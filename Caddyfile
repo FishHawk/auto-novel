@@ -1,0 +1,17 @@
+:80 {
+  root * /frontend/dist
+  file_server
+
+  handle_path /api* {
+    reverse_proxy server:5000
+  }
+
+  handle_path /books* {
+    root * /books
+    file_server
+  }
+}
+
+:9181 {
+    reverse_proxy dashboard:9181
+}

@@ -1,0 +1,16 @@
+services:
+  proxy:
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - "{$BOOKS_PATH}:/books"
+
+  server:
+    volumes:
+      - "{$BOOKS_PATH}:/books"
+    command: gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 'app:create_app()'
+
+  worker:
+    volumes:
+      - "{$BOOKS_PATH}:/books"

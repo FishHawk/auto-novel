@@ -1,0 +1,15 @@
+# Editor
+.vscode
+books
+
+# Backend
+.pytest_cache
+__pycache__
+venv
+
+#Frontend
+node_modules
+dist
+
+auto-imports.d.ts
+components.d.ts

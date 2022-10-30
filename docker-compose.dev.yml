@@ -1,0 +1,31 @@
+services:
+  proxy:
+    container_name: proxy
+    ports:
+      - 8080:80
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./frontend/dist:/frontend/dist
+      - ./books:/books
+
+  server:
+    container_name: server
+    environment:
+      FLASK_APP: app:create_app()
+      FLASK_DEBUG: True
+    volumes:
+      - ./backend:/backend
+      - ./books:/books
+    command: flask run --host=0.0.0.0
+
+  worker:
+    container_name: worker
+    volumes:
+      - ./backend:/backend
+      - ./books:/books
+
+  dashboard:
+    container_name: dashboard
+
+  redis:
+    container_name: redis

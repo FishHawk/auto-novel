@@ -1,0 +1,35 @@
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    image: proxy
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    image: server
+    depends_on:
+      - redis
+    stdin_open: true
+    tty: true
+
+  worker:
+    image: server
+    depends_on:
+      - redis
+    command: rq worker --name worker --url redis://redis:6379/0
+
+  dashboard:
+    image: eoranged/rq-dashboard
+    depends_on:
+      - redis
+    environment:
+      - RQ_DASHBOARD_REDIS_URL=redis://redis:6379/0
+    ports:
+      - 9181:9181
+
+  redis:
+    image: redis
