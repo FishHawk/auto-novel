@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 
 from flask import Flask, request
@@ -81,10 +80,13 @@ def create_app():
             cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
         )
 
-        metadata = provider.get_book_metadata(
-            book_id=book_id,
-            cache=cache,
-        )
+        try:
+            metadata = provider.get_book_metadata(
+                book_id=book_id,
+                cache=cache,
+            )
+        except Exception:
+            return "获取元数据失败。", 500
 
         total_episode_number = sum(
             [1 for token in metadata.toc if isinstance(token, TocEpisodeToken)]
