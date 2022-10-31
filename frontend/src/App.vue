@@ -16,7 +16,7 @@
         @click="onSearch"
         type="primary"
         color="#2c3e50"
-        :loading="loading.valueOf()"
+        :loading="loading"
         style="width: 120px; height: 60px; font-size: 20px"
       >
         查询
@@ -31,7 +31,7 @@
 
     <div style="margin-top: 20px">
       <span style="color: #b4bcc2; font-size: 20px; margin: 60px">
-        中文翻译可能会因为额度限制失败，失败后冷却两天。
+        中文翻译可能会因为额度限制失败，失败后冷却五分钟。
       </span>
     </div>
 
@@ -140,27 +140,59 @@ interface Book {
   files: BookFileGroup[];
 }
 
-const loading = ref(false);
 const book_url = ref('');
+let loading = false;
+let book_query_id = 0;
+let poll_id: number | undefined = undefined;
+
 const book: Ref<Book | undefined> = ref();
 
 function onSearch() {
-  if (loading.value == true) return;
-  loading.value = true;
+  if (loading == true) return;
   book.value = undefined;
+  loading = true;
+  book_query_id += 1;
+  clearTimeout(poll_id);
+
   const url = book_url.value;
+  const query_id = book_query_id;
   axios
     .get(window.location.href + 'api/query', {
       params: { url },
     })
     .then((json) => {
-      loading.value = false;
-      json.data.url = url;
-      book.value = json.data;
+      if (query_id == book_query_id) {
+        book.value = json.data;
+        loading = false;
+        poll_id = setTimeout(() => {
+          poll_query(url, query_id);
+        }, 1000);
+      }
     })
     .catch((error) => {
-      loading.value = false;
-      ElMessage.error(`查询失败：${error}`);
+      if (query_id == book_query_id) {
+        loading = false;
+        ElMessage.error(`查询失败：${error}`);
+      }
+    })
+}
+
+async function poll_query(url: string, query_id: number) {
+  return axios
+    .get(window.location.href + 'api/query', {
+      params: { url },
+    })
+    .then((json) => {
+      if (query_id == book_query_id) {
+        book.value = json.data;
+      }
+    })
+    .finally(() => {
+      if (query_id == book_query_id) {
+        poll_id = setTimeout(() => {
+          poll_query(url, query_id);
+        }, 1000);
+      }
     });
 }
 

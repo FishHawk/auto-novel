@@ -21,9 +21,9 @@ def parse_url_as_provider_and_book_id(
 
 
 def get_provider(
-    name: str,
+    provider_id: str,
 ) -> BookProvider | None:
     for provider_class in _PROVIDER_LIST:
-        if name == provider_class.provider_id:
+        if provider_id == provider_class.provider_id:
             return provider_class()
     return None

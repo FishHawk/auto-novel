@@ -150,7 +150,7 @@ def create_app():
             book_id,
             lang,
             result_ttl=0,
-            failure_ttl=2 * 24 * 3600,
+            failure_ttl=5 * 60,
             job_id=job_id,
         )
         return "成功添加更新任务"
