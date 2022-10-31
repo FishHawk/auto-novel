@@ -1,44 +1,36 @@
 <template>
-  <el-col>
-    <h1 style="margin-top: 15%">网络小说 epub/txt 生成器</h1>
-    <el-row justify="center" style="border: 2px solid #2c3e50">
+  <el-col style="margin-top: 15%">
+    <h1>网络小说 epub/txt 生成器</h1>
+    <el-row justify="center" class="search-bar">
       <el-input
         ref="input"
-        class="inputDeep"
+        class="search-bar-input"
         v-model="book_url"
         size="large"
         placeholder="请输入小说链接..."
         autofocus="true"
-        style="width: 600px; height: 60px"
       />
-      <!-- @search="onSearch" -->
       <el-button
         @click="onSearch"
         type="primary"
+        class="search-bar-button"
         color="#2c3e50"
         :loading="loading"
-        style="width: 120px; height: 60px; font-size: 20px"
       >
         查询
       </el-button>
     </el-row>
 
-    <div style="margin-top: 20px">
-      <span style="color: #b4bcc2; font-size: 20px; margin: 60px">
+    <div>
+      <p class="support-text">
         支持KAKUYOMU(カクヨム)和成为小说家吧(小説家になろう)。
-      </span>
-    </div>
-
-    <div style="margin-top: 20px">
-      <span style="color: #b4bcc2; font-size: 20px; margin: 60px">
-        中文翻译可能会因为额度限制失败，失败后冷却五分钟。
-      </span>
-    </div>
-
-    <div style="margin-top: 20px">
-      <span style="color: #b4bcc2; font-size: 20px; margin: 60px">
+      </p>
+      <p class="support-text">
+        中文翻译可能会因为额度限制失败，即使更新结束也不完整。
+      </p>
+      <p class="support-text">
         链接示例: https://kakuyomu.jp/works/16817139555217983105
-      </span>
+      </p>
     </div>
 
     <el-row justify="center" style="margin-top: 40px">
@@ -174,7 +166,7 @@ function onSearch() {
         loading = false;
         ElMessage.error(`查询失败：${error}`);
       }
-    })
+    });
 }
 
 async function poll_query(url: string, query_id: number) {
@@ -240,18 +232,38 @@ function filenameToUrl(filename: string): string {
 </script>
 
 <style scoped>
-.el-input {
-  --el-color-primary: #2c3e50;
-  --el-input-border-color: transparent;
-  --el-input-hover-border-color: transparent;
-  --el-input-clear-hover-color: transparent;
-  --el-input-focus-border-color: transparent;
-  font-size: 20px;
-}
 .el-table {
   --el-color-primary: #2c3e50;
 }
 .el-button {
   border-radius: 0px;
+}
+
+.search-bar {
+  border: 2px solid #2c3e50;
+}
+
+.search-bar-input {
+  width: 600px;
+  height: 60px;
+  font-size: 20px;
+
+  --el-color-primary: #2c3e50;
+  --el-input-border-color: transparent;
+  --el-input-hover-border-color: transparent;
+  --el-input-clear-hover-color: transparent;
+  --el-input-focus-border-color: transparent;
+}
+
+.search-bar-button {
+  width: 120px;
+  height: 60px;
+  font-size: 20px;
+  border-radius: 0px;
+}
+
+.support-text {
+  color: #b4bcc2;
+  font-size: 20px;
 }
 </style>
