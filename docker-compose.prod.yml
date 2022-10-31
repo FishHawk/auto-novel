@@ -6,7 +6,7 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - "{$BOOKS_PATH}:/books"
+      - ${BOOKS_PATH}:/books
 
     restart: unless-stopped
 
@@ -16,7 +16,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - "{$BOOKS_PATH}:/books"
+      - ${BOOKS_PATH}:/books
 
     command: gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 'app:create_app()'
 
@@ -26,7 +26,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - "{$BOOKS_PATH}:/books"
+      - ${BOOKS_PATH}:/books
 
     command: rq worker --name worker --url redis://redis:6379/0
 
