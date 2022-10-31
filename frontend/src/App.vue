@@ -133,16 +133,16 @@ interface Book {
 }
 
 const book_url = ref('');
-let loading = false;
+const loading = ref(false);
 let book_query_id = 0;
 let poll_id: number | undefined = undefined;
 
 const book: Ref<Book | undefined> = ref();
 
 function onSearch() {
-  if (loading == true) return;
+  if (loading.value == true) return;
   book.value = undefined;
-  loading = true;
+  loading.value = true;
   book_query_id += 1;
   clearTimeout(poll_id);
 
@@ -155,7 +155,7 @@ function onSearch() {
     .then((json) => {
       if (query_id == book_query_id) {
         book.value = json.data;
-        loading = false;
+        loading.value = false;
         poll_id = setTimeout(() => {
           poll_query(url, query_id);
         }, 1000);
@@ -163,7 +163,7 @@ function onSearch() {
     })
     .catch((error) => {
       if (query_id == book_query_id) {
-        loading = false;
+        loading.value = false;
         ElMessage.error(`查询失败：${error.message}`);
       }
     });
