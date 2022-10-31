@@ -1,16 +1,44 @@
 services:
   proxy:
+    image: ghcr.io/fishhawk/wneg-proxy
+
     ports:
       - 80:80
       - 443:443
     volumes:
       - "{$BOOKS_PATH}:/books"
 
+    restart: unless-stopped
+
   server:
+    image: ghcr.io/fishhawk/wneg-server
+
+    depends_on:
+      - redis
     volumes:
       - "{$BOOKS_PATH}:/books"
+
     command: gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 'app:create_app()'
 
   worker:
+    image: ghcr.io/fishhawk/wneg-server
+
+    depends_on:
+      - redis
     volumes:
       - "{$BOOKS_PATH}:/books"
+
+    command: rq worker --name worker --url redis://redis:6379/0
+
+  dashboard:
+    image: eoranged/rq-dashboard
+
+    depends_on:
+      - redis
+    environment:
+      - RQ_DASHBOARD_REDIS_URL=redis://redis:6379/0
+    ports:
+      - 9181:9181
+
+  redis:
+    image: redis

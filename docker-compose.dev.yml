@@ -1,6 +1,12 @@
 services:
   proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+
+    image: proxy
     container_name: proxy
+
     ports:
       - 8080:80
     volumes:
@@ -8,24 +14,50 @@ services:
       - ./frontend/dist:/frontend/dist
       - ./books:/books
 
+    restart: unless-stopped
+
   server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+
+    image: server
     container_name: server
+
+    depends_on:
+      - redis
     environment:
       FLASK_APP: app:create_app()
       FLASK_DEBUG: True
     volumes:
       - ./backend:/backend
       - ./books:/books
+
     command: flask run --host=0.0.0.0
 
   worker:
+    image: server
     container_name: worker
+
+    depends_on:
+      - redis
     volumes:
       - ./backend:/backend
       - ./books:/books
 
+    command: rq worker --name worker --url redis://redis:6379/0
+
   dashboard:
+    image: eoranged/rq-dashboard
     container_name: dashboard
 
+    depends_on:
+      - redis
+    environment:
+      - RQ_DASHBOARD_REDIS_URL=redis://redis:6379/0
+    ports:
+      - 9181:9181
+
   redis:
+    image: redis
     container_name: redis
