@@ -164,7 +164,7 @@ function onSearch() {
     .catch((error) => {
       if (query_id == book_query_id) {
         loading = false;
-        ElMessage.error(`查询失败：${error}`);
+        ElMessage.error(`查询失败：${error.message}`);
       }
     });
 }
@@ -196,11 +196,11 @@ function onUpdate(lang: string) {
       book_id: book.value.book_id,
       lang,
     })
-    .then((text) => {
+    .then((_) => {
       ElMessage.success(`更新成功，任务已经进入队列。`);
     })
     .catch((error) => {
-      ElMessage.error(`更新失败：${error}`);
+      ElMessage.error(`更新失败：${error.message}`);
     });
 }
 

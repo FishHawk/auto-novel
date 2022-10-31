@@ -139,6 +139,9 @@ def create_app():
         if not lang:
             return "没有lang参数", 400
 
+        if queue.count >= 100:
+            return "更新任务数目已达上限100", 500
+
         job_id = "/".join([provider_id, book_id, lang])
 
         if queue.fetch_job(job_id=job_id):
