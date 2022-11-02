@@ -15,6 +15,9 @@ services:
 
     depends_on:
       - redis
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
     volumes:
       - ${BOOKS_PATH}:/books
 
@@ -25,6 +28,9 @@ services:
 
     depends_on:
       - redis
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
     volumes:
       - ${BOOKS_PATH}:/books
 

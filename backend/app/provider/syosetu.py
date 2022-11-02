@@ -1,3 +1,4 @@
+import os
 import re
 
 import bs4
@@ -22,6 +23,13 @@ class Syosetu(BookProvider):
     lang = "jp"
     session = requests.Session()
 
+    def __init__(self) -> None:
+        self.proxies = {}
+        if "HTTP_PROXY" in os.environ:
+            self.proxies["http"] = os.environ["HTTP_PROXY"]
+        if "HTTPS_PROXY" in os.environ:
+            self.proxies["https"] = os.environ["HTTPS_PROXY"]
+
     @staticmethod
     def extract_book_id_from_url(url: str) -> str | None:
         match = re.search(r"ncode.syosetu.com/([A-Za-z0-9]+)", url)
@@ -32,7 +40,7 @@ class Syosetu(BookProvider):
 
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         url = f"https://ncode.syosetu.com/{book_id}"
-        res = self.session.get(url, headers=_HEADERS)
+        res = self.session.get(url, headers=_HEADERS, proxies=self.proxies)
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
 
@@ -80,7 +88,7 @@ class Syosetu(BookProvider):
             url = f"https://ncode.syosetu.com/{book_id}"
         else:
             url = f"https://ncode.syosetu.com/{book_id}/{episode_id}"
-        res = self.session.get(url, headers=_HEADERS)
+        res = self.session.get(url, headers=_HEADERS, proxies=self.proxies)
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
 

@@ -27,8 +27,10 @@ services:
     depends_on:
       - redis
     environment:
-      FLASK_APP: app:create_app()
-      FLASK_DEBUG: True
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - FLASK_APP=app:create_app()
+      - FLASK_DEBUG=True
     volumes:
       - ./backend:/backend
       - ./books:/books
@@ -41,6 +43,9 @@ services:
 
     depends_on:
       - redis
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
     volumes:
       - ./backend:/backend
       - ./books:/books

@@ -1,6 +1,7 @@
 # Editor
 .vscode
 books
+.env
 
 # Backend
 .pytest_cache
