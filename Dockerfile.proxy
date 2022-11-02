@@ -4,13 +4,13 @@ COPY ./frontend /frontend
 
 WORKDIR /frontend
 
-RUN npm install --registry=https://registry.npm.taobao.org; \
+RUN npm install; \
     npm run build
 
 
 
 FROM caddy:2.6.2
 
-COPY --from=builder /frontend/dist /frontend/dist
-
 COPY Caddyfile /etc/caddy/Caddyfile
+
+COPY --from=builder /frontend/dist /frontend/dist
