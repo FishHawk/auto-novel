@@ -8,7 +8,7 @@ services:
     volumes:
       - ${BOOKS_PATH}:/books
 
-    restart: unless-stopped
+    restart: always
 
   server:
     image: ghcr.io/fishhawk/wneg-server
@@ -21,6 +21,7 @@ services:
     volumes:
       - ${BOOKS_PATH}:/books
 
+    restart: always
     command: gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 'app:create_app()'
 
   worker:
@@ -34,6 +35,7 @@ services:
     volumes:
       - ${BOOKS_PATH}:/books
 
+    restart: always
     command: rq worker --name worker --url redis://redis:6379/0
 
   dashboard:
@@ -46,5 +48,9 @@ services:
     ports:
       - 9181:9181
 
+    restart: always
+
   redis:
     image: redis
+
+    restart: always
