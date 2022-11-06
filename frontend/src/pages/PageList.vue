@@ -22,48 +22,52 @@ loadPage();
 
 <template>
   <div class="list">
-    <li v-for="book in books" :key="book.book_id">
-      <el-link :href="book.url" target="_blank" class="title">
-        {{ book.title }}
-      </el-link>
+    <el-divider />
+    <div v-for="book in books" :key="book.book_id">
+      <el-row class="title">
+        <span> {{ book.title }} </span>
+      </el-row>
 
-      <div v-for="group in book.files" :key="group.lang" class="content">
-        <el-row>
-          <el-col :span="4">
-            <span>
-              {{
-                readableLang(group.lang) +
-                '(' +
-                group.cached_episode_number +
-                '/' +
-                group.total_episode_number +
-                ')'
-              }}
-            </span>
-          </el-col>
-          <el-col :span="20">
-            <el-space spacer="|">
-              <el-link
-                v-for="file in group.files"
-                :href="filenameToUrl(file.filename)"
-                :icon="Download"
-                :disabled="file.filename === null"
-              >
-                {{ file.type }}
-              </el-link>
-            </el-space>
-          </el-col>
-        </el-row>
-      </div>
+      <el-row class="content">
+        <el-link :href="book.url" target="_blank">
+          {{ book.provider_id }}.{{ book.book_id }}
+        </el-link>
+      </el-row>
+
+      <el-row v-for="group in book.files" :key="group.lang" class="content">
+        <el-col :span="4">
+          <span>
+            {{
+              readableLang(group.lang) +
+              '(' +
+              group.cached_episode_number +
+              '/' +
+              group.total_episode_number +
+              ')'
+            }}
+          </span>
+        </el-col>
+        <el-col :span="20">
+          <el-space spacer="|">
+            <el-link
+              v-for="file in group.files"
+              :href="filenameToUrl(file.filename)"
+              :icon="Download"
+              :disabled="file.filename === null"
+            >
+              {{ file.type }}
+            </el-link>
+          </el-space>
+        </el-col>
+      </el-row>
 
       <el-divider />
-    </li>
+    </div>
   </div>
 </template>
 
 <style>
 .list {
-  margin-top: 15%;
   width: 650px;
 }
 .title {
@@ -72,6 +76,6 @@ loadPage();
 .content {
   font-size: 14px;
   margin-top: 10px;
-  margin-left: 30px;
+  margin-left: 20px;
 }
 </style>
