@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Download } from '@element-plus/icons-vue';
-import { Book, BookStatus } from '../models/Book';
+import { Book, BookFileGroup, BookStatus } from '../models/Book';
 
 defineProps<{ book: Book }>();
 defineEmits<{ (e: 'onUpdate', lang: string): void }>();
@@ -29,6 +29,14 @@ function readableStatus(
 
 function filenameToUrl(filename: string): string {
   return window.location.href + 'books/' + filename;
+}
+
+function isUpdateEnabled(group: BookFileGroup): boolean {
+  const isNotComplete =
+    group.status == null &&
+    group.total_episode_number > group.cached_episode_number;
+  const hasMissingFile = group.files.some((it) => it.filename === null);
+  return isNotComplete || hasMissingFile;
 }
 </script>
 
@@ -84,12 +92,7 @@ function filenameToUrl(filename: string): string {
         <template #default="scope">
           <el-button
             @click="$emit('onUpdate', scope.row.lang)"
-            :disabled="
-              !(
-                scope.row.status == null &&
-                scope.row.total_episode_number > scope.row.cached_episode_number
-              )
-            "
+            :disabled="!isUpdateEnabled(scope.row)"
             type="primary"
             color="#2c3e50"
           >
