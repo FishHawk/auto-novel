@@ -18,8 +18,6 @@ function loadPage() {
     });
 }
 loadPage();
-
-const activeNames = ref([]);
 </script>
 
 <template>
@@ -30,26 +28,32 @@ const activeNames = ref([]);
       </el-link>
 
       <div v-for="group in book.files" :key="group.lang" class="content">
-        <span style="margin-left: 16px; margin-right: 16px">
-          {{
-            readableLang(group.lang) +
-            '(' +
-            group.cached_episode_number +
-            '/' +
-            group.total_episode_number +
-            ')'
-          }}
-        </span>
-        <el-space spacer="|">
-          <el-link
-            v-for="file in group.files"
-            :href="filenameToUrl(file.filename)"
-            :icon="Download"
-            :disabled="file.filename === null"
-          >
-            {{ file.type }}
-          </el-link>
-        </el-space>
+        <el-row>
+          <el-col :span="4">
+            <span>
+              {{
+                readableLang(group.lang) +
+                '(' +
+                group.cached_episode_number +
+                '/' +
+                group.total_episode_number +
+                ')'
+              }}
+            </span>
+          </el-col>
+          <el-col :span="20">
+            <el-space spacer="|">
+              <el-link
+                v-for="file in group.files"
+                :href="filenameToUrl(file.filename)"
+                :icon="Download"
+                :disabled="file.filename === null"
+              >
+                {{ file.type }}
+              </el-link>
+            </el-space>
+          </el-col>
+        </el-row>
       </div>
 
       <el-divider />
@@ -60,7 +64,7 @@ const activeNames = ref([]);
 <style>
 .list {
   margin-top: 15%;
-  width: 600px;
+  width: 650px;
 }
 .title {
   font-size: 18px;
@@ -68,5 +72,6 @@ const activeNames = ref([]);
 .content {
   font-size: 14px;
   margin-top: 10px;
+  margin-left: 30px;
 }
 </style>
