@@ -7,6 +7,9 @@ import axios from 'axios';
 import SearchBar from './components/SearchBar.vue';
 import { Book } from './models/Book';
 
+axios.defaults.baseURL = window.location.href;
+const book_list_url = window.location.href + 'books';
+
 const book: Ref<Book | undefined> = ref();
 const loading = ref(false);
 let query_id = 0;
@@ -22,7 +25,7 @@ function onSearch(url: string) {
 
   const query_id_snapshot = query_id;
   axios
-    .get(window.location.href + 'api/query', {
+    .get('api/query', {
       params: { url },
     })
     .then((res) => {
@@ -45,7 +48,7 @@ function onSearch(url: string) {
 
 function pollSearch(url: string, query_id_snapshot: number) {
   return axios
-    .get(window.location.href + 'api/query', {
+    .get('api/query', {
       params: { url },
     })
     .then((res) => {
@@ -65,7 +68,7 @@ function pollSearch(url: string, query_id_snapshot: number) {
 function onUpdate(lang: string) {
   if (book.value === undefined) return;
   axios
-    .post(window.location.href + 'api/book-update', {
+    .post('api/book-update', {
       provider_id: book.value.provider_id,
       book_id: book.value.book_id,
       lang,
@@ -109,14 +112,23 @@ function handleError(error: any, prefix: string) {
       <li class="support-text">
         如果中文版本更新完仍不完整，说明翻译额度已被耗尽，请等待几小时再尝试。
       </li>
+      <li class="support-text">
+        你也可以直接浏览缓存的
+        <a :href="book_list_url" target="_blank">文件列表 </a>
+        。
+      </li>
     </ul>
 
     <el-row justify="center" style="margin-top: 40px">
       <BookCard v-if="book !== undefined" :book="book" @onUpdate="onUpdate" />
     </el-row>
 
-    <el-link class="footer">
-      GitHub: https://github.com/FishHawk/web-novel-ebook-generator
+    <el-link
+      href="https://github.com/FishHawk/web-novel-ebook-generator"
+      target="_blank"
+      class="footer"
+    >
+      @GitHub
     </el-link>
   </el-col>
 </template>
@@ -127,6 +139,10 @@ function handleError(error: any, prefix: string) {
   font-size: 20px;
   margin-top: 5px;
   margin-bottom: 5px;
+}
+
+.support-text a {
+  color: #b4bcc2;
 }
 
 .footer {
