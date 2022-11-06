@@ -1,35 +1,15 @@
 <script setup lang="ts">
 import { Download } from '@element-plus/icons-vue';
-import { Book, BookFileGroup, BookStatus } from '../models/Book';
+import {
+  Book,
+  BookFileGroup,
+  readableLang,
+  readableStatus,
+  filenameToUrl,
+} from '../models/Book';
 
 defineProps<{ book: Book }>();
 defineEmits<{ (e: 'onUpdate', lang: string): void }>();
-
-function readableLang(lang: string): string {
-  if (lang == 'zh') return '中文';
-  else if (lang == 'jp') return '日文';
-  else return `未知(${lang})`;
-}
-
-function readableStatus(
-  status: BookStatus,
-  total: number,
-  cached: number
-): string {
-  const page_status = `(${cached}/${total})`;
-  if (status == 'queued') return '排队中' + page_status;
-  else if (status == 'started') return '更新中' + page_status;
-  else if (status == 'failed') return '失败' + page_status;
-  else if (status == 'unknown') return '未知' + page_status;
-  else {
-    if (total > cached) return `不完整(${cached}/${total})`;
-    else return `完整(${cached}/${total})`;
-  }
-}
-
-function filenameToUrl(filename: string): string {
-  return window.location.href + 'books/' + filename;
-}
 
 function isUpdateEnabled(group: BookFileGroup): boolean {
   const isNotComplete =
@@ -45,11 +25,12 @@ function isUpdateEnabled(group: BookFileGroup): boolean {
     v-if="book !== undefined"
     :body-style="{ padding: '0px' }"
     style="width: 600px"
+    target="_blank"
   >
     <template #header>
-      <el-col>
-        <span>{{ book.title }}</span>
-      </el-col>
+      <el-link :href="book.url">
+        {{ book.title }}
+      </el-link>
     </template>
 
     <el-table :data="book.files" table-layout="auto" stripe>

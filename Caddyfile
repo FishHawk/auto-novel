@@ -8,9 +8,7 @@
 
   handle_path /books* {
     root * /books
-    file_server browse {
-      hide *.zip
-    }
+    file_server
   }
 }
 

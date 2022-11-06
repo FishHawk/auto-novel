@@ -26,6 +26,10 @@ class Kakuyomu(BookProvider):
         else:
             return match.group(1)
 
+    @staticmethod
+    def build_url_from_book_id(book_id: str) -> str | None:
+        return f"https://kakuyomu.jp/works/{book_id}"
+
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         url = f"https://kakuyomu.jp/works/{book_id}"
         res = self.session.get(url)

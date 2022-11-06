@@ -1,3 +1,4 @@
+import itertools
 import logging
 from pathlib import Path
 
@@ -5,28 +6,16 @@ from flask import Flask, request
 import redis
 import rq
 
-from app.provider import get_provider, parse_url_as_provider_and_book_id
+from app.provider import build_url, get_provider, parse_url_as_provider_and_book_id
 from app.translator import get_default_translator
 from app.cache import BookCache
-from app.model import TocEpisodeToken
+from app.model import BookMetadata, TocEpisodeToken
 from app.make import make_book
 
 redis_connection = redis.Redis(host="redis", port=6379, db=0)
 queue = rq.Queue(connection=redis_connection)
 
 books_path = Path("/books")
-
-
-def get_status(job_id: str) -> str | None:
-    job = queue.fetch_job(job_id=job_id)
-    if not job:
-        return None
-
-    status = job.get_status(refresh=True)
-    if status in ["queued", "started", "failed"]:
-        return status
-    else:
-        return "unknown"
 
 
 def update_book(provider_id: str, book_id: str, lang: str):
@@ -62,6 +51,70 @@ def update_book(provider_id: str, book_id: str, lang: str):
         )
 
 
+def get_status(job_id: str) -> str | None:
+    job = queue.fetch_job(job_id=job_id)
+    if not job:
+        return None
+
+    status = job.get_status(refresh=True)
+    if status in ["queued", "started", "failed"]:
+        return status
+    else:
+        return "unknown"
+
+
+def get_book(
+    url: str,
+    provider_id: str,
+    book_id: str,
+    metadata: BookMetadata,
+    cache: BookCache,
+):
+    total_episode_number = sum(
+        [1 for token in metadata.toc if isinstance(token, TocEpisodeToken)]
+    )
+
+    book_file_groups = []
+    for lang in ["jp", "zh"]:
+        cached_episode_number = cache.count_episode(lang)
+
+        book_file_group = {
+            "lang": lang,
+            "status": None,
+            "total_episode_number": total_episode_number,
+            "cached_episode_number": cached_episode_number,
+            "files": [],
+        }
+
+        possible_suffixes = ["txt", "epub"]
+        if lang == "zh":
+            possible_suffixes.append("mixed.epub")
+
+        suffix_to_type = {
+            "txt": "TXT",
+            "epub": "EPUB",
+            "mixed.epub": "EPUB原文混合版",
+        }
+
+        for suffix in possible_suffixes:
+            book_type = suffix_to_type[suffix]
+            book_name = f"{provider_id}.{book_id}.{lang}.{suffix}"
+            book_path = books_path / book_name
+            if not book_path.exists():
+                book_name = None
+            book_file_group["files"].append({"type": book_type, "filename": book_name})
+
+        book_file_groups.append(book_file_group)
+
+    return {
+        "url": url,
+        "provider_id": provider_id,
+        "book_id": book_id,
+        "title": metadata.title,
+        "files": book_file_groups,
+    }
+
+
 def create_app():
     app = Flask(__name__)
 
@@ -89,59 +142,68 @@ def create_app():
         except Exception:
             return "获取元数据失败。", 500
 
-        total_episode_number = sum(
-            [1 for token in metadata.toc if isinstance(token, TocEpisodeToken)]
+        book = get_book(
+            url=provider.build_url_from_book_id(book_id=book_id),
+            provider_id=provider.provider_id,
+            book_id=book_id,
+            metadata=metadata,
+            cache=cache,
         )
 
-        book_file_groups = []
-        for lang in ["jp", "zh"]:
-            if cache:
-                cached_episode_number = cache.count_episode(lang)
-            else:
-                cached_episode_number = 0
+        for group in book["files"]:
+            group["status"] = get_status(
+                job_id="/".join([provider.provider_id, book_id, group["lang"]])
+            )
 
-            status = get_status(job_id="/".join([provider.provider_id, book_id, lang]))
+        return book
 
-            book_file_group = {
-                "lang": lang,
-                "status": status,
-                "total_episode_number": total_episode_number,
-                "cached_episode_number": cached_episode_number,
-                "files": [],
-            }
+    @app.get("/list")
+    def _list():
+        next_id = request.args.get("next")
+        page_size = 60
+        all_zip_paths = sorted(
+            books_path.glob("*.zip"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
 
-            possible_suffixes = ["txt", "epub"]
-            if lang == "zh":
-                possible_suffixes.append("mixed.epub")
+        if next_id:
+            paged_zip_paths = itertools.islice(
+                itertools.dropwhile(lambda p: p.stem != next_id, all_zip_paths),
+                start=1,
+                stop=page_size + 1,
+            )
+        else:
+            paged_zip_paths = all_zip_paths[:page_size]
 
-            suffix_to_type = {
-                "txt": "TXT",
-                "epub": "EPUB",
-                "mixed.epub": "EPUB原文混合版",
-            }
+        books = []
+        for zip_path in paged_zip_paths:
+            try:
+                provider_id, book_id = zip_path.stem.split(".")
+            except ValueError:
+                continue
 
-            for suffix in possible_suffixes:
-                book_type = suffix_to_type[suffix]
-                book_name = f"{provider.provider_id}.{book_id}.{lang}.{suffix}"
-                book_path = books_path / book_name
-                if not book_path.exists():
-                    book_name = None
-                book_file_group["files"].append(
-                    {"type": book_type, "filename": book_name}
-                )
+            cache = BookCache(zip_path)
+            metadata = cache.get_book_metadata("jp")
 
-            book_file_groups.append(book_file_group)
+            if not metadata:
+                continue
 
-        return {
-            "provider_id": provider.provider_id,
-            "book_id": book_id,
-            "title": metadata.title,
-            "files": book_file_groups,
-        }
+            book = get_book(
+                url=build_url(provider_id=provider_id, book_id=book_id),
+                provider_id=provider_id,
+                book_id=book_id,
+                metadata=metadata,
+                cache=cache,
+            )
+
+            books.append(book)
+
+        return books
 
     @app.post("/book-update")
     def _create_book_update_job():
-        provider_id = request.json["provider_id"]
+        provider_id = request.json.get("provider_id")
         if not provider_id:
             return "没有provider_id参数", 400
 

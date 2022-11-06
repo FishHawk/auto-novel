@@ -14,6 +14,11 @@ class BookProvider(ABC):
     def extract_book_id_from_url(url: str) -> str | None:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def build_url_from_book_id(book_id: str) -> str | None:
+        pass
+
     @abstractmethod
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         pass

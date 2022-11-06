@@ -20,6 +20,16 @@ def parse_url_as_provider_and_book_id(
     return None
 
 
+def build_url(
+    provider_id: str,
+    book_id: str,
+) -> str | None:
+    for provider_class in _PROVIDER_LIST:
+        if provider_id == provider_class.provider_id:
+            return provider_class.build_url_from_book_id(book_id=book_id)
+    return None
+
+
 def get_provider(
     provider_id: str,
 ) -> BookProvider | None:

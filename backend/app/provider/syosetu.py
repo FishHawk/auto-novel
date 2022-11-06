@@ -38,6 +38,10 @@ class Syosetu(BookProvider):
         else:
             return match.group(1).lower()
 
+    @staticmethod
+    def build_url_from_book_id(book_id: str) -> str | None:
+        return f"https://ncode.syosetu.com/{book_id}"
+
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         url = f"https://ncode.syosetu.com/{book_id}"
         res = self.session.get(url, headers=_HEADERS, proxies=self.proxies)
