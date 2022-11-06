@@ -43,20 +43,20 @@ function onSearch(url: string) {
     });
 }
 
-async function pollSearch(url: string, query_id: number) {
+function pollSearch(url: string, query_id_snapshot: number) {
   return axios
     .get(window.location.href + 'api/query', {
       params: { url },
     })
     .then((res) => {
-      if (query_id == query_id) {
+      if (query_id_snapshot == query_id) {
         book.value = res.data;
       }
     })
     .finally(() => {
-      if (query_id == query_id) {
+      if (query_id_snapshot == query_id) {
         poll_id = window.setTimeout(() => {
-          pollSearch(url, query_id);
+          pollSearch(url, query_id_snapshot);
         }, 1000);
       }
     });
