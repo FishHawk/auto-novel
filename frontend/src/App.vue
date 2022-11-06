@@ -25,9 +25,10 @@ function onSearch(url: string) {
     .get(window.location.href + 'api/query', {
       params: { url },
     })
-    .then((json) => {
+    .then((res) => {
+      console.log(res.data);
       if (query_id_snapshot == query_id) {
-        book.value = json.data;
+        book.value = res.data;
         loading.value = false;
         poll_id = window.setTimeout(() => {
           pollSearch(url, query_id_snapshot);
@@ -47,9 +48,9 @@ async function pollSearch(url: string, query_id: number) {
     .get(window.location.href + 'api/query', {
       params: { url },
     })
-    .then((json) => {
+    .then((res) => {
       if (query_id == query_id) {
-        book.value = json.data;
+        book.value = res.data;
       }
     })
     .finally(() => {

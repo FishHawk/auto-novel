@@ -9,7 +9,7 @@ _TRANSLATORS: List[Translator] = [BaiduWebTranslate, BaiduVipTranslate]
 def get_translator(name: str) -> Translator:
     for translator in _TRANSLATORS:
         if translator.translator_id == name:
-            return name
+            return translator()
     raise RuntimeError(f"Unknown translator name: {name}")
 
 

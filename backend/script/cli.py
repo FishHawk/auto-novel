@@ -62,28 +62,26 @@ def cli(args):
         txt_enabled=args.txt,
     )
 
-    if args.langs:
+    if args.zh:
         if args.translator:
             translator = get_translator(args.translator)
         else:
             translator = get_default_translator()
 
-        for lang in args.langs:
-            if lang == book.lang:
-                continue
+        translated_book = translator.translate_book(
+            book=book,
+            lang="zh",
+            cache=cache,
+        )
 
-            book_translated = translator.translate_book(
-                book=book,
-                lang=lang,
-                cache=cache,
-            )
-
-            make_book(
-                output_path=output_path,
-                book=book_translated,
-                epub_enabled=args.epub,
-                txt_enabled=args.txt,
-            )
+        make_book(
+            output_path=output_path,
+            book=translated_book,
+            secondary_book=book,
+            epub_enabled=args.epub,
+            epub_mixed_enabled=args.mixed,
+            txt_enabled=args.txt,
+        )
 
     logging.info("完成")
 
@@ -93,33 +91,37 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "url",
-        help="book url",
+        help="书的网址",
     )
     parser.add_argument(
         "--disable-cache",
         action="store_true",
-        help="disable cache",
+        help="关闭缓存",
     )
     parser.add_argument(
         "--epub",
         action="store_true",
-        help="create epub",
+        help="生成epub",
     )
     parser.add_argument(
         "--txt",
         action="store_true",
-        help="create txt",
+        help="生成txt",
     )
     parser.add_argument(
-        "-l",
-        "--langs",
-        nargs="+",
-        help="the languages to translate",
+        "--mixed",
+        action="store_true",
+        help="生成原文对比版epub",
+    )
+    parser.add_argument(
+        "--zh",
+        action="store_true",
+        help="翻译成中文",
     )
     parser.add_argument(
         "-t",
         "--translator",
-        help="translator id",
+        help="翻译器id",
     )
 
     args = parser.parse_args()

@@ -25,7 +25,7 @@ class BookMetadata:
     title: str
     authors: List[Author]
     introduction: str
-    toc: List[TocEpisodeToken | TocChapterToken] | None
+    toc: List[TocEpisodeToken | TocChapterToken]
 
 
 @dataclass

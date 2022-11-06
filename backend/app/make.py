@@ -1,29 +1,23 @@
 import logging
 from pathlib import Path
-from typing import List
 
 from lxml import etree
 from ebooklib import epub
 
-from app.cache import BookCache
 from app.model import Book, TocChapterToken, TocEpisodeToken
-from app.provider.base import BookProvider
-from app.translator import get_translator
 
 
-_MISSING_EPISODE_HINT = {
-    "en": "This episode is missing.",
-    "zh": "该章节缺失。",
-}
+_MISSING_EPISODE_HINT = "该章节缺失。"
 
 
-def _missing_episode_hint(lang: str) -> str:
-    return _MISSING_EPISODE_HINT.get(lang, _MISSING_EPISODE_HINT["en"])
+def mix_texts(from_text: str, to_text: str) -> str:
+    return f"{from_text}[{to_text}]"
 
 
-def make_epub(file_path: Path, book: Book):
-    epub_book = epub.EpubBook()
-
+def _epub_setup(
+    epub_book: epub.EpubBook,
+    book: Book,
+):
     # set metadata
     epub_book.set_identifier(f"{book.provider}.{book.book_id}")
     epub_book.set_language(book.lang)
@@ -46,44 +40,114 @@ def make_epub(file_path: Path, book: Book):
     )
     epub_book.add_item(nav_css)
 
-    # add episodes
+
+def _epub_add_episode(
+    epub_book: epub.EpubBook,
+    token: TocEpisodeToken,
+    body: etree.Element,
+):
+    uid = f"episode-{token.episode_id}"
+    filename = f"{uid}.xhtml"
+
+    content = etree.tostring(
+        body,
+        pretty_print=True,
+        encoding="utf-8",
+    )
+
+    epub_html = epub.EpubHtml(
+        uid=uid,
+        title=token.title,
+        file_name=filename,
+        content=content,
+    )
+
+    epub_book.add_item(epub_html)
+    epub_book.toc.append(epub.Link(filename, token.title, uid))
+    epub_book.spine.append(epub_html)
+
+
+def _epub_add_episodes(
+    epub_book: epub.EpubBook,
+    book: Book,
+):
     for token in book.metadata.toc:
         if isinstance(token, TocChapterToken):
             epub_book.toc.append(epub.Section(token.title))
         elif isinstance(token, TocEpisodeToken):
-            uid = f"episode-{token.episode_id}"
-            filename = f"{uid}.xhtml"
-
             body = etree.Element("body")
             etree.SubElement(body, "h1").text = token.title
 
             episode = book.episodes.get(token.episode_id)
             if episode:
-                for txt in episode.paragraphs:
-                    etree.SubElement(body, "p").text = txt
+                for text in episode.paragraphs:
+                    etree.SubElement(body, "p").text = text
             else:
-                text = _missing_episode_hint(book.lang)
-                etree.SubElement(body, "p").text = text
+                etree.SubElement(body, "p").text = _MISSING_EPISODE_HINT
 
-            content = etree.tostring(
-                body,
-                pretty_print=True,
-                encoding="utf-8",
+            _epub_add_episode(
+                epub_book=epub_book,
+                token=token,
+                body=body,
             )
 
-            epub_html = epub.EpubHtml(
-                uid=uid,
-                title=token.title,
-                file_name=filename,
-                lang=book.lang,
-                content=content,
+
+def _epub_add_mixed_episodes(
+    epub_book: epub.EpubBook,
+    book: Book,
+    secondary_book: Book,
+):
+    for token, secondary_token in zip(book.metadata.toc, secondary_book.metadata.toc):
+        if isinstance(token, TocChapterToken):
+            assert isinstance(secondary_token, TocChapterToken)
+            mixed_title = mix_texts(token.title, secondary_token.title)
+            epub_book.toc.append(epub.Section(mixed_title))
+        elif isinstance(token, TocEpisodeToken):
+            assert isinstance(secondary_token, TocEpisodeToken)
+            body = etree.Element("body")
+            etree.SubElement(body, "h1").text = token.title
+
+            episode = book.episodes.get(token.episode_id)
+            secondary_episode = secondary_book.episodes.get(token.episode_id)
+            if episode and secondary_episode:
+                etree.SubElement(
+                    body, "p", {"style": "opacity:0.4;"}
+                ).text = secondary_token.title
+                for text, secondary_text in zip(
+                    episode.paragraphs,
+                    secondary_episode.paragraphs,
+                ):
+                    if text.strip():
+                        etree.SubElement(body, "p").text = text.rstrip()
+                        etree.SubElement(
+                            body, "p", {"style": "opacity:0.4;"}
+                        ).text = secondary_text.lstrip()
+                    else:
+                        etree.SubElement(body, "p").text = text
+            elif episode:
+                for text in episode.paragraphs:
+                    etree.SubElement(body, "p").text = text
+            else:
+                etree.SubElement(body, "p").text = _MISSING_EPISODE_HINT
+
+            _epub_add_episode(
+                epub_book=epub_book,
+                token=token,
+                body=body,
             )
 
-            epub_book.add_item(epub_html)
-            epub_book.toc.append(epub.Link(filename, token.title, uid))
-            epub_book.spine.append(epub_html)
 
-    # save epub
+def make_epub(file_path: Path, book: Book):
+    epub_book = epub.EpubBook()
+    _epub_setup(epub_book, book)
+    _epub_add_episodes(epub_book, book)
+    epub.write_epub(file_path, epub_book, {})
+
+
+def make_mixed_epub(file_path: Path, book: Book, secondary_book: Book):
+    epub_book = epub.EpubBook()
+    _epub_setup(epub_book, book)
+    _epub_add_mixed_episodes(epub_book, book, secondary_book)
     epub.write_epub(file_path, epub_book, {})
 
 
@@ -113,15 +177,16 @@ def make_txt(file_path: Path, book: Book):
                         file.write(text)
                         file.write("\n")
                 else:
-                    text = _missing_episode_hint(book.lang)
-                    file.write(text)
+                    file.write(_MISSING_EPISODE_HINT)
                     file.write("\n")
 
 
 def make_book(
     output_path: Path,
     book: Book,
+    secondary_book: Book | None = None,
     epub_enabled: bool = True,
+    epub_mixed_enabled: bool = True,
     txt_enabled: bool = True,
 ):
     file_path = f"{book.provider}.{book.book_id}.{book.lang}"
@@ -129,50 +194,24 @@ def make_book(
     if epub_enabled:
         epub_file_path = output_path / f"{file_path}.epub"
         logging.info("制作epub: %s", epub_file_path)
-        make_epub(file_path=epub_file_path, book=book)
+        make_epub(
+            file_path=epub_file_path,
+            book=book,
+        )
+
+    if epub_mixed_enabled and secondary_book:
+        epub_file_path = output_path / f"{file_path}.mixed.epub"
+        logging.info("制作混合epub: %s", epub_file_path)
+        make_mixed_epub(
+            file_path=epub_file_path,
+            book=book,
+            secondary_book=secondary_book,
+        )
 
     if txt_enabled:
         txt_file_path = output_path / f"{file_path}.txt"
         logging.info("制作txt: %s", txt_file_path)
-        make_txt(file_path=txt_file_path, book=book)
-
-
-def get_and_make_book(
-    provider: BookProvider,
-    book_id: str,
-    cache: BookCache | None,
-    output_path: Path,
-    langs: List[str],
-    epub_enabled: bool = True,
-    txt_enabled: bool = True,
-):
-    book = provider.get_book(
-        book_id=book_id,
-        cache=cache,
-    )
-
-    make_book(
-        output_path=output_path,
-        book=book,
-        epub_enabled=epub_enabled,
-        txt_enabled=txt_enabled,
-    )
-
-    translator = get_translator("baidu")
-
-    for lang in langs:
-        if lang == book.lang:
-            continue
-
-        book_translated = translator.translate_book(
+        make_txt(
+            file_path=txt_file_path,
             book=book,
-            lang=lang,
-            cache=cache,
-        )
-
-        make_book(
-            output_path=output_path,
-            book=book_translated,
-            epub_enabled=epub_enabled,
-            txt_enabled=txt_enabled,
         )

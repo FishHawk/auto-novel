@@ -9,3 +9,6 @@ dev:
 
 prod:
 	docker-compose -f docker-compose.prod.yml up -d
+
+test-cli:
+	python backend/script/cli.py "https://ncode.syosetu.com/n0833hi" --epub --txt --zh --mixed

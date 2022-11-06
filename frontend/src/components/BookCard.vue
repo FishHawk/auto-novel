@@ -36,7 +36,7 @@ function filenameToUrl(filename: string): string {
   <el-card
     v-if="book !== undefined"
     :body-style="{ padding: '0px' }"
-    style="width: 450px"
+    style="width: 600px"
   >
     <template #header>
       <el-col>
@@ -53,13 +53,15 @@ function filenameToUrl(filename: string): string {
 
       <el-table-column label="状态" align="center">
         <template #default="scope">
-          <span>{{
-            readableStatus(
-              scope.row.status,
-              scope.row.total_episode_number,
-              scope.row.cached_episode_number
-            )
-          }}</span>
+          <span>
+            {{
+              readableStatus(
+                scope.row.status,
+                scope.row.total_episode_number,
+                scope.row.cached_episode_number
+              )
+            }}
+          </span>
         </template>
       </el-table-column>
 
@@ -71,8 +73,9 @@ function filenameToUrl(filename: string): string {
               :href="filenameToUrl(file.filename)"
               :icon="Download"
               :disabled="file.filename === null"
-              >{{ file.type.toUpperCase() }}</el-link
             >
+              {{ file.type }}
+            </el-link>
           </el-space>
         </template>
       </el-table-column>

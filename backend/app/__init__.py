@@ -58,6 +58,7 @@ def update_book(provider_id: str, book_id: str, lang: str):
         make_book(
             output_path=books_path,
             book=book_translated,
+            secondary_book=book,
         )
 
 
@@ -109,10 +110,21 @@ def create_app():
                 "files": [],
             }
 
-            for book_type in ["epub", "txt"]:
-                book_name = f"{provider.provider_id}.{book_id}.{lang}.{book_type}"
+            possible_suffixes = ["txt", "epub"]
+            if lang == "zh":
+                possible_suffixes.append("mixed.epub")
+
+            suffix_to_type = {
+                "txt": "TXT",
+                "epub": "EPUB",
+                "mixed.epub": "EPUB原文混合版",
+            }
+
+            for suffix in possible_suffixes:
+                book_type = suffix_to_type[suffix]
+                book_name = f"{provider.provider_id}.{book_id}.{lang}.{suffix}"
                 book_path = books_path / book_name
-                if not book_path.exists:
+                if not book_path.exists():
                     book_name = None
                 book_file_group["files"].append(
                     {"type": book_type, "filename": book_name}
