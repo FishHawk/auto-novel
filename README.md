@@ -35,3 +35,8 @@ options:
   -t TRANSLATOR, --translator TRANSLATOR
                         translator id
 ```
+
+支持的翻译器：
+- 百度网页版，id：`baidu-web`。
+- 百度开发者版，id：`baidu-vip`。
+  - 需要环境变量`BAIDU_VIP_TRANSLATE_APPID`和`BAIDU_VIP_TRANSLATE_APPKEY`。
