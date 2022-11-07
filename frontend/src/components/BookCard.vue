@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Download } from '@element-plus/icons-vue';
+import { ElMessage, FormInstance, FormRules } from 'element-plus';
+import { reactive, ref } from 'vue';
 import {
   Book,
   BookFileGroup,
@@ -9,7 +11,9 @@ import {
 } from '../models/Book';
 
 defineProps<{ book: Book }>();
-defineEmits<{ (e: 'onUpdate', lang: string): void }>();
+const emit = defineEmits<{
+  (e: 'onUpdate', lang: string, start_index?: number): void;
+}>();
 
 function isUpdateEnabled(group: BookFileGroup): boolean {
   const isNotComplete =
@@ -17,6 +21,34 @@ function isUpdateEnabled(group: BookFileGroup): boolean {
     group.total_episode_number > group.cached_episode_number;
   const hasMissingFile = group.files.some((it) => it.filename === null);
   return isNotComplete || hasMissingFile;
+}
+
+const dialogFormVisible = ref(false);
+const formRef = ref<FormInstance>();
+const form = reactive({
+  start_index: 1,
+  lang: '',
+});
+
+function openDialog(lang: string) {
+  form.lang = lang;
+  dialogFormVisible.value = true;
+}
+
+async function submitForm(formEl: FormInstance | undefined) {
+  if (!formEl) return;
+  await formEl.validate((valid, fields) => {
+    if (valid) {
+      if (form.start_index == null || form.start_index == 1) {
+        emit('onUpdate', form.lang);
+      } else {
+        emit('onUpdate', form.lang, form.start_index - 1);
+      }
+      dialogFormVisible.value = false;
+    } else {
+      ElMessage.error(`更新表单${fields}字段不合法。`);
+    }
+  });
 }
 </script>
 
@@ -79,10 +111,37 @@ function isUpdateEnabled(group: BookFileGroup): boolean {
           >
             更新
           </el-button>
+          <el-button
+            @click="openDialog(scope.row.lang)"
+            :disabled="!isUpdateEnabled(scope.row)"
+            type="primary"
+            color="#2c3e50"
+          >
+            高级
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
   </el-card>
+
+  <el-dialog v-model="dialogFormVisible" title="更新" style="max-width: 400px">
+    <el-form ref="formRef" :model="form">
+      <el-form-item label="从这章开始更新">
+        <el-input-number
+          v-model="form.start_index"
+          :min="1"
+          controls-position="right"
+          size="large"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="submitForm(formRef)">
+          更新
+        </el-button>
+        <el-button @click="dialogFormVisible = false">取消</el-button>
+      </el-form-item>
+    </el-form>
+  </el-dialog>
 </template>
 
 <style scoped>

@@ -11,7 +11,6 @@ function loadPage() {
     .get('api/list')
     .then((res) => {
       books.value = res.data;
-      console.log(res.data);
     })
     .catch((error) => {
       handleError(error, '查询失败');

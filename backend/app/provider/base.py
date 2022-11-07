@@ -75,6 +75,7 @@ class BookProvider(ABC):
         self,
         book_id: str,
         cache: BookCache | None = None,
+        start_index: int = 0,
     ) -> Book:
         logging.info(
             "获取元数据:%s/%s",
@@ -95,6 +96,17 @@ class BookProvider(ABC):
 
         episodes = {}
         for index, episode_id in enumerate(episode_ids):
+            if index < start_index:
+                logging.info(
+                    "跳过章节:%d/%d %s/%s/%s",
+                    index + 1,
+                    len(episode_ids),
+                    self.provider_id,
+                    book_id,
+                    episode_id,
+                )
+                continue
+
             logging.info(
                 "获取章节:%d/%d %s/%s/%s",
                 index + 1,

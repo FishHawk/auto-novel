@@ -27,7 +27,6 @@ function onSearch(url: string) {
       params: { url },
     })
     .then((res) => {
-      console.log(res.data);
       if (query_id_snapshot == query_id) {
         book.value = res.data;
         loading.value = false;
@@ -63,13 +62,14 @@ function pollSearch(url: string, query_id_snapshot: number) {
     });
 }
 
-function onUpdate(lang: string) {
+function onUpdate(lang: string, start_index?: number) {
   if (book.value === undefined) return;
   axios
     .post('api/book-update', {
       provider_id: book.value.provider_id,
       book_id: book.value.book_id,
       lang,
+      start_index,
     })
     .then((_) => {
       ElMessage.success(`更新任务已经进入队列。`);

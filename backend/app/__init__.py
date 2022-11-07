@@ -22,7 +22,12 @@ queue = rq.Queue(connection=redis_connection)
 books_path = Path("/books")
 
 
-def update_book(provider_id: str, book_id: str, lang: str):
+def update_book(
+    provider_id: str,
+    book_id: str,
+    lang: str,
+    start_index: int,
+):
     provider = get_provider(provider_id)
 
     cache = BookCache(
@@ -32,6 +37,7 @@ def update_book(provider_id: str, book_id: str, lang: str):
     book = provider.get_book(
         book_id=book_id,
         cache=cache,
+        start_index=start_index,
     )
 
     make_book(
@@ -219,6 +225,8 @@ def create_app():
         if not lang:
             return "没有lang参数", 400
 
+        start_index = request.json.get("start_index", 0)
+
         if queue.count >= 100:
             return "更新任务数目已达上限100", 500
 
@@ -232,7 +240,8 @@ def create_app():
             provider_id,
             book_id,
             lang,
-            ttl=-1,
+            start_index,
+            job_timeout="10m",
             result_ttl=0,
             failure_ttl=0,
             job_id=job_id,
