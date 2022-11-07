@@ -50,7 +50,7 @@ services:
       - ./backend:/backend
       - ./books:/books
 
-    command: rq worker --name worker --url redis://redis:6379/0
+    command: rq worker --url redis://redis:6379/0
 
   dashboard:
     image: eoranged/rq-dashboard

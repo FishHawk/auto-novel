@@ -12,6 +12,10 @@ from app.cache import BookCache
 from app.model import BookMetadata, TocEpisodeToken
 from app.make import make_book
 
+logging.basicConfig(
+    level=logging.INFO,
+)
+
 redis_connection = redis.Redis(host="redis", port=6379, db=0)
 queue = rq.Queue(connection=redis_connection)
 
@@ -228,10 +232,12 @@ def create_app():
             provider_id,
             book_id,
             lang,
+            ttl=-1,
             result_ttl=0,
-            failure_ttl=5 * 60,
+            failure_ttl=0,
             job_id=job_id,
         )
+
         return "成功添加更新任务"
 
     return app

@@ -20,7 +20,10 @@ class Translator(ABC):
         pass
 
     def _translate_metadata(
-        self, metadata: BookMetadata, from_lang: str, to_lang: str
+        self,
+        metadata: BookMetadata,
+        from_lang: str,
+        to_lang: str,
     ) -> BookMetadata:
         metadata = copy.deepcopy(metadata)
 
@@ -43,7 +46,10 @@ class Translator(ABC):
         return metadata
 
     def _translate_episode(
-        self, episode: Episode, from_lang: str, to_lang: str
+        self,
+        episode: Episode,
+        from_lang: str,
+        to_lang: str,
     ) -> Episode | None:
         query_list = [text for text in episode.paragraphs]
 
@@ -55,7 +61,12 @@ class Translator(ABC):
 
         return Episode(paragraphs=result_list)
 
-    def translate_book(self, book: Book, lang: str, cache: BookCache | None) -> Book:
+    def translate_book(
+        self,
+        book: Book,
+        lang: str,
+        cache: BookCache | None,
+    ) -> Book:
         logging.info(
             "翻译元数据:%s/%s",
             book.provider,
