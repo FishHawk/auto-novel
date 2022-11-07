@@ -12,6 +12,7 @@ export interface BookFileGroup {
   total_episode_number: number;
   cached_episode_number: number;
   files: BookFile[];
+  mixed_files: BookFile[];
 }
 
 export interface Book {

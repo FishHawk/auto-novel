@@ -19,7 +19,9 @@ function isUpdateEnabled(group: BookFileGroup): boolean {
   const isNotComplete =
     group.status == null &&
     group.total_episode_number > group.cached_episode_number;
-  const hasMissingFile = group.files.some((it) => it.filename === null);
+  const hasMissingFile =
+    group.files.some((it) => it.filename === null) ||
+    group.mixed_files.some((it) => it.filename === null);
   return isNotComplete || hasMissingFile;
 }
 
@@ -56,7 +58,7 @@ async function submitForm(formEl: FormInstance | undefined) {
   <el-card
     v-if="book !== undefined"
     :body-style="{ padding: '0px' }"
-    style="width: 600px"
+    style="width: 650px"
     target="_blank"
   >
     <template #header>
@@ -95,7 +97,22 @@ async function submitForm(formEl: FormInstance | undefined) {
               :icon="Download"
               :disabled="file.filename === null"
             >
-              {{ file.type }}
+              {{ file.type.toUpperCase() }}
+            </el-link>
+          </el-space>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="原文对比版链接" align="center">
+        <template #default="scope">
+          <el-space spacer="|">
+            <el-link
+              v-for="file in scope.row.mixed_files"
+              :href="filenameToUrl(file.filename)"
+              :icon="Download"
+              :disabled="file.filename === null"
+            >
+              {{ file.type.toUpperCase() }}
             </el-link>
           </el-space>
         </template>

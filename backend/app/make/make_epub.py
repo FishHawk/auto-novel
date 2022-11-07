@@ -1,13 +1,10 @@
-import logging
 from pathlib import Path
 
 from lxml import etree
 from ebooklib import epub
 
 from app.model import Book, TocChapterToken, TocEpisodeToken
-
-
-_MISSING_EPISODE_HINT = "该章节缺失。"
+from app.make.base import _MISSING_EPISODE_HINT
 
 
 def mix_texts(from_text: str, to_text: str) -> str:
@@ -149,69 +146,3 @@ def make_mixed_epub(file_path: Path, book: Book, secondary_book: Book):
     _epub_setup(epub_book, book)
     _epub_add_mixed_episodes(epub_book, book, secondary_book)
     epub.write_epub(file_path, epub_book, {})
-
-
-def make_txt(file_path: Path, book: Book):
-    with open(file_path, "w", encoding="utf-8") as file:
-        file.write(book.metadata.title)
-        file.write("\n")
-
-        for author in book.metadata.authors:
-            file.write(f"{author.name}[{author.link}]")
-        file.write("\n")
-
-        if book.metadata.introduction.strip():
-            file.write(book.metadata.introduction)
-            file.write("\n")
-
-        file.write("\n" * 3)
-
-        for token in book.metadata.toc:
-            if isinstance(token, TocChapterToken):
-                file.write(f"# {token.title}\n\n")
-            elif isinstance(token, TocEpisodeToken):
-                file.write(f"# {token.title}\n\n")
-                episode = book.episodes.get(token.episode_id)
-                if episode:
-                    for text in episode.paragraphs:
-                        file.write(text)
-                        file.write("\n")
-                else:
-                    file.write(_MISSING_EPISODE_HINT)
-                    file.write("\n")
-
-
-def make_book(
-    output_path: Path,
-    book: Book,
-    secondary_book: Book | None = None,
-    epub_enabled: bool = True,
-    epub_mixed_enabled: bool = True,
-    txt_enabled: bool = True,
-):
-    file_path = f"{book.provider}.{book.book_id}.{book.lang}"
-
-    if epub_enabled:
-        epub_file_path = output_path / f"{file_path}.epub"
-        logging.info("制作epub: %s", epub_file_path)
-        make_epub(
-            file_path=epub_file_path,
-            book=book,
-        )
-
-    if epub_mixed_enabled and secondary_book:
-        epub_file_path = output_path / f"{file_path}.mixed.epub"
-        logging.info("制作混合epub: %s", epub_file_path)
-        make_mixed_epub(
-            file_path=epub_file_path,
-            book=book,
-            secondary_book=secondary_book,
-        )
-
-    if txt_enabled:
-        txt_file_path = output_path / f"{file_path}.txt"
-        logging.info("制作txt: %s", txt_file_path)
-        make_txt(
-            file_path=txt_file_path,
-            book=book,
-        )

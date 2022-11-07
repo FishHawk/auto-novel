@@ -79,8 +79,9 @@ def cli(args):
             book=translated_book,
             secondary_book=book,
             epub_enabled=args.epub,
-            epub_mixed_enabled=args.mixed,
+            epub_mixed_enabled=args.epub_mixed,
             txt_enabled=args.txt,
+            txt_mixed_enabled=args.txt_mixed,
         )
 
     logging.info("完成")
@@ -104,14 +105,19 @@ if __name__ == "__main__":
         help="生成epub",
     )
     parser.add_argument(
+        "--epub-mixed",
+        action="store_true",
+        help="生成原文混合版epub",
+    )
+    parser.add_argument(
         "--txt",
         action="store_true",
         help="生成txt",
     )
     parser.add_argument(
-        "--mixed",
+        "--txt-mixed",
         action="store_true",
-        help="生成原文对比版epub",
+        help="生成原文混合版txt",
     )
     parser.add_argument(
         "--zh",

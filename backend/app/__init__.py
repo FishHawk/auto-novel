@@ -94,25 +94,22 @@ def get_book(
             "total_episode_number": total_episode_number,
             "cached_episode_number": cached_episode_number,
             "files": [],
+            "mixed_files": [],
         }
 
-        possible_suffixes = ["txt", "epub"]
-        if lang == "zh":
-            possible_suffixes.append("mixed.epub")
+        possible_book_types = ["txt", "epub"]
 
-        suffix_to_type = {
-            "txt": "TXT",
-            "epub": "EPUB",
-            "mixed.epub": "EPUB原文混合版",
-        }
-
-        for suffix in possible_suffixes:
-            book_type = suffix_to_type[suffix]
-            book_name = f"{provider_id}.{book_id}.{lang}.{suffix}"
-            book_path = books_path / book_name
-            if not book_path.exists():
+        for book_type in possible_book_types:
+            book_name = f"{provider_id}.{book_id}.{lang}.{book_type}"
+            if not (books_path / book_name).exists():
                 book_name = None
             book_file_group["files"].append({"type": book_type, "filename": book_name})
+
+            if lang != "jp":
+                mixed_book_name = f"{provider_id}.{book_id}.{lang}.mixed.{book_type}"
+                if not (books_path / mixed_book_name).exists():
+                    mixed_book_name = None
+                book_file_group["mixed_files"].append({"type": book_type, "filename": mixed_book_name})
 
         book_file_groups.append(book_file_group)
 

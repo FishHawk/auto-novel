@@ -54,7 +54,15 @@ loadPage();
               :icon="Download"
               :disabled="file.filename === null"
             >
-              {{ file.type }}
+              {{ file.type.toUpperCase() }}
+            </el-link>
+            <el-link
+              v-for="file in group.mixed_files"
+              :href="filenameToUrl(file.filename)"
+              :icon="Download"
+              :disabled="file.filename === null"
+            >
+              原文对比版{{ file.type.toUpperCase() }}
             </el-link>
           </el-space>
         </el-col>
