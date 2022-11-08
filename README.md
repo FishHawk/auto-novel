@@ -4,13 +4,20 @@
 
 支持的站点：
 
-- kakuyomu.jp
-- syosetu.com
+- [KAKUYOMU/カクヨム](https://kakuyomu.jp/)
+- [成为小说家/小説家になろう](https://syosetu.com/)
 
 支持的格式：
 
-- TXT
-- EPUB
+- TXT，原文对比版TXT
+- EPUB，原文对比版EPUB
+
+支持的翻译器：
+
+- 百度网页版
+- 百度开发者版
+
+
 
 ## 本地运行
 
@@ -20,7 +27,7 @@
 详细用法如下：
 
 ```
-usage: cli.py [-h] [--disable-cache] [--epub] [--txt] [--mixed] [--zh] [-t TRANSLATOR] url
+usage: cli.py [-h] [--disable-cache] [--epub] [--epub-mixed] [--txt] [--txt-mixed] [--zh] [-t TRANSLATOR] url
 
 positional arguments:
   url                   书的网址
@@ -29,14 +36,14 @@ options:
   -h, --help            show this help message and exit
   --disable-cache       关闭缓存
   --epub                生成epub
+  --epub-mixed          生成原文混合版epub
   --txt                 生成txt
-  --mixed               生成原文对比版epub
+  --txt-mixed           生成原文混合版txt
   --zh                  翻译成中文
   -t TRANSLATOR, --translator TRANSLATOR
                         翻译器id
 ```
 
-支持的翻译器：
 - 百度网页版，id：`baidu-web`。
 - 百度开发者版，id：`baidu-vip`。
   - 需要环境变量`BAIDU_VIP_TRANSLATE_APPID`和`BAIDU_VIP_TRANSLATE_APPKEY`。
