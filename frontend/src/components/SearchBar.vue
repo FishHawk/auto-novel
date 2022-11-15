@@ -91,6 +91,7 @@ function onClickHistory(history: SearchHistory) {
 }
 
 .search-history {
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -58,9 +58,7 @@ function onSearch(url: string) {
         bookRef.value = book;
         loadingRef.value = false;
         addHistory({ url: book.url, title: book.title });
-        poll_id = window.setTimeout(() => {
-          pollSearch(url, query_id_snapshot);
-        }, 1000);
+        pollSearchIfNeed(book, url, query_id_snapshot);
       }
     })
     .catch((error) => {
@@ -71,26 +69,38 @@ function onSearch(url: string) {
     });
 }
 
-function pollSearch(url: string, query_id_snapshot: number) {
+function pollSearchIfNeed(book: Book, url: string, query_id_snapshot: number) {
+  const hasActivitedJob = book.files.some((item) => {
+    return item.status == 'queued' || item.status == 'started';
+  });
+  if (hasActivitedJob) {
+    poll_id = window.setTimeout(() => {
+      doPollSearch(url, query_id_snapshot);
+    }, 2000);
+  }
+}
+
+function doPollSearch(url: string, query_id_snapshot: number) {
   return axios
-    .get('api/query', {
-      params: { url },
-    })
+    .get('api/query', { params: { url } })
     .then((res) => {
       if (query_id_snapshot == query_id) {
-        bookRef.value = res.data;
+        const book = res.data as Book;
+        bookRef.value = book;
+        pollSearchIfNeed(book, url, query_id_snapshot);
       }
     })
-    .finally(() => {
+    .catch(() => {
       if (query_id_snapshot == query_id) {
         poll_id = window.setTimeout(() => {
-          pollSearch(url, query_id_snapshot);
-        }, 1000);
+          doPollSearch(url, query_id_snapshot);
+        }, 2000);
       }
     });
 }
 
 function onUpdate(lang: string, start_index?: number) {
+  const query_id_snapshot = query_id;
   if (bookRef.value === undefined) return;
   axios
     .post('api/book-update', {
@@ -101,6 +111,9 @@ function onUpdate(lang: string, start_index?: number) {
     })
     .then((_) => {
       ElMessage.success(`更新任务已经进入队列。`);
+      if (query_id === query_id_snapshot && bookRef.value) {
+        doPollSearch(bookRef.value.url, query_id);
+      }
     })
     .catch((error) => {
       handleError(error, '更新失败');
