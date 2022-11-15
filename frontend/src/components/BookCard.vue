@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Download } from '@element-plus/icons-vue';
-import { ElMessage, FormInstance, FormRules } from 'element-plus';
+import { ElMessage, FormInstance } from 'element-plus';
 import { reactive, ref } from 'vue';
 import {
   Book,

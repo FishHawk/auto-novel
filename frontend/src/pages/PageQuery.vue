@@ -1,35 +1,63 @@
 <script lang="ts" setup>
-import { Ref, ref } from 'vue';
+import { onMounted, Ref, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import 'element-plus/es/components/message/style/css';
 import axios from 'axios';
 
 import SearchBar from '../components/SearchBar.vue';
-import { Book } from '../models/Book';
+import { Book, SearchHistory } from '../models/Book';
 import { handleError } from '../models/Util';
 
-const book: Ref<Book | undefined> = ref();
-const loading = ref(false);
+const bookRef: Ref<Book | undefined> = ref();
+const loadingRef = ref(false);
 let query_id = 0;
 let poll_id: number | undefined = undefined;
 
-function onSearch(url: string) {
-  if (loading.value) return;
+const historiesRef: Ref<SearchHistory[]> = ref([]);
 
-  book.value = undefined;
-  loading.value = true;
+onMounted(() => {
+  const histories_raw = localStorage.getItem('histories');
+  if (histories_raw) {
+    try {
+      historiesRef.value = JSON.parse(histories_raw);
+    } catch (e) {
+      localStorage.removeItem('histories');
+    }
+  }
+});
+
+function addHistory(history: SearchHistory) {
+  const histories = historiesRef.value.filter(
+    (item) => item.url != history.url
+  );
+  histories.unshift(history);
+
+  const histories_length_limit = 10;
+  if (histories.length > histories_length_limit)
+    histories.length = histories_length_limit;
+
+  historiesRef.value = histories;
+  const parsed = JSON.stringify(historiesRef.value);
+  localStorage.setItem('histories', parsed);
+}
+
+function onSearch(url: string) {
+  if (loadingRef.value) return;
+
+  bookRef.value = undefined;
+  loadingRef.value = true;
   query_id += 1;
   clearTimeout(poll_id);
 
   const query_id_snapshot = query_id;
   axios
-    .get('api/query', {
-      params: { url },
-    })
+    .get('api/query', { params: { url } })
     .then((res) => {
       if (query_id_snapshot == query_id) {
-        book.value = res.data;
-        loading.value = false;
+        const book = res.data as Book;
+        bookRef.value = book;
+        loadingRef.value = false;
+        addHistory({ url: book.url, title: book.title });
         poll_id = window.setTimeout(() => {
           pollSearch(url, query_id_snapshot);
         }, 1000);
@@ -37,7 +65,7 @@ function onSearch(url: string) {
     })
     .catch((error) => {
       if (query_id_snapshot == query_id) {
-        loading.value = false;
+        loadingRef.value = false;
         handleError(error, '查询失败');
       }
     });
@@ -50,7 +78,7 @@ function pollSearch(url: string, query_id_snapshot: number) {
     })
     .then((res) => {
       if (query_id_snapshot == query_id) {
-        book.value = res.data;
+        bookRef.value = res.data;
       }
     })
     .finally(() => {
@@ -63,11 +91,11 @@ function pollSearch(url: string, query_id_snapshot: number) {
 }
 
 function onUpdate(lang: string, start_index?: number) {
-  if (book.value === undefined) return;
+  if (bookRef.value === undefined) return;
   axios
     .post('api/book-update', {
-      provider_id: book.value.provider_id,
-      book_id: book.value.book_id,
+      provider_id: bookRef.value.provider_id,
+      book_id: bookRef.value.book_id,
       lang,
       start_index,
     })
@@ -85,7 +113,11 @@ function onUpdate(lang: string, start_index?: number) {
     <h1>网络小说 EPUB/TXT 生成器</h1>
 
     <el-row justify="center">
-      <SearchBar @onSearch="onSearch" :loading="loading" />
+      <SearchBar
+        @onSearch="onSearch"
+        :loading="loadingRef"
+        :histories="historiesRef"
+      />
     </el-row>
 
     <ul>
@@ -106,7 +138,11 @@ function onUpdate(lang: string, start_index?: number) {
     </ul>
 
     <el-row justify="center" style="margin-top: 40px">
-      <BookCard v-if="book !== undefined" :book="book" @onUpdate="onUpdate" />
+      <BookCard
+        v-if="bookRef !== undefined"
+        :book="bookRef"
+        @onUpdate="onUpdate"
+      />
     </el-row>
 
     <el-link

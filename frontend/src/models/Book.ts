@@ -18,7 +18,7 @@ export interface BookFileGroup {
 export interface Book {
   provider_id: string;
   book_id: string;
-  url: string,
+  url: string;
   title: string;
   files: BookFileGroup[];
 }
@@ -47,4 +47,9 @@ export function readableStatus(
 
 export function filenameToUrl(filename: string): string {
   return window.location.origin + '/books/' + filename;
+}
+
+export interface SearchHistory {
+  url: string;
+  title: string;
 }
