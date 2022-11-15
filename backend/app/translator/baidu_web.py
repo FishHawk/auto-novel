@@ -47,7 +47,9 @@ _HEADERS = {
 class BaiduWebTranslate(BaiduBaseTranslate):
     translator_id = "baidu-web"
 
-    def __init__(self):
+    def __init__(self, from_lang: str, to_lang: str) -> None:
+        super().__init__(from_lang, to_lang)
+
         self.session = requests.Session()
         self.token = None
         self.gtk = None
@@ -63,17 +65,12 @@ class BaiduWebTranslate(BaiduBaseTranslate):
         self.token = re.findall(r"token: '(.*?)',", res.text)[0]
         self.gtk = re.findall(r'window.gtk = "(.*?)";', res.text)[0]
 
-    def _inner_translate(
-        self,
-        query: str,
-        from_lang: str,
-        to_lang: str,
-    ) -> List[str]:
+    def _inner_translate(self, query: str) -> List[str]:
         url = "https://fanyi.baidu.com/v2transapi"
         sign = self.javascript(query, self.gtk)
         data = {
-            "from": from_lang,
-            "to": to_lang,
+            "from": self.from_lang,
+            "to": self.to_lang,
             "query": query,
             "simple_means_flag": 3,
             "sign": sign,

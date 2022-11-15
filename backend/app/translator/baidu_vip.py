@@ -14,17 +14,14 @@ def _make_md5(text, encoding="utf-8"):
 class BaiduVipTranslate(BaiduBaseTranslate):
     translator_id = "baidu-vip"
 
-    def __init__(self):
+    def __init__(self, from_lang: str, to_lang: str) -> None:
+        super().__init__(from_lang, to_lang)
+
         self.session = requests.Session()
         self.appid = os.environ["BAIDU_VIP_TRANSLATE_APPID"]
         self.appkey = os.environ["BAIDU_VIP_TRANSLATE_APPKEY"]
 
-    def _inner_translate(
-        self,
-        query: str,
-        from_lang: str,
-        to_lang: str,
-    ) -> List[str]:
+    def _inner_translate(self, query: str) -> List[str]:
         salt = random.randint(32768, 65536)
         sign = _make_md5(self.appid + query + str(salt) + self.appkey)
 
@@ -34,8 +31,8 @@ class BaiduVipTranslate(BaiduBaseTranslate):
             data={
                 "appid": self.appid,
                 "q": query,
-                "from": from_lang,
-                "to": to_lang,
+                "from": self.from_lang,
+                "to": self.to_lang,
                 "salt": salt,
                 "sign": sign,
             },

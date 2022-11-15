@@ -30,45 +30,42 @@ class BookProvider(ABC):
     def get_book_metadata(
         self,
         book_id: str,
-        cache: BookCache | None = None,
+        cache: BookCache,
     ) -> BookMetadata:
-        metadata = None
-        if cache:
-            metadata = cache.get_book_metadata(lang=self.lang)
+        metadata = cache.get_book_metadata(
+            lang=self.lang,
+        )
         if not metadata:
             metadata = self._get_book_metadata(
                 book_id=book_id,
             )
-            if cache:
-                cache.save_book_metadata(
-                    lang=self.lang,
-                    metadata=metadata,
-                )
+            cache.save_book_metadata(
+                lang=self.lang,
+                metadata=metadata,
+            )
         return metadata
 
     def get_episode(
         self,
         book_id: str,
         episode_id: str,
-        cache: BookCache | None = None,
-    ) -> Episode:
-        episode = None
-        if cache:
-            episode = cache.get_episode(
-                lang=self.lang,
-                episode_id=episode_id,
-            )
-        if not episode:
+        cache: BookCache,
+        cache_only: bool,
+    ) -> Episode | None:
+        episode = cache.get_episode(
+            lang=self.lang,
+            episode_id=episode_id,
+        )
+        if not episode and not cache_only:
             episode = self._get_episode(
                 book_id=book_id,
                 episode_id=episode_id,
             )
-            if cache:
-                cache.save_episode(
-                    lang=self.lang,
-                    episode_id=episode_id,
-                    episode=episode,
-                )
+            cache.save_episode(
+                lang=self.lang,
+                episode_id=episode_id,
+                episode=episode,
+            )
         return episode
 
     def get_book(
@@ -105,17 +102,12 @@ class BookProvider(ABC):
                 episode_id,
             )
             try:
-                if index < start_index:
-                    episode = cache.get_episode(
-                        lang=self.lang,
-                        episode_id=episode_id,
-                    )
-                else:
-                    episode = self.get_episode(
-                        book_id=book_id,
-                        episode_id=episode_id,
-                        cache=cache,
-                    )
+                episode = self.get_episode(
+                    book_id=book_id,
+                    episode_id=episode_id,
+                    cache=cache,
+                    cache_only=index < start_index,
+                )
                 episodes[episode_id] = episode
             except Exception as exception:
                 logging.warning(

@@ -76,16 +76,12 @@ class BaiduBaseTranslate(Translator):
     def _inner_translate(
         self,
         query: str,
-        from_lang: str,
-        to_lang: str,
     ) -> List[str]:
         pass
 
     def _translate(
         self,
         query_list: List[str],
-        from_lang: str,
-        to_lang: str,
     ) -> List[str]:
         processor = BaiduQueryProcessor(query_list=query_list)
         processed_query_list = processor.get()
@@ -97,16 +93,12 @@ class BaiduBaseTranslate(Translator):
                 for chunked_string in self._chunk_string(chunked_query):
                     chunked_translated = self._inner_translate(
                         query=chunked_string,
-                        from_lang=from_lang,
-                        to_lang=to_lang,
                     )
                     buffer_result_list.append(chunked_translated)
                 result_list.append("".join(buffer_result_list))
             else:
                 chunked_translated = self._inner_translate(
                     query="\n".join(chunked_query),
-                    from_lang=from_lang,
-                    to_lang=to_lang,
                 )
                 result_list += chunked_translated
 

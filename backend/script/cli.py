@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from app.provider import parse_url_as_provider_and_book_id
-from app.translator import get_default_translator, get_translator
+from app.translator import DEFAULT_TRANSLATOR_ID, get_translator
 from app.cache import BookCache
 from app.make import make_book
 
@@ -44,11 +44,9 @@ def cli(args):
 
     output_path = Path(".")
 
-    cache = None
-    if not args.disable_cache:
-        cache = BookCache(
-            cache_path=output_path / f"{provider.provider_id}.{book_id}.zip",
-        )
+    cache = BookCache(
+        cache_path=output_path / f"{provider.provider_id}.{book_id}.zip",
+    )
 
     book = provider.get_book(
         book_id=book_id,
@@ -63,14 +61,14 @@ def cli(args):
     )
 
     if args.zh:
-        if args.translator:
-            translator = get_translator(args.translator)
-        else:
-            translator = get_default_translator()
+        translator = get_translator(
+            args.translator if args.translator else DEFAULT_TRANSLATOR_ID,
+            from_lang=book.lang,
+            to_lang="zh",
+        )
 
         translated_book = translator.translate_book(
             book=book,
-            lang="zh",
             cache=cache,
         )
 
@@ -93,11 +91,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "url",
         help="书的网址",
-    )
-    parser.add_argument(
-        "--disable-cache",
-        action="store_true",
-        help="关闭缓存",
     )
     parser.add_argument(
         "--epub",

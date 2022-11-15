@@ -6,13 +6,11 @@ from app.translator.baidu_vip import BaiduVipTranslate
 _TRANSLATORS: List[Translator] = [BaiduWebTranslate, BaiduVipTranslate]
 
 
-def get_translator(name: str) -> Translator:
+DEFAULT_TRANSLATOR_ID = "baidu-web"
+
+
+def get_translator(name: str, from_lang: str, to_lang: str) -> Translator:
     for translator in _TRANSLATORS:
         if translator.translator_id == name:
-            return translator()
+            return translator(from_lang=from_lang, to_lang=to_lang)
     raise RuntimeError(f"Unknown translator name: {name}")
-
-
-def get_default_translator() -> Translator:
-    return BaiduWebTranslate()
-    # return BaiduVipTranslate()

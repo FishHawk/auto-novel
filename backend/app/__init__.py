@@ -7,7 +7,7 @@ import redis
 import rq
 
 from app.provider import build_url, get_provider, parse_url_as_provider_and_book_id
-from app.translator import get_default_translator
+from app.translator import get_translator, DEFAULT_TRANSLATOR_ID
 from app.cache import BookCache
 from app.model import BookMetadata, TocEpisodeToken
 from app.make import make_book
@@ -46,12 +46,16 @@ def update_book(
     )
 
     if lang != provider.lang:
-        translator = get_default_translator()
+        translator = get_translator(
+            DEFAULT_TRANSLATOR_ID,
+            from_lang=book.lang,
+            to_lang=lang,
+        )
 
         book_translated = translator.translate_book(
             book=book,
-            lang=lang,
             cache=cache,
+            start_index=start_index,
         )
 
         make_book(
@@ -109,7 +113,9 @@ def get_book(
                 mixed_book_name = f"{provider_id}.{book_id}.{lang}.mixed.{book_type}"
                 if not (books_path / mixed_book_name).exists():
                     mixed_book_name = None
-                book_file_group["mixed_files"].append({"type": book_type, "filename": mixed_book_name})
+                book_file_group["mixed_files"].append(
+                    {"type": book_type, "filename": mixed_book_name}
+                )
 
         book_file_groups.append(book_file_group)
 
