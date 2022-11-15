@@ -96,17 +96,6 @@ class BookProvider(ABC):
 
         episodes = {}
         for index, episode_id in enumerate(episode_ids):
-            if index < start_index:
-                logging.info(
-                    "跳过章节:%d/%d %s/%s/%s",
-                    index + 1,
-                    len(episode_ids),
-                    self.provider_id,
-                    book_id,
-                    episode_id,
-                )
-                continue
-
             logging.info(
                 "获取章节:%d/%d %s/%s/%s",
                 index + 1,
@@ -116,11 +105,17 @@ class BookProvider(ABC):
                 episode_id,
             )
             try:
-                episode = self.get_episode(
-                    book_id=book_id,
-                    episode_id=episode_id,
-                    cache=cache,
-                )
+                if index < start_index:
+                    episode = cache.get_episode(
+                        lang=self.lang,
+                        episode_id=episode_id,
+                    )
+                else:
+                    episode = self.get_episode(
+                        book_id=book_id,
+                        episode_id=episode_id,
+                        cache=cache,
+                    )
                 episodes[episode_id] = episode
             except Exception as exception:
                 logging.warning(
@@ -130,7 +125,6 @@ class BookProvider(ABC):
                     episode_id,
                 )
                 logging.warning(exception, exc_info=True)
-                continue
 
         return Book(
             book_id=book_id,
