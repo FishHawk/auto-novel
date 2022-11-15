@@ -1,26 +1,55 @@
 <script lang="ts" setup>
-import { Ref, ref } from 'vue';
+import { onMounted, Ref, ref, watch } from 'vue';
 import { Download } from '@element-plus/icons-vue';
 import { Book, readableLang, filenameToUrl } from '../models/Book';
 import axios from 'axios';
 import { handleError } from '../models/Util';
 
+interface PagedBooks {
+  total: number;
+  books: Book[];
+}
+
+const loading = ref(true);
+const currentPage = ref(1);
+const total = ref(1);
 const books: Ref<Book[]> = ref([]);
-function loadPage() {
+
+function loadPage(page: number) {
+  loading.value = true;
+  books.value = [];
   axios
-    .get('api/list')
+    .get('api/list', { params: { page: currentPage.value } })
     .then((res) => {
-      books.value = res.data;
+      if (currentPage.value == page) {
+        loading.value = false;
+        const pagedBooks = res.data as PagedBooks;
+        total.value = pagedBooks.total;
+        books.value = pagedBooks.books;
+      }
     })
     .catch((error) => {
-      handleError(error, '查询失败');
+      if (currentPage.value == page) {
+        handleError(error, '查询失败');
+      }
     });
 }
-loadPage();
+
+function onPageChange(page: number) {
+  currentPage.value = page;
+}
+
+watch(currentPage, (page) => loadPage(page), { immediate: true });
 </script>
 
 <template>
-  <div class="list">
+  <el-pagination
+    :current-page="currentPage"
+    :total="total"
+    layout="prev, pager, next, ->, jumper"
+    @current-change="onPageChange"
+  />
+  <div class="list" v-loading="loading">
     <el-divider />
     <div v-for="book in books" :key="book.book_id">
       <el-row class="title">
@@ -71,11 +100,18 @@ loadPage();
       <el-divider />
     </div>
   </div>
+  <el-pagination
+    :current-page="currentPage"
+    :total="total"
+    layout="prev, pager, next, ->, jumper"
+    @current-change="onPageChange"
+  />
 </template>
 
 <style>
 .list {
   width: 650px;
+  min-height: 650px;
 }
 .title {
   font-size: 18px;

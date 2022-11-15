@@ -172,22 +172,19 @@ def create_app():
 
     @app.get("/list")
     def _list():
-        next_id = request.args.get("next")
-        page_size = 60
+        page = request.args.get("page", 1, int)
+        if page < 1:
+            page = 1
+        page_size = 10
+
         all_zip_paths = sorted(
             books_path.glob("*.zip"),
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )
+        total = len(all_zip_paths)
 
-        if next_id:
-            paged_zip_paths = itertools.islice(
-                itertools.dropwhile(lambda p: p.stem != next_id, all_zip_paths),
-                start=1,
-                stop=page_size + 1,
-            )
-        else:
-            paged_zip_paths = all_zip_paths[:page_size]
+        paged_zip_paths = all_zip_paths[page_size * (page - 1) : page_size * page]
 
         books = []
         for zip_path in paged_zip_paths:
@@ -212,7 +209,10 @@ def create_app():
 
             books.append(book)
 
-        return books
+        return {
+            "total": total,
+            "books": books,
+        }
 
     @app.post("/book-update")
     def _create_book_update_job():
