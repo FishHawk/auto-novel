@@ -35,11 +35,12 @@ def _save_cache(cache_path: Path, file_name: str, data: any):
         pickled = pickle.dumps(data, pickle.HIGHEST_PROTOCOL)
         with ZipFile(cache_path, "a", compression=ZIP_BZIP2) as cache_file:
             cache_file.writestr(file_name, pickled)
-    except Exception:
+    except Exception as exception:
         logging.warning(
-            "error when read cache: %s:%s",
+            "can not write cache: %s:%s, because %s",
             cache_path,
             file_name,
+            exception,
         )
 
 

@@ -4,7 +4,6 @@
 # Backend
 backend/.pytest_cache
 backend/**/__pycache__
-backend/script
 backend/tests
 backend/venv
 
