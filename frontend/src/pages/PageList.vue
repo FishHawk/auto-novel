@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, Ref, ref, watch } from 'vue';
+import { Ref, ref, watch } from 'vue';
 import { Download } from '@element-plus/icons-vue';
 import { Book, readableLang, filenameToUrl } from '../models/Book';
 import axios from 'axios';
@@ -49,8 +49,8 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     layout="prev, pager, next, ->, jumper"
     @current-change="onPageChange"
   />
+  <el-divider />
   <div class="list" v-loading="loading">
-    <el-divider />
     <div v-for="book in books" :key="book.book_id">
       <el-row class="title">
         <span> {{ book.title }} </span>
@@ -111,7 +111,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 <style>
 .list {
   width: 650px;
-  min-height: 650px;
+  min-height: 600px;
 }
 .title {
   font-size: 18px;
