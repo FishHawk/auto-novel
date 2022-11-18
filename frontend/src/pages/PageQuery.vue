@@ -278,7 +278,10 @@ function openDescriptionDialog() {
       >
         Firefox
       </a>
-      。为了安全，建议只在本站点启用该插件。安装以后，具体配置如下图所示。
+      。如果无法访问Chrome的插件页面，你也可以从
+      <a href="/CORS-Unblock.crx" target="_blank">这里</a>
+      直接下载插件文件。
+      为了安全，建议只在本站点启用该插件。安装以后，具体配置如下图所示。
     </p>
     <img
       src="/extension_options.png"

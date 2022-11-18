@@ -76,7 +76,6 @@ function getPercentage(progress: LocalBoostProgress): number {
   <el-card
     v-if="book !== undefined"
     :body-style="{ padding: '0px' }"
-    style="width: 720"
     target="_blank"
   >
     <template #header>
@@ -139,7 +138,7 @@ function getPercentage(progress: LocalBoostProgress): number {
       <el-table-column label="操作" align="left" header-align="center">
         <template #default="scope">
           <el-button
-            @click="$emit('onNormalUpdate', scope.row.lang, 1, 65536)"
+            @click="$emit('onNormalUpdate', scope.row.lang, 0, 65536)"
             type="primary"
             size="small"
             color="#2c3e50"
