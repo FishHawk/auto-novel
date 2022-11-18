@@ -16,7 +16,7 @@ def _epub_setup(
     book: Book,
 ):
     # set metadata
-    epub_book.set_identifier(f"{book.provider}.{book.book_id}")
+    epub_book.set_identifier(f"{book.provider_id}.{book.book_id}")
     epub_book.set_language(book.lang)
     epub_book.set_title(book.metadata.title)
     for author in book.metadata.authors:

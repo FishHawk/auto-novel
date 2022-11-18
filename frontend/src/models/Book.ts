@@ -53,3 +53,9 @@ export interface SearchHistory {
   url: string;
   title: string;
 }
+
+export interface LocalBoostProgress {
+  total: number | undefined;
+  finished: number;
+  error: number;
+}

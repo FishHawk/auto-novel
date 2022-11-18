@@ -2,6 +2,7 @@ from pathlib import Path
 import pickle
 import logging
 from datetime import datetime
+from typing import Dict, List
 from zipfile import ZipFile, ZIP_BZIP2, ZipInfo
 
 from app.model import BookMetadata, Episode
@@ -114,3 +115,13 @@ class BookCache:
                 if s.startswith("episode.") and s.endswith(f"{lang}.pickle")
             ]
         )
+
+    def filter_uncached_episodes(
+        self,
+        episode_ids: List[str],
+        lang: str,
+    ) -> Dict[str, Episode]:
+        def is_uncached(episode_id):
+            return self.get_episode(lang, episode_id) is None
+
+        return list(filter(episode_ids, is_uncached))

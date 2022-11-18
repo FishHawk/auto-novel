@@ -1,6 +1,7 @@
 import itertools
 import logging
 from pathlib import Path
+from typing import Dict, List
 
 from flask import Flask, request
 import redis
@@ -27,6 +28,7 @@ def update_book(
     book_id: str,
     lang: str,
     start_index: int,
+    end_index: int,
 ):
     provider = get_provider(provider_id)
 
@@ -37,7 +39,7 @@ def update_book(
     book = provider.get_book(
         book_id=book_id,
         cache=cache,
-        start_index=start_index,
+        allow_request=lambda i: start_index <= i <= end_index,
     )
 
     make_book(
@@ -55,7 +57,7 @@ def update_book(
         book_translated = translator.translate_book(
             book=book,
             cache=cache,
-            start_index=start_index,
+            allow_request=lambda i: start_index <= i <= end_index,
         )
 
         make_book(
@@ -136,6 +138,7 @@ def create_app():
         url = request.args.get("url")
         if url is None:
             return "没有url参数", 400
+
         parsed = parse_url_as_provider_and_book_id(url)
         if parsed is None:
             logging.info("无法解析网址: %s", url)
@@ -214,21 +217,14 @@ def create_app():
             "books": books,
         }
 
-    @app.post("/book-update")
-    def _create_book_update_job():
-        provider_id = request.json.get("provider_id")
-        if not provider_id:
-            return "没有provider_id参数", 400
-
-        book_id = request.json.get("book_id")
-        if not book_id:
-            return "没有book_id参数", 400
-
-        lang = request.json.get("lang")
-        if not lang:
-            return "没有lang参数", 400
-
-        start_index = request.json.get("start_index", 0)
+    @app.post("/book-update/<provider_id>/<book_id>/<lang>")
+    def _create_book_update_job(
+        provider_id: str,
+        book_id: str,
+        lang: str,
+    ):
+        start_index = request.args.get("start_index", 0, int)
+        end_index = request.args.get("end_index", 65536, int)
 
         if queue.count >= 100:
             return "更新任务数目已达上限100", 500
@@ -244,6 +240,7 @@ def create_app():
             book_id,
             lang,
             start_index,
+            end_index,
             job_timeout="10m",
             result_ttl=0,
             failure_ttl=0,
@@ -252,4 +249,184 @@ def create_app():
 
         return "成功添加更新任务"
 
+    route_boost(app)
+
     return app
+
+
+def route_boost(app: Flask):
+    @app.get("/boost/metadata/<provider_id>/<book_id>")
+    def get_metadata(
+        provider_id: str,
+        book_id: str,
+    ):
+        start_index = request.args.get("start_index", 0, int)
+        end_index = request.args.get("end_index", 65536, int)
+
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+        )
+
+        try:
+            metadata = provider.get_book_metadata(
+                book_id=book_id,
+                cache=cache,
+            )
+        except Exception:
+            return "获取元数据失败。", 500
+
+        episode_ids = [
+            token.episode_id
+            for token in metadata.toc
+            if isinstance(token, TocEpisodeToken)
+        ][start_index:end_index]
+
+        uncached_episode_ids = list(
+            filter(
+                lambda episode_id: cache.get_episode("zh", episode_id) is None,
+                episode_ids,
+            )
+        )
+
+        return {
+            "metadata": metadata.to_query_list(),
+            "episode_ids": uncached_episode_ids,
+        }
+
+    @app.post("/boost/metadata/<provider_id>/<book_id>")
+    def post_metadata(
+        provider_id: str,
+        book_id: str,
+    ):
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+        )
+
+        metadata = provider.get_book_metadata(
+            book_id=book_id,
+            cache=cache,
+        )
+
+        query_list = metadata.to_query_list()
+        result_list = request.json
+        assert all(isinstance(s, str) for s in result_list)
+        assert len(query_list) == len(result_list)
+        metadata.apply_translated_result(result_list)
+
+        cache.save_book_metadata(
+            lang="zh",
+            metadata=metadata,
+        )
+        return "成功"
+
+    @app.get("/boost/episode/<provider_id>/<book_id>/<episode_id>")
+    def get_episode(
+        provider_id: str,
+        book_id: str,
+        episode_id: str,
+    ):
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+        )
+        episode = provider.get_episode(
+            book_id=book_id,
+            episode_id=episode_id,
+            cache=cache,
+            allow_request=True,
+        )
+        return episode.paragraphs
+
+    @app.post("/boost/episode/<provider_id>/<book_id>/<episode_id>")
+    def post_episode(
+        provider_id: str,
+        book_id: str,
+        episode_id: str,
+    ):
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+        )
+
+        translated_episode = cache.get_episode(
+            episode_id=episode_id,
+            lang="zh",
+        )
+        if translated_episode:
+            return "已经存在"
+
+        episode = cache.get_episode(
+            episode_id=episode_id,
+            lang=provider.lang,
+        )
+        if not episode:
+            return "不合法的episode_id", 400
+
+        query_list = episode.paragraphs
+        result_list = request.json
+        assert all(isinstance(s, str) for s in result_list)
+        assert len(query_list) == len(result_list)
+        episode.paragraphs = result_list
+
+        cache.save_episode(
+            lang="zh",
+            episode_id=episode_id,
+            episode=episode,
+        )
+        return "成功"
+
+    @app.post("/boost/make/<provider_id>/<book_id>")
+    def make(
+        provider_id: str,
+        book_id: str,
+    ):
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_path=books_path / f"{provider_id}.{book_id}.zip",
+        )
+
+        book = provider.get_book(
+            book_id=book_id,
+            cache=cache,
+            allow_request=lambda _: False,
+        )
+        make_book(
+            output_path=books_path,
+            book=book,
+        )
+
+        translator = get_translator(
+            DEFAULT_TRANSLATOR_ID,
+            from_lang=book.lang,
+            to_lang="zh",
+        )
+
+        book_translated = translator.translate_book(
+            book=book,
+            cache=cache,
+            allow_request=lambda i: False,
+        )
+        make_book(
+            output_path=books_path,
+            book=book_translated,
+            secondary_book=book,
+        )
+
+        return "成功"

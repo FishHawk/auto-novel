@@ -94,7 +94,7 @@ class BaiduBaseTranslate(Translator):
                     chunked_translated = self._inner_translate(
                         query=chunked_string,
                     )
-                    buffer_result_list.append(chunked_translated)
+                    buffer_result_list += chunked_translated
                 result_list.append("".join(buffer_result_list))
             else:
                 chunked_translated = self._inner_translate(

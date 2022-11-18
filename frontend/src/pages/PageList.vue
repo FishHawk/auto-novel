@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { Ref, ref, watch } from 'vue';
 import { Download } from '@element-plus/icons-vue';
+import ky from 'ky';
+
 import { Book, readableLang, filenameToUrl } from '../models/Book';
-import axios from 'axios';
 import { handleError } from '../models/Util';
 
 interface PagedBooks {
@@ -18,12 +19,13 @@ const books: Ref<Book[]> = ref([]);
 function loadPage(page: number) {
   loading.value = true;
   books.value = [];
-  axios
-    .get('api/list', { params: { page: currentPage.value } })
-    .then((res) => {
+  ky.get('/api/list', {
+    searchParams: { page: currentPage.value },
+  })
+    .json<PagedBooks>()
+    .then((pagedBooks) => {
       if (currentPage.value == page) {
         loading.value = false;
-        const pagedBooks = res.data as PagedBooks;
         total.value = pagedBooks.total;
         books.value = pagedBooks.books;
       }

@@ -15,7 +15,7 @@ def make_book(
     txt_enabled: bool = True,
     txt_mixed_enabled: bool = True,
 ):
-    file_path = f"{book.provider}.{book.book_id}.{book.lang}"
+    file_path = f"{book.provider_id}.{book.book_id}.{book.lang}"
 
     if epub_enabled:
         epub_file_path = output_path / f"{file_path}.epub"

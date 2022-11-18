@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import copy
 import logging
-from typing import List
+from typing import Callable, List
 
 from app.cache import BookCache
 from app.model import Book, BookMetadata, Episode, TocEpisodeToken
@@ -27,17 +27,10 @@ class Translator(ABC):
     ) -> BookMetadata:
         metadata = copy.deepcopy(metadata)
 
-        query_list = [
-            metadata.title,
-            metadata.introduction,
-        ] + [token.title for token in metadata.toc]
-
+        query_list = metadata.to_query_list()
         result_list = self._translate(query_list=query_list)
-
-        metadata.title = result_list.pop(0)
-        metadata.introduction = result_list.pop(0)
-        for token, translated_title in zip(metadata.toc, result_list):
-            token.title = translated_title
+        assert len(query_list) == len(result_list)
+        metadata.apply_translated_result(result_list)
 
         return metadata
 
@@ -45,7 +38,7 @@ class Translator(ABC):
         self,
         episode: Episode,
     ) -> Episode | None:
-        query_list = [text for text in episode.paragraphs]
+        query_list = episode.paragraphs
         result_list = self._translate(query_list=query_list)
         return Episode(paragraphs=result_list)
 
@@ -72,13 +65,13 @@ class Translator(ABC):
         episode_id: str,
         episode: Episode | None,
         cache: BookCache,
-        cache_only: bool,
+        allow_request: bool,
     ) -> Episode | None:
         translated_episode = cache.get_episode(
             lang=self.to_lang,
             episode_id=episode_id,
         )
-        if not translated_episode and episode and not cache_only:
+        if not translated_episode and episode and allow_request:
             translated_episode = self._translate_episode(
                 episode=episode,
             )
@@ -93,11 +86,11 @@ class Translator(ABC):
         self,
         book: Book,
         cache: BookCache,
-        start_index: int = 0,
+        allow_request: Callable[[int], int] = True,
     ) -> Book:
         logging.info(
             "翻译元数据:%s/%s",
-            book.provider,
+            book.provider_id,
             book.book_id,
         )
 
@@ -118,7 +111,7 @@ class Translator(ABC):
                 "翻译章节:%d/%d %s/%s/%s",
                 index + 1,
                 len(episode_ids),
-                book.provider,
+                book.provider_id,
                 book.book_id,
                 episode_id,
             )
@@ -127,7 +120,7 @@ class Translator(ABC):
                     episode_id=episode_id,
                     episode=book.episodes.get(episode_id),
                     cache=cache,
-                    cache_only=index < start_index,
+                    allow_request=allow_request(index),
                 )
                 if not episode:
                     logging.info(
@@ -140,14 +133,14 @@ class Translator(ABC):
             except Exception as exception:
                 logging.warning(
                     "翻译章节失败:%s/%s/%s",
-                    book.provider,
+                    book.provider_id,
                     book.book_id,
                     episode_id,
                 )
                 logging.warning(exception, exc_info=True)
 
         return Book(
-            provider=book.provider,
+            provider_id=book.provider_id,
             book_id=book.book_id,
             lang=self.to_lang,
             metadata=metadata,

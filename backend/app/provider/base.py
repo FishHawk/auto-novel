@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from app.cache import BookCache
 from app.model import Book, BookMetadata, Episode, TocEpisodeToken
@@ -50,13 +51,13 @@ class BookProvider(ABC):
         book_id: str,
         episode_id: str,
         cache: BookCache,
-        cache_only: bool,
+        allow_request: bool,
     ) -> Episode | None:
         episode = cache.get_episode(
             lang=self.lang,
             episode_id=episode_id,
         )
-        if not episode and not cache_only:
+        if not episode and allow_request:
             episode = self._get_episode(
                 book_id=book_id,
                 episode_id=episode_id,
@@ -72,7 +73,7 @@ class BookProvider(ABC):
         self,
         book_id: str,
         cache: BookCache | None = None,
-        start_index: int = 0,
+        allow_request: Callable[[int], bool] = lambda _: True,
     ) -> Book:
         logging.info(
             "获取元数据:%s/%s",
@@ -86,8 +87,7 @@ class BookProvider(ABC):
         )
 
         episode_ids = [
-            token.episode_id
-            for token in metadata.toc
+            token.episode_id for token in metadata.toc
             if isinstance(token, TocEpisodeToken)
         ]
 
@@ -106,7 +106,7 @@ class BookProvider(ABC):
                     book_id=book_id,
                     episode_id=episode_id,
                     cache=cache,
-                    cache_only=index < start_index,
+                    allow_request=allow_request(index),
                 )
                 episodes[episode_id] = episode
             except Exception as exception:
@@ -120,7 +120,7 @@ class BookProvider(ABC):
 
         return Book(
             book_id=book_id,
-            provider=self.provider_id,
+            provider_id=self.provider_id,
             lang=self.lang,
             metadata=metadata,
             episodes=episodes,

@@ -11,6 +11,7 @@ venv
 #Frontend
 node_modules
 dist
+__snapshots__
 
 auto-imports.d.ts
 components.d.ts
