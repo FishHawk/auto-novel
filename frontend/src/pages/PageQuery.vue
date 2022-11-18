@@ -116,9 +116,8 @@ function normalUpdate(lang: string, start_index: number, end_index: number) {
   if (bookRef.value === undefined) return;
   const provider_id = bookRef.value.provider_id;
   const book_id = bookRef.value.book_id;
-  ky.post(`/api/book-update/${provider_id}/${book_id}`, {
+  ky.post(`/api/book-update/${provider_id}/${book_id}/${lang}`, {
     searchParams: {
-      lang,
       start_index,
       end_index,
     },
@@ -286,7 +285,7 @@ function openDescriptionDialog() {
       alt="extension options"
       style="max-width: 100%"
     />
-    <p>对于Safari浏览器，你可以使用命令xxx启动，来关闭跨域检查。</p>
+    <!-- <p>对于Safari浏览器，你可以使用命令xxx启动，来关闭跨域检查。</p> -->
   </el-dialog>
   <el-col style="margin-top: 15%">
     <h1>网络小说 EPUB/TXT 生成器</h1>

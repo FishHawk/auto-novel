@@ -197,6 +197,7 @@ def create_app():
                 continue
 
             cache = BookCache(zip_path)
+            cache.metadata_max_age = 65536
             metadata = cache.get_book_metadata("jp")
 
             if not metadata:
