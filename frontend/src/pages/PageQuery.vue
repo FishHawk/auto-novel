@@ -290,7 +290,7 @@ function openDescriptionDialog() {
     />
     <!-- <p>对于Safari浏览器，你可以使用命令xxx启动，来关闭跨域检查。</p> -->
   </el-dialog>
-  <el-col style="margin-top: 15%">
+  <el-col style="margin-top: 15%; margin-bottom: 15%">
     <h1>网络小说 EPUB/TXT 生成器</h1>
 
     <el-row justify="center">
@@ -329,13 +329,15 @@ function openDescriptionDialog() {
     </ul>
 
     <el-row justify="center" style="margin-top: 30px">
-      <BookCard
-        v-if="bookRef !== undefined"
-        :book="bookRef"
-        :local-boost-progress="localBoostProgressRef"
-        @onNormalUpdate="normalUpdate"
-        @onLocalBoost="localBoost"
-      />
+      <el-col :span="24">
+        <BookCard
+          v-if="bookRef !== undefined"
+          :book="bookRef"
+          :local-boost-progress="localBoostProgressRef"
+          @onNormalUpdate="normalUpdate"
+          @onLocalBoost="localBoost"
+        />
+      </el-col>
     </el-row>
 
     <el-link
@@ -351,7 +353,7 @@ function openDescriptionDialog() {
 <style scoped>
 .support-text {
   color: #b4bcc2;
-  font-size: 20px;
+  font-size: 18px;
   margin-top: 5px;
   margin-bottom: 5px;
 }
