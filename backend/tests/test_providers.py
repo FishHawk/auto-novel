@@ -1,3 +1,5 @@
+import os
+from unittest import mock
 from app.provider.kakuyomu import Kakuyomu
 from app.provider.syosetu import Syosetu
 from app.provider.novelup import Novelup
@@ -26,6 +28,7 @@ class TestClassKakuyomu:
         self.provider._get_episode("16816700429191462823", "16816700429191679071")
 
 
+@mock.patch.dict(os.environ, {"HTTPS_PROXY": "http://localhost:7890"})
 class TestClassSyosetu:
     provider = Syosetu()
 
@@ -33,18 +36,21 @@ class TestClassSyosetu:
         bench = [
             ("https://ncode.syosetu.com/n9669bk", "n9669bk"),
             ("https://ncode.syosetu.com/n9669BK", "n9669bk"),
+            ("https://novel18.syosetu.com/n9669BK", "n9669bk"),
         ]
         for url, book_id in bench:
-            assert book_id == Kakuyomu.extract_book_id_from_url(url)
+            assert book_id == Syosetu.extract_book_id_from_url(url)
 
     def test_get_book_metadata(self):
-        self.provider._get_book_metadata("n9669bk")
-        self.provider._get_book_metadata("n8473hv")  # 介绍需要展开
-        self.provider._get_book_metadata("n0916hw")  # 一篇完结
+        # self.provider._get_book_metadata("n9669bk")
+        # self.provider._get_book_metadata("n8473hv")  # 介绍需要展开
+        # self.provider._get_book_metadata("n0916hw")  # 一篇完结
+        self.provider._get_book_metadata("n5305eg")  # novel18重定向
 
     def test_get_episode(self):
-        self.provider._get_episode("n9669bk", "1")
-        self.provider._get_episode("n0916hw", "default")
+        # self.provider._get_episode("n9669bk", "1")
+        # self.provider._get_episode("n0916hw", "default")
+        self.provider._get_episode("n5305eg", "414")  # novel18重定向
 
 
 class TestClassNovelup:

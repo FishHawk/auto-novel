@@ -14,25 +14,35 @@ from app.model import (
 )
 
 _HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
 }
+
+
+def _create_session():
+    session = requests.Session()
+    session.cookies.set("over18", "yes", domain=".syosetu.com")
+    return session
+
+
+def _create_proxies():
+    proxies = {}
+    if "HTTP_PROXY" in os.environ:
+        proxies["http"] = os.environ["HTTP_PROXY"]
+    if "HTTPS_PROXY" in os.environ:
+        proxies["https"] = os.environ["HTTPS_PROXY"]
+    return proxies
 
 
 class Syosetu(BookProvider):
     provider_id = "syosetu"
     lang = "jp"
-    session = requests.Session()
-
-    def __init__(self) -> None:
-        self.proxies = {}
-        if "HTTP_PROXY" in os.environ:
-            self.proxies["http"] = os.environ["HTTP_PROXY"]
-        if "HTTPS_PROXY" in os.environ:
-            self.proxies["https"] = os.environ["HTTPS_PROXY"]
+    session = _create_session()
+    proxies = _create_proxies()
 
     @staticmethod
     def extract_book_id_from_url(url: str) -> str | None:
-        match = re.search(r"ncode.syosetu.com/([A-Za-z0-9]+)", url)
+        match = re.search(r"syosetu.com/([A-Za-z0-9]+)", url)
         if match is None:
             return None
         else:
