@@ -1,22 +1,22 @@
 # Web Novel Ebook Generator
 
-[网络小说 epub/txt 生成器](https://books.fishhawk.top/)的后端，可以将日本网络小说翻译成中文并转换成电子书。
+[网络小说 epub/txt 生成器](https://books.fishhawk.top/)的项目代码，可以将日本网络小说翻译成中文并转换成电子书。可以通过安装插件启动本地加速。
 
 支持的站点：
 
 - [KAKUYOMU/カクヨム](https://kakuyomu.jp/)
 - [成为小说家/小説家になろう](https://syosetu.com/)
+- [ノベルアップ＋](https://novelup.plus/)
 
 支持的格式：
 
-- TXT，原文对比版TXT
-- EPUB，原文对比版EPUB
+- TXT，原文对比版 TXT
+- EPUB，原文对比版 EPUB
 
 支持的翻译器：
 
 - 百度网页版
 - 百度开发者版
-
 
 
 ## 本地运行
