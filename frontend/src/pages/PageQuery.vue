@@ -309,6 +309,9 @@ function openDescriptionDialog() {
         链接示例(成为小说家吧): https://ncode.syosetu.com/n0833hi
       </li>
       <li class="support-text">
+        链接示例(ノベルアップ＋): https://novelup.plus/story/206612087/479535927
+      </li>
+      <li class="support-text">
         因为翻译额度有限，强烈建议使用本地加速，需要安装浏览器插件，见
         <span @click="openDescriptionDialog" style="text-decoration: underline">
           使用说明
