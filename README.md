@@ -7,6 +7,7 @@
 - [KAKUYOMU/カクヨム](https://kakuyomu.jp/)
 - [成为小说家/小説家になろう](https://syosetu.com/)
 - [ノベルアップ＋](https://novelup.plus/)
+- [HAMELN](https://syosetu.org/)
 
 支持的格式：
 
