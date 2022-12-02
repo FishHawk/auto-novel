@@ -113,13 +113,14 @@ class BookCache:
         with ZipFile(self.cache_path, "r", compression=ZIP_BZIP2) as cache_file:
             namelist = cache_file.namelist()
 
-        return sum(
-            [
-                1
-                for s in namelist
-                if s.startswith("episode.") and s.endswith(f"{lang}.pickle")
-            ]
+        episode_namelist = set(
+            filter(
+                lambda s: s.startswith("episode.") and s.endswith(f"{lang}.pickle"),
+                namelist,
+            )
         )
+
+        return len(episode_namelist)
 
     def filter_uncached_episodes(
         self,
