@@ -27,8 +27,8 @@ services:
     depends_on:
       - redis
     environment:
-      - HTTP_PROXY
       - HTTPS_PROXY
+      - PIXIV_COOKIE_PHPSESSID
       - FLASK_APP=app:create_app()
       - FLASK_DEBUG=True
     volumes:
@@ -44,8 +44,8 @@ services:
     depends_on:
       - redis
     environment:
-      - HTTP_PROXY
       - HTTPS_PROXY
+      - PIXIV_COOKIE_PHPSESSID
     volumes:
       - ./backend:/backend
       - ./books:/books

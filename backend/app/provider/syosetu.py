@@ -27,8 +27,6 @@ def _create_session():
 
 def _create_proxies():
     proxies = {}
-    if "HTTP_PROXY" in os.environ:
-        proxies["http"] = os.environ["HTTP_PROXY"]
     if "HTTPS_PROXY" in os.environ:
         proxies["https"] = os.environ["HTTPS_PROXY"]
     return proxies

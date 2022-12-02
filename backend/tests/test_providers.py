@@ -1,14 +1,15 @@
-import os
-from unittest import mock
+from pprint import pp
 
+from app.provider.base import BookProvider
 from app.provider.kakuyomu import Kakuyomu
 from app.provider.syosetu import Syosetu
 from app.provider.novelup import Novelup
 from app.provider.hameln import Hameln
+from app.provider.pixiv import Pixiv
 
 
 class BaseTestProvider:
-    provider: None
+    provider: BookProvider
     benches_url: None
     benches_book: None
     benches_episode: None
@@ -19,11 +20,15 @@ class BaseTestProvider:
 
     def test_get_book_metadata(self):
         for book_id in self.benches_book:
-            self.provider._get_book_metadata(book_id)
+            metadata = self.provider._get_book_metadata(book_id)
+            pp(metadata)
 
     def test_get_episode(self):
         for book_id, episode_id in self.benches_episode:
-            self.provider._get_episode(book_id, episode_id)
+            episode = self.provider._get_episode(book_id, episode_id)
+            pp(episode.paragraphs[0])
+            pp(episode.paragraphs[-1])
+            pp(len(episode.paragraphs))
 
 
 class TestKakuyomu(BaseTestProvider):
@@ -48,7 +53,6 @@ class TestKakuyomu(BaseTestProvider):
     ]
 
 
-@mock.patch.dict(os.environ, {"HTTPS_PROXY": "http://localhost:7890"})
 class TestSyosetu(BaseTestProvider):
     provider = Syosetu()
     benches_url = [
@@ -97,4 +101,20 @@ class TestHameln(BaseTestProvider):
     benches_episode = [
         ("297874", "1.html"),
         ("303596", "default"),  # 一篇完结
+    ]
+
+
+class TestPixiv(BaseTestProvider):
+    provider = Pixiv()
+    benches_url = [
+        ("https://www.pixiv.net/novel/series/870363", "870363"),
+        ("https://www.pixiv.net/novel/series/870363?p=5", "870363"),
+    ]
+    benches_book = [
+        "9406879",  # 目录1页
+        "870363",  # 目录很多页
+    ]
+    benches_episode = [
+        ("9406879", "18304868"),  # 章节1页
+        ("870363", "18199707"),  # 章节很多页
     ]

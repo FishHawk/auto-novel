@@ -315,6 +315,9 @@ function openDescriptionDialog() {
         链接示例(HAMELN): https://syosetu.org/novel/297874/
       </li>
       <li class="support-text">
+        链接示例(Pixiv): https://www.pixiv.net/novel/series/9406879
+      </li>
+      <li class="support-text">
         因为翻译额度有限，强烈建议使用本地加速，需要安装浏览器插件，见
         <span @click="openDescriptionDialog" style="text-decoration: underline">
           使用说明
