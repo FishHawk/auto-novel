@@ -1,81 +1,27 @@
 import logging
 from pathlib import Path
-from typing import Dict, List
 
 from flask import Flask, request
 import redis
 import rq
 
-from app.provider import build_url, get_provider, parse_url_as_provider_and_book_id
-from app.translator import get_translator, DEFAULT_TRANSLATOR_ID
+from app.provider import build_url, get_provider, parse_url
+from app.make import make_book
 from app.cache import BookCache
 from app.model import BookMetadata, TocEpisodeToken
-from app.make import make_book
 
 logging.basicConfig(
     level=logging.INFO,
 )
 
-redis_connection = redis.Redis(host="redis", port=6379, db=0)
-queue = rq.Queue(connection=redis_connection)
-
-books_path = Path("/books")
+BOOKS_DIR = Path("/books")
 
 
-def update_book(
-    provider_id: str,
-    book_id: str,
-    lang: str,
-    start_index: int,
-    end_index: int,
-):
-    provider = get_provider(provider_id)
-
-    cache = BookCache(
-        cache_path=books_path / f"{provider_id}.{book_id}.zip",
-    )
-
-    book = provider.get_book(
-        book_id=book_id,
-        cache=cache,
-        allow_request=lambda i: start_index <= i <= end_index,
-    )
-
-    make_book(
-        output_path=books_path,
-        book=book,
-    )
-
-    if lang != provider.lang:
-        translator = get_translator(
-            DEFAULT_TRANSLATOR_ID,
-            from_lang=book.lang,
-            to_lang=lang,
-        )
-
-        book_translated = translator.translate_book(
-            book=book,
-            cache=cache,
-            allow_request=lambda i: start_index <= i <= end_index,
-        )
-
-        make_book(
-            output_path=books_path,
-            book=book_translated,
-            secondary_book=book,
-        )
-
-
-def get_status(job_id: str) -> str | None:
-    job = queue.fetch_job(job_id=job_id)
-    if not job:
-        return None
-
-    status = job.get_status(refresh=True)
-    if status in ["queued", "started", "failed"]:
-        return status
-    else:
-        return "unknown"
+def create_app():
+    app = Flask(__name__)
+    route_base(app)
+    route_boost(app)
+    return app
 
 
 def get_book(
@@ -106,13 +52,13 @@ def get_book(
 
         for book_type in possible_book_types:
             book_name = f"{provider_id}.{book_id}.{lang}.{book_type}"
-            if not (books_path / book_name).exists():
+            if not (BOOKS_DIR / book_name).exists():
                 book_name = None
             book_file_group["files"].append({"type": book_type, "filename": book_name})
 
             if lang != "jp":
                 mixed_book_name = f"{provider_id}.{book_id}.{lang}.mixed.{book_type}"
-                if not (books_path / mixed_book_name).exists():
+                if not (BOOKS_DIR / mixed_book_name).exists():
                     mixed_book_name = None
                 book_file_group["mixed_files"].append(
                     {"type": book_type, "filename": mixed_book_name}
@@ -129,8 +75,20 @@ def get_book(
     }
 
 
-def create_app():
-    app = Flask(__name__)
+def route_base(app: Flask):
+    redis_connection = redis.Redis(host="redis", port=6379, db=0)
+    queue = rq.Queue(connection=redis_connection)
+
+    def get_status(job_id: str) -> str | None:
+        job = queue.fetch_job(job_id=job_id)
+        if not job:
+            return None
+
+        status = job.get_status(refresh=True)
+        if status in ["queued", "started", "failed"]:
+            return status
+        else:
+            return "unknown"
 
     @app.get("/query")
     def _query():
@@ -138,15 +96,18 @@ def create_app():
         if url is None:
             return "没有url参数", 400
 
-        parsed = parse_url_as_provider_and_book_id(url)
+        parsed = parse_url(url)
         if parsed is None:
             logging.info("无法解析网址: %s", url)
             return "无法解析网址，可能是因为格式错误或者不支持", 400
 
-        provider, book_id = parsed
+        provider_id, book_id = parsed
+        provider = get_provider(provider_id=provider_id)
 
         cache = BookCache(
-            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
         )
 
         try:
@@ -172,6 +133,39 @@ def create_app():
 
         return book
 
+    @app.post("/book-update/<provider_id>/<book_id>/<lang>")
+    def _create_book_update_job(
+        provider_id: str,
+        book_id: str,
+        lang: str,
+    ):
+        start_index = request.args.get("start_index", 0, int)
+        end_index = request.args.get("end_index", 65536, int)
+
+        if queue.count >= 100:
+            return "更新任务数目已达上限100", 500
+
+        job_id = "/".join([provider_id, book_id, lang])
+
+        if queue.fetch_job(job_id=job_id):
+            return "更新任务已经在队列中", 500
+
+        queue.enqueue(
+            make_book,
+            provider_id,
+            book_id,
+            lang,
+            start_index,
+            end_index,
+            BOOKS_DIR,
+            job_timeout="10m",
+            result_ttl=0,
+            failure_ttl=0,
+            job_id=job_id,
+        )
+
+        return "成功添加更新任务"
+
     @app.get("/list")
     def _list():
         page = request.args.get("page", 1, int)
@@ -180,7 +174,7 @@ def create_app():
         page_size = 10
 
         all_zip_paths = sorted(
-            books_path.glob("*.zip"),
+            BOOKS_DIR.glob("*.zip"),
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )
@@ -195,7 +189,7 @@ def create_app():
             except ValueError:
                 continue
 
-            cache = BookCache(zip_path)
+            cache = BookCache(BOOKS_DIR, provider_id, book_id)
             cache.metadata_max_age = 65536
             metadata = cache.get_book_metadata("jp")
 
@@ -217,42 +211,6 @@ def create_app():
             "books": books,
         }
 
-    @app.post("/book-update/<provider_id>/<book_id>/<lang>")
-    def _create_book_update_job(
-        provider_id: str,
-        book_id: str,
-        lang: str,
-    ):
-        start_index = request.args.get("start_index", 0, int)
-        end_index = request.args.get("end_index", 65536, int)
-
-        if queue.count >= 100:
-            return "更新任务数目已达上限100", 500
-
-        job_id = "/".join([provider_id, book_id, lang])
-
-        if queue.fetch_job(job_id=job_id):
-            return "更新任务已经在队列中", 500
-
-        queue.enqueue(
-            update_book,
-            provider_id,
-            book_id,
-            lang,
-            start_index,
-            end_index,
-            job_timeout="10m",
-            result_ttl=0,
-            failure_ttl=0,
-            job_id=job_id,
-        )
-
-        return "成功添加更新任务"
-
-    route_boost(app)
-
-    return app
-
 
 def route_boost(app: Flask):
     @app.get("/boost/metadata/<provider_id>/<book_id>")
@@ -268,7 +226,9 @@ def route_boost(app: Flask):
             return "找不到provider", 404
 
         cache = BookCache(
-            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
         )
 
         try:
@@ -307,9 +267,10 @@ def route_boost(app: Flask):
             return "找不到provider", 404
 
         cache = BookCache(
-            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
         )
-
         metadata = provider.get_book_metadata(
             book_id=book_id,
             cache=cache,
@@ -338,7 +299,9 @@ def route_boost(app: Flask):
             return "找不到provider", 404
 
         cache = BookCache(
-            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
         )
         episode = provider.get_episode(
             book_id=book_id,
@@ -359,7 +322,9 @@ def route_boost(app: Flask):
             return "找不到provider", 404
 
         cache = BookCache(
-            cache_path=books_path / f"{provider.provider_id}.{book_id}.zip",
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
         )
 
         translated_episode = cache.get_episode(
@@ -394,39 +359,12 @@ def route_boost(app: Flask):
         provider_id: str,
         book_id: str,
     ):
-        provider = get_provider(provider_id)
-        if not provider:
-            return "找不到provider", 404
-
-        cache = BookCache(
-            cache_path=books_path / f"{provider_id}.{book_id}.zip",
-        )
-
-        book = provider.get_book(
+        make_book(
+            provider_id=provider_id,
             book_id=book_id,
-            cache=cache,
-            allow_request=lambda _: False,
+            lang="zh",
+            start_index=-1,
+            end_index=-1,
+            cache_dir=BOOKS_DIR,
         )
-        make_book(
-            output_path=books_path,
-            book=book,
-        )
-
-        translator = get_translator(
-            DEFAULT_TRANSLATOR_ID,
-            from_lang=book.lang,
-            to_lang="zh",
-        )
-
-        book_translated = translator.translate_book(
-            book=book,
-            cache=cache,
-            allow_request=lambda i: False,
-        )
-        make_book(
-            output_path=books_path,
-            book=book_translated,
-            secondary_book=book,
-        )
-
         return "成功"

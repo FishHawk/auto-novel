@@ -1,9 +1,13 @@
 from typing import List
+
 from app.translator.base import Translator
 from app.translator.baidu_web import BaiduWebTranslate
 from app.translator.baidu_vip import BaiduVipTranslate
 
-_TRANSLATORS: List[Translator] = [BaiduWebTranslate, BaiduVipTranslate]
+_TRANSLATORS: List[Translator] = [
+    BaiduWebTranslate,
+    BaiduVipTranslate,
+]
 
 
 DEFAULT_TRANSLATOR_ID = "baidu-web"

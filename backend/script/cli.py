@@ -5,9 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from app.provider import parse_url_as_provider_and_book_id
-from app.translator import DEFAULT_TRANSLATOR_ID, get_translator
-from app.cache import BookCache
+from app.provider import parse_url
 from app.make import make_book
 
 
@@ -35,52 +33,25 @@ logging.basicConfig(
 
 
 def cli(args):
-    parsed = parse_url_as_provider_and_book_id(args.url)
+    parsed = parse_url(args.url)
     if not parsed:
         logging.info("无法解析网址，可能是因为格式错误或者不支持")
         exit(-1)
 
-    provider, book_id = parsed
-
-    output_path = Path(".")
-
-    cache = BookCache(
-        cache_path=output_path / f"{provider.provider_id}.{book_id}.zip",
-    )
-
-    book = provider.get_book(
-        book_id=book_id,
-        cache=cache,
-    )
+    provider_id, book_id = parsed
 
     make_book(
-        output_path=output_path,
-        book=book,
+        provider_id=provider_id,
+        book_id=book_id,
+        lang="zh" if args.zh else "jp",
+        start_index=args.start - 1,
+        end_index=args.end - 1,
+        cache_dir=Path("."),
         epub_enabled=args.epub,
+        epub_mixed_enabled=args.epub_mixed,
         txt_enabled=args.txt,
+        txt_mixed_enabled=args.txt_mixed,
     )
-
-    if args.zh:
-        translator = get_translator(
-            args.translator if args.translator else DEFAULT_TRANSLATOR_ID,
-            from_lang=book.lang,
-            to_lang="zh",
-        )
-
-        translated_book = translator.translate_book(
-            book=book,
-            cache=cache,
-        )
-
-        make_book(
-            output_path=output_path,
-            book=translated_book,
-            secondary_book=book,
-            epub_enabled=args.epub,
-            epub_mixed_enabled=args.epub_mixed,
-            txt_enabled=args.txt,
-            txt_mixed_enabled=args.txt_mixed,
-        )
 
     logging.info("完成")
 
@@ -91,6 +62,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "url",
         help="书的网址",
+    )
+    parser.add_argument(
+        "--zh",
+        action="store_true",
+        help="翻译成中文",
     )
     parser.add_argument(
         "--epub",
@@ -113,9 +89,20 @@ if __name__ == "__main__":
         help="生成原文混合版txt",
     )
     parser.add_argument(
-        "--zh",
-        action="store_true",
-        help="翻译成中文",
+        "--start",
+        type=int,
+        nargs="?",
+        const=0,
+        default=0,
+        help="起始章节序号，默认为0",
+    )
+    parser.add_argument(
+        "--end",
+        type=int,
+        nargs="?",
+        const=65536,
+        default=65536,
+        help="结束章节序号，默认为65536",
     )
     parser.add_argument(
         "-t",
@@ -123,6 +110,4 @@ if __name__ == "__main__":
         help="翻译器id",
     )
 
-    args = parser.parse_args()
-
-    cli(args)
+    cli(args=parser.parse_args())

@@ -28,19 +28,20 @@
 详细用法如下：
 
 ```
-usage: cli.py [-h] [--disable-cache] [--epub] [--epub-mixed] [--txt] [--txt-mixed] [--zh] [-t TRANSLATOR] url
+usage: cli.py [-h] [--zh] [--epub] [--epub-mixed] [--txt] [--txt-mixed] [--start [START]] [--end [END]] [-t TRANSLATOR] url
 
 positional arguments:
   url                   书的网址
 
 options:
   -h, --help            show this help message and exit
-  --disable-cache       关闭缓存
+  --zh                  翻译成中文
   --epub                生成epub
   --epub-mixed          生成原文混合版epub
   --txt                 生成txt
   --txt-mixed           生成原文混合版txt
-  --zh                  翻译成中文
+  --start [START]       起始章节序号，默认为0
+  --end [END]           结束章节序号，默认为65536
   -t TRANSLATOR, --translator TRANSLATOR
                         翻译器id
 ```

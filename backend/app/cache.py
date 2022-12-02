@@ -48,8 +48,13 @@ def _save_cache(cache_path: Path, file_name: str, data: any):
 class BookCache:
     metadata_max_age = 2  # 元数据缓存有效时间，单位为天
 
-    def __init__(self, cache_path: Path) -> None:
-        self.cache_path = cache_path
+    def __init__(
+        self,
+        cache_dir: Path,
+        provider_id: str,
+        book_id: str,
+    ) -> None:
+        self.cache_path = cache_dir / f"{provider_id}.{book_id}.zip"
 
     def _get_book_metadata_mtime(self, lang: str) -> datetime | None:
         info = _get_info(

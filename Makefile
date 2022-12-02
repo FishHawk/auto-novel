@@ -11,4 +11,4 @@ prod:
 	docker-compose -f docker-compose.prod.yml up -d
 
 test-cli:
-	python backend/script/cli.py "https://ncode.syosetu.com/n0833hi" --epub --txt --zh --epub-mixed --txt-mixed
+	python backend/script/cli.py "https://ncode.syosetu.com/n0833hi" --epub --txt --zh --epub-mixed --txt-mixed --start 23 --end 24

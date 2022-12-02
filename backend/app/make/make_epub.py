@@ -4,10 +4,11 @@ from lxml import etree
 from ebooklib import epub
 
 from app.model import Book, TocChapterToken, TocEpisodeToken
-from app.make.base import _MISSING_EPISODE_HINT
+
+_MISSING_EPISODE_HINT = "该章节缺失。"
 
 
-def mix_texts(from_text: str, to_text: str) -> str:
+def _mix_texts(from_text: str, to_text: str) -> str:
     return f"{from_text}[{to_text}]"
 
 
@@ -97,7 +98,7 @@ def _epub_add_mixed_episodes(
     for token, secondary_token in zip(book.metadata.toc, secondary_book.metadata.toc):
         if isinstance(token, TocChapterToken):
             assert isinstance(secondary_token, TocChapterToken)
-            mixed_title = mix_texts(token.title, secondary_token.title)
+            mixed_title = _mix_texts(token.title, secondary_token.title)
             epub_book.toc.append(epub.Section(mixed_title))
         elif isinstance(token, TocEpisodeToken):
             assert isinstance(secondary_token, TocEpisodeToken)
@@ -134,14 +135,14 @@ def _epub_add_mixed_episodes(
             )
 
 
-def make_epub(file_path: Path, book: Book):
+def make_epub_file(file_path: Path, book: Book):
     epub_book = epub.EpubBook()
     _epub_setup(epub_book, book)
     _epub_add_episodes(epub_book, book)
     epub.write_epub(file_path, epub_book, {})
 
 
-def make_mixed_epub(file_path: Path, book: Book, secondary_book: Book):
+def make_mixed_epub_file(file_path: Path, book: Book, secondary_book: Book):
     epub_book = epub.EpubBook()
     _epub_setup(epub_book, book)
     _epub_add_mixed_episodes(epub_book, book, secondary_book)

@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from app.model import Book, TocChapterToken, TocEpisodeToken
-from app.make.base import _MISSING_EPISODE_HINT
+
+_MISSING_EPISODE_HINT = "该章节缺失。"
 
 
 def _write_meta(file, book: Book):
@@ -19,7 +20,7 @@ def _write_meta(file, book: Book):
     file.write("\n" * 3)
 
 
-def make_txt(
+def make_txt_file(
     file_path: Path,
     book: Book,
 ):
@@ -43,7 +44,7 @@ def make_txt(
                 file.write("\n\n\n")
 
 
-def make_mixed_txt(
+def make_mixed_txt_file(
     file_path: Path,
     book: Book,
     secondary_book: Book,

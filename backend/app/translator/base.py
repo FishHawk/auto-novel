@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 import copy
-import logging
-from typing import Callable, List
+from typing import List
 
 from app.cache import BookCache
-from app.model import Book, BookMetadata, Episode, TocEpisodeToken
+from app.model import BookMetadata, Episode
 
 
 class Translator(ABC):
@@ -81,68 +80,3 @@ class Translator(ABC):
                 episode=translated_episode,
             )
         return translated_episode
-
-    def translate_book(
-        self,
-        book: Book,
-        cache: BookCache,
-        allow_request: Callable[[int], int] = True,
-    ) -> Book:
-        logging.info(
-            "翻译元数据:%s/%s",
-            book.provider_id,
-            book.book_id,
-        )
-
-        metadata = self.translate_metadata(
-            metadata=book.metadata,
-            cache=cache,
-        )
-
-        episode_ids = [
-            token.episode_id
-            for token in metadata.toc
-            if isinstance(token, TocEpisodeToken)
-        ]
-
-        episodes = {}
-        for index, episode_id in enumerate(episode_ids):
-            logging.info(
-                "翻译章节:%d/%d %s/%s/%s",
-                index + 1,
-                len(episode_ids),
-                book.provider_id,
-                book.book_id,
-                episode_id,
-            )
-            try:
-                episode = self.translate_episode(
-                    episode_id=episode_id,
-                    episode=book.episodes.get(episode_id),
-                    cache=cache,
-                    allow_request=allow_request(index),
-                )
-                if not episode:
-                    logging.info(
-                        "跳过缺失章节:%s/%s/%s",
-                        book.name,
-                        book.book_id,
-                        episode_id,
-                    )
-                episodes[episode_id] = episode
-            except Exception as exception:
-                logging.warning(
-                    "翻译章节失败:%s/%s/%s",
-                    book.provider_id,
-                    book.book_id,
-                    episode_id,
-                )
-                logging.warning(exception, exc_info=True)
-
-        return Book(
-            provider_id=book.provider_id,
-            book_id=book.book_id,
-            lang=self.to_lang,
-            metadata=metadata,
-            episodes=episodes,
-        )

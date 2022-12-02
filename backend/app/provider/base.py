@@ -1,9 +1,7 @@
-import logging
 from abc import ABC, abstractmethod
-from typing import Callable
 
 from app.cache import BookCache
-from app.model import Book, BookMetadata, Episode, TocEpisodeToken
+from app.model import BookMetadata, Episode
 
 
 class BookProvider(ABC):
@@ -68,60 +66,3 @@ class BookProvider(ABC):
                 episode=episode,
             )
         return episode
-
-    def get_book(
-        self,
-        book_id: str,
-        cache: BookCache | None = None,
-        allow_request: Callable[[int], bool] = lambda _: True,
-    ) -> Book:
-        logging.info(
-            "获取元数据:%s/%s",
-            self.provider_id,
-            book_id,
-        )
-
-        metadata = self.get_book_metadata(
-            book_id=book_id,
-            cache=cache,
-        )
-
-        episode_ids = [
-            token.episode_id for token in metadata.toc
-            if isinstance(token, TocEpisodeToken)
-        ]
-
-        episodes = {}
-        for index, episode_id in enumerate(episode_ids):
-            logging.info(
-                "获取章节:%d/%d %s/%s/%s",
-                index + 1,
-                len(episode_ids),
-                self.provider_id,
-                book_id,
-                episode_id,
-            )
-            try:
-                episode = self.get_episode(
-                    book_id=book_id,
-                    episode_id=episode_id,
-                    cache=cache,
-                    allow_request=allow_request(index),
-                )
-                episodes[episode_id] = episode
-            except Exception as exception:
-                logging.warning(
-                    "获取章节失败:%s/%s/%s",
-                    self.provider_id,
-                    book_id,
-                    episode_id,
-                )
-                logging.warning(exception, exc_info=True)
-
-        return Book(
-            book_id=book_id,
-            provider_id=self.provider_id,
-            lang=self.lang,
-            metadata=metadata,
-            episodes=episodes,
-        )

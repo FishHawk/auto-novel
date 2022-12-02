@@ -14,13 +14,13 @@ _PROVIDER_LIST: List[BookProvider] = [
 ]
 
 
-def parse_url_as_provider_and_book_id(
+def parse_url(
     url: str,
-) -> Tuple[BookProvider, str] | None:
-    for source in _PROVIDER_LIST:
-        book_id = source.extract_book_id_from_url(url)
+) -> Tuple[str, str] | None:
+    for provider_class in _PROVIDER_LIST:
+        book_id = provider_class.extract_book_id_from_url(url)
         if book_id is not None:
-            return (source(), book_id)
+            return (provider_class.provider_id, book_id)
     return None
 
 
