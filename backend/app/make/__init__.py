@@ -143,7 +143,7 @@ def make_book(
                 )
                 if not translated_episode:
                     logging.info("跳过缺失章节:%s/%s/%s", provider_id, book_id, episode_id)
-                translated_episodes[episode_id] = episode
+                translated_episodes[episode_id] = translated_episode
             except Exception as exception:
                 logging.warning("翻译章节失败:%s/%s/%s", provider_id, book_id, episode_id)
                 logging.warning(exception, exc_info=True)
