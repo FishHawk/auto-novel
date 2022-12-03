@@ -109,12 +109,15 @@ class TestPixiv(BaseTestProvider):
     benches_url = [
         ("https://www.pixiv.net/novel/series/870363", "870363"),
         ("https://www.pixiv.net/novel/series/870363?p=5", "870363"),
+        ("https://www.pixiv.net/novel/show.php?id=18827415", "s18827415"),
     ]
     benches_book = [
         "9406879",  # 目录1页
         "870363",  # 目录很多页
+        "s18827415",  # 单章节
     ]
     benches_episode = [
         ("9406879", "18304868"),  # 章节1页
         ("870363", "18199707"),  # 章节很多页
+        ("s18827415", "18827415"),  # 单章节
     ]
