@@ -116,7 +116,6 @@ def route_base(app: Flask):
                 cache=cache,
             )
         except Exception as e:
-            print(e)
             return "获取元数据失败。", 500
 
         book = get_book(

@@ -146,7 +146,7 @@ function getPercentage(progress: LocalBoostProgress): number {
             更新
           </el-button>
           <el-button
-            @click="$emit('onLocalBoost', 1, 65536)"
+            @click="$emit('onLocalBoost', 0, 65536)"
             v-if="scope.row.lang === 'zh'"
             type="primary"
             size="small"
