@@ -1,6 +1,9 @@
 :80 {
-  root * /frontend/dist
-  file_server
+  handle {
+    root * /frontend/dist
+    try_files {path} /
+    file_server
+  }
 
   handle_path /api* {
     reverse_proxy server:5000

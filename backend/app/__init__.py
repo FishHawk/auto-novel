@@ -20,6 +20,7 @@ BOOKS_DIR = Path("/books")
 def create_app():
     app = Flask(__name__)
     route_base(app)
+    route_novel(app)
     route_boost(app)
     return app
 
@@ -209,6 +210,65 @@ def route_base(app: Flask):
         return {
             "total": total,
             "books": books,
+        }
+
+
+def route_novel(app: Flask):
+    @app.get("/novel/metadata/<provider_id>/<book_id>")
+    def get_novel_metadata(
+        provider_id: str,
+        book_id: str,
+    ):
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
+        )
+
+        try:
+            metadata = provider.get_book_metadata(
+                book_id=book_id,
+                cache=cache,
+            )
+        except Exception:
+            return "获取元数据失败。", 500
+
+        return {
+            "url": provider.build_url_from_book_id(book_id),
+            "jp": metadata,
+            "zh": cache.get_book_metadata(lang="zh"),
+        }
+
+    @app.get("/novel/episode/<provider_id>/<book_id>/<episode_id>")
+    def get_novel_episode(
+        provider_id: str,
+        book_id: str,
+        episode_id: str,
+    ):
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
+        )
+
+        episode = provider.get_episode(
+            book_id=book_id,
+            episode_id=episode_id,
+            cache=cache,
+            allow_request=True,
+        )
+
+        return {
+            "jp": episode.paragraphs,
+            "zh": cache.get_episode(lang="zh", episode_id=episode_id),
         }
 
 

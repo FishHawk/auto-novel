@@ -1,0 +1,29 @@
+import { createRouter, createWebHistory } from 'vue-router';
+
+const history = createWebHistory();
+
+const routes = [
+  {
+    path: '/',
+    component: () => import('./views/Query.vue'),
+  },
+  {
+    path: '/list',
+    component: () => import('./views/List.vue'),
+  },
+  {
+    path: '/novel/:providerId/:bookId',
+    component: () => import('./views/NovelMetadata.vue'),
+  },
+  {
+    path: '/novel/:providerId/:bookId/:episodeId',
+    component: () => import('./views/NovelEpisode.vue'),
+  },
+];
+
+const router = createRouter({
+  history,
+  routes,
+});
+
+export default router;

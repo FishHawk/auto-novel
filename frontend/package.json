@@ -13,7 +13,8 @@
     "@element-plus/icons-vue": "^2.0.10",
     "element-plus": "^2.2.19",
     "ky": "^0.32.2",
-    "vue": "^3.2.37"
+    "vue": "^3.2.37",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^3.1.0",

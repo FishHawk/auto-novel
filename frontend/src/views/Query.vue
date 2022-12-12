@@ -290,7 +290,7 @@ function openDescriptionDialog() {
     />
     <!-- <p>对于Safari浏览器，你可以使用命令xxx启动，来关闭跨域检查。</p> -->
   </el-dialog>
-  <el-col style="margin-top: 15%; margin-bottom: 15%">
+  <el-col style="margin-top: 15%; margin-bottom: 15%; margin: 0 auto">
     <h1>网络小说 EPUB/TXT 生成器</h1>
 
     <el-row justify="center">
@@ -329,7 +329,8 @@ function openDescriptionDialog() {
       </li>
       <li class="support-text">
         你也可以直接浏览缓存的
-        <a href="#/list" target="_blank">文件列表</a>
+        <router-link to="/list">文件列表</router-link>
+        <router-link to="/novel/kakuyomu/16817139555217983105">Text</router-link>
         。
       </li>
     </ul>

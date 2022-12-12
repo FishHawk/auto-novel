@@ -10,23 +10,6 @@
   -webkit-text-size-adjust: 100%;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  min-width: 820px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  text-align: center;
-}
-
-#app {
-  margin: 0 auto;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

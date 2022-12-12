@@ -1,22 +1,23 @@
-<script lang="ts" setup>
-import { computed } from 'vue';
-import PageQuery from './pages/PageQuery.vue';
-import PageList from './pages/PageList.vue';
-
-const routes: { [id: string]: typeof PageQuery } = {
-  '/': PageQuery,
-  '/list': PageList,
-};
-
-let currentPath = window.location.hash;
-const currentView = computed(() => {
-  return routes[currentPath.slice(1) || '/'];
-});
-window.addEventListener('hashchange', () => {
-  currentPath = window.location.hash;
-});
-</script>
-
 <template>
-  <component :is="currentView" />
+  <router-view />
 </template>
+
+<style>
+body {
+  margin: 0;
+  display: flex;
+  width: 100;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  text-align: start;
+}
+
+#app {
+  width: 730px;
+  margin: 0 auto;
+}
+</style>
