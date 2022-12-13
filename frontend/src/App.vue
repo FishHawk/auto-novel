@@ -1,22 +1,14 @@
 <template>
-  <router-view />
+  <n-message-provider>
+    <router-view :key="$route.path" />
+  </n-message-provider>
 </template>
 
 <style>
-body {
-  margin: 0;
-  display: flex;
-  width: 100;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  text-align: start;
-}
-
 #app {
+  width: 100;
+}
+.content {
   width: 730px;
   margin: 0 auto;
 }

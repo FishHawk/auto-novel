@@ -10,11 +10,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.0.10",
-    "element-plus": "^2.2.19",
     "ky": "^0.32.2",
     "vue": "^3.2.37",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "@vicons/material": "^0.12.0",
+    "vfonts": "^0.0.3",
+    "naive-ui": "^2.34.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^3.1.0",

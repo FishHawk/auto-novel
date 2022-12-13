@@ -20,13 +20,12 @@ BOOKS_DIR = Path("/books")
 def create_app():
     app = Flask(__name__)
     route_base(app)
-    route_novel(app)
+    route_content(app)
     route_boost(app)
     return app
 
 
-def get_book(
-    url: str,
+def get_book_file_groups(
     provider_id: str,
     book_id: str,
     metadata: BookMetadata,
@@ -67,13 +66,7 @@ def get_book(
 
         book_file_groups.append(book_file_group)
 
-    return {
-        "url": url,
-        "provider_id": provider_id,
-        "book_id": book_id,
-        "title": metadata.title,
-        "files": book_file_groups,
-    }
+    return book_file_groups
 
 
 def route_base(app: Flask):
@@ -91,19 +84,14 @@ def route_base(app: Flask):
         else:
             return "unknown"
 
-    @app.get("/query")
-    def _query():
-        url = request.args.get("url")
-        if url is None:
-            return "没有url参数", 400
-
-        parsed = parse_url(url)
-        if parsed is None:
-            logging.info("无法解析网址: %s", url)
-            return "无法解析网址，可能是因为格式错误或者不支持", 400
-
-        provider_id, book_id = parsed
-        provider = get_provider(provider_id=provider_id)
+    @app.get("/storage/<provider_id>/<book_id>")
+    def get_storage_state(
+        provider_id: str,
+        book_id: str,
+    ):
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
 
         cache = BookCache(
             cache_dir=BOOKS_DIR,
@@ -119,23 +107,21 @@ def route_base(app: Flask):
         except Exception as e:
             return "获取元数据失败。", 500
 
-        book = get_book(
-            url=provider.build_url_from_book_id(book_id=book_id),
-            provider_id=provider.provider_id,
+        book_file_groups = get_book_file_groups(
+            provider_id=provider_id,
             book_id=book_id,
             metadata=metadata,
             cache=cache,
         )
-
-        for group in book["files"]:
+        for group in book_file_groups:
             group["status"] = get_status(
                 job_id="/".join([provider.provider_id, book_id, group["lang"]])
             )
 
-        return book
+        return book_file_groups
 
-    @app.post("/book-update/<provider_id>/<book_id>/<lang>")
-    def _create_book_update_job(
+    @app.post("/storage/<provider_id>/<book_id>/<lang>")
+    def create_storage_update_job(
         provider_id: str,
         book_id: str,
         lang: str,
@@ -167,7 +153,7 @@ def route_base(app: Flask):
 
         return "成功添加更新任务"
 
-    @app.get("/list")
+    @app.get("/storage-list")
     def _list():
         page = request.args.get("page", 1, int)
         if page < 1:
@@ -197,13 +183,19 @@ def route_base(app: Flask):
             if not metadata:
                 continue
 
-            book = get_book(
-                url=build_url(provider_id=provider_id, book_id=book_id),
+            book_file_groups = get_book_file_groups(
                 provider_id=provider_id,
                 book_id=book_id,
                 metadata=metadata,
                 cache=cache,
             )
+            book = {
+                "url": build_url(provider_id=provider_id, book_id=book_id),
+                "provider_id": provider_id,
+                "book_id": book_id,
+                "title": metadata.title,
+                "files": book_file_groups,
+            }
 
             books.append(book)
 
@@ -213,9 +205,9 @@ def route_base(app: Flask):
         }
 
 
-def route_novel(app: Flask):
-    @app.get("/novel/metadata/<provider_id>/<book_id>")
-    def get_novel_metadata(
+def route_content(app: Flask):
+    @app.get("/content/metadata/<provider_id>/<book_id>")
+    def get_content_metadata(
         provider_id: str,
         book_id: str,
     ):
@@ -237,14 +229,15 @@ def route_novel(app: Flask):
         except Exception:
             return "获取元数据失败。", 500
 
+        cache.metadata_max_age = 65536
         return {
             "url": provider.build_url_from_book_id(book_id),
             "jp": metadata,
             "zh": cache.get_book_metadata(lang="zh"),
         }
 
-    @app.get("/novel/episode/<provider_id>/<book_id>/<episode_id>")
-    def get_novel_episode(
+    @app.get("/content/episode/<provider_id>/<book_id>/<episode_id>")
+    def get_content_episode(
         provider_id: str,
         book_id: str,
         episode_id: str,
@@ -259,6 +252,14 @@ def route_novel(app: Flask):
             book_id=book_id,
         )
 
+        try:
+            metadata = provider.get_book_metadata(
+                book_id=book_id,
+                cache=cache,
+            )
+        except Exception:
+            return "获取元数据失败。", 500
+
         episode = provider.get_episode(
             book_id=book_id,
             episode_id=episode_id,
@@ -266,9 +267,56 @@ def route_novel(app: Flask):
             allow_request=True,
         )
 
+        tokens = [token for token in metadata.toc if isinstance(token, TocEpisodeToken)]
+        index = next(i for i, v in enumerate(tokens) if v.episode_id == episode_id)
+        curr_token = tokens[index]
+        prev_token = tokens[index - 1] if index > 0 else None
+        next_token = tokens[index + 1] if index < len(tokens) - 1 else None
+
+        cache.metadata_max_age = 65536
+        metadata_zh = cache.get_book_metadata(lang="zh")
+        if metadata_zh:
+            for token in [
+                token for token in metadata_zh.toc if isinstance(token, TocEpisodeToken)
+            ]:
+                if curr_token and token.episode_id == curr_token.episode_id:
+                    curr_token = {
+                        "episode_id": token.episode_id,
+                        "title": curr_token.title,
+                        "zh_title": token.title,
+                    }
+                    break
+            for token in [
+                token for token in metadata_zh.toc if isinstance(token, TocEpisodeToken)
+            ]:
+                if prev_token and token.episode_id == prev_token.episode_id:
+                    prev_token = {
+                        "episode_id": token.episode_id,
+                        "title": prev_token.title,
+                        "zh_title": token.title,
+                    }
+                    break
+            for token in [
+                token for token in metadata_zh.toc if isinstance(token, TocEpisodeToken)
+            ]:
+                if next_token and token.episode_id == next_token.episode_id:
+                    next_token = {
+                        "episode_id": token.episode_id,
+                        "title": next_token.title,
+                        "zh_title": token.title,
+                    }
+                    break
+        episode_zh = cache.get_episode(lang="zh", episode_id=episode_id)
+        paragraphs_zh = None
+        if episode_zh:
+            paragraphs_zh = episode_zh.paragraphs
+
         return {
+            "curr": curr_token,
+            "prev": prev_token,
+            "next": next_token,
             "jp": episode.paragraphs,
-            "zh": cache.get_episode(lang="zh", episode_id=episode_id),
+            "zh": paragraphs_zh,
         }
 
 

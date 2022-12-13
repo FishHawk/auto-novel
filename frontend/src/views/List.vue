@@ -1,74 +1,56 @@
 <script lang="ts" setup>
 import { Ref, ref, watch } from 'vue';
-import { Download } from '@element-plus/icons-vue';
-import ky from 'ky';
 
-import { Book, readableLang, filenameToUrl } from '../models/Book';
-import { handleError } from '../models/Util';
+import { Result } from '../models/util';
+import {
+  BookPagedList,
+  getBookPagedList,
+  filenameToUrl,
+} from '../models/book_storage';
 
-interface PagedBooks {
-  total: number;
-  books: Book[];
-}
-
-const loading = ref(true);
 const currentPage = ref(1);
 const total = ref(1);
-const books: Ref<Book[]> = ref([]);
+const books: Ref<Result<BookPagedList, any> | undefined> = ref();
 
-function loadPage(page: number) {
-  loading.value = true;
-  books.value = [];
-  ky.get('/api/list', {
-    searchParams: { page: currentPage.value },
-  })
-    .json<PagedBooks>()
-    .then((pagedBooks) => {
-      if (currentPage.value == page) {
-        loading.value = false;
-        total.value = pagedBooks.total;
-        books.value = pagedBooks.books;
-      }
-    })
-    .catch((error) => {
-      if (currentPage.value == page) {
-        handleError(error, '查询失败');
-      }
-    });
+async function loadPage(page: number) {
+  books.value = undefined;
+  const pagedList = await getBookPagedList(currentPage.value);
+  if (currentPage.value == page) {
+    books.value = pagedList;
+    if (pagedList.ok) {
+      total.value = pagedList.value.total;
+    }
+  }
 }
-
-function onPageChange(page: number) {
-  currentPage.value = page;
-}
-
 watch(currentPage, (page) => loadPage(page), { immediate: true });
 </script>
 
 <template>
-  <el-pagination
-    :current-page="currentPage"
-    :total="total"
-    layout="prev, pager, next, ->, jumper"
-    @current-change="onPageChange"
-  />
-  <el-divider />
-  <div class="list" v-loading="loading">
-    <div v-for="book in books" :key="book.book_id">
-      <el-row class="title">
-        <span> {{ book.title }} </span>
-      </el-row>
+  <div class="content">
+    <n-pagination
+      v-model:page="currentPage"
+      :page-count="total / 10"
+      show-quick-jumper
+    />
+    <n-divider />
+    <div class="list" v-if="books?.ok">
+      <div v-for="book in books.value.books">
+        <h1 class="title">
+          <n-a
+            :href="`/novel/${book.provider_id}/${book.book_id}`"
+            target="_blank"
+          >
+            {{ book.title }}
+          </n-a>
+        </h1>
+        <n-a :href="book.url" target="_blank">
+          {{ book.url }}
+        </n-a>
 
-      <el-row class="content">
-        <el-link :href="book.url" target="_blank">
-          {{ book.provider_id }}.{{ book.book_id }}
-        </el-link>
-      </el-row>
-
-      <el-row v-for="group in book.files" :key="group.lang" class="content">
-        <el-col :span="4">
+        <n-space v-for="group in book.files" :key="group.lang">
           <span>
             {{
-              readableLang(group.lang) +
+              group.lang +
               '(' +
               group.cached_episode_number +
               '/' +
@@ -76,51 +58,37 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
               ')'
             }}
           </span>
-        </el-col>
-        <el-col :span="20">
-          <el-space spacer="|">
-            <el-link
+
+          <n-space spacer="|">
+            <n-a
               v-for="file in group.files"
               :href="filenameToUrl(file.filename)"
-              :icon="Download"
-              :disabled="file.filename === null"
+              target="_blank"
             >
               {{ file.type.toUpperCase() }}
-            </el-link>
-            <el-link
-              v-for="file in group.mixed_files"
+            </n-a>
+            <n-a
+              v-for="file in group.files"
               :href="filenameToUrl(file.filename)"
-              :icon="Download"
-              :disabled="file.filename === null"
+              target="_blank"
             >
               原文对比版{{ file.type.toUpperCase() }}
-            </el-link>
-          </el-space>
-        </el-col>
-      </el-row>
-
-      <el-divider />
+            </n-a>
+          </n-space>
+        </n-space>
+        <n-divider />
+      </div>
     </div>
+    <n-pagination
+      v-model:page="currentPage"
+      :page-count="total / 10"
+      show-quick-jumper
+    />
   </div>
-  <el-pagination
-    :current-page="currentPage"
-    :total="total"
-    layout="prev, pager, next, ->, jumper"
-    @current-change="onPageChange"
-  />
 </template>
 
 <style>
 .list {
-  width: 650px;
   min-height: 600px;
-}
-.title {
-  font-size: 18px;
-}
-.content {
-  font-size: 14px;
-  margin-top: 10px;
-  margin-left: 20px;
 }
 </style>
