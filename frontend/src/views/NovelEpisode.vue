@@ -31,7 +31,6 @@ const episode: Ref<Result<ContentEpisode, any> | undefined> = ref();
 onMounted(() => {
   getEpisode();
   const modeRaw = localStorage.getItem('episode-mode');
-  console.log(modeRaw);
   for (const option of modeOptions) {
     if (modeRaw === option.label) {
       mode.value = option.value;
@@ -83,10 +82,8 @@ function navToNextEpisode() {
 }
 
 watch(mode, (mode) => {
-  console.log(mode);
   for (const option of modeOptions) {
     if (mode === option.value) {
-      console.log('write' + option.label);
       localStorage.setItem('episode-mode', option.label);
       break;
     }
