@@ -360,35 +360,38 @@ function getPercentage(progress: LocalBoostProgress): number {
     </n-card>
   </n-modal>
 
-  <div class="content" v-if="contentMetadata?.ok" style="margin-bottom: 40px">
-    <!-- hacky, prevent margin collapse -->
-    <div style="display: inline-block" />
-
-    <n-h2 prefix="bar" align-text>
+  <div class="content" v-if="contentMetadata?.ok">
+    <n-h2 style="text-align: center; width: 100%">
       <n-a :href="contentMetadata.value.url" target="_blank">
         {{ contentMetadata.value.title }}
       </n-a>
       <br />
       <n-text
-        id="novel-title-secondary"
+        style="color: grey"
         v-if="contentMetadata.value.zh_title !== undefined"
       >
         {{ contentMetadata.value.zh_title }}
       </n-text>
     </n-h2>
 
-    <div style="margin-bottom: 15px">
+    <n-space justify="space-around">
       <n-a href="/">
         <n-button text>
-          <n-icon><SearchOutlined /></n-icon> 搜索
+          <template #icon>
+            <n-icon> <SearchOutlined /> </n-icon>
+          </template>
+          搜索
         </n-button>
       </n-a>
-      <n-a href="/list" style="margin-start: 20px">
+      <n-a href="/list">
         <n-button text>
-          <n-icon><FormatListBulletedOutlined /></n-icon> 列表
+          <template #icon>
+            <n-icon> <FormatListBulletedOutlined /> </n-icon>
+          </template>
+          列表
         </n-button>
       </n-a>
-    </div>
+    </n-space>
 
     <div v-if="contentMetadata.value.authors.length > 0">
       作者：
@@ -444,7 +447,7 @@ function getPercentage(progress: LocalBoostProgress): number {
           <span class="episode-title">
             {{ token.title }}
           </span>
-          <span class="episode-title-secondary">
+          <span class="episode-title" style="color: grey">
             {{ token.zh_title }}
           </span>
         </span>
@@ -457,7 +460,7 @@ function getPercentage(progress: LocalBoostProgress): number {
           <span class="episode-title">
             {{ token.title.trim().length > 0 ? token.title : '短篇' }}
           </span>
-          <span class="episode-title-secondary">
+          <span class="episode-title" style="color: grey">
             {{ token.zh_title }}
           </span>
         </n-a>
@@ -469,10 +472,6 @@ function getPercentage(progress: LocalBoostProgress): number {
 </template>
 
 <style scoped>
-#novel-title-secondary {
-  color: gray;
-}
-
 .episode-base {
   width: 100%;
   position: relative;
@@ -482,12 +481,5 @@ function getPercentage(progress: LocalBoostProgress): number {
   display: inline-block;
   word-wrap: break-word;
   width: 50%;
-}
-
-.episode-title-secondary {
-  display: inline-block;
-  word-wrap: break-word;
-  width: 50%;
-  color: grey;
 }
 </style>

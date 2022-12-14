@@ -53,7 +53,7 @@ onMounted(() => {
           filter: drop-shadow(0.05em 0.05em black);
         "
       >
-        网络小说 EPUB/TXT 生成器
+        日本网文机翻机器人
       </n-h1>
       <n-input
         v-model:value="url"
@@ -70,7 +70,7 @@ onMounted(() => {
     </div>
   </div>
 
-  <div class="content" style="margin-bottom: 50px; margin-top: 50px">
+  <div class="content" style="margin-top: 50px">
     <div v-if="historiesRef.length > 0">
       <n-h2 prefix="bar" align-text>搜索历史</n-h2>
       <ul>
