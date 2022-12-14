@@ -6,6 +6,8 @@ import {
   SettingsOutlined,
   AddOutlined,
   MinusOutlined,
+  ArrowBackIosOutlined,
+  ArrowForwardIosOutlined,
 } from '@vicons/material';
 
 import { Result } from '../models/util';
@@ -47,38 +49,30 @@ async function getEpisode() {
   episode.value = contentEpisode;
 }
 
-function navToMetadata() {
+function getEpisodePath(episodeId: string): string {
   const providerId = route.params.providerId as string;
   const bookId = route.params.bookId as string;
-  router.push({
-    path: `/novel/${providerId}/${bookId}`,
-  });
+  return `/novel/${providerId}/${bookId}/${episodeId}`;
 }
 
-function navToEpisode(episodeId: string) {
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
-  router.push({
-    path: `/novel/${providerId}/${bookId}/${episodeId}`,
-  });
-}
-
-function navToPrevEpisode() {
+function getPrevEpisodePath(): string {
   if (episode.value?.ok) {
     const episodeId = episode.value.value.prev?.episode_id;
     if (episodeId) {
-      navToEpisode(episodeId);
+      return getEpisodePath(episodeId);
     }
   }
+  return '';
 }
 
-function navToNextEpisode() {
+function getNextEpisodePath(): string {
   if (episode.value?.ok) {
     const episodeId = episode.value.value.next?.episode_id;
     if (episodeId) {
-      navToEpisode(episodeId);
+      return getEpisodePath(episodeId);
     }
   }
+  return '';
 }
 
 watch(mode, (mode) => {
@@ -128,28 +122,43 @@ watch(mode, (mode) => {
     </n-card>
   </n-modal>
 
-  <div class="content" v-if="episode?.ok" style="margin-bottom: 30px">
-    <n-space align="center" justify="space-between" style="width: 100%">
-      <n-button text style="font-size: 24px" @click="navToMetadata()">
-        <n-icon :depth="3"> <MenuOutlined /> </n-icon>
-      </n-button>
-      <h1>
-        {{ episode.value.curr.title }}
-        <span style="opacity: 0.4">{{ episode.value.curr.zh_title }}</span>
-      </h1>
-      <n-button text style="font-size: 24px" @click="showModal = true">
-        <n-icon :depth="3"> <SettingsOutlined /> </n-icon>
-      </n-button>
-    </n-space>
+  <div class="content" v-if="episode?.ok" style="margin-bottom: 40px">
+    <!-- hacky, prevent margin collapse -->
+    <div style="display: inline-block" />
 
-    <n-space justify="space-between" style="width: 100%">
-      <n-a @click="navToPrevEpisode()">
-        {{ episode.value.prev?.title }}
-        <span style="opacity: 0.4">{{ episode.value.prev?.zh_title }}</span>
+    <n-h3 style="text-align: center; width: 100%">
+      {{ episode.value.curr.title }}
+      <br />
+      <span style="color: gray">{{ episode.value.curr.zh_title }}</span>
+    </n-h3>
+
+    <n-space align="center" justify="space-between" style="width: 100%">
+      <n-a :href="getPrevEpisodePath()">
+        <n-space align="center">
+          <n-icon><ArrowBackIosOutlined /></n-icon>
+          <span>
+            {{ episode.value.prev?.title }}
+            <br />
+            <span style="color: grey">{{ episode.value.prev?.zh_title }}</span>
+          </span>
+        </n-space>
       </n-a>
-      <n-a @click="navToNextEpisode()">
-        {{ episode.value.next?.title }}
-        <span style="opacity: 0.4">{{ episode.value.next?.zh_title }}</span>
+
+      <n-a :href="`/novel/${route.params.providerId}/${route.params.bookId}`">
+        目录
+      </n-a>
+
+      <n-a @click="showModal = true"> 设置 </n-a>
+
+      <n-a :href="getNextEpisodePath()">
+        <n-space align="center">
+          <span style="text-align: end">
+            {{ episode.value.next?.title }}
+            <br />
+            <span style="color: grey">{{ episode.value.next?.zh_title }}</span>
+          </span>
+          <n-icon><ArrowForwardIosOutlined /></n-icon>
+        </n-space>
       </n-a>
     </n-space>
 
@@ -170,14 +179,26 @@ watch(mode, (mode) => {
 
     <n-divider />
 
-    <n-space justify="space-between" style="width: 100%">
-      <n-a @click="navToPrevEpisode()">
-        {{ episode.value.prev?.title }}
-        <span style="opacity: 0.4">{{ episode.value.prev?.zh_title }}</span>
+    <n-space align="center" justify="space-between" style="width: 100%">
+      <n-a :href="getPrevEpisodePath()">
+        <n-space align="center">
+          <n-icon><ArrowBackIosOutlined /></n-icon>
+          <span>
+            {{ episode.value.prev?.title }}
+            <br />
+            <span style="color: grey">{{ episode.value.prev?.zh_title }}</span>
+          </span>
+        </n-space>
       </n-a>
-      <n-a @click="navToNextEpisode()">
-        {{ episode.value.next?.title }}
-        <span style="opacity: 0.4">{{ episode.value.next?.zh_title }}</span>
+      <n-a :href="getNextEpisodePath()">
+        <n-space align="center">
+          <span>
+            {{ episode.value.next?.title }}
+            <br />
+            <span style="color: grey">{{ episode.value.next?.zh_title }}</span>
+          </span>
+          <n-icon><ArrowForwardIosOutlined /></n-icon>
+        </n-space>
       </n-a>
     </n-space>
   </div>

@@ -9,7 +9,7 @@ import {
   useMessage,
   NP,
 } from 'naive-ui';
-import { MenuOutlined } from '@vicons/material';
+import { SearchOutlined, FormatListBulletedOutlined } from '@vicons/material';
 
 import { handleError, Result } from '../models/util';
 import { addHistory, LocalBoostProgress } from '../models/history';
@@ -109,20 +109,6 @@ function instanceOfTocEpisodeToken(
   object: TocChapterToken | TocEpisodeToken
 ): object is TocEpisodeToken {
   return 'episode_id' in object;
-}
-
-function navToEpisode(episodeId: string) {
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
-  router.push({
-    path: `/novel/${providerId}/${bookId}/${episodeId}`,
-  });
-}
-
-function navToHome() {
-  router.push({
-    path: `/`,
-  });
 }
 
 async function update(lang: string, startIndex: number, endIndex: number) {
@@ -374,30 +360,37 @@ function getPercentage(progress: LocalBoostProgress): number {
     </n-card>
   </n-modal>
 
-  <div
-    class="content"
-    v-if="contentMetadata === undefined"
-    v-loading="contentMetadata === undefined"
-  />
-  <div
-    class="content"
-    v-if="contentMetadata !== undefined && contentMetadata.ok"
-  >
-    <n-button text style="font-size: 24px" @click="navToHome()">
-      <n-icon :depth="3"> <MenuOutlined /> </n-icon>
-    </n-button>
+  <div class="content" v-if="contentMetadata?.ok" style="margin-bottom: 40px">
+    <!-- hacky, prevent margin collapse -->
+    <div style="display: inline-block" />
 
-    <n-h1>
-      <n-a :href="contentMetadata.value.url" target="_blank">{{
-        contentMetadata.value.title
-      }}</n-a>
-    </n-h1>
-
-    <n-h2 v-if="contentMetadata.value.zh_title !== undefined">
-      {{ contentMetadata.value.zh_title }}
+    <n-h2 prefix="bar" align-text>
+      <n-a :href="contentMetadata.value.url" target="_blank">
+        {{ contentMetadata.value.title }}
+      </n-a>
+      <br />
+      <n-text
+        id="novel-title-secondary"
+        v-if="contentMetadata.value.zh_title !== undefined"
+      >
+        {{ contentMetadata.value.zh_title }}
+      </n-text>
     </n-h2>
 
-    <div>
+    <div style="margin-bottom: 15px">
+      <n-a href="/">
+        <n-button text>
+          <n-icon><SearchOutlined /></n-icon> 搜索
+        </n-button>
+      </n-a>
+      <n-a href="/list" style="margin-start: 20px">
+        <n-button text>
+          <n-icon><FormatListBulletedOutlined /></n-icon> 列表
+        </n-button>
+      </n-a>
+    </div>
+
+    <div v-if="contentMetadata.value.authors.length > 0">
       作者：
       <span v-for="author in contentMetadata.value.authors">
         <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
@@ -447,28 +440,54 @@ function getPercentage(progress: LocalBoostProgress): number {
     <n-h2 prefix="bar" align-text>目录</n-h2>
     <n-ul>
       <n-li v-for="token in contentMetadata.value.toc">
-        <span v-if="!instanceOfTocEpisodeToken(token)">
-          {{ token.title }}
+        <span v-if="!instanceOfTocEpisodeToken(token)" class="episode-base">
+          <span class="episode-title">
+            {{ token.title }}
+          </span>
+          <span class="episode-title-secondary">
+            {{ token.zh_title }}
+          </span>
         </span>
+
         <n-a
           v-if="instanceOfTocEpisodeToken(token)"
-          @click="navToEpisode(token.episode_id)"
+          class="episode-base"
+          :href="`/novel/${route.params.providerId}/${route.params.bookId}/${token.episode_id}`"
         >
-          {{ token.title }}
-          <span
-            v-if="token.title.trim().length === 0"
-            style="opacity: 0.4; color: black"
-          >
-            无名
+          <span class="episode-title">
+            {{ token.title.trim().length > 0 ? token.title : '短篇' }}
           </span>
-          <span
-            v-if="token.zh_title !== undefined"
-            style="opacity: 0.4; color: black"
-          >
-            ----{{ token.zh_title }}
+          <span class="episode-title-secondary">
+            {{ token.zh_title }}
           </span>
         </n-a>
+
+        <n-divider style="margin-top: 2px; margin-bottom: 2px" />
       </n-li>
     </n-ul>
   </div>
 </template>
+
+<style scoped>
+#novel-title-secondary {
+  color: gray;
+}
+
+.episode-base {
+  width: 100%;
+  position: relative;
+  display: block;
+}
+.episode-title {
+  display: inline-block;
+  word-wrap: break-word;
+  width: 50%;
+}
+
+.episode-title-secondary {
+  display: inline-block;
+  word-wrap: break-word;
+  width: 50%;
+  color: grey;
+}
+</style>

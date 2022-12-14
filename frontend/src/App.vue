@@ -12,4 +12,7 @@
   width: 730px;
   margin: 0 auto;
 }
+a {
+  text-decoration: none;
+}
 </style>
