@@ -1,4 +1,6 @@
 :80 {
+  encode gzip
+
   handle {
     root * /frontend/dist
     try_files {path} /
