@@ -1,6 +1,3 @@
-import os
-import re
-
 import bs4
 import requests
 
@@ -25,34 +22,14 @@ def _create_session():
     return session
 
 
-def _create_proxies():
-    proxies = {}
-    if "HTTPS_PROXY" in os.environ:
-        proxies["https"] = os.environ["HTTPS_PROXY"]
-    return proxies
-
-
 class Syosetu(BookProvider):
     provider_id = "syosetu"
     lang = "jp"
     session = _create_session()
-    proxies = _create_proxies()
-
-    @staticmethod
-    def extract_book_id_from_url(url: str) -> str | None:
-        match = re.search(r"syosetu.com/([A-Za-z0-9]+)", url)
-        if match is None:
-            return None
-        else:
-            return match.group(1).lower()
-
-    @staticmethod
-    def build_url_from_book_id(book_id: str) -> str | None:
-        return f"https://ncode.syosetu.com/{book_id}"
 
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         url = f"https://ncode.syosetu.com/{book_id}"
-        res = self.session.get(url, headers=_HEADERS, proxies=self.proxies)
+        res = self.session.get(url, headers=_HEADERS)
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
 
@@ -100,7 +77,7 @@ class Syosetu(BookProvider):
             url = f"https://ncode.syosetu.com/{book_id}"
         else:
             url = f"https://ncode.syosetu.com/{book_id}/{episode_id}"
-        res = self.session.get(url, headers=_HEADERS, proxies=self.proxies)
+        res = self.session.get(url, headers=_HEADERS)
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
 

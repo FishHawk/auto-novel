@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { h, onMounted, Ref, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import {
   NA,
   DataTableColumns,
@@ -33,9 +33,9 @@ import {
   postStorageTask,
 } from '../models/book_storage';
 import { BaiduWebTranslator } from '../translator/baidu-web';
+import { buildMetadataUrl } from '../models/provider';
 
 const route = useRoute();
-const router = useRouter();
 const message = useMessage();
 const showModal = ref(false);
 const contentMetadata: Ref<Result<ContentMetadata, any> | undefined> = ref();
@@ -68,21 +68,21 @@ onMounted(() => {
   getFileGroups();
 });
 
+const providerId = route.params.providerId as string;
+const bookId = route.params.bookId as string;
+const url = buildMetadataUrl(providerId, bookId);
+
 async function getMetadata() {
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
   const metadata = await getContentMetadata(providerId, bookId);
   contentMetadata.value = metadata;
   if (metadata.ok) {
-    addHistory({ url: metadata.value.url, title: metadata.value.title });
+    addHistory({ url, title: metadata.value.title });
   }
 }
 
 let pollId = 0;
 async function getFileGroups() {
   const pollIdSnapshot = pollId;
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
   const groups = await getStorage(providerId, bookId);
 
   if (groups.ok) {
@@ -112,8 +112,6 @@ function instanceOfTocEpisodeToken(
 }
 
 async function update(lang: string, startIndex: number, endIndex: number) {
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
   const result = await postStorageTask(
     providerId,
     bookId,
@@ -136,8 +134,6 @@ async function localBoost(startIndex: number, endIndex: number) {
     return;
   }
 
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
   const progress: LocalBoostProgress = {
     total: undefined,
     error: 0,
@@ -362,16 +358,9 @@ function getPercentage(progress: LocalBoostProgress): number {
 
   <div class="content" v-if="contentMetadata?.ok">
     <n-h2 style="text-align: center; width: 100%">
-      <n-a :href="contentMetadata.value.url" target="_blank">
-        {{ contentMetadata.value.title }}
-      </n-a>
+      <n-a :href="url" target="_blank">{{ contentMetadata.value.title }}</n-a>
       <br />
-      <n-text
-        style="color: grey"
-        v-if="contentMetadata.value.zh_title !== undefined"
-      >
-        {{ contentMetadata.value.zh_title }}
-      </n-text>
+      <span style="color: grey">{{ contentMetadata.value.zh_title }}</span>
     </n-h2>
 
     <n-space justify="space-around">
@@ -455,7 +444,7 @@ function getPercentage(progress: LocalBoostProgress): number {
         <n-a
           v-if="instanceOfTocEpisodeToken(token)"
           class="episode-base"
-          :href="`/novel/${route.params.providerId}/${route.params.bookId}/${token.episode_id}`"
+          :href="`/novel/${providerId}/${bookId}/${token.episode_id}`"
         >
           <span class="episode-title">
             {{ token.title.trim().length > 0 ? token.title : '短篇' }}

@@ -5,7 +5,7 @@ from flask import Flask, request
 import redis
 import rq
 
-from app.provider import build_url, get_provider, parse_url
+from app.provider import get_provider
 from app.make import make_book
 from app.cache import BookCache
 from app.model import BookMetadata, TocEpisodeToken
@@ -190,7 +190,6 @@ def route_base(app: Flask):
                 cache=cache,
             )
             book = {
-                "url": build_url(provider_id=provider_id, book_id=book_id),
                 "provider_id": provider_id,
                 "book_id": book_id,
                 "title": metadata.title,
@@ -231,7 +230,6 @@ def route_content(app: Flask):
 
         cache.metadata_max_age = 65536
         return {
-            "url": provider.build_url_from_book_id(book_id),
             "jp": metadata,
             "zh": cache.get_book_metadata(lang="zh"),
         }

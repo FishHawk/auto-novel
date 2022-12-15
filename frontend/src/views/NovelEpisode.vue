@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { AddOutlined, MinusOutlined } from '@vicons/material';
 
 import { Result } from '../models/util';
 import { ContentEpisode, getContentEpisode } from '../models/book_content';
+import { buildEpisodeUrl } from '../models/provider';
 
 enum Mode {
   JP,
@@ -22,6 +22,11 @@ const fontSizeOptions = ['14px', '16px', '18px', '20px'];
 const fontSize = ref('14px');
 
 const route = useRoute();
+const providerId = route.params.providerId as string;
+const bookId = route.params.bookId as string;
+const episodeId = route.params.episodeId as string;
+const url = buildEpisodeUrl(providerId, bookId, episodeId);
+
 const showModal = ref(false);
 const episode: Ref<Result<ContentEpisode, any> | undefined> = ref();
 
@@ -44,16 +49,11 @@ onMounted(() => {
 });
 
 async function getEpisode() {
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
-  const episodeId = route.params.episodeId as string;
   const contentEpisode = await getContentEpisode(providerId, bookId, episodeId);
   episode.value = contentEpisode;
 }
 
 function getEpisodePath(episodeId: string): string {
-  const providerId = route.params.providerId as string;
-  const bookId = route.params.bookId as string;
   return `/novel/${providerId}/${bookId}/${episodeId}`;
 }
 
@@ -138,18 +138,16 @@ watch(fontSize, (fontSize) => {
   </n-modal>
 
   <div class="content" v-if="episode?.ok">
-    <n-h3 style="text-align: center; width: 100%">
-      {{ episode.value.curr.title }}
+    <n-h2 style="text-align: center; width: 100%">
+      <n-a :href="url" target="_blank">{{ episode.value.curr.title }}</n-a>
       <br />
       <span style="color: gray">{{ episode.value.curr.zh_title }}</span>
-    </n-h3>
+    </n-h2>
 
     <n-space align="center" justify="space-between" style="width: 100%">
       <n-a v-if="episode.value.prev" :href="getPrevEpisodePath()">上一章</n-a>
       <n-text v-if="!episode.value.prev" style="color: grey">上一章</n-text>
-      <n-a :href="`/novel/${route.params.providerId}/${route.params.bookId}`">
-        目录
-      </n-a>
+      <n-a :href="`/novel/${providerId}/${bookId}`"> 目录 </n-a>
       <n-a @click="showModal = true"> 设置 </n-a>
       <n-a v-if="episode.value.next" :href="getNextEpisodePath()">下一章</n-a>
       <n-text v-if="!episode.value.next" style="color: grey">下一章</n-text>

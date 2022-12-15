@@ -93,7 +93,6 @@ export async function postStorageTask(
 export interface BookListItem {
   provider_id: string;
   book_id: string;
-  url: string;
   title: string;
   files: RawBookFileGroup[];
 }

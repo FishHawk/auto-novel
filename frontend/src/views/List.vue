@@ -7,6 +7,7 @@ import {
   getBookPagedList,
   filenameToUrl,
 } from '../models/book_storage';
+import { buildMetadataUrl } from '../models/provider';
 
 const currentPage = ref(1);
 const total = ref(1);
@@ -43,8 +44,11 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
             {{ book.title }}
           </n-a>
         </h1>
-        <n-a :href="book.url" target="_blank">
-          {{ book.url }}
+        <n-a
+          :href="buildMetadataUrl(book.provider_id, book.book_id)"
+          target="_blank"
+        >
+          {{ buildMetadataUrl(book.provider_id, book.book_id) }}
         </n-a>
 
         <n-space v-for="group in book.files" :key="group.lang">

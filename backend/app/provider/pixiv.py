@@ -1,6 +1,5 @@
 import json
 import os
-import re
 
 import requests
 import bs4
@@ -24,13 +23,6 @@ def _create_headers():
     return headers
 
 
-def _create_proxies():
-    proxies = {}
-    if "HTTPS_PROXY" in os.environ:
-        proxies["https"] = os.environ["HTTPS_PROXY"]
-    return proxies
-
-
 class Pixiv(BookProvider):
     provider_id = "pixiv"
     lang = "jp"
@@ -38,29 +30,11 @@ class Pixiv(BookProvider):
     base_url = "https://www.pixiv.net"
     session = requests.Session()
     headers = _create_headers()
-    proxies = _create_proxies()
-
-    @staticmethod
-    def extract_book_id_from_url(url: str) -> str | None:
-        match = re.search(r"pixiv.net/novel/series/([0-9]+)", url)
-        book_id = match.group(1) if match else None
-        if book_id is None:
-            match = re.search(r"pixiv.net/novel/show.php\?id=([0-9]+)", url)
-            book_id = "s" + match.group(1) if match else None
-        return book_id
-
-    @staticmethod
-    def build_url_from_book_id(book_id: str) -> str | None:
-        if book_id.startswith("s"):
-            return f"{Pixiv.base_url}/novel/show.php?id={book_id[1:]}"
-        else:
-            return f"{Pixiv.base_url}/novel/series/{book_id}"
 
     def _fetch(self, url):
         res = self.session.get(
             self.base_url + url,
             headers=self.headers,
-            proxies=self.proxies,
         )
         res.raise_for_status()
         return res

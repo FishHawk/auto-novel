@@ -1,5 +1,3 @@
-import re
-
 import bs4
 import requests
 
@@ -23,20 +21,8 @@ class Hameln(BookProvider):
     lang = "jp"
     session = requests.Session()
 
-    @staticmethod
-    def extract_book_id_from_url(url: str) -> str | None:
-        match = re.search(r"syosetu.org/novel/([0-9]+)", url)
-        if match is None:
-            return None
-        else:
-            return match.group(1).lower()
-
-    @staticmethod
-    def build_url_from_book_id(book_id: str) -> str | None:
-        return f"https://syosetu.org/novel/{book_id}"
-
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
-        url = self.build_url_from_book_id(book_id)
+        url = f"https://syosetu.org/novel/${book_id}"
         res = self.session.get(url, headers=_HEADERS)
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
@@ -102,8 +88,6 @@ class Hameln(BookProvider):
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
 
-        paragraphs = [
-            p.text for p in soup.find("div", {"id": "honbun"}).find_all("p")
-        ]
+        paragraphs = [p.text for p in soup.find("div", {"id": "honbun"}).find_all("p")]
 
         return Episode(paragraphs=paragraphs)

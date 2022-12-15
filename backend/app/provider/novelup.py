@@ -17,19 +17,6 @@ class Novelup(BookProvider):
     provider_id = "novelup"
     lang = "jp"
     session = requests.Session()
-
-    @staticmethod
-    def extract_book_id_from_url(url: str) -> str | None:
-        match = re.search(r"novelup.plus/story/([0-9]+)", url)
-        if match is None:
-            return None
-        else:
-            return match.group(1)
-
-    @staticmethod
-    def build_url_from_book_id(book_id: str) -> str | None:
-        return f"https://novelup.plus/story/{book_id}"
-
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         url = f"https://novelup.plus/story/{book_id}"
         res = self.session.get(url)

@@ -14,10 +14,6 @@ class BaseTestProvider:
     benches_book: None
     benches_episode: None
 
-    def test_parse_url(self):
-        for url, book_id in self.benches_url:
-            assert book_id == self.provider.__class__.extract_book_id_from_url(url)
-
     def test_get_book_metadata(self):
         for book_id in self.benches_book:
             metadata = self.provider._get_book_metadata(book_id)
@@ -33,16 +29,6 @@ class BaseTestProvider:
 
 class TestKakuyomu(BaseTestProvider):
     provider = Kakuyomu()
-    benches_url = [
-        (
-            "https://kakuyomu.jp/works/16817139555217983105",
-            "16817139555217983105",
-        ),
-        (
-            "https://kakuyomu.jp/works/16817139555217983105/episodes/16817139555286132564",
-            "16817139555217983105",
-        ),
-    ]
     benches_book = [
         "16816700429191462823",
         "1177354054880238351",
@@ -55,11 +41,6 @@ class TestKakuyomu(BaseTestProvider):
 
 class TestSyosetu(BaseTestProvider):
     provider = Syosetu()
-    benches_url = [
-        ("https://ncode.syosetu.com/n9669bk", "n9669bk"),
-        ("https://ncode.syosetu.com/n9669BK", "n9669bk"),
-        ("https://novel18.syosetu.com/n9669BK", "n9669bk"),
-    ]
     benches_book = [
         "n9669bk",
         "n8473hv",  # 介绍需要展开
@@ -75,10 +56,6 @@ class TestSyosetu(BaseTestProvider):
 
 class TestNovelup(BaseTestProvider):
     provider = Novelup()
-    benches_url = [
-        ("https://novelup.plus/story/206612087", "206612087"),
-        ("https://novelup.plus/story/206612087?p=2", "206612087"),
-    ]
     benches_book = [
         "875360007",  # 目录很多页，被折叠
         "339045601",  # 目录1页
@@ -90,9 +67,6 @@ class TestNovelup(BaseTestProvider):
 
 class TestHameln(BaseTestProvider):
     provider = Hameln()
-    benches_url = [
-        ("https://syosetu.org/novel/297874/", "297874"),
-    ]
     benches_book = [
         "297874",
         "292106",  # 作者没有链接
@@ -106,11 +80,6 @@ class TestHameln(BaseTestProvider):
 
 class TestPixiv(BaseTestProvider):
     provider = Pixiv()
-    benches_url = [
-        ("https://www.pixiv.net/novel/series/870363", "870363"),
-        ("https://www.pixiv.net/novel/series/870363?p=5", "870363"),
-        ("https://www.pixiv.net/novel/show.php?id=18827415", "s18827415"),
-    ]
     benches_book = [
         "9406879",  # 目录1页
         "870363",  # 目录很多页

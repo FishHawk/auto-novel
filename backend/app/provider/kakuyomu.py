@@ -1,5 +1,3 @@
-import re
-
 import requests
 import bs4
 
@@ -17,18 +15,6 @@ class Kakuyomu(BookProvider):
     provider_id = "kakuyomu"
     lang = "jp"
     session = requests.Session()
-
-    @staticmethod
-    def extract_book_id_from_url(url: str) -> str | None:
-        match = re.search(r"kakuyomu.jp/works/([0-9]+)", url)
-        if match is None:
-            return None
-        else:
-            return match.group(1)
-
-    @staticmethod
-    def build_url_from_book_id(book_id: str) -> str | None:
-        return f"https://kakuyomu.jp/works/{book_id}"
 
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         url = f"https://kakuyomu.jp/works/{book_id}"

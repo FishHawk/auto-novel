@@ -24,7 +24,6 @@ interface RawBookMetadata {
 }
 
 interface RawContentMetadata {
-  url: string;
   jp: RawBookMetadata;
   zh: RawBookMetadata | null;
 }
@@ -42,7 +41,6 @@ export interface TocChapterToken {
 }
 
 export interface ContentMetadata {
-  url: string;
   authors: Author[];
   title: string;
   zh_title: string | undefined;
@@ -68,7 +66,6 @@ export async function getContentMetadata(
         toc.push(token);
       }
       return Ok({
-        url: it.url,
         authors: it.jp.authors,
         title: it.jp.title,
         zh_title: it.zh?.title,
