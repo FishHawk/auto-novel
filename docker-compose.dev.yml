@@ -1,10 +1,6 @@
 services:
   proxy:
-    build:
-      context: .
-      dockerfile: Dockerfile.proxy
-
-    image: proxy
+    image: caddy:2.6.2
     container_name: proxy
 
     ports:
@@ -24,8 +20,6 @@ services:
     image: server
     container_name: server
 
-    depends_on:
-      - redis
     environment:
       - HTTPS_PROXY
       - PIXIV_COOKIE_PHPSESSID
@@ -34,35 +28,4 @@ services:
     volumes:
       - ./backend:/backend
       - ./books:/books
-
     command: flask run --host=0.0.0.0
-
-  worker:
-    image: server
-    container_name: worker
-
-    depends_on:
-      - redis
-    environment:
-      - HTTPS_PROXY
-      - PIXIV_COOKIE_PHPSESSID
-    volumes:
-      - ./backend:/backend
-      - ./books:/books
-
-    command: rq worker --url redis://redis:6379/0
-
-  dashboard:
-    image: eoranged/rq-dashboard
-    container_name: dashboard
-
-    depends_on:
-      - redis
-    environment:
-      - RQ_DASHBOARD_REDIS_URL=redis://redis:6379/0
-    ports:
-      - 9181:9181
-
-  redis:
-    image: redis
-    container_name: redis

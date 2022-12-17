@@ -48,6 +48,7 @@ export interface ContentMetadata {
   zh_introduction: string | undefined;
   toc: (TocEpisodeToken | TocChapterToken)[];
 }
+
 export async function getContentMetadata(
   providerId: string,
   bookId: string

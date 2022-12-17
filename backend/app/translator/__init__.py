@@ -18,3 +18,11 @@ def get_translator(name: str, from_lang: str, to_lang: str) -> Translator:
         if translator.translator_id == name:
             return translator(from_lang=from_lang, to_lang=to_lang)
     raise RuntimeError(f"Unknown translator name: {name}")
+
+
+def get_default_translator() -> Translator:
+    return get_translator(
+        DEFAULT_TRANSLATOR_ID,
+        from_lang="jp",
+        to_lang="zh",
+    )

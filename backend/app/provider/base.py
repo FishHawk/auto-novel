@@ -6,7 +6,7 @@ from app.model import BookMetadata, Episode
 
 class BookProvider(ABC):
     provider_id: str
-    lang: str
+    lang = "jp"
 
     @abstractmethod
     def _get_book_metadata(self, book_id: str) -> BookMetadata:

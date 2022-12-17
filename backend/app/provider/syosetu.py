@@ -24,7 +24,6 @@ def _create_session():
 
 class Syosetu(BookProvider):
     provider_id = "syosetu"
-    lang = "jp"
     session = _create_session()
 
     def _get_book_metadata(self, book_id: str) -> BookMetadata:

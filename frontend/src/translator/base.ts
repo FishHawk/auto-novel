@@ -1,5 +1,3 @@
-import ky from 'ky';
-
 export abstract class Translator {
   from_lang: string;
   to_lang: string;

@@ -1,14 +1,12 @@
 import logging
 from pathlib import Path
 
-from flask import Flask, request
-import redis
-import rq
-
+from flask import Flask, request, redirect, url_for
 from app.provider import get_provider
 from app.make import make_book
 from app.cache import BookCache
 from app.model import BookMetadata, TocEpisodeToken
+from app.translator import get_default_translator
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,13 +19,13 @@ def create_app():
     app = Flask(__name__)
     route_base(app)
     route_content(app)
+    route_update(app)
     route_boost(app)
+    route_make(app)
     return app
 
 
 def get_book_file_groups(
-    provider_id: str,
-    book_id: str,
     metadata: BookMetadata,
     cache: BookCache,
 ):
@@ -41,49 +39,15 @@ def get_book_file_groups(
 
         book_file_group = {
             "lang": lang,
-            "status": None,
-            "total_episode_number": total_episode_number,
-            "cached_episode_number": cached_episode_number,
-            "files": [],
-            "mixed_files": [],
+            "total": total_episode_number,
+            "cached": cached_episode_number,
         }
-
-        possible_book_types = ["txt", "epub"]
-
-        for book_type in possible_book_types:
-            book_name = f"{provider_id}.{book_id}.{lang}.{book_type}"
-            if not (BOOKS_DIR / book_name).exists():
-                book_name = None
-            book_file_group["files"].append({"type": book_type, "filename": book_name})
-
-            if lang != "jp":
-                mixed_book_name = f"{provider_id}.{book_id}.{lang}.mixed.{book_type}"
-                if not (BOOKS_DIR / mixed_book_name).exists():
-                    mixed_book_name = None
-                book_file_group["mixed_files"].append(
-                    {"type": book_type, "filename": mixed_book_name}
-                )
-
         book_file_groups.append(book_file_group)
 
     return book_file_groups
 
 
 def route_base(app: Flask):
-    redis_connection = redis.Redis(host="redis", port=6379, db=0)
-    queue = rq.Queue(connection=redis_connection)
-
-    def get_status(job_id: str) -> str | None:
-        job = queue.fetch_job(job_id=job_id)
-        if not job:
-            return None
-
-        status = job.get_status(refresh=True)
-        if status in ["queued", "started", "failed"]:
-            return status
-        else:
-            return "unknown"
-
     @app.get("/storage/<provider_id>/<book_id>")
     def get_storage_state(
         provider_id: str,
@@ -104,54 +68,14 @@ def route_base(app: Flask):
                 book_id=book_id,
                 cache=cache,
             )
-        except Exception as e:
+        except Exception:
             return "获取元数据失败。", 500
 
         book_file_groups = get_book_file_groups(
-            provider_id=provider_id,
-            book_id=book_id,
             metadata=metadata,
             cache=cache,
         )
-        for group in book_file_groups:
-            group["status"] = get_status(
-                job_id="/".join([provider.provider_id, book_id, group["lang"]])
-            )
-
         return book_file_groups
-
-    @app.post("/storage/<provider_id>/<book_id>/<lang>")
-    def create_storage_update_job(
-        provider_id: str,
-        book_id: str,
-        lang: str,
-    ):
-        start_index = request.args.get("start_index", 0, int)
-        end_index = request.args.get("end_index", 65536, int)
-
-        if queue.count >= 100:
-            return "更新任务数目已达上限100", 500
-
-        job_id = "/".join([provider_id, book_id, lang])
-
-        if queue.fetch_job(job_id=job_id):
-            return "更新任务已经在队列中", 500
-
-        queue.enqueue(
-            make_book,
-            provider_id,
-            book_id,
-            lang,
-            start_index,
-            end_index,
-            BOOKS_DIR,
-            job_timeout="10m",
-            result_ttl=0,
-            failure_ttl=0,
-            job_id=job_id,
-        )
-
-        return "成功添加更新任务"
 
     @app.get("/storage-list")
     def _list():
@@ -184,8 +108,6 @@ def route_base(app: Flask):
                 continue
 
             book_file_groups = get_book_file_groups(
-                provider_id=provider_id,
-                book_id=book_id,
                 metadata=metadata,
                 cache=cache,
             )
@@ -318,6 +240,103 @@ def route_content(app: Flask):
         }
 
 
+def route_update(app: Flask):
+    @app.post("/update/metadata/<provider_id>/<book_id>")
+    def post_metadata_update_task(
+        provider_id: str,
+        book_id: str,
+    ):
+        start_index = request.args.get("startIndex", 0, int)
+        end_index = request.args.get("endIndex", 65536, int)
+        translated = request.args.get(
+            "translated", False, type=lambda v: v.lower() == "true"
+        )
+
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
+        )
+
+        try:
+            metadata = provider.get_book_metadata(
+                book_id=book_id,
+                cache=cache,
+            )
+        except Exception:
+            return "获取元数据失败。", 500
+
+        try:
+            if translated:
+                translator = get_default_translator()
+                translator.translate_metadata(
+                    metadata=metadata,
+                    cache=cache,
+                )
+        except Exception:
+            return "翻译失败。", 500
+
+        episode_ids = [
+            token.episode_id
+            for token in metadata.toc
+            if isinstance(token, TocEpisodeToken)
+        ][start_index:end_index]
+
+        lang = "zh" if translated else "jp"
+        uncached_episode_ids = list(
+            filter(
+                lambda episode_id: cache.get_episode(lang, episode_id) is None,
+                episode_ids,
+            )
+        )
+
+        print(uncached_episode_ids)
+        return uncached_episode_ids
+
+    @app.post("/update/episode/<provider_id>/<book_id>/<episode_id>")
+    def post_episode_update_task(
+        provider_id: str,
+        book_id: str,
+        episode_id: str,
+    ):
+        print(episode_id)
+        translated = request.args.get("translated", False, bool)
+
+        provider = get_provider(provider_id)
+        if not provider:
+            return "找不到provider", 404
+
+        cache = BookCache(
+            cache_dir=BOOKS_DIR,
+            provider_id=provider_id,
+            book_id=book_id,
+        )
+        episode = provider.get_episode(
+            book_id=book_id,
+            episode_id=episode_id,
+            cache=cache,
+            allow_request=True,
+        )
+
+        try:
+            if translated:
+                translator = get_default_translator()
+                translator.translate_episode(
+                    episode_id=episode_id,
+                    episode=episode,
+                    cache=cache,
+                    allow_request=True,
+                )
+        except Exception:
+            return "翻译失败。", 500
+
+        return "成功"
+
+
 def route_boost(app: Flask):
     @app.get("/boost/metadata/<provider_id>/<book_id>")
     def get_metadata(
@@ -442,7 +461,7 @@ def route_boost(app: Flask):
 
         episode = cache.get_episode(
             episode_id=episode_id,
-            lang=provider.lang,
+            lang="jp",
         )
         if not episode:
             return "不合法的episode_id", 400
@@ -460,17 +479,21 @@ def route_boost(app: Flask):
         )
         return "成功"
 
-    @app.post("/boost/make/<provider_id>/<book_id>")
-    def make(
+
+def route_make(app):
+    @app.get("/books/<provider_id>/<book_id>/<lang>/<book_type>")
+    def generate_book_before_get(
         provider_id: str,
         book_id: str,
+        lang: str,
+        book_type: str,
     ):
         make_book(
             provider_id=provider_id,
             book_id=book_id,
-            lang="zh",
-            start_index=-1,
-            end_index=-1,
+            lang=lang,
+            book_type=book_type,
             cache_dir=BOOKS_DIR,
         )
-        return "成功"
+        filename = f"{provider_id}.{book_id}.{lang}.{book_type}"
+        return redirect(f"../../../../../books/{filename}")

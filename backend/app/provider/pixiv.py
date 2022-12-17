@@ -25,7 +25,6 @@ def _create_headers():
 
 class Pixiv(BookProvider):
     provider_id = "pixiv"
-    lang = "jp"
 
     base_url = "https://www.pixiv.net"
     session = requests.Session()

@@ -5,6 +5,7 @@ import { Result } from '../models/util';
 import {
   BookPagedList,
   getBookPagedList,
+  getFileTypes,
   filenameToUrl,
 } from '../models/book_storage';
 import { buildMetadataUrl } from '../models/provider';
@@ -52,31 +53,21 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
         </n-a>
 
         <n-space v-for="group in book.files" :key="group.lang">
-          <span>
-            {{
-              group.lang +
-              '(' +
-              group.cached_episode_number +
-              '/' +
-              group.total_episode_number +
-              ')'
-            }}
-          </span>
-
+          <span>{{ group.status }}</span>
           <n-space spacer="|">
             <n-a
-              v-for="file in group.files"
-              :href="filenameToUrl(file.filename)"
+              v-for="file in getFileTypes(group.lang)"
+              :href="
+                filenameToUrl(
+                  book.provider_id,
+                  book.book_id,
+                  group.lang,
+                  file.extension
+                )
+              "
               target="_blank"
             >
-              {{ file.type.toUpperCase() }}
-            </n-a>
-            <n-a
-              v-for="file in group.files"
-              :href="filenameToUrl(file.filename)"
-              target="_blank"
-            >
-              原文对比版{{ file.type.toUpperCase() }}
+              {{ file.name }}
             </n-a>
           </n-space>
         </n-space>

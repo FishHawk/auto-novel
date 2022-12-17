@@ -12,35 +12,26 @@ import {
 import { SearchOutlined, FormatListBulletedOutlined } from '@vicons/material';
 
 import { handleError, Result } from '../models/util';
-import { addHistory, LocalBoostProgress } from '../models/history';
-import {
-  getBoostEpisode,
-  getBoostMetadata,
-  postBoostEpisode,
-  postBoostMakeBook,
-  postBoostMetadata,
-} from '../models/book_boost';
-import {
-  getContentMetadata,
-  ContentMetadata,
-  TocChapterToken,
-  TocEpisodeToken,
-} from '../models/book_content';
+import { addHistory } from '../models/history';
+import { getContentMetadata, ContentMetadata } from '../models/book_content';
 import {
   BookFileGroup,
   filenameToUrl,
+  getFileTypes,
   getStorage,
-  postStorageTask,
 } from '../models/book_storage';
-import { BaiduWebTranslator } from '../translator/baidu-web';
 import { buildMetadataUrl } from '../models/provider';
+
+import { UpdateProgress } from '../update/progress';
+import { runLocalBoost } from '../update/local';
+import { runUpdate } from '../update/remote';
 
 const route = useRoute();
 const message = useMessage();
 const showModal = ref(false);
 const contentMetadata: Ref<Result<ContentMetadata, any> | undefined> = ref();
 const fileGroups: Ref<Result<BookFileGroup[], any> | undefined> = ref();
-const localBoostProgress: Ref<LocalBoostProgress | undefined> = ref();
+const progress: Ref<UpdateProgress | undefined> = ref();
 
 const formStartIndex = ref(1);
 const formEndIndex = ref(65536);
@@ -56,7 +47,7 @@ const formModeOptions = [
 
 function submitForm() {
   if (formMode.value == FormMode.NORMAL) {
-    update('zh', formStartIndex.value - 1, formEndIndex.value - 1);
+    update(formStartIndex.value - 1, formEndIndex.value - 1, true);
   } else {
     localBoost(formStartIndex.value - 1, formEndIndex.value - 1);
   }
@@ -80,133 +71,70 @@ async function getMetadata() {
   }
 }
 
-let pollId = 0;
+let lastPoll = false;
 async function getFileGroups() {
-  const pollIdSnapshot = pollId;
   const groups = await getStorage(providerId, bookId);
 
   if (groups.ok) {
     fileGroups.value = groups;
-
-    const hasActivitedJob = groups.value.some((item) => {
-      return (
-        item.statusCode == 'queued' ||
-        item.statusCode == 'started' ||
-        localBoostProgress.value !== undefined
-      );
-    });
-    if (!hasActivitedJob) return;
   }
 
-  if (pollId === pollIdSnapshot) {
-    pollId = window.setTimeout(() => {
-      getFileGroups();
-    }, 2000);
+  if (progress.value || lastPoll) {
+    lastPoll = progress.value !== undefined;
+    window.setTimeout(() => getFileGroups(), 2000);
   }
 }
 
-function instanceOfTocEpisodeToken(
-  object: TocChapterToken | TocEpisodeToken
-): object is TocEpisodeToken {
-  return 'episode_id' in object;
-}
-
-async function update(lang: string, startIndex: number, endIndex: number) {
-  const result = await postStorageTask(
-    providerId,
-    bookId,
-    lang,
-    startIndex,
-    endIndex
-  );
-  if (result.ok) {
-    message.success('更新任务已经进入队列。');
-    pollId += 1;
-    getFileGroups();
-  } else {
-    handleError(message, result.error, '更新失败');
+async function update(
+  startIndex: number,
+  endIndex: number,
+  translated: boolean
+) {
+  if (progress.value !== undefined) {
+    message.info('已有任务在运行。');
+    return;
+  }
+  try {
+    await runUpdate(
+      providerId,
+      bookId,
+      startIndex,
+      endIndex,
+      translated,
+      (it: UpdateProgress) => (progress.value = it),
+      () => getFileGroups(),
+      (it: UpdateProgress) => {
+        message.success(`更新任务完成[${it.finished}/${it.total}]`);
+        progress.value = undefined;
+      }
+    );
+  } catch (error) {
+    progress.value = undefined;
+    console.log(error);
+    handleError(message, error, '本地加速任务失败');
   }
 }
 
 async function localBoost(startIndex: number, endIndex: number) {
-  if (localBoostProgress.value !== undefined) {
-    message.info('本地加速已经在运行。');
+  if (progress.value !== undefined) {
+    message.info('已有任务在运行。');
     return;
   }
-
-  const progress: LocalBoostProgress = {
-    total: undefined,
-    error: 0,
-    finished: 0,
-  };
-  localBoostProgress.value = progress;
-
   try {
-    const translator = await BaiduWebTranslator.createInstance('jp', 'zh');
-
-    console.log(`获取元数据 ${providerId}/${bookId}`);
-    const metadata = await getBoostMetadata(
+    runLocalBoost(
       providerId,
       bookId,
       startIndex,
-      endIndex
-    );
-
-    console.log(`翻译元数据 ${providerId}/${bookId}`);
-    const translated_metadata = await translator.translate(metadata.metadata);
-
-    console.log(`上传元数据 ${providerId}/${bookId}`);
-    await postBoostMetadata(providerId, bookId, translated_metadata);
-
-    progress.total = metadata.episode_ids.length;
-    localBoostProgress.value = {
-      total: progress.total,
-      error: progress.error,
-      finished: progress.finished,
-    };
-    getFileGroups();
-
-    for (const episodeId of metadata.episode_ids) {
-      try {
-        console.log(`获取章节 ${providerId}/${bookId}/${episodeId}`);
-        const episode = await getBoostEpisode(providerId, bookId, episodeId);
-
-        console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
-        const translated_episode = await translator.translate(episode);
-
-        console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
-        await postBoostEpisode(
-          providerId,
-          bookId,
-          episodeId,
-          translated_episode
-        );
-
-        progress.finished += 1;
-        localBoostProgress.value = {
-          total: progress.total,
-          error: progress.error,
-          finished: progress.finished,
-        };
-      } catch {
-        progress.error += 1;
-        localBoostProgress.value = {
-          total: progress.total,
-          error: progress.error,
-          finished: progress.finished,
-        };
+      endIndex,
+      (it: UpdateProgress) => (progress.value = it),
+      () => getFileGroups(),
+      (it: UpdateProgress) => {
+        message.success(`本地加速任务完成[${it.finished}/${it.total}]`);
+        progress.value = undefined;
       }
-    }
-
-    console.log(`制作 ${providerId}/${bookId}`);
-    await postBoostMakeBook(providerId, bookId);
-
-    localBoostProgress.value = undefined;
-    message.success(
-      `本地加速任务完成[${progress.finished}/${progress.total}]: ${providerId}/${bookId}`
     );
   } catch (error) {
-    localBoostProgress.value = undefined;
+    progress.value = undefined;
     console.log(error);
     handleError(message, error, '本地加速任务失败');
   }
@@ -215,59 +143,22 @@ async function localBoost(startIndex: number, endIndex: number) {
 const tableColumns: DataTableColumns<BookFileGroup> = [
   {
     title: '语言',
-    key: 'lang',
-  },
-  {
-    title: '状态',
     key: 'status',
   },
   {
     title: '链接',
-    key: 'files',
+    key: 'links',
     render(row) {
-      return row.files.map((file) => {
-        if (file.filename === null) {
-          return h(
-            NA,
-            { style: { marginRight: '6px', color: 'grey' } },
-            { default: () => file.type.toUpperCase() }
-          );
-        } else {
-          return h(
-            NA,
-            {
-              style: { marginRight: '6px' },
-              href: filenameToUrl(file.filename),
-              target: '_blank',
-            },
-            { default: () => file.type.toUpperCase() }
-          );
-        }
-      });
-    },
-  },
-  {
-    title: '原文对比版链接',
-    key: 'mixFiles',
-    render(row) {
-      return row.mixedFiles.map((file) => {
-        if (file.filename === null) {
-          return h(
-            NA,
-            { style: { marginRight: '6px', color: 'grey' } },
-            { default: () => file.type.toUpperCase() }
-          );
-        } else {
-          return h(
-            NA,
-            {
-              style: { marginRight: '6px' },
-              href: filenameToUrl(file.filename),
-              target: '_blank',
-            },
-            { default: () => file.type.toUpperCase() }
-          );
-        }
+      return getFileTypes(row.lang).map((file) => {
+        return h(
+          NA,
+          {
+            style: { marginRight: '6px' },
+            href: filenameToUrl(providerId, bookId, row.lang, file.extension),
+            target: '_blank',
+          },
+          { default: () => file.name }
+        );
       });
     },
   },
@@ -282,12 +173,12 @@ const tableColumns: DataTableColumns<BookFileGroup> = [
             style: { marginRight: '6px' },
             tertiary: true,
             size: 'small',
-            onClick: () => update(row.langCode, 0, 65536),
+            onClick: () => update(0, 65536, row.lang === 'zh'),
           },
           { default: () => '更新' }
         ),
       ];
-      if (row.langCode === 'zh') {
+      if (row.lang === 'zh') {
         arr.push(
           h(
             NButton,
@@ -305,14 +196,6 @@ const tableColumns: DataTableColumns<BookFileGroup> = [
     },
   },
 ];
-
-function getPercentage(progress: LocalBoostProgress): number {
-  if (progress.total === undefined) {
-    return 0;
-  } else {
-    return (100 * (progress.finished + progress.error)) / progress.total;
-  }
-}
 </script>
 
 <template>
@@ -406,25 +289,27 @@ function getPercentage(progress: LocalBoostProgress): number {
       :pagination="false"
       :bordered="false"
     />
-    <div v-if="localBoostProgress !== undefined">
+    <div v-if="progress !== undefined">
       <n-space
-        v-if="localBoostProgress !== undefined"
+        v-if="progress !== undefined"
         align="center"
         justify="space-between"
         style="width: 100%"
       >
         <span>本地加速</span>
         <div>
-          <span>成功:{{ localBoostProgress.finished ?? '-' }}</span>
+          <span>成功:{{ progress.finished ?? '-' }}</span>
           <n-divider vertical />
-          <span>失败:{{ localBoostProgress.error ?? '-' }}</span>
+          <span>失败:{{ progress.error ?? '-' }}</span>
           <n-divider vertical />
-          <span>总共:{{ localBoostProgress.total ?? '-' }}</span>
+          <span>总共:{{ progress.total ?? '-' }}</span>
         </div>
       </n-space>
       <n-progress
         type="line"
-        :percentage="getPercentage(localBoostProgress)"
+        :percentage="
+          (100 * (progress.finished + progress.error)) / (progress.total ?? 1)
+        "
         style="width: 100%"
       />
     </div>
@@ -432,7 +317,7 @@ function getPercentage(progress: LocalBoostProgress): number {
     <n-h2 prefix="bar" align-text>目录</n-h2>
     <n-ul>
       <n-li v-for="token in contentMetadata.value.toc">
-        <span v-if="!instanceOfTocEpisodeToken(token)" class="episode-base">
+        <span v-if="'level' in token" class="episode-base">
           <span class="episode-title">
             {{ token.title }}
           </span>
@@ -442,7 +327,7 @@ function getPercentage(progress: LocalBoostProgress): number {
         </span>
 
         <n-a
-          v-if="instanceOfTocEpisodeToken(token)"
+          v-if="'episode_id' in token"
           class="episode-base"
           :href="`/novel/${providerId}/${bookId}/${token.episode_id}`"
         >

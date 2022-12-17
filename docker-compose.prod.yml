@@ -13,8 +13,6 @@ services:
   server:
     image: ghcr.io/fishhawk/wneg-server
 
-    depends_on:
-      - redis
     environment:
       - HTTPS_PROXY
       - PIXIV_COOKIE_PHPSESSID
@@ -23,34 +21,3 @@ services:
 
     restart: always
     command: gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 'app:create_app()'
-
-  worker:
-    image: ghcr.io/fishhawk/wneg-server
-
-    depends_on:
-      - redis
-    environment:
-      - HTTPS_PROXY
-      - PIXIV_COOKIE_PHPSESSID
-    volumes:
-      - ${BOOKS_PATH}:/books
-
-    restart: always
-    command: rq worker --url redis://redis:6379/0
-
-  dashboard:
-    image: eoranged/rq-dashboard
-
-    depends_on:
-      - redis
-    environment:
-      - RQ_DASHBOARD_REDIS_URL=redis://redis:6379/0
-    ports:
-      - 9181:9181
-
-    restart: always
-
-  redis:
-    image: redis
-
-    restart: always

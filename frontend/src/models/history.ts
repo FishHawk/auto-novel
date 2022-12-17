@@ -3,12 +3,6 @@ export interface SearchHistory {
   title: string;
 }
 
-export interface LocalBoostProgress {
-  total: number | undefined;
-  finished: number;
-  error: number;
-}
-
 export function getHistories(): SearchHistory[] {
   const historiesRaw = localStorage.getItem('histories');
   if (historiesRaw) {

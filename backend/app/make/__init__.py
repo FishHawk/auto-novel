@@ -1,8 +1,6 @@
 import logging
 from pathlib import Path
 
-from app.provider import get_provider
-from app.translator import get_translator, DEFAULT_TRANSLATOR_ID
 from app.cache import BookCache
 from app.model import Book, TocEpisodeToken
 from app.make.make_epub import make_epub_file, make_mixed_epub_file
@@ -59,24 +57,9 @@ def make_book(
     provider_id: str,
     book_id: str,
     lang: str,
-    start_index: int,
-    end_index: int,
+    book_type: str,
     cache_dir: Path,
-    epub_enabled: bool = True,
-    epub_mixed_enabled: bool = True,
-    txt_enabled: bool = True,
-    txt_mixed_enabled: bool = True,
 ):
-    provider = get_provider(provider_id)
-
-    translator = None
-    if lang != provider.lang:
-        translator = get_translator(
-            DEFAULT_TRANSLATOR_ID,
-            from_lang=provider.lang,
-            to_lang=lang,
-        )
-
     cache = BookCache(
         cache_dir=cache_dir,
         provider_id=provider_id,
@@ -84,17 +67,14 @@ def make_book(
     )
 
     logging.info("获取元数据:%s/%s", provider_id, book_id)
-    metadata = provider.get_book_metadata(
-        book_id=book_id,
-        cache=cache,
-    )
+    metadata = cache.get_book_metadata("jp")
+    assert metadata
 
-    if translator:
+    if lang == "zh":
+        cache.metadata_max_age = 60000
         logging.info("翻译元数据:%s/%s", provider_id, book_id)
-        translated_metadata = translator.translate_metadata(
-            metadata=metadata,
-            cache=cache,
-        )
+        translated_metadata = cache.get_book_metadata("zh")
+        assert translated_metadata
 
     episode_ids = [
         token.episode_id for token in metadata.toc if isinstance(token, TocEpisodeToken)
@@ -112,12 +92,7 @@ def make_book(
             episode_id,
         )
         try:
-            episode = provider.get_episode(
-                book_id=book_id,
-                episode_id=episode_id,
-                cache=cache,
-                allow_request=(start_index <= index <= end_index),
-            )
+            episode = cache.get_episode("jp", episode_id)
             if not episode:
                 logging.info("跳过缺失章节:%s/%s/%s", provider_id, book_id, episode_id)
             episodes[episode_id] = episode
@@ -125,7 +100,7 @@ def make_book(
             logging.warning("获取章节失败:%s/%s/%s", provider_id, book_id, episode_id)
             logging.warning(exception, exc_info=True)
 
-        if translator and episode_id in episodes:
+        if lang == "zh" and episode_id in episodes:
             logging.info(
                 "翻译章节:%d/%d %s/%s/%s",
                 index + 1,
@@ -135,12 +110,7 @@ def make_book(
                 episode_id,
             )
             try:
-                translated_episode = translator.translate_episode(
-                    episode_id=episode_id,
-                    episode=episodes[episode_id],
-                    cache=cache,
-                    allow_request=(start_index <= index <= end_index),
-                )
+                translated_episode = cache.get_episode("zh", episode_id)
                 if not translated_episode:
                     logging.info("跳过缺失章节:%s/%s/%s", provider_id, book_id, episode_id)
                 translated_episodes[episode_id] = translated_episode
@@ -151,24 +121,26 @@ def make_book(
     book = Book(
         book_id=book_id,
         provider_id=provider_id,
-        lang=provider.lang,
+        lang="jp",
         metadata=metadata,
         episodes=episodes,
     )
-    _make_files(
-        output_path=cache_dir,
-        book=book,
-        epub_enabled=epub_enabled,
-        epub_mixed_enabled=epub_mixed_enabled,
-        txt_enabled=txt_enabled,
-        txt_mixed_enabled=txt_mixed_enabled,
-    )
 
-    if translator:
+    if lang == "jp":
+        _make_files(
+            output_path=cache_dir,
+            book=book,
+            epub_enabled=book_type == "epub",
+            epub_mixed_enabled=book_type == "mixed.epub",
+            txt_enabled=book_type == "txt",
+            txt_mixed_enabled=book_type == "mixed.txt",
+        )
+
+    if lang == "zh":
         translated_book = Book(
             book_id=book_id,
             provider_id=provider_id,
-            lang=lang,
+            lang="zh",
             metadata=translated_metadata,
             episodes=translated_episodes,
         )
@@ -176,8 +148,8 @@ def make_book(
             output_path=cache_dir,
             book=translated_book,
             secondary_book=book,
-            epub_enabled=epub_enabled,
-            epub_mixed_enabled=epub_mixed_enabled,
-            txt_enabled=txt_enabled,
-            txt_mixed_enabled=txt_mixed_enabled,
+            epub_enabled=book_type == "epub",
+            epub_mixed_enabled=book_type == "mixed.epub",
+            txt_enabled=book_type == "txt",
+            txt_mixed_enabled=book_type == "mixed.txt",
         )

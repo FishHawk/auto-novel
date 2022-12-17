@@ -15,8 +15,8 @@ from app.model import (
 
 class Novelup(BookProvider):
     provider_id = "novelup"
-    lang = "jp"
     session = requests.Session()
+
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
         url = f"https://novelup.plus/story/{book_id}"
         res = self.session.get(url)

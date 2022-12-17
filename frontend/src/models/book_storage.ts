@@ -1,29 +1,11 @@
 import ky from 'ky';
 import { Ok, Err, Result } from './util';
 
-type UpdateTaskStatus = 'queued' | 'started' | 'failed' | 'unknown' | null;
-
-interface BookFile {
-  type: string;
-  filename: string;
-}
-
-export interface RawBookFileGroup {
-  lang: string;
-  status: UpdateTaskStatus;
-  total_episode_number: number;
-  cached_episode_number: number;
-  files: BookFile[];
-  mixed_files: BookFile[];
-}
-
 export interface BookFileGroup {
-  langCode: string;
-  statusCode: UpdateTaskStatus;
   lang: string;
   status: string;
-  files: BookFile[];
-  mixedFiles: BookFile[];
+  total: number;
+  cached: number;
 }
 
 function readableLang(lang: string): string {
@@ -32,35 +14,8 @@ function readableLang(lang: string): string {
   else return `未知(${lang})`;
 }
 
-function readableStatus(
-  status: UpdateTaskStatus,
-  total: number,
-  cached: number
-): string {
-  const page_status = `(${cached}/${total})`;
-  if (status == 'queued') return '排队中' + page_status;
-  else if (status == 'started') return '更新中' + page_status;
-  else if (status == 'failed') return '失败' + page_status;
-  else if (status == 'unknown') return '未知' + page_status;
-  else {
-    if (total > cached) return `不完整(${cached}/${total})`;
-    else return `完整(${cached}/${total})`;
-  }
-}
-
-function processRawFileGroup(it: RawBookFileGroup): BookFileGroup {
-  return {
-    langCode: it.lang,
-    statusCode: it.status,
-    lang: readableLang(it.lang),
-    status: readableStatus(
-      it.status,
-      it.total_episode_number,
-      it.cached_episode_number
-    ),
-    files: it.files,
-    mixedFiles: it.mixed_files,
-  };
+function readableStatus(lang: string, total: number, cached: number): string {
+  return `${readableLang(lang)}(${cached}/${total})`;
 }
 
 export async function getStorage(
@@ -69,24 +24,13 @@ export async function getStorage(
 ): Promise<Result<BookFileGroup[], any>> {
   return ky
     .get(`/api/storage/${providerId}/${bookId}`)
-    .json<RawBookFileGroup[]>()
-    .then((list) => Ok(list.map((it) => processRawFileGroup(it))))
-    .catch((error) => Err(error));
-}
-
-export async function postStorageTask(
-  providerId: string,
-  bookId: string,
-  lang: string,
-  startIndex: number,
-  endIndex: number
-): Promise<Result<string, any>> {
-  return ky
-    .post(`/api/storage/${providerId}/${bookId}/${lang}`, {
-      searchParams: { startIndex, endIndex },
+    .json<BookFileGroup[]>()
+    .then((it) => {
+      for (const group of it) {
+        group.status = readableStatus(group.lang, group.total, group.cached);
+      }
+      return Ok(it);
     })
-    .text()
-    .then((it) => Ok(it))
     .catch((error) => Err(error));
 }
 
@@ -94,7 +38,7 @@ export interface BookListItem {
   provider_id: string;
   book_id: string;
   title: string;
-  files: RawBookFileGroup[];
+  files: BookFileGroup[];
 }
 
 export interface BookPagedList {
@@ -111,7 +55,7 @@ export async function getBookPagedList(
     .then((it) => {
       for (const item of it.books) {
         for (const group of item.files) {
-          group.lang = readableLang(group.lang);
+          group.status = readableStatus(group.lang, group.total, group.cached);
         }
       }
       return Ok(it);
@@ -119,6 +63,25 @@ export async function getBookPagedList(
     .catch((error) => Err(error));
 }
 
-export function filenameToUrl(filename: string): string {
-  return window.location.origin + '/books/' + filename;
+const fileTypes = [
+  { name: 'TXT', extension: 'txt' },
+  { name: 'EPUB', extension: 'epub' },
+  { name: '中日对比版TXT', extension: 'mixed.txt' },
+  { name: '中日对比版EPUB', extension: 'mixed.epub' },
+];
+
+export function getFileTypes(lang: string) {
+  return lang === 'jp' ? fileTypes.slice(0, 2) : fileTypes;
+}
+
+export function filenameToUrl(
+  providerId: string,
+  bookId: string,
+  lang: string,
+  extension: string
+): string {
+  return (
+    window.location.origin +
+    `/api/books/${providerId}/${bookId}/${lang}/${extension}`
+  );
 }

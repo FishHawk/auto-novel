@@ -13,7 +13,6 @@ from app.model import (
 
 class Kakuyomu(BookProvider):
     provider_id = "kakuyomu"
-    lang = "jp"
     session = requests.Session()
 
     def _get_book_metadata(self, book_id: str) -> BookMetadata:

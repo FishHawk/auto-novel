@@ -18,7 +18,6 @@ _HEADERS = {
 
 class Hameln(BookProvider):
     provider_id = "hameln"
-    lang = "jp"
     session = requests.Session()
 
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
