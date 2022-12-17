@@ -17,11 +17,15 @@ export function handleError(
   error: any,
   prefix: string
 ) {
+  message.error(`${prefix} ${errorToString(error)}`);
+}
+
+export function errorToString(error: any) {
   if (error.response) {
-    message.error(`${prefix} ${error.response.status}:${error.response.data}`);
+    return `${error.response.status}:${error.response.statusText}`;
   } else if (error.request) {
-    message.error(`${prefix} 没有收到回复`);
+    return `没有收到回复`;
   } else {
-    message.error(`${prefix} ${error.message}`);
+    return `${error.message}`;
   }
 }

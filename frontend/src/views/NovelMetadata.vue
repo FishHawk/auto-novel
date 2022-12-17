@@ -12,7 +12,7 @@ import {
 } from 'naive-ui';
 import { SearchOutlined, FormatListBulletedOutlined } from '@vicons/material';
 
-import { handleError, Result } from '../models/util';
+import { handleError, Result, errorToString } from '../models/util';
 import { addHistory } from '../models/history';
 import { getContentMetadata, ContentMetadata } from '../models/book_content';
 import {
@@ -346,6 +346,14 @@ const tableColumns: DataTableColumns<BookFileGroup> = [
         </n-li>
       </n-ul>
     </div>
+  </div>
+
+  <div v-if="contentMetadata && !contentMetadata.ok">
+    <n-result
+      status="error"
+      title="加载错误"
+      :description="errorToString(contentMetadata.error)"
+    />
   </div>
 </template>
 

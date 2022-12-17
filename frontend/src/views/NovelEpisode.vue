@@ -2,7 +2,7 @@
 import { onMounted, Ref, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { Result } from '../models/util';
+import { Result, errorToString } from '../models/util';
 import { ContentEpisode, getContentEpisode } from '../models/book_content';
 import { buildEpisodeUrl } from '../models/provider';
 
@@ -130,6 +130,8 @@ watch(fontSize, (fontSize) => {
       common: { bodyColor: themeOptions[themeIndex].bodyColor },
     }"
   >
+    <n-global-style />
+
     <n-modal v-model:show="showModal">
       <n-card
         style="width: 600px"
@@ -245,6 +247,12 @@ watch(fontSize, (fontSize) => {
       </n-space>
     </div>
 
-    <n-global-style />
+    <div v-if="episode && !episode.ok">
+      <n-result
+        status="error"
+        title="加载错误"
+        :description="errorToString(episode.error)"
+      />
+    </div>
   </n-config-provider>
 </template>
