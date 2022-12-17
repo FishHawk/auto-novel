@@ -238,109 +238,114 @@ const tableColumns: DataTableColumns<BookFileGroup> = [
     </n-card>
   </n-modal>
 
-  <div class="content" v-if="contentMetadata?.ok">
-    <n-h2 style="text-align: center; width: 100%">
-      <n-a :href="url" target="_blank">{{ contentMetadata.value.title }}</n-a>
-      <br />
-      <span style="color: grey">{{ contentMetadata.value.zh_title }}</span>
-    </n-h2>
+  <div class="content">
+    <div v-if="contentMetadata?.ok">
+      <n-h2 style="text-align: center; width: 100%">
+        <n-a :href="url" target="_blank">{{ contentMetadata.value.title }}</n-a>
+        <br />
+        <span style="color: grey">{{ contentMetadata.value.zh_title }}</span>
+      </n-h2>
 
-    <n-space justify="space-around">
-      <n-a href="/">
-        <n-button text>
-          <template #icon>
-            <n-icon> <SearchOutlined /> </n-icon>
-          </template>
-          搜索
-        </n-button>
-      </n-a>
-      <n-a href="/list">
-        <n-button text>
-          <template #icon>
-            <n-icon> <FormatListBulletedOutlined /> </n-icon>
-          </template>
-          列表
-        </n-button>
-      </n-a>
-    </n-space>
-
-    <div v-if="contentMetadata.value.authors.length > 0">
-      作者：
-      <span v-for="author in contentMetadata.value.authors">
-        <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
-      </span>
-    </div>
-
-    <n-p>{{ contentMetadata.value.introduction }}</n-p>
-    <n-p v-if="contentMetadata.value.zh_introduction !== undefined">{{
-      contentMetadata.value.zh_introduction
-    }}</n-p>
-
-    <n-h2 prefix="bar" align-text>状态</n-h2>
-    <n-p
-      >如果需要自定义更新范围，请使用
-      <n-a @click="showModal = true"> 高级模式 </n-a>。
-    </n-p>
-    <n-data-table
-      v-if="fileGroups !== undefined && fileGroups.ok"
-      :columns="tableColumns"
-      :data="fileGroups.value"
-      :pagination="false"
-      :bordered="false"
-    />
-    <div v-if="progress !== undefined">
-      <n-space
-        v-if="progress !== undefined"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-      >
-        <span>{{ progress.name }}</span>
-        <div>
-          <span>成功:{{ progress.finished ?? '-' }}</span>
-          <n-divider vertical />
-          <span>失败:{{ progress.error ?? '-' }}</span>
-          <n-divider vertical />
-          <span>总共:{{ progress.total ?? '-' }}</span>
-        </div>
-      </n-space>
-      <n-progress
-        type="line"
-        :percentage="
-          (100 * (progress.finished + progress.error)) / (progress.total ?? 1)
-        "
-        style="width: 100%"
-      />
-    </div>
-
-    <n-h2 prefix="bar" align-text>目录</n-h2>
-    <n-ul>
-      <n-li v-for="token in contentMetadata.value.toc">
-        <span v-if="'level' in token" class="episode-base">
-          <span class="episode-title">
-            {{ token.title }}
-          </span>
-          <span class="episode-title" style="color: grey">
-            {{ token.zh_title }}
-          </span>
-        </span>
-
-        <n-a
-          v-if="'episode_id' in token"
-          class="episode-base"
-          :href="`/novel/${providerId}/${bookId}/${token.episode_id}`"
-        >
-          <span class="episode-title">
-            {{ token.title.trim().length > 0 ? token.title : '短篇' }}
-          </span>
-          <span class="episode-title" style="color: grey">
-            {{ token.zh_title }}
-          </span>
+      <n-space justify="space-around">
+        <n-a href="/">
+          <n-button text>
+            <template #icon>
+              <n-icon> <SearchOutlined /> </n-icon>
+            </template>
+            搜索
+          </n-button>
         </n-a>
+        <n-a href="/list">
+          <n-button text>
+            <template #icon>
+              <n-icon> <FormatListBulletedOutlined /> </n-icon>
+            </template>
+            列表
+          </n-button>
+        </n-a>
+      </n-space>
 
-        <n-divider style="margin-top: 2px; margin-bottom: 2px" />
-      </n-li>
-    </n-ul>
+      <div v-if="contentMetadata.value.authors.length > 0">
+        作者：
+        <span v-for="author in contentMetadata.value.authors">
+          <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
+        </span>
+      </div>
+
+      <n-p>{{ contentMetadata.value.introduction }}</n-p>
+      <n-p v-if="contentMetadata.value.zh_introduction !== undefined">{{
+        contentMetadata.value.zh_introduction
+      }}</n-p>
+    </div>
+
+    <div v-if="fileGroups?.ok">
+      <n-h2 prefix="bar" align-text>状态</n-h2>
+      <n-p
+        >如果需要自定义更新范围，请使用
+        <n-a @click="showModal = true"> 高级模式 </n-a>。
+      </n-p>
+      <n-data-table
+        :columns="tableColumns"
+        :data="fileGroups.value"
+        :pagination="false"
+        :bordered="false"
+      />
+      <div v-if="progress !== undefined">
+        <n-space
+          v-if="progress !== undefined"
+          align="center"
+          justify="space-between"
+          style="width: 100%"
+        >
+          <span>{{ progress.name }}</span>
+          <div>
+            <span>成功:{{ progress.finished ?? '-' }}</span>
+            <n-divider vertical />
+            <span>失败:{{ progress.error ?? '-' }}</span>
+            <n-divider vertical />
+            <span>总共:{{ progress.total ?? '-' }}</span>
+          </div>
+        </n-space>
+        <n-progress
+          type="line"
+          :percentage="
+            (100 * (progress.finished + progress.error)) / (progress.total ?? 1)
+          "
+          style="width: 100%"
+        />
+      </div>
+    </div>
+
+    <div v-if="contentMetadata?.ok">
+      <n-h2 prefix="bar" align-text>目录</n-h2>
+      <n-ul>
+        <n-li v-for="token in contentMetadata.value.toc">
+          <span v-if="'level' in token" class="episode-base">
+            <span class="episode-title">
+              {{ token.title }}
+            </span>
+            <span class="episode-title" style="color: grey">
+              {{ token.zh_title }}
+            </span>
+          </span>
+
+          <n-a
+            v-if="'episode_id' in token"
+            class="episode-base"
+            :href="`/novel/${providerId}/${bookId}/${token.episode_id}`"
+          >
+            <span class="episode-title">
+              {{ token.title.trim().length > 0 ? token.title : '短篇' }}
+            </span>
+            <span class="episode-title" style="color: grey">
+              {{ token.zh_title }}
+            </span>
+          </n-a>
+
+          <n-divider style="margin-top: 2px; margin-bottom: 2px" />
+        </n-li>
+      </n-ul>
+    </div>
   </div>
 </template>
 

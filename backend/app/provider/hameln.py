@@ -21,7 +21,7 @@ class Hameln(BookProvider):
     session = requests.Session()
 
     def _get_book_metadata(self, book_id: str) -> BookMetadata:
-        url = f"https://syosetu.org/novel/${book_id}"
+        url = f"https://syosetu.org/novel/{book_id}"
         res = self.session.get(url, headers=_HEADERS)
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
