@@ -8,6 +8,7 @@ import {
   NDataTable,
   useMessage,
   NP,
+  NTooltip,
 } from 'naive-ui';
 import { SearchOutlined, FormatListBulletedOutlined } from '@vicons/material';
 
@@ -141,10 +142,7 @@ async function localBoost(startIndex: number, endIndex: number) {
 }
 
 const tableColumns: DataTableColumns<BookFileGroup> = [
-  {
-    title: '语言',
-    key: 'status',
-  },
+  { title: '语言', key: 'status' },
   {
     title: '链接',
     key: 'links',
@@ -166,33 +164,34 @@ const tableColumns: DataTableColumns<BookFileGroup> = [
     title: '操作',
     key: 'actions',
     render(row) {
-      const arr = [
-        h(
+      const updateButton = h(
+        NButton,
+        {
+          tertiary: true,
+          size: 'small',
+          onClick: () => update(0, 65536, row.lang === 'zh'),
+        },
+        { default: () => '更新' }
+      );
+      if (row.lang === 'jp') {
+        return updateButton;
+      } else {
+        const newUpdateButton = h(NTooltip, null, {
+          trigger: () => updateButton,
+          default: () => '翻译api额度很紧张，大概率失败，推荐使用本地加速。',
+        });
+        const localBoostButton = h(
           NButton,
           {
-            style: { marginRight: '6px' },
+            style: { marginLeft: '6px' },
             tertiary: true,
             size: 'small',
-            onClick: () => update(0, 65536, row.lang === 'zh'),
+            onClick: () => localBoost(0, 65536),
           },
-          { default: () => '更新' }
-        ),
-      ];
-      if (row.lang === 'zh') {
-        arr.push(
-          h(
-            NButton,
-            {
-              style: { marginRight: '6px' },
-              tertiary: true,
-              size: 'small',
-              onClick: () => localBoost(0, 65536),
-            },
-            { default: () => '本地加速' }
-          )
+          { default: () => '本地加速' }
         );
+        return [newUpdateButton, localBoostButton];
       }
-      return arr;
     },
   },
 ];
@@ -296,7 +295,7 @@ const tableColumns: DataTableColumns<BookFileGroup> = [
         justify="space-between"
         style="width: 100%"
       >
-        <span>本地加速</span>
+        <span>{{ progress.name }}</span>
         <div>
           <span>成功:{{ progress.finished ?? '-' }}</span>
           <n-divider vertical />
