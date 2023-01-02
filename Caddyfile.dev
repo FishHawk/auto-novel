@@ -8,10 +8,10 @@
   }
 
   handle_path /api* {
-    reverse_proxy server:8081
+    reverse_proxy 172.17.0.1:8081
   }
 
-  handle_path /books* {
+  handle_path /files* {
     root * /data/files
     file_server
   }

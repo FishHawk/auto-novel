@@ -1,31 +1,27 @@
 services:
   proxy:
     image: caddy:2.6.2
-    container_name: proxy
-
     ports:
       - 8080:80
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./frontend/dist:/frontend/dist
-      - ./books:/books
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile
+      - ./src-vue/dist:/dist
+      - ./data/files:/data/files
 
-    restart: unless-stopped
-
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
-
-    image: server
-    container_name: server
-
-    environment:
-      - HTTPS_PROXY
-      - PIXIV_COOKIE_PHPSESSID
-      - FLASK_APP=app:create_app()
-      - FLASK_DEBUG=True
+  mongo:
+    image: mongo:6.0.3
     volumes:
-      - ./backend:/backend
-      - ./books:/books
-    command: flask run --host=0.0.0.0
+      - ./data/db:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=auth
+    ports:
+      - 27017:27017
+
+  mongo-express:
+    image: mongo-express:1.0.0-alpha.4
+    depends_on:
+      - mongo
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongo:27017
+    ports:
+      - 27018:8081

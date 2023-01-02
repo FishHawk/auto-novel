@@ -1,8 +1,7 @@
 FROM node:19.0-slim AS builder
 
-COPY ./frontend /frontend
-
-WORKDIR /frontend
+COPY ./src-vue /src-vue
+WORKDIR /src-vue
 
 RUN npm install; \
     npm run build
@@ -12,5 +11,4 @@ RUN npm install; \
 FROM caddy:2.6.2
 
 COPY Caddyfile /etc/caddy/Caddyfile
-
-COPY --from=builder /frontend/dist /frontend/dist
+COPY --from=builder /src-vue/dist /dist

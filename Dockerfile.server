@@ -1,7 +1,36 @@
-FROM python:3.10.8-slim-bullseye
+FROM gradle:7-jdk18 as builder
 
-COPY ./backend /backend
+COPY . /wneg
+WORKDIR /wneg
 
-WORKDIR /backend
+RUN gradle --no-daemon installDist
 
-RUN pip install -r requirements.txt
+RUN jdeps --print-module-deps \
+    --ignore-missing-deps \
+    --recursive \
+    --multi-release 17 \
+    --class-path="./build/install/wneg/lib/*" \
+    --module-path="./build/install/wneg/lib/*" \
+    ./build/install/wneg/lib/wneg*.jar > jre-deps.info
+
+RUN jlink --verbose \
+    --compress 2 \
+    --strip-debug \
+    --no-header-files \
+    --no-man-pages \
+    --output /javaruntime \
+    --add-modules $(cat jre-deps.info)
+
+
+
+FROM debian:buster-slim
+
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH "${JAVA_HOME}/bin:${PATH}"
+
+COPY --from=builder /javaruntime $JAVA_HOME
+COPY --from=builder /wneg/build/install/wneg /wneg
+
+ENV LANG C.UTF-8
+
+CMD ["./wneg/bin/wneg"]

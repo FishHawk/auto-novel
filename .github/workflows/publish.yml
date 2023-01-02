@@ -37,7 +37,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: Dockerfile.proxy
+          file: Dockerfile.server.proxy
           push: true
           tags: ghcr.io/fishhawk/wneg-proxy:latest
 

@@ -1,17 +1,12 @@
 # Editor
-.vscode
-books
-.env
+/data/
+/.gradle/
+/.idea/
+/build/
+/.env
 
-# Backend
-.pytest_cache
-__pycache__
-venv
-
-#Frontend
-node_modules
-dist
-__snapshots__
-
-auto-imports.d.ts
-components.d.ts
+# Vue
+src-vue/node_modules/
+src-vue/dist/
+src-vue/auto-imports.d.ts
+src-vue/components.d.ts
