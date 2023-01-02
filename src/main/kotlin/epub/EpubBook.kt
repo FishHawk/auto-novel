@@ -204,9 +204,9 @@ class EpubBook {
             "link", null,
             mapOf(
                 "href" to href,
-                "hrefLang" to hrefLang,
+                "href-lang" to hrefLang,
                 "id" to id,
-                "mediaType" to mediaType,
+                "media-type" to mediaType,
                 "properties" to properties,
                 "refines" to refines,
                 "rel" to rel,
@@ -228,9 +228,9 @@ class EpubBook {
             mapOf(
                 "href" to href,
                 "id" to id,
-                "mediaType" to mediaType,
+                "media-type" to mediaType,
                 "fallback" to fallback,
-                "mediaOverlay" to mediaOverlay,
+                "media-overlay" to mediaOverlay,
                 "properties" to properties,
             )
         )
@@ -254,29 +254,25 @@ class EpubBook {
         )
     }
 
-    fun addResource(
-        id: String,
-        resource: EpubResource,
-    ) {
-        addResourceToManifest("Content/" + resource.path, id, resource.mediaType)
+    fun addResource(resource: EpubResource, linear: Boolean? = null) {
         resources.add(resource)
-    }
-
-    fun addResource(
-        id: String,
-        resource: EpubResource,
-        linear: Boolean,
-    ) {
-        addResource(id, resource)
-        addResourceRefToSpine(id, linear = linear)
+        addResourceToManifest(
+            href = resource.path,
+            id = resource.id,
+            mediaType = resource.mediaType,
+            properties = resource.properties
+        )
+        if (linear != null) {
+            addResourceRefToSpine(idref = resource.id, linear = linear)
+        }
     }
 
     fun addNavigation(
         identifier: String,
         navigation: Navigation,
     ) {
-        addResource("toc", createEpubResourceNavigation(navigation), true)
-        addResource("toc.ncx", createEpubResourceTocNcx(identifier, navigation))
+        addResource(createEpubNav(navigation), true)
+        addResource(createEpubNcx(identifier, navigation))
     }
 
     suspend fun write(filePath: Path) = Writer(this).write(filePath)
@@ -294,11 +290,11 @@ class EpubBook {
                     it.putNextEntry(ZipEntry("mimetype"))
                     it.write("application/epub+zip".toByteArray())
 
-                    it.putNextEntry(ZipEntry("package.opf"))
+                    it.putNextEntry(ZipEntry("OEBPS/content.opf"))
                     it.write(createPackageDocument().toByteArray())
 
                     book.resources.forEach { doc ->
-                        it.putNextEntry(ZipEntry("Content/" + doc.path))
+                        it.putNextEntry(ZipEntry("OEBPS/" + doc.path))
                         it.write(doc.content.toByteArray())
                     }
                 }
@@ -348,9 +344,9 @@ class EpubBook {
 
         companion object {
             const val TEMPLATE_CONTAINER = """<?xml version="1.0" encoding="utf-8"?>
-<container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
     <rootfiles>
-        <rootfile full-path="package.opf" media-type="application/oebps-package+xml"/>
+        <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
     </rootfiles>
 </container>"""
 

@@ -8,6 +8,7 @@ import org.jsoup.parser.Tag
 
 data class EpubResource(
     val path: String,
+    val id: String,
     val mediaType: String,
     val properties: String? = null,
     val content: String,
@@ -25,8 +26,9 @@ private const val TEMPLATE_XHTML = """<?xml version="1.0" encoding="utf-8"?>
 
 data class Link(val href: String, val rel: String, val mediaType: String)
 
-fun createEpubResourceXhtml(
+fun createEpubXhtml(
     path: String,
+    id: String,
     language: String,
     title: String,
     links: List<Link> = emptyList(),
@@ -51,7 +53,13 @@ fun createEpubResourceXhtml(
     doc.title(title)
     bodyContent(doc.body())
     doc.outputSettings().prettyPrint(true)
-    return EpubResource(path, "application/xhtml+xml", properties, doc.html())
+    return EpubResource(
+        path = path,
+        id = id,
+        mediaType = "application/xhtml+xml",
+        properties = properties,
+        content = doc.html()
+    )
 }
 
 data class Navigation(
@@ -65,30 +73,29 @@ data class Navigation(
     )
 }
 
-fun createEpubResourceNavigation(
-    navigation: Navigation,
-): EpubResource {
-    return createEpubResourceXhtml(
-        "nav.xhtml",
-        navigation.language,
-        navigation.title,
-        emptyList(),
-        "nav"
-    ) {
-        val nav = it.appendElement("nav")
-            .attr("epub:type", "toc")
-        nav.appendElement("h2").appendText(navigation.title)
-        val ol = nav.appendElement("ol")
-        navigation.items.forEach {
-            val li = ol.appendElement("li")
-            if (it.href == null) {
-                li.appendElement("span")
-                    .appendText(it.text)
-            } else {
-                li.appendElement("a")
-                    .attr("href", it.href)
-                    .appendText(it.text)
-            }
+fun createEpubNav(
+    navigation: Navigation
+): EpubResource = createEpubXhtml(
+    path = "Text/nav.xhtml",
+    id = "nav.xhtml",
+    language = navigation.language,
+    title = navigation.title,
+    links = emptyList(),
+    properties = "nav"
+) { body ->
+    val nav = body.appendElement("nav")
+        .attr("epub:type", "toc")
+    nav.appendElement("h2").appendText(navigation.title)
+    val ol = nav.appendElement("ol")
+    navigation.items.forEach {
+        val li = ol.appendElement("li")
+        if (it.href == null) {
+            li.appendElement("span")
+                .appendText(it.text)
+        } else {
+            li.appendElement("a")
+                .attr("href", it.href)
+                .appendText(it.text)
         }
     }
 }
@@ -102,23 +109,23 @@ private const val TEMPLATE_NCX = """<?xml version="1.0" encoding="UTF-8"?>
 </head>
 </ncx>"""
 
-fun createEpubResourceTocNcx(
+fun createEpubNcx(
     identifier: String,
     navigation: Navigation,
 ): EpubResource {
-    val doc = Jsoup.parse(TEMPLATE_XHTML, Parser.xmlParser())
-    doc.head().appendElement("meta")
+    val doc = Jsoup.parse(TEMPLATE_NCX, Parser.xmlParser())
+    val ncx = doc.selectFirst("ncx")!!
+    val head = ncx.selectFirst("head")!!
+
+    head.appendElement("meta")
         .attr("name", "dtb:uid")
         .attr("content", identifier)
-
-    val ncx = doc.head().parent()!!
 
     ncx.appendElement("docTitle")
         .appendElement("text")
         .appendText(navigation.title)
 
-    val navMap = doc.head().parent()!!
-        .appendElement("navMap")
+    val navMap = ncx.appendElement("navMap")
     navigation.items.forEachIndexed { index, it ->
         if (it.href != null) {
             val navPoint = navMap.appendElement("navPoint")
@@ -132,5 +139,11 @@ fun createEpubResourceTocNcx(
     }
 
     doc.outputSettings().prettyPrint(true)
-    return EpubResource("toc.ncx", "application/x-dtbncx+xml", null, doc.html())
+    return EpubResource(
+        path = "toc.ncx",
+        id = "toc.ncx",
+        mediaType = "application/x-dtbncx+xml",
+        properties = null,
+        content = doc.html()
+    )
 }

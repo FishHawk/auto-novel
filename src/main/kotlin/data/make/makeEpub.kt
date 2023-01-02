@@ -3,7 +3,7 @@ package data.make
 import data.BookTocItem
 import epub.EpubBook
 import epub.Navigation
-import epub.createEpubResourceXhtml
+import epub.createEpubXhtml
 import java.nio.file.Path
 
 private const val MISSING_EPISODE_HINT = "该章节缺失。"
@@ -47,11 +47,11 @@ suspend fun makeEpubFile(filePath: Path, bookFile: BookFile) {
     }
 
     bookFile.metadata.toc.filter { it.episodeId != null }.forEachIndexed { index, token ->
-        val id = "episode${index + 1}"
-        val path = "$id.xhtml"
+        val id = "episode${index + 1}.xhtml"
+        val path = "Text/$id"
         val episode = bookFile.episodes[token.episodeId]
         val resource = when (bookFile.lang) {
-            BookFile.Lang.JP -> createEpubResourceXhtml(path, "jp", token.titleJp) {
+            BookFile.Lang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
                 it.appendElement("h1").appendText(token.titleJp)
                 if (episode == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
@@ -62,7 +62,7 @@ suspend fun makeEpubFile(filePath: Path, bookFile: BookFile) {
                 }
             }
 
-            BookFile.Lang.ZH -> createEpubResourceXhtml(path, "zh", token.titleZh ?: token.titleJp) {
+            BookFile.Lang.ZH -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
                 if (episode?.paragraphsZh == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
@@ -73,7 +73,7 @@ suspend fun makeEpubFile(filePath: Path, bookFile: BookFile) {
                 }
             }
 
-            BookFile.Lang.MIX -> createEpubResourceXhtml(path, "zh", token.titleZh ?: token.titleJp) {
+            BookFile.Lang.MIX -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
                 if (token.titleZh == null) {
                     it.appendElement("h1").appendText(token.titleJp)
                 } else {
@@ -96,7 +96,7 @@ suspend fun makeEpubFile(filePath: Path, bookFile: BookFile) {
                 }
             }
         }
-        epub.addResource(id, resource, true)
+        epub.addResource(resource, true)
     }
     epub.write(filePath)
 }
