@@ -1,11 +1,23 @@
 package data.provider.providers
 
 import data.provider.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 
 class Hameln : BookProvider {
     companion object {
         const val id = "hameln"
+    }
+
+    init {
+        runBlocking {
+            cookies.addCookie(
+                "https://syosetu.org/",
+                Cookie(name = "over18", value = "off", domain = ".syosetu.org")
+            )
+        }
     }
 
     override fun getMetadataUrl(bookId: String): String {

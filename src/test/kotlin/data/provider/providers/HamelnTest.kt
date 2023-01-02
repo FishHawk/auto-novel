@@ -46,6 +46,11 @@ class HamelnTest : DescribeSpec({
             author.name.shouldBe("駒由李")
             author.link.shouldBe("https://syosetu.org/user/146909/")
         }
+        it("常规，R18重定向") {
+            // https://syosetu.org/novel/94938
+            val metadata = provider.getMetadata("94938")
+            metadata.title.shouldBe("オズの国のドロシー")
+        }
     }
 
     describe("getEpisode") {
