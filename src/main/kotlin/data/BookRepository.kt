@@ -15,7 +15,9 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 fun createDatabase(): CoroutineDatabase {
-    val client = KMongo.createClient("mongodb://localhost:27017").coroutine
+    val client = KMongo.createClient(
+        System.getenv("MONGODB_URL") ?: "mongodb://localhost:27017"
+    ).coroutine
     return client.getDatabase("main")
 }
 

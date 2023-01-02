@@ -1,23 +1,36 @@
 services:
   proxy:
     image: ghcr.io/fishhawk/wneg-proxy
-
     ports:
       - 80:80
-      - 443:443
     volumes:
-      - ${BOOKS_PATH}:/books
-
+      - ${DATA_PATH}/files:/data/files
     restart: always
 
   server:
     image: ghcr.io/fishhawk/wneg-server
-
+    depends_on:
+      - mongo
     environment:
       - HTTPS_PROXY
       - PIXIV_COOKIE_PHPSESSID
+      - MONGODB_URL=mongodb://mongo:27017
     volumes:
-      - ${BOOKS_PATH}:/books
-
+      - ${DATA_PATH}/files:/data/files
     restart: always
-    command: gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 'app:create_app()'
+
+  mongo:
+    image: mongo:6.0.3
+    volumes:
+      - ${DATA_PATH}/db:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=auth
+
+  mongo-express:
+    image: mongo-express:1.0.0-alpha.4
+    depends_on:
+      - mongo
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongo:27017
+    ports:
+      - 27018:8081

@@ -15,9 +15,7 @@
     "vue-router": "^4.1.6",
     "@vicons/material": "^0.12.0",
     "vfonts": "^0.0.3",
-    "naive-ui": "^2.34.2"
-  },
-  "devDependencies": {
+    "naive-ui": "^2.34.2",
     "@vitejs/plugin-vue": "^3.1.0",
     "got": "^12.5.3",
     "typescript": "^4.6.4",

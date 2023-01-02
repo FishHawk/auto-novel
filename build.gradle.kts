@@ -2,7 +2,6 @@ plugins {
     application
     kotlin("jvm") version "1.7.20"
     kotlin("plugin.serialization") version "1.7.20"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "me.fishhawk"
@@ -23,7 +22,6 @@ dependencies {
     implementation("io.ktor:ktor-server-caching-headers:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
@@ -44,23 +42,16 @@ dependencies {
 }
 
 application {
-    mainClass.set("me.fishhawk.lisu.ApplicationKt")
+    mainClass.set("ApplicationKt")
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.shadowJar {
-    archiveClassifier.set("")
-    manifest {
-        attributes("Main-Class" to "me.fishhawk.ApplicationKt")
-    }
-}
-
-var env = "production"
-
-tasks.processResources {
+//var env = "production"
+//
+//tasks.processResources {
 //    filesMatching("*.conf") {
 //        when (env) {
 //            "development" -> {
@@ -82,7 +73,7 @@ tasks.processResources {
 //            }
 //        }
 //    }
-}
+//}
 //
 //val setDev = tasks.register("setDev") {
 //    env = "development"

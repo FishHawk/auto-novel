@@ -5,7 +5,6 @@ import api.routeUpdateZh
 import data.BookRepository
 import data.createDatabase
 import io.ktor.server.engine.*
-
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -15,7 +14,6 @@ import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-
 
 fun main() {
     val database = createDatabase()

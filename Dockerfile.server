@@ -1,7 +1,7 @@
 FROM gradle:7-jdk18 as builder
 
-COPY . /wneg
-WORKDIR /wneg
+COPY . /app
+WORKDIR /app
 
 RUN gradle --no-daemon installDist
 
@@ -22,15 +22,13 @@ RUN jlink --verbose \
     --add-modules $(cat jre-deps.info)
 
 
-
 FROM debian:buster-slim
 
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
 
 COPY --from=builder /javaruntime $JAVA_HOME
-COPY --from=builder /wneg/build/install/wneg /wneg
+COPY --from=builder /app/build/install/wneg /app
 
 ENV LANG C.UTF-8
-
-CMD ["./wneg/bin/wneg"]
+CMD ["/app/bin/wneg"]
