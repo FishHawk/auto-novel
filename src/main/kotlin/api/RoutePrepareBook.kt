@@ -44,7 +44,7 @@ fun Route.routePrepareBook(bookRepo: BookRepository) {
         }
 
         val fileName = "${loc.providerId}.${loc.bookId}.${loc.lang}.${loc.type}"
-        val filePath = Path("./data/files") / fileName
+        val filePath = Path("/data/files") / fileName
 
         val metadata = bookRepo.getMetadata(
             providerId = loc.providerId,

@@ -143,10 +143,19 @@ fun Route.routeNovel(bookRepo: BookRepository) {
     }
 
     get<Novel.Episode> { loc ->
-        val metadata = bookRepo.getMetadata(providerId = loc.providerId, bookId = loc.bookId)
-        val episode = bookRepo.getEpisode(providerId = loc.providerId, bookId = loc.bookId, episodeId = loc.episodeId)
+        val metadata = bookRepo.getMetadata(
+            providerId = loc.providerId,
+            bookId = loc.bookId,
+        )
+        val episode = bookRepo.getEpisode(
+            providerId = loc.providerId,
+            bookId = loc.bookId,
+            episodeId = loc.episodeId,
+        )
         val toc = metadata.toc.filter { it.episodeId != null }
-        val currIndex = metadata.toc.indexOfFirst { it.episodeId == loc.episodeId }
+
+
+        val currIndex = toc.indexOfFirst { it.episodeId == loc.episodeId }
         val dto = BookEpisodeDto(
             titleJp = toc[currIndex].titleJp,
             titleZh = toc[currIndex].titleZh,
