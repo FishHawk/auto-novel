@@ -1,13 +1,10 @@
 package api
 
-import data.BookAuthor
-import data.BookRepository
-import data.BookMetadata
-import data.BookTocItem
+import data.*
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.resources.get
+import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
@@ -74,6 +71,8 @@ private class Novel {
     data class List(
         val parent: Novel = Novel(),
         val page: Int,
+        val provider: String = "",
+        val sort: BookRepository.ListSort = BookRepository.ListSort.CreatedTime,
     )
 
     @Serializable
@@ -110,7 +109,12 @@ fun Route.routeNovel(bookRepo: BookRepository) {
 
     get<Novel.List> { loc ->
         val total = bookRepo.countMetadata()
-        bookRepo.list(page = loc.page.coerceAtLeast(0), pageSize = 10)
+        bookRepo.list(
+            page = loc.page.coerceAtLeast(0),
+            pageSize = 10,
+            optionProvider = loc.provider,
+            optionSort = loc.sort,
+        )
             .map {
                 BookPageItemDto(
                     providerId = it.providerId,

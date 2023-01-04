@@ -5,12 +5,14 @@ import data.provider.SBookEpisode
 import data.provider.SBookMetadata
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
+import org.litote.kmongo.util.KMongoUtil.toBson
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -314,7 +316,32 @@ class BookRepository(private val database: CoroutineDatabase) {
         )
     }
 
-    suspend fun list(page: Int, pageSize: Int): List<BookMetadata> {
-        return metadataCol.find().skip(page * pageSize).limit(pageSize).toList()
+    @Serializable
+    enum class ListSort {
+        @SerialName("changed")
+        ChangedTime,
+
+        @SerialName("created")
+        CreatedTime
+    }
+
+    suspend fun list(
+        page: Int,
+        pageSize: Int,
+        optionProvider: String,
+        optionSort: ListSort,
+    ): List<BookMetadata> {
+        val sort = when (optionSort) {
+            ListSort.ChangedTime -> descending(BookMetadata::changeAt)
+            ListSort.CreatedTime -> toBson("{ _id: -1 }")
+        }
+        return metadataCol.find(
+            if (optionProvider.isEmpty()) EMPTY_BSON
+            else BookMetadata::providerId eq optionProvider
+        )
+            .sort(sort)
+            .skip(page * pageSize)
+            .limit(pageSize)
+            .toList()
     }
 }

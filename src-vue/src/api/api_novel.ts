@@ -55,9 +55,15 @@ async function getState(
     .catch((error) => Err(error));
 }
 
-async function list(page: number): Promise<Result<BookPageDto>> {
+async function list(
+  page: number,
+  provider: string,
+  sort: 'created' | 'changed'
+): Promise<Result<BookPageDto>> {
   return ky
-    .get(`/api/novel/list`, { searchParams: { page } })
+    .get(`/api/novel/list`, {
+      searchParams: { page, provider, sort },
+    })
     .json<BookPageDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
