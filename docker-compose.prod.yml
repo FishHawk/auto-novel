@@ -25,6 +25,7 @@ services:
       - ${DATA_PATH}/db:/data/db
     environment:
       - MONGO_INITDB_DATABASE=auth
+    restart: always
 
   mongo-express:
     image: mongo-express:1.0.0-alpha.4
