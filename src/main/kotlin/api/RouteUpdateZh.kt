@@ -1,6 +1,7 @@
 package api
 
-import data.BookRepository
+import data.BookEpisodeRepository
+import data.BookMetadataRepository
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -10,21 +11,7 @@ import io.ktor.server.resources.post
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-
-@Serializable
-private data class MetadataToTranslateDto(
-    val title: String? = null,
-    val introduction: String? = null,
-    val toc: Map<Int, String>,
-    val episodeIds: List<String>,
-)
-
-@Serializable
-private data class MetadataTranslatedDto(
-    val title: String? = null,
-    val introduction: String? = null,
-    val toc: Map<Int, String>,
-)
+import org.koin.ktor.ext.inject
 
 @Serializable
 @Resource("/update-zh")
@@ -49,69 +36,136 @@ private class UpdateZh {
     )
 }
 
-fun Route.routeUpdateZh(bookRepo: BookRepository) {
+fun Route.routeUpdateZh() {
+    val service by inject<UpdateZhService>()
+
     get<UpdateZh.Metadata> { loc ->
-        val metadata = bookRepo.getMetadata(
+        val result = service.getMetadataToTranslate(
             providerId = loc.providerId,
             bookId = loc.bookId,
+            startIndex = loc.startIndex,
+            endIndex = loc.endIndex,
         )
+        call.respondResult(result)
+    }
+
+    post<UpdateZh.Metadata> { loc ->
+        val metadataTranslated = call.receive<UpdateZhService.MetadataTranslatedDto>()
+        val result = service.updateMetadata(
+            providerId = loc.providerId,
+            bookId = loc.bookId,
+            metadataTranslated = metadataTranslated,
+        )
+        call.respondResult(result)
+    }
+
+    get<UpdateZh.Episode> { loc ->
+        val result = service.getEpisodeToTranslate(
+            providerId = loc.providerId,
+            bookId = loc.bookId,
+            episodeId = loc.episodeId,
+        )
+        call.respondResult(result)
+    }
+
+    post<UpdateZh.Episode> { loc ->
+        val episodeTranslated = call.receive<List<String>>()
+        val result = service.updateEpisode(
+            providerId = loc.providerId,
+            bookId = loc.bookId,
+            episodeId = loc.episodeId,
+            episodeTranslated = episodeTranslated,
+        )
+        call.respondResult(result)
+    }
+}
+
+class UpdateZhService(
+    private val bookMetadataRepository: BookMetadataRepository,
+    private val bookEpisodeRepository: BookEpisodeRepository,
+) {
+    @Serializable
+    data class MetadataToTranslateDto(
+        val title: String? = null,
+        val introduction: String? = null,
+        val toc: List<String>,
+        val episodeIds: List<String>,
+    )
+
+    @Serializable
+    data class MetadataTranslatedDto(
+        val title: String? = null,
+        val introduction: String? = null,
+        val toc: Map<String, String>,
+    )
+
+    suspend fun getMetadataToTranslate(
+        providerId: String,
+        bookId: String,
+        startIndex: Int,
+        endIndex: Int,
+    ): Result<MetadataToTranslateDto> {
+        val metadata = bookMetadataRepository.get(providerId, bookId)
+            .getOrElse { return httpInternalServerError(it.message) }
+
         val episodeIds = metadata.toc
             .mapNotNull { it.episodeId }
-            .safeSubList(loc.startIndex, loc.endIndex)
-            .filter {
-                val episode = bookRepo.getEpisodeInDb(
-                    providerId = loc.providerId,
-                    bookId = loc.bookId,
-                    episodeId = it,
-                )
+            .safeSubList(startIndex, endIndex)
+            .filter { episodeId ->
+                val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
                 episode?.paragraphsZh == null
             }
-        call.respond(
+
+        return Result.success(
             MetadataToTranslateDto(
-                title = if (metadata.titleZh == null) metadata.titleJp else null,
-                introduction = if (metadata.introductionZh == null) metadata.introductionJp else null,
-                toc = metadata.toc
-                    .mapIndexedNotNull { index, it ->
-                        if (it.titleZh == null) index to it.titleJp
-                        else null
-                    }.toMap(),
+                title = metadata.titleJp.takeIf { metadata.titleZh == null },
+                introduction = metadata.introductionJp.takeIf { metadata.introductionZh == null },
+                toc = metadata.toc.mapNotNull { if (it.titleZh == null) it.titleJp else null }.distinct(),
                 episodeIds = episodeIds,
             )
         )
     }
 
-    post<UpdateZh.Metadata> { loc ->
-        val metadataTranslated = call.receive<MetadataTranslatedDto>()
-        bookRepo.updateMetadata(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
+    suspend fun updateMetadata(
+        providerId: String,
+        bookId: String,
+        metadataTranslated: MetadataTranslatedDto,
+    ): Result<Unit> {
+        bookMetadataRepository.updateZh(
+            providerId = providerId,
+            bookId = bookId,
             titleZh = metadataTranslated.title,
             introductionZh = metadataTranslated.introduction,
-            toc = metadataTranslated.toc,
+            tocZh = metadataTranslated.toc,
         )
-        call.respond("成功")
+        return Result.success(Unit)
     }
 
-    get<UpdateZh.Episode> { loc ->
-        val episode = bookRepo.getEpisode(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-            episodeId = loc.episodeId,
-        )
-        call.respond(
+    suspend fun getEpisodeToTranslate(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+    ): Result<List<String>> {
+        val episode = bookEpisodeRepository.get(providerId, bookId, episodeId)
+            .getOrElse { return httpInternalServerError(it.message) }
+        return Result.success(
             if (episode.paragraphsZh != null) emptyList()
             else episode.paragraphsJp
         )
     }
 
-    post<UpdateZh.Episode> { loc ->
-        val episodeTranslated = call.receive<List<String>>()
-        bookRepo.updateEpisode(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-            episodeId = loc.episodeId,
+    suspend fun updateEpisode(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+        episodeTranslated: List<String>,
+    ): Result<Unit> {
+        bookEpisodeRepository.updateZh(
+            providerId = providerId,
+            bookId = bookId,
+            episodeId = episodeId,
             paragraphsZh = episodeTranslated,
         )
-        call.respond("成功")
+        return Result.success(Unit)
     }
 }

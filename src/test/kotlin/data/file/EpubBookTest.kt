@@ -1,7 +1,6 @@
-package data.make
+package data.file
 
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.matchers.shouldBe
 
 class EpubBookTest : DescribeSpec({
 

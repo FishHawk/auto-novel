@@ -1,11 +1,24 @@
 services:
   proxy:
-    image: caddy:2.6.2
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
     ports:
       - 8080:80
     volumes:
-      - ./Caddyfile.dev:/etc/caddy/Caddyfile
-      - ./src-vue/dist:/dist
+      - ./data/files:/data/files
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    depends_on:
+      - mongo
+    environment:
+      - HTTPS_PROXY
+      - PIXIV_COOKIE_PHPSESSID
+      - MONGODB_URL=mongodb://mongo:27017
+    volumes:
       - ./data/files:/data/files
 
   mongo:
@@ -14,8 +27,6 @@ services:
       - ./data/db:/data/db
     environment:
       - MONGO_INITDB_DATABASE=auth
-    ports:
-      - 27017:27017
 
   mongo-express:
     image: mongo-express:1.0.0-alpha.4

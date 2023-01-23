@@ -1,5 +1,7 @@
-package data.make
+package data.file
 
+import data.BookEpisode
+import data.BookMetadata
 import data.BookTocItem
 import epub.EpubBook
 import epub.Navigation
@@ -8,50 +10,55 @@ import java.nio.file.Path
 
 private const val MISSING_EPISODE_HINT = "该章节缺失。"
 
-suspend fun makeEpubFile(filePath: Path, bookFile: BookFile) {
+suspend fun makeEpubFile(
+    filePath: Path,
+    lang: BookFileLang,
+    metadata: BookMetadata,
+    episodes: Map<String, BookEpisode>,
+) {
     val epub = EpubBook()
-    val identifier = "${bookFile.metadata.providerId}.${bookFile.metadata.bookId}"
+    val identifier = "${metadata.providerId}.${metadata.bookId}"
     epub.addIdentifier(identifier, true)
 
-    when (bookFile.lang) {
-        BookFile.Lang.JP -> {
-            epub.addTitle(bookFile.metadata.titleJp)
+    when (lang) {
+        BookFileLang.JP -> {
+            epub.addTitle(metadata.titleJp)
             epub.addLanguage("jp")
-            epub.addDescription(bookFile.metadata.introductionJp)
+            epub.addDescription(metadata.introductionJp)
             epub.addNavigation(
                 identifier,
                 Navigation(
                     language = "jp",
-                    title = bookFile.metadata.titleJp,
-                    items = tocToNavigationItems(bookFile.metadata.toc) { it.titleJp }
+                    title = metadata.titleJp,
+                    items = tocToNavigationItems(metadata.toc) { it.titleJp }
                 )
             )
         }
 
         else -> {
-            epub.addTitle(bookFile.metadata.titleZh!!)
+            epub.addTitle(metadata.titleZh!!)
             epub.addLanguage("zh")
-            epub.addDescription(bookFile.metadata.introductionZh!!)
+            epub.addDescription(metadata.introductionZh!!)
             epub.addNavigation(
                 identifier,
                 Navigation(
                     language = "zh",
-                    title = bookFile.metadata.titleZh,
-                    items = tocToNavigationItems(bookFile.metadata.toc) { it.titleZh ?: it.titleJp }
+                    title = metadata.titleZh,
+                    items = tocToNavigationItems(metadata.toc) { it.titleZh ?: it.titleJp }
                 )
             )
         }
     }
-    bookFile.metadata.authors.map {
+    metadata.authors.map {
         epub.addCreator(it.name)
     }
 
-    bookFile.metadata.toc.filter { it.episodeId != null }.forEachIndexed { index, token ->
+    metadata.toc.filter { it.episodeId != null }.forEachIndexed { index, token ->
         val id = "episode${index + 1}.xhtml"
         val path = "Text/$id"
-        val episode = bookFile.episodes[token.episodeId]
-        val resource = when (bookFile.lang) {
-            BookFile.Lang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
+        val episode = episodes[token.episodeId]
+        val resource = when (lang) {
+            BookFileLang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
                 it.appendElement("h1").appendText(token.titleJp)
                 if (episode == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
@@ -62,7 +69,7 @@ suspend fun makeEpubFile(filePath: Path, bookFile: BookFile) {
                 }
             }
 
-            BookFile.Lang.ZH -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
+            BookFileLang.ZH -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
                 if (episode?.paragraphsZh == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
@@ -73,7 +80,7 @@ suspend fun makeEpubFile(filePath: Path, bookFile: BookFile) {
                 }
             }
 
-            BookFile.Lang.MIX -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
+            BookFileLang.MIX -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
                 if (token.titleZh == null) {
                     it.appendElement("h1").appendText(token.titleJp)
                 } else {

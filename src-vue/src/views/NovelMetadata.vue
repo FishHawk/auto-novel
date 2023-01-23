@@ -1,17 +1,14 @@
 <script lang="ts" setup>
 import { h, onMounted, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { NA, DataTableColumns, NButton, useMessage } from 'naive-ui';
 import {
-  NA,
-  DataTableColumns,
-  NButton,
-  NDataTable,
-  useMessage,
-  NP,
-} from 'naive-ui';
-import { SearchOutlined, FormatListBulletedOutlined } from '@vicons/material';
+  SearchFilled,
+  FormatListBulletedFilled,
+  EditNoteFilled,
+} from '@vicons/material';
 
-import { ResultRef } from '../api/result';
+import { ResultState } from '../api/result';
 import ApiNovel, {
   BookMetadataDto,
   BookStateDto,
@@ -27,11 +24,13 @@ import { updateZh } from '../api/api_update_zh';
 import { errorToString } from '../data/handle_error';
 
 const route = useRoute();
+const providerId = route.params.providerId as string;
+const bookId = route.params.bookId as string;
+const url = buildMetadataUrl(providerId, bookId);
+
 const message = useMessage();
+
 const showModal = ref(false);
-const bookMetadata: ResultRef<BookMetadataDto> = ref();
-const bookState: ResultRef<BookStateDto> = ref();
-const progress: Ref<UpdateProgress | undefined> = ref();
 
 const formStartIndex = ref(1);
 const formEndIndex = ref(65536);
@@ -54,23 +53,21 @@ function submitForm() {
   showModal.value = false;
 }
 
-onMounted(() => {
-  getMetadata();
-  getFileGroups();
-});
-
-const providerId = route.params.providerId as string;
-const bookId = route.params.bookId as string;
-const url = buildMetadataUrl(providerId, bookId);
-
+const bookMetadata = ref<ResultState<BookMetadataDto>>();
+onMounted(() => getMetadata());
 async function getMetadata() {
   const result = await ApiNovel.getMetadata(providerId, bookId);
   bookMetadata.value = result;
   if (result.ok) {
+    document.title = result.value.titleJp;
     addHistory({ url, title: result.value.titleJp });
   }
 }
 
+const bookState = ref<ResultState<BookStateDto>>();
+const progress: Ref<UpdateProgress | undefined> = ref();
+
+onMounted(() => getFileGroups());
 let lastPoll = false;
 async function getFileGroups() {
   const result = await ApiNovel.getState(providerId, bookId);
@@ -234,7 +231,7 @@ const tableColumns: DataTableColumns<BookFiles> = [
         <n-a href="/">
           <n-button text>
             <template #icon>
-              <n-icon> <SearchOutlined /> </n-icon>
+              <n-icon> <SearchFilled /> </n-icon>
             </template>
             搜索
           </n-button>
@@ -242,22 +239,33 @@ const tableColumns: DataTableColumns<BookFiles> = [
         <n-a href="/list">
           <n-button text>
             <template #icon>
-              <n-icon> <FormatListBulletedOutlined /> </n-icon>
+              <n-icon> <FormatListBulletedFilled /> </n-icon>
             </template>
             列表
           </n-button>
         </n-a>
+        <!-- <n-a :href="`/novel-edit/${providerId}/${bookId}`">
+          <n-button text>
+            <template #icon>
+              <n-icon> <EditNoteFilled /> </n-icon>
+            </template>
+            编辑
+          </n-button>
+        </n-a> -->
+      </n-space>
+
+      <n-divider />
+
+      <n-space>
         <span>浏览次数:{{ bookMetadata.value.visited }}</span>
         <span>下载次数:{{ bookMetadata.value.downloaded }}</span>
       </n-space>
-
-      <div v-if="bookMetadata.value.authors.length > 0">
+      <n-p v-if="bookMetadata.value.authors.length > 0">
         作者：
         <span v-for="author in bookMetadata.value.authors">
           <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
         </span>
-      </div>
-
+      </n-p>
       <n-p>{{ bookMetadata.value.introductionJp }}</n-p>
       <n-p v-if="bookMetadata.value.introductionZh !== undefined">{{
         bookMetadata.value.introductionZh

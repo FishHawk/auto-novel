@@ -1,4 +1,4 @@
-import ky from 'ky';
+import api from './api';
 import { Ok, Err, Result } from './result';
 
 export interface BookStateDto {
@@ -21,8 +21,6 @@ export interface BookPageDto {
 }
 
 export interface BookMetadataDto {
-  providerId: string;
-  bookId: string;
   titleJp: string;
   titleZh?: string;
   authors: { name: string; link: string }[];
@@ -31,8 +29,7 @@ export interface BookMetadataDto {
   toc: { titleJp: string; titleZh?: string; episodeId?: string }[];
   visited: number;
   downloaded: number;
-  syncAt: string;
-  changeAt: string;
+  syncAt: number;
 }
 
 export interface BookEpisodeDto {
@@ -48,8 +45,8 @@ async function getState(
   providerId: string,
   bookId: string
 ): Promise<Result<BookStateDto>> {
-  return ky
-    .get(`/api/novel/state/${providerId}/${bookId}`)
+  return api
+    .get(`novel/state/${providerId}/${bookId}`)
     .json<BookStateDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
@@ -60,8 +57,8 @@ async function list(
   provider: string,
   sort: 'created' | 'changed'
 ): Promise<Result<BookPageDto>> {
-  return ky
-    .get(`/api/novel/list`, {
+  return api
+    .get(`novel/list`, {
       searchParams: { page, provider, sort },
     })
     .json<BookPageDto>()
@@ -73,8 +70,8 @@ async function getMetadata(
   providerId: string,
   bookId: string
 ): Promise<Result<BookMetadataDto>> {
-  return ky
-    .get(`/api/novel/metadata/${providerId}/${bookId}`)
+  return api
+    .get(`novel/metadata/${providerId}/${bookId}`)
     .json<BookMetadataDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
@@ -85,19 +82,12 @@ async function getEpisode(
   bookId: string,
   episodeId: string
 ): Promise<Result<BookEpisodeDto>> {
-  return ky
-    .get(`/api/novel/episode/${providerId}/${bookId}/${episodeId}`)
+  return api
+    .get(`novel/episode/${providerId}/${bookId}/${episodeId}`)
     .json<BookEpisodeDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
 }
-
-export default {
-  getState,
-  list,
-  getMetadata,
-  getEpisode,
-};
 
 export interface BookFiles {
   label: string;
@@ -110,7 +100,7 @@ export function stateToFileList(
   bookId: string,
   state: BookStateDto
 ): BookFiles[] {
-  const baseUrl = window.location.origin + `/api/prepare-book/`;
+  const baseUrl = window.origin + `/api/prepare-book/`;
 
   function createFile(label: string, lang: string, type: string) {
     return {
@@ -138,3 +128,10 @@ export function stateToFileList(
     },
   ];
 }
+
+export default {
+  getState,
+  list,
+  getMetadata,
+  getEpisode,
+};

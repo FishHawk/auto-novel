@@ -1,4 +1,4 @@
-package data.make
+package data.file
 
 import data.BookEpisode
 import data.BookMetadata
@@ -8,22 +8,26 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
 import java.nio.file.Path
 import kotlin.io.path.bufferedWriter
-import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
 import kotlin.io.path.notExists
 
-suspend fun makeTxtFile(filePath: Path, bookFile: BookFile) {
+suspend fun makeTxtFile(
+    filePath: Path,
+    lang: BookFileLang,
+    metadata: BookMetadata,
+    episodes: Map<String, BookEpisode>,
+) {
     withContext(Dispatchers.IO) {
         if (filePath.notExists()) {
             filePath.createFile()
         }
         filePath.bufferedWriter().use {
-            val writer: TxtWriter = when (bookFile.lang) {
-                BookFile.Lang.JP -> TxtMakerJp
-                BookFile.Lang.ZH -> TxtMakerZh
-                BookFile.Lang.MIX -> TxtMakerMix
+            val writer: TxtWriter = when (lang) {
+                BookFileLang.JP -> TxtMakerJp
+                BookFileLang.ZH -> TxtMakerZh
+                BookFileLang.MIX -> TxtMakerMix
             }
-            with(it) { with(writer) { writeBook(bookFile) } }
+            with(it) { with(writer) { writeBook(metadata, episodes) } }
         }
     }
 }
@@ -50,19 +54,22 @@ private abstract class TxtWriter {
         write(MISSING_EPISODE_HINT)
     }
 
-    fun BufferedWriter.writeBook(book: BookFile) {
-        writeTitle(book.metadata)
+    fun BufferedWriter.writeBook(
+        metadata: BookMetadata,
+        episodes: Map<String, BookEpisode>,
+    ) {
+        writeTitle(metadata)
         write("\n")
-        writeAuthor(book.metadata)
+        writeAuthor(metadata)
         write("\n")
         write("#".repeat(12) + "\n")
-        writeIntroduction(book.metadata)
+        writeIntroduction(metadata)
         write("\n\n\n")
 
-        book.metadata.toc.forEach { item ->
+        metadata.toc.forEach { item ->
             writeTocItemTitle(item)
             write("\n")
-            val episode = item.episodeId?.let { book.episodes[it] }
+            val episode = item.episodeId?.let { episodes[it] }
             if (episode == null) writeMissingEpisode()
             else writeEpisode(episode)
             write("\n\n\n")

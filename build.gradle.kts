@@ -22,11 +22,16 @@ dependencies {
     implementation("io.ktor:ktor-server-caching-headers:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-java:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+
+    val koinVersion = "3.3.0"
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
 
     implementation("org.codehaus.janino:janino:3.1.9")
     implementation("ch.qos.logback:logback-classic:1.4.5")
@@ -88,3 +93,4 @@ tasks.test {
 //docker-compose -f docker-compose.dev.yml build --progress plain
 //docker-compose -f docker-compose.dev.yml up -d
 //docker-compose -f docker-compose.prod.yml up -d
+//docker run --name mongo -v $(pwd)/data/db:/data/db -p 27017:27017 -d mongo:6.0.3

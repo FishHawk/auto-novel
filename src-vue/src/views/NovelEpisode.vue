@@ -1,13 +1,21 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ResultRef } from '../api/result';
+import { ResultState } from '../api/result';
 import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
 import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 import ApiNovel, { BookEpisodeDto } from '../api/api_novel';
+
+const route = useRoute();
+const providerId = route.params.providerId as string;
+const bookId = route.params.bookId as string;
+const episodeId = route.params.episodeId as string;
+const url = buildEpisodeUrl(providerId, bookId, episodeId);
+
+const showModal = ref(false);
 
 interface Theme {
   isDark: boolean;
@@ -24,6 +32,15 @@ const themeOptions: Theme[] = [
   { isDark: true, bodyColor: '#272727' },
 ];
 const themeIndex = ref(0);
+onMounted(() => {
+  const themeIndexRaw = localStorage.getItem('episode-theme-index');
+  if (themeIndexRaw !== null) {
+    themeIndex.value = +themeIndexRaw;
+  }
+});
+watch(themeIndex, (themeIndex) => {
+  localStorage.setItem('episode-theme-index', themeIndex.toString());
+});
 
 enum Mode {
   JP,
@@ -36,27 +53,7 @@ const modeOptions = [
   { value: Mode.MIX, label: '中日混合' },
 ];
 const mode = ref(Mode.MIX);
-
-const fontSizeOptions = ['14px', '16px', '18px', '20px'];
-const fontSize = ref('14px');
-
-const route = useRoute();
-const providerId = route.params.providerId as string;
-const bookId = route.params.bookId as string;
-const episodeId = route.params.episodeId as string;
-const url = buildEpisodeUrl(providerId, bookId, episodeId);
-
-const showModal = ref(false);
-const episode: ResultRef<BookEpisodeDto> = ref();
-
 onMounted(() => {
-  getEpisode();
-
-  const themeIndexRaw = localStorage.getItem('episode-theme-index');
-  if (themeIndexRaw !== null) {
-    themeIndex.value = +themeIndexRaw;
-  }
-
   const modeRaw = localStorage.getItem('episode-mode');
   for (const option of modeOptions) {
     if (modeRaw === option.label) {
@@ -64,7 +61,19 @@ onMounted(() => {
       break;
     }
   }
+});
+watch(mode, (mode) => {
+  for (const option of modeOptions) {
+    if (mode === option.value) {
+      localStorage.setItem('episode-mode', option.label);
+      break;
+    }
+  }
+});
 
+const fontSizeOptions = ['14px', '16px', '18px', '20px'];
+const fontSize = ref('14px');
+onMounted(() => {
   const fontSizeRaw = localStorage.getItem('episode-font-size');
   for (const option of fontSizeOptions) {
     if (fontSizeRaw === option) {
@@ -73,10 +82,23 @@ onMounted(() => {
     }
   }
 });
+watch(fontSize, (fontSize) => {
+  for (const option of fontSizeOptions) {
+    if (fontSize === option) {
+      localStorage.setItem('episode-font-size', option);
+      break;
+    }
+  }
+});
 
+const bookEpisode = shallowRef<ResultState<BookEpisodeDto>>();
+onMounted(() => getEpisode());
 async function getEpisode() {
   const result = await ApiNovel.getEpisode(providerId, bookId, episodeId);
-  episode.value = result;
+  bookEpisode.value = result;
+  if (result.ok) {
+    document.title = result.value.titleJp;
+  }
 }
 
 function getTextList(
@@ -103,26 +125,6 @@ function getTextList(
     return [{ text1: '章节未翻译!' }];
   }
 }
-
-watch(themeIndex, (themeIndex) => {
-  localStorage.setItem('episode-theme-index', themeIndex.toString());
-});
-watch(mode, (mode) => {
-  for (const option of modeOptions) {
-    if (mode === option.value) {
-      localStorage.setItem('episode-mode', option.label);
-      break;
-    }
-  }
-});
-watch(fontSize, (fontSize) => {
-  for (const option of fontSizeOptions) {
-    if (fontSize === option) {
-      localStorage.setItem('episode-font-size', option);
-      break;
-    }
-  }
-});
 </script>
 
 <template>
@@ -175,22 +177,22 @@ watch(fontSize, (fontSize) => {
 
         <n-space style="margin-top: 15px">
           <span>主题</span>
-          <n-radio-group v-model:value="themeIndex" name="fontSize">
+          <n-radio-group v-model:value="themeIndex" name="themeIndex">
             <n-space>
               <n-radio
-                v-for="index in themeOptions.length"
+                v-for="(theme, index) of themeOptions"
                 :key="index"
                 :value="index"
               >
                 <n-tag
                   :bordered="false"
                   :color="{
-                    color: themeOptions[index].bodyColor,
-                    textColor: themeOptions[index].isDark ? 'white' : 'black',
+                    color: theme.bodyColor,
+                    textColor: theme.isDark ? 'white' : 'black',
                   }"
                   style="width: 8em"
                 >
-                  {{ themeOptions[index].bodyColor }}
+                  {{ theme.bodyColor }}
                 </n-tag>
               </n-radio>
             </n-space>
@@ -199,34 +201,43 @@ watch(fontSize, (fontSize) => {
       </n-card>
     </n-modal>
 
-    <div class="content" v-if="episode?.ok">
+    <div class="content" v-if="bookEpisode?.ok">
       <n-h2 style="text-align: center; width: 100%">
-        <n-a :href="url" target="_blank">{{ episode.value.titleJp }}</n-a>
+        <n-a :href="url" target="_blank">{{ bookEpisode.value.titleJp }}</n-a>
         <br />
-        <span style="color: gray">{{ episode.value.titleZh }}</span>
+        <span style="color: gray">{{ bookEpisode.value.titleZh }}</span>
       </n-h2>
 
       <n-space align="center" justify="space-between" style="width: 100%">
         <n-a
-          v-if="episode.value.prevId"
-          :href="`/novel/${providerId}/${bookId}/${episode.value.prevId}`"
+          v-if="bookEpisode.value.prevId"
+          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
           >上一章</n-a
         >
-        <n-text v-if="!episode.value.prevId" style="color: grey">上一章</n-text>
-        <n-a :href="`/novel/${providerId}/${bookId}`"> 目录 </n-a>
-        <n-a @click="showModal = true"> 设置 </n-a>
+        <n-text v-else style="color: grey">上一章</n-text>
+
+        <n-a :href="`/novel/${providerId}/${bookId}`">目录</n-a>
+        <n-a @click="showModal = true">设置</n-a>
+
+        <!-- <n-a
+          v-if="bookEpisode.value.paragraphsZh"
+          :href="`/novel-edit/${providerId}/${bookId}/${episodeId}`"
+          >编辑</n-a
+        >
+        <n-text v-else style="color: grey">编辑</n-text> -->
+
         <n-a
-          v-if="episode.value.nextId"
-          :href="`/novel/${providerId}/${bookId}/${episode.value.nextId}`"
+          v-if="bookEpisode.value.nextId"
+          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
           >下一章</n-a
         >
-        <n-text v-if="!episode.value.nextId" style="color: grey">下一章</n-text>
+        <n-text v-else style="color: grey">下一章</n-text>
       </n-space>
 
       <n-divider />
 
       <div id="episode-content">
-        <template v-for="text in getTextList(episode.value)">
+        <template v-for="text in getTextList(bookEpisode.value)">
           <n-p v-if="text.text1.trim().length === 0">
             <br />
           </n-p>
@@ -251,25 +262,26 @@ watch(fontSize, (fontSize) => {
 
       <n-space align="center" justify="space-between" style="width: 100%">
         <n-a
-          v-if="episode.value.prevId"
-          :href="`/novel/${providerId}/${bookId}/${episode.value.prevId}`"
+          v-if="bookEpisode.value.prevId"
+          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
           >上一章</n-a
         >
-        <n-text v-if="!episode.value.prevId" style="color: grey">上一章</n-text>
+        <n-text v-else style="color: grey">上一章</n-text>
+
         <n-a
-          v-if="episode.value.nextId"
-          :href="`/novel/${providerId}/${bookId}/${episode.value.nextId}`"
+          v-if="bookEpisode.value.nextId"
+          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
           >下一章</n-a
         >
-        <n-text v-if="!episode.value.nextId" style="color: grey">下一章</n-text>
+        <n-text v-else style="color: grey">下一章</n-text>
       </n-space>
     </div>
 
-    <div v-if="episode && !episode.ok">
+    <div v-if="bookEpisode && !bookEpisode.ok">
       <n-result
         status="error"
         title="加载错误"
-        :description="errorToString(episode.error)"
+        :description="errorToString(bookEpisode.error)"
       />
     </div>
   </n-config-provider>

@@ -1,7 +1,7 @@
 package api
 
-import data.BookMetadata
-import data.BookRepository
+import data.BookEpisodeRepository
+import data.BookMetadataRepository
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -9,6 +9,7 @@ import io.ktor.server.resources.post
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+import org.koin.ktor.ext.inject
 
 @Serializable
 @Resource("/update-jp")
@@ -33,32 +34,58 @@ private class UpdateJp {
     )
 }
 
-fun Route.routeUpdateJp(bookRepo: BookRepository) {
+fun Route.routeUpdateJp() {
+    val service by inject<UpdateJpService>()
+
     post<UpdateJp.Metadata> { loc ->
-        val metadata = bookRepo.getMetadata(
+        val result = service.updateMetadata(
             providerId = loc.providerId,
             bookId = loc.bookId,
+            startIndex = loc.startIndex,
+            endIndex = loc.endIndex
         )
-        val episodeIds = metadata.toc
-            .mapNotNull { it.episodeId }
-            .safeSubList(loc.startIndex, loc.endIndex)
-            .filter {
-                bookRepo.getEpisodeInDb(
-                    providerId = loc.providerId,
-                    bookId = loc.bookId,
-                    episodeId = it,
-                ) == null
-            }
-        call.respond(episodeIds)
+        call.respondResult(result)
     }
 
     post<UpdateJp.Episode> { loc ->
-        bookRepo.getEpisode(
+        val result = service.updateEpisode(
             providerId = loc.providerId,
             bookId = loc.bookId,
             episodeId = loc.episodeId,
         )
-        call.respond("成功")
+        call.respondResult(result)
+    }
+}
+
+class UpdateJpService(
+    private val bookMetadataRepository: BookMetadataRepository,
+    private val bookEpisodeRepository: BookEpisodeRepository,
+) {
+    suspend fun updateMetadata(
+        providerId: String,
+        bookId: String,
+        startIndex: Int,
+        endIndex: Int,
+    ): Result<List<String>> {
+        val metadata = bookMetadataRepository.get(providerId, bookId)
+            .getOrElse { return httpInternalServerError(it.message) }
+
+        val episodeIds = metadata.toc
+            .mapNotNull { it.episodeId }
+            .safeSubList(startIndex, endIndex)
+            .filter { bookEpisodeRepository.getLocal(providerId, bookId, it) == null }
+
+        return Result.success(episodeIds)
+    }
+
+    suspend fun updateEpisode(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+    ): Result<Unit> {
+        bookEpisodeRepository.get(providerId, bookId, episodeId)
+            .getOrElse { return httpInternalServerError(it.message) }
+        return Result.success(Unit)
     }
 }
 

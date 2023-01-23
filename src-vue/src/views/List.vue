@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 
-import { ResultRef } from '../api/result';
+import { ResultState } from '../api/result';
 import ApiNovel, { BookPageDto, stateToFileList } from '../api/api_novel';
 import { buildMetadataUrl } from '../data/provider';
 
@@ -22,7 +22,7 @@ const sortOptions = [
 
 const currentPage = ref(1);
 const total = ref(1);
-const bookPage: ResultRef<BookPageDto> = ref();
+const bookPage = ref<ResultState<BookPageDto>>();
 
 async function loadPage(page: number) {
   bookPage.value = undefined;

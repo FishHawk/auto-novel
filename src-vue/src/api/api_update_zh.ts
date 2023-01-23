@@ -1,4 +1,4 @@
-import ky from 'ky';
+import api from './api';
 import { Ref } from 'vue';
 import { UpdateProgress } from './progress';
 import { Result, Ok, Err } from './result';
@@ -7,14 +7,14 @@ import { BaiduWebTranslator } from '../data/translator/baidu-web';
 interface MetadataToTranslateDto {
   title?: string;
   introduction?: string;
-  toc: { [key: number]: string };
+  toc: string[];
   episodeIds: string[];
 }
 
 interface MetadataTranslatedDto {
   title?: string;
   introduction?: string;
-  toc: { [key: number]: string };
+  toc: { [key: string]: string };
 }
 
 async function getMetadata(
@@ -23,8 +23,8 @@ async function getMetadata(
   startIndex: number,
   endIndex: number
 ): Promise<Result<MetadataToTranslateDto, any>> {
-  return ky
-    .get(`/api/update-zh/metadata/${providerId}/${bookId}`, {
+  return api
+    .get(`update-zh/metadata/${providerId}/${bookId}`, {
       searchParams: { startIndex, endIndex },
     })
     .json<MetadataToTranslateDto>()
@@ -37,8 +37,8 @@ async function postMetadata(
   bookId: string,
   translated: MetadataTranslatedDto
 ): Promise<Result<string, any>> {
-  return ky
-    .post(`/api/update-zh/metadata/${providerId}/${bookId}`, {
+  return api
+    .post(`update-zh/metadata/${providerId}/${bookId}`, {
       json: translated,
     })
     .text()
@@ -51,8 +51,8 @@ async function getEpisode(
   bookId: string,
   episodeId: string
 ): Promise<string[]> {
-  return ky
-    .get(`/api/update-zh/episode/${providerId}/${bookId}/${episodeId}`)
+  return api
+    .get(`update-zh/episode/${providerId}/${bookId}/${episodeId}`)
     .json<string[]>();
 }
 
@@ -62,8 +62,8 @@ async function postEpisode(
   episodeId: string,
   translated: string[]
 ): Promise<string> {
-  return ky
-    .post(`/api/update-zh/episode/${providerId}/${bookId}/${episodeId}`, {
+  return api
+    .post(`update-zh/episode/${providerId}/${bookId}/${episodeId}`, {
       json: translated,
     })
     .text();
@@ -77,9 +77,7 @@ function generateQuery(metadata: MetadataToTranslateDto): string[] {
   if (metadata.introduction) {
     query.push(metadata.introduction);
   }
-  for (const key in metadata.toc) {
-    query.push(metadata.toc[key]);
-  }
+  query.push(...metadata.toc);
   return query;
 }
 
@@ -94,8 +92,8 @@ function generateTranslated(
   if (metadata.introduction) {
     obj.introduction = translated.shift();
   }
-  for (const key in metadata.toc) {
-    obj.toc[key] = translated.shift()!!;
+  for (const textJp of metadata.toc) {
+    obj.toc[textJp] = translated.shift()!!;
   }
   return obj;
 }

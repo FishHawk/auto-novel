@@ -1,8 +1,10 @@
 package api
 
-import data.BookRepository
-import data.make.BookFile
-import data.make.makeFile
+import data.BookEpisodeRepository
+import data.BookMetadataRepository
+import data.file.BookFileLang
+import data.file.BookFileRepository
+import data.file.BookFileType
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -10,7 +12,7 @@ import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import java.nio.file.attribute.BasicFileAttributes
+import org.koin.ktor.ext.inject
 import java.time.ZoneId
 import kotlin.io.path.*
 
@@ -19,66 +21,60 @@ import kotlin.io.path.*
 private data class PrepareBook(
     val providerId: String,
     val bookId: String,
-    val lang: String,
-    val type: String,
+    val lang: BookFileLang,
+    val type: BookFileType,
 )
 
-fun Route.routePrepareBook(bookRepo: BookRepository) {
+fun Route.routePrepareBook() {
+    val service by inject<PrepareBookService>()
+
     get<PrepareBook> { loc ->
-        val lang = when (loc.lang.lowercase()) {
-            "jp" -> BookFile.Lang.JP
-            "zh" -> BookFile.Lang.ZH
-            "mix" -> BookFile.Lang.MIX
-            else -> return@get call.respondText(
-                "不支持${loc.lang}",
-                status = HttpStatusCode.BadRequest,
-            )
-        }
-        val type = when (loc.type.lowercase()) {
-            "epub" -> BookFile.Type.EPUB
-            "txt" -> BookFile.Type.TXT
-            else -> return@get call.respondText(
-                "不支持${loc.lang}",
-                status = HttpStatusCode.BadRequest,
-            )
-        }
+        val result = service.updateBookFile(loc.providerId, loc.bookId, loc.lang, loc.type)
+        result.onSuccess { fileName -> return@get call.respondRedirect("../../../../../files/$fileName") }
+        call.respondResult(result)
+    }
+}
 
-        val fileName = "${loc.providerId}.${loc.bookId}.${loc.lang}.${loc.type}"
-        val filePath = Path("./data/files") / fileName
+class PrepareBookService(
+    private val bookMetadataRepository: BookMetadataRepository,
+    private val bookEpisodeRepository: BookEpisodeRepository,
+    private val bookFileRepository: BookFileRepository,
+) {
+    suspend fun updateBookFile(
+        providerId: String,
+        bookId: String,
+        lang: BookFileLang,
+        type: BookFileType,
+    ): Result<String> {
+        val fileName = "${providerId}.${bookId}.${lang.value}.${type.value}"
 
-        val metadata = bookRepo.getMetadata(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-        )
+        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+            ?: return httpNotFound("小说不存在")
 
-        val shouldMake = if (filePath.exists()) {
+        val shouldMake = bookFileRepository.getCreationTime(fileName)?.let { fileCreateAt ->
             val updateAt = metadata.changeAt.atZone(ZoneId.systemDefault()).toInstant()
-            val fileCreateAt = filePath.readAttributes<BasicFileAttributes>().creationTime().toInstant()
             updateAt > fileCreateAt
-        } else true
+        } ?: true
 
         if (shouldMake) {
             val episodes = metadata.toc
                 .mapNotNull { it.episodeId }
                 .mapNotNull { episodeId ->
-                    bookRepo.getEpisodeInDb(
-                        providerId = loc.providerId,
-                        bookId = loc.bookId,
-                        episodeId = episodeId
-                    )?.let { episodeId to it }
+                    bookEpisodeRepository
+                        .getLocal(providerId, bookId, episodeId)
+                        ?.let { episodeId to it }
                 }
                 .toMap()
-            val bookFile = BookFile(
-                metadata = metadata,
-                episodes = episodes,
+            bookFileRepository.makeFile(
+                fileName = fileName,
                 lang = lang,
                 type = type,
+                metadata = metadata,
+                episodes = episodes,
             )
-            makeFile(bookFile, filePath)
         }
 
-        bookRepo.increaseDownloaded(providerId = loc.providerId, bookId = loc.bookId)
-        call.respondRedirect("../../../../../files/$fileName")
+        bookMetadataRepository.increaseDownloaded(providerId, bookId)
+        return Result.success(fileName)
     }
 }
-

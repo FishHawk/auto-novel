@@ -1,4 +1,4 @@
-import ky from 'ky';
+import api from './api';
 import { Ref } from 'vue';
 import { UpdateProgress } from './progress';
 import { Result, Ok, Err } from './result';
@@ -9,8 +9,8 @@ async function postMetadata(
   startIndex: number,
   endIndex: number
 ): Promise<Result<string[]>> {
-  return ky
-    .post(`/api/update-jp/metadata/${providerId}/${bookId}`, {
+  return api
+    .post(`update-jp/metadata/${providerId}/${bookId}`, {
       searchParams: { startIndex, endIndex },
     })
     .json<string[]>()
@@ -23,8 +23,8 @@ async function postEpisode(
   bookId: string,
   episodeId: string
 ): Promise<Result<string>> {
-  return ky
-    .post(`/api/update-jp/episode/${providerId}/${bookId}/${episodeId}`)
+  return api
+    .post(`update-jp/episode/${providerId}/${bookId}/${episodeId}`)
     .text()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
