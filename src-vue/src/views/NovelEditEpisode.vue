@@ -9,7 +9,7 @@ import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
 import ApiNovel from '../api/api_novel';
-import ApiNovelEdit from '../api/api_novel_edit';
+import ApiNovelEdit from '../api/api_patch';
 
 const route = useRoute();
 const providerId = route.params.providerId as string;

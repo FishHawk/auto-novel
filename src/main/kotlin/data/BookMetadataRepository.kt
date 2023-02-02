@@ -10,8 +10,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.abortTransactionAndAwait
-import org.litote.kmongo.coroutine.commitTransactionAndAwait
 import org.litote.kmongo.util.KMongoUtil.toBson
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -184,12 +182,10 @@ class BookMetadataRepository(
 
         metadataRemote.titleJp.let {
             list.add(setValue(BookMetadata::titleJp, it))
-            list.add(setValue(BookMetadata::titleZh, null))
         }
 
         metadataRemote.introductionJp.let {
             list.add(setValue(BookMetadata::introductionJp, it))
-            list.add(setValue(BookMetadata::introductionZh, null))
         }
 
         metadataRemote.toc.map { itemNew ->
@@ -210,7 +206,7 @@ class BookMetadataRepository(
 
         return col.findOneAndUpdate(
             bsonSpecifyMetadata(providerId, bookId),
-            combine(*list.toTypedArray()),
+            combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )
     }
@@ -220,12 +216,8 @@ class BookMetadataRepository(
         bookId: String,
         titleZh: String?,
         introductionZh: String?,
-        tocZh: Map<String, String>,
+        tocZh: Map<Int, String>,
     ) {
-        val metadata = col.findOne(
-            bsonSpecifyMetadata(providerId, bookId),
-        ) ?: return
-
         val list = mutableListOf<Bson>()
         titleZh?.let {
             list.add(setValue(BookMetadata::titleZh, it))
@@ -233,19 +225,14 @@ class BookMetadataRepository(
         introductionZh?.let {
             list.add(setValue(BookMetadata::introductionZh, it))
         }
-        metadata.toc.forEachIndexed { index, item ->
-            val itemTitleZh = tocZh[item.titleJp]
-            if (itemTitleZh != null && itemTitleZh != item.titleZh) {
-                list.add(setValue(BookMetadata::toc.pos(index) / BookTocItem::titleZh, itemTitleZh))
-            }
+        tocZh.forEach { (index, itemTitleZh) ->
+            list.add(setValue(BookMetadata::toc.pos(index) / BookTocItem::titleZh, itemTitleZh))
         }
-        if (list.isNotEmpty()) {
-            list.add(setValue(BookMetadata::changeAt, LocalDateTime.now()))
-        }
+        list.add(setValue(BookMetadata::changeAt, LocalDateTime.now()))
 
         col.updateOne(
             bsonSpecifyMetadata(providerId, bookId),
-            combine(*list.toTypedArray()),
+            combine(list),
         )
     }
 

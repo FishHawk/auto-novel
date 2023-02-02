@@ -131,12 +131,36 @@ class UpdateZhService(
         bookId: String,
         metadataTranslated: MetadataTranslatedDto,
     ): Result<Unit> {
+        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+            ?: return Result.success(Unit)
+
+        val titleZh = metadataTranslated.title.takeIf {
+            metadata.titleZh == null
+        }
+        val introductionZh = metadataTranslated.introduction.takeIf {
+            metadata.introductionZh == null
+        }
+        val tocZh = metadata.toc.mapIndexedNotNull { index, item ->
+            if (item.titleZh == null) {
+                metadataTranslated.toc[item.titleJp]?.let { index to it }
+            } else {
+                null
+            }
+        }.toMap()
+
+        if (titleZh == null &&
+            introductionZh == null &&
+            tocZh.isEmpty()
+        ) {
+            return Result.success(Unit)
+        }
+
         bookMetadataRepository.updateZh(
             providerId = providerId,
             bookId = bookId,
             titleZh = metadataTranslated.title,
             introductionZh = metadataTranslated.introduction,
-            tocZh = metadataTranslated.toc,
+            tocZh = tocZh,
         )
         return Result.success(Unit)
     }
@@ -160,6 +184,15 @@ class UpdateZhService(
         episodeId: String,
         episodeTranslated: List<String>,
     ): Result<Unit> {
+        val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
+
+        if (episode == null ||
+            episode.paragraphsZh != null ||
+            episode.paragraphsJp.size != episodeTranslated.size
+        ) {
+            return Result.success(Unit)
+        }
+
         bookEpisodeRepository.updateZh(
             providerId = providerId,
             bookId = bookId,

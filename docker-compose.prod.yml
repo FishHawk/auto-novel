@@ -21,17 +21,10 @@ services:
 
   mongo:
     image: mongo:6.0.3
+    ports:
+      - 27017:27017
     volumes:
       - ${DATA_PATH}/db:/data/db
     environment:
       - MONGO_INITDB_DATABASE=auth
     restart: always
-
-  mongo-express:
-    image: mongo-express:1.0.0-alpha.4
-    depends_on:
-      - mongo
-    environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://mongo:27017
-    ports:
-      - 27018:8081

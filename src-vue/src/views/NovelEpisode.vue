@@ -219,12 +219,12 @@ function getTextList(
         <n-a :href="`/novel/${providerId}/${bookId}`">目录</n-a>
         <n-a @click="showModal = true">设置</n-a>
 
-        <!-- <n-a
+        <n-a
           v-if="bookEpisode.value.paragraphsZh"
           :href="`/novel-edit/${providerId}/${bookId}/${episodeId}`"
           >编辑</n-a
         >
-        <n-text v-else style="color: grey">编辑</n-text> -->
+        <n-text v-else style="color: grey">编辑</n-text>
 
         <n-a
           v-if="bookEpisode.value.nextId"

@@ -27,6 +27,14 @@ const routes = [
     path: '/novel-edit/:providerId/:bookId/:episodeId',
     component: () => import('./views/NovelEditEpisode.vue'),
   },
+  {
+    path: '/patch',
+    component: () => import('./views/PatchList.vue'),
+  },
+  {
+    path: '/patch/:providerId/:bookId',
+    component: () => import('./views/PatchDetail.vue'),
+  },
 ];
 
 const router = createRouter({

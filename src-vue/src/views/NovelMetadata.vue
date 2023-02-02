@@ -244,14 +244,14 @@ const tableColumns: DataTableColumns<BookFiles> = [
             列表
           </n-button>
         </n-a>
-        <!-- <n-a :href="`/novel-edit/${providerId}/${bookId}`">
+        <n-a :href="`/novel-edit/${providerId}/${bookId}`">
           <n-button text>
             <template #icon>
               <n-icon> <EditNoteFilled /> </n-icon>
             </template>
             编辑
           </n-button>
-        </n-a> -->
+        </n-a>
       </n-space>
 
       <n-divider />

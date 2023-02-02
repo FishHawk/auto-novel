@@ -5,12 +5,7 @@ import data.provider.SBookEpisode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
-import org.litote.kmongo.and
-import org.litote.kmongo.coroutine.abortTransactionAndAwait
-import org.litote.kmongo.coroutine.commitTransactionAndAwait
-import org.litote.kmongo.eq
-import org.litote.kmongo.ne
-import org.litote.kmongo.setValue
+import org.litote.kmongo.*
 
 @Serializable
 data class BookEpisode(
@@ -87,7 +82,7 @@ class BookEpisodeRepository(
         )
     }
 
-    private suspend fun getEpisodeRemote(
+    private suspend fun getRemote(
         providerId: String,
         bookId: String,
         episodeId: String,
@@ -105,7 +100,7 @@ class BookEpisodeRepository(
         val episodeLocal = getLocal(providerId, bookId, episodeId)
         if (episodeLocal != null) return Result.success(episodeLocal)
 
-        return getEpisodeRemote(providerId, bookId, episodeId)
+        return getRemote(providerId, bookId, episodeId)
             .onSuccess {
                 metadataRepository.updateChangeAt(providerId, bookId)
                 col.insertOne(it)
@@ -118,22 +113,25 @@ class BookEpisodeRepository(
         episodeId: String,
         paragraphsZh: List<String>,
     ) {
-        val episode = col.findOne(
-            bsonSpecifyEpisode(providerId, bookId, episodeId),
-        )
-
-        if (episode == null ||
-            episode.paragraphsZh != null ||
-            episode.paragraphsJp.size != paragraphsZh.size
-        ) {
-            return
-        }
-
         col.updateOne(
             bsonSpecifyEpisode(providerId, bookId, episodeId),
             setValue(BookEpisode::paragraphsZh, paragraphsZh)
         )
+        metadataRepository.updateChangeAt(providerId, bookId)
+    }
 
+    suspend fun updateZh(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+        paragraphsZh: Map<Int, String>,
+    ) {
+        col.updateOne(
+            bsonSpecifyEpisode(providerId, bookId, episodeId),
+            combine(paragraphsZh.map { (index, textZh) ->
+                setValue(BookEpisode::paragraphsZh.pos(index), textZh)
+            }),
+        )
         metadataRepository.updateChangeAt(providerId, bookId)
     }
 }

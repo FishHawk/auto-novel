@@ -6,7 +6,7 @@ import { UploadFilled } from '@vicons/material';
 
 import { Ok, ResultState } from '../api/result';
 import ApiNovel from '../api/api_novel';
-import ApiNovelEdit from '../api/api_novel_edit';
+import ApiNovelEdit from '../api/api_patch';
 import { buildMetadataUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
@@ -37,6 +37,7 @@ async function getMetadata() {
   if (result.ok) {
     document.title = `编辑 - ${result.value.titleJp}`;
     const bookMetadata = result.value;
+    const tocSet = new Set();
     const editMetadata: EditMetadata = {
       title: {
         jp: bookMetadata.titleJp,
@@ -48,11 +49,17 @@ async function getMetadata() {
         zh: bookMetadata.introductionZh,
         ref: ref(bookMetadata.introductionZh),
       },
-      toc: bookMetadata.toc.map((item) => ({
-        jp: item.titleJp,
-        zh: item.titleZh,
-        ref: ref(item.titleZh),
-      })),
+      toc: bookMetadata.toc
+        .filter((item) => {
+          const inTocSet = tocSet.has(item.titleJp);
+          if (!inTocSet) tocSet.add(item.titleJp);
+          return !inTocSet;
+        })
+        .map((item) => ({
+          jp: item.titleJp,
+          zh: item.titleZh,
+          ref: ref(item.titleZh),
+        })),
     };
     editMetadataRef.value = Ok(editMetadata);
   } else {
@@ -76,7 +83,7 @@ async function submitTranslate() {
       {},
       ...editMetadata.toc
         .filter((item) => item.ref.value != item.zh)
-        .map((item, i) => ({ [i]: item.ref.value }))
+        .map((item) => ({ [item.jp]: item.ref.value }))
     ),
   };
   const result = await ApiNovelEdit.postMetadataPatch(
