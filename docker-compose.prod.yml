@@ -15,16 +15,18 @@ services:
       - HTTPS_PROXY
       - PIXIV_COOKIE_PHPSESSID
       - MONGODB_URL=mongodb://mongo:27017
+    ports:
+      - 8081:8081
     volumes:
       - ${DATA_PATH}/files:/data/files
     restart: always
 
   mongo:
     image: mongo:6.0.3
+    environment:
+      - MONGO_INITDB_DATABASE=auth
     ports:
       - 27017:27017
     volumes:
       - ${DATA_PATH}/db:/data/db
-    environment:
-      - MONGO_INITDB_DATABASE=auth
     restart: always
