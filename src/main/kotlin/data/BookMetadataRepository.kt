@@ -154,14 +154,14 @@ class BookMetadataRepository(
             ?: return getRemote(providerId, bookId)
                 .onSuccess { col.insertOne(it) }
 
-        // 不在数据库中，没有过期
+        // 在数据库中，没有过期
         val days = ChronoUnit.DAYS.between(metadataLocal.syncAt, LocalDateTime.now())
         val isExpired = days > 2
         if (!isExpired) {
             return Result.success(metadataLocal)
         }
 
-        // 不在数据库中，过期，合并
+        // 在数据库中，过期，合并
         return getRemote(providerId, bookId).map { metadataRemote ->
             mergeRemoteMetadataToLocal(
                 providerId = providerId,
@@ -169,7 +169,10 @@ class BookMetadataRepository(
                 metadataLocal = metadataLocal,
                 metadataRemote = metadataRemote,
             )!!
-        }.recover { metadataLocal }
+        }.recover {
+            it.printStackTrace()
+            metadataLocal
+        }
     }
 
     private suspend fun mergeRemoteMetadataToLocal(

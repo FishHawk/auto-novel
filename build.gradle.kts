@@ -29,12 +29,12 @@ dependencies {
     implementation("io.ktor:ktor-client-java:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
 
+    implementation("org.codehaus.janino:janino:3.1.9")
+    implementation("ch.qos.logback:logback-classic:1.4.5")
+
     val koinVersion = "3.3.0"
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
-
-    implementation("org.codehaus.janino:janino:3.1.9")
-    implementation("ch.qos.logback:logback-classic:1.4.5")
 
     implementation("org.jsoup:jsoup:1.15.3")
 
