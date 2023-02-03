@@ -69,10 +69,16 @@ private abstract class TxtWriter {
         metadata.toc.forEach { item ->
             writeTocItemTitle(item)
             write("\n")
-            val episode = item.episodeId?.let { episodes[it] }
-            if (episode == null) writeMissingEpisode()
-            else writeEpisode(episode)
-            write("\n\n\n")
+
+            if (item.episodeId != null) {
+                val episode = episodes[item.episodeId]
+                if (episode == null) {
+                    writeMissingEpisode()
+                } else {
+                    writeEpisode(episode)
+                }
+                write("\n\n\n")
+            }
         }
     }
 }
