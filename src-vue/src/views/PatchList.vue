@@ -28,7 +28,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     <n-pagination
       v-model:page="currentPage"
       :page-count="Math.floor(total / 10)"
-      show-quick-jumper
+      :page-slot="7"
     />
     <n-divider />
     <div v-if="bookPage?.ok">
@@ -54,7 +54,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     <n-pagination
       v-model:page="currentPage"
       :page-count="Math.floor(total / 10)"
-      show-quick-jumper
+      :page-slot="7"
     />
   </div>
 </template>
