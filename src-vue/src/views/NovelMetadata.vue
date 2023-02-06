@@ -360,6 +360,6 @@ const tableColumns: DataTableColumns<BookFiles> = [
 .episode-title {
   display: inline-block;
   word-wrap: break-word;
-  width: 50%;
+  width: 49%;
 }
 </style>

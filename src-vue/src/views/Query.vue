@@ -12,7 +12,7 @@ const message = useMessage();
 const url: Ref<string> = ref('');
 const historiesRef: Ref<SearchHistory[]> = ref([]);
 
-function query(url: string) {
+function getNovelUrl(url: string) {
   if (url.length === 0) {
     return;
   }
@@ -23,7 +23,13 @@ function query(url: string) {
   }
   const providerId = parseResult.providerId;
   const bookId = parseResult.bookId;
-  router.push({ path: `/novel/${providerId}/${bookId}` });
+  return `/novel/${providerId}/${bookId}`;
+}
+
+function query(url: string) {
+  const novelUrl = getNovelUrl(url);
+  if (!novelUrl) return;
+  router.push({ path: novelUrl });
 }
 
 function navToList() {
@@ -75,7 +81,9 @@ onMounted(() => {
       <n-h2 prefix="bar" align-text>搜索历史</n-h2>
       <ul>
         <li v-for="history in historiesRef">
-          <n-a @click="query(history.url)">{{ history.title }}</n-a>
+          <n-a :href="getNovelUrl(history.url)" target="_blank">{{
+            history.title
+          }}</n-a>
         </li>
       </ul>
     </div>
@@ -89,13 +97,12 @@ onMounted(() => {
       <n-li> Pixiv: https://www.pixiv.net/novel/series/9406879 </n-li>
     </n-ul>
 
-    <n-h2 prefix="bar" align-text>如何使用本地加速</n-h2>
+    <n-h2 prefix="bar" align-text>如何使用中文翻译</n-h2>
     <n-p>
-      本地加速是在你本地调用翻译api，从而解决翻译额度的问题。
-      因为翻译额度有限，强烈建议使用。
+      中文翻译需要从你的浏览器访问翻译网站，因此需要安装插件解决跨域的问题。
     </n-p>
     <n-p>
-      对于Chrome/Edge/Firefox浏览器，你需要安装插件 CORS Unblock。下载链接：
+      对于 Chrome/Edge/Firefox 浏览器，你需要安装插件 CORS Unblock。下载链接：
       <n-a
         href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino/"
         target="_blank"
@@ -116,7 +123,7 @@ onMounted(() => {
       >
         Firefox
       </n-a>
-      。如果无法访问Chrome的插件页面，你也可以从
+      。如果无法访问 Chrome 的插件页面，你也可以从
       <n-a href="/CORS-Unblock.crx" target="_blank">这里</n-a>
       直接下载插件文件。 为了安全，建议只在本站点启用该插件。
       安装以后，具体配置如下图所示。
@@ -126,7 +133,11 @@ onMounted(() => {
       alt="extension options"
       style="max-width: 100%"
     />
-    <n-p>对于Safari浏览器，你可以修改启动选项来关闭跨域检查。</n-p>
+    <n-p>
+      对于 Safari 浏览器，只能各凭本事了。
+      尽管 Safari 可以修改启动选项来关闭跨域检查，但我不知道有没有什么办法删掉
+      referer 和 origin 头。
+    </n-p>
 
     <n-h2 prefix="bar" align-text>联系我</n-h2>
     如果发现问题或者有什么建议，欢迎到
