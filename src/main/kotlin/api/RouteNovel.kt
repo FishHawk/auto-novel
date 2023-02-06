@@ -171,7 +171,11 @@ class NovelService(
                 state = getStateFromMetadata(it),
             )
         }
-        val total = bookMetadataRepository.count()
+        val total = if (optionProvider == null) {
+            bookMetadataRepository.count()
+        } else {
+            bookMetadataRepository.countProvider(optionProvider)
+        }
         return Result.success(BookPageDto(total = total, items = items))
     }
 

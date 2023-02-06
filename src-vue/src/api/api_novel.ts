@@ -122,8 +122,8 @@ export function stateToFileList(
       files: [
         createFile('TXT', 'zh', 'txt'),
         createFile('EPUB', 'zh', 'epub'),
-        createFile('中日对比版TXT', 'mix', 'txt'),
-        createFile('中日对比版EPUB', 'mix', 'epub'),
+        createFile('中日对比TXT', 'mix', 'txt'),
+        createFile('中日对比EPUB', 'mix', 'epub'),
       ],
     },
   ];

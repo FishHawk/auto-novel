@@ -114,6 +114,12 @@ class BookMetadataRepository(
         return col.countDocuments()
     }
 
+    suspend fun countProvider(providerId: String): Long {
+        return col.countDocuments(
+            BookMetadata::providerId eq providerId
+        )
+    }
+
     // Element operations
     private fun bsonSpecifyMetadata(providerId: String, bookId: String): Bson {
         return and(
