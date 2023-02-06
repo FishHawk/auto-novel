@@ -36,14 +36,14 @@ suspend fun makeEpubFile(
         }
 
         else -> {
-            epub.addTitle(metadata.titleZh!!)
+            epub.addTitle(metadata.titleZh ?: metadata.titleJp)
             epub.addLanguage("zh")
-            epub.addDescription(metadata.introductionZh!!)
+            epub.addDescription(metadata.introductionZh ?: "")
             epub.addNavigation(
                 identifier,
                 Navigation(
                     language = "zh",
-                    title = metadata.titleZh,
+                    title = metadata.titleZh ?: metadata.titleJp,
                     items = tocToNavigationItems(metadata.toc) { it.titleZh ?: it.titleJp }
                 )
             )

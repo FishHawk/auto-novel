@@ -35,6 +35,7 @@ dependencies {
     val koinVersion = "3.3.0"
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
+    testImplementation("io.insert-koin:koin-test:$koinVersion")
 
     implementation("org.jsoup:jsoup:1.15.3")
 
@@ -43,6 +44,7 @@ dependencies {
     val kotestVersion = "5.5.4"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-koin:1.1.0")
     testImplementation("io.kotest:kotest-assertions-ktor:4.4.3")
 }
 

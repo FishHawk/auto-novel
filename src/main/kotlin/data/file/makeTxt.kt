@@ -106,18 +106,18 @@ private object TxtMakerJp : TxtWriter() {
 
 private object TxtMakerZh : TxtWriter() {
     override fun BufferedWriter.writeTitle(metadata: BookMetadata) {
-        write(metadata.titleZh!! + "\n")
+        write((metadata.titleZh ?: metadata.titleJp) + "\n")
     }
 
     override fun BufferedWriter.writeIntroduction(metadata: BookMetadata) {
-        if (metadata.introductionZh!!.isNotBlank()) {
+        if (!metadata.introductionZh.isNullOrBlank()) {
             write(metadata.introductionZh)
             write("\n")
         }
     }
 
     override fun BufferedWriter.writeTocItemTitle(item: BookTocItem) {
-        write("# ${item.titleZh!!}\n")
+        write("# ${item.titleZh ?: item.titleJp}\n")
     }
 
     override fun BufferedWriter.writeEpisode(episode: BookEpisode) {

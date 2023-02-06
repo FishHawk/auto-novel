@@ -35,8 +35,10 @@ class Syosetu : BookProvider {
 
         val title = doc.selectFirst("p.novel_title")!!.text()
 
-        val author = doc.selectFirst("div.novel_writername > a")!!.let {
-            SBookAuthor(name = it.text(), link = it.attr("href"))
+        val author = doc.selectFirst("div.novel_writername")!!.let { el ->
+            el.selectFirst("a")?.let {
+                SBookAuthor(name = it.text(), link = it.attr("href"))
+            } ?: SBookAuthor(name = el.text(), link = null)
         }
 
         if (doc.selectFirst("div.index_box") == null) {
