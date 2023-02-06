@@ -6,6 +6,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
+import org.litote.kmongo.util.KMongoUtil.toBson
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -90,6 +91,7 @@ class BookPatchRepository(
         return col
             .withDocumentClass<BookPatchOutline>()
             .find()
+            .sort(toBson("{ _id: -1 }"))
             .skip(page * pageSize)
             .limit(pageSize)
             .projection(
