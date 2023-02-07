@@ -9,9 +9,9 @@ const providerOption = ref('');
 const providerOptions = [
   { label: '全部', value: '' },
   { label: 'Kakuyomu', value: 'kakuyomu' },
-  { label: 'Syosetu', value: 'syosetu' },
-  { label: 'Hameln', value: 'hameln' },
+  { label: '成为小说家吧', value: 'syosetu' },
   { label: 'Novelup', value: 'novelup' },
+  { label: 'Hameln', value: 'hameln' },
   { label: 'Pixiv', value: 'pixiv' },
 ];
 const sortOption = ref<'created' | 'changed'>('changed');

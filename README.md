@@ -1,51 +1,21 @@
 # Web Novel Ebook Generator
 
-[网络小说 epub/txt 生成器](https://books.fishhawk.top/)的项目代码，可以将日本网络小说翻译成中文并转换成电子书。可以通过安装插件启动本地加速。
+[日本网文机翻机器人](https://books.fishhawk.top/)的代码，可以将日本网络小说翻译成中文并生成 TXT/EPUB 以供下载。
 
-支持的站点：
+- 支持的小说网站：
 
-- [KAKUYOMU/カクヨム](https://kakuyomu.jp/)
-- [成为小说家/小説家になろう](https://syosetu.com/)
-- [ノベルアップ＋](https://novelup.plus/)
-- [HAMELN](https://syosetu.org/)
+  - [Kakuyomu](https://kakuyomu.jp/)
 
-支持的格式：
+  - [小説家になろう](https://syosetu.com/)
 
-- TXT，原文对比版 TXT
-- EPUB，原文对比版 EPUB
+  - [Novelup](https://novelup.plus/)
 
-支持的翻译器：
+  - [Hameln](https://syosetu.org/)
 
-- 百度网页版
-- 百度开发者版
+  - [Pixiv](https://www.pixiv.net/)
 
 
-## 本地运行
-
-1. 安装依赖：`pip install -r requirements.txt`。
-2. 下载小说：`python backend/script/cli.py "小说的url" --epub --txt --zh`。这会下载小说并翻译成中文，同时生成 EPUB 和 TXT 两种格式的文件。
-
-详细用法如下：
-
-```
-usage: cli.py [-h] [--zh] [--epub] [--epub-mixed] [--txt] [--txt-mixed] [--start [START]] [--end [END]] [-t TRANSLATOR] url
-
-positional arguments:
-  url                   书的网址
-
-options:
-  -h, --help            show this help message and exit
-  --zh                  翻译成中文
-  --epub                生成epub
-  --epub-mixed          生成原文混合版epub
-  --txt                 生成txt
-  --txt-mixed           生成原文混合版txt
-  --start [START]       起始章节序号，默认为0
-  --end [END]           结束章节序号，默认为65536
-  -t TRANSLATOR, --translator TRANSLATOR
-                        翻译器id
-```
-
-- 百度网页版，id：`baidu-web`。
-- 百度开发者版，id：`baidu-vip`。
-  - 需要环境变量`BAIDU_VIP_TRANSLATE_APPID`和`BAIDU_VIP_TRANSLATE_APPKEY`。
+- 使用百度网页版自动翻译小说。
+- 可以在线阅读。
+- 可以下载 TXT 和 EPUB 到本地阅读，支持日文、中文以及中日对比三种版本。
+- 可以修改翻译结果。
