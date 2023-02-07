@@ -4,6 +4,7 @@
 .gradle/
 data/
 build/
+log/
 .env
 
 # Vue

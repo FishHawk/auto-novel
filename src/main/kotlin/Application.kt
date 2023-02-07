@@ -64,7 +64,9 @@ fun main() {
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                call.application.environment.log.error("未捕获异常:", cause)
+                val httpMethod = call.request.httpMethod.value
+                val uri = call.request.uri
+                call.application.environment.log.error("未捕获异常 $httpMethod-$uri:", cause)
                 call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
             }
         }

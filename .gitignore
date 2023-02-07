@@ -3,6 +3,7 @@
 /.gradle/
 /.idea/
 /build/
+/log/
 /.env
 
 # Vue

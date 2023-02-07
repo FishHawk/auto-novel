@@ -2,6 +2,7 @@ package api
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 
 data class HttpException(
@@ -23,7 +24,10 @@ suspend inline fun <reified T : Any> ApplicationCall.respondResult(result: Resul
             respond(it)
         }
     }.onFailure {
-        application.environment.log.info("已捕获异常:", it)
+        val httpMethod = request.httpMethod.value
+        val uri = request.uri
+        application.environment.log.warn("已捕获异常 $httpMethod-$uri:", it)
+
         if (it is HttpException) {
             respond(it.status, it.message)
         } else {
