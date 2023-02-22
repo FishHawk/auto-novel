@@ -1,9 +1,7 @@
 package data
 
 import api.*
-import data.file.BookFileLang
 import data.file.BookFileRepository
-import data.file.BookFileType
 import data.provider.ProviderDataSource
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
@@ -11,9 +9,12 @@ import io.kotest.koin.KoinLifecycleMode
 import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
+import org.litote.kmongo.div
+import org.litote.kmongo.pos
+import org.litote.kmongo.regex
 
 val appModule = module {
-    single { MongoDataSource("mongodb://192.168.1.100:27017") }
+    single { MongoDataSource("mongodb://192.168.1.110:27017") }
     single { ProviderDataSource() }
 
     single { BookMetadataRepository(get(), get()) }
@@ -31,14 +32,13 @@ val appModule = module {
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
 
-    private val service by inject<PrepareBookService>(PrepareBookService::class.java)
+    private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
 
     init {
         describe("test") {
-            val providerId = "pixiv"
-            val bookId = "9001702"
-            service.updateBookFile(providerId, bookId, BookFileLang.MIX, BookFileType.EPUB)
+            val col = mongo.database.getCollection<BookMetadata>("metadata")
+            val list = col.find(BookMetadata::authors.pos(0) / BookAuthor::name regex "^作者：.*$".toRegex()).toList()
+            println(list.size)
         }
     }
-
 }
