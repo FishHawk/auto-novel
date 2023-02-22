@@ -303,7 +303,10 @@ const tableColumns: DataTableColumns<BookFiles> = [
         <n-progress
           type="line"
           :percentage="
-            (100 * (progress.finished + progress.error)) / (progress.total ?? 1)
+            Math.round(
+              (1000 * (progress.finished + progress.error)) /
+                (progress.total ?? 1)
+            ) / 10
           "
           style="width: 100%"
         />
