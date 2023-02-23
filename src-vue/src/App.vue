@@ -27,5 +27,14 @@ a {
     padding-right: 10px;
     margin-bottom: 40px;
   }
+  .on-desktop {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: 600px) {
+  .on-mobile {
+    display: none;
+  }
 }
 </style>

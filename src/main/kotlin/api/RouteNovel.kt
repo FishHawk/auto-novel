@@ -2,7 +2,6 @@ package api
 
 import data.*
 import data.BookAuthor
-import data.BookMetadata
 import data.BookTocItem
 import io.ktor.http.*
 import io.ktor.resources.*
@@ -10,6 +9,7 @@ import io.ktor.server.application.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.time.ZoneId
@@ -18,14 +18,6 @@ import java.time.ZoneId
 @Resource("/novel")
 private class Novel {
     @Serializable
-    @Resource("/state/{providerId}/{bookId}")
-    data class State(
-        val parent: Novel = Novel(),
-        val providerId: String,
-        val bookId: String,
-    )
-
-    @Serializable
     @Resource("/list")
     data class List(
         val parent: Novel = Novel(),
@@ -33,6 +25,21 @@ private class Novel {
         val provider: String = "",
         val sort: BookMetadataRepository.ListOption.Sort =
             BookMetadataRepository.ListOption.Sort.CreatedTime,
+    )
+
+    @Serializable
+    @Resource("/rank/{providerId}")
+    data class Rank(
+        val parent: Novel = Novel(),
+        val providerId: String,
+    )
+
+    @Serializable
+    @Resource("/state/{providerId}/{bookId}")
+    data class State(
+        val parent: Novel = Novel(),
+        val providerId: String,
+        val bookId: String,
     )
 
     @Serializable
@@ -62,6 +69,15 @@ fun Route.routeNovel() {
             pageSize = 10,
             optionProvider = loc.provider.ifEmpty { null },
             optionSort = loc.sort,
+        )
+        call.respondResult(result)
+    }
+
+    get<Novel.Rank> { loc ->
+        val options = call.request.queryParameters.toMap().mapValues { it.value.first() }
+        val result = service.listRank(
+            providerId = loc.providerId,
+            options = options,
         )
         call.respondResult(result)
     }
@@ -114,8 +130,8 @@ class NovelService(
 
     @Serializable
     data class BookPageDto(
-        val total: Long,
-        val items: List<BookPageItemDto>,
+        val pageNumber: Long,
+        val items: List<BookListItem>,
     )
 
     @Serializable
@@ -141,14 +157,6 @@ class NovelService(
         val paragraphsZh: List<String>? = null,
     )
 
-    private suspend fun getStateFromMetadata(metadata: BookMetadata): BookStateDto {
-        return BookStateDto(
-            total = metadata.toc.count { it.episodeId != null },
-            countJp = bookEpisodeRepository.countJp(metadata.providerId, metadata.bookId),
-            countZh = bookEpisodeRepository.countZh(metadata.providerId, metadata.bookId),
-        )
-    }
-
     suspend fun list(
         page: Int,
         pageSize: Int,
@@ -163,20 +171,29 @@ class NovelService(
                 sort = optionSort,
             ),
         ).map {
-            BookPageItemDto(
-                providerId = it.providerId,
-                bookId = it.bookId,
-                titleJp = it.titleJp,
-                titleZh = it.titleZh,
-                state = getStateFromMetadata(it),
+            it.copy(
+                extra = listOf(
+                    it.extra,
+                    "日文[${bookEpisodeRepository.countJp(it.providerId, it.bookId)}]",
+                    "中文[${bookEpisodeRepository.countZh(it.providerId, it.bookId)}]",
+                ).joinToString("/")
             )
         }
+
         val total = if (optionProvider == null) {
             bookMetadataRepository.count()
         } else {
             bookMetadataRepository.countProvider(optionProvider)
         }
-        return Result.success(BookPageDto(total = total, items = items))
+        return Result.success(BookPageDto(pageNumber = total / pageSize, items = items))
+    }
+
+    suspend fun listRank(
+        providerId: String,
+        options: Map<String, String>,
+    ): Result<BookPageDto> {
+        return bookMetadataRepository.listRank(providerId, options)
+            .map { BookPageDto(pageNumber = 1, items = it) }
     }
 
     suspend fun getState(
@@ -185,7 +202,13 @@ class NovelService(
     ): Result<BookStateDto> {
         val metadata = bookMetadataRepository.get(providerId, bookId)
             .getOrElse { return httpInternalServerError(it.message) }
-        return Result.success(getStateFromMetadata(metadata))
+        return Result.success(
+            BookStateDto(
+                total = metadata.toc.count { it.episodeId != null },
+                countJp = bookEpisodeRepository.countJp(metadata.providerId, metadata.bookId),
+                countZh = bookEpisodeRepository.countZh(metadata.providerId, metadata.bookId),
+            )
+        )
     }
 
     suspend fun getMetadata(

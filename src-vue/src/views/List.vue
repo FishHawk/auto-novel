@@ -1,145 +1,255 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { h, onMounted, ref, watch } from 'vue';
+import { useRoute, RouterLink } from 'vue-router';
+import { MenuOption } from 'naive-ui';
+import { MenuFilled } from '@vicons/material';
 
-import { ResultState } from '../api/result';
-import ApiNovel, { BookPageDto, stateToFileList } from '../api/api_novel';
-import { buildMetadataUrl } from '../data/provider';
+import { Result, ResultState } from '../api/result';
+import ApiNovel, { BookPageDto } from '../api/api_novel';
 
-const providerOption = ref('');
-const providerOptions = [
-  { label: '全部', value: '' },
-  { label: 'Kakuyomu', value: 'kakuyomu' },
-  { label: '成为小说家吧', value: 'syosetu' },
-  { label: 'Novelup', value: 'novelup' },
-  { label: 'Hameln', value: 'hameln' },
-  { label: 'Pixiv', value: 'pixiv' },
-];
-const sortOption = ref<'created' | 'changed'>('changed');
-const sortOptions = [
-  { label: '更新时间', value: 'changed' },
-  { label: '创建时间', value: 'created' },
-];
+let route = useRoute();
+
+const options = ref<{ title: string; values: string[] }[]>([]);
+const selected = ref<number[]>([]);
+
+onMounted(() => {
+  const path = route.path;
+  if (path == '/list') {
+    options.value = [
+      {
+        title: '来源',
+        values: [
+          '全部',
+          'Kakuyomu',
+          '成为小说家吧',
+          'Novelup',
+          'Hameln',
+          'Pixiv',
+        ],
+      },
+      {
+        title: '排序',
+        values: ['更新时间', '创建时间'],
+      },
+    ];
+  } else if (path == '/rank/syosetu/1') {
+    options.value = [
+      {
+        title: '流派',
+        values: [
+          '恋爱：异世界',
+          '恋爱：现实世界',
+          '幻想：高幻想',
+          '幻想：低幻想',
+          '文学：纯文学',
+          '文学：人性剧',
+          '文学：历史',
+          '文学：推理',
+          '文学：恐怖',
+          '文学：动作',
+          '文学：喜剧',
+          '科幻：VR游戏',
+          '科幻：宇宙',
+          '科幻：空想科学',
+          '科幻：惊悚',
+          '其他：童话',
+          '其他：诗',
+          '其他：散文',
+          '其他：其他',
+        ],
+      },
+      {
+        title: '范围',
+        values: ['每日', '每周', '每月', '季度', '每年'],
+      },
+    ];
+  } else if (path == '/rank/syosetu/2') {
+    options.value = [
+      {
+        title: '状态',
+        values: ['全部', '短篇', '连载', '完结'],
+      },
+      {
+        title: '范围',
+        values: ['每日', '每周', '每月', '季度', '每年', '总计'],
+      },
+    ];
+  } else if (path == '/rank/syosetu/3') {
+    options.value = [
+      {
+        title: '状态',
+        values: ['恋爱', '幻想', '文学/科幻/其他'],
+      },
+      {
+        title: '范围',
+        values: ['每日', '每周', '每月', '季度', '每年'],
+      },
+    ];
+  }
+
+  selected.value = Array(options.value.length).fill(0);
+});
+
+function optionNth(n: number): string {
+  return options.value[n].values[selected.value[n]];
+}
 
 const currentPage = ref(1);
-const total = ref(1);
+const pageNumber = ref(1);
 const bookPage = ref<ResultState<BookPageDto>>();
 
 async function loadPage(page: number) {
+  const path = route.path;
   bookPage.value = undefined;
-  const result = await ApiNovel.list(
-    currentPage.value - 1,
-    providerOption.value,
-    sortOption.value
-  );
+
+  let result: Result<BookPageDto>;
+  if (path == '/list') {
+    const providerMap: { [key: string]: string } = {
+      全部: '',
+      Kakuyomu: 'kakuyomu',
+      成为小说家吧: 'syosetu',
+      Novelup: 'novelup',
+      Hameln: 'hameln',
+      Pixiv: 'pixiv',
+    };
+    const sortMap: { [key: string]: string } = {
+      更新时间: 'changed',
+      创建时间: 'created',
+    };
+
+    result = await ApiNovel.list(
+      currentPage.value - 1,
+      providerMap[optionNth(0)],
+      sortMap[optionNth(1)]
+    );
+  } else if (path.startsWith('/rank/syosetu/')) {
+    let type: string;
+    if (path == '/rank/syosetu/1') {
+      type = '流派';
+    } else if (path == '/rank/syosetu/2') {
+      type = '综合';
+    } else if (path == '/rank/syosetu/3') {
+      type = '异世界转生/转移';
+    } else {
+      return;
+    }
+    const genre = optionNth(0);
+    const range = optionNth(1);
+    result = await ApiNovel.listRank('syosetu', { type, genre, range });
+  } else {
+    return;
+  }
+
   if (currentPage.value == page) {
     bookPage.value = result;
     if (result.ok) {
-      total.value = result.value.total;
+      pageNumber.value = result.value.pageNumber;
     }
   }
 }
 
 watch(currentPage, (page) => loadPage(page), { immediate: true });
-watch(providerOption, (_) => {
-  currentPage.value = 1;
-  loadPage(currentPage.value);
-});
-watch(sortOption, (_) => {
-  currentPage.value = 1;
-  loadPage(currentPage.value);
-});
+watch(
+  selected,
+  (_) => {
+    currentPage.value = 1;
+    loadPage(currentPage.value);
+  },
+  { deep: true }
+);
+
+const topMenuOptions: MenuOption[] = [
+  {
+    label: () =>
+      h(RouterLink, { to: { path: '/' } }, { default: () => '首页' }),
+    key: '/1',
+  },
+  {
+    label: () =>
+      h(RouterLink, { to: { path: '/list' } }, { default: () => '列表' }),
+    key: '/list',
+  },
+];
+
+const menuOptions: MenuOption[] = [
+  {
+    label: () =>
+      h(RouterLink, { to: { path: '/list' } }, { default: () => '已缓存小说' }),
+    key: '/list',
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        { to: { path: '/rank/syosetu/1' } },
+        { default: () => '成为小说家：流派' }
+      ),
+    key: '/rank/syosetu/1',
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        { to: { path: '/rank/syosetu/2' } },
+        { default: () => '成为小说家：综合' }
+      ),
+    key: '/rank/syosetu/2',
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        { to: { path: '/rank/syosetu/3' } },
+        { default: () => '成为小说家：异世界转移/转生' }
+      ),
+    key: '/rank/syosetu/3',
+  },
+];
 </script>
 
 <template>
-  <div class="content">
-    <section style="margin: 24px 0">
-      <table>
-        <tr>
-          <td nowrap="nowrap" style="vertical-align: top; padding-right: 10px">
-            来源
-          </td>
-          <td>
-            <n-radio-group
-              v-model:value="providerOption"
-              name="providerOptions"
-            >
-              <n-space>
-                <n-radio
-                  v-for="option in providerOptions"
-                  :key="option.label"
-                  :value="option.value"
-                  >{{ option.label }}</n-radio
-                >
-              </n-space>
-            </n-radio-group>
-          </td>
-        </tr>
-
-        <tr>
-          <td nowrap="nowrap" style="vertical-align: top; padding-right: 10px">
-            排序
-          </td>
-          <td>
-            <n-radio-group v-model:value="sortOption" name="sortOptions">
-              <n-space>
-                <n-radio
-                  v-for="option in sortOptions"
-                  :key="option.label"
-                  :value="option.value"
-                  >{{ option.label }}</n-radio
-                >
-              </n-space>
-            </n-radio-group>
-          </td>
-        </tr>
-      </table>
-    </section>
-
-    <n-pagination
-      v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
-      :page-slot="7"
-    />
-    <n-divider />
-    <div v-if="bookPage?.ok">
-      <div v-for="item in bookPage.value.items">
-        <n-h3 class="title" style="margin-bottom: 4px">
-          <n-a
-            :href="`/novel/${item.providerId}/${item.bookId}`"
-            target="_blank"
-          >
-            {{ item.titleJp }}
-          </n-a>
-        </n-h3>
-        <div>{{ item.titleZh }}</div>
-        <n-a
-          :href="buildMetadataUrl(item.providerId, item.bookId)"
-          target="_blank"
-        >
-          {{ buildMetadataUrl(item.providerId, item.bookId) }}
-        </n-a>
-
-        <div
-          v-for="group in stateToFileList(
-            item.providerId,
-            item.bookId,
-            item.state
-          )"
-        >
-          <n-space>
-            <span>{{ group.label }}</span>
-            <n-a v-for="file in group.files" :href="file.url" target="_blank">
-              {{ file.label }}
-            </n-a>
-          </n-space>
+  <n-layout>
+    <n-layout-header bordered>
+      <n-popover trigger="click">
+        <template #trigger>
+          <n-icon size="24" class="on-mobile" style="padding-bottom: 0px">
+            <MenuFilled />
+          </n-icon>
+        </template>
+        <n-menu v-model:value="$route.path" :options="menuOptions" />
+      </n-popover>
+      <n-menu
+        :value="$route.path == '/' ? '/' : '/list'"
+        mode="horizontal"
+        :options="topMenuOptions"
+      />
+    </n-layout-header>
+    <n-layout has-sider>
+      <n-layout-sider bordered class="on-desktop">
+        <n-menu
+          v-model:value="$route.path"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="menuOptions"
+        />
+      </n-layout-sider>
+      <n-layout-content content-style="padding: 24px;">
+        <div class="content">
+          <table style="border-spacing: 12px">
+            <BookListOption
+              v-for="(option, index) in options"
+              :title="option.title"
+              :values="option.values"
+              v-model:selected="selected[index]"
+            />
+          </table>
+          <BookList
+            :currentPage="currentPage"
+            :pageNumber="pageNumber"
+            :bookPage="bookPage"
+          />
         </div>
-        <n-divider />
-      </div>
-    </div>
-    <n-pagination
-      v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
-      :page-slot="7"
-    />
-  </div>
+      </n-layout-content>
+    </n-layout>
+  </n-layout>
 </template>

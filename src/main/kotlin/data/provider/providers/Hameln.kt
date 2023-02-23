@@ -20,6 +20,10 @@ class Hameln : BookProvider {
         }
     }
 
+    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+        TODO("Not yet implemented")
+    }
+
     override fun getMetadataUrl(bookId: String): String {
         return "https://syosetu.org/novel/$bookId"
     }

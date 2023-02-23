@@ -82,7 +82,7 @@ fun main() {
 }
 
 val appModule = module {
-    single { MongoDataSource(System.getenv("MONGODB_URL") ?: "mongodb://localhost:27017") }
+    single { MongoDataSource(System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017") }
     single { ProviderDataSource() }
 
     single { BookMetadataRepository(get(), get()) }

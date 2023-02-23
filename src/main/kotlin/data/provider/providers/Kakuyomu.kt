@@ -8,6 +8,10 @@ class Kakuyomu : BookProvider {
         const val id = "kakuyomu"
     }
 
+    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+        TODO("Not yet implemented")
+    }
+
     override fun getMetadataUrl(bookId: String): String {
         return "https://kakuyomu.jp/works/$bookId"
     }

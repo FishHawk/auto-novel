@@ -15,6 +15,14 @@ class ProviderDataSource {
         )
     }
 
+    suspend fun getRank(providerId: String, options: Map<String, String>): Result<List<SBookListItem>> {
+        return runCatching {
+            providers[providerId]!!.getRank(options)
+        }.onFailure {
+            logger.error("获取排行失败 $providerId/$options", it)
+        }
+    }
+
     suspend fun getMetadata(providerId: String, bookId: String): Result<SBookMetadata> {
         return runCatching {
             providers[providerId]!!.getMetadata(bookId)

@@ -1,23 +1,47 @@
 import api from './api';
 import { Ok, Err, Result } from './result';
+export interface BookListItemDto {
+  providerId: string;
+  bookId: string;
+  titleJp: string;
+  titleZh?: string;
+  extra: string;
+}
+
+export interface BookPageDto {
+  pageNumber: number;
+  items: BookListItemDto[];
+}
+
+async function list(
+  page: number,
+  provider: string,
+  sort: string
+): Promise<Result<BookPageDto>> {
+  return api
+    .get(`novel/list`, {
+      searchParams: { page, provider, sort },
+    })
+    .json<BookPageDto>()
+    .then((it) => Ok(it))
+    .catch((error) => Err(error));
+}
+
+async function listRank(
+  providerId: string,
+  options: { [key: string]: string }
+): Promise<Result<BookPageDto>> {
+  return api
+    .get(`novel/rank/${providerId}`, { searchParams: options })
+    .json<BookPageDto>()
+    .then((it) => Ok(it))
+    .catch((error) => Err(error));
+}
 
 export interface BookStateDto {
   total: number;
   countJp: number;
   countZh: number;
-}
-
-export interface BookPageItemDto {
-  providerId: string;
-  bookId: string;
-  titleJp: string;
-  titleZh: string | undefined;
-  state: BookStateDto;
-}
-
-export interface BookPageDto {
-  total: number;
-  items: BookPageItemDto[];
 }
 
 export interface BookMetadataDto {
@@ -48,20 +72,6 @@ async function getState(
   return api
     .get(`novel/state/${providerId}/${bookId}`)
     .json<BookStateDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
-}
-
-async function list(
-  page: number,
-  provider: string,
-  sort: 'created' | 'changed'
-): Promise<Result<BookPageDto>> {
-  return api
-    .get(`novel/list`, {
-      searchParams: { page, provider, sort },
-    })
-    .json<BookPageDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
 }
@@ -132,6 +142,7 @@ export function stateToFileList(
 export default {
   getState,
   list,
+  listRank,
   getMetadata,
   getEpisode,
 };

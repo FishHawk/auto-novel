@@ -9,9 +9,6 @@ import io.kotest.koin.KoinLifecycleMode
 import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
-import org.litote.kmongo.div
-import org.litote.kmongo.pos
-import org.litote.kmongo.regex
 
 val appModule = module {
     single { MongoDataSource("mongodb://192.168.1.110:27017") }
@@ -32,13 +29,17 @@ val appModule = module {
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
 
-    private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
+    private val repo by inject<BookMetadataRepository>(BookMetadataRepository::class.java)
 
     init {
         describe("test") {
-            val col = mongo.database.getCollection<BookMetadata>("metadata")
-            val list = col.find(BookMetadata::authors.pos(0) / BookAuthor::name regex "^作者：.*$".toRegex()).toList()
-            println(list.size)
+            val list = repo.listRank(
+                mapOf(
+                    "type" to "综合",
+                    "genre" to "全部",
+                    "range" to "每日",
+                )
+            )
         }
     }
 }

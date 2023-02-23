@@ -29,6 +29,10 @@ class Pixiv : BookProvider {
         }
     }
 
+    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+        TODO("Not yet implemented")
+    }
+
     override fun getMetadataUrl(bookId: String): String {
         return if (bookId.startsWith("s")) {
             getEpisodeUrl(bookId, bookId.removePrefix("s"))

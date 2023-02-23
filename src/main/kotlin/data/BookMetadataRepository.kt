@@ -3,6 +3,7 @@ package data
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import data.provider.ProviderDataSource
+import data.provider.SBookListItem
 import data.provider.SBookMetadata
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
@@ -41,6 +42,15 @@ data class BookMetadata(
     val downloaded: Long,
     @Contextual val syncAt: LocalDateTime,
     @Contextual val changeAt: LocalDateTime,
+)
+
+@Serializable
+data class BookListItem(
+    val providerId: String,
+    val bookId: String,
+    val titleJp: String,
+    val titleZh: String?,
+    val extra: String,
 )
 
 private fun SBookMetadata.toDb(providerId: String, bookId: String) =
@@ -94,7 +104,7 @@ class BookMetadataRepository(
         page: Int,
         pageSize: Int,
         option: ListOption,
-    ): List<BookMetadata> {
+    ): List<BookListItem> {
         val bsonProviderIdFilter = option.providerId?.let {
             BookMetadata::providerId eq it
         } ?: EMPTY_BSON
@@ -108,6 +118,43 @@ class BookMetadataRepository(
             .skip(page * pageSize)
             .limit(pageSize)
             .toList()
+            .map {
+                BookListItem(
+                    providerId = it.providerId,
+                    bookId = it.bookId,
+                    titleJp = it.titleJp,
+                    titleZh = it.titleZh,
+                    extra = "${it.toc.count { it.episodeId != null }}",
+                )
+            }
+    }
+
+    suspend fun listRank(
+        providerId: String,
+        options: Map<String, String>,
+    ): Result<List<BookListItem>> {
+        @Serializable
+        data class BookIdWithTitleZh(val bookId: String, val titleZh: String?)
+
+        return providerDataSource.getRank(providerId, options).map { items ->
+            val idToTitleZh = col
+                .withDocumentClass<BookIdWithTitleZh>()
+                .find(
+                    BookMetadata::providerId eq providerId,
+                    BookMetadata::bookId `in` items.map { it.bookId },
+                )
+                .toList()
+                .associate { it.bookId to it.titleZh }
+            items.map {
+                BookListItem(
+                    providerId = providerId,
+                    bookId = it.bookId,
+                    titleJp = it.title,
+                    titleZh = idToTitleZh[it.bookId],
+                    extra = it.extra,
+                )
+            }
+        }
     }
 
     suspend fun count(): Long {

@@ -11,6 +11,10 @@ class Novelup : BookProvider {
         const val id = "novelup"
     }
 
+    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+        TODO("Not yet implemented")
+    }
+
     override fun getMetadataUrl(bookId: String): String {
         return "https://novelup.plus/story/$bookId"
     }
