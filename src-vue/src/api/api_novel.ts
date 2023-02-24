@@ -32,7 +32,7 @@ async function listRank(
   options: { [key: string]: string }
 ): Promise<Result<BookPageDto>> {
   return api
-    .get(`novel/rank/${providerId}`, { searchParams: options })
+    .get(`novel/rank/${providerId}`, { searchParams: options, timeout: 20000 })
     .json<BookPageDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));

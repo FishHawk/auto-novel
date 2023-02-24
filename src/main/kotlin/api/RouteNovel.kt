@@ -4,8 +4,10 @@ import data.*
 import data.BookAuthor
 import data.BookTocItem
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -79,6 +81,7 @@ fun Route.routeNovel() {
             providerId = loc.providerId,
             options = options,
         )
+        call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 3600 * 2))
         call.respondResult(result)
     }
 
