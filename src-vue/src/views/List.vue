@@ -148,7 +148,18 @@ async function loadPage(page: number) {
   }
 }
 
-watch(currentPage, (page) => loadPage(page), { immediate: true });
+watch(
+  currentPage,
+  (page) => {
+    console.log(page);
+      console.log('asdf');
+    if (options.value.length > 0) {
+      console.log(page);
+      console.log('asdf');
+      loadPage(page);
+    }
+  },
+);
 watch(
   selected,
   (_) => {
@@ -244,9 +255,9 @@ const menuOptions: MenuOption[] = [
             />
           </table>
           <BookList
-            :currentPage="currentPage"
-            :pageNumber="pageNumber"
-            :bookPage="bookPage"
+            v-model:page="currentPage"
+            :page-number="pageNumber"
+            :book-page="bookPage"
           />
         </div>
       </n-layout-content>
