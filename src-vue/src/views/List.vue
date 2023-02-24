@@ -213,24 +213,24 @@ const menuOptions: MenuOption[] = [
 
 <template>
   <n-layout>
-    <n-layout-header bordered>
-      <n-popover trigger="click">
+    <n-layout-header
+      bordered
+      style="display: flex; align-items: center; height: 50px"
+    >
+      <n-menu
+        :value="$route.path == '/' ? '/' : '/list'"
+        mode="horizontal"
+        :options="topMenuOptions"
+        style="flex: 1"
+      />
+      <n-popover trigger="click" style="padding: 0">
         <template #trigger>
-          <n-icon
-            size="24"
-            class="on-mobile"
-            style="height: 42px; display: inline-flex; align-items: center"
-          >
+          <n-icon size="24" class="on-mobile" style="padding-inline-end: 16px">
             <MenuFilled />
           </n-icon>
         </template>
         <n-menu v-model:value="$route.path" :options="menuOptions" />
       </n-popover>
-      <n-menu
-        :value="$route.path == '/' ? '/' : '/list'"
-        mode="horizontal"
-        :options="topMenuOptions"
-      />
     </n-layout-header>
     <n-layout has-sider>
       <n-layout-sider bordered class="on-desktop">
@@ -242,7 +242,7 @@ const menuOptions: MenuOption[] = [
       </n-layout-sider>
       <n-layout-content>
         <div class="content">
-          <table style="border-spacing: 12px">
+          <table style="border-spacing: 0px 8px">
             <BookListOption
               v-for="(option, index) in options"
               :title="option.title"

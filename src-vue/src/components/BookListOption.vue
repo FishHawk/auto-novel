@@ -11,12 +11,12 @@ defineEmits(['update:selected']);
   <tr>
     <td
       nowrap="nowrap"
-      style="vertical-align: top; padding-right: 12px; color: grey"
+      style="vertical-align: top; padding-right: 20px; color: grey"
     >
       {{ title }}
     </td>
     <td>
-      <n-space size="large">
+      <n-space :size="[16, 4]">
         <n-button
           v-for="(value, index) in values"
           text
