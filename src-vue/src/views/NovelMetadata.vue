@@ -315,33 +315,43 @@ const tableColumns: DataTableColumns<BookFiles> = [
 
     <div v-if="bookMetadata?.ok">
       <n-h2 prefix="bar" align-text>目录</n-h2>
-      <n-ul>
-        <n-li v-for="token in bookMetadata.value.toc">
-          <span v-if="!token.episodeId" class="episode-base">
-            <span class="episode-title">
-              {{ token.titleJp }}
-            </span>
-            <span class="episode-title" style="color: grey">
-              {{ token.titleZh }}
-            </span>
-          </span>
-
+      <table style="width: 100%">
+        <template v-for="token in bookMetadata.value.toc">
           <n-a
             v-if="token.episodeId"
-            class="episode-base"
             :href="`/novel/${providerId}/${bookId}/${token.episodeId}`"
+            role="row"
+            style="display: table-row"
           >
-            <span class="episode-title">
+            <td style="width: 50%">
               {{ token.titleJp }}
-            </span>
-            <span class="episode-title" style="color: grey">
-              {{ token.titleZh }}
-            </span>
+              <br />
+              <span class="on-mobile" style="color: grey">{{
+                token.titleZh
+              }}</span>
+            </td>
+            <td class="on-desktop" style="color: grey">{{ token.titleZh }}</td>
           </n-a>
-
-          <n-divider style="margin-top: 2px; margin-bottom: 2px" />
-        </n-li>
-      </n-ul>
+          <tr v-else>
+            <td style="width: 50%">
+              {{ token.titleJp }}
+              <br />
+              <span class="on-mobile" style="color: grey">{{
+                token.titleZh
+              }}</span>
+            </td>
+            <td class="on-desktop" style="color: grey">{{ token.titleZh }}</td>
+          </tr>
+          <n-divider
+            class="on-desktop"
+            style="width: 200%; margin-top: 2px; margin-bottom: 2px"
+          />
+          <n-divider
+            class="on-mobile"
+            style="width: 100%; margin-top: 2px; margin-bottom: 2px"
+          />
+        </template>
+      </table>
     </div>
   </div>
 
