@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watch } from 'vue';
+import { computed } from 'vue';
 import { BookPageDto } from '../api/api_novel';
 import { ResultState } from '../api/result';
 import { buildMetadataUrl } from '../data/provider';
@@ -12,15 +12,23 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:page', id: number): void;
 }>();
-watch(
-  () => props.page,
-  (x) => emit('update:page', x)
-);
+const pageInternal = computed({
+  get(): number {
+    return props.page;
+  },
+  set(newValue: number): void {
+    emit('update:page', newValue);
+  },
+});
 </script>
 
 <template>
   <div>
-    <n-pagination v-model:page="page" :page-count="pageNumber" :page-slot="7" />
+    <n-pagination
+      v-model:page="pageInternal"
+      :page-count="pageNumber"
+      :page-slot="7"
+    />
     <n-divider />
     <div v-if="bookPage?.ok">
       <div v-for="item in bookPage.value.items">
@@ -45,6 +53,10 @@ watch(
         <n-divider />
       </div>
     </div>
-    <n-pagination v-model:page="page" :page-count="pageNumber" :page-slot="7" />
+    <n-pagination
+      v-model:page="pageInternal"
+      :page-count="pageNumber"
+      :page-slot="7"
+    />
   </div>
 </template>

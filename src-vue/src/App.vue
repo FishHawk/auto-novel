@@ -9,9 +9,11 @@
   width: 100;
 }
 .content {
-  width: 730px;
+  width: 800px;
   margin: 0 auto;
-  margin-bottom: 40px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 48px;
 }
 a {
   text-decoration: none;
@@ -25,7 +27,7 @@ a {
     width: auto;
     padding-left: 10px;
     padding-right: 10px;
-    margin-bottom: 40px;
+    padding-bottom: 48px;
   }
   .on-desktop {
     display: none;

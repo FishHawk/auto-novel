@@ -148,18 +148,11 @@ async function loadPage(page: number) {
   }
 }
 
-watch(
-  currentPage,
-  (page) => {
-    console.log(page);
-      console.log('asdf');
-    if (options.value.length > 0) {
-      console.log(page);
-      console.log('asdf');
-      loadPage(page);
-    }
-  },
-);
+watch(currentPage, (page) => {
+  if (options.value.length > 0) {
+    loadPage(page);
+  }
+});
 watch(
   selected,
   (_) => {
@@ -223,7 +216,11 @@ const menuOptions: MenuOption[] = [
     <n-layout-header bordered>
       <n-popover trigger="click">
         <template #trigger>
-          <n-icon size="24" class="on-mobile" style="padding-bottom: 0px">
+          <n-icon
+            size="24"
+            class="on-mobile"
+            style="height: 42px; display: inline-flex; align-items: center"
+          >
             <MenuFilled />
           </n-icon>
         </template>
@@ -240,11 +237,10 @@ const menuOptions: MenuOption[] = [
         <n-menu
           v-model:value="$route.path"
           :collapsed-width="64"
-          :collapsed-icon-size="22"
           :options="menuOptions"
         />
       </n-layout-sider>
-      <n-layout-content content-style="padding: 24px;">
+      <n-layout-content>
         <div class="content">
           <table style="border-spacing: 12px">
             <BookListOption
