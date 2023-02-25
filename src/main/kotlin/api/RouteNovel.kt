@@ -176,10 +176,9 @@ class NovelService(
         ).map {
             it.copy(
                 extra = listOf(
-                    it.extra,
-                    "日文[${bookEpisodeRepository.countJp(it.providerId, it.bookId)}]",
-                    "中文[${bookEpisodeRepository.countZh(it.providerId, it.bookId)}]",
-                ).joinToString("/")
+                    "日文(${bookEpisodeRepository.countJp(it.providerId, it.bookId)}/${it.extra})",
+                    "中文(${bookEpisodeRepository.countZh(it.providerId, it.bookId)}/${it.extra})",
+                ).joinToString(" ")
             )
         }
 
