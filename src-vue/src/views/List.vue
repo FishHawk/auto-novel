@@ -2,20 +2,23 @@
 import { h, onMounted, ref, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { MenuOption } from 'naive-ui';
-import { MenuFilled } from '@vicons/material';
 
 import { Result, ResultState } from '../api/result';
 import ApiNovel, { BookPageDto } from '../api/api_novel';
 
-let route = useRoute();
+interface ListOptionDescriptior {
+  title: string;
+  values: string[];
+}
+interface ListDescriptior {
+  title: string;
+  options: ListOptionDescriptior[];
+}
 
-const options = ref<{ title: string; values: string[] }[]>([]);
-const selected = ref<number[]>([]);
-
-onMounted(() => {
-  const path = route.path;
-  if (path == '/list') {
-    options.value = [
+const listDescriptors: { [key: string]: ListDescriptior } = {
+  '/list': {
+    title: '已缓存小说',
+    options: [
       {
         title: '来源',
         values: [
@@ -31,9 +34,11 @@ onMounted(() => {
         title: '排序',
         values: ['更新时间', '创建时间'],
       },
-    ];
-  } else if (path == '/rank/syosetu/1') {
-    options.value = [
+    ],
+  },
+  '/rank/syosetu/1': {
+    title: '成为小说家：流派',
+    options: [
       {
         title: '流派',
         values: [
@@ -62,9 +67,11 @@ onMounted(() => {
         title: '范围',
         values: ['每日', '每周', '每月', '季度', '每年'],
       },
-    ];
-  } else if (path == '/rank/syosetu/2') {
-    options.value = [
+    ],
+  },
+  '/rank/syosetu/2': {
+    title: '成为小说家：综合',
+    options: [
       {
         title: '状态',
         values: ['全部', '短篇', '连载', '完结'],
@@ -73,9 +80,11 @@ onMounted(() => {
         title: '范围',
         values: ['每日', '每周', '每月', '季度', '每年', '总计'],
       },
-    ];
-  } else if (path == '/rank/syosetu/3') {
-    options.value = [
+    ],
+  },
+  '/rank/syosetu/3': {
+    title: '成为小说家：异世界转移/转生',
+    options: [
       {
         title: '状态',
         values: ['恋爱', '幻想', '文学/科幻/其他'],
@@ -84,14 +93,24 @@ onMounted(() => {
         title: '范围',
         values: ['每日', '每周', '每月', '季度', '每年'],
       },
-    ];
-  }
+    ],
+  },
+};
 
-  selected.value = Array(options.value.length).fill(0);
+const route = useRoute();
+
+const descriptior = ref<ListDescriptior>();
+const selected = ref<number[]>([]);
+
+onMounted(() => {
+  const path = route.path;
+  const selectedDescriptor = listDescriptors[path];
+  descriptior.value = selectedDescriptor;
+  selected.value = Array(selectedDescriptor.options.length).fill(0);
 });
 
 function optionNth(n: number): string {
-  return options.value[n].values[selected.value[n]];
+  return descriptior.value!.options[n].values[selected.value[n]];
 }
 
 const currentPage = ref(1);
@@ -149,7 +168,7 @@ async function loadPage(page: number) {
 }
 
 watch(currentPage, (page) => {
-  if (options.value.length > 0) {
+  if (descriptior.value && descriptior.value.options.length > 0) {
     loadPage(page);
   }
 });
@@ -161,19 +180,6 @@ watch(
   },
   { deep: true }
 );
-
-const topMenuOptions: MenuOption[] = [
-  {
-    label: () =>
-      h(RouterLink, { to: { path: '/' } }, { default: () => '首页' }),
-    key: '/1',
-  },
-  {
-    label: () =>
-      h(RouterLink, { to: { path: '/list' } }, { default: () => '列表' }),
-    key: '/list',
-  },
-];
 
 const menuOptions: MenuOption[] = [
   {
@@ -212,51 +218,31 @@ const menuOptions: MenuOption[] = [
 </script>
 
 <template>
-  <n-layout>
-    <n-layout-header
-      bordered
-      style="display: flex; align-items: center; height: 50px"
-    >
+  <n-layout has-sider>
+    <n-layout-sider bordered class="on-desktop">
       <n-menu
-        :value="$route.path == '/' ? '/' : '/list'"
-        mode="horizontal"
-        :options="topMenuOptions"
-        style="flex: 1"
+        v-model:value="$route.path"
+        :collapsed-width="64"
+        :options="menuOptions"
       />
-      <n-popover trigger="click" style="padding: 0">
-        <template #trigger>
-          <n-icon size="24" class="on-mobile" style="padding-inline-end: 16px">
-            <MenuFilled />
-          </n-icon>
-        </template>
-        <n-menu v-model:value="$route.path" :options="menuOptions" />
-      </n-popover>
-    </n-layout-header>
-    <n-layout has-sider>
-      <n-layout-sider bordered class="on-desktop">
-        <n-menu
-          v-model:value="$route.path"
-          :collapsed-width="64"
-          :options="menuOptions"
-        />
-      </n-layout-sider>
-      <n-layout-content>
-        <div class="content">
-          <table style="border-spacing: 0px 8px">
-            <BookListOption
-              v-for="(option, index) in options"
-              :title="option.title"
-              :values="option.values"
-              v-model:selected="selected[index]"
-            />
-          </table>
-          <BookList
-            v-model:page="currentPage"
-            :page-number="pageNumber"
-            :book-page="bookPage"
+    </n-layout-sider>
+    <n-layout-content>
+      <div class="content">
+        <n-h1>{{ descriptior?.title }}</n-h1>
+        <table style="border-spacing: 0px 8px">
+          <BookListOption
+            v-for="(option, index) in descriptior?.options"
+            :title="option.title"
+            :values="option.values"
+            v-model:selected="selected[index]"
           />
-        </div>
-      </n-layout-content>
-    </n-layout>
+        </table>
+        <BookList
+          v-model:page="currentPage"
+          :page-number="pageNumber"
+          :book-page="bookPage"
+        />
+      </div>
+    </n-layout-content>
   </n-layout>
 </template>

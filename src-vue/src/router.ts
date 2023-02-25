@@ -5,22 +5,17 @@ const history = createWebHistory();
 const routes = [
   { path: '/', component: () => import('./views/Query.vue') },
 
-  { path: '/list', component: () => import('./views/List.vue') },
-  { path: '/rank/syosetu/1', component: () => import('./views/List.vue') },
-  { path: '/rank/syosetu/2', component: () => import('./views/List.vue') },
-  { path: '/rank/syosetu/3', component: () => import('./views/List.vue') },
-
-  // {
-  //   path: '/list',
-  //   component: () => import('./views/List.vue'),
-  //   children: [
-  //     { path: '/cached', component: UserProfile, },
-  //     {
-  //       path: '/rank/syosetu/1',
-  //       component: UserPosts,
-  //     },
-  //   ],
-  // },
+  {
+    path: '/',
+    component: () => import('./views/Main.vue'),
+    children: [
+      { path: '/list', component: () => import('./views/List.vue') },
+      { path: '/rank/syosetu/1', component: () => import('./views/List.vue') },
+      { path: '/rank/syosetu/2', component: () => import('./views/List.vue') },
+      { path: '/rank/syosetu/3', component: () => import('./views/List.vue') },
+      { path: '/patch', component: () => import('./views/PatchList.vue') },
+    ],
+  },
 
   {
     path: '/novel/:providerId/:bookId',
@@ -37,10 +32,6 @@ const routes = [
   {
     path: '/novel-edit/:providerId/:bookId/:episodeId',
     component: () => import('./views/NovelEditEpisode.vue'),
-  },
-  {
-    path: '/patch',
-    component: () => import('./views/PatchList.vue'),
   },
   {
     path: '/patch/:providerId/:bookId',

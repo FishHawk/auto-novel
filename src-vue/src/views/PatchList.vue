@@ -24,37 +24,40 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 </script>
 
 <template>
-  <div class="content">
-    <n-pagination
-      v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
-      :page-slot="7"
-    />
-    <n-divider />
-    <div v-if="bookPage?.ok">
-      <div v-for="item in bookPage.value.items">
-        <n-h2 class="title">
+  <n-layout-content>
+    <div class="content">
+      <n-h1>编辑历史</n-h1>
+      <n-pagination
+        v-model:page="currentPage"
+        :page-count="Math.floor(total / 10)"
+        :page-slot="7"
+      />
+      <n-divider />
+      <div v-if="bookPage?.ok">
+        <div v-for="item in bookPage.value.items">
+          <n-h2 class="title">
+            <n-a
+              :href="`/patch/${item.providerId}/${item.bookId}`"
+              target="_blank"
+            >
+              {{ item.titleJp }}
+            </n-a>
+          </n-h2>
+          <div>{{ item.titleZh }}</div>
           <n-a
-            :href="`/patch/${item.providerId}/${item.bookId}`"
+            :href="buildMetadataUrl(item.providerId, item.bookId)"
             target="_blank"
           >
-            {{ item.titleJp }}
+            {{ buildMetadataUrl(item.providerId, item.bookId) }}
           </n-a>
-        </n-h2>
-        <div>{{ item.titleZh }}</div>
-        <n-a
-          :href="buildMetadataUrl(item.providerId, item.bookId)"
-          target="_blank"
-        >
-          {{ buildMetadataUrl(item.providerId, item.bookId) }}
-        </n-a>
-        <n-divider />
+          <n-divider />
+        </div>
       </div>
+      <n-pagination
+        v-model:page="currentPage"
+        :page-count="Math.floor(total / 10)"
+        :page-slot="7"
+      />
     </div>
-    <n-pagination
-      v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
-      :page-slot="7"
-    />
-  </div>
+  </n-layout-content>
 </template>

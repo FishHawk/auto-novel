@@ -134,9 +134,9 @@ onMounted(() => {
       style="max-width: 100%"
     />
     <n-p>
-      对于 Safari 浏览器，只能各凭本事了。
-      尽管 Safari 可以修改启动选项来关闭跨域检查，但我不知道有没有什么办法删掉
-      referer 和 origin 头。
+      对于 Safari 浏览器，只能各凭本事了。 尽管 Safari
+      可以修改启动选项来关闭跨域检查，但我不知道有没有什么办法删掉 referer 和
+      origin 头。
     </n-p>
 
     <n-h2 prefix="bar" align-text>联系我</n-h2>
@@ -147,12 +147,19 @@ onMounted(() => {
     >
       GitHub
     </n-a>
-    上提issue。也可以在
+    上提issue，也可以在
     <n-a
       href="https://bbs.saraba1st.com/2b/thread-2103011-1-1.html"
       target="_blank"
     >
       Stage1st
+    </n-a>
+    或者
+    <n-a
+      href="https://tieba.baidu.com/p/8276724398"
+      target="_blank"
+    >
+      百度贴吧
     </n-a>
     上回复我。
   </div>
