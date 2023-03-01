@@ -2,7 +2,7 @@ import api from './api';
 import { Ref } from 'vue';
 import { UpdateProgress } from './progress';
 import { Result, Ok, Err } from './result';
-import { BaiduWebTranslator } from '../data/translator/baidu-web';
+import { BaiduWebTranslator } from '../translator/baidu-web';
 
 interface MetadataToTranslateDto {
   title?: string;

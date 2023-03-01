@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 
-import { ResultState } from '../api/result';
-import ApiPatch, { BookPatchPageDto } from '../api/api_patch';
+import { ResultState } from '../data/api/result';
+import ApiPatch, { BookPatchPageDto } from '../data/api/api_patch';
 import { buildMetadataUrl } from '../data/provider';
 
 const currentPage = ref(1);
@@ -24,7 +24,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 </script>
 
 <template>
-  <n-layout-content>
+  <MainLayout>
     <div class="content">
       <n-h1>编辑历史</n-h1>
       <n-pagination
@@ -59,5 +59,5 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
         :page-slot="7"
       />
     </div>
-  </n-layout-content>
+  </MainLayout>
 </template>

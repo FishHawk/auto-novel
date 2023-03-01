@@ -60,7 +60,7 @@ const hameln: Provider = {
     if (episodeId == 'default') {
       return `https://syosetu.org/novel/${bookId}/`;
     } else {
-      return `https://syosetu.org/novel/${bookId}/${episodeId}`;
+      return `https://syosetu.org/novel/${bookId}/${episodeId}.html`;
     }
   },
 };

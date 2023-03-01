@@ -4,12 +4,12 @@ import { useRoute } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import { Err, Ok, ResultState } from '../api/result';
+import { Err, Ok, ResultState } from '../data/api/result';
+import ApiNovel from '../data/api/api_novel';
+import ApiNovelEdit from '../data/api/api_patch';
 import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
-import ApiNovel from '../api/api_novel';
-import ApiNovelEdit from '../api/api_patch';
 
 const route = useRoute();
 const providerId = route.params.providerId as string;

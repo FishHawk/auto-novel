@@ -2,8 +2,8 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ResultState } from '../api/result';
-import ApiPatch, { BookPatchDto } from '../api/api_patch';
+import { ResultState } from '../data/api/result';
+import ApiPatch, { BookPatchDto } from '../data/api/api_patch';
 import TextDiff from '../components/TextDiff.vue';
 import { buildMetadataUrl } from '../data/provider';
 

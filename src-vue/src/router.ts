@@ -5,17 +5,12 @@ const history = createWebHistory();
 const routes = [
   { path: '/', component: () => import('./views/Query.vue') },
 
+  { path: '/list', component: () => import('./views/List.vue') },
   {
-    path: '/',
-    component: () => import('./views/Main.vue'),
-    children: [
-      { path: '/list', component: () => import('./views/List.vue') },
-      { path: '/rank/syosetu/1', component: () => import('./views/List.vue') },
-      { path: '/rank/syosetu/2', component: () => import('./views/List.vue') },
-      { path: '/rank/syosetu/3', component: () => import('./views/List.vue') },
-      { path: '/patch', component: () => import('./views/PatchList.vue') },
-    ],
+    path: '/rank/:providerId/:type',
+    component: () => import('./views/Rank.vue'),
   },
+  { path: '/patch', component: () => import('./views/Patch.vue') },
 
   {
     path: '/novel/:providerId/:bookId',

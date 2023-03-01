@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { BookPageDto } from '../api/api_novel';
-import { ResultState } from '../api/result';
+import { BookPageDto } from '../data/api/api_novel';
+import { ResultState } from '../data/api/result';
 import { buildMetadataUrl } from '../data/provider';
 
 const props = defineProps<{

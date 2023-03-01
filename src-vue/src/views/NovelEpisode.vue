@@ -2,12 +2,12 @@
 import { onMounted, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ResultState } from '../api/result';
+import { ResultState } from '../data/api/result';
 import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
 import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
-import ApiNovel, { BookEpisodeDto } from '../api/api_novel';
+import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
 
 const route = useRoute();
 const providerId = route.params.providerId as string;

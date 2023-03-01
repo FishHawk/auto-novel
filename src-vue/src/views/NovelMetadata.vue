@@ -8,19 +8,19 @@ import {
   EditNoteFilled,
 } from '@vicons/material';
 
-import { ResultState } from '../api/result';
+import { ResultState } from '../data/api/result';
 import ApiNovel, {
   BookMetadataDto,
   BookStateDto,
   BookFiles,
   stateToFileList,
-} from '../api/api_novel';
+} from '../data/api/api_novel';
 import { addHistory } from '../data/history';
 import { buildMetadataUrl } from '../data/provider';
 
-import { UpdateProgress } from '../api/progress';
-import { updateJp } from '../api/api_update_jp';
-import { updateZh } from '../api/api_update_zh';
+import { UpdateProgress } from '../data/api/progress';
+import { updateJp } from '../data/api/api_update_jp';
+import { updateZh } from '../data/api/api_update_zh';
 import { errorToString } from '../data/handle_error';
 
 const route = useRoute();
@@ -323,33 +323,13 @@ const tableColumns: DataTableColumns<BookFiles> = [
             role="row"
             style="display: table-row"
           >
-            <td style="width: 50%">
-              {{ token.titleJp }}
-              <br />
-              <span class="on-mobile" style="color: grey">{{
-                token.titleZh
-              }}</span>
-            </td>
-            <td class="on-desktop" style="color: grey">{{ token.titleZh }}</td>
+            <TocItem :token="token" />
           </n-a>
           <tr v-else>
-            <td style="width: 50%">
-              {{ token.titleJp }}
-              <br />
-              <span class="on-mobile" style="color: grey">{{
-                token.titleZh
-              }}</span>
-            </td>
-            <td class="on-desktop" style="color: grey">{{ token.titleZh }}</td>
+            <TocItem :token="token" />
           </tr>
-          <n-divider
-            class="on-desktop"
-            style="width: 200%; margin-top: 2px; margin-bottom: 2px"
-          />
-          <n-divider
-            class="on-mobile"
-            style="width: 100%; margin-top: 2px; margin-bottom: 2px"
-          />
+          <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
+          <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
         </template>
       </table>
     </div>
@@ -363,16 +343,3 @@ const tableColumns: DataTableColumns<BookFiles> = [
     />
   </div>
 </template>
-
-<style scoped>
-.episode-base {
-  width: 100%;
-  position: relative;
-  display: block;
-}
-.episode-title {
-  display: inline-block;
-  word-wrap: break-word;
-  width: 49%;
-}
-</style>
