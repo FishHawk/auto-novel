@@ -10,6 +10,12 @@ data class HttpException(
     override val message: String,
 ) : Exception()
 
+fun <T> httpBadRequest(message: String?) =
+    Result.failure<T>(HttpException(HttpStatusCode.BadRequest, message ?: "参数错误"))
+
+fun <T> httpConflict(message: String?) =
+    Result.failure<T>(HttpException(HttpStatusCode.Conflict, message ?: "冲突"))
+
 fun <T> httpNotFound(message: String?) =
     Result.failure<T>(HttpException(HttpStatusCode.NotFound, message ?: "未找到"))
 

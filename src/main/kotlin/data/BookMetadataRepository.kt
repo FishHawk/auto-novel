@@ -3,7 +3,6 @@ package data
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import data.provider.ProviderDataSource
-import data.provider.SBookListItem
 import data.provider.SBookMetadata
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
@@ -14,6 +13,7 @@ import org.litote.kmongo.*
 import org.litote.kmongo.util.KMongoUtil.toBson
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 @Serializable
 data class BookAuthor(
@@ -37,6 +37,7 @@ data class BookMetadata(
     val authors: List<BookAuthor>,
     val introductionJp: String,
     val introductionZh: String?,
+    val glossaryUuid: String? = null,
     val glossary: Map<String, String> = emptyMap(),
     val toc: List<BookTocItem>,
     val visited: Long,
@@ -284,6 +285,7 @@ class BookMetadataRepository(
             list.add(setValue(BookMetadata::introductionZh, it))
         }
         glossary?.let {
+            list.add(setValue(BookMetadata::glossaryUuid, UUID.randomUUID().toString()))
             list.add(setValue(BookMetadata::glossary, it))
         }
         tocZh.forEach { (index, itemTitleZh) ->

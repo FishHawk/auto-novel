@@ -1,5 +1,4 @@
 import api.*
-import api.routeUpdateJp
 import data.BookEpisodeRepository
 import data.BookMetadataRepository
 import data.BookPatchRepository
@@ -77,8 +76,7 @@ fun main() {
             routePrepareBook()
             routeNovel()
             routePatch()
-            routeUpdateJp()
-            routeUpdateZh()
+            routeUpdate()
         }
     }.start(wait = true)
 }
@@ -95,6 +93,5 @@ val appModule = module {
     single { PrepareBookService(get(), get(), get()) }
     single { NovelService(get(), get()) }
     single { PatchService(get()) }
-    single { UpdateJpService(get(), get()) }
-    single { UpdateZhService(get(), get()) }
+    single { UpdateService(get(), get()) }
 }

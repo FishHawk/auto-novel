@@ -23,7 +23,7 @@ val appModule = module {
     single { NovelService(get(), get()) }
     single { PatchService(get()) }
     single { UpdateJpService(get(), get()) }
-    single { UpdateZhService(get(), get()) }
+    single { UpdateService(get(), get()) }
 }
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {

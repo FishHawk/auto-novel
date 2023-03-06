@@ -111,7 +111,6 @@ const showModal = ref(false);
       :provider-id="providerId"
       :book-id="bookId"
       v-model:showModal="showModal"
-      :glossary="bookMetadata.value.glossary"
     />
 
     <n-h2 prefix="bar" align-text>目录</n-h2>

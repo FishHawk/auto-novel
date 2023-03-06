@@ -156,9 +156,25 @@ function addTerm() {
     />
 
     <n-h2 prefix="bar" align-text>术语表</n-h2>
-    <n-p>
-      术语表会在翻译前将日文词替换成随机字母，在翻译后替换回对应中文词。术语表会影响整个翻译过程，请只在有必要的情况下添加或修改术语。
-    </n-p>
+    <n-p>在你使用术语表之前需要知道的：</n-p>
+    <ui>
+      <li>
+        <span>
+          术语表的原理是在翻译前将日文词替换成随机字母，在翻译后替换回对应中文词。
+        </span>
+      </li>
+      <li>
+        <span>
+          在修改术语表后再次更新中文时，已经翻译的章节会按照新的术语表重新翻译需要更新的段落。
+        </span>
+      </li>
+      <li>
+        <span>
+          术语表会影响ai对词义的理解，例如：无法从人名判断性别导致ai使用了错误的人称代词。
+        </span>
+      </li>
+    </ui>
+    <n-p> 总而言之,术语表不是万能的，请只在有必要的情况下编辑术语表。 </n-p>
     <table style="border-spacing: 16px 0px">
       <tr v-for="(termZh, termJp) in editMetadataRef.value.glossary.ref.value">
         <td>{{ termJp }}</td>

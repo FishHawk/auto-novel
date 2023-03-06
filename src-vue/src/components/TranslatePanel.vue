@@ -6,15 +6,13 @@ import { ResultState } from '../data/api/result';
 import ApiNovel, { BookStateDto, BookFiles } from '../data/api/api_novel';
 
 import { UpdateProgress } from '../data/api/progress';
-import { updateJp } from '../data/api/api_update_jp';
-import { updateZh } from '../data/api/api_update_zh';
+import { update } from '../data/api/api_update';
 import { errorToString } from '../data/handle_error';
 
 const props = defineProps<{
   providerId: string;
   bookId: string;
   showModal: boolean;
-  glossary: { [key: string]: string };
 }>();
 const emits = defineEmits(['update:showModal']);
 
@@ -43,7 +41,8 @@ async function startUpdateJpTask(startIndex: number, endIndex: number) {
     message.info('已有任务在运行。');
     return;
   }
-  const result = await updateJp(
+  const result = await update(
+    false,
     progress,
     props.providerId,
     props.bookId,
@@ -66,13 +65,13 @@ async function startUpdateZhTask(startIndex: number, endIndex: number) {
     message.info('已有任务在运行。');
     return;
   }
-  const result = await updateZh(
+  const result = await update(
+    true,
     progress,
     props.providerId,
     props.bookId,
     startIndex,
     endIndex,
-    props.glossary,
     () => getFileGroups()
   );
   progress.value = undefined;

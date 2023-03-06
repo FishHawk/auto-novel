@@ -12,6 +12,8 @@ data class BookEpisode(
     val providerId: String,
     val bookId: String,
     val episodeId: String,
+    val glossaryUuid: String? = null,
+    val glossary: Map<String, String> = emptyMap(),
     val paragraphsJp: List<String>,
     val paragraphsZh: List<String>?,
 )
@@ -119,11 +121,39 @@ class BookEpisodeRepository(
         providerId: String,
         bookId: String,
         episodeId: String,
+        glossaryUuid: String?,
+        glossary: Map<String, String>,
         paragraphsZh: List<String>,
     ) {
         col.updateOne(
             bsonSpecifyEpisode(providerId, bookId, episodeId),
-            setValue(BookEpisode::paragraphsZh, paragraphsZh)
+            combine(
+                setValue(BookEpisode::glossaryUuid, glossaryUuid),
+                setValue(BookEpisode::glossary, glossary),
+                setValue(BookEpisode::paragraphsZh, paragraphsZh)
+            )
+        )
+        metadataRepository.updateChangeAt(providerId, bookId)
+    }
+
+    suspend fun updateZh(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+        glossaryUuid: String?,
+        glossary: Map<String, String>,
+        paragraphsZh: Map<Int, String>,
+    ) {
+        col.updateOne(
+            bsonSpecifyEpisode(providerId, bookId, episodeId),
+            combine(
+                listOf(
+                    setValue(BookEpisode::glossaryUuid, glossaryUuid),
+                    setValue(BookEpisode::glossary, glossary),
+                ) + paragraphsZh.map { (index, textZh) ->
+                    setValue(BookEpisode::paragraphsZh.pos(index), textZh)
+                }
+            ),
         )
         metadataRepository.updateChangeAt(providerId, bookId)
     }
@@ -136,9 +166,11 @@ class BookEpisodeRepository(
     ) {
         col.updateOne(
             bsonSpecifyEpisode(providerId, bookId, episodeId),
-            combine(paragraphsZh.map { (index, textZh) ->
-                setValue(BookEpisode::paragraphsZh.pos(index), textZh)
-            }),
+            combine(
+                paragraphsZh.map { (index, textZh) ->
+                    setValue(BookEpisode::paragraphsZh.pos(index), textZh)
+                }
+            ),
         )
         metadataRepository.updateChangeAt(providerId, bookId)
     }
