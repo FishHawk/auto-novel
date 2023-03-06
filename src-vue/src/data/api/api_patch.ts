@@ -32,6 +32,7 @@ interface BookMetadataPatchDto {
   uuid: String;
   titleChange?: BookMetadataTextChange;
   introductionChange?: BookMetadataTextChange;
+  glossary?: { [key: string]: string };
   tocChange: BookMetadataTextChange[];
   createAt: number;
 }

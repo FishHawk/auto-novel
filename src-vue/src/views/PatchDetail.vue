@@ -68,6 +68,14 @@ async function getMetadata() {
             v-for="textChange of metadataPatch.tocChange"
             :diff="textChange"
           />
+
+          <table style="border-spacing: 16px 0px">
+            <tr v-for="(termZh, termJp) in metadataPatch.glossary">
+              <td>{{ termJp }}</td>
+              <td style="width: 4px">=></td>
+              <td>{{ termZh }}</td>
+            </tr>
+          </table>
         </n-space>
       </div>
 
