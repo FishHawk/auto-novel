@@ -16,9 +16,15 @@ interface EditField {
   ref: Ref<string | undefined>;
 }
 
+interface EditGlossary {
+  origin: { [key: string]: string };
+  ref: Ref<{ [key: string]: string }>;
+}
+
 interface EditMetadata {
   title: EditField;
   introduction: EditField;
+  glossary: EditGlossary;
   toc: EditField[];
 }
 
@@ -30,6 +36,7 @@ const url = buildMetadataUrl(providerId, bookId);
 const message = useMessage();
 
 const editMetadataRef = shallowRef<ResultState<EditMetadata>>();
+const termsToAdd = ref(['', '']);
 
 onMounted(() => getMetadata());
 async function getMetadata() {
@@ -48,6 +55,10 @@ async function getMetadata() {
         jp: bookMetadata.introductionJp,
         zh: bookMetadata.introductionZh,
         ref: ref(bookMetadata.introductionZh),
+      },
+      glossary: {
+        origin: bookMetadata.glossary,
+        ref: ref(bookMetadata.glossary),
       },
       toc: bookMetadata.toc
         .filter((item) => {
@@ -79,6 +90,7 @@ async function submitTranslate() {
       editMetadata.introduction.ref.value != editMetadata.introduction.zh
         ? editMetadata.introduction.ref.value
         : undefined,
+    glossary: editMetadata.glossary.ref.value,
     toc: Object.assign(
       {},
       ...editMetadata.toc
@@ -95,6 +107,24 @@ async function submitTranslate() {
     message.success('提交成功');
   } else {
     message.error('提交失败：' + errorToString(result.error));
+  }
+}
+
+function deleteTerm(jp: string) {
+  if (editMetadataRef.value?.ok) {
+    delete editMetadataRef.value.value.glossary.ref.value[jp];
+    editMetadataRef.value.value.glossary = editMetadataRef.value.value.glossary;
+  }
+}
+
+function addTerm() {
+  if (editMetadataRef.value?.ok) {
+    const jp = termsToAdd.value[0];
+    const zh = termsToAdd.value[1];
+    if (jp && zh) {
+      editMetadataRef.value.value.glossary.ref.value[jp] = zh;
+      termsToAdd.value = ['', ''];
+    }
   }
 }
 </script>
@@ -125,14 +155,55 @@ async function submitTranslate() {
       type="textarea"
     />
 
-    <n-h2 prefix="bar" align-text>目录</n-h2>
-    <table>
-      <tr v-for="token in editMetadataRef.value.toc">
-        <td style="width: 50%">{{ token.jp }}</td>
+    <n-h2 prefix="bar" align-text>术语表</n-h2>
+    <n-p>
+      术语表会在翻译前将日文词替换成随机字母，在翻译后替换回对应中文词。术语表会影响整个翻译过程，请只在有必要的情况下添加或修改术语。
+    </n-p>
+    <table style="border-spacing: 16px 0px">
+      <tr v-for="(termZh, termJp) in editMetadataRef.value.glossary.ref.value">
+        <td>{{ termJp }}</td>
+        <td style="width: 4px">=></td>
+        <td>{{ termZh }}</td>
         <td>
-          <n-input v-model:value="token.ref.value" :placeholder="token.jp" />
+          <n-button @click="deleteTerm(termJp as string)">删除</n-button>
         </td>
       </tr>
+      <tr>
+        <td colspan="3">
+          <n-input
+            pair
+            v-model:value="termsToAdd"
+            separator="=>"
+            :placeholder="['日文', '中文']"
+            clearable
+          />
+        </td>
+        <td>
+          <n-button @click="addTerm()">添加</n-button>
+        </td>
+      </tr>
+    </table>
+
+    <n-h2 prefix="bar" align-text>目录</n-h2>
+    <table style="width: 100%">
+      <template v-for="token in editMetadataRef.value.toc">
+        <tr>
+          <td style="width: 50%; padding: 4px">
+            {{ token.jp }}
+            <br />
+            <n-input
+              class="on-mobile"
+              v-model:value="token.ref.value"
+              :placeholder="token.jp"
+            />
+          </td>
+          <td class="on-desktop" style="padding: 4px">
+            <n-input v-model:value="token.ref.value" :placeholder="token.jp" />
+          </td>
+        </tr>
+        <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
+        <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
+      </template>
     </table>
 
     <n-button
@@ -159,24 +230,6 @@ async function submitTranslate() {
 </template>
 
 <style scoped>
-td {
-  width: 50%;
-  text-align: left;
-  vertical-align: top;
-  height: 100%;
-}
-table {
-  width: 100%;
-  height: 1px;
-  border-collapse: separate;
-  border-spacing: 0 1em;
-}
-tr {
-  height: 100%;
-}
-td > div {
-  height: 100%;
-}
 .float {
   position: fixed;
   right: 40px;

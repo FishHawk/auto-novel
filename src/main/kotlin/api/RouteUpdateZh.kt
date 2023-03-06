@@ -160,6 +160,7 @@ class UpdateZhService(
             bookId = bookId,
             titleZh = metadataTranslated.title,
             introductionZh = metadataTranslated.introduction,
+            glossary = null,
             tocZh = tocZh,
         )
         return Result.success(Unit)

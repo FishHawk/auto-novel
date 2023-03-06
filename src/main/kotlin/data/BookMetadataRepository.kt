@@ -37,6 +37,7 @@ data class BookMetadata(
     val authors: List<BookAuthor>,
     val introductionJp: String,
     val introductionZh: String?,
+    val glossary: Map<String, String> = emptyMap(),
     val toc: List<BookTocItem>,
     val visited: Long,
     val downloaded: Long,
@@ -272,6 +273,7 @@ class BookMetadataRepository(
         bookId: String,
         titleZh: String?,
         introductionZh: String?,
+        glossary: Map<String, String>?,
         tocZh: Map<Int, String>,
     ) {
         val list = mutableListOf<Bson>()
@@ -280,6 +282,9 @@ class BookMetadataRepository(
         }
         introductionZh?.let {
             list.add(setValue(BookMetadata::introductionZh, it))
+        }
+        glossary?.let {
+            list.add(setValue(BookMetadata::glossary, it))
         }
         tocZh.forEach { (index, itemTitleZh) ->
             list.add(setValue(BookMetadata::toc.pos(index) / BookTocItem::titleZh, itemTitleZh))

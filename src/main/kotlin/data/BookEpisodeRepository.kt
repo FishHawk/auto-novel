@@ -107,6 +107,14 @@ class BookEpisodeRepository(
             }
     }
 
+    suspend fun delete(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+    ) {
+        col.deleteOne(bsonSpecifyEpisode(providerId, bookId, episodeId))
+    }
+
     suspend fun updateZh(
         providerId: String,
         bookId: String,

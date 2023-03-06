@@ -22,28 +22,24 @@ async function getMetadata(
   bookId: string,
   startIndex: number,
   endIndex: number
-): Promise<Result<MetadataToTranslateDto, any>> {
+): Promise<MetadataToTranslateDto> {
   return api
     .get(`update-zh/metadata/${providerId}/${bookId}`, {
       searchParams: { startIndex, endIndex },
     })
-    .json<MetadataToTranslateDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+    .json<MetadataToTranslateDto>();
 }
 
 async function postMetadata(
   providerId: string,
   bookId: string,
   translated: MetadataTranslatedDto
-): Promise<Result<string, any>> {
+): Promise<string> {
   return api
     .post(`update-zh/metadata/${providerId}/${bookId}`, {
       json: translated,
     })
-    .text()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+    .text();
 }
 
 async function getEpisode(
@@ -104,11 +100,12 @@ export async function updateZh(
   bookId: string,
   startIndex: number,
   endIndex: number,
+  glossary: { [key: string]: string },
   onStart: () => void
 ): Promise<Result<UpdateProgress, any>> {
   let translator;
   try {
-    translator = await BaiduWebTranslator.createInstance('jp', 'zh');
+    translator = await BaiduWebTranslator.createInstance('jp', 'zh', glossary);
   } catch (e: any) {
     return Err(e);
   }
@@ -117,32 +114,26 @@ export async function updateZh(
   let total = undefined;
   let finished = 0;
   let error = 0;
-
   progress.value = { name, total, finished, error };
 
-  console.log(`获取元数据 ${providerId}/${bookId}`);
-  const metadataResult = await getMetadata(
-    providerId,
-    bookId,
-    startIndex,
-    endIndex
-  );
+  let metadata: MetadataToTranslateDto;
+  try {
+    console.log(`获取元数据 ${providerId}/${bookId}`);
+    metadata = await getMetadata(providerId, bookId, startIndex, endIndex);
 
-  if (!metadataResult.ok) {
-    return Err(metadataResult.error);
-  }
+    const metadataTextsSrc = generateQuery(metadata);
+    if (metadataTextsSrc.length > 0) {
+      console.log(`翻译元数据 ${providerId}/${bookId}`);
+      const metadataTranslated = generateTranslated(
+        metadata,
+        await translator.translate(metadataTextsSrc)
+      );
 
-  const metadata = metadataResult.value;
-  const metadataQuery = generateQuery(metadata);
-  if (metadataQuery.length > 0) {
-    console.log(`翻译元数据 ${providerId}/${bookId}`);
-    const metadataTranslated = generateTranslated(
-      metadata,
-      await translator.translate(metadataQuery)
-    );
-
-    console.log(`上传元数据 ${providerId}/${bookId}`);
-    await postMetadata(providerId, bookId, metadataTranslated);
+      console.log(`上传元数据 ${providerId}/${bookId}`);
+      await postMetadata(providerId, bookId, metadataTranslated);
+    }
+  } catch (e: any) {
+    return Err(e);
   }
 
   total = metadata.episodeIds.length;
@@ -156,7 +147,9 @@ export async function updateZh(
 
       if (episode.length > 0) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
-        const episodeTranslated = await translator.translate(episode);
+        const episodeTranslated = await translator.translateWithGlossary(
+          episode
+        );
 
         console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
         await postEpisode(providerId, bookId, episodeId, episodeTranslated);

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { h, onMounted, Ref, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { NA, DataTableColumns, NButton, useMessage } from 'naive-ui';
 import {
   SearchFilled,
   FormatListBulletedFilled,
@@ -9,18 +8,10 @@ import {
 } from '@vicons/material';
 
 import { ResultState } from '../data/api/result';
-import ApiNovel, {
-  BookMetadataDto,
-  BookStateDto,
-  BookFiles,
-  stateToFileList,
-} from '../data/api/api_novel';
+import ApiNovel, { BookMetadataDto } from '../data/api/api_novel';
 import { addHistory } from '../data/history';
 import { buildMetadataUrl } from '../data/provider';
 
-import { UpdateProgress } from '../data/api/progress';
-import { updateJp } from '../data/api/api_update_jp';
-import { updateZh } from '../data/api/api_update_zh';
 import { errorToString } from '../data/handle_error';
 
 const route = useRoute();
@@ -28,32 +19,8 @@ const providerId = route.params.providerId as string;
 const bookId = route.params.bookId as string;
 const url = buildMetadataUrl(providerId, bookId);
 
-const message = useMessage();
-
-const showModal = ref(false);
-
-const formStartIndex = ref(1);
-const formEndIndex = ref(65536);
-enum FormMode {
-  JP,
-  ZH,
-}
-const formMode = ref(FormMode.JP);
-const formModeOptions = [
-  { label: '日文', value: FormMode.JP },
-  { label: '中文', value: FormMode.ZH },
-];
-
-function submitForm() {
-  if (formMode.value == FormMode.JP) {
-    startUpdateJpTask(formStartIndex.value - 1, formEndIndex.value - 1);
-  } else {
-    startUpdateZhTask(formStartIndex.value - 1, formEndIndex.value - 1);
-  }
-  showModal.value = false;
-}
-
 const bookMetadata = ref<ResultState<BookMetadataDto>>();
+
 onMounted(() => getMetadata());
 async function getMetadata() {
   const result = await ApiNovel.getMetadata(providerId, bookId);
@@ -64,275 +31,107 @@ async function getMetadata() {
   }
 }
 
-const bookState = ref<ResultState<BookStateDto>>();
-const progress: Ref<UpdateProgress | undefined> = ref();
-
-onMounted(() => getFileGroups());
-let lastPoll = false;
-async function getFileGroups() {
-  const result = await ApiNovel.getState(providerId, bookId);
-
-  if (result.ok) {
-    bookState.value = result;
-  }
-
-  if (progress.value || lastPoll) {
-    lastPoll = progress.value !== undefined;
-    window.setTimeout(() => getFileGroups(), 2000);
-  }
-}
-
-async function startUpdateJpTask(startIndex: number, endIndex: number) {
-  if (progress.value !== undefined) {
-    message.info('已有任务在运行。');
-    return;
-  }
-  const result = await updateJp(
-    progress,
-    providerId,
-    bookId,
-    startIndex,
-    endIndex,
-    () => getFileGroups()
-  );
-  progress.value = undefined;
-  if (result.ok) {
-    const progressHint = `${result.value.finished}/${result.value.total}`;
-    message.success(`日文更新任务完成[${progressHint}]`);
-  } else {
-    console.log(result.error);
-    message.error(`日文更新任务失败:${errorToString(result.error)}`);
-  }
-}
-
-async function startUpdateZhTask(startIndex: number, endIndex: number) {
-  if (progress.value !== undefined) {
-    message.info('已有任务在运行。');
-    return;
-  }
-  const result = await updateZh(
-    progress,
-    providerId,
-    bookId,
-    startIndex,
-    endIndex,
-    () => getFileGroups()
-  );
-  progress.value = undefined;
-  if (result.ok) {
-    const progressHint = `${result.value.finished}/${result.value.total}`;
-    message.success(`中文更新任务完成[${progressHint}]`);
-  } else {
-    console.log(result.error);
-    message.error(`中文更新任务失败:${errorToString(result.error)}`);
-  }
-}
-
-const tableColumns: DataTableColumns<BookFiles> = [
-  { title: '语言', key: 'label' },
-  {
-    title: '链接',
-    key: 'links',
-    render(row) {
-      return row.files.map((file) => {
-        return h(
-          NA,
-          {
-            style: { marginRight: '6px' },
-            href: file.url,
-            target: '_blank',
-            download: file.name,
-          },
-          { default: () => file.label }
-        );
-      });
-    },
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    render(row) {
-      if (row.lang === 'jp') {
-        return h(
-          NButton,
-          {
-            tertiary: true,
-            size: 'small',
-            onClick: () => startUpdateJpTask(0, 65536),
-          },
-          { default: () => '更新' }
-        );
-      } else {
-        return h(
-          NButton,
-          {
-            tertiary: true,
-            size: 'small',
-            onClick: () => startUpdateZhTask(0, 65536),
-          },
-          { default: () => '更新(需要插件)' }
-        );
-      }
-    },
-  },
-];
+const showModal = ref(false);
 </script>
 
 <template>
-  <n-modal v-model:show="showModal">
-    <n-card
-      style="width: 600px"
-      title="高级"
-      :bordered="false"
-      size="huge"
-      role="dialog"
-      aria-modal="true"
-    >
-      <n-space>
-        <span>从这章开始更新</span>
-        <n-input-number v-model:value="formStartIndex" :min="1" clearable />
-      </n-space>
+  <div v-if="bookMetadata?.ok" class="content">
+    <n-h2 style="text-align: center; width: 100%">
+      <n-a :href="url" target="_blank">{{ bookMetadata.value.titleJp }}</n-a>
+      <br />
+      <span style="color: grey">{{ bookMetadata.value.titleZh }}</span>
+    </n-h2>
 
-      <n-space style="margin-top: 15px">
-        <span>到这章为止</span>
-        <n-input-number v-model:value="formEndIndex" :min="1" clearable />
-      </n-space>
+    <n-space align="center" justify="space-around">
+      <n-a href="/">
+        <n-button text>
+          <template #icon>
+            <n-icon> <SearchFilled /> </n-icon>
+          </template>
+          搜索
+        </n-button>
+      </n-a>
+      <n-a href="/list">
+        <n-button text>
+          <template #icon>
+            <n-icon> <FormatListBulletedFilled /> </n-icon>
+          </template>
+          列表
+        </n-button>
+      </n-a>
+      <n-a :href="`/novel-edit/${providerId}/${bookId}`">
+        <n-button text>
+          <template #icon>
+            <n-icon> <EditNoteFilled /> </n-icon>
+          </template>
+          编辑
+        </n-button>
+      </n-a>
+    </n-space>
 
-      <n-space style="margin-top: 15px">
-        <span>语言</span>
-        <n-radio-group v-model:value="formMode" name="update-mode">
-          <n-space>
-            <n-radio
-              v-for="option in formModeOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </n-radio>
-          </n-space>
-        </n-radio-group>
-      </n-space>
-      <n-space style="margin-top: 15px">
-        <n-button @click="submitForm()">更新</n-button>
-        <n-button @click="showModal = false">取消</n-button>
-      </n-space>
-    </n-card>
-  </n-modal>
+    <n-divider />
 
-  <div class="content">
-    <div v-if="bookMetadata?.ok">
-      <n-h2 style="text-align: center; width: 100%">
-        <n-a :href="url" target="_blank">{{ bookMetadata.value.titleJp }}</n-a>
-        <br />
-        <span style="color: grey">{{ bookMetadata.value.titleZh }}</span>
-      </n-h2>
+    <n-space>
+      <span>浏览次数:{{ bookMetadata.value.visited }}</span>
+      <span>下载次数:{{ bookMetadata.value.downloaded }}</span>
+    </n-space>
+    <n-p v-if="bookMetadata.value.authors.length > 0">
+      作者：
+      <span v-for="author in bookMetadata.value.authors">
+        <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
+      </span>
+    </n-p>
+    <n-p>{{ bookMetadata.value.introductionJp }}</n-p>
+    <n-p v-if="bookMetadata.value.introductionZh !== undefined">{{
+      bookMetadata.value.introductionZh
+    }}</n-p>
 
-      <n-space align="center" justify="space-around">
-        <n-a href="/">
-          <n-button text>
-            <template #icon>
-              <n-icon> <SearchFilled /> </n-icon>
-            </template>
-            搜索
-          </n-button>
-        </n-a>
-        <n-a href="/list">
-          <n-button text>
-            <template #icon>
-              <n-icon> <FormatListBulletedFilled /> </n-icon>
-            </template>
-            列表
-          </n-button>
-        </n-a>
-        <n-a :href="`/novel-edit/${providerId}/${bookId}`">
-          <n-button text>
-            <template #icon>
-              <n-icon> <EditNoteFilled /> </n-icon>
-            </template>
-            编辑
-          </n-button>
-        </n-a>
-      </n-space>
+    <n-h2 prefix="bar" align-text>翻译</n-h2>
+    <n-p>
+      如果需要自定义更新范围，请使用
+      <n-a @click="showModal = true">高级模式</n-a>
+      。如果要编辑术语表，请进入
+      <n-a :href="`/novel-edit/${providerId}/${bookId}`">编辑</n-a>
+      界面。
+    </n-p>
+    <n-p v-if="Object.keys(bookMetadata.value.glossary).length">
+      <n-collapse>
+        <n-collapse-item title="术语表">
+          <table style="border-spacing: 16px 0px">
+            <tr v-for="(termZh, termJp) in bookMetadata.value.glossary">
+              <td>{{ termJp }}</td>
+              <td>=></td>
+              <td>{{ termZh }}</td>
+            </tr>
+          </table>
+        </n-collapse-item>
+      </n-collapse>
+    </n-p>
+    <TranslatePanel
+      :provider-id="providerId"
+      :book-id="bookId"
+      v-model:showModal="showModal"
+      :glossary="bookMetadata.value.glossary"
+    />
 
-      <n-divider />
-
-      <n-space>
-        <span>浏览次数:{{ bookMetadata.value.visited }}</span>
-        <span>下载次数:{{ bookMetadata.value.downloaded }}</span>
-      </n-space>
-      <n-p v-if="bookMetadata.value.authors.length > 0">
-        作者：
-        <span v-for="author in bookMetadata.value.authors">
-          <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
-        </span>
-      </n-p>
-      <n-p>{{ bookMetadata.value.introductionJp }}</n-p>
-      <n-p v-if="bookMetadata.value.introductionZh !== undefined">{{
-        bookMetadata.value.introductionZh
-      }}</n-p>
-    </div>
-
-    <div v-if="bookState?.ok">
-      <n-h2 prefix="bar" align-text>状态</n-h2>
-      <n-p
-        >如果需要自定义更新范围，请使用
-        <n-a @click="showModal = true"> 高级模式 </n-a>。
-      </n-p>
-      <n-data-table
-        :columns="tableColumns"
-        :data="stateToFileList(providerId, bookId, bookState.value)"
-        :pagination="false"
-        :bordered="false"
-      />
-      <div v-if="progress !== undefined">
-        <n-space
-          v-if="progress !== undefined"
-          align="center"
-          justify="space-between"
-          style="width: 100%"
+    <n-h2 prefix="bar" align-text>目录</n-h2>
+    <table style="width: 100%">
+      <template v-for="token in bookMetadata.value.toc">
+        <n-a
+          v-if="token.episodeId"
+          :href="`/novel/${providerId}/${bookId}/${token.episodeId}`"
+          role="row"
+          style="display: table-row"
         >
-          <span>{{ progress.name }}</span>
-          <div>
-            <span>成功:{{ progress.finished ?? '-' }}</span>
-            <n-divider vertical />
-            <span>失败:{{ progress.error ?? '-' }}</span>
-            <n-divider vertical />
-            <span>总共:{{ progress.total ?? '-' }}</span>
-          </div>
-        </n-space>
-        <n-progress
-          type="line"
-          :percentage="
-            Math.round(
-              (1000 * (progress.finished + progress.error)) /
-                (progress.total ?? 1)
-            ) / 10
-          "
-          style="width: 100%"
-        />
-      </div>
-    </div>
-
-    <div v-if="bookMetadata?.ok">
-      <n-h2 prefix="bar" align-text>目录</n-h2>
-      <table style="width: 100%">
-        <template v-for="token in bookMetadata.value.toc">
-          <n-a
-            v-if="token.episodeId"
-            :href="`/novel/${providerId}/${bookId}/${token.episodeId}`"
-            role="row"
-            style="display: table-row"
-          >
-            <TocItem :token="token" />
-          </n-a>
-          <tr v-else>
-            <TocItem :token="token" />
-          </tr>
-          <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
-          <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
-        </template>
-      </table>
-    </div>
+          <TocItem :token="token" />
+        </n-a>
+        <tr v-else>
+          <TocItem :token="token" />
+        </tr>
+        <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
+        <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
+      </template>
+    </table>
   </div>
 
   <div v-if="bookMetadata && !bookMetadata.ok">

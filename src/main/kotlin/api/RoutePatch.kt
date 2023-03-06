@@ -107,6 +107,7 @@ class PatchService(
     data class BookMetadataPatchBody(
         val title: String? = null,
         val introduction: String? = null,
+        val glossary: Map<String, String>? = null,
         val toc: Map<String, String>,
     )
 
@@ -149,6 +150,7 @@ class PatchService(
     ): Result<Unit> {
         if (patch.title == null &&
             patch.introduction == null &&
+            patch.glossary == null &&
             patch.toc.isEmpty()
         ) return Result.success(Unit)
 
@@ -156,6 +158,7 @@ class PatchService(
             providerId = providerId,
             bookId = bookId,
             title = patch.title,
+            glossary = patch.glossary,
             introduction = patch.introduction,
             toc = patch.toc,
         )

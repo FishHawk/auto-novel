@@ -10,19 +10,20 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "ky": "^0.32.2",
-    "vue": "^3.2.37",
-    "vue-router": "^4.1.6",
     "@vicons/material": "^0.12.0",
-    "vfonts": "^0.0.3",
-    "naive-ui": "^2.34.2",
     "@vitejs/plugin-vue": "^3.1.0",
     "got": "^12.5.3",
+    "ky": "^0.32.2",
+    "naive-ui": "^2.34.2",
+    "nanoid": "^4.0.1",
     "typescript": "^4.6.4",
     "unplugin-auto-import": "^0.11.3",
     "unplugin-vue-components": "^0.22.9",
+    "vfonts": "^0.0.3",
     "vite": "^3.1.0",
     "vitest": "^0.25.2",
+    "vue": "^3.2.37",
+    "vue-router": "^4.1.6",
     "vue-tsc": "^0.40.4"
   }
 }

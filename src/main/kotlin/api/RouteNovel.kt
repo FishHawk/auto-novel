@@ -123,15 +123,6 @@ class NovelService(
     )
 
     @Serializable
-    data class BookPageItemDto(
-        val providerId: String,
-        val bookId: String,
-        val titleJp: String,
-        val titleZh: String? = null,
-        val state: BookStateDto,
-    )
-
-    @Serializable
     data class BookPageDto(
         val pageNumber: Long,
         val items: List<BookListItem>,
@@ -144,6 +135,7 @@ class NovelService(
         val authors: List<BookAuthor>,
         val introductionJp: String,
         val introductionZh: String? = null,
+        val glossary: Map<String, String>,
         val toc: List<BookTocItem>,
         val visited: Long,
         val downloaded: Long,
@@ -227,6 +219,7 @@ class NovelService(
                 authors = metadata.authors,
                 introductionJp = metadata.introductionJp,
                 introductionZh = metadata.introductionZh,
+                glossary = metadata.glossary,
                 toc = metadata.toc,
                 visited = metadata.visited,
                 downloaded = metadata.downloaded,

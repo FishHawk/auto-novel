@@ -57,6 +57,7 @@ interface BookEpisodePatchDto {
 interface BookMetadataPatchBody {
   title?: string;
   introduction?: string;
+  glossary?: { [key: string]: string };
   toc: { [key: string]: string };
 }
 

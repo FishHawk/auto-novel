@@ -29,17 +29,11 @@ val appModule = module {
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
 
-    private val repo by inject<BookMetadataRepository>(BookMetadataRepository::class.java)
+    private val repo by inject<BookEpisodeRepository>(BookEpisodeRepository::class.java)
 
     init {
         describe("test") {
-            val list = repo.listRank(
-                mapOf(
-                    "type" to "综合",
-                    "genre" to "全部",
-                    "range" to "每日",
-                )
-            )
+            repo.delete("syosetu", "n0833hi", "1")
         }
     }
 }

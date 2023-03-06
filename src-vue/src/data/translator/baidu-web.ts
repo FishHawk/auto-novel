@@ -1,5 +1,6 @@
 import ky from 'ky';
 import { BaiduBaseTranslator } from './baidu';
+import { Glossary } from './base';
 
 function a(r: any, o: any) {
   for (var t = 0; t < o.length - 2; t += 3) {
@@ -61,14 +62,18 @@ export class BaiduWebTranslator extends BaiduBaseTranslator {
   private token = '';
   private gtk = '';
 
-  static async createInstance(from_lang: string, to_lang: string) {
-    const translator = new this(from_lang, to_lang);
-    await translator.load_main_page();
-    await translator.load_main_page();
+  static async createInstance(
+    langSrc: string,
+    langDst: string,
+    glossary: Glossary
+  ) {
+    const translator = new this(langSrc, langDst, glossary);
+    await translator.loadMainPage();
+    await translator.loadMainPage();
     return translator;
   }
 
-  private async load_main_page() {
+  private async loadMainPage() {
     const html = await ky
       .get('https://fanyi.baidu.com', { credentials: 'include' })
       .text();
@@ -76,13 +81,13 @@ export class BaiduWebTranslator extends BaiduBaseTranslator {
     this.gtk = html.match(/window.gtk = "(.*?)";/)!![1];
   }
 
-  async inner_translate(query: string): Promise<string[]> {
+  async translateInner(textSrc: string): Promise<string[]> {
     const url = 'https://fanyi.baidu.com/v2transapi';
-    const sign = token(query, this.gtk);
+    const sign = token(textSrc, this.gtk);
     const data = {
-      from: this.from_lang,
-      to: this.to_lang,
-      query: query,
+      from: this.langSrc,
+      to: this.langDst,
+      query: textSrc,
       simple_means_flag: 3,
       sign: sign,
       token: this.token,

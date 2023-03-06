@@ -1,5 +1,6 @@
 import api from './api';
 import { Ok, Err, Result } from './result';
+
 export interface BookListItemDto {
   providerId: string;
   bookId: string;
@@ -50,6 +51,7 @@ export interface BookMetadataDto {
   authors: { name: string; link: string }[];
   introductionJp: string;
   introductionZh?: string;
+  glossary: { [key: string]: string };
   toc: { titleJp: string; titleZh?: string; episodeId?: string }[];
   visited: number;
   downloaded: number;
@@ -103,40 +105,6 @@ export interface BookFiles {
   label: string;
   lang: string;
   files: { label: string; url: string; name: string }[];
-}
-
-export function stateToFileList(
-  providerId: string,
-  bookId: string,
-  state: BookStateDto
-): BookFiles[] {
-  const baseUrl = window.origin + `/api/prepare-book/`;
-
-  function createFile(label: string, lang: string, type: string) {
-    return {
-      label,
-      url: baseUrl + `${providerId}/${bookId}/${lang}/${type}`,
-      name: `${providerId}.${bookId}.${lang}.${type}`,
-    };
-  }
-
-  return [
-    {
-      label: `日文(${state.countJp}/${state.total})`,
-      lang: 'jp',
-      files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
-    },
-    {
-      label: `中文(${state.countZh}/${state.total})`,
-      lang: 'zh',
-      files: [
-        createFile('TXT', 'zh', 'txt'),
-        createFile('EPUB', 'zh', 'epub'),
-        createFile('中日对比TXT', 'mix', 'txt'),
-        createFile('中日对比EPUB', 'mix', 'epub'),
-      ],
-    },
-  ];
 }
 
 export default {

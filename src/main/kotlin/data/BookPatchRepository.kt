@@ -33,6 +33,7 @@ data class BookMetadataPatch(
     val uuid: String,
     val titleChange: TextChange?,
     val introductionChange: TextChange?,
+    val glossary: Map<String, String>?,
     val tocChange: List<TextChange>,
     @Contextual val createAt: LocalDateTime,
 ) {
@@ -151,6 +152,7 @@ class BookPatchRepository(
         bookId: String,
         title: String?,
         introduction: String?,
+        glossary: Map<String, String>?,
         toc: Map<String, String>,
     ) {
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
@@ -172,6 +174,9 @@ class BookPatchRepository(
             metadata.introductionZh,
             introduction,
         )
+        val glossaryChange = glossary?.takeIf {
+            glossary != metadata.glossary
+        }
         val tocChange = toc.mapNotNull { (jp, zhNew) ->
             metadata.toc.find { it.titleJp == jp }?.let { item ->
                 BookMetadataPatch.TextChange(jp = item.titleJp, zhOld = item.titleZh, zhNew = zhNew)
@@ -181,6 +186,7 @@ class BookPatchRepository(
         if (
             titleChange == null &&
             introductionChange == null &&
+            glossaryChange == null &&
             tocChange.isEmpty()
         ) {
             return
@@ -198,6 +204,7 @@ class BookPatchRepository(
             titleChange = titleChange,
             introductionChange = introductionChange,
             tocChange = tocChange,
+            glossary = glossaryChange,
             createAt = LocalDateTime.now(),
         )
         col.updateOne(
@@ -214,6 +221,7 @@ class BookPatchRepository(
             bookId = bookId,
             titleZh = title,
             introductionZh = introduction,
+            glossary = glossaryChange,
             tocZh = tocZh,
         )
     }
