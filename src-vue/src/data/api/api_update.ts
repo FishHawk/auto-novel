@@ -257,6 +257,12 @@ export async function update(
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh: updatedParagraphs,
         });
+      } else {
+        console.log(`更新术语表Uuid ${providerId}/${bookId}/${episodeId}`);
+        await putEpisode(providerId, bookId, episodeId, {
+          glossaryUuid: metadata.glossaryUuid,
+          paragraphsZh: {},
+        });
       }
 
       finished += 1;
