@@ -100,7 +100,13 @@ export class BaiduWebTranslator extends BaiduBaseTranslator {
     if ('error' in json) {
       throw Error(`Baidu translator error ${json.error}: ${json.msg}`);
     } else if ('errno' in json) {
-      throw Error(`Baidu translator error ${json.errno}: ${json.msg}`);
+      if (json.errno == 1000) {
+        throw Error(
+          `Baidu translator error ${json.errno}: ${json.errmsg}，可能是因为输入为空`
+        );
+      } else {
+        throw Error(`Baidu translator error ${json.errno}: ${json.errmsg}`);
+      }
     } else {
       return json.trans_result.data.map((item: any) => item.dst);
     }

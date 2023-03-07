@@ -244,7 +244,7 @@ export async function update(
       );
 
       const textsSrc = expiredParagraphs.map((it) => it.text);
-      if (translator && episode.paragraphsJp.length > 0) {
+      if (translator && textsSrc.length > 0) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
         const textsDst = await translator.translateWithGlossary(textsSrc);
 
