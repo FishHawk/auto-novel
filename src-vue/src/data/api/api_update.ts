@@ -1,8 +1,4 @@
-import { SearchParamsOption } from 'ky';
-import { Ref } from 'vue';
-
 import api from './api';
-import { UpdateProgress } from './progress';
 import { Result, Ok, Err } from './result';
 import { BaiduWebTranslator } from '../translator/baidu-web';
 import { Translator } from '../translator/base';
@@ -153,21 +149,20 @@ function getExpiredParagraphs(
     });
 }
 
+interface UpdateCallback {
+  onStart: (total: number) => void;
+  onEpisodeTranslateSuccess: () => void;
+  onEpisodeTranslateFailure: () => void;
+}
+
 export async function update(
   needTranslate: boolean,
-  progress: Ref<UpdateProgress | undefined>,
   providerId: string,
   bookId: string,
   startIndex: number,
   endIndex: number,
-  onStart: () => void
-): Promise<Result<UpdateProgress, any>> {
-  const name = needTranslate ? '更新中文' : '更新日文';
-  let total = undefined;
-  let finished = 0;
-  let error = 0;
-  progress.value = { name, total, finished, error };
-
+  callback: UpdateCallback
+): Promise<Result<undefined, any>> {
   let metadata: MetadataToTranslateDto;
   let translator: Translator | undefined = undefined;
   try {
@@ -203,10 +198,9 @@ export async function update(
     return Err(e);
   }
 
-  total =
-    metadata.untranslatedEpisodeIds.length + metadata.expiredEpisodeIds.length;
-  progress.value = { name, total, finished, error };
-  onStart();
+  callback.onStart(
+    metadata.untranslatedEpisodeIds.length + metadata.expiredEpisodeIds.length
+  );
 
   for (const episodeId of metadata.untranslatedEpisodeIds) {
     try {
@@ -225,13 +219,11 @@ export async function update(
         });
       }
 
-      finished += 1;
+      callback.onEpisodeTranslateSuccess();
     } catch (e) {
       console.log(e);
-      error += 1;
+      callback.onEpisodeTranslateFailure();
     }
-
-    progress.value = { name, total, finished, error };
   }
 
   for (const episodeId of metadata.expiredEpisodeIds) {
@@ -244,35 +236,27 @@ export async function update(
       );
 
       const textsSrc = expiredParagraphs.map((it) => it.text);
+      const paragraphsZh: { [key: number]: string } = {};
       if (translator && textsSrc.length > 0) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
         const textsDst = await translator.translateWithGlossary(textsSrc);
-
-        console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
-        const updatedParagraphs: { [key: number]: string } = {};
         expiredParagraphs.forEach((it, index) => {
-          updatedParagraphs[it.index] = textsDst[index];
-        });
-        await putEpisode(providerId, bookId, episodeId, {
-          glossaryUuid: metadata.glossaryUuid,
-          paragraphsZh: updatedParagraphs,
-        });
-      } else {
-        console.log(`更新术语表Uuid ${providerId}/${bookId}/${episodeId}`);
-        await putEpisode(providerId, bookId, episodeId, {
-          glossaryUuid: metadata.glossaryUuid,
-          paragraphsZh: {},
+          paragraphsZh[it.index] = textsDst[index];
         });
       }
 
-      finished += 1;
+      console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
+      await putEpisode(providerId, bookId, episodeId, {
+        glossaryUuid: metadata.glossaryUuid,
+        paragraphsZh,
+      });
+
+      callback.onEpisodeTranslateSuccess();
     } catch (e) {
       console.log(e);
-      error += 1;
+      callback.onEpisodeTranslateFailure();
     }
-
-    progress.value = { name, total, finished, error };
   }
 
-  return Ok({ name, total, finished, error });
+  return Ok(undefined);
 }

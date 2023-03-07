@@ -5,7 +5,6 @@ import { NA, DataTableColumns, NButton, useMessage } from 'naive-ui';
 import { ResultState } from '../data/api/result';
 import ApiNovel, { BookStateDto, BookFiles } from '../data/api/api_novel';
 
-import { UpdateProgress } from '../data/api/progress';
 import { update } from '../data/api/api_update';
 import { errorToString } from '../data/handle_error';
 
@@ -15,6 +14,13 @@ const props = defineProps<{
   showModal: boolean;
 }>();
 const emits = defineEmits(['update:showModal']);
+
+interface UpdateProgress {
+  name: string;
+  total?: number;
+  finished: number;
+  error: number;
+}
 
 const message = useMessage();
 
@@ -36,52 +42,51 @@ async function getFileGroups() {
   }
 }
 
-async function startUpdateJpTask(startIndex: number, endIndex: number) {
+async function startUpdateTask(
+  needTranslate: boolean,
+  startIndex: number,
+  endIndex: number
+) {
   if (progress.value !== undefined) {
     message.info('已有任务在运行。');
     return;
   }
-  const result = await update(
-    false,
-    progress,
-    props.providerId,
-    props.bookId,
-    startIndex,
-    endIndex,
-    () => getFileGroups()
-  );
-  progress.value = undefined;
-  if (result.ok) {
-    const progressHint = `${result.value.finished}/${result.value.total}`;
-    message.success(`日文更新任务完成[${progressHint}]`);
-  } else {
-    console.log(result.error);
-    message.error(`日文更新任务失败:${errorToString(result.error)}`);
-  }
-}
+  const name = needTranslate ? '更新中文' : '更新日文';
+  progress.value = {
+    name,
+    finished: 0,
+    error: 0,
+  };
 
-async function startUpdateZhTask(startIndex: number, endIndex: number) {
-  if (progress.value !== undefined) {
-    message.info('已有任务在运行。');
-    return;
-  }
   const result = await update(
-    true,
-    progress,
+    needTranslate,
     props.providerId,
     props.bookId,
     startIndex,
     endIndex,
-    () => getFileGroups()
+    {
+      onStart: (total: number) => {
+        progress.value!.total = total;
+        getFileGroups();
+      },
+      onEpisodeTranslateSuccess: () => (progress.value!.finished += 1),
+      onEpisodeTranslateFailure: () => (progress.value!.error += 1),
+    }
   );
-  progress.value = undefined;
+
   if (result.ok) {
-    const progressHint = `${result.value.finished}/${result.value.total}`;
-    message.success(`中文更新任务完成[${progressHint}]`);
+    const total = progress.value.total;
+    if (total && total > 0) {
+      const progressHint = `${progress.value?.finished}/${progress.value?.total}`;
+      message.success(`${name}任务完成:[${progressHint}]`);
+    } else {
+      message.success(`${name}任务完成:没有需要更新的章节`);
+    }
   } else {
     console.log(result.error);
-    message.error(`中文更新任务失败:${errorToString(result.error)}`);
+    message.error(`${name}任务失败:${errorToString(result.error)}`);
   }
+  progress.value = undefined;
 }
 
 const tableColumns: DataTableColumns<BookFiles> = [
@@ -114,7 +119,7 @@ const tableColumns: DataTableColumns<BookFiles> = [
           {
             tertiary: true,
             size: 'small',
-            onClick: () => startUpdateJpTask(0, 65536),
+            onClick: () => startUpdateTask(false, 0, 65536),
           },
           { default: () => '更新' }
         );
@@ -124,7 +129,7 @@ const tableColumns: DataTableColumns<BookFiles> = [
           {
             tertiary: true,
             size: 'small',
-            onClick: () => startUpdateZhTask(0, 65536),
+            onClick: () => startUpdateTask(true, 0, 65536),
           },
           { default: () => '更新(需要插件)' }
         );
@@ -184,9 +189,9 @@ const formModeOptions = [
 
 function submitForm() {
   if (formMode.value == FormMode.JP) {
-    startUpdateJpTask(formStartIndex.value - 1, formEndIndex.value - 1);
+    startUpdateTask(false, formStartIndex.value - 1, formEndIndex.value - 1);
   } else {
-    startUpdateZhTask(formStartIndex.value - 1, formEndIndex.value - 1);
+    startUpdateTask(true, formStartIndex.value - 1, formEndIndex.value - 1);
   }
   emits('update:showModal', false);
 }
