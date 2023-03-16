@@ -236,7 +236,7 @@ function getTextList(
 
       <n-divider />
 
-      <div id="episode-content">
+      <div class="episode-content">
         <template v-for="text in getTextList(bookEpisode.value)">
           <n-p v-if="text.text1.trim().length === 0">
             <br />
@@ -287,9 +287,25 @@ function getTextList(
   </n-config-provider>
 </template>
 
-<style scoped>
+<style>
 #episode-content p {
   margin-top: 8px;
   margin-bottom: 8px;
+}
+.content {
+  width: 800px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 48px;
+}
+
+@media only screen and (max-width: 600px) {
+  .content {
+    width: auto;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 48px;
+  }
 }
 </style>

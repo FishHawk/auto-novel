@@ -102,7 +102,6 @@ async function submitTranslate() {
 
     <n-divider />
 
-    <n-h2 prefix="bar" align-text>段落</n-h2>
     <table>
       <tr v-for="paragraph in editEpisodeRef.value.paragraphs">
         <td>{{ paragraph.jp }}</td>

@@ -25,7 +25,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 
 <template>
   <MainLayout>
-    <div class="content">
+    <div>
       <n-h1>编辑历史</n-h1>
       <n-pagination
         v-model:page="currentPage"

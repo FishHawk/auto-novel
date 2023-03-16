@@ -93,7 +93,7 @@ async function loader(page: number, selected: number[]) {
 
 <template>
   <ListLayout>
-    <div class="content">
+    <div>
       <BookPagedList :descriptior="descriptior" :loader="loader" />
     </div>
   </ListLayout>

@@ -33,7 +33,7 @@ class Pixiv : BookProvider {
         TODO("Not yet implemented")
     }
 
-    override fun getMetadataUrl(bookId: String): String {
+    private fun getMetadataUrl(bookId: String): String {
         return if (bookId.startsWith("s")) {
             getEpisodeUrl(bookId, bookId.removePrefix("s"))
         } else {
@@ -41,7 +41,7 @@ class Pixiv : BookProvider {
         }
     }
 
-    override fun getEpisodeUrl(bookId: String, episodeId: String): String {
+    private fun getEpisodeUrl(bookId: String, episodeId: String): String {
         return "https://www.pixiv.net/novel/show.php?id=$episodeId"
     }
 

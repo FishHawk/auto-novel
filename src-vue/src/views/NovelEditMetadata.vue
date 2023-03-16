@@ -2,7 +2,7 @@
 import { onMounted, Ref, ref, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import { useMessage } from 'naive-ui';
-import { UploadFilled } from '@vicons/material';
+import { TocFilled, UploadFilled } from '@vicons/material';
 
 import { Ok, ResultState } from '../data/api/result';
 import ApiNovel from '../data/api/api_novel';
@@ -130,119 +130,132 @@ function addTerm() {
 </script>
 
 <template>
-  <div v-if="editMetadataRef?.ok" class="content">
-    <n-h2 style="text-align: center; width: 100%">
-      <n-a :href="url" target="_blank">{{
-        editMetadataRef.value.title.jp
-      }}</n-a>
-      <br />
-      <span style="color: grey">{{ editMetadataRef.value.title.zh }}</span>
-    </n-h2>
+  <MainLayout>
+    <div v-if="editMetadataRef?.ok">
+      <n-h2 prefix="bar" >
+        <n-a :href="url" target="_blank">{{
+          editMetadataRef.value.title.jp
+        }}</n-a>
+        <br />
+        <span style="color: grey">{{ editMetadataRef.value.title.zh }}</span>
+      </n-h2>
 
-    <n-divider />
+      <n-a :href="`/novel/${providerId}/${bookId}`">
+        <n-button>
+          <template #icon>
+            <n-icon> <TocFilled /> </n-icon>
+          </template>
+          返回目录
+        </n-button>
+      </n-a>
 
-    <n-h2 prefix="bar" align-text>标题/简介</n-h2>
-    <n-p>{{ editMetadataRef.value.title.jp }}</n-p>
-    <n-input
-      v-model:value="editMetadataRef.value.title.ref.value"
-      :placeholder="editMetadataRef.value.title.jp"
-    />
+      <n-p>{{ editMetadataRef.value.title.jp }}</n-p>
+      <n-input
+        v-model:value="editMetadataRef.value.title.ref.value"
+        :placeholder="editMetadataRef.value.title.jp"
+      />
 
-    <n-p>{{ editMetadataRef.value.introduction.jp }}</n-p>
-    <n-input
-      v-model:value="editMetadataRef.value.introduction.ref.value"
-      :placeholder="editMetadataRef.value.introduction.jp"
-      type="textarea"
-    />
+      <n-p>{{ editMetadataRef.value.introduction.jp }}</n-p>
+      <n-input
+        v-model:value="editMetadataRef.value.introduction.ref.value"
+        :placeholder="editMetadataRef.value.introduction.jp"
+        type="textarea"
+      />
 
-    <n-h2 prefix="bar" align-text>术语表</n-h2>
-    <n-p>在你使用术语表之前需要知道的：</n-p>
-    <ui>
-      <li>
-        <span>
-          术语表的原理是在翻译前将日文词替换成随机字母，在翻译后替换回对应中文词。
-        </span>
-      </li>
-      <li>
-        <span>
-          在修改术语表后再次更新中文时，已经翻译的章节会按照新的术语表重新翻译需要更新的段落。
-        </span>
-      </li>
-      <li>
-        <span>
-          术语表会影响ai对词义的理解，例如：无法从人名判断性别导致ai使用了错误的人称代词。
-        </span>
-      </li>
-    </ui>
-    <n-p> 总而言之,术语表不是万能的，请只在有必要的情况下编辑术语表。 </n-p>
-    <table style="border-spacing: 16px 0px">
-      <tr v-for="(termZh, termJp) in editMetadataRef.value.glossary.ref.value">
-        <td>{{ termJp }}</td>
-        <td style="width: 4px">=></td>
-        <td>{{ termZh }}</td>
-        <td>
-          <n-button @click="deleteTerm(termJp as string)">删除</n-button>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="3">
-          <n-input
-            pair
-            v-model:value="termsToAdd"
-            separator="=>"
-            :placeholder="['日文', '中文']"
-            clearable
-          />
-        </td>
-        <td>
-          <n-button @click="addTerm()">添加</n-button>
-        </td>
-      </tr>
-    </table>
-
-    <n-h2 prefix="bar" align-text>目录</n-h2>
-    <table style="width: 100%">
-      <template v-for="token in editMetadataRef.value.toc">
-        <tr>
-          <td style="width: 50%; padding: 4px">
-            {{ token.jp }}
-            <br />
-            <n-input
-              class="on-mobile"
-              v-model:value="token.ref.value"
-              :placeholder="token.jp"
-            />
-          </td>
-          <td class="on-desktop" style="padding: 4px">
-            <n-input v-model:value="token.ref.value" :placeholder="token.jp" />
+      <n-h2 prefix="bar" >术语表</n-h2>
+      <n-p>在你使用术语表之前需要知道的：</n-p>
+      <ui>
+        <li>
+          <span>
+            术语表的原理是在翻译前将日文词替换成随机字母，在翻译后替换回对应中文词。
+          </span>
+        </li>
+        <li>
+          <span>
+            在修改术语表后再次更新中文时，已经翻译的章节会按照新的术语表重新翻译需要更新的段落。
+          </span>
+        </li>
+        <li>
+          <span>
+            术语表会影响ai对词义的理解，例如：无法从人名判断性别导致ai使用了错误的人称代词。
+          </span>
+        </li>
+      </ui>
+      <n-p> 总而言之,术语表不是万能的，请只在有必要的情况下编辑术语表。 </n-p>
+      <table style="border-spacing: 16px 0px">
+        <tr
+          v-for="(termZh, termJp) in editMetadataRef.value.glossary.ref.value"
+        >
+          <td>{{ termJp }}</td>
+          <td style="width: 4px">=></td>
+          <td>{{ termZh }}</td>
+          <td>
+            <n-button @click="deleteTerm(termJp as string)">删除</n-button>
           </td>
         </tr>
-        <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
-        <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
-      </template>
-    </table>
+        <tr>
+          <td colspan="3">
+            <n-input
+              pair
+              v-model:value="termsToAdd"
+              separator="=>"
+              :placeholder="['日文', '中文']"
+              clearable
+            />
+          </td>
+          <td>
+            <n-button @click="addTerm()">添加</n-button>
+          </td>
+        </tr>
+      </table>
 
-    <n-button
-      round
-      size="large"
-      type="primary"
-      class="float"
-      @click="submitTranslate()"
-    >
-      <template #icon>
-        <n-icon><UploadFilled /></n-icon>
-      </template>
-      提交翻译
-    </n-button>
-  </div>
+      <n-h2 prefix="bar" >目录</n-h2>
+      <table style="width: 100%">
+        <template v-for="token in editMetadataRef.value.toc">
+          <tr>
+            <td style="width: 50%; padding: 4px">
+              {{ token.jp }}
+              <br />
+              <n-input
+                class="on-mobile"
+                v-model:value="token.ref.value"
+                :placeholder="token.jp"
+              />
+            </td>
+            <td class="on-desktop" style="padding: 4px">
+              <n-input
+                v-model:value="token.ref.value"
+                :placeholder="token.jp"
+              />
+            </td>
+          </tr>
+          <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
+          <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
+        </template>
+      </table>
 
-  <div v-if="editMetadataRef && !editMetadataRef.ok">
-    <n-result
-      status="error"
-      title="加载错误"
-      :description="errorToString(editMetadataRef.error)"
-    />
-  </div>
+      <n-button
+        round
+        size="large"
+        type="primary"
+        class="float"
+        @click="submitTranslate()"
+      >
+        <template #icon>
+          <n-icon><UploadFilled /></n-icon>
+        </template>
+        提交翻译
+      </n-button>
+    </div>
+
+    <div v-if="editMetadataRef && !editMetadataRef.ok">
+      <n-result
+        status="error"
+        title="加载错误"
+        :description="errorToString(editMetadataRef.error)"
+      />
+    </div>
+  </MainLayout>
 </template>
 
 <style scoped>

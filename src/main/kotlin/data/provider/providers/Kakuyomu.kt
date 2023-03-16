@@ -12,11 +12,11 @@ class Kakuyomu : BookProvider {
         TODO("Not yet implemented")
     }
 
-    override fun getMetadataUrl(bookId: String): String {
+    private fun getMetadataUrl(bookId: String): String {
         return "https://kakuyomu.jp/works/$bookId"
     }
 
-    override fun getEpisodeUrl(bookId: String, episodeId: String): String {
+    private fun getEpisodeUrl(bookId: String, episodeId: String): String {
         return "https://kakuyomu.jp/works/$bookId/episodes/$episodeId"
     }
 

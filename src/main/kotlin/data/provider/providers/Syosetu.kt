@@ -97,7 +97,7 @@ class Syosetu : BookProvider {
 
         val title = item.selectFirst("a.tl")!!.text()
 
-        val extra = item.selectFirst("tbody")!!.let {
+        val meta = item.selectFirst("tbody")!!.let {
             val left = it.selectFirst("td.left")!!.text()
             val genre = it.child(2).text()
             val keywords = it.select("td.keyword > a").map { it.text() }
@@ -107,17 +107,15 @@ class Syosetu : BookProvider {
             ).joinToString("\n")
         }
 
-        return SBookListItem(bookId = bookId, title = title, extra = extra)
+        return SBookListItem(bookId = bookId, title = title, meta = meta)
     }
 
-    override fun getMetadataUrl(bookId: String): String {
-        return "https://ncode.syosetu.com/$bookId"
-    }
+    private fun getMetadataUrl(bookId: String) =
+        "https://ncode.syosetu.com/$bookId"
 
-    override fun getEpisodeUrl(bookId: String, episodeId: String): String {
-        return if (episodeId == "default") "https://ncode.syosetu.com/$bookId"
+    private fun getEpisodeUrl(bookId: String, episodeId: String) =
+        if (episodeId == "default") "https://ncode.syosetu.com/$bookId"
         else "https://ncode.syosetu.com/$bookId/$episodeId"
-    }
 
     override suspend fun getMetadata(bookId: String): SBookMetadata {
         val doc = client.get(getMetadataUrl(bookId)).document()

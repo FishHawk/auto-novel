@@ -153,7 +153,7 @@ class BookMetadataRepository(
                     bookId = it.bookId,
                     titleJp = it.title,
                     titleZh = idToTitleZh[it.bookId],
-                    extra = it.extra,
+                    extra = it.meta,
                 )
             }
         }

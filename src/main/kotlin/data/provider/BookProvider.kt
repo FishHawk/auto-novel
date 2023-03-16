@@ -37,15 +37,11 @@ data class SBookEpisode(
 data class SBookListItem(
     val bookId: String,
     val title: String,
-    val extra: String,
+    val meta: String,
 )
 
 interface BookProvider {
     suspend fun getRank(options: Map<String, String>): List<SBookListItem>
-
-    fun getMetadataUrl(bookId: String): String
-    fun getEpisodeUrl(bookId: String, episodeId: String): String
-
     suspend fun getMetadata(bookId: String): SBookMetadata
     suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode
 }

@@ -20,10 +20,22 @@ const menuOptions: MenuOption[] = [
 <template>
   <MainLayout>
     <n-layout has-sider>
-      <n-layout-sider bordered class="on-desktop">
+      <n-layout-content id="list-container">
+        <div>
+          <slot />
+        </div>
+      </n-layout-content>
+      <n-layout-sider class="on-desktop">
         <n-menu :value="path" :options="menuOptions" />
       </n-layout-sider>
-      <n-layout-content> <slot /> </n-layout-content>
     </n-layout>
   </MainLayout>
 </template>
+
+<style scoped>
+@media only screen and (min-width: 600px) {
+  #list-container {
+    margin-right: 12px;
+  }
+}
+</style>
