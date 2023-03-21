@@ -25,9 +25,11 @@ const pageInternal = computed({
 <template>
   <div>
     <n-pagination
+      v-if="pageNumber > 1"
       v-model:page="pageInternal"
       :page-count="pageNumber"
       :page-slot="7"
+      style="margin-top: 20px"
     />
     <n-divider />
     <div v-if="bookPage?.ok">
@@ -54,6 +56,7 @@ const pageInternal = computed({
       </div>
     </div>
     <n-pagination
+      v-if="pageNumber > 1"
       v-model:page="pageInternal"
       :page-count="pageNumber"
       :page-slot="7"
