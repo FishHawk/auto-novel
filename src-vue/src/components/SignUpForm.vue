@@ -45,8 +45,9 @@ const rules: FormRules = {
   ],
   username: [
     {
-      validator: (rule: FormItemRule, value: string) => value.length >= 3,
-      message: '用户名至少为3个字符',
+      validator: (rule: FormItemRule, value: string) =>
+        value.length >= 3 && value.length <= 15,
+      message: '用户名应当为3～15个字符',
       trigger: 'input',
     },
   ],
@@ -146,6 +147,7 @@ const verifyButtonLabel = computed(() => {
     <n-form-item-row path="email">
       <n-input v-model:value="formValue.email" placeholder="邮箱" />
     </n-form-item-row>
+    <div style="color: #7c7c7c">*收不到验证邮件的话，记得看垃圾箱。</div>
     <n-form-item-row path="emailCode">
       <n-input-group>
         <n-input v-model:value="formValue.emailCode" placeholder="邮箱验证码" />

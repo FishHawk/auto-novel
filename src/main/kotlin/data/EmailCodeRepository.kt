@@ -25,7 +25,7 @@ class EmailCodeRepository(
         runBlocking {
             col.ensureIndex(
                 EmailCode::createdAt,
-                indexOptions = IndexOptions().expireAfter(5, TimeUnit.MINUTES),
+                indexOptions = IndexOptions().expireAfter(15, TimeUnit.MINUTES),
             )
         }
     }

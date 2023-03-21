@@ -195,7 +195,7 @@ class AuthService(
                 to = email,
                 subject = "$emailCode 日本网文机翻机器人 注册激活码",
                 text = "您的注册激活码为 $emailCode\n" +
-                        "激活码将会在五分钟后失效,请尽快完成注册\n" +
+                        "激活码将会在15分钟后失效,请尽快完成注册\n" +
                         "这是系统邮件，请勿回复"
             )
         } catch (e: AddressException) {
