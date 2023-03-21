@@ -1,11 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import {
-  SearchFilled,
-  FormatListBulletedFilled,
-  EditNoteFilled,
-} from '@vicons/material';
+import { EditNoteFilled } from '@vicons/material';
 
 import { ResultState } from '../data/api/result';
 import ApiNovel, { BookMetadataDto } from '../data/api/api_novel';
@@ -116,6 +112,8 @@ const showModal = ref(false);
           <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
         </template>
       </table>
+
+      <CommentList :post-id="route.path" />
     </div>
 
     <div v-if="bookMetadata && !bookMetadata.ok">

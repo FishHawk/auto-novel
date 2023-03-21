@@ -1,0 +1,199 @@
+<script lang="ts" setup>
+import { useMessage } from 'naive-ui';
+import { onMounted, ref } from 'vue';
+import { CommentFilled } from '@vicons/material';
+
+import ApiComment, {
+  CommentDto,
+  CommentPageDto,
+} from '../data/api/api_comment';
+import { Ok, ResultState } from '../data/api/result';
+
+import { errorToString } from '../data/handle_error';
+import { getUser } from '../data/localstorage/user';
+
+const message = useMessage();
+
+const props = defineProps<{
+  postId: string;
+}>();
+
+interface Comment extends CommentDto {
+  topElement?: any;
+  page: number;
+}
+
+interface CommentPage extends CommentPageDto {
+  page: number;
+  items: Comment[];
+}
+
+const topElement = ref();
+const commentPage = ref<ResultState<CommentPage>>(undefined);
+
+onMounted(() => loadPage(1, true));
+
+async function loadPage(page: number, isFirst: boolean = false) {
+  const result = await ApiComment.list(
+    props.postId,
+    page - 1,
+    getUser()?.token
+  );
+  if (result.ok) {
+    commentPage.value = Ok({
+      ...result.value,
+      page,
+      items: result.value.items.map((it) => ({ ...it, page: 1 })),
+    });
+    if (!isFirst) {
+      topElement.value?.scrollIntoView({ behavior: 'smooth' });
+    }
+  } else {
+    commentPage.value = result;
+  }
+}
+
+async function loadSubPage(page: number, comment: Comment) {
+  const result = await ApiComment.listSub(
+    props.postId,
+    comment.id,
+    page - 1,
+    getUser()?.token
+  );
+  if (result.ok) {
+    comment.page = page;
+    comment.pageNumber = result.value.pageNumber;
+    comment.items = result.value.items;
+    comment.topElement?.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    message.error('回复加载错误：' + errorToString(result.error));
+  }
+}
+
+function refreshSubCommentsIfNeed(comment: Comment) {
+  if (comment.page >= comment.pageNumber) {
+    loadSubPage(comment.page, comment);
+  }
+}
+
+const showInput = ref(false);
+const replyContent = ref('');
+
+function replyClicked() {
+  const user = getUser();
+  if (user) {
+    showInput.value = !showInput.value;
+  } else {
+    message.info('请先登录');
+  }
+}
+
+async function reply() {
+  const user = getUser();
+  if (user) {
+    if (replyContent.value.length === 0) {
+      message.info('回复内容不能为空');
+    } else {
+      const result = await ApiComment.reply(
+        props.postId,
+        undefined,
+        undefined,
+        replyContent.value,
+        user.token
+      );
+      if (result.ok) {
+        if (commentPage.value?.ok) {
+          if (
+            commentPage.value.value.page >= commentPage.value.value.pageNumber
+          ) {
+            loadPage(commentPage.value.value.page);
+          }
+        }
+        replyContent.value = '';
+        showInput.value = false;
+      } else {
+        message.error('回复加载错误：' + errorToString(result.error));
+      }
+    }
+  } else {
+    message.info('请先登录');
+  }
+}
+</script>
+
+<template>
+  <div ref="topElement" />
+  <n-space align="baseline" justify="space-between" style="width: 100">
+    <n-h2 prefix="bar">评论</n-h2>
+    <n-button @click="replyClicked()">
+      <template #icon>
+        <n-icon>
+          <CommentFilled />
+        </n-icon>
+      </template>
+      发表评论
+    </n-button>
+  </n-space>
+
+  <template v-if="showInput">
+    <n-input
+      v-model:value="replyContent"
+      :placeholder="`发表回复`"
+      type="textarea"
+      style="margin-top: 10px"
+    />
+    <n-button type="primary" @click="reply()" style="margin-top: 10px">
+      发布
+    </n-button>
+    <n-divider />
+  </template>
+
+  <template v-if="commentPage?.ok">
+    <div
+      v-for="comment in commentPage.value.items"
+      :ref="(el) => (comment.topElement = el)"
+    >
+      <Comment
+        :postId="postId"
+        :comment="comment"
+        @replied="refreshSubCommentsIfNeed(comment)"
+      />
+      <div
+        v-for="subComment in comment.items"
+        style="margin-left: 30px; margin-top: 20px"
+      >
+        <Comment
+          :postId="postId"
+          :comment="subComment"
+          :parent-id="comment.id"
+          @replied="refreshSubCommentsIfNeed(comment)"
+        />
+      </div>
+
+      <n-pagination
+        v-if="comment.pageNumber > 1"
+        v-model:page="comment.page"
+        :page-count="comment.pageNumber"
+        :page-slot="7"
+        style="margin-left: 30px; margin-top: 20px"
+        @update:page="loadSubPage($event, comment)"
+      />
+      <n-divider />
+    </div>
+
+    <n-pagination
+      v-if="commentPage.value.pageNumber > 1"
+      v-model:page="commentPage.value.page"
+      :page-count="commentPage.value.pageNumber"
+      :page-slot="7"
+      style="margin-top: 20px"
+      @update:page="loadPage($event)"
+    />
+  </template>
+  <n-result
+    v-if="commentPage && !commentPage.ok"
+    status="error"
+    title="加载错误"
+    :description="errorToString(commentPage.error)"
+  />
+</template>

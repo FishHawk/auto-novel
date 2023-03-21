@@ -1,14 +1,15 @@
 import api.*
-import data.BookEpisodeRepository
-import data.BookMetadataRepository
-import data.BookPatchRepository
-import data.MongoDataSource
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import data.*
 import data.file.BookFileRepository
 import data.provider.ProviderDataSource
 import io.ktor.http.*
-import io.ktor.server.engine.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.plugins.callloging.*
@@ -48,6 +49,24 @@ fun main() {
             slf4jLogger()
             modules(appModule)
         }
+        install(Authentication) {
+            jwt {
+                val secret = System.getenv("JWT_SECRET")!!
+                verifier(
+                    JWT.require(Algorithm.HMAC256(secret)).build()
+                )
+                validate { credential ->
+                    if (credential.payload.getClaim("username").asString() != "") {
+                        JWTPrincipal(credential.payload)
+                    } else {
+                        null
+                    }
+                }
+                challenge { defaultScheme, realm ->
+                    call.respond(HttpStatusCode.Unauthorized, "Token不合法或者过期")
+                }
+            }
+        }
         install(Resources)
         install(CachingHeaders)
         install(ContentNegotiation) {
@@ -73,6 +92,8 @@ fun main() {
         }
 
         routing {
+            routeAuth()
+            routeComment()
             routePrepareBook()
             routeNovel()
             routePatch()
@@ -82,14 +103,25 @@ fun main() {
 }
 
 val appModule = module {
-    single { MongoDataSource(System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017") }
+    single {
+        val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017"
+        MongoDataSource(mongodbUrl)
+    }
     single { ProviderDataSource() }
 
     single { BookMetadataRepository(get(), get()) }
     single { BookEpisodeRepository(get(), get(), get()) }
     single { BookPatchRepository(get(), get(), get()) }
     single { BookFileRepository() }
+    single { CommentRepository(get()) }
+    single { UserRepository(get()) }
+    single { EmailCodeRepository(get()) }
 
+    single {
+        val secret = System.getenv("JWT_SECRET")!!
+        AuthService(secret, get(), get())
+    }
+    single { CommentService(get()) }
     single { PrepareBookService(get(), get(), get()) }
     single { NovelService(get(), get()) }
     single { PatchService(get()) }

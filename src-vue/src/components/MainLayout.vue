@@ -1,25 +1,12 @@
 <script lang="ts" setup>
-import { h, ref } from 'vue';
+import { h, onMounted, ref, watch } from 'vue';
 import { MenuOption } from 'naive-ui';
 import { MenuFilled } from '@vicons/material';
 import { useRoute } from 'vue-router';
 
+import { deleteUser, getUser, setUser, User } from '../data/localstorage/user';
+
 const path = useRoute().path;
-
-const showLoginModal = ref(false);
-
-const signUpFormValue = ref({
-  email: '',
-  emailCode: '',
-  username: '',
-  password: '',
-  repeatPassword: '',
-});
-
-const signInFormValue = ref({
-  emailOrUsername: '',
-  password: '',
-});
 
 function menuOption(text: string, href: string): MenuOption {
   return { label: () => h('a', { href }, text), key: href };
@@ -55,15 +42,23 @@ function getTopMenuOptionKey() {
   }
 }
 
-function signIn() {
-  console.log(signInFormValue.value);
+const showLoginModal = ref(false);
+const user = ref<User | undefined>();
+
+function onSignInSuccess(userValue: User) {
+  user.value = userValue;
+  showLoginModal.value = false;
 }
-function signUp() {
-  console.log(signUpFormValue.value);
+
+onMounted(() => (user.value = getUser()));
+watch(user, (user) => {
+  if (user) setUser(user);
+});
+
+function signOut() {
+  deleteUser();
+  user.value = undefined;
 }
-function sendEmailCode() {}
-function validateEmail() {}
-function validateUsername() {}
 </script>
 
 <template>
@@ -95,15 +90,23 @@ function validateUsername() {}
           />
         </div>
         <div style="flex: 1"></div>
-        <div>
-          <n-button
-            quaternary
-            style="margin-right: 4px"
-            @click="showLoginModal = true"
-          >
-            登录/注册
-          </n-button>
-        </div>
+
+        <n-button
+          v-if="user"
+          quaternary
+          style="margin-right: 4px"
+          @click="signOut()"
+        >
+          @{{ user.username }}
+        </n-button>
+        <n-button
+          v-else
+          quaternary
+          style="margin-right: 4px"
+          @click="showLoginModal = true"
+        >
+          登录/注册
+        </n-button>
       </div>
     </n-layout-header>
     <slot name="full-width" />
@@ -113,7 +116,7 @@ function validateUsername() {}
   </n-layout>
   <n-modal v-model:show="showLoginModal">
     <n-card
-      style="width: 400px"
+      style="width: min(400px, calc(100% - 16px))"
       :bordered="false"
       size="large"
       role="dialog"
@@ -128,76 +131,11 @@ function validateUsername() {}
         pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
       >
         <n-tab-pane name="signin" tab="登录">
-          <n-form :model="signInFormValue" label-placement="left">
-            <n-form-item-row>
-              <n-input
-                v-model:value="signInFormValue.emailOrUsername"
-                placeholder="用户名/邮箱"
-              />
-            </n-form-item-row>
-            <n-form-item-row>
-              <n-input
-                v-model:value="signInFormValue.password"
-                type="password"
-                show-password-on="click"
-                placeholder="密码"
-              />
-            </n-form-item-row>
-          </n-form>
-          <n-space>
-            <n-a href="/reset-password" target="_blank">忘记密码</n-a>
-          </n-space>
-          <n-button
-            type="primary"
-            block
-            style="margin-top: 20px"
-            @click="signIn()"
-          >
-            登录
-          </n-button>
+          <SignInForm @signIn="onSignInSuccess" />
         </n-tab-pane>
 
         <n-tab-pane name="signup" tab="注册">
-          <n-form :model="signUpFormValue" label-placement="left">
-            <n-form-item-row>
-              <n-input
-                v-model:value="signUpFormValue.email"
-                placeholder="邮箱"
-              />
-            </n-form-item-row>
-            <n-form-item-row>
-              <n-input-group>
-                <n-input
-                  v-model:value="signUpFormValue.emailCode"
-                  placeholder="邮箱验证码"
-                />
-                <n-button type="primary"> 发送验证码 </n-button>
-              </n-input-group>
-            </n-form-item-row>
-            <n-form-item-row>
-              <n-input
-                v-model:value="signUpFormValue.username"
-                placeholder="用户名"
-              />
-            </n-form-item-row>
-            <n-form-item-row>
-              <n-input
-                v-model:value="signUpFormValue.password"
-                type="password"
-                show-password-on="click"
-                placeholder="密码"
-              />
-            </n-form-item-row>
-            <n-form-item-row>
-              <n-input
-                v-model:value="signUpFormValue.repeatPassword"
-                type="password"
-                show-password-on="click"
-                placeholder="重复密码"
-              />
-            </n-form-item-row>
-          </n-form>
-          <n-button type="primary" block @click="signUp()"> 注册 </n-button>
+          <SignUpForm @signUp="onSignInSuccess" />
         </n-tab-pane>
       </n-tabs>
     </n-card>

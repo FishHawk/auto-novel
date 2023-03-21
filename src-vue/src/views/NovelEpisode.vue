@@ -131,7 +131,12 @@ function getTextList(
   <n-config-provider
     :theme="themeOptions[themeIndex].isDark ? darkTheme : lightTheme"
     :theme-overrides="{
-      common: { bodyColor: themeOptions[themeIndex].bodyColor },
+      common: {
+        bodyColor: themeOptions[themeIndex].bodyColor,
+      },
+      Pagination: {
+        itemColorDisabled: '#00000',
+      },
     }"
   >
     <n-global-style />
@@ -275,6 +280,10 @@ function getTextList(
         >
         <n-text v-else style="color: grey">下一章</n-text>
       </n-space>
+
+      <n-divider />
+
+      <CommentList :post-id="route.path" />
     </div>
 
     <div v-if="bookEpisode && !bookEpisode.ok">

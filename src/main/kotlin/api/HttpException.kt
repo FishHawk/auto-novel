@@ -7,20 +7,23 @@ import io.ktor.server.response.*
 
 data class HttpException(
     val status: HttpStatusCode,
-    override val message: String,
+    override val message: String?,
 ) : Exception()
 
 fun <T> httpBadRequest(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.BadRequest, message ?: "参数错误"))
+    Result.failure<T>(HttpException(HttpStatusCode.BadRequest, message))
+
+fun <T> httpUnauthorized(message: String?) =
+    Result.failure<T>(HttpException(HttpStatusCode.Unauthorized, message))
 
 fun <T> httpConflict(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.Conflict, message ?: "冲突"))
+    Result.failure<T>(HttpException(HttpStatusCode.Conflict, message))
 
 fun <T> httpNotFound(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.NotFound, message ?: "未找到"))
+    Result.failure<T>(HttpException(HttpStatusCode.NotFound, message))
 
 fun <T> httpInternalServerError(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.InternalServerError, message ?: "内部错误"))
+    Result.failure<T>(HttpException(HttpStatusCode.InternalServerError, message))
 
 suspend inline fun <reified T : Any> ApplicationCall.respondResult(result: Result<T>) {
     result.onSuccess {
@@ -35,7 +38,7 @@ suspend inline fun <reified T : Any> ApplicationCall.respondResult(result: Resul
         application.environment.log.warn("已捕获异常 $httpMethod-$uri:", it)
 
         if (it is HttpException) {
-            respond(it.status, it.message)
+            respond(it.status, it.message ?: it.status.description)
         } else {
             respond(HttpStatusCode.InternalServerError, it.message ?: "未知错误")
         }
