@@ -10,7 +10,6 @@ import ApiNovelEdit from '../data/api/api_patch';
 import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
-
 const route = useRoute();
 const providerId = route.params.providerId as string;
 const bookId = route.params.bookId as string;
@@ -163,5 +162,20 @@ td > div {
   right: 40px;
   bottom: 40px;
   box-shadow: rgb(0 0 0 / 12%) 0px 2px 8px 0px;
+}
+.content {
+  width: 800px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 48px;
+}
+@media only screen and (max-width: 600px) {
+  .content {
+    width: auto;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 48px;
+  }
 }
 </style>

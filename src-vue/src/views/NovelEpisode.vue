@@ -296,7 +296,7 @@ function getTextList(
   </n-config-provider>
 </template>
 
-<style>
+<style scoped>
 #episode-content p {
   margin-top: 8px;
   margin-bottom: 8px;
@@ -308,7 +308,6 @@ function getTextList(
   padding-right: 24px;
   padding-bottom: 48px;
 }
-
 @media only screen and (max-width: 600px) {
   .content {
     width: auto;
