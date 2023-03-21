@@ -14,6 +14,7 @@ services:
     environment:
       - HTTPS_PROXY
       - EMAIL_PASSWORD
+      - JWT_SECRET
       - PIXIV_COOKIE_PHPSESSID
       - MONGODB_URL=mongodb://mongo:27017
     ports:
