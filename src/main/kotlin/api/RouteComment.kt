@@ -45,7 +45,7 @@ private class Comment {
 fun Route.routeComment() {
     val service by inject<CommentService>()
 
-    authenticate {
+    authenticate(optional = true) {
         get<Comment.List> { loc ->
             val principal = call.principal<JWTPrincipal>()
             val username = principal?.payload?.getClaim("username")?.asString()
@@ -59,17 +59,18 @@ fun Route.routeComment() {
             val result = service.listSub(username, loc.postId, loc.parentId, loc.page)
             call.respondResult(result)
         }
-
+    }
+    authenticate {
         post<Comment.Vote> { loc ->
             val principal = call.principal<JWTPrincipal>()
-            val username = principal?.payload?.getClaim("username")?.asString()
+            val username = principal!!.payload.getClaim("username").asString()
             val result = service.vote(loc.commentId, loc.isUpvote, loc.isCancel, username)
             call.respondResult(result)
         }
 
         post<Comment> {
             val principal = call.principal<JWTPrincipal>()
-            val username = principal?.payload?.getClaim("username")?.asString()
+            val username = principal!!.payload.getClaim("username").asString()
             val body = call.receive<CommentService.CommentBody>()
             val result = service.createComment(body, username)
             call.respondResult(result)
@@ -215,11 +216,8 @@ class CommentService(
         commentId: String,
         isUpvote: Boolean,
         isCancel: Boolean,
-        username: String?,
+        username: String,
     ): Result<Unit> {
-        if (username == null) {
-            return httpUnauthorized("没有登录")
-        }
         if (isUpvote) {
             if (isCancel) {
                 commentRepository.cancelUpvote(commentId, username)
@@ -246,11 +244,8 @@ class CommentService(
 
     suspend fun createComment(
         body: CommentBody,
-        username: String?,
+        username: String,
     ): Result<Unit> {
-        if (username == null) {
-            return httpUnauthorized("没有登录")
-        }
         if (body.content.isBlank()) {
             return httpBadRequest("回复内容不能为空")
         }
