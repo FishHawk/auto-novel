@@ -16,6 +16,7 @@ const topMenuOptions: MenuOption[] = [
   menuOption('首页', '/'),
   menuOption('列表', '/list'),
   menuOption('编辑历史', '/patch'),
+  menuOption('反馈', '/feedback'),
 ];
 
 const collapsedMenuOptions: MenuOption[] = [

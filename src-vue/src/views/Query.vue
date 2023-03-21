@@ -76,7 +76,7 @@ onMounted(() => {
     </template>
 
     <div v-if="historiesRef.length > 0">
-      <n-h2 prefix="bar" >搜索历史</n-h2>
+      <n-h2 prefix="bar">搜索历史</n-h2>
       <ul>
         <li v-for="history in historiesRef">
           <n-a :href="getNovelUrl(history.url)" target="_blank">{{
@@ -86,7 +86,7 @@ onMounted(() => {
       </ul>
     </div>
 
-    <n-h2 prefix="bar" >链接示例</n-h2>
+    <n-h2 prefix="bar">链接示例</n-h2>
     <n-ul>
       <n-li> Kakuyomu: https://kakuyomu.jp/works/16817139555217983105 </n-li>
       <n-li> 成为小说家吧: https://ncode.syosetu.com/n0833hi </n-li>
@@ -95,9 +95,12 @@ onMounted(() => {
       <n-li> Pixiv: https://www.pixiv.net/novel/series/9406879 </n-li>
     </n-ul>
 
-    <n-h2 prefix="bar" >如何使用中文翻译</n-h2>
+    <n-h2 prefix="bar">如何使用中文翻译</n-h2>
     <n-p>
       中文翻译需要从你的浏览器访问翻译网站，因此需要安装插件解决跨域的问题。
+    </n-p>
+    <n-p>
+      如果你是手机，是没办法安装插件的。等我之后有空，可能会写个安卓App。
     </n-p>
     <n-p>
       对于 Chrome/Edge/Firefox 浏览器，你需要安装插件 CORS Unblock。下载链接：
@@ -136,26 +139,5 @@ onMounted(() => {
       可以修改启动选项来关闭跨域检查，但我不知道有没有什么办法删掉 referer 和
       origin 头。
     </n-p>
-
-    <n-h2 prefix="bar" >联系我</n-h2>
-    如果发现问题或者有什么建议，欢迎到
-    <n-a
-      href="https://github.com/FishHawk/web-novel-ebook-generator"
-      target="_blank"
-    >
-      GitHub
-    </n-a>
-    上提issue，也可以在
-    <n-a
-      href="https://bbs.saraba1st.com/2b/thread-2103011-1-1.html"
-      target="_blank"
-    >
-      Stage1st
-    </n-a>
-    或者
-    <n-a href="https://tieba.baidu.com/p/8276724398" target="_blank">
-      百度贴吧
-    </n-a>
-    上回复我。
   </MainLayout>
 </template>

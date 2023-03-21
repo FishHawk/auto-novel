@@ -4,6 +4,7 @@ const history = createWebHistory();
 
 const routes = [
   { path: '/', component: () => import('./views/Query.vue') },
+  { path: '/feedback', component: () => import('./views/Feedback.vue') },
 
   { path: '/list', component: () => import('./views/List.vue') },
   {
