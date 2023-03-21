@@ -189,6 +189,11 @@ async function reply() {
       style="margin-top: 20px"
       @update:page="loadPage($event)"
     />
+
+    <n-empty
+      v-if="commentPage.value.items.length === 0"
+      description="还没有评论"
+    />
   </template>
   <n-result
     v-if="commentPage && !commentPage.ok"
