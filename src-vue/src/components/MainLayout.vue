@@ -66,11 +66,6 @@ function signOut() {
   <n-layout>
     <n-layout-header bordered>
       <div class="header">
-        <n-a href="/" target="_blank">
-          <n-icon size="30" style="margin-right: 8px; margin-bottom: 8px">
-            <img src="/robot.svg" style="width: 100%; min-width: 100%" />
-          </n-icon>
-        </n-a>
         <n-popover trigger="click" :width="280" style="padding: 0">
           <template #trigger>
             <n-icon
@@ -83,6 +78,11 @@ function signOut() {
           </template>
           <n-menu :value="path" :options="collapsedMenuOptions" />
         </n-popover>
+        <n-a class="on-desktop" href="/" target="_blank">
+          <n-icon size="30" style="margin-right: 8px; margin-bottom: 8px">
+            <img src="/robot.svg" style="width: 100%; min-width: 100%" />
+          </n-icon>
+        </n-a>
         <div class="on-desktop">
           <n-menu
             :value="getTopMenuOptionKey()"
