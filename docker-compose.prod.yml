@@ -5,6 +5,7 @@ services:
       - 80:80
     volumes:
       - ${DATA_PATH}/files:/data/files
+      - ${DATA_PATH}/files-extra:/data/files-extra
     restart: always
 
   server:

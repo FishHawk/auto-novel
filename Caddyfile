@@ -15,4 +15,9 @@
     root * /data/files
     file_server
   }
+
+  handle_path /files-extra* {
+    root * /data/files-extra
+    file_server browse
+  }
 }

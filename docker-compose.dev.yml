@@ -30,11 +30,3 @@ services:
     environment:
       - MONGO_INITDB_DATABASE=auth
 
-  mongo-express:
-    image: mongo-express:1.0.0-alpha.4
-    depends_on:
-      - mongo
-    environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://mongo:27017
-    ports:
-      - 27018:8081
