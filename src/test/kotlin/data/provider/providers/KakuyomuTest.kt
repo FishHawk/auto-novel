@@ -9,10 +9,6 @@ import io.kotest.matchers.string.shouldStartWith
 class KakuyomuTest : DescribeSpec({
     val provider = Kakuyomu()
 
-    describe("getMetadataUrl") { }
-
-    describe("getEpisodeUrl") { }
-
     describe("getMetadata") {
         it("常规") {
             // https://kakuyomu.jp/works/1177354054892870623

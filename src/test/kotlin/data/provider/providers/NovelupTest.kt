@@ -9,10 +9,6 @@ import io.kotest.matchers.string.shouldStartWith
 class NovelupTest : DescribeSpec({
     val provider = Novelup()
 
-    describe("getMetadataUrl") { }
-
-    describe("getEpisodeUrl") { }
-
     describe("getMetadata") {
         it("常规") {
             // https://novelup.plus/story/206612087

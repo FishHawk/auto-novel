@@ -8,10 +8,6 @@ import io.kotest.matchers.string.shouldStartWith
 class HamelnTest : DescribeSpec({
     val provider = Hameln()
 
-    describe("getMetadataUrl") { }
-
-    describe("getEpisodeUrl") { }
-
     describe("getMetadata") {
         it("常规") {
             // https://syosetu.org/novel/232822

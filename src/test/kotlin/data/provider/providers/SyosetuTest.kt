@@ -10,10 +10,6 @@ import io.kotest.matchers.string.shouldStartWith
 class SyosetuTest : DescribeSpec({
     val provider = Syosetu()
 
-    describe("getMetadataUrl") { }
-
-    describe("getEpisodeUrl") { }
-
     describe("getMetadata") {
         it("常规") {
             // https://ncode.syosetu.com/n9669bk

@@ -6,10 +6,6 @@ import io.kotest.matchers.shouldBe
 class PixivTest : DescribeSpec({
     val provider = Pixiv()
 
-    describe("getMetadataUrl") { }
-
-    describe("getEpisodeUrl") { }
-
     describe("getMetadata") {
         it("常规") {
             // https://www.pixiv.net/novel/series/9406879
