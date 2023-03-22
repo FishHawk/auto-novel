@@ -15,7 +15,7 @@ const topMenuOptions: MenuOption[] = [
   menuOption('列表', '/list'),
   menuOption('编辑历史', '/patch'),
   menuOption('反馈', '/feedback'),
-  menuOption('其他', '/files-extra'),
+  menuOption('其他', '/extra'),
 ];
 
 const collapsedMenuOptions: MenuOption[] = [
@@ -28,7 +28,7 @@ const collapsedMenuOptions: MenuOption[] = [
       menuOption('成为小说家：综合', '/rank/syosetu/2'),
       menuOption('成为小说家：异世界转移/转生', '/rank/syosetu/3'),
       menuOption('反馈', '/feedback'),
-      menuOption('其他', '/files-extra'),
+      menuOption('其他', '/extra'),
     ],
   },
   menuOption('编辑历史', '/patch'),
@@ -135,6 +135,7 @@ function handleUserDropdownSelect(key: string | number) {
       <slot />
     </div>
   </n-layout>
+
   <n-modal v-model:show="showLoginModal">
     <n-card
       style="width: min(400px, calc(100% - 16px))"

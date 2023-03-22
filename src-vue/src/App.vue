@@ -8,9 +8,6 @@
 body {
   font-family: 'IBMPlexSans', Arial, sans-serif;
 }
-#app {
-  width: 100;
-}
 a {
   text-decoration: none;
 }
