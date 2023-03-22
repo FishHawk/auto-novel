@@ -1,12 +1,10 @@
 <script lang="ts" setup>
-import { h, onMounted, ref, watch } from 'vue';
-import { MenuOption } from 'naive-ui';
-import { MenuFilled } from '@vicons/material';
+import { Component, h, onMounted, ref, watch } from 'vue';
+import { MenuOption, NIcon } from 'naive-ui';
+import { LogOutFilled, MenuFilled } from '@vicons/material';
 import { useRoute } from 'vue-router';
 
 import { deleteUser, getUser, setUser, User } from '../data/localstorage/user';
-
-const path = useRoute().path;
 
 function menuOption(text: string, href: string): MenuOption {
   return { label: () => h('a', { href }, text), key: href };
@@ -34,6 +32,7 @@ const collapsedMenuOptions: MenuOption[] = [
   menuOption('编辑历史', '/patch'),
 ];
 
+const path = useRoute().path;
 function getTopMenuOptionKey() {
   if (path.startsWith('/patch')) {
     return '/patch';
@@ -43,6 +42,18 @@ function getTopMenuOptionKey() {
     return '/';
   }
 }
+
+function dropdownOption(label: string, key: string, icon: Component) {
+  return {
+    label,
+    key,
+    icon: () => h(NIcon, null, { default: () => h(icon) }),
+  };
+}
+
+const userDropdownOptions = [
+  dropdownOption('退出登录', 'signOut', LogOutFilled),
+];
 
 const showLoginModal = ref(false);
 const user = ref<User | undefined>();
@@ -57,9 +68,12 @@ watch(user, (user) => {
   if (user) setUser(user);
 });
 
-function signOut() {
-  deleteUser();
-  user.value = undefined;
+function handleUserDropdownSelect(key: string | number) {
+  console.log(key);
+  if (key === 'signOut') {
+    deleteUser();
+    user.value = undefined;
+  }
 }
 </script>
 
@@ -93,14 +107,17 @@ function signOut() {
         </div>
         <div style="flex: 1"></div>
 
-        <n-button
+        <n-dropdown
           v-if="user"
-          quaternary
-          style="margin-right: 4px"
-          @click="signOut()"
+          trigger="click"
+          :options="userDropdownOptions"
+          @select="handleUserDropdownSelect"
         >
-          @{{ user.username }}
-        </n-button>
+          <n-button quaternary style="margin-right: 4px">
+            @{{ user.username }}
+          </n-button>
+        </n-dropdown>
+
         <n-button
           v-else
           quaternary
