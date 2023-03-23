@@ -6,10 +6,17 @@ import { NConfigProvider, lightTheme, darkTheme, useMessage } from 'naive-ui';
 import { ResultState } from '../data/api/result';
 import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
+import {
+  useReaderSettingStore,
+  themeOptions,
+  modeOptions,
+  fontSizeOptions,
+} from '../data/stores/readerSetting';
 import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
 const authInfoStore = useAuthInfoStore();
+const readerSettingStore = useReaderSettingStore();
 
 const message = useMessage();
 
@@ -20,80 +27,6 @@ const episodeId = route.params.episodeId as string;
 const url = buildEpisodeUrl(providerId, bookId, episodeId);
 
 const showModal = ref(false);
-
-interface Theme {
-  isDark: boolean;
-  bodyColor: string;
-}
-const themeOptions: Theme[] = [
-  { isDark: false, bodyColor: '#FFFFFF' },
-  { isDark: false, bodyColor: '#FFF2E2' },
-  { isDark: false, bodyColor: '#E3EDCD' },
-  { isDark: false, bodyColor: '#E9EBFE' },
-  { isDark: false, bodyColor: '#EAEAEF' },
-
-  { isDark: true, bodyColor: '#000000' },
-  { isDark: true, bodyColor: '#272727' },
-];
-const themeIndex = ref(0);
-onMounted(() => {
-  const themeIndexRaw = localStorage.getItem('episode-theme-index');
-  if (themeIndexRaw !== null) {
-    themeIndex.value = +themeIndexRaw;
-  }
-});
-watch(themeIndex, (themeIndex) => {
-  localStorage.setItem('episode-theme-index', themeIndex.toString());
-});
-
-enum Mode {
-  JP,
-  ZH,
-  MIX,
-}
-const modeOptions = [
-  { value: Mode.JP, label: '日文' },
-  { value: Mode.ZH, label: '中文' },
-  { value: Mode.MIX, label: '中日混合' },
-];
-const mode = ref(Mode.MIX);
-onMounted(() => {
-  const modeRaw = localStorage.getItem('episode-mode');
-  for (const option of modeOptions) {
-    if (modeRaw === option.label) {
-      mode.value = option.value;
-      break;
-    }
-  }
-});
-watch(mode, (mode) => {
-  for (const option of modeOptions) {
-    if (mode === option.value) {
-      localStorage.setItem('episode-mode', option.label);
-      break;
-    }
-  }
-});
-
-const fontSizeOptions = ['14px', '16px', '18px', '20px'];
-const fontSize = ref('14px');
-onMounted(() => {
-  const fontSizeRaw = localStorage.getItem('episode-font-size');
-  for (const option of fontSizeOptions) {
-    if (fontSizeRaw === option) {
-      fontSize.value = option;
-      break;
-    }
-  }
-});
-watch(fontSize, (fontSize) => {
-  for (const option of fontSizeOptions) {
-    if (fontSize === option) {
-      localStorage.setItem('episode-font-size', option);
-      break;
-    }
-  }
-});
 
 const bookEpisode = shallowRef<ResultState<BookEpisodeDto>>();
 onMounted(() => getEpisode());
@@ -110,12 +43,12 @@ function getTextList(
 ): { text1: string; text2?: string }[] {
   const paragraphsJp = episode.paragraphsJp;
   const paragraphsZh = episode.paragraphsZh;
-  if (mode.value == Mode.JP) {
+  if (readerSettingStore.mode == 'jp') {
     return paragraphsJp.map((text) => {
       return { text1: text };
     });
   } else if (paragraphsZh) {
-    if (mode.value == Mode.ZH) {
+    if (readerSettingStore.mode == 'zh') {
       return paragraphsZh.map((text) => {
         return { text1: text };
       });
@@ -143,14 +76,10 @@ function enableEditMode() {
 
 <template>
   <n-config-provider
-    :theme="themeOptions[themeIndex].isDark ? darkTheme : lightTheme"
+    :theme="readerSettingStore.theme.isDark ? darkTheme : lightTheme"
     :theme-overrides="{
-      common: {
-        bodyColor: themeOptions[themeIndex].bodyColor,
-      },
-      Pagination: {
-        itemColorDisabled: '#00000',
-      },
+      common: { bodyColor: readerSettingStore.theme.bodyColor },
+      Pagination: { itemColorDisabled: '#00000' },
     }"
   >
     <n-global-style />
@@ -166,7 +95,7 @@ function enableEditMode() {
       >
         <n-space>
           <span>语言</span>
-          <n-radio-group v-model:value="mode" name="mode">
+          <n-radio-group v-model:value="readerSettingStore.mode" name="mode">
             <n-space>
               <n-radio
                 v-for="option in modeOptions"
@@ -181,7 +110,10 @@ function enableEditMode() {
 
         <n-space style="margin-top: 15px">
           <span>字体大小</span>
-          <n-radio-group v-model:value="fontSize" name="fontSize">
+          <n-radio-group
+            v-model:value="readerSettingStore.fontSize"
+            name="fontSize"
+          >
             <n-space>
               <n-radio
                 v-for="option in fontSizeOptions"
@@ -196,26 +128,24 @@ function enableEditMode() {
 
         <n-space style="margin-top: 15px">
           <span>主题</span>
-          <n-radio-group v-model:value="themeIndex" name="themeIndex">
-            <n-space>
-              <n-radio
-                v-for="(theme, index) of themeOptions"
-                :key="index"
-                :value="index"
+          <n-space>
+            <n-radio
+              v-for="theme of themeOptions"
+              :checked="theme.bodyColor == readerSettingStore.theme.bodyColor"
+              @update:checked="readerSettingStore.theme = theme"
+            >
+              <n-tag
+                :bordered="false"
+                :color="{
+                  color: theme.bodyColor,
+                  textColor: theme.isDark ? 'white' : 'black',
+                }"
+                style="width: 8em"
               >
-                <n-tag
-                  :bordered="false"
-                  :color="{
-                    color: theme.bodyColor,
-                    textColor: theme.isDark ? 'white' : 'black',
-                  }"
-                  style="width: 8em"
-                >
-                  {{ theme.bodyColor }}
-                </n-tag>
-              </n-radio>
-            </n-space>
-          </n-radio-group>
+                {{ theme.bodyColor }}
+              </n-tag>
+            </n-radio>
+          </n-space>
         </n-space>
       </n-card>
     </n-modal>
@@ -269,13 +199,13 @@ function enableEditMode() {
               <br />
             </n-p>
             <template v-if="text.text1.trim().length > 0">
-              <n-p :style="{ fontSize: fontSize }">
+              <n-p :style="{ fontSize: readerSettingStore.fontSize }">
                 {{ text.text1 }}
               </n-p>
               <n-p
                 v-if="text.text2"
                 :style="{
-                  fontSize: fontSize,
+                  fontSize: readerSettingStore.fontSize,
                   opacity: 0.4,
                 }"
               >
