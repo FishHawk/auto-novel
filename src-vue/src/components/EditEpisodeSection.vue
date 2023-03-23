@@ -3,12 +3,9 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import { BookEpisodeDto } from '../data/api/api_novel';
-import ApiNovelEdit from '../data/api/api_patch';
+import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 import { errorToString } from '../data/handle_error';
-
-const authInfoStore = useAuthInfoStore();
 
 const props = defineProps<{
   providerId: string;
@@ -16,6 +13,12 @@ const props = defineProps<{
   episodeId: string;
   bookEpisode: BookEpisodeDto;
 }>();
+
+const emit = defineEmits<{
+  (e: 'update:bookEpisode', bookEpisode: BookEpisodeDto): void;
+}>();
+
+const authInfoStore = useAuthInfoStore();
 
 const message = useMessage();
 
@@ -46,7 +49,12 @@ function createEditEpisode(): EditEpisode {
 
 const editEpisode = ref<EditEpisode>(createEditEpisode());
 
+const isSubmitting = ref(false);
+
 async function submitTranslate() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
+
   const token = authInfoStore.token;
   if (!token) {
     message.info('请先登录');
@@ -61,14 +69,18 @@ async function submitTranslate() {
         .map((item) => ({ [item.index]: item.edit }))
     ),
   };
-  const result = await ApiNovelEdit.postEpisodePatch(
+  const result = await ApiNovel.putEpisode(
     props.providerId,
     props.bookId,
     props.episodeId,
     patch,
     token
   );
+
+  isSubmitting.value = false;
+
   if (result.ok) {
+    emit('update:bookEpisode', result.value);
     message.success('提交成功');
   } else {
     message.error('提交失败：' + errorToString(result.error));
@@ -96,6 +108,7 @@ async function submitTranslate() {
     size="large"
     type="primary"
     class="float"
+    :loading="isSubmitting"
     @click="submitTranslate()"
   >
     <template #icon>

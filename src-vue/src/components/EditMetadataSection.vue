@@ -3,10 +3,19 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import { BookMetadataDto } from '../data/api/api_novel';
-import ApiNovelEdit from '../data/api/api_patch';
+import ApiNovel, { BookMetadataDto } from '../data/api/api_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 import { errorToString } from '../data/handle_error';
+
+const props = defineProps<{
+  providerId: string;
+  bookId: string;
+  bookMetadata: BookMetadataDto;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:bookMetadata', bookMetadata: BookMetadataDto): void;
+}>();
 
 const authInfoStore = useAuthInfoStore();
 
@@ -26,12 +35,6 @@ interface EditMetadata {
   glossary: EditGlossary;
   toc: EditField[];
 }
-
-const props = defineProps<{
-  providerId: string;
-  bookId: string;
-  bookMetadata: BookMetadataDto;
-}>();
 
 function createEditMetadata(): EditMetadata {
   const tocSet = new Set();
@@ -69,7 +72,12 @@ const message = useMessage();
 const editMetadata = ref(createEditMetadata());
 const termsToAdd = ref(['', '']);
 
+const isSubmitting = ref(false);
+
 async function submitTranslate() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
+
   const token = authInfoStore.token;
   if (!token) {
     message.info('请先登录');
@@ -79,6 +87,7 @@ async function submitTranslate() {
   function ifEdited(field: EditField) {
     return field.zh != field.edit ? field.edit : undefined;
   }
+
   const patch = {
     title: ifEdited(editMetadata.value.title),
     introduction: ifEdited(editMetadata.value.introduction),
@@ -90,13 +99,17 @@ async function submitTranslate() {
         .map((item) => ({ [item.jp]: item.edit }))
     ),
   };
-  const result = await ApiNovelEdit.postMetadataPatch(
+  const result = await ApiNovel.putMetadata(
     props.providerId,
     props.bookId,
     patch,
     token
   );
+
+  isSubmitting.value = false;
+
   if (result.ok) {
+    emit('update:bookMetadata', result.value);
     message.success('提交成功');
   } else {
     message.error('提交失败：' + errorToString(result.error));
@@ -204,6 +217,7 @@ function addTerm() {
     size="large"
     type="primary"
     class="float"
+    :loading="isSubmitting"
     @click="submitTranslate()"
   >
     <template #icon>

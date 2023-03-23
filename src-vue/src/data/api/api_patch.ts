@@ -55,17 +55,6 @@ interface BookEpisodePatchDto {
   createAt: number;
 }
 
-interface BookMetadataPatchBody {
-  title?: string;
-  introduction?: string;
-  glossary?: { [key: string]: string };
-  toc: { [key: string]: string };
-}
-
-interface BookEpisodePatchBody {
-  paragraphs: { [key: number]: string };
-}
-
 async function list(page: number): Promise<Result<BookPatchPageDto>> {
   return api
     .get(`patch/list`, { searchParams: { page } })
@@ -96,43 +85,8 @@ async function deletePatch(
     .catch((error) => Err(error));
 }
 
-async function postMetadataPatch(
-  providerId: string,
-  bookId: string,
-  patch: BookMetadataPatchBody,
-  token: string
-): Promise<Result<string>> {
-  return api
-    .post(`patch/metadata/${providerId}/${bookId}`, {
-      headers: { Authorization: 'Bearer ' + token },
-      json: patch,
-    })
-    .text()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
-}
-
-async function postEpisodePatch(
-  providerId: string,
-  bookId: string,
-  episodeId: string,
-  patch: BookEpisodePatchBody,
-  token: string
-): Promise<Result<string>> {
-  return api
-    .post(`patch/episode/${providerId}/${bookId}/${episodeId}`, {
-      headers: { Authorization: 'Bearer ' + token },
-      json: patch,
-    })
-    .text()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
-}
-
 export default {
   list,
   getPatch,
   // deletePatch,
-  postMetadataPatch,
-  postEpisodePatch,
 };

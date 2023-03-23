@@ -144,6 +144,29 @@ async function getMetadata(
     .catch((error) => Err(error));
 }
 
+interface BookMetadataPatchBody {
+  title?: string;
+  introduction?: string;
+  glossary?: { [key: string]: string };
+  toc: { [key: string]: string };
+}
+
+async function putMetadata(
+  providerId: string,
+  bookId: string,
+  patch: BookMetadataPatchBody,
+  token: string
+): Promise<Result<BookMetadataDto>> {
+  return api
+    .put(`novel/metadata/${providerId}/${bookId}`, {
+      headers: { Authorization: 'Bearer ' + token },
+      json: patch,
+    })
+    .json<BookMetadataDto>()
+    .then((it) => Ok(it))
+    .catch((error) => Err(error));
+}
+
 export interface BookEpisodeDto {
   titleJp: string;
   titleZh: string | undefined;
@@ -165,6 +188,27 @@ async function getEpisode(
     .catch((error) => Err(error));
 }
 
+interface BookEpisodePatchBody {
+  paragraphs: { [key: number]: string };
+}
+
+async function putEpisode(
+  providerId: string,
+  bookId: string,
+  episodeId: string,
+  patch: BookEpisodePatchBody,
+  token: string
+): Promise<Result<BookEpisodeDto>> {
+  return api
+    .put(`novel/episode/${providerId}/${bookId}/${episodeId}`, {
+      headers: { Authorization: 'Bearer ' + token },
+      json: patch,
+    })
+    .json<BookEpisodeDto>()
+    .then((it) => Ok(it))
+    .catch((error) => Err(error));
+}
+
 export default {
   getState,
   list,
@@ -173,5 +217,7 @@ export default {
   removeFavorite,
   listRank,
   getMetadata,
+  putMetadata,
   getEpisode,
+  putEpisode,
 };

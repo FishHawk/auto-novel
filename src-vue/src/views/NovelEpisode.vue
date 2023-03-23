@@ -259,7 +259,7 @@ function enableEditMode() {
         :provider-id="providerId"
         :book-id="bookId"
         :episode-id="episodeId"
-        :book-episode="bookEpisode.value"
+        v-model:book-episode="bookEpisode.value"
       />
 
       <template v-else>

@@ -13,6 +13,7 @@ import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
+import io.ktor.server.resources.put
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
@@ -131,9 +132,31 @@ fun Route.routeNovel() {
         }
     }
 
+    authenticate {
+        put<Novel.Metadata> { loc ->
+            val username = call.jwtUsername()
+            val patch = call.receive<NovelService.BookMetadataPatchBody>()
+            val result = service.patchMetadata(loc.providerId, loc.bookId, patch, username)
+            call.respondResult(result)
+        }
+    }
+
     get<Novel.Episode> { loc ->
         val result = service.getEpisode(loc.providerId, loc.bookId, loc.episodeId)
         call.respondResult(result)
+    }
+
+    authenticate {
+        put<Novel.Episode> { loc ->
+            val patch = call.receive<NovelService.BookEpisodePatchBody>()
+            val result = service.patchEpisode(
+                providerId = loc.providerId,
+                bookId = loc.bookId,
+                episodeId = loc.episodeId,
+                patch = patch,
+            )
+            call.respondResult(result)
+        }
     }
 }
 
@@ -141,6 +164,7 @@ class NovelService(
     private val bookMetadataRepository: BookMetadataRepository,
     private val bookEpisodeRepository: BookEpisodeRepository,
     private val userRepository: UserRepository,
+    private val bookPatchRepository: BookPatchRepository,
 ) {
     @Serializable
     data class BookListPageDto(
@@ -353,6 +377,42 @@ class NovelService(
     }
 
     @Serializable
+    data class BookMetadataPatchBody(
+        val title: String? = null,
+        val introduction: String? = null,
+        val glossary: Map<String, String>? = null,
+        val toc: Map<String, String>,
+    )
+
+    suspend fun patchMetadata(
+        providerId: String,
+        bookId: String,
+        patch: BookMetadataPatchBody,
+        username: String,
+    ): Result<BookMetadataDto> {
+        if (patch.title == null &&
+            patch.introduction == null &&
+            patch.glossary == null &&
+            patch.toc.isEmpty()
+        ) return httpInternalServerError("修改为空")
+
+        bookPatchRepository.addMetadataPatch(
+            providerId = providerId,
+            bookId = bookId,
+            title = patch.title,
+            glossary = patch.glossary,
+            introduction = patch.introduction,
+            toc = patch.toc,
+        )
+
+        return getMetadata(
+            providerId = providerId,
+            bookId = bookId,
+            username = username,
+        )
+    }
+
+    @Serializable
     data class BookEpisodeDto(
         val titleJp: String,
         val titleZh: String? = null,
@@ -386,6 +446,34 @@ class NovelService(
                 paragraphsJp = episode.paragraphsJp,
                 paragraphsZh = episode.paragraphsZh,
             )
+        )
+    }
+
+    @Serializable
+    data class BookEpisodePatchBody(
+        val paragraphs: Map<Int, String>
+    )
+
+    suspend fun patchEpisode(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+        patch: BookEpisodePatchBody,
+    ): Result<BookEpisodeDto> {
+        if (patch.paragraphs.isEmpty())
+            return httpInternalServerError("修改为空")
+
+        bookPatchRepository.addEpisodePatch(
+            providerId = providerId,
+            bookId = bookId,
+            episodeId = episodeId,
+            paragraphs = patch.paragraphs,
+        )
+
+        return getEpisode(
+            providerId = providerId,
+            bookId = bookId,
+            episodeId = episodeId,
         )
     }
 }

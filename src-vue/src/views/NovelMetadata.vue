@@ -153,7 +153,7 @@ function enableEditMode() {
         <EditMetadataSection
           :provider-id="providerId"
           :book-id="bookId"
-          :book-metadata="bookMetadata.value"
+          v-model:book-metadata="bookMetadata.value"
         />
       </template>
 
