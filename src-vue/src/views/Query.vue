@@ -1,16 +1,18 @@
 <script lang="ts" setup>
-import { onMounted, Ref, ref } from 'vue';
+import { Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 
-import { getHistories, SearchHistory } from '../data/history';
+import ApiNovel from '../data/api/api_novel';
+import { useAuthInfoStore } from '../data/stores/authInfo';
 import { parseUrl } from '../data/provider';
+
+const authInfoStore = useAuthInfoStore();
 
 const router = useRouter();
 const message = useMessage();
 
 const url: Ref<string> = ref('');
-const historiesRef: Ref<SearchHistory[]> = ref([]);
 
 function getNovelUrl(url: string) {
   if (url.length === 0) {
@@ -32,9 +34,9 @@ function query(url: string) {
   router.push({ path: novelUrl });
 }
 
-onMounted(() => {
-  historiesRef.value = getHistories();
-});
+async function loadMyFavorite(page: number, selected: number[]) {
+  return ApiNovel.listFavorite(authInfoStore.token!!);
+}
 </script>
 
 <template>
@@ -75,16 +77,16 @@ onMounted(() => {
       </div>
     </template>
 
-    <div v-if="historiesRef.length > 0">
-      <n-h2 prefix="bar">搜索历史</n-h2>
-      <ul>
-        <li v-for="history in historiesRef">
-          <n-a :href="getNovelUrl(history.url)" target="_blank">{{
-            history.title
-          }}</n-a>
-        </li>
-      </ul>
-    </div>
+    <template v-if="authInfoStore.token">
+      <n-h2 prefix="bar">我的收藏</n-h2>
+      <BookPagedList
+        :descriptior="{
+          title: '',
+          options: [],
+        }"
+        :loader="loadMyFavorite"
+      />
+    </template>
 
     <n-h2 prefix="bar">链接示例</n-h2>
     <n-ul>

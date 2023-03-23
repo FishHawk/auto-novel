@@ -10,6 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.cachingheaders.*
+import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.response.*
@@ -30,6 +31,20 @@ private class Novel {
         val provider: String = "",
         val sort: BookMetadataRepository.ListOption.Sort =
             BookMetadataRepository.ListOption.Sort.CreatedTime,
+    )
+
+    @Serializable
+    @Resource("/favorite")
+    class Favorite(
+        val parent: Novel = Novel(),
+    )
+
+    @Serializable
+    @Resource("/favorite-item")
+    class FavoriteItem(
+        val parent: Novel = Novel(),
+        val providerId: String,
+        val bookId: String,
     )
 
     @Serializable
@@ -78,38 +93,46 @@ fun Route.routeNovel() {
         call.respondResult(result)
     }
 
+    authenticate {
+        get<Novel.Favorite> {
+            val username = call.jwtUsername()
+            val result = service.listFavorite(username)
+            call.respondResult(result)
+        }
+        post<Novel.FavoriteItem> { loc ->
+            val username = call.jwtUsername()
+            val result = service.addFavorite(username, loc.providerId, loc.bookId)
+            call.respondResult(result)
+        }
+        delete<Novel.FavoriteItem> { loc ->
+            val username = call.jwtUsername()
+            val result = service.removeFavorite(username, loc.providerId, loc.bookId)
+            call.respondResult(result)
+        }
+    }
+
     get<Novel.Rank> { loc ->
         val options = call.request.queryParameters.toMap().mapValues { it.value.first() }
-        val result = service.listRank(
-            providerId = loc.providerId,
-            options = options,
-        )
+        val result = service.listRank(loc.providerId, options)
         call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 3600 * 2))
         call.respondResult(result)
     }
 
     get<Novel.State> { loc ->
-        val result = service.getState(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-        )
+        val result = service.getState(loc.providerId, loc.bookId)
         call.respondResult(result)
     }
 
-    get<Novel.Metadata> { loc ->
-        val result = service.getMetadata(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-        )
-        call.respondResult(result)
+    authenticate(optional = true) {
+        get<Novel.Metadata> { loc ->
+            val username = call.jwtUsernameOrNull()
+            val result = service.getMetadata(loc.providerId, loc.bookId, username)
+            call.respondResult(result)
+        }
     }
 
     get<Novel.Episode> { loc ->
-        val result = service.getEpisode(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-            episodeId = loc.episodeId,
-        )
+        val result = service.getEpisode(loc.providerId, loc.bookId, loc.episodeId)
         call.respondResult(result)
     }
 }
@@ -117,50 +140,31 @@ fun Route.routeNovel() {
 class NovelService(
     private val bookMetadataRepository: BookMetadataRepository,
     private val bookEpisodeRepository: BookEpisodeRepository,
+    private val userRepository: UserRepository,
 ) {
     @Serializable
-    data class BookStateDto(
-        val total: Int,
-        val countJp: Long,
-        val countZh: Long,
-    )
-
-    @Serializable
-    data class BookPageDto(
+    data class BookListPageDto(
         val pageNumber: Long,
-        val items: List<BookListItem>,
-    )
-
-    @Serializable
-    data class BookMetadataDto(
-        val titleJp: String,
-        val titleZh: String? = null,
-        val authors: List<BookAuthor>,
-        val introductionJp: String,
-        val introductionZh: String? = null,
-        val glossary: Map<String, String>,
-        val toc: List<BookTocItem>,
-        val visited: Long,
-        val downloaded: Long,
-        val syncAt: Long,
-    )
-
-    @Serializable
-    data class BookEpisodeDto(
-        val titleJp: String,
-        val titleZh: String? = null,
-        val prevId: String? = null,
-        val nextId: String? = null,
-        val paragraphsJp: List<String>,
-        val paragraphsZh: List<String>? = null,
-    )
+        val items: List<ItemDto>,
+    ) {
+        @Serializable
+        data class ItemDto(
+            val providerId: String,
+            val bookId: String,
+            val titleJp: String,
+            val titleZh: String?,
+            val total: Int,
+            val countJp: Int,
+            val countZh: Int,
+        )
+    }
 
     suspend fun list(
         page: Int,
         pageSize: Int,
         optionProvider: String?,
         optionSort: BookMetadataRepository.ListOption.Sort,
-    ): Result<BookPageDto> {
+    ): Result<BookListPageDto> {
         val items = bookMetadataRepository.list(
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
@@ -169,11 +173,14 @@ class NovelService(
                 sort = optionSort,
             ),
         ).map {
-            it.copy(
-                extra = listOf(
-                    "日文(${bookEpisodeRepository.countJp(it.providerId, it.bookId)}/${it.extra})",
-                    "中文(${bookEpisodeRepository.countZh(it.providerId, it.bookId)}/${it.extra})",
-                ).joinToString(" ")
+            BookListPageDto.ItemDto(
+                providerId = it.providerId,
+                bookId = it.bookId,
+                titleJp = it.titleJp,
+                titleZh = it.titleZh,
+                total = it.total,
+                countJp = bookEpisodeRepository.countJp(it.providerId, it.bookId).toInt(),
+                countZh = bookEpisodeRepository.countZh(it.providerId, it.bookId).toInt()
             )
         }
 
@@ -182,16 +189,111 @@ class NovelService(
         } else {
             bookMetadataRepository.countProvider(optionProvider)
         }
-        return Result.success(BookPageDto(pageNumber = total / pageSize, items = items))
+        val dto = BookListPageDto(
+            pageNumber = total / pageSize,
+            items = items,
+        )
+        return Result.success(dto)
+    }
+
+    suspend fun listFavorite(
+        username: String,
+    ): Result<BookListPageDto> {
+        val user = userRepository.getByUsername(username)
+            ?: return httpNotFound("用户不存在")
+        val items = user.favoriteBooks.mapNotNull {
+            val metadata = bookMetadataRepository.getLocal(
+                providerId = it.providerId,
+                bookId = it.bookId,
+            ) ?: return@mapNotNull null
+
+            BookListPageDto.ItemDto(
+                providerId = metadata.providerId,
+                bookId = metadata.bookId,
+                titleJp = metadata.titleJp,
+                titleZh = metadata.titleZh,
+                total = metadata.toc.count { it.episodeId != null },
+                countJp = bookEpisodeRepository.countJp(it.providerId, it.bookId).toInt(),
+                countZh = bookEpisodeRepository.countZh(it.providerId, it.bookId).toInt()
+            )
+        }
+        val dto = BookListPageDto(
+            pageNumber = 1,
+            items = items,
+        )
+        return Result.success(dto)
+    }
+
+    suspend fun addFavorite(
+        username: String,
+        providerId: String,
+        bookId: String,
+    ): Result<Unit> {
+        userRepository.addFavorite(
+            username = username,
+            providerId = providerId,
+            bookId = bookId,
+        )
+        return Result.success(Unit)
+    }
+
+    suspend fun removeFavorite(
+        username: String,
+        providerId: String,
+        bookId: String,
+    ): Result<Unit> {
+        userRepository.removeFavorite(
+            username = username,
+            providerId = providerId,
+            bookId = bookId,
+        )
+        return Result.success(Unit)
+    }
+
+    @Serializable
+    data class BookRankPageDto(
+        val pageNumber: Long,
+        val items: List<ItemDto>,
+    ) {
+        @Serializable
+        data class ItemDto(
+            val providerId: String,
+            val bookId: String,
+            val titleJp: String,
+            val titleZh: String?,
+            val extra: String,
+        )
     }
 
     suspend fun listRank(
         providerId: String,
         options: Map<String, String>,
-    ): Result<BookPageDto> {
-        return bookMetadataRepository.listRank(providerId, options)
-            .map { BookPageDto(pageNumber = 1, items = it) }
+    ): Result<BookRankPageDto> {
+        return bookMetadataRepository.listRank(
+            providerId = providerId,
+            options = options,
+        ).map {
+            BookRankPageDto(
+                pageNumber = 1,
+                items = it.map {
+                    BookRankPageDto.ItemDto(
+                        providerId = providerId,
+                        bookId = it.bookId,
+                        titleJp = it.titleJp,
+                        titleZh = it.titleZh,
+                        extra = it.extra,
+                    )
+                }
+            )
+        }
     }
+
+    @Serializable
+    data class BookStateDto(
+        val total: Int,
+        val countJp: Long,
+        val countZh: Long,
+    )
 
     suspend fun getState(
         providerId: String,
@@ -208,10 +310,28 @@ class NovelService(
         )
     }
 
+    @Serializable
+    data class BookMetadataDto(
+        val titleJp: String,
+        val titleZh: String? = null,
+        val authors: List<BookAuthor>,
+        val introductionJp: String,
+        val introductionZh: String? = null,
+        val glossary: Map<String, String>,
+        val toc: List<BookTocItem>,
+        val visited: Long,
+        val downloaded: Long,
+        val syncAt: Long,
+        val inFavorite: Boolean?,
+    )
+
     suspend fun getMetadata(
         providerId: String,
         bookId: String,
+        username: String?,
     ): Result<BookMetadataDto> {
+        val user = username?.let { userRepository.getByUsername(it) }
+
         val metadata = bookMetadataRepository.get(providerId, bookId)
             .getOrElse { return httpInternalServerError(it.message) }
         bookMetadataRepository.increaseVisited(providerId, bookId)
@@ -227,9 +347,20 @@ class NovelService(
                 visited = metadata.visited,
                 downloaded = metadata.downloaded,
                 syncAt = metadata.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
+                inFavorite = user?.favoriteBooks?.any { it.providerId == providerId && it.bookId == bookId },
             )
         )
     }
+
+    @Serializable
+    data class BookEpisodeDto(
+        val titleJp: String,
+        val titleZh: String? = null,
+        val prevId: String? = null,
+        val nextId: String? = null,
+        val paragraphsJp: List<String>,
+        val paragraphsZh: List<String>? = null,
+    )
 
     suspend fun getEpisode(
         providerId: String,

@@ -1,17 +1,11 @@
 <script lang="ts" setup>
 import { computed, onBeforeUnmount, ref } from 'vue';
-import {
-  FormInst,
-  FormItemInst,
-  FormItemRule,
-  FormRules,
-  useMessage,
-} from 'naive-ui';
+import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
-import ApiAuth, { UserDto } from '../data/api/api_auth';
+import ApiAuth, { SignInDto } from '../data/api/api_auth';
 import { errorToString } from '../data/handle_error';
 
-const emits = defineEmits<{ (e: 'signUp', user: UserDto): void }>();
+const emits = defineEmits<{ (e: 'signUp', user: SignInDto): void }>();
 
 const message = useMessage();
 

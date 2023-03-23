@@ -3,7 +3,7 @@ import { h, onMounted, Ref, ref } from 'vue';
 import { NA, DataTableColumns, NButton, useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
-import ApiNovel, { BookStateDto, BookFiles } from '../data/api/api_novel';
+import ApiNovel, { BookStateDto } from '../data/api/api_novel';
 
 import { update } from '../data/api/api_update';
 import { errorToString } from '../data/handle_error';
@@ -87,6 +87,12 @@ async function startUpdateTask(
     message.error(`${name}任务失败:${errorToString(result.error)}`);
   }
   progress.value = undefined;
+}
+
+interface BookFiles {
+  label: string;
+  lang: string;
+  files: { label: string; url: string; name: string }[];
 }
 
 const tableColumns: DataTableColumns<BookFiles> = [

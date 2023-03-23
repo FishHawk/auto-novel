@@ -8,8 +8,10 @@ import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import ApiComment, { SubCommentDto } from '../data/api/api_comment';
+import { useAuthInfoStore } from '../data/stores/authInfo';
 import { errorToString } from '../data/handle_error';
-import { getUser } from '../data/localstorage/user';
+
+const authInfoStore = useAuthInfoStore();
 
 const props = defineProps<{
   postId: string;
@@ -25,13 +27,13 @@ const emit = defineEmits<{
 const message = useMessage();
 
 async function vote(isUpvote: boolean, isCancel: boolean) {
-  const user = getUser();
-  if (user) {
+  const token = authInfoStore.token;
+  if (token) {
     const result = await ApiComment.vote(
       props.comment.id,
       isUpvote,
       isCancel,
-      user.token
+      token
     );
     if (result.ok) {
       if (isUpvote && isCancel) {
@@ -88,8 +90,8 @@ const showInput = ref(false);
 const replyContent = ref('');
 
 function replyClicked() {
-  const user = getUser();
-  if (user) {
+  const token = authInfoStore.token;
+  if (token) {
     showInput.value = !showInput.value;
   } else {
     message.info('请先登录');
@@ -97,8 +99,8 @@ function replyClicked() {
 }
 
 async function reply() {
-  const user = getUser();
-  if (user) {
+  const token = authInfoStore.token;
+  if (token) {
     if (replyContent.value.length === 0) {
       message.info('回复内容不能为空');
     } else {
@@ -110,7 +112,7 @@ async function reply() {
         parentId,
         receiver,
         replyContent.value,
-        user.token
+        token
       );
       if (result.ok) {
         emit('replied');

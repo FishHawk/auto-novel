@@ -40,7 +40,7 @@ const termsToAdd = ref(['', '']);
 
 onMounted(() => getMetadata());
 async function getMetadata() {
-  const result = await ApiNovel.getMetadata(providerId, bookId);
+  const result = await ApiNovel.getMetadata(providerId, bookId, undefined);
   if (result.ok) {
     document.title = `编辑 - ${result.value.titleJp}`;
     const bookMetadata = result.value;
@@ -132,7 +132,7 @@ function addTerm() {
 <template>
   <MainLayout>
     <div v-if="editMetadataRef?.ok">
-      <n-h2 prefix="bar" >
+      <n-h2 prefix="bar">
         <n-a :href="url" target="_blank">{{
           editMetadataRef.value.title.jp
         }}</n-a>
@@ -162,7 +162,7 @@ function addTerm() {
         type="textarea"
       />
 
-      <n-h2 prefix="bar" >术语表</n-h2>
+      <n-h2 prefix="bar">术语表</n-h2>
       <n-p>在你使用术语表之前需要知道的：</n-p>
       <ui>
         <li>
@@ -209,7 +209,7 @@ function addTerm() {
         </tr>
       </table>
 
-      <n-h2 prefix="bar" >目录</n-h2>
+      <n-h2 prefix="bar">目录</n-h2>
       <table style="width: 100%">
         <template v-for="token in editMetadataRef.value.toc">
           <tr>

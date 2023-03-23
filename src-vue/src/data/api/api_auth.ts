@@ -1,7 +1,7 @@
 import api from './api';
 import { Ok, Err, Result } from './result';
 
-export interface UserDto {
+export interface SignInDto {
   email: string;
   username: string;
   token: string;
@@ -11,10 +11,10 @@ export interface UserDto {
 async function signIn(
   emailOrUsername: string,
   password: string
-): Promise<Result<UserDto>> {
+): Promise<Result<SignInDto>> {
   return api
     .post(`auth/sign-in`, { json: { emailOrUsername, password } })
-    .json<UserDto>()
+    .json<SignInDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
 }
@@ -24,7 +24,7 @@ async function signUp(
   emailCode: string,
   username: string,
   password: string
-): Promise<Result<UserDto>> {
+): Promise<Result<SignInDto>> {
   return api
     .post('auth/sign-up', {
       json: {
@@ -34,7 +34,7 @@ async function signUp(
         password,
       },
     })
-    .json<UserDto>()
+    .json<SignInDto>()
     .then((it) => Ok(it))
     .catch((error) => Err(error));
 }

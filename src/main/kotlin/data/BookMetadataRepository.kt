@@ -46,9 +46,16 @@ data class BookMetadata(
     @Contextual val changeAt: LocalDateTime,
 )
 
-@Serializable
 data class BookListItem(
     val providerId: String,
+    val bookId: String,
+    val titleJp: String,
+    val titleZh: String?,
+    val total: Int,
+    val changeAt: LocalDateTime,
+)
+
+data class BookRankItem(
     val bookId: String,
     val titleJp: String,
     val titleZh: String?,
@@ -126,7 +133,8 @@ class BookMetadataRepository(
                     bookId = it.bookId,
                     titleJp = it.titleJp,
                     titleZh = it.titleZh,
-                    extra = "${it.toc.count { it.episodeId != null }}",
+                    total = it.toc.count { it.episodeId != null },
+                    changeAt = it.changeAt,
                 )
             }
     }
@@ -134,7 +142,7 @@ class BookMetadataRepository(
     suspend fun listRank(
         providerId: String,
         options: Map<String, String>,
-    ): Result<List<BookListItem>> {
+    ): Result<List<BookRankItem>> {
         @Serializable
         data class BookIdWithTitleZh(val bookId: String, val titleZh: String?)
 
@@ -148,8 +156,7 @@ class BookMetadataRepository(
                 .toList()
                 .associate { it.bookId to it.titleZh }
             items.map {
-                BookListItem(
-                    providerId = providerId,
+                BookRankItem(
                     bookId = it.bookId,
                     titleJp = it.title,
                     titleZh = idToTitleZh[it.bookId],

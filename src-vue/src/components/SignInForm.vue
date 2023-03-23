@@ -2,10 +2,10 @@
 import { ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
-import ApiAuth, { UserDto } from '../data/api/api_auth';
+import ApiAuth, { SignInDto } from '../data/api/api_auth';
 import { errorToString } from '../data/handle_error';
 
-const emits = defineEmits<{ (e: 'signIn', user: UserDto): void }>();
+const emits = defineEmits<{ (e: 'signIn', user: SignInDto): void }>();
 
 const message = useMessage();
 

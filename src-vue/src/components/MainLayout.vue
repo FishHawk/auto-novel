@@ -1,10 +1,12 @@
 <script lang="ts" setup>
-import { Component, h, onMounted, ref, watch } from 'vue';
+import { Component, h, ref } from 'vue';
 import { MenuOption, NIcon } from 'naive-ui';
 import { LogOutFilled, MenuFilled } from '@vicons/material';
 import { useRoute } from 'vue-router';
 
-import { deleteUser, getUser, setUser, User } from '../data/localstorage/user';
+import { AuthInfo, useAuthInfoStore } from '../data/stores/authInfo';
+
+const authInfoStore = useAuthInfoStore();
 
 function menuOption(text: string, href: string): MenuOption {
   return { label: () => h('a', { href }, text), key: href };
@@ -58,23 +60,16 @@ const userDropdownOptions = [
 ];
 
 const showLoginModal = ref(false);
-const user = ref<User | undefined>();
 
-function onSignInSuccess(userValue: User) {
-  user.value = userValue;
+function onSignInSuccess(info: AuthInfo): void {
+  authInfoStore.set(info);
   showLoginModal.value = false;
 }
-
-onMounted(() => (user.value = getUser()));
-watch(user, (user) => {
-  if (user) setUser(user);
-});
 
 function handleUserDropdownSelect(key: string | number) {
   console.log(key);
   if (key === 'signOut') {
-    deleteUser();
-    user.value = undefined;
+    authInfoStore.delete();
   }
 }
 </script>
@@ -110,13 +105,13 @@ function handleUserDropdownSelect(key: string | number) {
         <div style="flex: 1"></div>
 
         <n-dropdown
-          v-if="user"
+          v-if="authInfoStore.username"
           trigger="click"
           :options="userDropdownOptions"
           @select="handleUserDropdownSelect"
         >
           <n-button quaternary style="margin-right: 4px">
-            @{{ user.username }}
+            @{{ authInfoStore.username }}
           </n-button>
         </n-dropdown>
 

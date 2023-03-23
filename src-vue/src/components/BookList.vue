@@ -1,17 +1,21 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { BookPageDto } from '../data/api/api_novel';
+
+import { BookListPageDto, BookRankPageDto } from '../data/api/api_novel';
 import { ResultState } from '../data/api/result';
 import { buildMetadataUrl } from '../data/provider';
+import { errorToString } from '../data/handle_error';
 
 const props = defineProps<{
   page: number;
   pageNumber: number;
-  bookPage: ResultState<BookPageDto>;
+  bookPage: ResultState<BookListPageDto | BookRankPageDto>;
 }>();
+
 const emit = defineEmits<{
   (e: 'update:page', id: number): void;
 }>();
+
 const pageInternal = computed({
   get(): number {
     return props.page;
@@ -49,12 +53,32 @@ const pageInternal = computed({
         >
           {{ buildMetadataUrl(item.providerId, item.bookId) }}
         </n-a>
-        <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
-          {{ extraLine }}
-        </div>
+        <template v-if="'extra' in item">
+          <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
+            {{ extraLine }}
+          </div>
+        </template>
+        <template v-else>
+          <div style="color: #666">
+            日文({{ item.countJp }}/{{ item.total }}) 中文({{ item.countZh }}/{{
+              item.total
+            }})
+          </div>
+        </template>
         <n-divider />
       </div>
+
+      <n-empty
+        v-if="bookPage.value.items.length === 0"
+        description="空列表"
+      />
     </div>
+    <n-result
+      v-if="bookPage && !bookPage.ok"
+      status="error"
+      title="加载错误"
+      :description="errorToString(bookPage.error)"
+    />
     <n-pagination
       v-if="pageNumber > 1"
       v-model:page="pageInternal"

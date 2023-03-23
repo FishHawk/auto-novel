@@ -2,9 +2,7 @@ package api
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import data.EmailCodeRepository
-import data.User
-import data.UserRepository
+import data.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -19,7 +17,6 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.Email
-import util.PBKDF2
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
@@ -110,7 +107,7 @@ class AuthService(
             ?: userRepository.getByUsername(body.emailOrUsername)
             ?: return httpNotFound("用户不存在")
 
-        if (user.password != PBKDF2.hash(body.password, user.salt))
+        if (!user.validatePassword(body.password))
             return httpUnauthorized("密码错误")
 
         val (token, expiresAt) = generateToken(user.username)
@@ -153,17 +150,10 @@ class AuthService(
         if (!emailCodeRepository.exist(body.email, body.emailCode))
             return httpBadRequest("邮箱验证码错误")
 
-        val salt = PBKDF2.randomSalt()
-        val password = PBKDF2.hash(body.password, salt)
         userRepository.add(
-            User(
-                email = body.email,
-                username = body.username,
-                salt = salt,
-                password = password,
-                role = User.Role.Normal,
-                createdAt = LocalDateTime.now(),
-            )
+            email = body.email,
+            username = body.username,
+            password = body.password,
         )
 
         val (token, expiresAt) = generateToken(body.username)

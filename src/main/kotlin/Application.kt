@@ -123,7 +123,7 @@ val appModule = module {
     }
     single { CommentService(get()) }
     single { PrepareBookService(get(), get(), get()) }
-    single { NovelService(get(), get()) }
+    single { NovelService(get(), get(), get()) }
     single { PatchService(get()) }
     single { UpdateService(get(), get()) }
 }

@@ -47,30 +47,26 @@ fun Route.routeComment() {
 
     authenticate(optional = true) {
         get<Comment.List> { loc ->
-            val principal = call.principal<JWTPrincipal>()
-            val username = principal?.payload?.getClaim("username")?.asString()
+            val username = call.jwtUsernameOrNull()
             val result = service.list(username, loc.postId, loc.page)
             call.respondResult(result)
         }
 
         get<Comment.ListSub> { loc ->
-            val principal = call.principal<JWTPrincipal>()
-            val username = principal?.payload?.getClaim("username")?.asString()
+            val username = call.jwtUsernameOrNull()
             val result = service.listSub(username, loc.postId, loc.parentId, loc.page)
             call.respondResult(result)
         }
     }
     authenticate {
         post<Comment.Vote> { loc ->
-            val principal = call.principal<JWTPrincipal>()
-            val username = principal!!.payload.getClaim("username").asString()
+            val username = call.jwtUsername()
             val result = service.vote(loc.commentId, loc.isUpvote, loc.isCancel, username)
             call.respondResult(result)
         }
 
         post<Comment> {
-            val principal = call.principal<JWTPrincipal>()
-            val username = principal!!.payload.getClaim("username").asString()
+            val username = call.jwtUsername()
             val body = call.receive<CommentService.CommentBody>()
             val result = service.createComment(body, username)
             call.respondResult(result)

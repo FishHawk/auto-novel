@@ -15,6 +15,8 @@
     "ky": "^0.32.2",
     "naive-ui": "^2.34.2",
     "nanoid": "^4.0.1",
+    "pinia": "^2.0.33",
+    "pinia-plugin-persistedstate": "^3.1.0",
     "typescript": "^4.6.4",
     "unplugin-auto-import": "^0.11.3",
     "unplugin-vue-components": "^0.22.9",

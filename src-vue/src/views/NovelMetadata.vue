@@ -1,14 +1,22 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { EditNoteFilled } from '@vicons/material';
+import {
+  EditNoteFilled,
+  FavoriteBorderFilled,
+  FavoriteFilled,
+} from '@vicons/material';
+import { useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
 import ApiNovel, { BookMetadataDto } from '../data/api/api_novel';
-import { addHistory } from '../data/history';
 import { buildMetadataUrl } from '../data/provider';
-
+import { useAuthInfoStore } from '../data/stores/authInfo';
 import { errorToString } from '../data/handle_error';
+
+const authInfoStore = useAuthInfoStore();
+
+const message = useMessage();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
@@ -19,12 +27,59 @@ const bookMetadata = ref<ResultState<BookMetadataDto>>();
 
 onMounted(() => getMetadata());
 async function getMetadata() {
-  const result = await ApiNovel.getMetadata(providerId, bookId);
+  const result = await ApiNovel.getMetadata(
+    providerId,
+    bookId,
+    authInfoStore.token
+  );
   bookMetadata.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
-    addHistory({ url, title: result.value.titleJp });
   }
+}
+
+var isFavoriteChanging = false;
+
+async function addFavorite() {
+  if (isFavoriteChanging) return;
+  isFavoriteChanging = true;
+
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+
+  const result = await ApiNovel.addFavorite(providerId, bookId, token);
+  if (result.ok) {
+    if (bookMetadata.value?.ok) {
+      bookMetadata.value.value.inFavorite = true;
+    }
+  } else {
+    message.error('收藏错误：' + errorToString(result.error));
+  }
+  isFavoriteChanging = false;
+}
+
+async function removeFavorite() {
+  if (isFavoriteChanging) return;
+  isFavoriteChanging = true;
+
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+
+  const result = await ApiNovel.removeFavorite(providerId, bookId, token);
+  if (result.ok) {
+    if (bookMetadata.value?.ok) {
+      bookMetadata.value.value.inFavorite = false;
+    }
+  } else {
+    message.error('取消收藏错误：' + errorToString(result.error));
+  }
+  isFavoriteChanging = false;
 }
 
 const showModal = ref(false);
@@ -53,14 +108,33 @@ const showModal = ref(false);
         </n-space>
       </n-p>
 
-      <n-a :href="`/novel-edit/${providerId}/${bookId}`">
-        <n-button>
+      <n-space>
+        <n-a :href="`/novel-edit/${providerId}/${bookId}`">
+          <n-button>
+            <template #icon>
+              <n-icon> <EditNoteFilled /> </n-icon>
+            </template>
+            编辑
+          </n-button>
+        </n-a>
+
+        <n-button
+          v-if="bookMetadata.value.inFavorite === true"
+          @click="removeFavorite()"
+        >
           <template #icon>
-            <n-icon> <EditNoteFilled /> </n-icon>
+            <n-icon> <FavoriteFilled /> </n-icon>
           </template>
-          编辑
+          取消收藏
         </n-button>
-      </n-a>
+
+        <n-button v-else @click="addFavorite()">
+          <template #icon>
+            <n-icon> <FavoriteBorderFilled /> </n-icon>
+          </template>
+          收藏
+        </n-button>
+      </n-space>
 
       <n-p>{{ bookMetadata.value.introductionJp }}</n-p>
       <n-p v-if="bookMetadata.value.introductionZh !== undefined">{{

@@ -9,8 +9,10 @@ import ApiComment, {
 } from '../data/api/api_comment';
 import { Ok, ResultState } from '../data/api/result';
 
+import { useAuthInfoStore } from '../data/stores/authInfo';
 import { errorToString } from '../data/handle_error';
-import { getUser } from '../data/localstorage/user';
+
+const authInfoStore = useAuthInfoStore();
 
 const message = useMessage();
 
@@ -37,7 +39,7 @@ async function loadPage(page: number, isFirst: boolean = false) {
   const result = await ApiComment.list(
     props.postId,
     page - 1,
-    getUser()?.token
+    authInfoStore.token
   );
   if (result.ok) {
     commentPage.value = Ok({
@@ -58,7 +60,7 @@ async function loadSubPage(page: number, comment: Comment) {
     props.postId,
     comment.id,
     page - 1,
-    getUser()?.token
+    authInfoStore.token
   );
   if (result.ok) {
     comment.page = page;
@@ -80,8 +82,8 @@ const showInput = ref(false);
 const replyContent = ref('');
 
 function replyClicked() {
-  const user = getUser();
-  if (user) {
+  const token = authInfoStore.token;
+  if (token) {
     showInput.value = !showInput.value;
   } else {
     message.info('请先登录');
@@ -89,8 +91,8 @@ function replyClicked() {
 }
 
 async function reply() {
-  const user = getUser();
-  if (user) {
+  const token = authInfoStore.token;
+  if (token) {
     if (replyContent.value.length === 0) {
       message.info('回复内容不能为空');
     } else {
@@ -99,7 +101,7 @@ async function reply() {
         undefined,
         undefined,
         replyContent.value,
-        user.token
+        token
       );
       if (result.ok) {
         if (commentPage.value?.ok) {
