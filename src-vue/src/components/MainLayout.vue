@@ -29,11 +29,11 @@ const collapsedMenuOptions: MenuOption[] = [
       menuOption('成为小说家：流派', '/rank/syosetu/1'),
       menuOption('成为小说家：综合', '/rank/syosetu/2'),
       menuOption('成为小说家：异世界转移/转生', '/rank/syosetu/3'),
-      menuOption('反馈', '/feedback'),
-      menuOption('其他', '/extra'),
     ],
   },
   menuOption('编辑历史', '/patch'),
+  menuOption('反馈', '/feedback'),
+  menuOption('其他', '/extra'),
 ];
 
 const path = useRoute().path;
