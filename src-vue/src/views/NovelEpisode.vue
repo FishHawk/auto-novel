@@ -1,17 +1,12 @@
 <script lang="ts" setup>
-import { onMounted, ref, shallowRef, watch } from 'vue';
+import { onMounted, ref, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme, useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
 import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
-import {
-  useReaderSettingStore,
-  themeOptions,
-  modeOptions,
-  fontSizeOptions,
-} from '../data/stores/readerSetting';
+import { useReaderSettingStore } from '../data/stores/readerSetting';
 import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
@@ -25,6 +20,25 @@ const providerId = route.params.providerId as string;
 const bookId = route.params.bookId as string;
 const episodeId = route.params.episodeId as string;
 const url = buildEpisodeUrl(providerId, bookId, episodeId);
+
+const themeOptions = [
+  { isDark: false, bodyColor: '#FFFFFF' },
+  { isDark: false, bodyColor: '#FFF2E2' },
+  { isDark: false, bodyColor: '#E3EDCD' },
+  { isDark: false, bodyColor: '#E9EBFE' },
+  { isDark: false, bodyColor: '#EAEAEF' },
+
+  { isDark: true, bodyColor: '#000000' },
+  { isDark: true, bodyColor: '#272727' },
+];
+
+const modeOptions = [
+  { value: 'jp', label: '日文' },
+  { value: 'zh', label: '中文' },
+  { value: 'mix', label: '中日混合' },
+];
+
+const fontSizeOptions = ['14px', '16px', '18px', '20px'];
 
 const showModal = ref(false);
 
