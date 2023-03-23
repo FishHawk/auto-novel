@@ -82,7 +82,15 @@ async function removeFavorite() {
   isFavoriteChanging = false;
 }
 
-const showModal = ref(false);
+const editMode = ref(false);
+function enableEditMode() {
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+  editMode.value = true;
+}
 </script>
 
 <template>
@@ -109,14 +117,19 @@ const showModal = ref(false);
       </n-p>
 
       <n-space>
-        <n-a :href="`/novel-edit/${providerId}/${bookId}`">
-          <n-button>
-            <template #icon>
-              <n-icon> <EditNoteFilled /> </n-icon>
-            </template>
-            编辑
-          </n-button>
-        </n-a>
+        <n-button v-if="!editMode" @click="enableEditMode()">
+          <template #icon>
+            <n-icon> <EditNoteFilled /> </n-icon>
+          </template>
+          编辑
+        </n-button>
+
+        <n-button v-else @click="editMode = false">
+          <template #icon>
+            <n-icon> <EditNoteFilled /> </n-icon>
+          </template>
+          退出编辑
+        </n-button>
 
         <n-button
           v-if="bookMetadata.value.inFavorite === true"
@@ -136,58 +149,31 @@ const showModal = ref(false);
         </n-button>
       </n-space>
 
-      <n-p>{{ bookMetadata.value.introductionJp }}</n-p>
-      <n-p v-if="bookMetadata.value.introductionZh !== undefined">{{
-        bookMetadata.value.introductionZh
-      }}</n-p>
+      <template v-if="editMode">
+        <EditMetadataSection
+          :provider-id="providerId"
+          :book-id="bookId"
+          :book-metadata="bookMetadata.value"
+        />
+      </template>
 
-      <n-h2 prefix="bar">翻译</n-h2>
-      <n-p>
-        如果需要自定义更新范围，请使用
-        <n-a @click="showModal = true">高级模式</n-a>
-        。如果要编辑术语表，请进入
-        <n-a :href="`/novel-edit/${providerId}/${bookId}`">编辑</n-a>
-        界面。
-      </n-p>
-      <n-p v-if="Object.keys(bookMetadata.value.glossary).length">
-        <n-collapse>
-          <n-collapse-item title="术语表">
-            <table style="border-spacing: 16px 0px">
-              <tr v-for="(termZh, termJp) in bookMetadata.value.glossary">
-                <td>{{ termJp }}</td>
-                <td>=></td>
-                <td>{{ termZh }}</td>
-              </tr>
-            </table>
-          </n-collapse-item>
-        </n-collapse>
-      </n-p>
-      <TranslatePanel
-        :provider-id="providerId"
-        :book-id="bookId"
-        v-model:showModal="showModal"
-      />
-
-      <n-h2 prefix="bar">目录</n-h2>
-      <table style="width: 100%">
-        <template v-for="token in bookMetadata.value.toc">
-          <n-a
-            v-if="token.episodeId"
-            :href="`/novel/${providerId}/${bookId}/${token.episodeId}`"
-            role="row"
-            style="display: table-row"
-          >
-            <TocItem :token="token" />
-          </n-a>
-          <tr v-else>
-            <TocItem :token="token" />
-          </tr>
-          <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
-          <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
-        </template>
-      </table>
-
-      <CommentList :post-id="route.path" />
+      <template v-else>
+        <n-p>{{ bookMetadata.value.introductionJp }}</n-p>
+        <n-p v-if="bookMetadata.value.introductionZh !== undefined">{{
+          bookMetadata.value.introductionZh
+        }}</n-p>
+        <TranslateSection
+          :provider-id="providerId"
+          :book-id="bookId"
+          :glossary="bookMetadata.value.glossary"
+        />
+        <TocSection
+          :provider-id="providerId"
+          :book-id="bookId"
+          :toc="bookMetadata.value.toc"
+        />
+        <CommentList :post-id="route.path" />
+      </template>
     </div>
 
     <div v-if="bookMetadata && !bookMetadata.ok">

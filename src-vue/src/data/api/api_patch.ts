@@ -99,10 +99,12 @@ async function deletePatch(
 async function postMetadataPatch(
   providerId: string,
   bookId: string,
-  patch: BookMetadataPatchBody
+  patch: BookMetadataPatchBody,
+  token: string
 ): Promise<Result<string>> {
   return api
     .post(`patch/metadata/${providerId}/${bookId}`, {
+      headers: { Authorization: 'Bearer ' + token },
       json: patch,
     })
     .text()
@@ -114,10 +116,12 @@ async function postEpisodePatch(
   providerId: string,
   bookId: string,
   episodeId: string,
-  patch: BookEpisodePatchBody
+  patch: BookEpisodePatchBody,
+  token: string
 ): Promise<Result<string>> {
   return api
     .post(`patch/episode/${providerId}/${bookId}/${episodeId}`, {
+      headers: { Authorization: 'Bearer ' + token },
       json: patch,
     })
     .text()

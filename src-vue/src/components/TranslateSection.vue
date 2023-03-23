@@ -11,7 +11,7 @@ import { errorToString } from '../data/handle_error';
 const props = defineProps<{
   providerId: string;
   bookId: string;
-  showModal: boolean;
+  glossary: { [key: string]: string };
 }>();
 const emits = defineEmits(['update:showModal']);
 
@@ -21,6 +21,8 @@ interface UpdateProgress {
   finished: number;
   error: number;
 }
+
+const showModal = ref(false);
 
 const message = useMessage();
 
@@ -247,6 +249,25 @@ function submitForm() {
     </n-card>
   </n-modal>
 
+  <n-h2 prefix="bar">翻译</n-h2>
+  <n-p>
+    如果需要自定义更新范围，请使用
+    <n-a @click="showModal = true">高级模式</n-a>
+    。如果要编辑术语表，请先进入编辑界面。
+  </n-p>
+  <n-p v-if="Object.keys(glossary).length">
+    <n-collapse>
+      <n-collapse-item title="术语表">
+        <table style="border-spacing: 16px 0px">
+          <tr v-for="(termZh, termJp) in glossary">
+            <td>{{ termJp }}</td>
+            <td>=></td>
+            <td>{{ termZh }}</td>
+          </tr>
+        </table>
+      </n-collapse-item>
+    </n-collapse>
+  </n-p>
   <n-data-table
     :columns="tableColumns"
     :data="stateToFileList()"

@@ -1,16 +1,18 @@
 <script lang="ts" setup>
+import { BookTocItemDto } from '../data/api/api_novel';
+
 defineProps<{
-  token: { titleJp: string; titleZh?: string };
+  item: BookTocItemDto;
 }>();
 </script>
 
 <template>
   <td style="width: 50%">
-    {{ token.titleJp }}
+    {{ item.titleJp }}
     <br />
-    <span class="on-mobile" style="color: grey">{{ token.titleZh }}</span>
+    <span class="on-mobile" style="color: grey">{{ item.titleZh }}</span>
   </td>
-  <td class="on-desktop" style="color: grey">{{ token.titleZh }}</td>
+  <td class="on-desktop" style="color: grey">{{ item.titleZh }}</td>
 </template>
 
 <style scoped>

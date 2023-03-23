@@ -23,14 +23,6 @@ const routes = [
     component: () => import('./views/NovelEpisode.vue'),
   },
   {
-    path: '/novel-edit/:providerId/:bookId',
-    component: () => import('./views/NovelEditMetadata.vue'),
-  },
-  {
-    path: '/novel-edit/:providerId/:bookId/:episodeId',
-    component: () => import('./views/NovelEditEpisode.vue'),
-  },
-  {
     path: '/patch/:providerId/:bookId',
     component: () => import('./views/PatchDetail.vue'),
   },

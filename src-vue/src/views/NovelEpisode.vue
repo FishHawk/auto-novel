@@ -1,13 +1,17 @@
 <script lang="ts" setup>
 import { onMounted, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { NConfigProvider, lightTheme, darkTheme, useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
+import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
+import { useAuthInfoStore } from '../data/stores/authInfo';
 import { buildEpisodeUrl } from '../data/provider';
 import { errorToString } from '../data/handle_error';
 
-import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
-import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
+const authInfoStore = useAuthInfoStore();
+
+const message = useMessage();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
@@ -125,6 +129,16 @@ function getTextList(
     return [{ text1: '章节未翻译!' }];
   }
 }
+
+const editMode = ref(false);
+function enableEditMode() {
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+  editMode.value = true;
+}
 </script>
 
 <template>
@@ -224,12 +238,11 @@ function getTextList(
         <n-a :href="`/novel/${providerId}/${bookId}`">目录</n-a>
         <n-a @click="showModal = true">设置</n-a>
 
-        <n-a
-          v-if="bookEpisode.value.paragraphsZh"
-          :href="`/novel-edit/${providerId}/${bookId}/${episodeId}`"
-          >编辑</n-a
-        >
-        <n-text v-else style="color: grey">编辑</n-text>
+        <n-text v-if="!bookEpisode.value.paragraphsZh" style="color: grey">
+          编辑
+        </n-text>
+        <n-a v-else-if="!editMode" @click="enableEditMode()"> 编辑 </n-a>
+        <n-a v-else @click="editMode = false"> 返回 </n-a>
 
         <n-a
           v-if="bookEpisode.value.nextId"
@@ -241,49 +254,59 @@ function getTextList(
 
       <n-divider />
 
-      <div class="episode-content">
-        <template v-for="text in getTextList(bookEpisode.value)">
-          <n-p v-if="text.text1.trim().length === 0">
-            <br />
-          </n-p>
-          <template v-if="text.text1.trim().length > 0">
-            <n-p :style="{ fontSize: fontSize }">
-              {{ text.text1 }}
+      <EditEpisodeSection
+        v-if="editMode"
+        :provider-id="providerId"
+        :book-id="bookId"
+        :episode-id="episodeId"
+        :book-episode="bookEpisode.value"
+      />
+
+      <template v-else>
+        <div class="episode-content">
+          <template v-for="text in getTextList(bookEpisode.value)">
+            <n-p v-if="text.text1.trim().length === 0">
+              <br />
             </n-p>
-            <n-p
-              v-if="text.text2"
-              :style="{
-                fontSize: fontSize,
-                opacity: 0.4,
-              }"
-            >
-              {{ text.text2 }}
-            </n-p>
+            <template v-if="text.text1.trim().length > 0">
+              <n-p :style="{ fontSize: fontSize }">
+                {{ text.text1 }}
+              </n-p>
+              <n-p
+                v-if="text.text2"
+                :style="{
+                  fontSize: fontSize,
+                  opacity: 0.4,
+                }"
+              >
+                {{ text.text2 }}
+              </n-p>
+            </template>
           </template>
-        </template>
-      </div>
+        </div>
 
-      <n-divider />
+        <n-divider />
 
-      <n-space align="center" justify="space-between" style="width: 100%">
-        <n-a
-          v-if="bookEpisode.value.prevId"
-          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
-          >上一章</n-a
-        >
-        <n-text v-else style="color: grey">上一章</n-text>
+        <n-space align="center" justify="space-between" style="width: 100%">
+          <n-a
+            v-if="bookEpisode.value.prevId"
+            :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
+            >上一章</n-a
+          >
+          <n-text v-else style="color: grey">上一章</n-text>
 
-        <n-a
-          v-if="bookEpisode.value.nextId"
-          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
-          >下一章</n-a
-        >
-        <n-text v-else style="color: grey">下一章</n-text>
-      </n-space>
+          <n-a
+            v-if="bookEpisode.value.nextId"
+            :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
+            >下一章</n-a
+          >
+          <n-text v-else style="color: grey">下一章</n-text>
+        </n-space>
 
-      <n-divider />
+        <n-divider />
 
-      <CommentList :post-id="route.path" />
+        <CommentList :post-id="route.path" />
+      </template>
     </div>
 
     <div v-if="bookEpisode && !bookEpisode.ok">

@@ -108,6 +108,12 @@ async function getState(
     .catch((error) => Err(error));
 }
 
+export interface BookTocItemDto {
+  titleJp: string;
+  titleZh?: string;
+  episodeId?: string;
+}
+
 export interface BookMetadataDto {
   titleJp: string;
   titleZh?: string;
@@ -115,7 +121,7 @@ export interface BookMetadataDto {
   introductionJp: string;
   introductionZh?: string;
   glossary: { [key: string]: string };
-  toc: { titleJp: string; titleZh?: string; episodeId?: string }[];
+  toc: BookTocItemDto[];
   visited: number;
   downloaded: number;
   syncAt: number;

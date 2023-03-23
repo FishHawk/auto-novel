@@ -80,11 +80,7 @@ fun Route.routePatch() {
 
     post<Patch.Metadata> { loc ->
         val patch = call.receive<PatchService.BookMetadataPatchBody>()
-        val result = service.addMetadataPatch(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-            patch = patch,
-        )
+        val result = service.addMetadataPatch(loc.providerId, loc.bookId, patch)
         call.respondResult(result)
     }
 
