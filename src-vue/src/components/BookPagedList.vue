@@ -17,7 +17,7 @@ import { BookListPageDto, BookRankPageDto } from '../data/api/api_novel';
 type Loader = (
   page: number,
   selected: number[]
-) => Promise<Result<BookListPageDto | BookRankPageDto, undefined>>;
+) => Promise<Result<BookListPageDto | BookRankPageDto>>;
 
 const props = defineProps<{
   descriptior: ListDescriptior;

@@ -23,7 +23,7 @@ async function getMetadata(
     .get(`update/metadata/${providerId}/${bookId}`, {
       searchParams: { startIndex, endIndex },
     })
-    .json<MetadataToTranslateDto>();
+    .json();
 }
 
 interface MetadataUpdateBody {
@@ -54,9 +54,7 @@ async function getEpisode(
   bookId: string,
   episodeId: string
 ): Promise<EpisodeToTranslateDto> {
-  return api
-    .get(`update/episode/${providerId}/${bookId}/${episodeId}`)
-    .json<EpisodeToTranslateDto>();
+  return api.get(`update/episode/${providerId}/${bookId}/${episodeId}`).json();
 }
 
 interface EpisodeUpdateBody {

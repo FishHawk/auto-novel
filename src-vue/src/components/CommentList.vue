@@ -10,7 +10,6 @@ import ApiComment, {
 import { Ok, ResultState } from '../data/api/result';
 
 import { useAuthInfoStore } from '../data/stores/authInfo';
-import { errorToString } from '../data/handle_error';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -68,7 +67,7 @@ async function loadSubPage(page: number, comment: Comment) {
     comment.items = result.value.items;
     comment.topElement?.scrollIntoView({ behavior: 'smooth' });
   } else {
-    message.error('回复加载错误：' + errorToString(result.error));
+    message.error('回复加载错误：' + result.error.message);
   }
 }
 
@@ -114,7 +113,7 @@ async function reply() {
         replyContent.value = '';
         showInput.value = false;
       } else {
-        message.error('回复加载错误：' + errorToString(result.error));
+        message.error('回复加载错误：' + result.error.message);
       }
     }
   } else {
@@ -201,6 +200,6 @@ async function reply() {
     v-if="commentPage && !commentPage.ok"
     status="error"
     title="加载错误"
-    :description="errorToString(commentPage.error)"
+    :description="commentPage.error.message"
   />
 </template>

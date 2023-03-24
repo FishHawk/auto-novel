@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
 import ApiAuth, { SignInDto } from '../data/api/api_auth';
-import { errorToString } from '../data/handle_error';
 
 const emits = defineEmits<{ (e: 'signIn', user: SignInDto): void }>();
 
@@ -45,7 +44,7 @@ function signIn() {
     if (userResult.ok) {
       emits('signIn', userResult.value);
     } else {
-      message.error(errorToString(userResult.error));
+      message.error('登录失败:' + userResult.error.message);
     }
   });
 }

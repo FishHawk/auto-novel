@@ -9,7 +9,6 @@ import { ref } from 'vue';
 
 import ApiComment, { SubCommentDto } from '../data/api/api_comment';
 import { useAuthInfoStore } from '../data/stores/authInfo';
-import { errorToString } from '../data/handle_error';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -56,7 +55,7 @@ async function vote(isUpvote: boolean, isCancel: boolean) {
         props.comment.viewerVote = false;
       }
     } else {
-      message.error('评论投票错误：' + errorToString(result.error));
+      message.error('评论投票错误：' + result.error.message);
     }
   } else {
     message.info('请先登录');
@@ -119,7 +118,7 @@ async function reply() {
         replyContent.value = '';
         showInput.value = false;
       } else {
-        message.error('回复加载错误：' + errorToString(result.error));
+        message.error('回复加载错误：' + result.error.message);
       }
     }
   } else {

@@ -8,7 +8,6 @@ import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 import { useReaderSettingStore } from '../data/stores/readerSetting';
 import { buildEpisodeUrl } from '../data/provider';
-import { errorToString } from '../data/handle_error';
 
 const authInfoStore = useAuthInfoStore();
 const readerSettingStore = useReaderSettingStore();
@@ -257,7 +256,7 @@ function enableEditMode() {
       <n-result
         status="error"
         title="加载错误"
-        :description="errorToString(bookEpisode.error)"
+        :description="bookEpisode.error.message"
       />
     </div>
   </n-config-provider>

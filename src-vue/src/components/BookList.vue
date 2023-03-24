@@ -4,7 +4,6 @@ import { computed } from 'vue';
 import { BookListPageDto, BookRankPageDto } from '../data/api/api_novel';
 import { ResultState } from '../data/api/result';
 import { buildMetadataUrl } from '../data/provider';
-import { errorToString } from '../data/handle_error';
 
 const props = defineProps<{
   page: number;
@@ -77,7 +76,7 @@ const pageInternal = computed({
       v-if="bookPage && !bookPage.ok"
       status="error"
       title="加载错误"
-      :description="errorToString(bookPage.error)"
+      :description="bookPage.error.message"
     />
     <n-pagination
       v-if="pageNumber > 1"

@@ -12,7 +12,6 @@ import { ResultState } from '../data/api/result';
 import ApiNovel, { BookMetadataDto } from '../data/api/api_novel';
 import { buildMetadataUrl } from '../data/provider';
 import { useAuthInfoStore } from '../data/stores/authInfo';
-import { errorToString } from '../data/handle_error';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -56,7 +55,7 @@ async function addFavorite() {
       bookMetadata.value.value.inFavorite = true;
     }
   } else {
-    message.error('收藏错误：' + errorToString(result.error));
+    message.error('收藏错误：' + result.error.message);
   }
   isFavoriteChanging = false;
 }
@@ -77,7 +76,7 @@ async function removeFavorite() {
       bookMetadata.value.value.inFavorite = false;
     }
   } else {
-    message.error('取消收藏错误：' + errorToString(result.error));
+    message.error('取消收藏错误：' + result.error.message);
   }
   isFavoriteChanging = false;
 }
@@ -180,7 +179,7 @@ function enableEditMode() {
       <n-result
         status="error"
         title="加载错误"
-        :description="errorToString(bookMetadata.error)"
+        :description="bookMetadata.error.message"
       />
     </div>
   </MainLayout>

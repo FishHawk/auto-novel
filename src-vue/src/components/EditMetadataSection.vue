@@ -5,7 +5,6 @@ import { UploadFilled } from '@vicons/material';
 
 import ApiNovel, { BookMetadataDto } from '../data/api/api_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
-import { errorToString } from '../data/handle_error';
 
 const props = defineProps<{
   providerId: string;
@@ -112,7 +111,7 @@ async function submitTranslate() {
     emit('update:bookMetadata', result.value);
     message.success('提交成功');
   } else {
-    message.error('提交失败：' + errorToString(result.error));
+    message.error('提交失败：' + result.error.message);
   }
 }
 

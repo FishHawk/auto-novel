@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
 import ApiAuth, { SignInDto } from '../data/api/api_auth';
-import { errorToString } from '../data/handle_error';
 
 const emits = defineEmits<{ (e: 'signUp', user: SignInDto): void }>();
 
@@ -76,7 +75,7 @@ function signUp() {
     if (userResult.ok) {
       emits('signUp', userResult.value);
     } else {
-      message.error(errorToString(userResult.error));
+      message.error('注册失败:' + userResult.error.message);
     }
   });
 }
@@ -117,7 +116,7 @@ async function verifyEmail() {
     }, 1000);
   } else {
     verifyState.value = undefined;
-    message.error(errorToString(result.error));
+    message.error('发送验证码失败:' + result.error.message);
   }
 }
 const verifyButtonLabel = computed(() => {

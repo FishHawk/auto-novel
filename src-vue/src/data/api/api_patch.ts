@@ -1,5 +1,5 @@
 import api from './api';
-import { Ok, Err, Result } from './result';
+import { Result, runCatching } from './result';
 
 export interface BookPatchPageItemDto {
   providerId: string;
@@ -56,33 +56,21 @@ interface BookEpisodePatchDto {
 }
 
 async function list(page: number): Promise<Result<BookPatchPageDto>> {
-  return api
-    .get(`patch/list`, { searchParams: { page } })
-    .json<BookPatchPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(api.get(`patch/list`, { searchParams: { page } }).json());
 }
 
 async function getPatch(
   providerId: string,
   bookId: string
 ): Promise<Result<BookPatchDto>> {
-  return api
-    .get(`patch/self/${providerId}/${bookId}`)
-    .json<BookPatchDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(api.get(`patch/self/${providerId}/${bookId}`).json());
 }
 
 async function deletePatch(
   providerId: string,
   bookId: string
 ): Promise<Result<string>> {
-  return api
-    .delete(`patch/self/${providerId}/${bookId}`)
-    .text()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(api.delete(`patch/self/${providerId}/${bookId}`).text());
 }
 
 export default {

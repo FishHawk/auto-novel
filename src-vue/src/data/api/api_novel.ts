@@ -1,6 +1,6 @@
 import { Options } from 'ky';
 import api from './api';
-import { Ok, Err, Result } from './result';
+import { Result, runCatching } from './result';
 
 export interface BookListPageDto {
   pageNumber: number;
@@ -22,34 +22,34 @@ async function list(
   provider: string,
   sort: string
 ): Promise<Result<BookListPageDto>> {
-  return api
-    .get(`novel/list`, {
-      searchParams: { page, provider, sort },
-    })
-    .json<BookListPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .get(`novel/list`, {
+        searchParams: { page, provider, sort },
+      })
+      .json()
+  );
 }
 
 async function listFavorite(token: string): Promise<Result<BookListPageDto>> {
-  return api
-    .get(`novel/favorite`, {
-      headers: { Authorization: 'Bearer ' + token },
-    })
-    .json<BookListPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .get(`novel/favorite`, {
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .json()
+  );
 }
 
 async function addFavorite(providerId: string, bookId: string, token: string) {
-  return api
-    .post(`novel/favorite-item`, {
-      headers: { Authorization: 'Bearer ' + token },
-      searchParams: { providerId, bookId },
-    })
-    .json<BookListPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .post(`novel/favorite-item`, {
+        headers: { Authorization: 'Bearer ' + token },
+        searchParams: { providerId, bookId },
+      })
+      .json()
+  );
 }
 
 async function removeFavorite(
@@ -57,14 +57,14 @@ async function removeFavorite(
   bookId: string,
   token: string
 ) {
-  return api
-    .delete(`novel/favorite-item`, {
-      headers: { Authorization: 'Bearer ' + token },
-      searchParams: { providerId, bookId },
-    })
-    .json<BookListPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .delete(`novel/favorite-item`, {
+        headers: { Authorization: 'Bearer ' + token },
+        searchParams: { providerId, bookId },
+      })
+      .json()
+  );
 }
 
 export interface BookRankPageDto {
@@ -84,11 +84,14 @@ async function listRank(
   providerId: string,
   options: { [key: string]: string }
 ): Promise<Result<BookListPageDto>> {
-  return api
-    .get(`novel/rank/${providerId}`, { searchParams: options, timeout: 20000 })
-    .json<BookListPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .get(`novel/rank/${providerId}`, {
+        searchParams: options,
+        timeout: 20000,
+      })
+      .json()
+  );
 }
 
 export interface BookStateDto {
@@ -101,11 +104,7 @@ async function getState(
   providerId: string,
   bookId: string
 ): Promise<Result<BookStateDto>> {
-  return api
-    .get(`novel/state/${providerId}/${bookId}`)
-    .json<BookStateDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(api.get(`novel/state/${providerId}/${bookId}`).json());
 }
 
 export interface BookTocItemDto {
@@ -137,11 +136,9 @@ async function getMetadata(
   if (token) {
     options.headers = { Authorization: 'Bearer ' + token };
   }
-  return api
-    .get(`novel/metadata/${providerId}/${bookId}`, options)
-    .json<BookMetadataDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api.get(`novel/metadata/${providerId}/${bookId}`, options).json()
+  );
 }
 
 interface BookMetadataPatchBody {
@@ -157,14 +154,14 @@ async function putMetadata(
   patch: BookMetadataPatchBody,
   token: string
 ): Promise<Result<BookMetadataDto>> {
-  return api
-    .put(`novel/metadata/${providerId}/${bookId}`, {
-      headers: { Authorization: 'Bearer ' + token },
-      json: patch,
-    })
-    .json<BookMetadataDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .put(`novel/metadata/${providerId}/${bookId}`, {
+        headers: { Authorization: 'Bearer ' + token },
+        json: patch,
+      })
+      .json()
+  );
 }
 
 export interface BookEpisodeDto {
@@ -181,11 +178,9 @@ async function getEpisode(
   bookId: string,
   episodeId: string
 ): Promise<Result<BookEpisodeDto>> {
-  return api
-    .get(`novel/episode/${providerId}/${bookId}/${episodeId}`)
-    .json<BookEpisodeDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api.get(`novel/episode/${providerId}/${bookId}/${episodeId}`).json()
+  );
 }
 
 interface BookEpisodePatchBody {
@@ -199,14 +194,14 @@ async function putEpisode(
   patch: BookEpisodePatchBody,
   token: string
 ): Promise<Result<BookEpisodeDto>> {
-  return api
-    .put(`novel/episode/${providerId}/${bookId}/${episodeId}`, {
-      headers: { Authorization: 'Bearer ' + token },
-      json: patch,
-    })
-    .json<BookEpisodeDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .put(`novel/episode/${providerId}/${bookId}/${episodeId}`, {
+        headers: { Authorization: 'Bearer ' + token },
+        json: patch,
+      })
+      .json<BookEpisodeDto>()
+  );
 }
 
 export default {

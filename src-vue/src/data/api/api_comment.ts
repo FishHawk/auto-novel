@@ -1,6 +1,6 @@
 import { Options } from 'ky';
 import api from './api';
-import { Err, Ok, Result } from './result';
+import { Result, runCatching } from './result';
 
 interface BaseCommentDto {
   id: string;
@@ -42,11 +42,7 @@ async function list(
       Authorization: 'Bearer ' + token,
     };
   }
-  return api
-    .get(`comment/list`, options)
-    .json<CommentPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(api.get(`comment/list`, options).json());
 }
 
 async function listSub(
@@ -63,11 +59,9 @@ async function listSub(
       Authorization: 'Bearer ' + token,
     };
   }
-  return api
-    .get(`comment/list-sub`, options)
-    .json<CommentPageDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api.get(`comment/list-sub`, options).json()
+  );
 }
 
 async function vote(
@@ -76,20 +70,20 @@ async function vote(
   isCancel: boolean,
   token: string
 ): Promise<Result<string>> {
-  return api
-    .post('comment/vote', {
-      headers: {
-        Authorization: 'Bearer ' + token,
-      },
-      searchParams: {
-        commentId,
-        isUpvote,
-        isCancel,
-      },
-    })
-    .text()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .post('comment/vote', {
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+        searchParams: {
+          commentId,
+          isUpvote,
+          isCancel,
+        },
+      })
+      .text()
+  );
 }
 
 async function reply(
@@ -99,21 +93,21 @@ async function reply(
   content: string,
   token: string
 ): Promise<Result<string>> {
-  return api
-    .post('comment', {
-      headers: {
-        Authorization: 'Bearer ' + token,
-      },
-      json: {
-        postId,
-        parentId,
-        receiver,
-        content,
-      },
-    })
-    .text()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .post('comment', {
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+        json: {
+          postId,
+          parentId,
+          receiver,
+          content,
+        },
+      })
+      .text()
+  );
 }
 
 export default {

@@ -1,5 +1,5 @@
 import api from './api';
-import { Ok, Err, Result } from './result';
+import { Result, runCatching } from './result';
 
 export interface SignInDto {
   email: string;
@@ -12,11 +12,9 @@ async function signIn(
   emailOrUsername: string,
   password: string
 ): Promise<Result<SignInDto>> {
-  return api
-    .post(`auth/sign-in`, { json: { emailOrUsername, password } })
-    .json<SignInDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api.post(`auth/sign-in`, { json: { emailOrUsername, password } }).json()
+  );
 }
 
 async function signUp(
@@ -25,28 +23,28 @@ async function signUp(
   username: string,
   password: string
 ): Promise<Result<SignInDto>> {
-  return api
-    .post('auth/sign-up', {
-      json: {
-        email,
-        emailCode,
-        username,
-        password,
-      },
-    })
-    .json<SignInDto>()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .post('auth/sign-up', {
+        json: {
+          email,
+          emailCode,
+          username,
+          password,
+        },
+      })
+      .json()
+  );
 }
 
 async function verifyEmail(email: string): Promise<Result<string>> {
-  return api
-    .post('auth/verify-email', {
-      searchParams: { email },
-    })
-    .text()
-    .then((it) => Ok(it))
-    .catch((error) => Err(error));
+  return runCatching(
+    api
+      .post('auth/verify-email', {
+        searchParams: { email },
+      })
+      .text()
+  );
 }
 
 export default {

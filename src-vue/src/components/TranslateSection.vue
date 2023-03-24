@@ -6,7 +6,6 @@ import { ResultState } from '../data/api/result';
 import ApiNovel, { BookStateDto } from '../data/api/api_novel';
 
 import { update } from '../data/api/api_update';
-import { errorToString } from '../data/handle_error';
 
 const props = defineProps<{
   providerId: string;
@@ -86,7 +85,7 @@ async function startUpdateTask(
     }
   } else {
     console.log(result.error);
-    message.error(`${name}任务失败:${errorToString(result.error)}`);
+    message.error(`${name}任务失败:${result.error.message}`);
   }
   progress.value = undefined;
 }
