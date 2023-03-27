@@ -71,7 +71,7 @@ function readableDate(timestamp: number) {
   } else if (diff < 86400) {
     return `${Math.floor(diff / 3600)}小时前`;
   } else {
-    const date = new Date(timestamp);
+    const date = new Date(timestamp * 1000);
     const year = date.getFullYear();
     var month = (1 + date.getMonth()).toString();
     month = month.length > 1 ? month : '0' + month;
