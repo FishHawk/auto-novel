@@ -20,6 +20,11 @@ class AlphapolibTest : DescribeSpec({
             metadata.toc[0].title.shouldBe("第一話")
             metadata.toc[0].episodeId.shouldBe("6857738")
         }
+
+        it("折叠") {
+            // https://www.alphapolis.co.jp/novel/761693105/571330821
+            val metadata = provider.getMetadata("761693105-571330821")
+        }
     }
 
     describe("getEpisode") {

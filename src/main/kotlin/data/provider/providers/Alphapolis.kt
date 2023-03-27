@@ -46,14 +46,31 @@ class Alphapolis : BookProvider {
                 )
             }
         val introduction = main.selectFirst("div.abstract")!!.text()
-        val toc = doc
-            .select("div.episodes > div.episode")
-            .map {
-                SBookTocItem(
-                    title = it.selectFirst("span.title")!!.text(),
-                    episodeId = it.selectFirst("a")!!.attr("href").substringAfterLast("/"),
+
+        val toc = mutableListOf<SBookTocItem>()
+        doc.selectFirst("div.episodes")!!.children().forEach { el ->
+            if (el.hasClass("chapter-rental")) {
+                toc.add(SBookTocItem(title = el.selectFirst("h3")!!.text()))
+            } else if (el.hasClass("rental")) {
+                el.select("div.rental-episode > a").not("[class]").forEach {
+                    toc.add(
+                        SBookTocItem(
+                            title = it.text(),
+                            episodeId = it.attr("href").substringAfterLast("/"),
+                        )
+                    )
+                }
+            } else if (el.tagName() == "h3") {
+                toc.add(SBookTocItem(title = el.text()))
+            } else if (el.hasClass("episode")) {
+                toc.add(
+                    SBookTocItem(
+                        title = el.selectFirst("span.title")!!.text(),
+                        episodeId = el.selectFirst("a")!!.attr("href").substringAfterLast("/"),
+                    )
                 )
             }
+        }
 
         return SBookMetadata(
             title = title,
