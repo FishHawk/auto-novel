@@ -1,13 +1,12 @@
 package data.provider.providers
 
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 
 class AlphapolibTest : DescribeSpec({
-    val provider = Alphapolib()
+    val provider = Alphapolis()
 
     describe("getMetadata") {
         it("常规") {
@@ -27,6 +26,7 @@ class AlphapolibTest : DescribeSpec({
         it("常规") {
             // https://www.alphapolis.co.jp/novel/638978238/525733370/episode/6857739
             val episode = provider.getEpisode("638978238-525733370", "6857739")
+            episode.paragraphs.getOrNull(1).shouldBe("「これからどうすっかなぁ…」")
         }
     }
 })

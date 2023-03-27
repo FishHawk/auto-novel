@@ -50,6 +50,15 @@ describe('provider', () => {
     ]);
   });
 
+  it('alphapolis', () => {
+    test_parse_url('alphapolis', [
+      [
+        'https://www.alphapolis.co.jp/novel/638978238/525733370',
+        '638978238-525733370',
+      ],
+    ]);
+  });
+
   it('unmatch', () => {
     const benches = ['https://www.google.com/', 'https://books.fishhawk.top/'];
     for (const url of benches) {

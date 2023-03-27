@@ -95,6 +95,9 @@ async function loadMyFavorite(page: number, selected: number[]) {
       <n-li> Novelup: https://novelup.plus/story/206612087 </n-li>
       <n-li> Hameln: https://syosetu.org/novel/297874/ </n-li>
       <n-li> Pixiv: https://www.pixiv.net/novel/series/9406879 </n-li>
+      <n-li>
+        Alphapolis: https://www.alphapolis.co.jp/novel/638978238/525733370
+      </n-li>
     </n-ul>
 
     <n-h2 prefix="bar">如何使用中文翻译</n-h2>

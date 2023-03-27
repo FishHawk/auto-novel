@@ -1,22 +1,22 @@
 package data.provider.providers
 
 import data.provider.*
-import io.ktor.client.*
-import io.ktor.client.engine.*
-import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 
-class Alphapolib : BookProvider {
+class Alphapolis : BookProvider {
     companion object {
-        const val id = "alphapolib"
+        const val id = "alphapolis"
     }
 
-    val clientText = HttpClient(Java) {
-        install(HttpCookies) { storage = cookies }
-        expectSuccess = true
-        engine {
-            proxy = ProxyBuilder.http("http://127.0.0.1:7890")
+    init {
+        runBlocking {
+            cookies.addCookie(
+                "https://www.alphapolis.co.jp",
+                Cookie(name = "_pubcid", value = "8807a80b-fc00-4c56-b151-95e6780d9f8f", domain = ".alphapolis.co.jp")
+            )
         }
     }
 
@@ -66,8 +66,8 @@ class Alphapolib : BookProvider {
 
     override suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode {
         val doc = clientText.get(getEpisodeUrl(bookId, episodeId)).document()
-        // TODO cookie怎么生成的？
-        // doc.selectFirst("div#novelBody")!!.text()
-        return SBookEpisode(paragraphs = emptyList())
+        val paragraphs = doc.selectFirst("div#novelBoby")!!.textNodes()
+            .map { it.text().removePrefix(" ") }
+        return SBookEpisode(paragraphs = paragraphs)
     }
 }

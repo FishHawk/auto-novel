@@ -61,5 +61,17 @@ val client = HttpClient(Java) {
     }
 }
 
+// Ktor的ContentNegotiation会影响Accept头
+// 进一步测试后可能可以去掉这个client
+val clientText = HttpClient(Java) {
+    install(HttpCookies) { storage = cookies }
+    expectSuccess = true
+    System.getenv("HTTPS_PROXY")?.let {
+        engine {
+            proxy = ProxyBuilder.http(it)
+        }
+    }
+}
+
 suspend fun HttpResponse.document(): Document = Jsoup.parse(body<String>())
 suspend fun HttpResponse.json(): JsonObject = body()

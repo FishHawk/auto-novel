@@ -13,6 +13,7 @@ const descriptior = {
         'Novelup',
         'Hameln',
         'Pixiv',
+        'Alphapolis',
       ],
     },
     {
@@ -33,6 +34,7 @@ async function loader(page: number, selected: number[]) {
     Novelup: 'novelup',
     Hameln: 'hameln',
     Pixiv: 'pixiv',
+    Alphapolis: 'alphapolis',
   };
   const sortMap: { [key: string]: string } = {
     更新时间: 'changed',

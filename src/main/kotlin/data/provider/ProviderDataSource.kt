@@ -12,6 +12,7 @@ class ProviderDataSource {
             Novelup.id to Novelup(),
             Syosetu.id to Syosetu(),
             Pixiv.id to Pixiv(),
+            Alphapolis.id to Alphapolis(),
         )
     }
 

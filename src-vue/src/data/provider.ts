@@ -88,12 +88,34 @@ const pixiv: Provider = {
   },
 };
 
+const alphapolis: Provider = {
+  parseUrl(url: string): string | undefined {
+    const matched = /www\.alphapolis\.co\.jp\/novel\/([0-9]+)\/([0-9]+)/.exec(
+      url
+    );
+    if (matched) {
+      return `${matched[1]}-${matched[2]}`;
+    } else {
+      return undefined;
+    }
+  },
+  buildMetadataUrl(bookId: string): string {
+    const realBookId = bookId.replace('-', '/');
+    return `https://www.alphapolis.co.jp/novel/${realBookId}`;
+  },
+  buildEpisodeUrl(bookId: string, episodeId: string): string {
+    const realBookId = bookId.replace('-', '/');
+    return `https://www.alphapolis.co.jp/novel/${realBookId}/episode/${episodeId}`;
+  },
+};
+
 const providers: { [id: string]: Provider } = {
   kakuyomu,
   syosetu,
   novelup,
   hameln,
   pixiv,
+  alphapolis,
 };
 
 export function parseUrl(url: string): ParseResult | undefined {
