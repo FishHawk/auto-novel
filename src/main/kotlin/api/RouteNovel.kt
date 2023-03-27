@@ -3,6 +3,7 @@ package api
 import data.*
 import data.BookAuthor
 import data.BookTocItem
+import data.elasticsearch.EsBookMetadataRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
@@ -30,8 +31,7 @@ private class Novel {
         val parent: Novel = Novel(),
         val page: Int,
         val provider: String = "",
-        val sort: BookMetadataRepository.ListOption.Sort =
-            BookMetadataRepository.ListOption.Sort.CreatedTime,
+        val query: String? = null,
     )
 
     @Serializable
@@ -86,10 +86,10 @@ fun Route.routeNovel() {
 
     get<Novel.List> { loc ->
         val result = service.list(
+            queryString = loc.query?.ifBlank { null },
+            providerId = loc.provider.ifEmpty { null },
             page = loc.page,
             pageSize = 10,
-            optionProvider = loc.provider.ifEmpty { null },
-            optionSort = loc.sort,
         )
         call.respondResult(result)
     }
@@ -165,6 +165,7 @@ class NovelService(
     private val bookEpisodeRepository: BookEpisodeRepository,
     private val userRepository: UserRepository,
     private val bookPatchRepository: BookPatchRepository,
+    private val esBookMetadataRepository: EsBookMetadataRepository,
 ) {
     @Serializable
     data class BookListPageDto(
@@ -184,37 +185,30 @@ class NovelService(
     }
 
     suspend fun list(
+        queryString: String?,
+        providerId: String?,
         page: Int,
         pageSize: Int,
-        optionProvider: String?,
-        optionSort: BookMetadataRepository.ListOption.Sort,
     ): Result<BookListPageDto> {
-        val items = bookMetadataRepository.list(
+        val esPage = esBookMetadataRepository.search(
+            queryString = queryString,
+            providerId = providerId,
             page = page.coerceAtLeast(0),
-            pageSize = pageSize,
-            option = BookMetadataRepository.ListOption(
-                providerId = optionProvider,
-                sort = optionSort,
-            ),
-        ).map {
+            pageSize = 10,
+        )
+        val items = esPage.items.map {
             BookListPageDto.ItemDto(
                 providerId = it.providerId,
                 bookId = it.bookId,
                 titleJp = it.titleJp,
                 titleZh = it.titleZh,
-                total = it.total,
+                total = bookMetadataRepository.getLocal(it.providerId, it.bookId)!!.toc.count { it.episodeId != null },
                 countJp = bookEpisodeRepository.countJp(it.providerId, it.bookId).toInt(),
                 countZh = bookEpisodeRepository.countZh(it.providerId, it.bookId).toInt()
             )
         }
-
-        val total = if (optionProvider == null) {
-            bookMetadataRepository.count()
-        } else {
-            bookMetadataRepository.countProvider(optionProvider)
-        }
         val dto = BookListPageDto(
-            pageNumber = total / pageSize,
+            pageNumber = esPage.total / pageSize,
             items = items,
         )
         return Result.success(dto)

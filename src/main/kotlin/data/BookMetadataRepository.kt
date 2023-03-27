@@ -2,16 +2,16 @@ package data
 
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
+import data.elasticsearch.EsBookMetadataRepository
 import data.provider.ProviderDataSource
 import data.provider.SBookMetadata
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
-import org.litote.kmongo.util.KMongoUtil.toBson
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -46,15 +46,6 @@ data class BookMetadata(
     @Contextual val changeAt: LocalDateTime,
 )
 
-data class BookListItem(
-    val providerId: String,
-    val bookId: String,
-    val titleJp: String,
-    val titleZh: String?,
-    val total: Int,
-    val changeAt: LocalDateTime,
-)
-
 data class BookRankItem(
     val bookId: String,
     val titleJp: String,
@@ -81,6 +72,7 @@ private fun SBookMetadata.toDb(providerId: String, bookId: String) =
 class BookMetadataRepository(
     private val providerDataSource: ProviderDataSource,
     private val mongoDataSource: MongoDataSource,
+    private val esBookMetadataRepository: EsBookMetadataRepository,
 ) {
     private val col
         get() = mongoDataSource.database.getCollection<BookMetadata>("metadata")
@@ -92,51 +84,6 @@ class BookMetadataRepository(
                 BookMetadata::bookId,
             )
         }
-    }
-
-    // List operations
-    data class ListOption(
-        val providerId: String?,
-        val sort: Sort,
-    ) {
-        @Serializable
-        enum class Sort {
-            @SerialName("changed")
-            ChangedTime,
-
-            @SerialName("created")
-            CreatedTime
-        }
-    }
-
-    suspend fun list(
-        page: Int,
-        pageSize: Int,
-        option: ListOption,
-    ): List<BookListItem> {
-        val bsonProviderIdFilter = option.providerId?.let {
-            BookMetadata::providerId eq it
-        } ?: EMPTY_BSON
-        val bsonSort = when (option.sort) {
-            ListOption.Sort.ChangedTime -> descending(BookMetadata::changeAt)
-            ListOption.Sort.CreatedTime -> toBson("{ _id: -1 }")
-        }
-        return col
-            .find(bsonProviderIdFilter)
-            .sort(bsonSort)
-            .skip(page * pageSize)
-            .limit(pageSize)
-            .toList()
-            .map {
-                BookListItem(
-                    providerId = it.providerId,
-                    bookId = it.bookId,
-                    titleJp = it.titleJp,
-                    titleZh = it.titleZh,
-                    total = it.toc.count { it.episodeId != null },
-                    changeAt = it.changeAt,
-                )
-            }
     }
 
     suspend fun listRank(
@@ -164,16 +111,6 @@ class BookMetadataRepository(
                 )
             }
         }
-    }
-
-    suspend fun count(): Long {
-        return col.countDocuments()
-    }
-
-    suspend fun countProvider(providerId: String): Long {
-        return col.countDocuments(
-            BookMetadata::providerId eq providerId
-        )
     }
 
     // Element operations
@@ -214,7 +151,10 @@ class BookMetadataRepository(
         // 不在数据库中
         val metadataLocal = getLocal(providerId, bookId)
             ?: return getRemote(providerId, bookId)
-                .onSuccess { col.insertOne(it) }
+                .onSuccess {
+                    col.insertOne(it)
+                    syncEs(it)
+                }
 
         // 在数据库中，没有过期
         val days = ChronoUnit.DAYS.between(metadataLocal.syncAt, LocalDateTime.now())
@@ -273,7 +213,7 @@ class BookMetadataRepository(
             bsonSpecifyMetadata(providerId, bookId),
             combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-        )
+        )?.also { syncEs(it) }
     }
 
     suspend fun updateZh(
@@ -300,16 +240,27 @@ class BookMetadataRepository(
         }
         list.add(setValue(BookMetadata::changeAt, LocalDateTime.now()))
 
-        col.updateOne(
+        col.findOneAndUpdate(
             bsonSpecifyMetadata(providerId, bookId),
             combine(list),
-        )
+        )?.let { syncEs(it) }
     }
 
     suspend fun updateChangeAt(providerId: String, bookId: String) {
-        col.updateOne(
+        col.findOneAndUpdate(
             bsonSpecifyMetadata(providerId, bookId),
             setValue(BookMetadata::changeAt, LocalDateTime.now()),
+        )?.let { syncEs(it) }
+    }
+
+    private suspend fun syncEs(metadata: BookMetadata) {
+        esBookMetadataRepository.index(
+            metadata.providerId,
+            metadata.bookId,
+            metadata.titleJp,
+            metadata.titleZh,
+            metadata.authors.map { it.name },
+            metadata.changeAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
         )
     }
 }

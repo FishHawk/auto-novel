@@ -3,6 +3,7 @@ import ApiNovel from '../data/api/api_novel';
 
 const descriptior = {
   title: '已缓存小说',
+  search: true,
   options: [
     {
       title: '来源',
@@ -16,14 +17,10 @@ const descriptior = {
         'Alphapolis',
       ],
     },
-    {
-      title: '排序',
-      values: ['更新时间', '创建时间'],
-    },
   ],
 };
 
-async function loader(page: number, selected: number[]) {
+async function loader(page: number, query: string, selected: number[]) {
   function optionNth(n: number): string {
     return descriptior.options[n].values[selected[n]];
   }
@@ -36,15 +33,8 @@ async function loader(page: number, selected: number[]) {
     Pixiv: 'pixiv',
     Alphapolis: 'alphapolis',
   };
-  const sortMap: { [key: string]: string } = {
-    更新时间: 'changed',
-    创建时间: 'created',
-  };
-  return ApiNovel.list(
-    page - 1,
-    providerMap[optionNth(0)],
-    sortMap[optionNth(1)]
-  );
+
+  return ApiNovel.list(page - 1, providerMap[optionNth(0)], query);
 }
 </script>
 

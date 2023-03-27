@@ -20,12 +20,12 @@ export interface BookListItemDto {
 async function list(
   page: number,
   provider: string,
-  sort: string
+  query: string
 ): Promise<Result<BookListPageDto>> {
   return runCatching(
     api
       .get(`novel/list`, {
-        searchParams: { page, provider, sort },
+        searchParams: { page, provider, query },
       })
       .json()
   );

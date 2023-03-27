@@ -18,6 +18,7 @@ services:
       - JWT_SECRET
       - PIXIV_COOKIE_PHPSESSID
       - MONGODB_URL=mongodb://mongo:27017
+      - ELASTIC_SEARCH_DB_URL=elasticsearch
     ports:
       - 8081:8081
     volumes:
@@ -32,4 +33,25 @@ services:
       - 27017:27017
     volumes:
       - ${DATA_PATH}/db:/data/db
+    restart: always
+
+  elasticsearch:
+    image: elasticsearch:8.6.1
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ${DATA_PATH}/es/data:/usr/share/elasticsearch/data
+      - ${DATA_PATH}/es/plugins:/usr/share/elasticsearch/plugins
+    ports:
+      - 9200:9200
     restart: always

@@ -10,6 +10,7 @@ const path = route.path;
 const listDescriptors: { [key: string]: ListDescriptior } = {
   '/rank/syosetu/1': {
     title: '成为小说家：流派',
+    search: false,
     options: [
       {
         title: '流派',
@@ -43,6 +44,7 @@ const listDescriptors: { [key: string]: ListDescriptior } = {
   },
   '/rank/syosetu/2': {
     title: '成为小说家：综合',
+    search: false,
     options: [
       {
         title: '状态',
@@ -56,6 +58,7 @@ const listDescriptors: { [key: string]: ListDescriptior } = {
   },
   '/rank/syosetu/3': {
     title: '成为小说家：异世界转移/转生',
+    search: false,
     options: [
       {
         title: '状态',
@@ -71,7 +74,7 @@ const listDescriptors: { [key: string]: ListDescriptior } = {
 
 const descriptior = listDescriptors[path];
 
-async function loader(page: number, selected: number[]) {
+async function loader(_page: number, _query: string, selected: number[]) {
   function optionNth(n: number): string {
     return descriptior.options[n].values[selected[n]];
   }

@@ -7,9 +7,18 @@ plugins {
 group = "me.fishhawk"
 version = "0.0.1"
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
 repositories {
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
+    maven("https://jitpack.io")
+    maven("https://maven.tryformation.com/releases") {
+        content { includeGroup("com.jillesvangurp") }
+    }
 }
 
 dependencies {
@@ -43,6 +52,8 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.15.3")
 
+    implementation("com.jillesvangurp:search-client:2.0.0-RC-13")
+
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.8.0")
 
     val kotestVersion = "5.5.4"
@@ -59,44 +70,3 @@ application {
 tasks.test {
     useJUnitPlatform()
 }
-
-//var env = "production"
-//
-//tasks.processResources {
-//    filesMatching("*.conf") {
-//        when (env) {
-//            "development" -> {
-//                expand(
-//                    "KTOR_ENV" to "dev",
-//                    "KTOR_PORT" to "8081",
-//                    "KTOR_MODULE" to "build",
-//                    "KTOR_AUTORELOAD" to "true"
-//                )
-//            }
-//
-//            "production" -> {
-//                expand(
-//                    "KTOR_ENV" to "production",
-//                    "KTOR_PORT" to "80",
-//                    "KTOR_MODULE" to "",
-//                    "KTOR_AUTORELOAD" to "false"
-//                )
-//            }
-//        }
-//    }
-//}
-//
-//val setDev = tasks.register("setDev") {
-//    env = "development"
-//}
-//
-//tasks {
-//    "run" {
-//        dependsOn(setDev)
-//    }
-//}
-
-//docker-compose -f docker-compose.dev.yml build --progress plain
-//docker-compose -f docker-compose.dev.yml up -d
-//docker-compose -f docker-compose.prod.yml up -d
-//docker run --name mongo -v $(pwd)/data/db:/data/db -p 27017:27017 -d mongo:6.0.3

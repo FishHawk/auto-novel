@@ -2,6 +2,8 @@ import api.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import data.*
+import data.elasticsearch.ElasticSearchDataSource
+import data.elasticsearch.EsBookMetadataRepository
 import data.file.BookFileRepository
 import data.provider.ProviderDataSource
 import io.ktor.http.*
@@ -109,7 +111,7 @@ val appModule = module {
     }
     single { ProviderDataSource() }
 
-    single { BookMetadataRepository(get(), get()) }
+    single { BookMetadataRepository(get(), get(), get()) }
     single { BookEpisodeRepository(get(), get(), get()) }
     single { BookPatchRepository(get(), get(), get()) }
     single { BookFileRepository() }
@@ -118,12 +120,18 @@ val appModule = module {
     single { EmailCodeRepository(get()) }
 
     single {
+        val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
+        ElasticSearchDataSource(url)
+    }
+    single { EsBookMetadataRepository(get()) }
+
+    single {
         val secret = System.getenv("JWT_SECRET")!!
         AuthService(secret, get(), get())
     }
     single { CommentService(get()) }
     single { PrepareBookService(get(), get(), get()) }
-    single { NovelService(get(), get(), get(), get()) }
+    single { NovelService(get(), get(), get(), get(), get()) }
     single { PatchService(get()) }
     single { UpdateService(get(), get()) }
 }
