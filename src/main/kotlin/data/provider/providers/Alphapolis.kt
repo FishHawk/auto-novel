@@ -33,8 +33,7 @@ class Alphapolis : BookProvider {
     }
 
     override suspend fun getMetadata(bookId: String): SBookMetadata {
-        val link = "https://www.alphapolis.co.jp/novel/638978238/525733370"
-        val doc = clientText.get(link).document()
+        val doc = clientText.get(getMetadataUrl(bookId)).document()
         val main = doc.selectFirst("div.content-main")!!
         val title = main.selectFirst("h1.title")!!.text()
         val author = main
