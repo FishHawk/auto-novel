@@ -11,4 +11,5 @@ RUN npm install; \
 FROM caddy:2.6.2
 
 COPY Caddyfile /etc/caddy/Caddyfile
+COPY robots.txt /dist/robots.txt
 COPY --from=builder /src/dist /dist
