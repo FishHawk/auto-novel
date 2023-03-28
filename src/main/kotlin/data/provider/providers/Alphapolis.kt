@@ -84,6 +84,9 @@ class Alphapolis : BookProvider {
         val doc = clientText.get(getEpisodeUrl(bookId, episodeId)).document()
         val paragraphs = doc.selectFirst("div#novelBoby")!!.textNodes()
             .map { it.text().removePrefix(" ") }
+        if (paragraphs.size < 5) {
+            throw RuntimeException("章节内容太少，爬取频率太快导致未加载")
+        }
         return SBookEpisode(paragraphs = paragraphs)
     }
 }

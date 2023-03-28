@@ -9,6 +9,7 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
+import org.litote.kmongo.eq
 import java.io.File
 import java.time.ZoneId
 
@@ -22,11 +23,18 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-            val a = repo.search("", null, 0, 10)
-            println(a.total)
-            println(a.items.size)
-            a.items.forEach {
-                println(it.titleJp)
+            val col = mongo.database.getCollection<BookEpisode>("episode")
+            col.find(
+                BookEpisode::providerId eq "alphapolis",
+            ).toList().map {
+//                if (it.paragraphsJp.size < 5) {
+//                    col.deleteOne(
+//                        BookEpisode::providerId eq it.providerId,
+//                        BookEpisode::bookId eq it.bookId,
+//                        BookEpisode::episodeId eq it.episodeId,
+//                    )
+//                }
+                println(it.paragraphsJp.size)
             }
         }
 
