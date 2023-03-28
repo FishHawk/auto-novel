@@ -92,7 +92,7 @@ function handleUserDropdownSelect(key: string | number) {
         </n-popover>
         <n-a class="on-desktop" href="/" target="_blank">
           <n-icon size="30" style="margin-right: 8px; margin-bottom: 8px">
-            <img src="/robot.svg" style="width: 100%; min-width: 100%" />
+            <img src="/robot.svg" alt="Robot" style="width: 100%; min-width: 100%" />
           </n-icon>
         </n-a>
         <div class="on-desktop">

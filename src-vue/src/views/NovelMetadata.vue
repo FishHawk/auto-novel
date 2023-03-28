@@ -95,11 +95,11 @@ function enableEditMode() {
 <template>
   <MainLayout>
     <div v-if="bookMetadata?.ok">
-      <n-h2 prefix="bar">
+      <n-h1 prefix="bar" style="font-size: 22px">
         <n-a :href="url" target="_blank">{{ bookMetadata.value.titleJp }}</n-a>
         <br />
         <span style="color: grey">{{ bookMetadata.value.titleZh }}</span>
-      </n-h2>
+      </n-h1>
 
       <n-p v-if="bookMetadata.value.authors.length > 0">
         作者：
