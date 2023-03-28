@@ -2,12 +2,15 @@ package data
 
 import appModule
 import data.elasticsearch.ElasticSearchDataSource
+import data.elasticsearch.EsBookMetadata
 import data.elasticsearch.EsBookMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
+import java.io.File
+import java.time.ZoneId
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
@@ -25,18 +28,33 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
             a.items.forEach {
                 println(it.titleJp)
             }
-//            val col = mongo.database.getCollection<BookMetadata>("metadata")
-//            val total = col.find().toList()
-//            repo.addBunch(total.map {
-//                EsBookMetadata(
-//                    providerId = it.providerId,
-//                    bookId = it.bookId,
-//                    titleJp = it.titleJp,
-//                    titleZh = it.titleZh,
-//                    authors = it.authors.map { it.name },
-//                    changeAt = it.changeAt.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
-//                )
-//            })
+        }
+
+        describe("script") {
+            it("es同步") {
+                val col = mongo.database.getCollection<BookMetadata>("metadata")
+                val total = col.find().toList()
+                repo.addBunch(total.map {
+                    EsBookMetadata(
+                        providerId = it.providerId,
+                        bookId = it.bookId,
+                        titleJp = it.titleJp,
+                        titleZh = it.titleZh,
+                        authors = it.authors.map { it.name },
+                        changeAt = it.changeAt.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
+                    )
+                })
+            }
+
+            it("sitemap") {
+                val col = mongo.database.getCollection<BookMetadata>("metadata")
+                val list = col.find().toList()
+                File("sitemap.txt").printWriter().use { out ->
+                    list.forEach {
+                        out.println("https://books.fishhawk.top/novel/${it.providerId}/${it.bookId}")
+                    }
+                }
+            }
         }
     }
 }
