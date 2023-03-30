@@ -14,9 +14,11 @@ import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
-import java.io.OutputStream
+import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -82,13 +84,10 @@ fun Route.routeWenkuNovel() {
                 if (part is PartData.FileItem) {
                     val fileName = part.originalFileName!!
                     val inputStream = part.streamProvider()
-                    val outputStream = service.createAndOpenEpisodeFile(loc.bookId, fileName)
-                        .getOrElse {
-                            call.respondResult(Result.failure(it))
-                            return@forEachPart
-                        }
-                    inputStream.copyTo(outputStream)
-                    call.respondResult(Result.success(Unit))
+                    val result = service.createEpisodeFile(
+                        loc.bookId, fileName, inputStream
+                    )
+                    call.respondResult(result)
                     return@forEachPart
                 }
                 part.dispose()
@@ -235,20 +234,46 @@ class WenkuNovelService(
         return Result.success(Unit)
     }
 
-    suspend fun createAndOpenEpisodeFile(
+    suspend fun createEpisodeFile(
         bookId: String,
         fileName: String,
-    ): Result<OutputStream> {
+        inputStream: InputStream,
+    ): Result<Unit> {
         metadataRepo.get(bookId)
             ?: return httpNotFound("书不存在")
-        val result = fileRepo.createAndOpen(bookId, fileName)
-            .onFailure {
+
+        val outputStream = fileRepo.createAndOpen(bookId, fileName)
+            .getOrElse {
                 return if (it is FileAlreadyExistsException) {
                     httpConflict("文件已经存在")
                 } else {
                     httpInternalServerError(it.message)
                 }
             }
-        return result
+
+        var fileTooLarge = false
+        withContext(Dispatchers.IO) {
+            outputStream.use { out ->
+                var bytesCopied: Long = 0
+                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                var bytes = inputStream.read(buffer)
+                while (bytes >= 0) {
+                    bytesCopied += bytes
+                    if (bytesCopied > 1024 * 1024 * 20) {
+                        fileTooLarge = true
+                        return@use
+                    }
+                    out.write(buffer, 0, bytes)
+                    bytes = inputStream.read(buffer)
+                }
+            }
+        }
+
+        return if (fileTooLarge) {
+            fileRepo.delete(bookId, fileName)
+            httpBadRequest("文件大小不能超过20MB")
+        } else {
+            Result.success(Unit)
+        }
     }
 }

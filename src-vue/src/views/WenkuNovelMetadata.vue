@@ -33,19 +33,21 @@ async function refreshMetadata() {
   }
 }
 
-async function beforeUpload(data: { file: UploadFileInfo }) {
+async function beforeUpload({ file }: { file: UploadFileInfo }) {
   if (!authInfoStore.token) {
     message.info('请先登录');
     return false;
   }
-  if (
-    data.file.file?.type === 'application/epub+zip' ||
-    data.file.file?.type === 'text/plain'
-  ) {
-    return true;
+  if (file.file?.size && file.file.size > 1024 * 1024 * 20) {
+    message.error('文件大小不能超过20MB');
+    return false;
   }
-  message.error('只能上传epub或txt格式的图书');
-  return false;
+  if (file.type === 'application/epub+zip' || file.type === 'text/plain') {
+    return true;
+  } else {
+    message.error('只能上传epub或txt格式的文件');
+    return false;
+  }
 }
 function handleFinish({
   file,
