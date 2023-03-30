@@ -3,7 +3,7 @@ import { Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 
-import ApiNovel from '../data/api/api_novel';
+import ApiWebNovel from '../data/api/api_web_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 import { parseUrl } from '../data/provider';
 
@@ -14,28 +14,26 @@ const message = useMessage();
 
 const url: Ref<string> = ref('');
 
-function getNovelUrl(url: string) {
+function query(url: string) {
   if (url.length === 0) {
     return;
   }
+
   const parseResult = parseUrl(url);
+
   if (parseResult === undefined) {
     message.error('无法解析网址，可能是因为格式错误或者不支持');
     return;
   }
+
   const providerId = parseResult.providerId;
   const bookId = parseResult.bookId;
-  return `/novel/${providerId}/${bookId}`;
-}
-
-function query(url: string) {
-  const novelUrl = getNovelUrl(url);
-  if (!novelUrl) return;
+  const novelUrl = `/novel/${providerId}/${bookId}`;
   router.push({ path: novelUrl });
 }
 
 async function loadMyFavorite(page: number, selected: number[]) {
-  return ApiNovel.listFavorite(authInfoStore.token!!);
+  return ApiWebNovel.listFavorite(authInfoStore.token!!);
 }
 </script>
 
@@ -79,13 +77,7 @@ async function loadMyFavorite(page: number, selected: number[]) {
 
     <template v-if="authInfoStore.token">
       <n-h2 prefix="bar">我的收藏</n-h2>
-      <BookPagedList
-        :descriptior="{
-          title: '',
-          options: [],
-        }"
-        :loader="loadMyFavorite"
-      />
+      <WebBookList :search="false" :options="[]" :loader="loadMyFavorite" />
     </template>
 
     <n-h2 prefix="bar">链接示例</n-h2>

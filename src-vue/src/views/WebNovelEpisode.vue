@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme, useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
-import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
+import ApiWebNovel, { BookEpisodeDto } from '../data/api/api_web_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 import { useReaderSettingStore } from '../data/stores/readerSetting';
 import { buildEpisodeUrl } from '../data/provider';
@@ -44,7 +44,7 @@ const showModal = ref(false);
 const bookEpisode = shallowRef<ResultState<BookEpisodeDto>>();
 onMounted(() => getEpisode());
 async function getEpisode() {
-  const result = await ApiNovel.getEpisode(providerId, bookId, episodeId);
+  const result = await ApiWebNovel.getEpisode(providerId, bookId, episodeId);
   bookEpisode.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
@@ -99,7 +99,7 @@ function enableEditMode() {
 
     <n-modal v-model:show="showModal">
       <n-card
-        style="width: 600px"
+        style="width: min(600px, calc(100% - 16px))"
         title="设置"
         :bordered="false"
         size="huge"

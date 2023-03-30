@@ -1,9 +1,8 @@
-package data.file
+package data.web
 
-import data.BookEpisode
-import data.BookMetadata
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
 import kotlin.io.path.*
@@ -29,9 +28,11 @@ enum class BookFileType(val value: String) {
     TXT("txt")
 }
 
-class BookFileRepository {
+class WebBookFileRepository(
+    private val root: Path,
+) {
     private fun buildFilePath(fileName: String) =
-        Path("./data/files") / fileName
+        root / fileName
 
     suspend fun makeFile(
         fileName: String,

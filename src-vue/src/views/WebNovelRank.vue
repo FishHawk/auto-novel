@@ -1,20 +1,25 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { ListDescriptior } from '../components/BookPagedList.vue';
 import ListLayout from '../components/ListLayout.vue';
-import ApiNovel from '../data/api/api_novel';
+import ApiWebNovel from '../data/api/api_web_novel';
 
 const route = useRoute();
 const path = route.path;
 
-const listDescriptors: { [key: string]: ListDescriptior } = {
-  '/rank/syosetu/1': {
+const listDescriptors: {
+  [key: string]: {
+    title: string;
+    search: boolean;
+    options: { label: string; tags: string[] }[];
+  };
+} = {
+  '/novel-rank/syosetu/1': {
     title: '成为小说家：流派',
     search: false,
     options: [
       {
-        title: '流派',
-        values: [
+        label: '流派',
+        tags: [
           '恋爱：异世界',
           '恋爱：现实世界',
           '幻想：高幻想',
@@ -37,36 +42,36 @@ const listDescriptors: { [key: string]: ListDescriptior } = {
         ],
       },
       {
-        title: '范围',
-        values: ['每日', '每周', '每月', '季度', '每年'],
+        label: '范围',
+        tags: ['每日', '每周', '每月', '季度', '每年'],
       },
     ],
   },
-  '/rank/syosetu/2': {
+  '/novel-rank/syosetu/2': {
     title: '成为小说家：综合',
     search: false,
     options: [
       {
-        title: '状态',
-        values: ['全部', '短篇', '连载', '完结'],
+        label: '状态',
+        tags: ['全部', '短篇', '连载', '完结'],
       },
       {
-        title: '范围',
-        values: ['每日', '每周', '每月', '季度', '每年', '总计'],
+        label: '范围',
+        tags: ['每日', '每周', '每月', '季度', '每年', '总计'],
       },
     ],
   },
-  '/rank/syosetu/3': {
+  '/novel-rank/syosetu/3': {
     title: '成为小说家：异世界转移/转生',
     search: false,
     options: [
       {
-        title: '状态',
-        values: ['恋爱', '幻想', '文学/科幻/其他'],
+        label: '状态',
+        tags: ['恋爱', '幻想', '文学/科幻/其他'],
       },
       {
-        title: '范围',
-        values: ['每日', '每周', '每月', '季度', '每年'],
+        label: '范围',
+        tags: ['每日', '每周', '每月', '季度', '每年'],
       },
     ],
   },
@@ -76,7 +81,7 @@ const descriptior = listDescriptors[path];
 
 async function loader(_page: number, _query: string, selected: number[]) {
   function optionNth(n: number): string {
-    return descriptior.options[n].values[selected[n]];
+    return descriptior.options[n].tags[selected[n]];
   }
   let type: string;
   if (path == '/rank/syosetu/1') {
@@ -90,14 +95,17 @@ async function loader(_page: number, _query: string, selected: number[]) {
   }
   const genre = optionNth(0);
   const range = optionNth(1);
-  return ApiNovel.listRank('syosetu', { type, genre, range });
+  return ApiWebNovel.listRank('syosetu', { type, genre, range });
 }
 </script>
 
 <template>
   <ListLayout>
-    <div>
-      <BookPagedList :descriptior="descriptior" :loader="loader" />
-    </div>
+    <n-h1>{{ descriptior.title }}</n-h1>
+    <WebBookList
+      :search="descriptior.search"
+      :options="descriptior.options"
+      :loader="loader"
+    />
   </ListLayout>
 </template>

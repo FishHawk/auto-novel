@@ -1,9 +1,10 @@
 package data
 
 import appModule
-import data.elasticsearch.ElasticSearchDataSource
-import data.elasticsearch.EsBookMetadata
-import data.elasticsearch.EsBookMetadataRepository
+import data.web.EsBookMetadata
+import data.web.EsBookMetadataRepository
+import data.web.BookEpisode
+import data.web.BookMetadata
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode

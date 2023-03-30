@@ -10,10 +10,11 @@ function menuOption(text: string, href: string): MenuOption {
 }
 
 const menuOptions: MenuOption[] = [
-  menuOption('已缓存小说', '/list'),
-  menuOption('成为小说家：流派', '/rank/syosetu/1'),
-  menuOption('成为小说家：综合', '/rank/syosetu/2'),
-  menuOption('成为小说家：异世界转移/转生', '/rank/syosetu/3'),
+  menuOption('网络小说', '/novel-list'),
+  menuOption('文库小说', '/wenku-list'),
+  menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),
+  menuOption('成为小说家：综合', '/novel-rank/syosetu/2'),
+  menuOption('成为小说家：异世界转移/转生', '/novel-rank/syosetu/3'),
 ];
 </script>
 

@@ -3,7 +3,7 @@ import { h, onMounted, Ref, ref } from 'vue';
 import { NA, DataTableColumns, NButton, useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
-import ApiNovel, { BookStateDto } from '../data/api/api_novel';
+import ApiWebNovel, { BookStateDto } from '../data/api/api_web_novel';
 
 import { update } from '../data/api/api_update';
 
@@ -12,7 +12,6 @@ const props = defineProps<{
   bookId: string;
   glossary: { [key: string]: string };
 }>();
-const emits = defineEmits(['update:showModal']);
 
 interface UpdateProgress {
   name: string;
@@ -31,7 +30,7 @@ const progress: Ref<UpdateProgress | undefined> = ref();
 onMounted(() => getFileGroups());
 let lastPoll = false;
 async function getFileGroups() {
-  const result = await ApiNovel.getState(props.providerId, props.bookId);
+  const result = await ApiWebNovel.getState(props.providerId, props.bookId);
 
   if (result.ok) {
     bookState.value = result;
@@ -200,17 +199,14 @@ function submitForm() {
   } else {
     startUpdateTask(true, formStartIndex.value - 1, formEndIndex.value - 1);
   }
-  emits('update:showModal', false);
+  showModal.value = false;
 }
 </script>
 
 <template>
-  <n-modal
-    :show="showModal"
-    @update:show="(value:boolean) => emits('update:showModal', value)"
-  >
+  <n-modal v-model:show="showModal">
     <n-card
-      style="width: 600px"
+      style="width: min(500px, calc(100% - 16px))"
       title="高级"
       :bordered="false"
       size="huge"
@@ -243,7 +239,7 @@ function submitForm() {
       </n-space>
       <n-space style="margin-top: 15px">
         <n-button @click="submitForm()">更新</n-button>
-        <n-button @click="emits('update:showModal', false)">取消</n-button>
+        <n-button @click="showModal = false">取消</n-button>
       </n-space>
     </n-card>
   </n-modal>

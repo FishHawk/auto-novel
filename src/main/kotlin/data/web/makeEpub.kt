@@ -1,8 +1,5 @@
-package data.file
+package data.web
 
-import data.BookEpisode
-import data.BookMetadata
-import data.BookTocItem
 import epub.EpubBook
 import epub.Navigation
 import epub.createEpubXhtml

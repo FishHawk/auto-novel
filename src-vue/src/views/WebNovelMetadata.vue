@@ -9,7 +9,7 @@ import {
 import { useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
-import ApiNovel, { BookMetadataDto } from '../data/api/api_novel';
+import ApiWebNovel, { BookMetadataDto } from '../data/api/api_web_novel';
 import { buildMetadataUrl } from '../data/provider';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 
@@ -26,7 +26,7 @@ const bookMetadata = ref<ResultState<BookMetadataDto>>();
 
 onMounted(() => getMetadata());
 async function getMetadata() {
-  const result = await ApiNovel.getMetadata(
+  const result = await ApiWebNovel.getMetadata(
     providerId,
     bookId,
     authInfoStore.token
@@ -49,7 +49,7 @@ async function addFavorite() {
     return;
   }
 
-  const result = await ApiNovel.addFavorite(providerId, bookId, token);
+  const result = await ApiWebNovel.addFavorite(providerId, bookId, token);
   if (result.ok) {
     if (bookMetadata.value?.ok) {
       bookMetadata.value.value.inFavorite = true;
@@ -70,7 +70,7 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiNovel.removeFavorite(providerId, bookId, token);
+  const result = await ApiWebNovel.removeFavorite(providerId, bookId, token);
   if (result.ok) {
     if (bookMetadata.value?.ok) {
       bookMetadata.value.value.inFavorite = false;

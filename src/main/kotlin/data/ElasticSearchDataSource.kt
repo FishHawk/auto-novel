@@ -1,4 +1,4 @@
-package data.elasticsearch
+package data
 
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.Node

@@ -5,26 +5,33 @@ const history = createWebHistory();
 const routes = [
   { path: '/', component: () => import('./views/Query.vue') },
   { path: '/feedback', component: () => import('./views/Feedback.vue') },
-  { path: '/extra', component: () => import('./views/Extra.vue') },
 
-  { path: '/list', component: () => import('./views/List.vue') },
+  { path: '/novel-list', component: () => import('./views/WebNovelList.vue') },
   {
-    path: '/rank/:providerId/:type',
-    component: () => import('./views/Rank.vue'),
+    path: '/novel-rank/:providerId/:type',
+    component: () => import('./views/WebNovelRank.vue'),
   },
   { path: '/patch', component: () => import('./views/Patch.vue') },
-
   {
     path: '/novel/:providerId/:bookId',
-    component: () => import('./views/NovelMetadata.vue'),
+    component: () => import('./views/WebNovelMetadata.vue'),
   },
   {
     path: '/novel/:providerId/:bookId/:episodeId',
-    component: () => import('./views/NovelEpisode.vue'),
+    component: () => import('./views/WebNovelEpisode.vue'),
   },
   {
     path: '/patch/:providerId/:bookId',
     component: () => import('./views/PatchDetail.vue'),
+  },
+
+  {
+    path: '/wenku-list',
+    component: () => import('./views/WenkuNovelList.vue'),
+  },
+  {
+    path: '/wenku/:bookId',
+    component: () => import('./views/WenkuNovelMetadata.vue'),
   },
 ];
 

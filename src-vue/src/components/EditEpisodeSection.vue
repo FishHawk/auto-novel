@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import ApiNovel, { BookEpisodeDto } from '../data/api/api_novel';
+import ApiWebNovel, { BookEpisodeDto } from '../data/api/api_web_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 
 const props = defineProps<{
@@ -68,7 +68,7 @@ async function submitTranslate() {
         .map((item) => ({ [item.index]: item.edit }))
     ),
   };
-  const result = await ApiNovel.putEpisode(
+  const result = await ApiWebNovel.putEpisode(
     props.providerId,
     props.bookId,
     props.episodeId,

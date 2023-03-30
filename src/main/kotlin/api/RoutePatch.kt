@@ -1,8 +1,8 @@
 package api
 
-import data.BookPatch
-import data.BookPatchOutline
-import data.BookPatchRepository
+import data.web.BookPatch
+import data.web.BookPatchOutline
+import data.web.BookPatchRepository
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*

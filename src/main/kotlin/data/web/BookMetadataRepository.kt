@@ -1,8 +1,8 @@
-package data
+package data.web
 
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
-import data.elasticsearch.EsBookMetadataRepository
+import data.MongoDataSource
 import data.provider.ProviderDataSource
 import data.provider.SBookMetadata
 import kotlinx.coroutines.runBlocking
@@ -243,6 +243,7 @@ class BookMetadataRepository(
         col.findOneAndUpdate(
             bsonSpecifyMetadata(providerId, bookId),
             combine(list),
+            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )?.let { syncEs(it) }
     }
 
@@ -250,6 +251,7 @@ class BookMetadataRepository(
         col.findOneAndUpdate(
             bsonSpecifyMetadata(providerId, bookId),
             setValue(BookMetadata::changeAt, LocalDateTime.now()),
+            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )?.let { syncEs(it) }
     }
 

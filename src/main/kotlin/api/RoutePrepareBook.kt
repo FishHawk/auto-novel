@@ -1,10 +1,6 @@
 package api
 
-import data.BookEpisodeRepository
-import data.BookMetadataRepository
-import data.file.BookFileLang
-import data.file.BookFileRepository
-import data.file.BookFileType
+import data.web.*
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -38,7 +34,7 @@ fun Route.routePrepareBook() {
 class PrepareBookService(
     private val bookMetadataRepository: BookMetadataRepository,
     private val bookEpisodeRepository: BookEpisodeRepository,
-    private val bookFileRepository: BookFileRepository,
+    private val webBookFileRepository: WebBookFileRepository,
 ) {
     suspend fun updateBookFile(
         providerId: String,
@@ -51,7 +47,7 @@ class PrepareBookService(
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("小说不存在")
 
-        val shouldMake = bookFileRepository.getCreationTime(fileName)?.let { fileCreateAt ->
+        val shouldMake = webBookFileRepository.getCreationTime(fileName)?.let { fileCreateAt ->
             val updateAt = metadata.changeAt.atZone(ZoneId.systemDefault()).toInstant()
             updateAt > fileCreateAt
         } ?: true
@@ -65,7 +61,7 @@ class PrepareBookService(
                         ?.let { episodeId to it }
                 }
                 .toMap()
-            bookFileRepository.makeFile(
+            webBookFileRepository.makeFile(
                 fileName = fileName,
                 lang = lang,
                 type = type,

@@ -1,9 +1,8 @@
 package api
 
 import data.*
-import data.BookAuthor
-import data.BookTocItem
-import data.elasticsearch.EsBookMetadataRepository
+import data.web.EsBookMetadataRepository
+import data.web.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
@@ -24,11 +23,11 @@ import java.time.ZoneId
 
 @Serializable
 @Resource("/novel")
-private class Novel {
+private class WebNovel {
     @Serializable
     @Resource("/list")
     data class List(
-        val parent: Novel = Novel(),
+        val parent: WebNovel = WebNovel(),
         val page: Int,
         val provider: String = "",
         val query: String? = null,
@@ -37,13 +36,13 @@ private class Novel {
     @Serializable
     @Resource("/favorite")
     class Favorite(
-        val parent: Novel = Novel(),
+        val parent: WebNovel = WebNovel(),
     )
 
     @Serializable
     @Resource("/favorite-item")
     class FavoriteItem(
-        val parent: Novel = Novel(),
+        val parent: WebNovel = WebNovel(),
         val providerId: String,
         val bookId: String,
     )
@@ -51,14 +50,14 @@ private class Novel {
     @Serializable
     @Resource("/rank/{providerId}")
     data class Rank(
-        val parent: Novel = Novel(),
+        val parent: WebNovel = WebNovel(),
         val providerId: String,
     )
 
     @Serializable
     @Resource("/state/{providerId}/{bookId}")
     data class State(
-        val parent: Novel = Novel(),
+        val parent: WebNovel = WebNovel(),
         val providerId: String,
         val bookId: String,
     )
@@ -66,7 +65,7 @@ private class Novel {
     @Serializable
     @Resource("/metadata/{providerId}/{bookId}")
     data class Metadata(
-        val parent: Novel = Novel(),
+        val parent: WebNovel = WebNovel(),
         val providerId: String,
         val bookId: String,
     )
@@ -74,17 +73,17 @@ private class Novel {
     @Serializable
     @Resource("/episode/{providerId}/{bookId}/{episodeId}")
     data class Episode(
-        val parent: Novel = Novel(),
+        val parent: WebNovel = WebNovel(),
         val providerId: String,
         val bookId: String,
         val episodeId: String,
     )
 }
 
-fun Route.routeNovel() {
-    val service by inject<NovelService>()
+fun Route.routeWebNovel() {
+    val service by inject<WebNovelService>()
 
-    get<Novel.List> { loc ->
+    get<WebNovel.List> { loc ->
         val result = service.list(
             queryString = loc.query?.ifBlank { null },
             providerId = loc.provider.ifEmpty { null },
@@ -95,37 +94,37 @@ fun Route.routeNovel() {
     }
 
     authenticate {
-        get<Novel.Favorite> {
+        get<WebNovel.Favorite> {
             val username = call.jwtUsername()
             val result = service.listFavorite(username)
             call.respondResult(result)
         }
-        post<Novel.FavoriteItem> { loc ->
+        post<WebNovel.FavoriteItem> { loc ->
             val username = call.jwtUsername()
             val result = service.addFavorite(username, loc.providerId, loc.bookId)
             call.respondResult(result)
         }
-        delete<Novel.FavoriteItem> { loc ->
+        delete<WebNovel.FavoriteItem> { loc ->
             val username = call.jwtUsername()
             val result = service.removeFavorite(username, loc.providerId, loc.bookId)
             call.respondResult(result)
         }
     }
 
-    get<Novel.Rank> { loc ->
+    get<WebNovel.Rank> { loc ->
         val options = call.request.queryParameters.toMap().mapValues { it.value.first() }
         val result = service.listRank(loc.providerId, options)
         call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 3600 * 2))
         call.respondResult(result)
     }
 
-    get<Novel.State> { loc ->
+    get<WebNovel.State> { loc ->
         val result = service.getState(loc.providerId, loc.bookId)
         call.respondResult(result)
     }
 
     authenticate(optional = true) {
-        get<Novel.Metadata> { loc ->
+        get<WebNovel.Metadata> { loc ->
             val username = call.jwtUsernameOrNull()
             val result = service.getMetadata(loc.providerId, loc.bookId, username)
             call.respondResult(result)
@@ -133,22 +132,22 @@ fun Route.routeNovel() {
     }
 
     authenticate {
-        put<Novel.Metadata> { loc ->
+        put<WebNovel.Metadata> { loc ->
             val username = call.jwtUsername()
-            val patch = call.receive<NovelService.BookMetadataPatchBody>()
+            val patch = call.receive<WebNovelService.BookMetadataPatchBody>()
             val result = service.patchMetadata(loc.providerId, loc.bookId, patch, username)
             call.respondResult(result)
         }
     }
 
-    get<Novel.Episode> { loc ->
+    get<WebNovel.Episode> { loc ->
         val result = service.getEpisode(loc.providerId, loc.bookId, loc.episodeId)
         call.respondResult(result)
     }
 
     authenticate {
-        put<Novel.Episode> { loc ->
-            val patch = call.receive<NovelService.BookEpisodePatchBody>()
+        put<WebNovel.Episode> { loc ->
+            val patch = call.receive<WebNovelService.BookEpisodePatchBody>()
             val result = service.patchEpisode(
                 providerId = loc.providerId,
                 bookId = loc.bookId,
@@ -160,7 +159,7 @@ fun Route.routeNovel() {
     }
 }
 
-class NovelService(
+class WebNovelService(
     private val bookMetadataRepository: BookMetadataRepository,
     private val bookEpisodeRepository: BookEpisodeRepository,
     private val userRepository: UserRepository,

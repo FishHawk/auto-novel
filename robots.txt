@@ -2,4 +2,3 @@ User-agent: *
 Disallow: /novel/*/*/*
 Disallow: /patch
 Disallow: /feedback
-Disallow: /extra

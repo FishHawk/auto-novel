@@ -1,7 +1,8 @@
-package data.elasticsearch
+package data.web
 
 import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
+import data.ElasticSearchDataSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.litote.kmongo.limit

@@ -1,8 +1,5 @@
-package data.file
+package data.web
 
-import data.BookEpisode
-import data.BookMetadata
-import data.BookTocItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedWriter

@@ -1,7 +1,7 @@
 package api
 
-import data.BookEpisodeRepository
-import data.BookMetadataRepository
+import data.web.BookEpisodeRepository
+import data.web.BookMetadataRepository
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*

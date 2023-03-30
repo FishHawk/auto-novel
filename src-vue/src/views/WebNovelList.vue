@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import ApiNovel from '../data/api/api_novel';
+import ApiWebNovel from '../data/api/api_web_novel';
 
 const descriptior = {
-  title: '已缓存小说',
+  title: '网络小说',
   search: true,
   options: [
     {
-      title: '来源',
-      values: [
+      label: '来源',
+      tags: [
         '全部',
         'Kakuyomu',
         '成为小说家吧',
@@ -22,7 +22,7 @@ const descriptior = {
 
 async function loader(page: number, query: string, selected: number[]) {
   function optionNth(n: number): string {
-    return descriptior.options[n].values[selected[n]];
+    return descriptior.options[n].tags[selected[n]];
   }
   const providerMap: { [key: string]: string } = {
     全部: '',
@@ -34,12 +34,17 @@ async function loader(page: number, query: string, selected: number[]) {
     Alphapolis: 'alphapolis',
   };
 
-  return ApiNovel.list(page - 1, providerMap[optionNth(0)], query);
+  return ApiWebNovel.list(page - 1, providerMap[optionNth(0)], query);
 }
 </script>
 
 <template>
   <ListLayout>
-    <BookPagedList :descriptior="descriptior" :loader="loader" />
+    <n-h1 v-if="descriptior.title">{{ descriptior.title }}</n-h1>
+    <WebBookList
+      :search="descriptior.search"
+      :options="descriptior.options"
+      :loader="loader"
+    />
   </ListLayout>
 </template>

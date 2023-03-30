@@ -14,10 +14,9 @@ function menuOption(text: string, href: string): MenuOption {
 
 const topMenuOptions: MenuOption[] = [
   menuOption('首页', '/'),
-  menuOption('列表', '/list'),
+  menuOption('列表', '/novel-list'),
   menuOption('编辑历史', '/patch'),
   menuOption('反馈', '/feedback'),
-  menuOption('其他', '/extra'),
 ];
 
 const collapsedMenuOptions: MenuOption[] = [
@@ -25,15 +24,15 @@ const collapsedMenuOptions: MenuOption[] = [
   {
     label: '列表',
     children: [
-      menuOption('已缓存小说', '/list'),
-      menuOption('成为小说家：流派', '/rank/syosetu/1'),
-      menuOption('成为小说家：综合', '/rank/syosetu/2'),
-      menuOption('成为小说家：异世界转移/转生', '/rank/syosetu/3'),
+      menuOption('网络小说', '/novel-list'),
+      menuOption('文库小说', '/wenku-list'),
+      menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),
+      menuOption('成为小说家：综合', '/novel-rank/syosetu/2'),
+      menuOption('成为小说家：异世界转移/转生', '/novel-rank/syosetu/3'),
     ],
   },
   menuOption('编辑历史', '/patch'),
   menuOption('反馈', '/feedback'),
-  menuOption('其他', '/extra'),
 ];
 
 const path = useRoute().path;
@@ -67,7 +66,6 @@ function onSignInSuccess(info: AuthInfo): void {
 }
 
 function handleUserDropdownSelect(key: string | number) {
-  console.log(key);
   if (key === 'signOut') {
     authInfoStore.delete();
   }
@@ -92,7 +90,11 @@ function handleUserDropdownSelect(key: string | number) {
         </n-popover>
         <n-a class="on-desktop" href="/" target="_blank">
           <n-icon size="30" style="margin-right: 8px; margin-bottom: 8px">
-            <img src="/robot.svg" alt="Robot" style="width: 100%; min-width: 100%" />
+            <img
+              src="/robot.svg"
+              alt="Robot"
+              style="width: 100%; min-width: 100%"
+            />
           </n-icon>
         </n-a>
         <div class="on-desktop">

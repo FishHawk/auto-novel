@@ -2,10 +2,15 @@ import api.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import data.*
-import data.elasticsearch.ElasticSearchDataSource
-import data.elasticsearch.EsBookMetadataRepository
-import data.file.BookFileRepository
+import data.ElasticSearchDataSource
+import data.web.EsBookMetadataRepository
+import data.web.WebBookFileRepository
+import data.wenku.WenkuBookFileRepository
 import data.provider.ProviderDataSource
+import data.web.BookEpisodeRepository
+import data.web.BookMetadataRepository
+import data.web.BookPatchRepository
+import data.wenku.WenkuBookMetadataRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -34,6 +39,7 @@ import org.koin.logger.slf4jLogger
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import kotlin.io.path.Path
 
 object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     override val descriptor = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.LONG)
@@ -97,7 +103,8 @@ fun main() {
             routeAuth()
             routeComment()
             routePrepareBook()
-            routeNovel()
+            routeWenkuNovel()
+            routeWebNovel()
             routePatch()
             routeUpdate()
         }
@@ -109,29 +116,35 @@ val appModule = module {
         val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017"
         MongoDataSource(mongodbUrl)
     }
-    single { ProviderDataSource() }
-
-    single { BookMetadataRepository(get(), get(), get()) }
-    single { BookEpisodeRepository(get(), get(), get()) }
-    single { BookPatchRepository(get(), get(), get()) }
-    single { BookFileRepository() }
-    single { CommentRepository(get()) }
-    single { UserRepository(get()) }
-    single { EmailCodeRepository(get()) }
-
     single {
         val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
         ElasticSearchDataSource(url)
     }
+    single { ProviderDataSource() }
+
+    single { WenkuBookFileRepository(root = Path("./data/files-wenku")) }
+    single { WenkuBookMetadataRepository(get()) }
+
+    single { BookMetadataRepository(get(), get(), get()) }
+    single { BookEpisodeRepository(get(), get(), get()) }
+    single { BookPatchRepository(get(), get(), get()) }
+    single { WebBookFileRepository(root = Path("./data/files")) }
     single { EsBookMetadataRepository(get()) }
+
+    single { CommentRepository(get()) }
+    single { UserRepository(get()) }
+    single { EmailCodeRepository(get()) }
 
     single {
         val secret = System.getenv("JWT_SECRET")!!
         AuthService(secret, get(), get())
     }
     single { CommentService(get()) }
+
     single { PrepareBookService(get(), get(), get()) }
-    single { NovelService(get(), get(), get(), get(), get()) }
+    single { WebNovelService(get(), get(), get(), get(), get()) }
     single { PatchService(get()) }
     single { UpdateService(get(), get()) }
+
+    single { WenkuNovelService(get(), get()) }
 }
