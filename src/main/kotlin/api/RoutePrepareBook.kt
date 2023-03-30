@@ -26,8 +26,11 @@ fun Route.routePrepareBook() {
 
     get<PrepareBook> { loc ->
         val result = service.updateBookFile(loc.providerId, loc.bookId, loc.lang, loc.type)
-        result.onSuccess { fileName -> return@get call.respondRedirect("../../../../../files/$fileName") }
-        call.respondResult(result)
+        result.onSuccess {
+            call.respondRedirect(it)
+        }.onFailure {
+            call.respondResult(result)
+        }
     }
 }
 
@@ -71,6 +74,6 @@ class PrepareBookService(
         }
 
         bookMetadataRepository.increaseDownloaded(providerId, bookId)
-        return Result.success(fileName)
+        return Result.success("../../../../../files-web/$fileName")
     }
 }

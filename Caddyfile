@@ -11,8 +11,8 @@
     reverse_proxy server:8081
   }
 
-  handle_path /files* {
-    root * /data/files
+  handle_path /files-web* {
+    root * /data/files-web
     file_server
   }
 
