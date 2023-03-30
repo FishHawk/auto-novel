@@ -23,6 +23,7 @@ const collapsedMenuOptions: MenuOption[] = [
   menuOption('首页', '/'),
   {
     label: '列表',
+    key: 'list',
     children: [
       menuOption('网络小说', '/novel-list'),
       menuOption('文库小说', '/wenku-list'),
@@ -86,7 +87,11 @@ function handleUserDropdownSelect(key: string | number) {
               <MenuFilled />
             </n-icon>
           </template>
-          <n-menu :value="path" :options="collapsedMenuOptions" />
+          <n-menu
+            :value="path"
+            :options="collapsedMenuOptions"
+            :default-expanded-keys="['list']"
+          />
         </n-popover>
         <n-a class="on-desktop" href="/" target="_blank">
           <n-icon size="30" style="margin-right: 8px; margin-bottom: 8px">
