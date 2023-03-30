@@ -4,8 +4,8 @@ services:
     ports:
       - 80:80
     volumes:
-      - ${DATA_PATH}/files:/data/files
-      - ${DATA_PATH}/files-extra:/data/files-extra
+      - ${DATA_PATH}/files-web:/data/files-web
+      - ${DATA_PATH}/files-wenku:/data/files-wenku
     restart: always
 
   server:
@@ -22,7 +22,8 @@ services:
     ports:
       - 8081:8081
     volumes:
-      - ${DATA_PATH}/files:/data/files
+      - ${DATA_PATH}/files-web:/data/files-web
+      - ${DATA_PATH}/files-wenku:/data/files-wenku
     restart: always
 
   mongo:
