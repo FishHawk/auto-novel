@@ -3,7 +3,6 @@ import { ref, watch } from 'vue';
 
 import { Result, ResultState } from '../data/api/result';
 import { WenkuListPageDto } from '../data/api/api_wenku_novel';
-import { buildMetadataUrl } from '../data/provider';
 
 type Loader = (
   page: number,
@@ -33,6 +32,7 @@ async function loadPage(page: number) {
     filters.value.query,
     filters.value.selected
   );
+
   if (currentPage.value == page) {
     bookPage.value = result;
     if (result.ok) {
@@ -62,10 +62,32 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   />
   <n-divider />
   <div v-if="bookPage?.ok">
-    <n-grid cols="2 400:4 600:6">
+    <n-grid x-gap="12" cols="2 600:4">
       <n-grid-item v-for="item in bookPage.value.items">
-        <img :src="item.cover" />
-        <div>{{ item.title }}</div>
+        <n-a :href="`/wenku/${item.bookId}`" target="_blank">
+          <n-card size="small" header-style="padding: 12px;">
+            <template #cover>
+              <img
+                :src="item.cover"
+                alt="cover"
+                style="aspect-ratio: 1 / 1.5; object-fit: cover"
+              />
+            </template>
+            <template #header>
+              <n-p
+                style="
+                  height: 3em;
+                  display: -webkit-box;
+                  -webkit-line-clamp: 2;
+                  -webkit-box-orient: vertical;
+                  overflow: hidden;
+                "
+              >
+                {{ item.title }}
+              </n-p>
+            </template>
+          </n-card>
+        </n-a>
       </n-grid-item>
     </n-grid>
 

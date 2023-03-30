@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { useMessage } from 'naive-ui';
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 
-import ApiWenkuNovel, { WenkuListPageDto } from '../data/api/api_wenku_novel';
-import { ResultState } from '../data/api/result';
+import ApiWenkuNovel from '../data/api/api_wenku_novel';
 import Bangumi from '../data/api/bangumi';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 
@@ -11,15 +10,8 @@ const message = useMessage();
 
 const authInfoStore = useAuthInfoStore();
 
-const novelList = ref<ResultState<WenkuListPageDto>>();
-
-onMounted(() => {
-  loader();
-});
-
-async function loader() {
-  const result = await ApiWenkuNovel.list(0, '');
-  novelList.value = result;
+async function loader(page: number, query: string, selected: number[]) {
+  return ApiWenkuNovel.list(page - 1, query);
 }
 
 const showModal = ref(false);
@@ -75,40 +67,7 @@ function openDialog() {
       <n-h1>文库小说</n-h1>
       <n-button @click="openDialog()">创建</n-button>
     </n-space>
-
-    <n-divider />
-    <div v-if="novelList?.ok">
-      <n-grid x-gap="12" cols="3 400:4">
-        <n-grid-item v-for="item in novelList.value.items">
-          <n-a :href="`/wenku/${item.bookId}`" target="_blank">
-            <n-card size="small" >
-              <template #cover>
-                <img :src="item.cover" alt="cover" />
-              </template>
-              <template #header>
-                <div
-                  style="
-                    text-overflow: ellipsis;
-                    overflow: hidden;
-                    white-space: nowrap;
-                  "
-                >
-                  {{ item.title }}
-                </div>
-              </template>
-            </n-card>
-          </n-a>
-        </n-grid-item>
-      </n-grid>
-
-      <n-empty v-if="novelList.value.items.length === 0" description="空列表" />
-    </div>
-    <n-result
-      v-if="novelList && !novelList.ok"
-      status="error"
-      title="加载错误"
-      :description="novelList.error.message"
-    />
+    <WenkuBookList :search="true" :options="[]" :loader="loader" />
   </ListLayout>
 
   <n-modal v-model:show="showModal">
