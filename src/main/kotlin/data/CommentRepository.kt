@@ -84,11 +84,13 @@ class CommentRepository(
         viewer: String?,
         page: Int,
         pageSize: Int,
+        reverse: Boolean = false,
     ): List<CommentView> {
         return col.find(
             Comment::postId eq postId,
             Comment::parentId eq parentId?.let { ObjectId(it) },
         )
+            .let { if (reverse) it.descendingSort(Comment::id) else it }
             .skip(page * pageSize)
             .limit(pageSize)
             .toList()

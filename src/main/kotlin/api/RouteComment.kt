@@ -161,6 +161,7 @@ class CommentService(
             viewer = viewer,
             page = page,
             pageSize = 10,
+            reverse = true,
         ).map {
             val subComments = commentRepository.list(
                 postId = postId,
