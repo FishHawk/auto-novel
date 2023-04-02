@@ -247,8 +247,6 @@ function enableEditMode() {
         </n-space>
 
         <n-divider />
-
-        <CommentList :post-id="route.path" />
       </template>
     </div>
 
