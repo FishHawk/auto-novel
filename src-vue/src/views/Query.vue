@@ -6,6 +6,7 @@ import { useMessage } from 'naive-ui';
 import ApiWebNovel from '../data/api/api_web_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 import { parseUrl } from '../data/provider';
+import { YoudaoTranslator } from '../data/translator/youdao';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -35,6 +36,11 @@ function query(url: string) {
 async function loadMyFavorite(page: number, selected: number[]) {
   return ApiWebNovel.listFavorite(authInfoStore.token!!);
 }
+
+async function test() {
+  const t = await YoudaoTranslator.createInstance();
+  const a = await t.translate(['测试']);
+}
 </script>
 
 <template>
@@ -60,6 +66,7 @@ async function loadMyFavorite(page: number, selected: number[]) {
           >
             日本网文机翻机器人
           </n-h1>
+          <n-button @click="test()"> 测试 </n-button>
           <n-input-group>
             <n-input
               v-model:value="url"
