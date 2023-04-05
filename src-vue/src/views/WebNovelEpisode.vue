@@ -206,7 +206,7 @@ function enableEditMode() {
       />
 
       <template v-else>
-        <div class="episode-content">
+        <div id="episode-content">
           <template v-for="text in getTextList(bookEpisode.value)">
             <n-p v-if="text.text1.trim().length === 0">
               <br />
@@ -245,8 +245,6 @@ function enableEditMode() {
           >
           <n-text v-else style="color: grey">下一章</n-text>
         </n-space>
-
-        <n-divider />
       </template>
     </div>
 
@@ -262,8 +260,7 @@ function enableEditMode() {
 
 <style scoped>
 #episode-content p {
-  margin-top: 8px;
-  margin-bottom: 8px;
+  word-wrap: break-word;
 }
 .content {
   width: 800px;
