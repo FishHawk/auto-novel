@@ -88,18 +88,32 @@ async function submitTranslate() {
 </script>
 
 <template>
-  <table>
-    <tr v-for="paragraph in editEpisode.paragraphs">
-      <td>{{ paragraph.jp }}</td>
-      <td>
-        <n-input
-          v-model:value="paragraph.edit"
-          :placeholder="paragraph.jp"
-          type="textarea"
-          autosize
-        />
-      </td>
-    </tr>
+  <table style="width: 100%">
+    <template v-for="paragraph in editEpisode.paragraphs">
+      <tr>
+        <td style="width: 50%; padding: 4px">
+          {{ paragraph.jp }}
+          <br />
+          <n-input
+            class="on-mobile"
+            v-model:value="paragraph.edit"
+            :placeholder="paragraph.jp"
+            type="textarea"
+            autosize
+          />
+        </td>
+        <td class="on-desktop" style="padding: 4px">
+          <n-input
+            v-model:value="paragraph.edit"
+            :placeholder="paragraph.jp"
+            type="textarea"
+            autosize
+          />
+        </td>
+      </tr>
+      <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
+      <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
+    </template>
   </table>
 
   <n-button

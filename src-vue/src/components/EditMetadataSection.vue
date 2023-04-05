@@ -141,6 +141,10 @@ function addTerm() {
   <n-input
     v-model:value="editMetadata.introduction.edit"
     :placeholder="editMetadata.introduction.jp"
+    :autosize="{
+      minRows: 3,
+      maxRows: 10,
+    }"
     type="textarea"
   />
 
