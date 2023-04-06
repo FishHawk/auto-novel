@@ -157,8 +157,8 @@ class BookMetadataRepository(
                 }
 
         // 在数据库中，没有过期
-        val days = ChronoUnit.DAYS.between(metadataLocal.syncAt, LocalDateTime.now())
-        val isExpired = days > 2
+        val hours = ChronoUnit.HOURS.between(metadataLocal.syncAt, LocalDateTime.now())
+        val isExpired = hours > 20
         if (!isExpired) {
             return Result.success(metadataLocal)
         }
