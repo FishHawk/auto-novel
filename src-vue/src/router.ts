@@ -8,7 +8,7 @@ const routes = [
 
   { path: '/novel-list', component: () => import('./views/WebNovelList.vue') },
   {
-    path: '/novel-rank/:providerId/:type',
+    path: '/novel-rank/:providerId/:typeId',
     component: () => import('./views/WebNovelRank.vue'),
   },
   { path: '/patch', component: () => import('./views/Patch.vue') },

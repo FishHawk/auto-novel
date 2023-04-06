@@ -4,16 +4,17 @@ import ListLayout from '../components/ListLayout.vue';
 import ApiWebNovel from '../data/api/api_web_novel';
 
 const route = useRoute();
-const path = route.path;
+const providerId = route.params.providerId as string;
+const typeId = route.params.typeId as string;
 
-const listDescriptors: {
+const descriptors: {
   [key: string]: {
     title: string;
     search: boolean;
     options: { label: string; tags: string[] }[];
   };
 } = {
-  '/novel-rank/syosetu/1': {
+  '1': {
     title: '成为小说家：流派',
     search: false,
     options: [
@@ -47,7 +48,7 @@ const listDescriptors: {
       },
     ],
   },
-  '/novel-rank/syosetu/2': {
+  '2': {
     title: '成为小说家：综合',
     search: false,
     options: [
@@ -61,7 +62,7 @@ const listDescriptors: {
       },
     ],
   },
-  '/novel-rank/syosetu/3': {
+  '3': {
     title: '成为小说家：异世界转移/转生',
     search: false,
     options: [
@@ -77,21 +78,17 @@ const listDescriptors: {
   },
 };
 
-const descriptior = listDescriptors[path];
+const descriptior = descriptors[typeId];
 
 async function loader(_page: number, _query: string, selected: number[]) {
+  const types: { [key: string]: string } = {
+    '1': '流派',
+    '2': '综合',
+    '3': '异世界转生/转移',
+  };
+  const type = types[typeId];
   function optionNth(n: number): string {
     return descriptior.options[n].tags[selected[n]];
-  }
-  let type: string;
-  if (path == '/rank/syosetu/1') {
-    type = '流派';
-  } else if (path == '/rank/syosetu/2') {
-    type = '综合';
-  } else if (path == '/rank/syosetu/3') {
-    type = '异世界转生/转移';
-  } else {
-    type = '流派'; // default
   }
   const genre = optionNth(0);
   const range = optionNth(1);
