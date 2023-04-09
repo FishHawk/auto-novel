@@ -12,6 +12,4 @@ src-vue/dist/
 src-vue/auto-imports.d.ts
 src-vue/components.d.ts
 src-vue/*.pem
-
-# Ext
-src-ext/_metadata/
+src-vue/extension/_metadata/

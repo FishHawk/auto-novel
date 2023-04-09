@@ -189,9 +189,14 @@ function parseSetCookie(setCookie) {
 }
 
 v2.headersReceived.methods.push((d) => {
+  if (d.url === 'https://fanyi.baidu.com/v2transapi') {
+    return; // 奇怪，不知道为什么得去掉这个url，不然百度翻译概率失败
+  }
   for (const header of d.responseHeaders) {
     if (header.name === 'Set-Cookie') {
       const cookie = parseSetCookie(header.value);
+      console.log(d.url);
+      console.log(cookie);
       chrome.cookies.set({
         domain: cookie.domain,
         expirationDate: cookie.expires,
