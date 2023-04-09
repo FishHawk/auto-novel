@@ -112,6 +112,3 @@ export class BaiduWebTranslator extends BaiduBaseTranslator {
     }
   }
 }
-
-//TODO 修复百度翻译重复字符
-// const regex = /(\p{Script=Han}{1,2}?)\1/u;

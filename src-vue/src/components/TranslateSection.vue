@@ -246,6 +246,11 @@ function submitForm() {
 
   <n-h2 prefix="bar">翻译</n-h2>
   <n-p>
+    网页端翻译需要安装插件，请查看
+    <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
+    移动端暂时无法翻译。
+  </n-p>
+  <n-p>
     如果需要自定义更新范围，请使用
     <n-a @click="showModal = true">高级模式</n-a>
     。如果要编辑术语表，请先进入编辑界面。

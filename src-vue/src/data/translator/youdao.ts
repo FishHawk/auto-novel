@@ -61,7 +61,7 @@ export class YoudaoTranslator extends Translator {
 
   async translate(textsSrc: string[]): Promise<string[]> {
     const form = {
-      i: textsSrc[0],
+      i: textsSrc.join('\n'),
       from: this.langSrc,
       to: this.langDst,
       dictResult: true,
@@ -84,8 +84,10 @@ export class YoudaoTranslator extends Translator {
       .text();
 
     const json = this.decode(text);
-    console.log(json);
-    return [];
+    const result = json['translateResult'].map((it: any) => {
+      return it.map((it: any) => it.tgt.trimEnd()).join('');
+    });
+    return result;
   }
 
   decode(src: string) {
