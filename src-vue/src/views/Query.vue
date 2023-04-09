@@ -7,6 +7,7 @@ import ApiWebNovel from '../data/api/api_web_novel';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 import { parseUrl } from '../data/provider';
 import { YoudaoTranslator } from '../data/translator/youdao';
+import { BaiduWebTranslator } from '../data/translator/baidu-web';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -37,9 +38,15 @@ async function loadMyFavorite(page: number, selected: number[]) {
   return ApiWebNovel.listFavorite(authInfoStore.token!!);
 }
 
-async function test() {
+async function testBaidu() {
+  const t = await BaiduWebTranslator.createInstance('jp', 'zh', {});
+  const a = await t.translate(['あたしの悪徳領主様!!　～俺は星間国家の悪徳領主！　外伝～']);
+  console.log(a);
+}
+async function testYoudao() {
   const t = await YoudaoTranslator.createInstance();
-  const a = await t.translate(['测试']);
+  const a = await t.translate(['あたしの悪徳領主様!!　～俺は星間国家の悪徳領主！　外伝～']);
+  console.log(a);
 }
 </script>
 
@@ -66,7 +73,6 @@ async function test() {
           >
             日本网文机翻机器人
           </n-h1>
-          <n-button @click="test()"> 测试 </n-button>
           <n-input-group>
             <n-input
               v-model:value="url"
@@ -81,6 +87,8 @@ async function test() {
         </div>
       </div>
     </template>
+    <n-button @click="testBaidu()">百度</n-button>
+    <n-button @click="testYoudao()">有道</n-button>
 
     <template v-if="authInfoStore.token">
       <n-h2 prefix="bar">我的收藏</n-h2>

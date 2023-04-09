@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pack-ext": "/opt/google/chrome/chrome --pack-extension=$(pwd)/extension --pack-extension-key=$(pwd)/unlock.pem && mv extension.crx public/unlock.crx"
   },
   "dependencies": {
     "@types/crypto-js": "^4.1.1",

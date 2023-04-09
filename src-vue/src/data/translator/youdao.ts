@@ -84,33 +84,23 @@ export class YoudaoTranslator extends Translator {
       .text();
 
     const json = this.decode(text);
+    console.log(json);
     return [];
   }
 
-  decode(ciphertext: string) {
+  decode(src: string) {
     const key = CryptoJS.MD5(
       'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
     );
     const iv = CryptoJS.MD5(
       'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4'
     );
-    const decrypted = CryptoJS.AES.decrypt(ciphertext, key, { iv }).toString();
-    console.log(decrypted);
-    // const json = JSON.parse(decrypted);
-    // return json;
-
-    // const key =
-    //   'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl';
-    // const iv =
-    //   'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4';
-    // const cbc = new aes.ModeOfOperation.cbc(
-    //   md5.digest(key).slice(0, 16),
-    //   md5.digest(iv).slice(0, 16)
-    // );
-    // const encryptedBytes = Buffer.from(ciphertext, 'base64');
-    // const decryptedBytes = cbc.decrypt(encryptedBytes);
-    // const decryptedText = aes.utils.utf8.fromBytes(decryptedBytes);
-    // const json = JSON.parse(decryptedText);
-    // return json;
+    const dec = CryptoJS.AES.decrypt(
+      src.replace(/_/g, '/').replace(/-/g, '+'),
+      key,
+      { iv }
+    ).toString(CryptoJS.enc.Utf8);
+    const json = JSON.parse(dec);
+    return json;
   }
 }
