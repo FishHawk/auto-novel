@@ -53,12 +53,12 @@ async function testYoudao() {
       <tbody>
         <tr>
           <td nowrap="nowrap">Chrome</td>
-          <td><n-a href="/unlock.crx" target="_blank">浏览器插件</n-a></td>
+          <td><n-a href="/extension.zip" target="_blank">浏览器插件</n-a></td>
         </tr>
         <tr>
           <td nowrap="nowrap">Edge</td>
           <td>
-            <n-a href="/unlock.crx" target="_blank">浏览器插件</n-a>
+            <n-a href="/extension.zip" target="_blank">浏览器插件</n-a>
             （只支持使用了Chrome内核之后的Edge版本）
           </td>
         </tr>
@@ -75,11 +75,9 @@ async function testYoudao() {
 
     <n-h4 prefix="bar">Chrome/Edge插件安装步骤</n-h4>
     <n-ul>
-      <n-li>
-        右键下载链接，点击链接另存为，下载插件。不能用左键下载，否则会被浏览器自动阻止。
-      </n-li>
-      <n-li> 进入插件页面，启用开发者模式。 </n-li>
-      <n-li> 将下载的crx文件拖入扩展页面即可安装。 </n-li>
+      <n-li>下载插件zip，解压到文件夹。</n-li>
+      <n-li>进入插件页面，启用开发者模式。</n-li>
+      <n-li>点击“加载已解压的扩展程序”，选择解压的文件夹。</n-li>
     </n-ul>
 
     <n-h4 prefix="bar">测试翻译</n-h4>
