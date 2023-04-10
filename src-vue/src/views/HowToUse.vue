@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { YoudaoTranslator } from '../data/translator/youdao';
-import { BaiduWebTranslator } from '../data/translator/baidu-web';
+import { BaiduTranslator } from '../data/translator/baidu';
 
 const message = useMessage();
 
@@ -13,7 +13,7 @@ const textYoudao = ref();
 
 async function testBaidu() {
   try {
-    const t = await BaiduWebTranslator.createInstance('jp', 'zh', {});
+    const t = await BaiduTranslator.create();
     const r = await t.translate([textJp]);
     textBaidu.value = r[0];
   } catch (e: any) {
@@ -23,7 +23,7 @@ async function testBaidu() {
 
 async function testYoudao() {
   try {
-    const t = await YoudaoTranslator.createInstance();
+    const t = await YoudaoTranslator.create();
     const r = await t.translate([textJp]);
     textYoudao.value = r[0];
   } catch (e: any) {

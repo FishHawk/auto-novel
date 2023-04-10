@@ -1,7 +1,6 @@
 import ky from 'ky';
 import CryptoJS from 'crypto-js';
-
-import { Glossary, Translator } from './base';
+import { Translator } from './adapter';
 
 function getBaseBody(key: string) {
   const c = 'fanyideskweb';
@@ -23,18 +22,15 @@ function getBaseBody(key: string) {
   };
 }
 
-export class YoudaoTranslator extends Translator {
+export class YoudaoTranslator implements Translator {
+  size = 2000;
   key = '';
 
-  constructor(langSrc: string, langDst: string, glossary: Glossary) {
-    super(langSrc, langDst, glossary);
+  static async create() {
+    return await new this().init();
   }
 
-  static async createInstance() {
-    return await new this('ja', 'zh-CHS', {}).init();
-  }
-
-  async init() {
+  private async init() {
     await ky.get('https://rlogs.youdao.com/rlog.php', {
       searchParams: {
         _npid: 'fanyiweb',
@@ -62,8 +58,8 @@ export class YoudaoTranslator extends Translator {
   async translate(textsSrc: string[]): Promise<string[]> {
     const form = {
       i: textsSrc.join('\n'),
-      from: this.langSrc,
-      to: this.langDst,
+      from: 'ja',
+      to: 'zh-CHS',
       dictResult: true,
       keyid: 'webfanyi',
       ...getBaseBody(this.key),
@@ -90,7 +86,7 @@ export class YoudaoTranslator extends Translator {
     return result;
   }
 
-  decode(src: string) {
+  private decode(src: string) {
     const key = CryptoJS.MD5(
       'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
     );

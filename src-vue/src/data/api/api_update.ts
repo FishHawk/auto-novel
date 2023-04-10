@@ -1,7 +1,7 @@
 import api from './api';
 import { Result, Ok, Err } from './result';
-import { BaiduWebTranslator } from '../translator/baidu-web';
-import { Translator } from '../translator/base';
+import { TranslatorAdapter } from '../translator/adapter';
+import { BaiduTranslator } from '../translator/baidu';
 
 interface MetadataToTranslateDto {
   title?: string;
@@ -162,16 +162,15 @@ export async function update(
   callback: UpdateCallback
 ): Promise<Result<undefined, any>> {
   let metadata: MetadataToTranslateDto;
-  let translator: Translator | undefined = undefined;
+  let translator: TranslatorAdapter | undefined = undefined;
   try {
     console.log(`获取元数据 ${providerId}/${bookId}`);
     metadata = await getMetadata(providerId, bookId, startIndex, endIndex);
 
     if (needTranslate) {
       try {
-        translator = await BaiduWebTranslator.createInstance(
-          'jp',
-          'zh',
+        translator = new TranslatorAdapter(
+          await BaiduTranslator.create(),
           metadata.glossary
         );
       } catch (e: any) {
@@ -208,7 +207,7 @@ export async function update(
       const textsSrc = episode.paragraphsJp;
       if (translator && textsSrc.length > 0) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
-        const textsDst = await translator.translateWithGlossary(textsSrc);
+        const textsDst = await translator.translate(textsSrc);
 
         console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
         await postEpisode(providerId, bookId, episodeId, {
@@ -237,7 +236,7 @@ export async function update(
       const paragraphsZh: { [key: number]: string } = {};
       if (translator && textsSrc.length > 0) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
-        const textsDst = await translator.translateWithGlossary(textsSrc);
+        const textsDst = await translator.translate(textsSrc);
         expiredParagraphs.forEach((it, index) => {
           paragraphsZh[it.index] = textsDst[index];
         });
