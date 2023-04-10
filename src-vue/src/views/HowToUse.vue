@@ -73,6 +73,16 @@ async function testYoudao() {
       </tbody>
     </n-table>
 
+    <n-h4 prefix="bar">Chrome/Edge插件安装步骤</n-h4>
+    <n-ul>
+      <n-li>
+        右键下载链接，点击链接另存为，下载插件。不能用左键下载，否则会被浏览器自动阻止。
+      </n-li>
+      <n-li> 进入插件页面，启用开发者模式。 </n-li>
+      <n-li> 将下载的crx文件拖入扩展页面即可安装。 </n-li>
+    </n-ul>
+
+    <n-h4 prefix="bar">测试翻译</n-h4>
     <n-p>安装好插件后可以用下面的按钮来测试能否翻译。</n-p>
     <n-p>日文：{{ textJp }}</n-p>
     <n-p>百度：{{ textBaidu }}</n-p>
