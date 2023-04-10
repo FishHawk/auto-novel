@@ -21,8 +21,10 @@ suspend fun makeTxtFile(
         filePath.bufferedWriter().use {
             val writer: TxtWriter = when (lang) {
                 BookFileLang.JP -> TxtMakerJp
-                BookFileLang.ZH -> TxtMakerZh
-                BookFileLang.MIX -> TxtMakerMix
+                BookFileLang.ZH_BAIDU -> TxtMakerZh { ep -> ep.baiduParagraphs }
+                BookFileLang.ZH_YOUDAO -> TxtMakerZh { ep -> ep.youdaoParagraphs }
+                BookFileLang.MIX_BAIDU -> TxtMakerMix(TxtMakerZh { ep -> ep.baiduParagraphs })
+                BookFileLang.MIX_YOUDAO -> TxtMakerMix(TxtMakerZh { ep -> ep.youdaoParagraphs })
             }
             with(it) { with(writer) { writeBook(metadata, episodes) } }
         }
@@ -101,7 +103,9 @@ private object TxtMakerJp : TxtWriter() {
     }
 }
 
-private object TxtMakerZh : TxtWriter() {
+private class TxtMakerZh(
+    private val getParagraphs: (BookEpisode) -> List<String>?
+) : TxtWriter() {
     override fun BufferedWriter.writeTitle(metadata: BookMetadata) {
         write((metadata.titleZh ?: metadata.titleJp) + "\n")
     }
@@ -118,28 +122,31 @@ private object TxtMakerZh : TxtWriter() {
     }
 
     override fun BufferedWriter.writeEpisode(episode: BookEpisode) {
-        if (episode.baiduParagraphs == null) {
+        val paragraphs = getParagraphs(episode)
+        if (paragraphs == null) {
             writeMissingEpisode()
         } else {
-            episode.baiduParagraphs.forEach { text -> write(text + "\n") }
+            paragraphs.forEach { text -> write(text + "\n") }
         }
     }
 }
 
-private object TxtMakerMix : TxtWriter() {
+private class TxtMakerMix(
+    private val txtMakerZh: TxtMakerZh,
+) : TxtWriter() {
     override fun BufferedWriter.writeTitle(metadata: BookMetadata) {
         with(TxtMakerJp) { writeTitle(metadata) }
-        with(TxtMakerZh) { writeTitle(metadata) }
+        with(txtMakerZh) { writeTitle(metadata) }
     }
 
     override fun BufferedWriter.writeIntroduction(metadata: BookMetadata) {
         with(TxtMakerJp) { writeIntroduction(metadata) }
-        with(TxtMakerZh) { writeIntroduction(metadata) }
+        with(txtMakerZh) { writeIntroduction(metadata) }
     }
 
     override fun BufferedWriter.writeTocItemTitle(item: BookTocItem) {
         with(TxtMakerJp) { writeTocItemTitle(item) }
-        with(TxtMakerZh) { writeTocItemTitle(item) }
+        with(txtMakerZh) { writeTocItemTitle(item) }
     }
 
     override fun BufferedWriter.writeEpisode(episode: BookEpisode) {
