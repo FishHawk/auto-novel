@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import { h, onMounted, Ref, ref } from 'vue';
-import { NA, DataTableColumns, NButton, useMessage } from 'naive-ui';
+import { onMounted, Ref, ref } from 'vue';
+import { useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
 import ApiWebNovel, { BookStateDto } from '../data/api/api_web_novel';
-
 import { update } from '../data/api/api_update';
 
 const props = defineProps<{
@@ -43,7 +42,7 @@ async function getFileGroups() {
 }
 
 async function startUpdateTask(
-  needTranslate: boolean,
+  version: 'jp' | 'baidu' | 'youdao',
   startIndex: number,
   endIndex: number
 ) {
@@ -51,7 +50,15 @@ async function startUpdateTask(
     message.info('已有任务在运行。');
     return;
   }
-  const name = needTranslate ? '更新中文' : '更新日文';
+  let name;
+  if (version === 'jp') {
+    name = '更新日文';
+  } else if (version === 'baidu') {
+    name = '百度翻译';
+  } else {
+    name = '有道翻译';
+  }
+
   progress.value = {
     name,
     finished: 0,
@@ -59,7 +66,7 @@ async function startUpdateTask(
   };
 
   const result = await update(
-    needTranslate,
+    version,
     props.providerId,
     props.bookId,
     startIndex,
@@ -91,58 +98,9 @@ async function startUpdateTask(
 
 interface BookFiles {
   label: string;
-  lang: string;
+  version: 'jp' | 'baidu' | 'youdao';
   files: { label: string; url: string; name: string }[];
 }
-
-const tableColumns: DataTableColumns<BookFiles> = [
-  { title: '语言', key: 'label' },
-  {
-    title: '链接',
-    key: 'links',
-    render(row) {
-      return row.files.map((file) => {
-        return h(
-          NA,
-          {
-            style: { marginRight: '6px' },
-            href: file.url,
-            target: '_blank',
-            download: file.name,
-          },
-          { default: () => file.label }
-        );
-      });
-    },
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    render(row) {
-      if (row.lang === 'jp') {
-        return h(
-          NButton,
-          {
-            tertiary: true,
-            size: 'small',
-            onClick: () => startUpdateTask(false, 0, 65536),
-          },
-          { default: () => '更新' }
-        );
-      } else {
-        return h(
-          NButton,
-          {
-            tertiary: true,
-            size: 'small',
-            onClick: () => startUpdateTask(true, 0, 65536),
-          },
-          { default: () => '更新(需要插件)' }
-        );
-      }
-    },
-  },
-];
 
 function stateToFileList(): BookFiles[] {
   const baseUrl = window.origin + `/api/prepare-book/`;
@@ -164,18 +122,28 @@ function stateToFileList(): BookFiles[] {
 
   return [
     {
-      label: `日文(${state?.countJp ?? '-'}/${state?.total ?? '-'})`,
-      lang: 'jp',
+      label: `日文(${state?.count ?? '-'}/${state?.total ?? '-'})`,
+      version: 'jp',
       files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
     },
     {
-      label: `中文(${state?.countZh ?? '-'}/${state?.total ?? '-'})`,
-      lang: 'zh',
+      label: `百度(${state?.countBaidu ?? '-'}/${state?.total ?? '-'})`,
+      version: 'baidu',
       files: [
-        createFile('TXT', 'zh', 'txt'),
-        createFile('EPUB', 'zh', 'epub'),
-        createFile('中日对比TXT', 'mix', 'txt'),
-        createFile('中日对比EPUB', 'mix', 'epub'),
+        createFile('TXT', 'zh-baidu', 'txt'),
+        createFile('EPUB', 'zh-baidu', 'epub'),
+        createFile('中日对比TXT', 'mix-baidu', 'txt'),
+        createFile('中日对比EPUB', 'mix-baidu', 'epub'),
+      ],
+    },
+    {
+      label: `有道(${state?.countYoudao ?? '-'}/${state?.total ?? '-'})`,
+      version: 'youdao',
+      files: [
+        createFile('TXT', 'zh-youdao', 'txt'),
+        createFile('EPUB', 'zh-youdao', 'epub'),
+        createFile('中日对比TXT', 'mix-youdao', 'txt'),
+        createFile('中日对比EPUB', 'mix-youdao', 'epub'),
       ],
     },
   ];
@@ -183,22 +151,19 @@ function stateToFileList(): BookFiles[] {
 
 const formStartIndex = ref(1);
 const formEndIndex = ref(65536);
-enum FormMode {
-  JP,
-  ZH,
-}
-const formMode = ref(FormMode.JP);
+const formMode = ref<'jp' | 'baidu' | 'youdao'>('jp');
 const formModeOptions = [
-  { label: '日文', value: FormMode.JP },
-  { label: '中文', value: FormMode.ZH },
+  { label: '日文', value: 'jp' },
+  { label: '百度', value: 'baidu' },
+  { label: '有道', value: 'youdao' },
 ];
 
 function submitForm() {
-  if (formMode.value == FormMode.JP) {
-    startUpdateTask(false, formStartIndex.value - 1, formEndIndex.value - 1);
-  } else {
-    startUpdateTask(true, formStartIndex.value - 1, formEndIndex.value - 1);
-  }
+  startUpdateTask(
+    formMode.value,
+    formStartIndex.value - 1,
+    formEndIndex.value - 1
+  );
   showModal.value = false;
 }
 </script>
@@ -268,12 +233,42 @@ function submitForm() {
       </n-collapse-item>
     </n-collapse>
   </n-p>
-  <n-data-table
-    :columns="tableColumns"
-    :data="stateToFileList()"
-    :pagination="false"
-    :bordered="false"
-  />
+  <n-table :bordered="false" :single-line="false">
+    <thead>
+      <tr>
+        <th>版本</th>
+        <th>链接</th>
+        <th>更新</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="row in stateToFileList()">
+        <td nowrap="nowrap">{{ row.label }}</td>
+        <td>
+          <n-space>
+            <n-a
+              v-for="file in row.files"
+              :href="file.url"
+              :download="file.name"
+              target="_blank"
+            >
+              {{ file.label }}
+            </n-a>
+          </n-space>
+        </td>
+        <td>
+          <n-button
+            tertiary
+            size="small"
+            @click="startUpdateTask(row.version, 0, 65536)"
+          >
+            {{ row.version === 'jp' ? '更新' : '更新(需要插件)' }}
+          </n-button>
+        </td>
+      </tr>
+    </tbody>
+  </n-table>
+
   <div v-if="progress !== undefined">
     <n-space
       v-if="progress !== undefined"

@@ -2,6 +2,7 @@ import api from './api';
 import { Result, Ok, Err } from './result';
 import { TranslatorAdapter } from '../translator/adapter';
 import { BaiduTranslator } from '../translator/baidu';
+import { YoudaoTranslator } from '../translator/youdao';
 
 interface MetadataToTranslateDto {
   title?: string;
@@ -16,12 +17,13 @@ interface MetadataToTranslateDto {
 async function getMetadata(
   providerId: string,
   bookId: string,
+  version: 'jp' | 'baidu' | 'youdao',
   startIndex: number,
   endIndex: number
 ): Promise<MetadataToTranslateDto> {
   return api
     .get(`update/metadata/${providerId}/${bookId}`, {
-      searchParams: { startIndex, endIndex },
+      searchParams: { version, startIndex, endIndex },
     })
     .json();
 }
@@ -60,6 +62,7 @@ async function getEpisode(
 interface EpisodeUpdateBody {
   glossaryUuid: string | undefined;
   paragraphsZh: string[];
+  version: 'baidu' | 'youdao';
 }
 
 async function postEpisode(
@@ -78,6 +81,7 @@ async function postEpisode(
 interface EpisodeUpdatePartlyBody {
   glossaryUuid: string | undefined;
   paragraphsZh: { [key: number]: string };
+  version: 'baidu' | 'youdao';
 }
 
 async function putEpisode(
@@ -154,7 +158,7 @@ interface UpdateCallback {
 }
 
 export async function update(
-  needTranslate: boolean,
+  version: 'jp' | 'baidu' | 'youdao',
   providerId: string,
   bookId: string,
   startIndex: number,
@@ -165,14 +169,27 @@ export async function update(
   let translator: TranslatorAdapter | undefined = undefined;
   try {
     console.log(`获取元数据 ${providerId}/${bookId}`);
-    metadata = await getMetadata(providerId, bookId, startIndex, endIndex);
+    metadata = await getMetadata(
+      providerId,
+      bookId,
+      version,
+      startIndex,
+      endIndex
+    );
 
-    if (needTranslate) {
+    if (version !== 'jp') {
       try {
-        translator = new TranslatorAdapter(
-          await BaiduTranslator.create(),
-          metadata.glossary
-        );
+        if (version === 'baidu') {
+          translator = new TranslatorAdapter(
+            await BaiduTranslator.create(),
+            metadata.glossary
+          );
+        } else {
+          translator = new TranslatorAdapter(
+            await YoudaoTranslator.create(),
+            metadata.glossary
+          );
+        }
       } catch (e: any) {
         return Err(e);
       }
@@ -205,7 +222,7 @@ export async function update(
       const episode = await getEpisode(providerId, bookId, episodeId);
 
       const textsSrc = episode.paragraphsJp;
-      if (translator && textsSrc.length > 0) {
+      if (version !== 'jp' && translator && textsSrc.length > 0) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
         const textsDst = await translator.translate(textsSrc);
 
@@ -213,6 +230,7 @@ export async function update(
         await postEpisode(providerId, bookId, episodeId, {
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh: textsDst,
+          version,
         });
       }
 
@@ -234,20 +252,20 @@ export async function update(
 
       const textsSrc = expiredParagraphs.map((it) => it.text);
       const paragraphsZh: { [key: number]: string } = {};
-      if (translator && textsSrc.length > 0) {
+      if (version !== 'jp' && translator && textsSrc.length > 0) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
         const textsDst = await translator.translate(textsSrc);
         expiredParagraphs.forEach((it, index) => {
           paragraphsZh[it.index] = textsDst[index];
         });
+
+        console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
+        await putEpisode(providerId, bookId, episodeId, {
+          glossaryUuid: metadata.glossaryUuid,
+          paragraphsZh,
+          version,
+        });
       }
-
-      console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
-      await putEpisode(providerId, bookId, episodeId, {
-        glossaryUuid: metadata.glossaryUuid,
-        paragraphsZh,
-      });
-
       callback.onEpisodeTranslateSuccess();
     } catch (e) {
       console.log(e);

@@ -20,6 +20,17 @@ const bookId = route.params.bookId as string;
 const episodeId = route.params.episodeId as string;
 const url = buildEpisodeUrl(providerId, bookId, episodeId);
 
+const modeOptions = [
+  { value: 'jp', label: '日文' },
+  { value: 'zh', label: '中文' },
+  { value: 'mix', label: '中日混合' },
+];
+const translationOptions = [
+  { value: 'youdao', label: '有道' },
+  { value: 'baidu', label: '百度' },
+  { value: 'compare', label: '对比（测试用）' },
+];
+const fontSizeOptions = ['14px', '16px', '18px', '20px'];
 const themeOptions = [
   { isDark: false, bodyColor: '#FFFFFF' },
   { isDark: false, bodyColor: '#FFF2E2' },
@@ -30,14 +41,6 @@ const themeOptions = [
   { isDark: true, bodyColor: '#000000' },
   { isDark: true, bodyColor: '#272727' },
 ];
-
-const modeOptions = [
-  { value: 'jp', label: '日文' },
-  { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中日混合' },
-];
-
-const fontSizeOptions = ['14px', '16px', '18px', '20px'];
 
 const showModal = ref(false);
 
@@ -53,9 +56,14 @@ async function getEpisode() {
 
 function getTextList(
   episode: BookEpisodeDto
-): { text1: string; text2?: string }[] {
-  const paragraphsJp = episode.paragraphsJp;
-  const paragraphsZh = episode.paragraphsZh;
+): { text1: string; text2?: string; textCompare?: string }[] {
+  const paragraphsJp = episode.paragraphs;
+
+  const paragraphsZh =
+    readerSettingStore.translation === 'youdao'
+      ? episode.youdaoParagraphs
+      : episode.baiduParagraphs;
+
   if (readerSettingStore.mode == 'jp') {
     return paragraphsJp.map((text) => {
       return { text1: text };
@@ -68,7 +76,15 @@ function getTextList(
     } else {
       return paragraphsJp.map(function (textJp, i) {
         const textZh = paragraphsZh[i];
-        return { text1: textZh, text2: textJp };
+        const textCompare =
+          readerSettingStore.translation !== 'compare'
+            ? undefined
+            : (episode.youdaoParagraphs ?? [])[i] ?? '';
+        return {
+          text1: textZh,
+          text2: textJp,
+          textCompare,
+        };
       });
     }
   } else {
@@ -106,60 +122,75 @@ function enableEditMode() {
         role="dialog"
         aria-modal="true"
       >
-        <n-space>
-          <span>语言</span>
-          <n-radio-group v-model:value="readerSettingStore.mode" name="mode">
-            <n-space>
-              <n-radio
-                v-for="option in modeOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </n-radio>
-            </n-space>
-          </n-radio-group>
-        </n-space>
+        <table style="border-spacing: 0px 16px">
+          <LabelTr label="语言">
+            <n-radio-group v-model:value="readerSettingStore.mode" name="mode">
+              <n-space>
+                <n-radio
+                  v-for="option in modeOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </n-radio>
+              </n-space>
+            </n-radio-group>
+          </LabelTr>
 
-        <n-space style="margin-top: 15px">
-          <span>字体大小</span>
-          <n-radio-group
-            v-model:value="readerSettingStore.fontSize"
-            name="fontSize"
-          >
-            <n-space>
-              <n-radio
-                v-for="option in fontSizeOptions"
-                :key="option"
-                :value="option"
-              >
-                {{ option }}
-              </n-radio>
-            </n-space>
-          </n-radio-group>
-        </n-space>
-
-        <n-space style="margin-top: 15px">
-          <span>主题</span>
-          <n-space>
-            <n-radio
-              v-for="theme of themeOptions"
-              :checked="theme.bodyColor == readerSettingStore.theme.bodyColor"
-              @update:checked="readerSettingStore.theme = theme"
+          <LabelTr label="翻译">
+            <n-radio-group
+              v-model:value="readerSettingStore.translation"
+              name="translator"
             >
-              <n-tag
-                :bordered="false"
-                :color="{
-                  color: theme.bodyColor,
-                  textColor: theme.isDark ? 'white' : 'black',
-                }"
-                style="width: 8em"
+              <n-space>
+                <n-radio
+                  v-for="option in translationOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </n-radio>
+              </n-space>
+            </n-radio-group>
+          </LabelTr>
+
+          <LabelTr label="字体">
+            <n-radio-group
+              v-model:value="readerSettingStore.fontSize"
+              name="fontSize"
+            >
+              <n-space>
+                <n-radio
+                  v-for="option in fontSizeOptions"
+                  :key="option"
+                  :value="option"
+                >
+                  {{ option }}
+                </n-radio>
+              </n-space>
+            </n-radio-group>
+          </LabelTr>
+
+          <LabelTr label="主题">
+            <n-space>
+              <n-radio
+                v-for="theme of themeOptions"
+                :checked="theme.bodyColor == readerSettingStore.theme.bodyColor"
+                @update:checked="readerSettingStore.theme = theme"
               >
-                {{ theme.bodyColor }}
-              </n-tag>
-            </n-radio>
-          </n-space>
-        </n-space>
+                <n-tag
+                  :color="{
+                    color: theme.bodyColor,
+                    textColor: theme.isDark ? 'white' : 'black',
+                  }"
+                  style="width: 8em"
+                >
+                  {{ theme.bodyColor }}
+                </n-tag>
+              </n-radio>
+            </n-space>
+          </LabelTr>
+        </table>
       </n-card>
     </n-modal>
 
@@ -181,11 +212,11 @@ function enableEditMode() {
         <n-a :href="`/novel/${providerId}/${bookId}`">目录</n-a>
         <n-a @click="showModal = true">设置</n-a>
 
-        <n-text v-if="!bookEpisode.value.paragraphsZh" style="color: grey">
+        <!-- <n-text v-if="!bookEpisode.value.paragraphsZh" style="color: grey">
           编辑
         </n-text>
         <n-a v-else-if="!editMode" @click="enableEditMode()"> 编辑 </n-a>
-        <n-a v-else @click="editMode = false"> 返回 </n-a>
+        <n-a v-else @click="editMode = false"> 返回 </n-a> -->
 
         <n-a
           v-if="bookEpisode.value.nextId"
@@ -214,6 +245,12 @@ function enableEditMode() {
             <template v-if="text.text1.trim().length > 0">
               <n-p :style="{ fontSize: readerSettingStore.fontSize }">
                 {{ text.text1 }}
+              </n-p>
+              <n-p
+                v-if="text.textCompare"
+                :style="{ fontSize: readerSettingStore.fontSize }"
+              >
+                {{ text.textCompare }}
               </n-p>
               <n-p
                 v-if="text.text2"

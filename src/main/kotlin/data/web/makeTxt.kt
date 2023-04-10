@@ -97,7 +97,7 @@ private object TxtMakerJp : TxtWriter() {
     }
 
     override fun BufferedWriter.writeEpisode(episode: BookEpisode) {
-        episode.paragraphsJp.forEach { text -> write(text + "\n") }
+        episode.paragraphs.forEach { text -> write(text + "\n") }
     }
 }
 
@@ -118,10 +118,10 @@ private object TxtMakerZh : TxtWriter() {
     }
 
     override fun BufferedWriter.writeEpisode(episode: BookEpisode) {
-        if (episode.paragraphsZh == null) {
+        if (episode.baiduParagraphs == null) {
             writeMissingEpisode()
         } else {
-            episode.paragraphsZh.forEach { text -> write(text + "\n") }
+            episode.baiduParagraphs.forEach { text -> write(text + "\n") }
         }
     }
 }
@@ -143,10 +143,10 @@ private object TxtMakerMix : TxtWriter() {
     }
 
     override fun BufferedWriter.writeEpisode(episode: BookEpisode) {
-        if (episode.paragraphsZh == null) {
+        if (episode.baiduParagraphs == null) {
             writeMissingEpisode()
         } else {
-            episode.paragraphsJp.zip(episode.paragraphsZh).forEach { (textJp, textZh) ->
+            episode.paragraphs.zip(episode.baiduParagraphs).forEach { (textJp, textZh) ->
                 if (textJp.isNotBlank()) {
                     write(textZh + "\n")
                     write(textJp + "\n")

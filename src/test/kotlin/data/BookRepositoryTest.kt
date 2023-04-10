@@ -35,7 +35,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 //                        BookEpisode::episodeId eq it.episodeId,
 //                    )
 //                }
-                println(it.paragraphsJp.size)
+                println(it.paragraphs.size)
             }
         }
 

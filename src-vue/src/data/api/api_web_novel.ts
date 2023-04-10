@@ -13,8 +13,9 @@ export interface BookListItemDto {
   titleJp: string;
   titleZh?: string;
   total: number;
-  countJp: number;
-  countZh: number;
+  count: number;
+  countBaidu: number;
+  countYoudao: number;
 }
 
 async function list(
@@ -96,8 +97,9 @@ async function listRank(
 
 export interface BookStateDto {
   total: number;
-  countJp: number;
-  countZh: number;
+  count: number;
+  countBaidu: number;
+  countYoudao: number;
 }
 
 async function getState(
@@ -169,8 +171,9 @@ export interface BookEpisodeDto {
   titleZh: string | undefined;
   prevId: string | undefined;
   nextId: string | undefined;
-  paragraphsJp: string[];
-  paragraphsZh: string[] | undefined;
+  paragraphs: string[];
+  baiduParagraphs: string[] | undefined;
+  youdaoParagraphs: string[] | undefined;
 }
 
 async function getEpisode(

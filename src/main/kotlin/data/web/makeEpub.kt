@@ -60,7 +60,7 @@ suspend fun makeEpubFile(
                 if (episode == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    episode.paragraphsJp.forEach { text ->
+                    episode.paragraphs.forEach { text ->
                         it.appendElement("p").appendText(text)
                     }
                 }
@@ -68,10 +68,10 @@ suspend fun makeEpubFile(
 
             BookFileLang.ZH -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
-                if (episode?.paragraphsZh == null) {
+                if (episode?.baiduParagraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    episode.paragraphsZh.forEach { text ->
+                    episode.baiduParagraphs.forEach { text ->
                         it.appendElement("p").appendText(text)
                     }
                 }
@@ -85,10 +85,10 @@ suspend fun makeEpubFile(
                     it.appendElement("p").appendText(token.titleJp)
                         .attr("style", "opacity:0.4;")
                 }
-                if (episode?.paragraphsZh == null) {
+                if (episode?.baiduParagraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    episode.paragraphsZh.zip(episode.paragraphsJp).forEach { (textZh, textJp) ->
+                    episode.baiduParagraphs.zip(episode.paragraphs).forEach { (textZh, textJp) ->
                         if (textJp.isBlank()) {
                             it.appendElement("p").appendText(textJp)
                         } else {
