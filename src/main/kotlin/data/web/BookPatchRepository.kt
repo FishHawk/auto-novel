@@ -227,71 +227,71 @@ class BookPatchRepository(
         )
     }
 
-    suspend fun addEpisodePatch(
-        providerId: String,
-        bookId: String,
-        episodeId: String,
-        paragraphs: Map<Int, String>,
-    ) {
-        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
-            ?: return
-        val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
-            ?: return
-        val tocItem = metadata.toc.find { it.episodeId == episodeId }
-            ?: return
-
-        if (episode.paragraphsZh == null) return
-
-        val paragraphsChange = paragraphs.mapNotNull { (index, zhNew) ->
-            val zhOld = episode.paragraphsZh.getOrNull(index) ?: return@mapNotNull null
-            if (zhOld == zhNew) return@mapNotNull null
-            val jp = episode.paragraphsJp[index]
-            BookEpisodePatch.TextChange(index = index, jp = jp, zhOld = zhOld, zhNew = zhNew)
-        }
-
-        if (paragraphsChange.isEmpty()) {
-            return
-        }
-
-        // Add patch
-        createIfNotExist(
-            providerId = providerId,
-            bookId = bookId,
-            titleJp = metadata.titleJp,
-            titleZh = metadata.titleZh,
-        )
-
-        val patches = BookEpisodePatches(
-            titleJp = tocItem.titleJp,
-            titleZh = tocItem.titleZh,
-            patches = emptyList(),
-        )
-        col.updateOne(
-            and(
-                bsonSpecifyPatch(providerId, bookId),
-                BookPatch::toc.keyProjection(episodeId) exists false,
-            ),
-            setValue(BookPatch::toc.keyProjection(episodeId), patches),
-        )
-
-        val patch = BookEpisodePatch(
-            uuid = UUID.randomUUID().toString(),
-            paragraphsChange = paragraphsChange,
-            createAt = LocalDateTime.now(),
-        )
-        col.updateOne(
-            bsonSpecifyPatch(providerId, bookId),
-            push(BookPatch::toc.keyProjection(episodeId) / BookEpisodePatches::patches, patch),
-        )
-
-        // Apply patch
-        bookEpisodeRepository.updateZh(
-            providerId = providerId,
-            bookId = bookId,
-            episodeId = episodeId,
-            paragraphsZh = paragraphsChange.associate { it.index to it.zhNew },
-        )
-    }
+//    suspend fun addEpisodePatch(
+//        providerId: String,
+//        bookId: String,
+//        episodeId: String,
+//        paragraphs: Map<Int, String>,
+//    ) {
+//        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+//            ?: return
+//        val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
+//            ?: return
+//        val tocItem = metadata.toc.find { it.episodeId == episodeId }
+//            ?: return
+//
+//        if (episode.baiduParagraphs == null) return
+//
+//        val paragraphsChange = paragraphs.mapNotNull { (index, zhNew) ->
+//            val zhOld = episode.baiduParagraphs.getOrNull(index) ?: return@mapNotNull null
+//            if (zhOld == zhNew) return@mapNotNull null
+//            val jp = episode.paragraphs[index]
+//            BookEpisodePatch.TextChange(index = index, jp = jp, zhOld = zhOld, zhNew = zhNew)
+//        }
+//
+//        if (paragraphsChange.isEmpty()) {
+//            return
+//        }
+//
+//        // Add patch
+//        createIfNotExist(
+//            providerId = providerId,
+//            bookId = bookId,
+//            titleJp = metadata.titleJp,
+//            titleZh = metadata.titleZh,
+//        )
+//
+//        val patches = BookEpisodePatches(
+//            titleJp = tocItem.titleJp,
+//            titleZh = tocItem.titleZh,
+//            patches = emptyList(),
+//        )
+//        col.updateOne(
+//            and(
+//                bsonSpecifyPatch(providerId, bookId),
+//                BookPatch::toc.keyProjection(episodeId) exists false,
+//            ),
+//            setValue(BookPatch::toc.keyProjection(episodeId), patches),
+//        )
+//
+//        val patch = BookEpisodePatch(
+//            uuid = UUID.randomUUID().toString(),
+//            paragraphsChange = paragraphsChange,
+//            createAt = LocalDateTime.now(),
+//        )
+//        col.updateOne(
+//            bsonSpecifyPatch(providerId, bookId),
+//            push(BookPatch::toc.keyProjection(episodeId) / BookEpisodePatches::patches, patch),
+//        )
+//
+//        // Apply patch
+//        bookEpisodeRepository.updateZh(
+//            providerId = providerId,
+//            bookId = bookId,
+//            episodeId = episodeId,
+//            paragraphsZh = paragraphsChange.associate { it.index to it.zhNew },
+//        )
+//    }
 
     suspend fun deletePatch(
         providerId: String,

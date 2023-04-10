@@ -1,0 +1,14 @@
+[{
+  "id": 1,
+  "priority": 1,
+  "action": {
+    "type": "modifyHeaders",
+    "responseHeaders": [{
+      "operation": "remove",
+      "header": "x-frame-options"
+    }]
+  },
+  "condition": {
+    "resourceTypes": ["sub_frame"]
+  }
+}]

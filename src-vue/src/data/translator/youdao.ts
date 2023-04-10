@@ -1,107 +1,104 @@
-//TODO 未完成的有道翻译，似乎不可能在网页上运行，可能会迁移到浏览器插件上。
-// import ky from 'ky';
-// import md5 from 'js-md5';
-// import aes from 'aes-js';
+import ky from 'ky';
+import CryptoJS from 'crypto-js';
+import { Translator } from './adapter';
 
-import { Glossary, Translator } from './base';
+function getBaseBody(key: string) {
+  const c = 'fanyideskweb';
+  const p = 'webfanyi';
+  const t = Date.now().toString();
 
-// function sign(t: string, key: string) {
-//   return md5(`client=fanyideskweb&mysticTime=${t}&product=webfanyi&key=${key}`);
-// }
+  const sign = CryptoJS.MD5(
+    `client=${c}&mysticTime=${t}&product=${p}&key=${key}`
+  ).toString();
+  return {
+    sign,
+    client: c,
+    product: p,
+    appVersion: '1.0.0',
+    vendor: 'web',
+    pointParam: 'client,mysticTime,product',
+    mysticTime: t,
+    keyfrom: 'fanyi.web',
+  };
+}
 
-// function getBaseBody(key: string) {
-//   const t = Date.now().toString();
-//   return {
-//     sign: sign(t, key),
-//     client: 'fanyideskweb',
-//     product: 'webfanyi',
-//     appVersion: '1.0.0',
-//     vendor: 'web',
-//     pointParam: 'client,mysticTime,product',
-//     mysticTime: t,
-//     keyfrom: 'fanyi.web',
-//   };
-// }
+export class YoudaoTranslator implements Translator {
+  size = 2000;
+  key = '';
 
-// export class YoudaoTranslator extends Translator {
-//   key = '';
+  static async create() {
+    return await new this().init();
+  }
 
-//   constructor(langSrc: string, langDst: string, glossary: Glossary) {
-//     super(langSrc, langDst, glossary);
-//   }
+  private async init() {
+    await ky.get('https://rlogs.youdao.com/rlog.php', {
+      searchParams: {
+        _npid: 'fanyiweb',
+        _ncat: 'pageview',
+        _ncoo: (2147483647 * Math.random()).toString(),
+        _nssn: 'NULL',
+        _nver: '1.2.0',
+        _ntms: Date.now().toString(),
+      },
+    });
 
-//   private static aesCbc = this.createAesCbc();
-//   private static createAesCbc() {
-//     const key =
-//       'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl';
-//     const iv =
-//       'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4';
-//     return new aes.ModeOfOperation.cbc(
-//       md5.digest(key).slice(0, 16),
-//       md5.digest(iv).slice(0, 16)
-//     );
-//   }
+    const json: any = await ky
+      .get('https://dict.youdao.com/webtranslate/key', {
+        searchParams: {
+          keyid: 'webfanyi-key-getter',
+          ...getBaseBody('asdjnjfenknafdfsdfsd'),
+        },
+      })
+      .json();
 
-//   static async createInstance() {
-//     return await new this('ja', 'zh-CHS', {}).init();
-//   }
+    this.key = json['data']['secretKey'];
+    return this;
+  }
 
-//   async init() {
-//     await ky.get('https://rlogs.youdao.com/rlog.php', {
-//       searchParams: {
-//         _npid: 'fanyiweb',
-//         _ncat: 'pageview',
-//         _ncoo: (2147483647 * Math.random()).toString(),
-//         _nssn: 'NULL',
-//         _nver: '1.2.0',
-//         _ntms: Date.now().toString(),
-//       },
-//       credentials: 'include',
-//     });
+  async translate(textsSrc: string[]): Promise<string[]> {
+    const form = {
+      i: textsSrc.join('\n'),
+      from: 'ja',
+      to: 'zh-CHS',
+      dictResult: true,
+      keyid: 'webfanyi',
+      ...getBaseBody(this.key),
+    };
+    const searchParams = new URLSearchParams();
+    for (const name in form) {
+      searchParams.append(name, (form as any)[name].toString());
+    }
 
-//     const json: any = await ky
-//       .get('https://dict.youdao.com/webtranslate/key', {
-//         searchParams: {
-//           keyid: 'webfanyi-key-getter',
-//           ...getBaseBody('asdjnjfenknafdfsdfsd'),
-//         },
-//         credentials: 'include',
-//       })
-//       .json();
-//     this.key = json['data']['secretKey'];
-//     return this;
-//   }
+    const text = await ky
+      .post('https://dict.youdao.com/webtranslate', {
+        body: searchParams,
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+        },
+      })
+      .text();
 
-//   async translate(textsSrc: string[]): Promise<string[]> {
-//     const form = {
-//       i: textsSrc[0],
-//       from: this.langSrc,
-//       to: this.langDst,
-//       dictResult: true,
-//       keyid: 'webfanyi',
-//       ...getBaseBody(this.key),
-//     };
-//     const searchParams = new URLSearchParams();
-//     for (const name in form) {
-//       searchParams.append(name, (form as any)[name].toString());
-//     }
+    const json = this.decode(text);
+    const result = json['translateResult'].map((it: any) => {
+      return it.map((it: any) => it.tgt.trimEnd()).join('');
+    });
+    return result;
+  }
 
-//     const text = await ky
-//       .post('https://dict.youdao.com/webtranslate', {
-//         body: searchParams,
-//         credentials: 'include',
-//       })
-//       .text();
-
-//     const json = this.decode(text);
-//     return [];
-//   }
-
-//   decode(ciphertext: string) {
-//     const encryptedBytes = Buffer.from(ciphertext, 'base64');
-//     const decryptedBytes = YoudaoTranslator.aesCbc.decrypt(encryptedBytes);
-//     const decryptedText = aes.utils.utf8.fromBytes(decryptedBytes);
-//     const json = JSON.parse(decryptedText);
-//     return json;
-//   }
-// }
+  private decode(src: string) {
+    const key = CryptoJS.MD5(
+      'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
+    );
+    const iv = CryptoJS.MD5(
+      'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4'
+    );
+    const dec = CryptoJS.AES.decrypt(
+      src.replace(/_/g, '/').replace(/-/g, '+'),
+      key,
+      { iv }
+    ).toString(CryptoJS.enc.Utf8);
+    const json = JSON.parse(dec);
+    return json;
+  }
+}

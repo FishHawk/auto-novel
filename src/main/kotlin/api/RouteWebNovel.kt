@@ -8,13 +8,11 @@ import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
@@ -145,18 +143,18 @@ fun Route.routeWebNovel() {
         call.respondResult(result)
     }
 
-    authenticate {
-        put<WebNovel.Episode> { loc ->
-            val patch = call.receive<WebNovelService.BookEpisodePatchBody>()
-            val result = service.patchEpisode(
-                providerId = loc.providerId,
-                bookId = loc.bookId,
-                episodeId = loc.episodeId,
-                patch = patch,
-            )
-            call.respondResult(result)
-        }
-    }
+//    authenticate {
+//        put<WebNovel.Episode> { loc ->
+//            val patch = call.receive<WebNovelService.BookEpisodePatchBody>()
+//            val result = service.patchEpisode(
+//                providerId = loc.providerId,
+//                bookId = loc.bookId,
+//                episodeId = loc.episodeId,
+//                patch = patch,
+//            )
+//            call.respondResult(result)
+//        }
+//    }
 }
 
 class WebNovelService(
@@ -178,8 +176,9 @@ class WebNovelService(
             val titleJp: String,
             val titleZh: String?,
             val total: Int,
-            val countJp: Int,
-            val countZh: Int,
+            val count: Long,
+            val countBaidu: Long,
+            val countYoudao: Long,
         )
     }
 
@@ -202,8 +201,9 @@ class WebNovelService(
                 titleJp = it.titleJp,
                 titleZh = it.titleZh,
                 total = bookMetadataRepository.getLocal(it.providerId, it.bookId)!!.toc.count { it.episodeId != null },
-                countJp = bookEpisodeRepository.countJp(it.providerId, it.bookId).toInt(),
-                countZh = bookEpisodeRepository.countZh(it.providerId, it.bookId).toInt()
+                count = bookEpisodeRepository.count(it.providerId, it.bookId),
+                countBaidu = bookEpisodeRepository.countBaidu(it.providerId, it.bookId),
+                countYoudao = bookEpisodeRepository.countYoudao(it.providerId, it.bookId),
             )
         }
         val dto = BookListPageDto(
@@ -230,8 +230,9 @@ class WebNovelService(
                 titleJp = metadata.titleJp,
                 titleZh = metadata.titleZh,
                 total = metadata.toc.count { it.episodeId != null },
-                countJp = bookEpisodeRepository.countJp(it.providerId, it.bookId).toInt(),
-                countZh = bookEpisodeRepository.countZh(it.providerId, it.bookId).toInt()
+                count = bookEpisodeRepository.count(metadata.providerId, metadata.bookId),
+                countBaidu = bookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
+                countYoudao = bookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
             )
         }
         val dto = BookListPageDto(
@@ -308,8 +309,9 @@ class WebNovelService(
     @Serializable
     data class BookStateDto(
         val total: Int,
-        val countJp: Long,
-        val countZh: Long,
+        val count: Long,
+        val countBaidu: Long,
+        val countYoudao: Long,
     )
 
     suspend fun getState(
@@ -321,8 +323,9 @@ class WebNovelService(
         return Result.success(
             BookStateDto(
                 total = metadata.toc.count { it.episodeId != null },
-                countJp = bookEpisodeRepository.countJp(metadata.providerId, metadata.bookId),
-                countZh = bookEpisodeRepository.countZh(metadata.providerId, metadata.bookId),
+                count = bookEpisodeRepository.count(metadata.providerId, metadata.bookId),
+                countBaidu = bookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
+                countYoudao = bookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
             )
         )
     }
@@ -411,8 +414,9 @@ class WebNovelService(
         val titleZh: String? = null,
         val prevId: String? = null,
         val nextId: String? = null,
-        val paragraphsJp: List<String>,
-        val paragraphsZh: List<String>? = null,
+        val paragraphs: List<String>,
+        val baiduParagraphs: List<String>? = null,
+        val youdaoParagraphs: List<String>? = null,
     )
 
     suspend fun getEpisode(
@@ -436,37 +440,38 @@ class WebNovelService(
                 titleZh = toc[currIndex].titleZh,
                 prevId = toc.getOrNull(currIndex - 1)?.episodeId,
                 nextId = toc.getOrNull(currIndex + 1)?.episodeId,
-                paragraphsJp = episode.paragraphsJp,
-                paragraphsZh = episode.paragraphsZh,
+                paragraphs = episode.paragraphs,
+                baiduParagraphs = episode.baiduParagraphs,
+                youdaoParagraphs = episode.youdaoParagraphs,
             )
         )
     }
 
-    @Serializable
-    data class BookEpisodePatchBody(
-        val paragraphs: Map<Int, String>
-    )
-
-    suspend fun patchEpisode(
-        providerId: String,
-        bookId: String,
-        episodeId: String,
-        patch: BookEpisodePatchBody,
-    ): Result<BookEpisodeDto> {
-        if (patch.paragraphs.isEmpty())
-            return httpInternalServerError("修改为空")
-
-        bookPatchRepository.addEpisodePatch(
-            providerId = providerId,
-            bookId = bookId,
-            episodeId = episodeId,
-            paragraphs = patch.paragraphs,
-        )
-
-        return getEpisode(
-            providerId = providerId,
-            bookId = bookId,
-            episodeId = episodeId,
-        )
-    }
+//    @Serializable
+//    data class BookEpisodePatchBody(
+//        val paragraphs: Map<Int, String>
+//    )
+//
+//    suspend fun patchEpisode(
+//        providerId: String,
+//        bookId: String,
+//        episodeId: String,
+//        patch: BookEpisodePatchBody,
+//    ): Result<BookEpisodeDto> {
+//        if (patch.paragraphs.isEmpty())
+//            return httpInternalServerError("修改为空")
+//
+//        bookPatchRepository.addEpisodePatch(
+//            providerId = providerId,
+//            bookId = bookId,
+//            episodeId = episodeId,
+//            paragraphs = patch.paragraphs,
+//        )
+//
+//        return getEpisode(
+//            providerId = providerId,
+//            bookId = bookId,
+//            episodeId = episodeId,
+//        )
+//    }
 }

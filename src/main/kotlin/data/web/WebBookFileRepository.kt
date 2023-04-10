@@ -12,11 +12,17 @@ enum class BookFileLang(val value: String) {
     @SerialName("jp")
     JP("jp"),
 
-    @SerialName("zh")
-    ZH("zh"),
+    @SerialName("zh-baidu")
+    ZH_BAIDU("zh-baidu"),
 
-    @SerialName("mix")
-    MIX("mix")
+    @SerialName("mix-baidu")
+    MIX_BAIDU("mix-baidu"),
+
+    @SerialName("zh-youdao")
+    ZH_YOUDAO("zh-youdao"),
+
+    @SerialName("mix-youdao")
+    MIX_YOUDAO("mix-youdao")
 }
 
 @Serializable

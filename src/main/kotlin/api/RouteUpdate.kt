@@ -2,14 +2,12 @@ package api
 
 import data.web.BookEpisodeRepository
 import data.web.BookMetadataRepository
-import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.get
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
@@ -23,6 +21,7 @@ private class Update {
         val parent: Update = Update(),
         val providerId: String,
         val bookId: String,
+        val version: String,
         val startIndex: Int = 0,
         val endIndex: Int = 65536,
     )
@@ -44,6 +43,7 @@ fun Route.routeUpdate() {
         val result = service.getMetadataToTranslate(
             providerId = loc.providerId,
             bookId = loc.bookId,
+            version = loc.version,
             startIndex = loc.startIndex,
             endIndex = loc.endIndex,
         )
@@ -110,9 +110,13 @@ class UpdateService(
     suspend fun getMetadataToTranslate(
         providerId: String,
         bookId: String,
+        version: String,
         startIndex: Int,
         endIndex: Int,
     ): Result<MetadataToTranslateDto> {
+        if (version != "baidu" && version != "youdao")
+            return httpBadRequest("不支持的版本")
+
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("元数据不存在")
 
@@ -131,10 +135,19 @@ class UpdateService(
             .safeSubList(startIndex, endIndex)
             .forEach { episodeId ->
                 val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
-                if (episode?.paragraphsZh == null) {
-                    untranslatedEpisodeIds.add(episodeId)
-                } else if (episode.glossaryUuid != metadata.glossaryUuid) {
-                    expiredEpisodeIds.add(episodeId)
+
+                if (version == "baidu") {
+                    if (episode?.baiduParagraphs == null) {
+                        untranslatedEpisodeIds.add(episodeId)
+                    } else if (episode.baiduGlossaryUuid != metadata.glossaryUuid) {
+                        expiredEpisodeIds.add(episodeId)
+                    }
+                } else {
+                    if (episode?.youdaoParagraphs == null) {
+                        untranslatedEpisodeIds.add(episodeId)
+                    } else if (episode.youdaoGlossaryUuid != metadata.glossaryUuid) {
+                        expiredEpisodeIds.add(episodeId)
+                    }
                 }
             }
 
@@ -214,14 +227,15 @@ class UpdateService(
 
         return Result.success(
             EpisodeToTranslateDto(
-                glossary = episode.glossary,
-                paragraphsJp = episode.paragraphsJp,
+                glossary = episode.baiduGlossary,
+                paragraphsJp = episode.paragraphs,
             )
         )
     }
 
     @Serializable
     data class EpisodeUpdateBody(
+        val version: String,
         val glossaryUuid: String? = null,
         val paragraphsZh: List<String>,
     )
@@ -232,6 +246,9 @@ class UpdateService(
         episodeId: String,
         body: EpisodeUpdateBody,
     ): Result<Unit> {
+        if (body.version != "baidu" && body.version != "youdao")
+            return httpBadRequest("不支持的版本")
+
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("元数据不存在")
         if (body.glossaryUuid != metadata.glossaryUuid) {
@@ -240,26 +257,41 @@ class UpdateService(
 
         val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
             ?: return httpNotFound("章节不存在")
-        if (episode.paragraphsJp.size != body.paragraphsZh.size) {
+        if (episode.paragraphs.size != body.paragraphsZh.size) {
             return httpBadRequest("翻译文本长度不匹配")
         }
-        if (episode.paragraphsZh != null) {
-            return httpConflict("翻译已经存在")
-        }
 
-        bookEpisodeRepository.updateZh(
-            providerId = providerId,
-            bookId = bookId,
-            episodeId = episodeId,
-            glossaryUuid = metadata.glossaryUuid,
-            glossary = metadata.glossary,
-            paragraphsZh = body.paragraphsZh,
-        )
+        if (body.version == "baidu") {
+            if (episode.baiduParagraphs != null) {
+                return httpConflict("翻译已经存在")
+            }
+            bookEpisodeRepository.updateBaidu(
+                providerId = providerId,
+                bookId = bookId,
+                episodeId = episodeId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        } else {
+            if (episode.youdaoParagraphs != null) {
+                return httpConflict("翻译已经存在")
+            }
+            bookEpisodeRepository.updateYoudao(
+                providerId = providerId,
+                bookId = bookId,
+                episodeId = episodeId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        }
         return Result.success(Unit)
     }
 
     @Serializable
     data class EpisodeUpdatePartlyBody(
+        val version: String,
         val glossaryUuid: String? = null,
         val paragraphsZh: Map<Int, String>,
     )
@@ -270,6 +302,9 @@ class UpdateService(
         episodeId: String,
         body: EpisodeUpdatePartlyBody,
     ): Result<Unit> {
+        if (body.version != "baidu" && body.version != "youdao")
+            return httpBadRequest("不支持的版本")
+
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("元数据不存在")
         if (body.glossaryUuid != metadata.glossaryUuid) {
@@ -278,18 +313,32 @@ class UpdateService(
 
         val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
             ?: return httpNotFound("章节不存在")
-        if (episode.paragraphsZh == null) {
-            return httpNotFound("翻译不存在")
-        }
 
-        bookEpisodeRepository.updateZh(
-            providerId = providerId,
-            bookId = bookId,
-            episodeId = episodeId,
-            glossaryUuid = metadata.glossaryUuid,
-            glossary = metadata.glossary,
-            paragraphsZh = body.paragraphsZh,
-        )
+        if (body.version == "baidu") {
+            if (episode.baiduParagraphs != null) {
+                return httpConflict("翻译已经存在")
+            }
+            bookEpisodeRepository.updateBaidu(
+                providerId = providerId,
+                bookId = bookId,
+                episodeId = episodeId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        } else {
+            if (episode.youdaoParagraphs != null) {
+                return httpConflict("翻译已经存在")
+            }
+            bookEpisodeRepository.updateYoudao(
+                providerId = providerId,
+                bookId = bookId,
+                episodeId = episodeId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        }
         return Result.success(Unit)
     }
 }

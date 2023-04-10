@@ -91,50 +91,5 @@ async function loadMyFavorite(page: number, selected: number[]) {
         Alphapolis: https://www.alphapolis.co.jp/novel/638978238/525733370
       </n-li>
     </n-ul>
-
-    <n-h2 prefix="bar">如何使用中文翻译</n-h2>
-    <n-p>
-      中文翻译需要从你的浏览器访问翻译网站，因此需要安装插件解决跨域的问题。
-    </n-p>
-    <n-p>
-      如果你是手机，是没办法安装插件的。等我之后有空，可能会写个安卓App。
-    </n-p>
-    <n-p>
-      对于 Chrome/Edge/Firefox 浏览器，你需要安装插件 CORS Unblock。下载链接：
-      <n-a
-        href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino/"
-        target="_blank"
-      >
-        Chrome
-      </n-a>
-      /
-      <n-a
-        href="https://microsoftedge.microsoft.com/addons/detail/cors-unblock/hkjklmhkbkdhlgnnfbbcihcajofmjgbh"
-        target="_blank"
-      >
-        Edge
-      </n-a>
-      /
-      <n-a
-        href="https://addons.mozilla.org/en-US/firefox/addon/cors-unblock/"
-        target="_blank"
-      >
-        Firefox
-      </n-a>
-      。如果无法访问 Chrome 的插件页面，你也可以从
-      <n-a href="/CORS-Unblock.crx" target="_blank">这里</n-a>
-      直接下载插件文件。 为了安全，建议只在本站点启用该插件。
-      安装以后，具体配置如下图所示。
-    </n-p>
-    <img
-      src="/extension_options.png"
-      alt="extension options"
-      style="max-width: 100%"
-    />
-    <n-p>
-      对于 Safari 浏览器，只能各凭本事了。 尽管 Safari
-      可以修改启动选项来关闭跨域检查，但我不知道有没有什么办法删掉 referer 和
-      origin 头。
-    </n-p>
   </MainLayout>
 </template>

@@ -1,121 +1,116 @@
-import { assert } from '@vueuse/shared';
-import { Translator } from './base';
+import ky from 'ky';
+import { Translator } from './adapter';
 
-export class BaiduQueryProcessor {
-  splitedTexts: string[];
-  splitedIndex: number[];
-  filteredSplitedTexts: string[];
-
-  constructor(texts: string[]) {
-    this.splitedTexts = [];
-    this.splitedIndex = [];
-    for (const text of texts) {
-      const splited = text.split('\n');
-      this.splitedTexts = this.splitedTexts.concat(splited);
-      this.splitedIndex.push(splited.length);
-    }
-    this.filteredSplitedTexts = this.splitedTexts.filter(
-      (q) => q.trim() !== ''
-    );
+function a(r: any, o: any) {
+  for (var t = 0; t < o.length - 2; t += 3) {
+    var a = o.charAt(t + 2);
+    (a = a >= 'a' ? a.charCodeAt(0) - 87 : Number(a)),
+      (a = '+' === o.charAt(t + 1) ? r >>> a : r << a),
+      (r = '+' === o.charAt(t) ? (r + a) & 4294967295 : r ^ a);
   }
-
-  getPreProcessed(): string[] {
-    return this.filteredSplitedTexts;
-  }
-
-  private *concat(textDst: string[]) {
-    assert(textDst.length == this.splitedTexts.length);
-    const recoveredTextDst: string[] = [];
-    for (const result of textDst) {
-      recoveredTextDst.push(result);
-      if (recoveredTextDst.length == this.splitedIndex[0]) {
-        this.splitedIndex.shift();
-        yield recoveredTextDst.join('\n');
-        recoveredTextDst.length = 0;
-      }
-    }
-  }
-
-  applyPostProcess(texts: string[]): string[] {
-    assert(texts.length == this.filteredSplitedTexts.length);
-    const insertedTexts: string[] = [];
-    for (const textSrc of this.splitedTexts) {
-      if (textSrc.trim() !== '') {
-        insertedTexts.push(texts.shift()!);
-      } else {
-        insertedTexts.push(textSrc);
-      }
-    }
-    return Array.from(this.concat(insertedTexts));
-  }
+  return r;
 }
+var C: any = null;
+var token = function (r: any, _gtk: any) {
+  var o = r.length;
+  o > 30 &&
+    (r =
+      '' +
+      r.substr(0, 10) +
+      r.substr(Math.floor(o / 2) - 5, 10) +
+      r.substring(r.length, r.length - 10));
+  var t: any = void 0,
+    t = null !== C ? C : (C = _gtk || '') || '';
+  for (
+    var e = t.split('.'),
+      h = Number(e[0]) || 0,
+      i = Number(e[1]) || 0,
+      d = [],
+      f = 0,
+      g = 0;
+    g < r.length;
+    g++
+  ) {
+    var m = r.charCodeAt(g);
+    128 > m
+      ? (d[f++] = m)
+      : (2048 > m
+          ? (d[f++] = (m >> 6) | 192)
+          : (55296 === (64512 & m) &&
+            g + 1 < r.length &&
+            56320 === (64512 & r.charCodeAt(g + 1))
+              ? ((m = 65536 + ((1023 & m) << 10) + (1023 & r.charCodeAt(++g))),
+                (d[f++] = (m >> 18) | 240),
+                (d[f++] = ((m >> 12) & 63) | 128))
+              : (d[f++] = (m >> 12) | 224),
+            (d[f++] = ((m >> 6) & 63) | 128)),
+        (d[f++] = (63 & m) | 128));
+  }
+  for (var S = h, u = '+-a^+6', l = '+-3^+b+-f', s = 0; s < d.length; s++)
+    (S += d[s]), (S = a(S, u));
+  return (
+    (S = a(S, l)),
+    (S ^= i),
+    0 > S && (S = (2147483647 & S) + 2147483648),
+    (S %= 1e6),
+    S.toString() + '.' + (S ^ h)
+  );
+};
 
-export abstract class BaiduBaseTranslator extends Translator {
-  private limit_per_request = 2000;
 
-  private *chunkQuery(query: string[]): Generator<string | string[]> {
-    const chunked: string[] = [];
-    let chunked_size = 0;
-    for (const line of query) {
-      const line_size = line.length;
-      if (line_size + chunked_size <= this.limit_per_request) {
-        chunked.push(line);
-        chunked_size += line_size;
-      } else {
-        if (chunked.length >= 0) {
-          yield chunked;
-          chunked.length = 0;
-          chunked_size = 0;
-        }
-        if (line_size <= this.limit_per_request) {
-          chunked.push(line);
-          chunked_size += line_size;
-        } else {
-          yield line;
-        }
-      }
-    }
-    if (chunked.length >= 0) {
-      yield chunked;
-    }
+export class BaiduTranslator implements Translator {
+  size = 2000;
+  private token = '';
+  private gtk = '';
+
+  static async create() {
+    const translator = new this();
+    await translator.loadMainPage();
+    await translator.loadMainPage();
+    return translator;
   }
 
-  private chunkString(query: string): string[] {
-    const chunks: string[] = [];
-    for (let i = 0; i < query.length; i += this.limit_per_request) {
-      chunks.push(query.slice(i, i + this.limit_per_request));
-    }
-    return chunks;
+  private async loadMainPage() {
+    const html = await ky
+      .get('https://fanyi.baidu.com', { credentials: 'include' })
+      .text();
+    this.token = html.match(/token: '(.*?)',/)!![1];
+    this.gtk = html.match(/window.gtk = "(.*?)";/)!![1];
   }
 
-  abstract translateInner(query: string): Promise<string[]>;
+  async translate(input: string[]): Promise<string[]> {
+    const query = input.join('\n');
+    const sign = token(query, this.gtk);
+    const data = {
+      from: 'jp',
+      to: 'zh',
+      query: query,
+      simple_means_flag: 3,
+      sign: sign,
+      token: this.token,
+      domain: 'common',
+    };
 
-  async translate(textSrc: string[]): Promise<string[]> {
-    const processor = new BaiduQueryProcessor(textSrc);
-    const processedTextSrc = processor.getPreProcessed();
+    const json: any = await ky
+      .post('https://fanyi.baidu.com/v2transapi', {
+        json: data,
+        credentials: 'include',
+      })
+      .json();
+    console.log(1);
 
-    let textDst: string[] = [];
-    for (const chunkedTextSrc of this.chunkQuery(processedTextSrc)) {
-      if (typeof chunkedTextSrc === 'string') {
-        const chunkedTextDst = this.chunkString(chunkedTextSrc)
-          .map(async (chunked_string) => {
-            return await this.translateInner(chunked_string);
-          })
-          .flat()
-          .join('');
-        textDst.push(chunkedTextDst);
-      } else {
-        const chunkedTextDst = await this.translateInner(
-          chunkedTextSrc.join('\n')
+    if ('error' in json) {
+      throw Error(`百度翻译错误：${json.error}: ${json.msg}`);
+    } else if ('errno' in json) {
+      if (json.errno == 1000) {
+        throw Error(
+          `百度翻译错误：${json.errno}: ${json.errmsg}，可能是因为输入为空`
         );
-        textDst = textDst.concat(chunkedTextDst);
+      } else {
+        throw Error(`百度翻译错误：${json.errno}: ${json.errmsg}`);
       }
+    } else {
+      return json.trans_result.data.map((item: any) => item.dst);
     }
-
-    const recovered_result_list = processor.applyPostProcess(textDst);
-    if (recovered_result_list.length != textSrc.length) {
-      throw Error('Baidu translator error');
-    }
-    return recovered_result_list;
   }
 }

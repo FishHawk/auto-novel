@@ -60,24 +60,39 @@ suspend fun makeEpubFile(
                 if (episode == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    episode.paragraphsJp.forEach { text ->
+                    episode.paragraphs.forEach { text ->
                         it.appendElement("p").appendText(text)
                     }
                 }
             }
 
-            BookFileLang.ZH -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
+            BookFileLang.ZH_BAIDU, BookFileLang.ZH_YOUDAO -> createEpubXhtml(
+                path,
+                id,
+                "zh",
+                token.titleZh ?: token.titleJp
+            ) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
-                if (episode?.paragraphsZh == null) {
+                val paragraphs = if (lang == BookFileLang.ZH_BAIDU) {
+                    episode?.baiduParagraphs
+                } else {
+                    episode?.youdaoParagraphs
+                }
+                if (paragraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    episode.paragraphsZh.forEach { text ->
+                    paragraphs.forEach { text ->
                         it.appendElement("p").appendText(text)
                     }
                 }
             }
 
-            BookFileLang.MIX -> createEpubXhtml(path, id, "zh", token.titleZh ?: token.titleJp) {
+            BookFileLang.MIX_BAIDU, BookFileLang.MIX_YOUDAO -> createEpubXhtml(
+                path,
+                id,
+                "zh",
+                token.titleZh ?: token.titleJp
+            ) {
                 if (token.titleZh == null) {
                     it.appendElement("h1").appendText(token.titleJp)
                 } else {
@@ -85,10 +100,15 @@ suspend fun makeEpubFile(
                     it.appendElement("p").appendText(token.titleJp)
                         .attr("style", "opacity:0.4;")
                 }
-                if (episode?.paragraphsZh == null) {
+                val paragraphs = if (lang == BookFileLang.MIX_BAIDU) {
+                    episode?.baiduParagraphs
+                } else {
+                    episode?.youdaoParagraphs
+                }
+                if (episode == null || paragraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    episode.paragraphsZh.zip(episode.paragraphsJp).forEach { (textZh, textJp) ->
+                    paragraphs.zip(episode.paragraphs).forEach { (textZh, textJp) ->
                         if (textJp.isBlank()) {
                             it.appendElement("p").appendText(textJp)
                         } else {

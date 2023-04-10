@@ -4,6 +4,7 @@ import data.MongoDataSource
 import data.provider.ProviderDataSource
 import data.provider.SBookEpisode
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
@@ -13,10 +14,19 @@ data class BookEpisode(
     val providerId: String,
     val bookId: String,
     val episodeId: String,
-    val glossaryUuid: String? = null,
-    val glossary: Map<String, String> = emptyMap(),
-    val paragraphsJp: List<String>,
-    val paragraphsZh: List<String>?,
+    @SerialName("paragraphsJp")
+    val paragraphs: List<String>,
+
+    @SerialName("glossaryUuid")
+    val baiduGlossaryUuid: String? = null,
+    @SerialName("glossary")
+    val baiduGlossary: Map<String, String> = emptyMap(),
+    @SerialName("paragraphsZh")
+    val baiduParagraphs: List<String>?,
+
+    val youdaoGlossaryUuid: String? = null,
+    val youdaoGlossary: Map<String, String> = emptyMap(),
+    val youdaoParagraphs: List<String>? = null,
 )
 
 private fun SBookEpisode.toDb(providerId: String, bookId: String, episodeId: String) =
@@ -24,8 +34,8 @@ private fun SBookEpisode.toDb(providerId: String, bookId: String, episodeId: Str
         providerId = providerId,
         bookId = bookId,
         episodeId = episodeId,
-        paragraphsJp = paragraphs,
-        paragraphsZh = null,
+        paragraphs = paragraphs,
+        baiduParagraphs = null,
     )
 
 
@@ -47,7 +57,7 @@ class BookEpisodeRepository(
         }
     }
 
-    suspend fun countJp(providerId: String, bookId: String): Long {
+    suspend fun count(providerId: String, bookId: String): Long {
         return col.countDocuments(
             and(
                 BookEpisode::providerId eq providerId,
@@ -56,12 +66,22 @@ class BookEpisodeRepository(
         )
     }
 
-    suspend fun countZh(providerId: String, bookId: String): Long {
+    suspend fun countBaidu(providerId: String, bookId: String): Long {
         return col.countDocuments(
             and(
                 BookEpisode::providerId eq providerId,
                 BookEpisode::bookId eq bookId,
-                BookEpisode::paragraphsZh ne null,
+                BookEpisode::baiduParagraphs ne null,
+            )
+        )
+    }
+
+    suspend fun countYoudao(providerId: String, bookId: String): Long {
+        return col.countDocuments(
+            and(
+                BookEpisode::providerId eq providerId,
+                BookEpisode::bookId eq bookId,
+                BookEpisode::youdaoParagraphs ne null,
             )
         )
     }
@@ -118,7 +138,7 @@ class BookEpisodeRepository(
         col.deleteOne(bsonSpecifyEpisode(providerId, bookId, episodeId))
     }
 
-    suspend fun updateZh(
+    suspend fun updateBaidu(
         providerId: String,
         bookId: String,
         episodeId: String,
@@ -129,15 +149,15 @@ class BookEpisodeRepository(
         col.updateOne(
             bsonSpecifyEpisode(providerId, bookId, episodeId),
             combine(
-                setValue(BookEpisode::glossaryUuid, glossaryUuid),
-                setValue(BookEpisode::glossary, glossary),
-                setValue(BookEpisode::paragraphsZh, paragraphsZh)
+                setValue(BookEpisode::baiduGlossaryUuid, glossaryUuid),
+                setValue(BookEpisode::baiduGlossary, glossary),
+                setValue(BookEpisode::baiduParagraphs, paragraphsZh)
             )
         )
         metadataRepository.updateChangeAt(providerId, bookId)
     }
 
-    suspend fun updateZh(
+    suspend fun updateBaidu(
         providerId: String,
         bookId: String,
         episodeId: String,
@@ -149,30 +169,71 @@ class BookEpisodeRepository(
             bsonSpecifyEpisode(providerId, bookId, episodeId),
             combine(
                 listOf(
-                    setValue(BookEpisode::glossaryUuid, glossaryUuid),
-                    setValue(BookEpisode::glossary, glossary),
+                    setValue(BookEpisode::baiduGlossaryUuid, glossaryUuid),
+                    setValue(BookEpisode::baiduGlossary, glossary),
                 ) + paragraphsZh.map { (index, textZh) ->
-                    setValue(BookEpisode::paragraphsZh.pos(index), textZh)
+                    setValue(BookEpisode::baiduParagraphs.pos(index), textZh)
                 }
             ),
         )
         metadataRepository.updateChangeAt(providerId, bookId)
     }
 
-    suspend fun updateZh(
+    suspend fun updateYoudao(
         providerId: String,
         bookId: String,
         episodeId: String,
+        glossaryUuid: String?,
+        glossary: Map<String, String>,
+        paragraphsZh: List<String>,
+    ) {
+        col.updateOne(
+            bsonSpecifyEpisode(providerId, bookId, episodeId),
+            combine(
+                setValue(BookEpisode::youdaoGlossaryUuid, glossaryUuid),
+                setValue(BookEpisode::youdaoGlossary, glossary),
+                setValue(BookEpisode::youdaoParagraphs, paragraphsZh)
+            )
+        )
+        metadataRepository.updateChangeAt(providerId, bookId)
+    }
+
+    suspend fun updateYoudao(
+        providerId: String,
+        bookId: String,
+        episodeId: String,
+        glossaryUuid: String?,
+        glossary: Map<String, String>,
         paragraphsZh: Map<Int, String>,
     ) {
         col.updateOne(
             bsonSpecifyEpisode(providerId, bookId, episodeId),
             combine(
-                paragraphsZh.map { (index, textZh) ->
-                    setValue(BookEpisode::paragraphsZh.pos(index), textZh)
+                listOf(
+                    setValue(BookEpisode::youdaoGlossaryUuid, glossaryUuid),
+                    setValue(BookEpisode::youdaoGlossary, glossary),
+                ) + paragraphsZh.map { (index, textZh) ->
+                    setValue(BookEpisode::youdaoParagraphs.pos(index), textZh)
                 }
             ),
         )
         metadataRepository.updateChangeAt(providerId, bookId)
     }
+
+//    suspend fun updateBaidu(
+//        providerId: String,
+//        bookId: String,
+//        episodeId: String,
+//        paragraphsZh: Map<Int, String>,
+//    ) {
+//        col.updateOne(
+//            bsonSpecifyEpisode(providerId, bookId, episodeId),
+//            combine(
+//                paragraphsZh.map { (index, textZh) ->
+//                    setValue(BookEpisode::baiduParagraphs.pos(index), textZh)
+//                }
+//            ),
+//        )
+//        metadataRepository.updateChangeAt(providerId, bookId)
+//    }
 }
