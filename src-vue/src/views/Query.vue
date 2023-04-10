@@ -81,6 +81,8 @@ async function loadMyFavorite(page: number, selected: number[]) {
       <n-a href="/how-to-use" target="_blank">使用说明</n-a>
       。
       <br />
+      章节设置里可以切换百度和有道。
+      <br />
       旧插件仍然能用，但只能用百度翻译。
       <br />
       大更新免不了有bug，欢迎反馈。

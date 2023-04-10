@@ -88,19 +88,23 @@ function getTextList(
       });
     }
   } else {
-    return [{ text1: '章节未翻译!' }];
+    if (readerSettingStore.translation === 'youdao') {
+      return [{ text1: '有道翻译版本不存在' }];
+    } else {
+      return [{ text1: '百度翻译版本不存在' }];
+    }
   }
 }
 
-const editMode = ref(false);
-function enableEditMode() {
-  const token = authInfoStore.token;
-  if (!token) {
-    message.info('请先登录');
-    return;
-  }
-  editMode.value = true;
-}
+// const editMode = ref(false);
+// function enableEditMode() {
+//   const token = authInfoStore.token;
+//   if (!token) {
+//     message.info('请先登录');
+//     return;
+//   }
+//   editMode.value = true;
+// }
 </script>
 
 <template>
@@ -228,61 +232,59 @@ function enableEditMode() {
 
       <n-divider />
 
-      <EditEpisodeSection
+      <!-- <EditEpisodeSection
         v-if="editMode"
         :provider-id="providerId"
         :book-id="bookId"
         :episode-id="episodeId"
         v-model:book-episode="bookEpisode.value"
-      />
+      /> -->
 
-      <template v-else>
-        <div id="episode-content">
-          <template v-for="text in getTextList(bookEpisode.value)">
-            <n-p v-if="text.text1.trim().length === 0">
-              <br />
+      <div id="episode-content">
+        <template v-for="text in getTextList(bookEpisode.value)">
+          <n-p v-if="text.text1.trim().length === 0">
+            <br />
+          </n-p>
+          <template v-if="text.text1.trim().length > 0">
+            <n-p :style="{ fontSize: readerSettingStore.fontSize }">
+              {{ text.text1 }}
             </n-p>
-            <template v-if="text.text1.trim().length > 0">
-              <n-p :style="{ fontSize: readerSettingStore.fontSize }">
-                {{ text.text1 }}
-              </n-p>
-              <n-p
-                v-if="text.textCompare"
-                :style="{ fontSize: readerSettingStore.fontSize }"
-              >
-                {{ text.textCompare }}
-              </n-p>
-              <n-p
-                v-if="text.text2"
-                :style="{
-                  fontSize: readerSettingStore.fontSize,
-                  opacity: 0.4,
-                }"
-              >
-                {{ text.text2 }}
-              </n-p>
-            </template>
+            <n-p
+              v-if="text.textCompare"
+              :style="{ fontSize: readerSettingStore.fontSize }"
+            >
+              {{ text.textCompare }}
+            </n-p>
+            <n-p
+              v-if="text.text2"
+              :style="{
+                fontSize: readerSettingStore.fontSize,
+                opacity: 0.4,
+              }"
+            >
+              {{ text.text2 }}
+            </n-p>
           </template>
-        </div>
+        </template>
+      </div>
 
-        <n-divider />
+      <n-divider />
 
-        <n-space align="center" justify="space-between" style="width: 100%">
-          <n-a
-            v-if="bookEpisode.value.prevId"
-            :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
-            >上一章</n-a
-          >
-          <n-text v-else style="color: grey">上一章</n-text>
+      <n-space align="center" justify="space-between" style="width: 100%">
+        <n-a
+          v-if="bookEpisode.value.prevId"
+          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
+          >上一章</n-a
+        >
+        <n-text v-else style="color: grey">上一章</n-text>
 
-          <n-a
-            v-if="bookEpisode.value.nextId"
-            :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
-            >下一章</n-a
-          >
-          <n-text v-else style="color: grey">下一章</n-text>
-        </n-space>
-      </template>
+        <n-a
+          v-if="bookEpisode.value.nextId"
+          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
+          >下一章</n-a
+        >
+        <n-text v-else style="color: grey">下一章</n-text>
+      </n-space>
     </div>
 
     <div v-if="bookEpisode && !bookEpisode.ok">

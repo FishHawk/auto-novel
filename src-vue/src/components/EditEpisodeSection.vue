@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<!-- <script lang="ts" setup>
 import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
@@ -171,4 +171,4 @@ td > div {
     padding-bottom: 48px;
   }
 }
-</style>
+</style> -->
