@@ -74,6 +74,18 @@ async function loadMyFavorite(page: number, selected: number[]) {
         </div>
       </div>
     </template>
+    <n-h2 prefix="bar">公告</n-h2>
+
+    <n-p>
+      2023年4月10日，重写了插件以支持有道翻译，参见
+      <n-a href="/how-to-use" target="_blank">使用说明</n-a>
+      。
+      <br />
+      旧插件仍然能用，但只能用百度翻译。
+      <br />
+      大更新免不了有bug，欢迎反馈。
+      <br />
+    </n-p>
 
     <template v-if="authInfoStore.token">
       <n-h2 prefix="bar">我的收藏</n-h2>
