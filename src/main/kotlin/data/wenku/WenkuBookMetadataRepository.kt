@@ -76,10 +76,12 @@ class WenkuBookMetadataRepository(
         page: Int,
         pageSize: Int,
     ): MetadataPageList {
-        return es.client.search(indexName) {
+        return es.client.search(
+            indexName,
+            from = page * pageSize,
+            size = pageSize
+        ) {
             query = bool {
-                from = page * pageSize
-                limit(pageSize)
                 if (queryString != null) {
                     must(
                         disMax {

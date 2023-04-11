@@ -77,10 +77,12 @@ class EsBookMetadataRepository(
         page: Int,
         pageSize: Int,
     ): EsBookPageList {
-        return client.search(indexName) {
+        return client.search(
+            indexName,
+            from = page * pageSize,
+            size = pageSize
+        ) {
             query = bool {
-                from = page * pageSize
-                limit(pageSize)
                 if (providerId != null) {
                     filter(
                         term(EsBookMetadata::providerId, providerId)

@@ -62,7 +62,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   />
   <n-divider />
   <div v-if="bookPage?.ok">
-    <n-grid x-gap="12" cols="2 600:4">
+    <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
       <n-grid-item v-for="item in bookPage.value.items">
         <n-a :href="`/wenku/${item.bookId}`" target="_blank">
           <n-card size="small" header-style="padding: 12px;">
