@@ -22,9 +22,7 @@ const menuOptions: MenuOption[] = [
   <MainLayout>
     <n-layout has-sider>
       <n-layout-content id="list-container">
-        <div>
-          <slot />
-        </div>
+        <slot />
       </n-layout-content>
       <n-layout-sider class="on-desktop">
         <n-menu :value="path" :options="menuOptions" />

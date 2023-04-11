@@ -14,6 +14,12 @@ a {
 .n-h:first-child {
   margin: var(--n-margin);
 }
+.n-layout {
+  overflow: visible;
+}
+.n-layout .n-layout-scroll-container {
+  overflow-x: visible;
+}
 
 @media only screen and (max-width: 600px) {
   .on-desktop {
