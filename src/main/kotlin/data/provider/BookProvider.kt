@@ -54,10 +54,10 @@ val client = HttpClient(Java) {
         json(Json { isLenient = true })
     }
     expectSuccess = true
-    System.getenv("HTTPS_PROXY")?.let {
-        engine {
-            proxy = ProxyBuilder.http(it)
-        }
+    engine {
+        proxy = ProxyBuilder.http(
+            System.getenv("HTTPS_PROXY") ?: "http://127.0.0.1:7890"
+        )
     }
 }
 
@@ -66,10 +66,10 @@ val client = HttpClient(Java) {
 val clientText = HttpClient(Java) {
     install(HttpCookies) { storage = cookies }
     expectSuccess = true
-    System.getenv("HTTPS_PROXY")?.let {
-        engine {
-            proxy = ProxyBuilder.http(it)
-        }
+    engine {
+        proxy = ProxyBuilder.http(
+            System.getenv("HTTPS_PROXY") ?: "http://127.0.0.1:7890"
+        )
     }
 }
 

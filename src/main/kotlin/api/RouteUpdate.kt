@@ -21,7 +21,7 @@ private class Update {
         val parent: Update = Update(),
         val providerId: String,
         val bookId: String,
-        val version: String,
+        val version: String = "jp",
         val startIndex: Int = 0,
         val endIndex: Int = 65536,
     )
@@ -114,9 +114,6 @@ class UpdateService(
         startIndex: Int,
         endIndex: Int,
     ): Result<MetadataToTranslateDto> {
-        if (version != "baidu" && version != "youdao")
-            return httpBadRequest("不支持的版本")
-
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("元数据不存在")
 
@@ -136,7 +133,11 @@ class UpdateService(
             .forEach { episodeId ->
                 val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
 
-                if (version == "baidu") {
+                if (version == "jp") {
+                    if (episode == null) {
+                        untranslatedEpisodeIds.add(episodeId)
+                    }
+                } else if (version == "baidu") {
                     if (episode?.baiduParagraphs == null) {
                         untranslatedEpisodeIds.add(episodeId)
                     } else if (episode.baiduGlossaryUuid != metadata.glossaryUuid) {
