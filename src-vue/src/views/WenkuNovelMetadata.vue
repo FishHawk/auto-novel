@@ -84,7 +84,7 @@ function handleFinish({
     </template>
 
     <div v-if="novelMetadata?.ok">
-      <n-space :wrap="false" style="margin-top: 40px">
+      <n-space :wrap="false" style="margin-top: 40px; min-height: 260px">
         <n-card size="small" style="width: 160px">
           <template #cover>
             <img :src="novelMetadata.value.cover" alt="cover" />
