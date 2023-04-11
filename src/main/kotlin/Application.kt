@@ -3,13 +3,9 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import data.*
 import data.ElasticSearchDataSource
-import data.web.EsBookMetadataRepository
-import data.web.WebBookFileRepository
 import data.wenku.WenkuBookFileRepository
 import data.provider.ProviderDataSource
-import data.web.BookEpisodeRepository
-import data.web.BookMetadataRepository
-import data.web.BookPatchRepository
+import data.web.*
 import data.wenku.WenkuBookMetadataRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -125,11 +121,12 @@ val appModule = module {
     single { WenkuBookFileRepository(root = Path("./data/files-wenku")) }
     single { WenkuBookMetadataRepository(get()) }
 
-    single { BookMetadataRepository(get(), get(), get()) }
+    single { BookMetadataRepository(get(), get(), get(), get()) }
     single { BookEpisodeRepository(get(), get(), get()) }
     single { BookPatchRepository(get(), get(), get()) }
     single { WebBookFileRepository(root = Path("./data/files-web")) }
     single { EsBookMetadataRepository(get()) }
+    single { WebBookTocMergeHistoryRepository(get()) }
 
     single { CommentRepository(get()) }
     single { UserRepository(get()) }

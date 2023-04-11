@@ -73,6 +73,7 @@ class BookMetadataRepository(
     private val providerDataSource: ProviderDataSource,
     private val mongoDataSource: MongoDataSource,
     private val esBookMetadataRepository: EsBookMetadataRepository,
+    private val tocMergeHistoryRepository: WebBookTocMergeHistoryRepository,
 ) {
     private val col
         get() = mongoDataSource.database.getCollection<BookMetadata>("metadata")
@@ -184,28 +185,31 @@ class BookMetadataRepository(
         metadataRemote: BookMetadata,
     ): BookMetadata? {
         val list = mutableListOf<Bson>()
-
-        metadataRemote.titleJp.let {
-            list.add(setValue(BookMetadata::titleJp, it))
+        if (metadataRemote.titleJp != metadataLocal.titleJp) {
+            list.add(setValue(BookMetadata::titleJp, metadataRemote.titleJp))
+        }
+        if (metadataRemote.introductionJp != metadataLocal.introductionJp) {
+            list.add(setValue(BookMetadata::introductionJp, metadataRemote.introductionJp))
         }
 
-        metadataRemote.introductionJp.let {
-            list.add(setValue(BookMetadata::introductionJp, it))
-        }
+        val merged = mergeToc(
+            remoteToc = metadataRemote.toc,
+            localToc = metadataLocal.toc,
+            isIdUnstable = isProviderIdUnstable(providerId)
+        )
+        list.add(setValue(BookMetadata::toc, merged.toc))
 
-        metadataRemote.toc.map { itemNew ->
-            val itemOld = metadataLocal.toc.find { it.titleJp == itemNew.titleJp }
-            if (itemOld?.titleZh == null) {
-                itemNew
-            } else {
-                itemNew.copy(titleZh = itemOld.titleZh)
-            }
-        }.let {
-            list.add(setValue(BookMetadata::toc, it))
-        }
-
-        if (list.isNotEmpty()) {
+        if (merged.hasChanged) {
             list.add(setValue(BookMetadata::changeAt, LocalDateTime.now()))
+        }
+        if (merged.reviewReason != null) {
+            tocMergeHistoryRepository.insert(
+                providerId = providerId,
+                bookId = bookId,
+                tocOld = metadataLocal.toc,
+                tocNew = metadataRemote.toc,
+                reason = merged.reviewReason,
+            )
         }
         list.add(setValue(BookMetadata::syncAt, LocalDateTime.now()))
 
