@@ -10,7 +10,7 @@ import { useReaderSettingStore } from '../data/stores/readerSetting';
 import { buildEpisodeUrl } from '../data/provider';
 
 const authInfoStore = useAuthInfoStore();
-const readerSettingStore = useReaderSettingStore();
+const setting = useReaderSettingStore();
 
 const message = useMessage();
 
@@ -19,28 +19,6 @@ const providerId = route.params.providerId as string;
 const bookId = route.params.bookId as string;
 const episodeId = route.params.episodeId as string;
 const url = buildEpisodeUrl(providerId, bookId, episodeId);
-
-const modeOptions = [
-  { value: 'jp', label: '日文' },
-  { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中日混合' },
-];
-const translationOptions = [
-  { value: 'youdao', label: '有道' },
-  { value: 'baidu', label: '百度' },
-  { value: 'compare', label: '对比（测试用）' },
-];
-const fontSizeOptions = ['14px', '16px', '18px', '20px'];
-const themeOptions = [
-  { isDark: false, bodyColor: '#FFFFFF' },
-  { isDark: false, bodyColor: '#FFF2E2' },
-  { isDark: false, bodyColor: '#E3EDCD' },
-  { isDark: false, bodyColor: '#E9EBFE' },
-  { isDark: false, bodyColor: '#EAEAEF' },
-
-  { isDark: true, bodyColor: '#000000' },
-  { isDark: true, bodyColor: '#272727' },
-];
 
 const showModal = ref(false);
 
@@ -56,44 +34,45 @@ async function getEpisode() {
 
 function getTextList(
   episode: BookEpisodeDto
-): { text1: string; text2?: string; textCompare?: string }[] {
+): { text1: string; text2?: string }[] {
   const paragraphsJp = episode.paragraphs;
 
   const paragraphsZh =
-    readerSettingStore.translation === 'youdao'
+    setting.translation === 'youdao'
       ? episode.youdaoParagraphs
       : episode.baiduParagraphs;
 
-  if (readerSettingStore.mode == 'jp') {
+  if (setting.mode == 'jp') {
     return paragraphsJp.map((text) => {
       return { text1: text };
     });
   } else if (paragraphsZh) {
-    if (readerSettingStore.mode == 'zh') {
+    if (setting.mode == 'zh') {
       return paragraphsZh.map((text) => {
         return { text1: text };
       });
     } else {
       return paragraphsJp.map(function (textJp, i) {
         const textZh = paragraphsZh[i];
-        const textCompare =
-          readerSettingStore.translation !== 'compare'
-            ? undefined
-            : (episode.youdaoParagraphs ?? [])[i] ?? '';
         return {
           text1: textZh,
           text2: textJp,
-          textCompare,
         };
       });
     }
   } else {
-    if (readerSettingStore.translation === 'youdao') {
+    if (setting.translation === 'youdao') {
       return [{ text1: '有道翻译版本不存在' }];
     } else {
       return [{ text1: '百度翻译版本不存在' }];
     }
   }
+}
+
+function getCompareTextList(
+  episode: BookEpisodeDto
+): { textBaidu: string; textYoudao: string; textJp: string }[] {
+  return [];
 }
 
 // const editMode = ref(false);
@@ -109,94 +88,15 @@ function getTextList(
 
 <template>
   <n-config-provider
-    :theme="readerSettingStore.theme.isDark ? darkTheme : lightTheme"
+    :theme="setting.theme.isDark ? darkTheme : lightTheme"
     :theme-overrides="{
-      common: { bodyColor: readerSettingStore.theme.bodyColor },
+      common: { bodyColor: setting.theme.bodyColor },
       Pagination: { itemColorDisabled: '#00000' },
     }"
   >
     <n-global-style />
 
-    <n-modal v-model:show="showModal">
-      <n-card
-        style="width: min(600px, calc(100% - 16px))"
-        title="设置"
-        :bordered="false"
-        size="huge"
-        role="dialog"
-        aria-modal="true"
-      >
-        <table style="border-spacing: 0px 16px">
-          <LabelTr label="语言">
-            <n-radio-group v-model:value="readerSettingStore.mode" name="mode">
-              <n-space>
-                <n-radio
-                  v-for="option in modeOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </n-radio>
-              </n-space>
-            </n-radio-group>
-          </LabelTr>
-
-          <LabelTr label="翻译">
-            <n-radio-group
-              v-model:value="readerSettingStore.translation"
-              name="translator"
-            >
-              <n-space>
-                <n-radio
-                  v-for="option in translationOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </n-radio>
-              </n-space>
-            </n-radio-group>
-          </LabelTr>
-
-          <LabelTr label="字体">
-            <n-radio-group
-              v-model:value="readerSettingStore.fontSize"
-              name="fontSize"
-            >
-              <n-space>
-                <n-radio
-                  v-for="option in fontSizeOptions"
-                  :key="option"
-                  :value="option"
-                >
-                  {{ option }}
-                </n-radio>
-              </n-space>
-            </n-radio-group>
-          </LabelTr>
-
-          <LabelTr label="主题">
-            <n-space>
-              <n-radio
-                v-for="theme of themeOptions"
-                :checked="theme.bodyColor == readerSettingStore.theme.bodyColor"
-                @update:checked="readerSettingStore.theme = theme"
-              >
-                <n-tag
-                  :color="{
-                    color: theme.bodyColor,
-                    textColor: theme.isDark ? 'white' : 'black',
-                  }"
-                  style="width: 8em"
-                >
-                  {{ theme.bodyColor }}
-                </n-tag>
-              </n-radio>
-            </n-space>
-          </LabelTr>
-        </table>
-      </n-card>
-    </n-modal>
+    <ReaderSettingDialog v-model:show="showModal" />
 
     <div class="content" v-if="bookEpisode?.ok">
       <n-h2 style="text-align: center; width: 100%">
@@ -242,29 +142,17 @@ function getTextList(
 
       <div id="episode-content">
         <template v-for="text in getTextList(bookEpisode.value)">
-          <n-p v-if="text.text1.trim().length === 0">
-            <br />
+          <br v-if="text.text1.trim().length === 0" />
+          <n-p
+            v-if="text.text2 && setting.mode === 'mix-reverse'"
+            class="secondary"
+          >
+            {{ text.text2 }}
           </n-p>
-          <template v-if="text.text1.trim().length > 0">
-            <n-p :style="{ fontSize: readerSettingStore.fontSize }">
-              {{ text.text1 }}
-            </n-p>
-            <n-p
-              v-if="text.textCompare"
-              :style="{ fontSize: readerSettingStore.fontSize }"
-            >
-              {{ text.textCompare }}
-            </n-p>
-            <n-p
-              v-if="text.text2"
-              :style="{
-                fontSize: readerSettingStore.fontSize,
-                opacity: 0.4,
-              }"
-            >
-              {{ text.text2 }}
-            </n-p>
-          </template>
+          <n-p>{{ text.text1 }}</n-p>
+          <n-p v-if="text.text2 && setting.mode === 'mix'" class="secondary">
+            {{ text.text2 }}
+          </n-p>
         </template>
       </div>
 
@@ -300,6 +188,10 @@ function getTextList(
 <style scoped>
 #episode-content p {
   word-wrap: break-word;
+  font-size: v-bind('setting.fontSize');
+}
+#episode-content .secondary {
+  opacity: v-bind('setting.mixJpOpacity');
 }
 .content {
   width: 800px;
