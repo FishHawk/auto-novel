@@ -41,4 +41,8 @@ class WebBookTocMergeHistoryRepository(
             )
         )
     }
+
+    suspend fun findOne(): TocMergedHistory? {
+        return col.findOne()
+    }
 }

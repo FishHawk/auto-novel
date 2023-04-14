@@ -5,8 +5,10 @@ import data.web.*
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
+import org.bson.types.ObjectId
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
+import org.litote.kmongo.eq
 import java.io.File
 import java.time.ZoneId
 
@@ -19,15 +21,30 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val repoEs by inject<EsBookMetadataRepository>(EsBookMetadataRepository::class.java)
     private val repoB by inject<BookMetadataRepository>(BookMetadataRepository::class.java)
     private val repoE by inject<BookEpisodeRepository>(BookEpisodeRepository::class.java)
+    private val repoTMH by inject<WebBookTocMergeHistoryRepository>(WebBookTocMergeHistoryRepository::class.java)
 
     init {
         describe("test") {
-            val pid = "syosetu"
-            val bid = "n1306fy"
-            val toc = repoB.get(pid, bid).getOrNull()!!.toc
-            (69..79).forEach {
-                repoE.delete(pid, bid, it.toString())
-            }
+            val h = repoTMH.findOne()!!
+            println(h.providerId)
+            println(h.bookId)
+            println(h.reason)
+
+//            repoTMH.col.deleteOne(
+//                WebBookTocMergeHistoryRepository.TocMergedHistory::id eq h.id
+//            )
+
+//            repoB.setToc(h.providerId, h.bookId, h.tocOld)
+//            repoB.setPauseUpdate(h.providerId, h.bookId, true)
+            println(h.tocOld.size)
+            println(h.tocNew.size)
+//            h.tocNew.zip(h.tocOld).forEach {
+//                if (it.first.titleJp != it.second.titleJp) {
+//                    println()
+//                    println(it.first.titleJp)
+//                    println(it.second.titleJp)
+//                }
+//            }
         }
 
         describe("script") {

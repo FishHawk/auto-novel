@@ -42,6 +42,7 @@ data class BookMetadata(
     val toc: List<BookTocItem>,
     val visited: Long,
     val downloaded: Long,
+    val pauseUpdate: Boolean = false,
     @Contextual val syncAt: LocalDateTime,
     @Contextual val changeAt: LocalDateTime,
 )
@@ -157,6 +158,11 @@ class BookMetadataRepository(
                     syncEs(it)
                 }
 
+        // 在数据库中，暂停更新
+        if (metadataLocal.pauseUpdate) {
+            return Result.success(metadataLocal)
+        }
+
         // 在数据库中，没有过期
         val hours = ChronoUnit.HOURS.between(metadataLocal.syncAt, LocalDateTime.now())
         val isExpired = hours > 20
@@ -267,6 +273,28 @@ class BookMetadataRepository(
             metadata.titleZh,
             metadata.authors.map { it.name },
             metadata.changeAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
+        )
+    }
+
+    suspend fun setToc(
+        providerId: String,
+        bookId: String,
+        toc: List<BookTocItem>,
+    ) {
+        col.updateOne(
+            bsonSpecifyMetadata(providerId, bookId),
+            setValue(BookMetadata::toc, toc),
+        )
+    }
+
+    suspend fun setPauseUpdate(
+        providerId: String,
+        bookId: String,
+        pauseUpdate: Boolean,
+    ) {
+        col.updateOne(
+            bsonSpecifyMetadata(providerId, bookId),
+            setValue(BookMetadata::pauseUpdate, pauseUpdate),
         )
     }
 }
