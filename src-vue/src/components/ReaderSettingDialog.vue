@@ -10,7 +10,7 @@ const modeOptions = [
 const translationOptions = [
   { value: 'youdao', label: '有道' },
   { value: 'baidu', label: '百度' },
-  { value: 'compare', label: '对比（测试用）' },
+  { value: 'youdao/baidu', label: '有道/百度' },
 ];
 const fontSizeOptions = ['14px', '16px', '18px', '20px'];
 const themeOptions = [

@@ -34,45 +34,53 @@ async function getEpisode() {
 
 function getTextList(
   episode: BookEpisodeDto
-): { text1: string; text2?: string }[] {
-  const paragraphsJp = episode.paragraphs;
-
-  const paragraphsZh =
-    setting.translation === 'youdao'
-      ? episode.youdaoParagraphs
-      : episode.baiduParagraphs;
-
-  if (setting.mode == 'jp') {
-    return paragraphsJp.map((text) => {
-      return { text1: text };
-    });
-  } else if (paragraphsZh) {
-    if (setting.mode == 'zh') {
-      return paragraphsZh.map((text) => {
-        return { text1: text };
-      });
-    } else {
-      return paragraphsJp.map(function (textJp, i) {
-        const textZh = paragraphsZh[i];
-        return {
-          text1: textZh,
-          text2: textJp,
-        };
-      });
-    }
+): ({ text: string; secondary: boolean } | null)[] {
+  const styles: { paragraphs: string[]; secondary: boolean }[] = [];
+  if (setting.mode === 'jp') {
+    styles.push({ paragraphs: episode.paragraphs, secondary: false });
   } else {
-    if (setting.translation === 'youdao') {
-      return [{ text1: '有道翻译版本不存在' }];
-    } else {
-      return [{ text1: '百度翻译版本不存在' }];
+    if (setting.mode === 'mix-reverse') {
+      styles.push({ paragraphs: episode.paragraphs, secondary: true });
+    }
+
+    if (
+      setting.translation === 'youdao' ||
+      setting.translation === 'youdao/baidu'
+    ) {
+      if (episode.youdaoParagraphs) {
+        styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
+      } else {
+        return [{ text: '百度翻译版本不存在', secondary: false }];
+      }
+    }
+
+    if (
+      setting.translation === 'baidu' ||
+      setting.translation === 'youdao/baidu'
+    ) {
+      if (episode.baiduParagraphs) {
+        styles.push({ paragraphs: episode.baiduParagraphs, secondary: false });
+      } else {
+        return [{ text: '百度翻译版本不存在', secondary: false }];
+      }
+    }
+
+    if (setting.mode === 'mix') {
+      styles.push({ paragraphs: episode.paragraphs, secondary: true });
     }
   }
-}
 
-function getCompareTextList(
-  episode: BookEpisodeDto
-): { textBaidu: string; textYoudao: string; textJp: string }[] {
-  return [];
+  const merged: ({ text: string; secondary: boolean } | null)[] = [];
+  for (let i = 0; i < episode.paragraphs.length; i++) {
+    if (episode.paragraphs[i].trim().length === 0) {
+      merged.push(null);
+    } else {
+      for (const style of styles) {
+        merged.push({ text: style.paragraphs[i], secondary: style.secondary });
+      }
+    }
+  }
+  return merged;
 }
 
 // const editMode = ref(false);
@@ -141,18 +149,9 @@ function getCompareTextList(
       /> -->
 
       <div id="episode-content">
-        <template v-for="text in getTextList(bookEpisode.value)">
-          <br v-if="text.text1.trim().length === 0" />
-          <n-p
-            v-if="text.text2 && setting.mode === 'mix-reverse'"
-            class="secondary"
-          >
-            {{ text.text2 }}
-          </n-p>
-          <n-p>{{ text.text1 }}</n-p>
-          <n-p v-if="text.text2 && setting.mode === 'mix'" class="secondary">
-            {{ text.text2 }}
-          </n-p>
+        <template v-for="p in getTextList(bookEpisode.value)">
+          <n-p v-if="p" :class="{ secondary: p.secondary }">{{ p.text }}</n-p>
+          <br v-else />
         </template>
       </div>
 
