@@ -26,6 +26,9 @@ data class User(
         @SerialName("admin")
         Admin,
 
+        @SerialName("maintainer")
+        Maintainer,
+
         @SerialName("normal")
         Normal,
     }

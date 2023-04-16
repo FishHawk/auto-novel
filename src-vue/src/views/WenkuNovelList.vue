@@ -4,7 +4,7 @@ import { ref } from 'vue';
 
 import ApiWenkuNovel from '../data/api/api_wenku_novel';
 import Bangumi from '../data/api/bangumi';
-import { useAuthInfoStore } from '../data/stores/authInfo';
+import { useAuthInfoStore, atLeastMaintainer } from '../data/stores/authInfo';
 
 const message = useMessage();
 
@@ -65,7 +65,11 @@ function openDialog() {
   <ListLayout>
     <n-space align="baseline" justify="space-between" style="width: 100">
       <n-h1>文库小说</n-h1>
-      <n-button @click="openDialog()">创建</n-button>
+      <n-button
+        v-if="atLeastMaintainer(authInfoStore.role)"
+        @click="openDialog()"
+        >创建</n-button
+      >
     </n-space>
     <WenkuBookList :search="true" :options="[]" :loader="loader" />
   </ListLayout>

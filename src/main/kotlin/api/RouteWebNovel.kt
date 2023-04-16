@@ -93,18 +93,18 @@ fun Route.routeWebNovel() {
 
     authenticate {
         get<WebNovel.Favorite> {
-            val username = call.jwtUsername()
-            val result = service.listFavorite(username)
+            val jwtUser = call.jwtUser()
+            val result = service.listFavorite(jwtUser.username)
             call.respondResult(result)
         }
         post<WebNovel.FavoriteItem> { loc ->
-            val username = call.jwtUsername()
-            val result = service.addFavorite(username, loc.providerId, loc.bookId)
+            val jwtUser = call.jwtUser()
+            val result = service.addFavorite(jwtUser.username, loc.providerId, loc.bookId)
             call.respondResult(result)
         }
         delete<WebNovel.FavoriteItem> { loc ->
-            val username = call.jwtUsername()
-            val result = service.removeFavorite(username, loc.providerId, loc.bookId)
+            val jwtUser = call.jwtUser()
+            val result = service.removeFavorite(jwtUser.username, loc.providerId, loc.bookId)
             call.respondResult(result)
         }
     }
@@ -123,17 +123,17 @@ fun Route.routeWebNovel() {
 
     authenticate(optional = true) {
         get<WebNovel.Metadata> { loc ->
-            val username = call.jwtUsernameOrNull()
-            val result = service.getMetadata(loc.providerId, loc.bookId, username)
+            val jwtUser = call.jwtUserOrNull()
+            val result = service.getMetadata(loc.providerId, loc.bookId, jwtUser?.username)
             call.respondResult(result)
         }
     }
 
     authenticate {
         put<WebNovel.Metadata> { loc ->
-            val username = call.jwtUsername()
+            val jwtUser = call.jwtUser()
             val patch = call.receive<WebNovelService.BookMetadataPatchBody>()
-            val result = service.patchMetadata(loc.providerId, loc.bookId, patch, username)
+            val result = service.patchMetadata(loc.providerId, loc.bookId, patch, jwtUser.username)
             call.respondResult(result)
         }
     }

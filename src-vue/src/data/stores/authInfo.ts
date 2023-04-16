@@ -1,17 +1,17 @@
 import { defineStore } from 'pinia';
+import { SignInDto } from '../api/api_auth';
 
-export interface AuthInfo {
-  email: string;
-  username: string;
-  token: string;
-  expiresAt: number;
-}
+export type AuthInfo = SignInDto;
 
-function validExpires(info: AuthInfo) {
-  if (Date.now() / 1000 > info.expiresAt) {
-    return undefined;
+function validExpires(info: AuthInfo | undefined) {
+  if (info) {
+    if (Date.now() / 1000 > info.expiresAt) {
+      return undefined;
+    } else {
+      return info;
+    }
   } else {
-    return info;
+    return undefined;
   }
 }
 
@@ -20,20 +20,9 @@ export const useAuthInfoStore = defineStore('authInfo', {
     info: undefined as AuthInfo | undefined,
   }),
   getters: {
-    username: (state) => {
-      if (state.info) {
-        return validExpires(state.info)?.username;
-      } else {
-        return undefined;
-      }
-    },
-    token: (state) => {
-      if (state.info) {
-        return validExpires(state.info)?.token;
-      } else {
-        return undefined;
-      }
-    },
+    username: (state) => validExpires(state.info)?.username,
+    role: (state) => validExpires(state.info)?.role,
+    token: (state) => validExpires(state.info)?.token,
   },
   actions: {
     set(info: AuthInfo) {
@@ -45,3 +34,9 @@ export const useAuthInfoStore = defineStore('authInfo', {
   },
   persist: true,
 });
+
+export function atLeastMaintainer(
+  role: 'normal' | 'admin' | 'maintainer' | undefined
+) {
+  return role === 'admin' || role === 'maintainer';
+}

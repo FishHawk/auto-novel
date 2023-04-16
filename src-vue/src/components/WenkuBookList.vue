@@ -78,8 +78,6 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
                 style="aspect-ratio: 1 / 1.5; object-fit: cover"
               />
             </template>
-            <!-- <template #header>
-            </template> -->
           </n-card>
 
           <n-text

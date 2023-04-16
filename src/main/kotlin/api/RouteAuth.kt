@@ -2,15 +2,13 @@ package api
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import data.*
+import data.EmailCodeRepository
+import data.User
+import data.UserRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
-import io.ktor.server.resources.*
 import io.ktor.server.resources.post
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
@@ -75,14 +73,22 @@ class AuthService(
     private val userRepository: UserRepository,
     private val emailCodeRepository: EmailCodeRepository,
 ) {
-    private fun generateToken(username: String): Pair<String, Long> {
+    private fun generateToken(
+        username: String,
+        role: User.Role,
+    ): Pair<String, Long> {
         val expiresAt = LocalDateTime.now()
             .plusMonths(6)
             .atZone(ZoneId.systemDefault())
         return Pair(
             JWT.create()
-                .withClaim("username", username)
-                .withExpiresAt(Date.from(expiresAt.toInstant()))
+                .apply {
+                    withClaim("username", username)
+                    if (role != User.Role.Normal) {
+                        withClaim("role", role.toString())
+                    }
+                    withExpiresAt(Date.from(expiresAt.toInstant()))
+                }
                 .sign(Algorithm.HMAC256(secret)),
             expiresAt.toEpochSecond(),
         )
@@ -98,6 +104,7 @@ class AuthService(
     data class SignInDto(
         val email: String,
         val username: String,
+        val role: User.Role,
         val token: String,
         val expiresAt: Long,
     )
@@ -110,11 +117,12 @@ class AuthService(
         if (!user.validatePassword(body.password))
             return httpUnauthorized("密码错误")
 
-        val (token, expiresAt) = generateToken(user.username)
+        val (token, expiresAt) = generateToken(user.username, user.role)
         return Result.success(
             SignInDto(
                 email = user.email,
                 username = user.username,
+                role = user.role,
                 token = token,
                 expiresAt = expiresAt,
             )
@@ -156,11 +164,12 @@ class AuthService(
             password = body.password,
         )
 
-        val (token, expiresAt) = generateToken(body.username)
+        val (token, expiresAt) = generateToken(body.username, User.Role.Normal)
         return Result.success(
             SignInDto(
                 email = body.email,
                 username = body.username,
+                role = User.Role.Normal,
                 token = token,
                 expiresAt = expiresAt,
             )

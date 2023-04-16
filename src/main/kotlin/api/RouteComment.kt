@@ -47,28 +47,28 @@ fun Route.routeComment() {
 
     authenticate(optional = true) {
         get<Comment.List> { loc ->
-            val username = call.jwtUsernameOrNull()
-            val result = service.list(username, loc.postId, loc.page)
+            val jwtUser = call.jwtUserOrNull()
+            val result = service.list(jwtUser?.username, loc.postId, loc.page)
             call.respondResult(result)
         }
 
         get<Comment.ListSub> { loc ->
-            val username = call.jwtUsernameOrNull()
-            val result = service.listSub(username, loc.postId, loc.parentId, loc.page)
+            val jwtUser = call.jwtUserOrNull()
+            val result = service.listSub(jwtUser?.username, loc.postId, loc.parentId, loc.page)
             call.respondResult(result)
         }
     }
     authenticate {
         post<Comment.Vote> { loc ->
-            val username = call.jwtUsername()
-            val result = service.vote(loc.commentId, loc.isUpvote, loc.isCancel, username)
+            val jwtUser = call.jwtUser()
+            val result = service.vote(loc.commentId, loc.isUpvote, loc.isCancel, jwtUser.username)
             call.respondResult(result)
         }
 
         post<Comment> {
-            val username = call.jwtUsername()
+            val jwtUser = call.jwtUser()
             val body = call.receive<CommentService.CommentBody>()
-            val result = service.createComment(body, username)
+            val result = service.createComment(body, jwtUser.username)
             call.respondResult(result)
         }
     }

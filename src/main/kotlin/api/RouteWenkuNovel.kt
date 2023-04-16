@@ -67,18 +67,30 @@ fun Route.routeWenkuNovel() {
 
     authenticate {
         post<WenkuNovel.Metadata> { loc ->
+            val jwtUser = call.jwtUser()
+            if (!jwtUser.atLeastMaintainer()) {
+                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
+            }
             val body = call.receive<WenkuNovelService.MetadataCreateBody>()
             val result = service.createMetadata(loc.bookId, body)
             call.respondResult(result)
         }
 
         put<WenkuNovel.Metadata> { loc ->
+            val jwtUser = call.jwtUser()
+            if (!jwtUser.atLeastMaintainer()) {
+                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
+            }
             val body = call.receive<WenkuNovelService.MetadataCreateBody>()
             val result = service.updateMetadata(loc.bookId, body)
             call.respondResult(result)
         }
 
         post<WenkuNovel.Episode> { loc ->
+            val jwtUser = call.jwtUser()
+            if (!jwtUser.atLeastMaintainer()) {
+                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
+            }
             val multipartData = call.receiveMultipart()
             multipartData.forEachPart { part ->
                 if (part is PartData.FileItem) {

@@ -1,11 +1,31 @@
 package api
 
+import com.auth0.jwt.interfaces.Payload
+import data.User
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 
-fun ApplicationCall.jwtUsername(): String =
-    principal<JWTPrincipal>()!!.payload.getClaim("username").asString()
+data class JwtUser(
+    val username: String,
+    val role: User.Role,
+) {
+    fun atLeastMaintainer(): Boolean {
+        return role == User.Role.Maintainer || role == User.Role.Admin
+    }
+}
 
-fun ApplicationCall.jwtUsernameOrNull(): String? =
-    principal<JWTPrincipal>()?.payload?.getClaim("username")?.asString()
+private fun JWTPrincipal.toJwtUser(): JwtUser = payload.let { payload ->
+    val username = payload.getClaim("username").asString()
+    val role = payload.getClaim("role")
+        .takeIf { !it.isNull }
+        ?.let { User.Role.valueOf(it.asString()) }
+        ?: User.Role.Normal
+    JwtUser(username, role)
+}
+
+fun ApplicationCall.jwtUser(): JwtUser =
+    principal<JWTPrincipal>()!!.toJwtUser()
+
+fun ApplicationCall.jwtUserOrNull(): JwtUser? =
+    principal<JWTPrincipal>()?.toJwtUser()

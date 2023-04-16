@@ -6,7 +6,7 @@ import { UploadFilled } from '@vicons/material';
 
 import { ResultState } from '../data/api/result';
 import ApiWenkuNovel, { WenkuMetadataDto } from '../data/api/api_wenku_novel';
-import { useAuthInfoStore } from '../data/stores/authInfo';
+import { useAuthInfoStore, atLeastMaintainer } from '../data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -142,7 +142,7 @@ function handleFinish({
       >
         <n-space align="baseline" justify="space-between" style="width: 100">
           <n-h2 prefix="bar">目录</n-h2>
-          <n-button>
+          <n-button v-if="atLeastMaintainer(authInfoStore.role)">
             <template #icon><n-icon :component="UploadFilled" /></template>
             上传章节
           </n-button>

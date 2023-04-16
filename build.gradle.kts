@@ -54,7 +54,7 @@ dependencies {
 
     implementation("com.jillesvangurp:search-client:2.0.0-RC-13")
 
-    implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.8.0")
+    implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.9.0")
 
     val kotestVersion = "5.5.4"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")

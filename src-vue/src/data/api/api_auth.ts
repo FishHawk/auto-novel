@@ -4,6 +4,7 @@ import { Result, runCatching } from './result';
 export interface SignInDto {
   email: string;
   username: string;
+  role: 'normal' | 'admin' | 'maintainer';
   token: string;
   expiresAt: number;
 }
