@@ -271,7 +271,7 @@ class WenkuNovelService(
                 var bytes = inputStream.read(buffer)
                 while (bytes >= 0) {
                     bytesCopied += bytes
-                    if (bytesCopied > 1024 * 1024 * 20) {
+                    if (bytesCopied > 1024 * 1024 * 40) {
                         fileTooLarge = true
                         return@use
                     }
@@ -283,7 +283,7 @@ class WenkuNovelService(
 
         return if (fileTooLarge) {
             fileRepo.delete(bookId, fileName)
-            httpBadRequest("文件大小不能超过20MB")
+            httpBadRequest("文件大小不能超过40MB")
         } else {
             Result.success(Unit)
         }
