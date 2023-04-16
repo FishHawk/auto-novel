@@ -155,7 +155,7 @@ class BookMetadataRepository(
             ?: return getRemote(providerId, bookId)
                 .onSuccess {
                     col.insertOne(it)
-                    syncEs(it)
+                    syncEs(it, true)
                 }
 
         // 在数据库中，暂停更新
@@ -223,7 +223,7 @@ class BookMetadataRepository(
             bsonSpecifyMetadata(providerId, bookId),
             combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-        )?.also { syncEs(it) }
+        )?.also { syncEs(it, merged.hasChanged) }
     }
 
     suspend fun updateZh(
@@ -254,7 +254,7 @@ class BookMetadataRepository(
             bsonSpecifyMetadata(providerId, bookId),
             combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-        )?.let { syncEs(it) }
+        )?.let { syncEs(it, false) }
     }
 
     suspend fun updateChangeAt(providerId: String, bookId: String) {
@@ -262,18 +262,31 @@ class BookMetadataRepository(
             bsonSpecifyMetadata(providerId, bookId),
             setValue(BookMetadata::changeAt, LocalDateTime.now()),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-        )?.let { syncEs(it) }
+        )
     }
 
-    private suspend fun syncEs(metadata: BookMetadata) {
-        esBookMetadataRepository.index(
-            metadata.providerId,
-            metadata.bookId,
-            metadata.titleJp,
-            metadata.titleZh,
-            metadata.authors.map { it.name },
-            metadata.changeAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
-        )
+    private suspend fun syncEs(
+        metadata: BookMetadata,
+        hasChange: Boolean,
+    ) {
+        if (hasChange) {
+            esBookMetadataRepository.index(
+                metadata.providerId,
+                metadata.bookId,
+                metadata.titleJp,
+                metadata.titleZh,
+                metadata.authors.map { it.name },
+                LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond(),
+            )
+        } else {
+            esBookMetadataRepository.update(
+                metadata.providerId,
+                metadata.bookId,
+                metadata.titleJp,
+                metadata.titleZh,
+                metadata.authors.map { it.name },
+            )
+        }
     }
 
     suspend fun setToc(

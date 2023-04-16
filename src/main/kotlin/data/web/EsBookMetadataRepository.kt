@@ -5,6 +5,8 @@ import com.jillesvangurp.searchdsls.querydsl.*
 import data.ElasticSearchDataSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.litote.kmongo.limit
 
 data class EsBookPageList(
@@ -67,6 +69,28 @@ class EsBookMetadataRepository(
                 authors = authors,
                 changeAt = changeAt,
             ),
+            refresh = Refresh.WaitFor,
+        )
+    }
+
+    @Serializable
+    private data class EsBookMetadataUpdate(
+        val titleJp: String,
+        val titleZh: String?,
+        val authors: List<String>,
+    )
+
+    suspend fun update(
+        providerId: String,
+        bookId: String,
+        titleJp: String,
+        titleZh: String?,
+        authors: List<String>,
+    ) {
+        client.updateDocument(
+            target = indexName,
+            id = "${providerId}.${bookId}",
+            docJson = Json.encodeToString(EsBookMetadataUpdate(titleJp, titleZh, authors)),
             refresh = Refresh.WaitFor,
         )
     }
