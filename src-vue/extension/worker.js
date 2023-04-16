@@ -6,7 +6,8 @@ const domainGA = 'https://www.google-analytics.com';
 
 function shouldHandleRequest(d) {
   const fromMySite =
-    d.initiator.startsWith(domain) || d.initiator.startsWith(domainDebug);
+    d.initiator !== undefined &&
+    (d.initiator.startsWith(domain) || d.initiator.startsWith(domainDebug));
   const requestMySite =
     d.url.startsWith(domain) ||
     d.url.startsWith(domainDebug) ||

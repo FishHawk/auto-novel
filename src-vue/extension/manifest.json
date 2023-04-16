@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "日本网文机翻机器人",
   "description": "解除浏览器跨域限制，以启用网页端的机翻功能",
   "permissions": [
@@ -9,9 +9,6 @@
     "webRequestBlocking",
     "declarativeNetRequest",
     "cookies"
-  ],
-  "host_permissions": [
-    "<all_urls>"
   ],
   "declarative_net_request": {
     "rule_resources": [
