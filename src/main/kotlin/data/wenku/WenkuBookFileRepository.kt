@@ -37,9 +37,10 @@ class WenkuBookFileRepository(
 
     fun list(novelId: String): List<String> {
         val path = root / novelId
+        val fileExtensions = listOf("epub", "txt")
         return if (path.exists() && path.isDirectory()) {
             path.listDirectoryEntries()
-                .filter { it.isRegularFile() }
+                .filter { it.isRegularFile() && it.fileName.extension in fileExtensions }
                 .map { it.fileName.toString() }
         } else {
             emptyList()
