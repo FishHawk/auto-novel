@@ -23,7 +23,7 @@ const collapsedMenuOptions: MenuOption[] = [
   menuOption('首页', '/'),
   {
     label: '列表',
-    key: 'list',
+    key: '/list',
     children: [
       menuOption('网络小说', '/novel-list'),
       menuOption('文库小说', '/wenku-list'),
@@ -40,10 +40,12 @@ const path = useRoute().path;
 function getTopMenuOptionKey() {
   if (path.startsWith('/patch')) {
     return '/patch';
-  } else if (path.startsWith('/list') || path.startsWith('/rank')) {
-    return '/list';
-  } else {
+  } else if (path.startsWith('/feedback')) {
+    return '/feedback';
+  } else if (path === '/') {
     return '/';
+  } else {
+    return '/novel-list';
   }
 }
 
@@ -90,7 +92,7 @@ function handleUserDropdownSelect(key: string | number) {
           <n-menu
             :value="path"
             :options="collapsedMenuOptions"
-            :default-expanded-keys="['list']"
+            :default-expanded-keys="['/list']"
           />
         </n-popover>
         <n-a class="on-desktop" href="/" target="_blank">
