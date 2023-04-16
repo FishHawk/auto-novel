@@ -80,18 +80,19 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
             </template>
           </n-card>
 
-          <n-text
+          <div
             style="
-              height: 3em;
+              height: 2.5em;
               display: -webkit-box;
               -webkit-line-clamp: 2;
               -webkit-box-orient: vertical;
               overflow: hidden;
               padding: 8px;
+              color: rgb(51, 54, 57);
             "
           >
             {{ item.title }}
-          </n-text>
+          </div>
         </n-a>
       </n-grid-item>
     </n-grid>
