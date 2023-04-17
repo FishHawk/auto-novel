@@ -109,6 +109,18 @@ const alphapolis: Provider = {
   },
 };
 
+const novelism: Provider = {
+  parseUrl(url: string): string | undefined {
+    return /novelism\.jp\/novel\/([^\/]+)/.exec(url)?.[1];
+  },
+  buildMetadataUrl(bookId: string): string {
+    return `https://novelism.jp/novel/${bookId}`;
+  },
+  buildEpisodeUrl(bookId: string, episodeId: string): string {
+    return `https://novelism.jp/novel/${bookId}/article/${episodeId}/`;
+  },
+};
+
 const providers: { [id: string]: Provider } = {
   kakuyomu,
   syosetu,
@@ -116,6 +128,7 @@ const providers: { [id: string]: Provider } = {
   hameln,
   pixiv,
   alphapolis,
+  novelism,
 };
 
 export function parseUrl(url: string): ParseResult | undefined {

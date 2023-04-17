@@ -15,6 +15,7 @@ const descriptior = {
         'Hameln',
         'Pixiv',
         'Alphapolis',
+        'Novelism',
       ],
     },
   ],
@@ -32,6 +33,7 @@ async function loader(page: number, query: string, selected: number[]) {
     Hameln: 'hameln',
     Pixiv: 'pixiv',
     Alphapolis: 'alphapolis',
+    Novelism: 'novelism',
   };
 
   return ApiWebNovel.list(page - 1, providerMap[optionNth(0)], query);

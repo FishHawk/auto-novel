@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { InputSegmenter } from '../src/data/translator/base';
+import { InputSegmenter } from '../src/data/translator/adapter';
 
 const input = `
 　一人の少女があの日を思い出す。
