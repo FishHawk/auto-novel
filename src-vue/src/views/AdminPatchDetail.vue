@@ -1,16 +1,18 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useMessage } from 'naive-ui';
 
 import { ResultState } from '../data/api/result';
 import ApiPatch, { BookPatchDto } from '../data/api/api_patch';
 import TextDiff from '../components/TextDiff.vue';
-import { buildMetadataUrl } from '../data/provider';
+import { useAuthInfoStore } from '../data/stores/authInfo';
+
+const message = useMessage();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
 const bookId = route.params.bookId as string;
-const url = buildMetadataUrl(providerId, bookId);
 
 const bookPatch = ref<ResultState<BookPatchDto>>();
 onMounted(() => getMetadata());
@@ -18,8 +20,23 @@ async function getMetadata() {
   const result = await ApiPatch.getPatch(providerId, bookId);
   bookPatch.value = result;
   if (result.ok) {
-    document.title = `修改记录 - ${result.value.titleJp}`;
+    document.title = `修改历史 - ${result.value.titleJp}`;
   }
+}
+
+const auth = useAuthInfoStore();
+
+async function deletePatch() {
+  const result = await ApiPatch.deletePatch(providerId, bookId, auth.token);
+  if (result.ok) {
+    message.info('删除成功');
+  } else {
+    message.error('删除失败：' + result.error.message);
+  }
+}
+
+async function revokePatch() {
+  message.info('暂未实现');
 }
 </script>
 
@@ -27,10 +44,17 @@ async function getMetadata() {
   <MainLayout>
     <div v-if="bookPatch?.ok">
       <n-h2 prefix="bar">
-        <n-a :href="url" target="_blank">{{ bookPatch.value.titleJp }}</n-a>
+        <n-a :href="`/novel/${providerId}/${bookId}`" target="_blank">{{
+          bookPatch.value.titleJp
+        }}</n-a>
         <br />
         <span style="color: grey">{{ bookPatch.value.titleZh }}</span>
       </n-h2>
+
+      <n-space>
+        <n-button @click="deletePatch()">删除</n-button>
+        <n-button @click="revokePatch()">撤销</n-button>
+      </n-space>
 
       <div v-for="metadataPatch of bookPatch.value.patches">
         <n-h4 prefix="bar">{{ metadataPatch.uuid }}</n-h4>

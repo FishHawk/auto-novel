@@ -1,10 +1,14 @@
 <script lang="ts" setup>
-import { Component, h, ref } from 'vue';
+import { Component, computed, h, ref } from 'vue';
 import { MenuOption, NIcon } from 'naive-ui';
 import { LogOutFilled, MenuFilled } from '@vicons/material';
 import { useRoute } from 'vue-router';
 
-import { AuthInfo, useAuthInfoStore } from '../data/stores/authInfo';
+import {
+  atLeastMaintainer,
+  AuthInfo,
+  useAuthInfoStore,
+} from '../data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -12,34 +16,52 @@ function menuOption(text: string, href: string): MenuOption {
   return { label: () => h('a', { href }, text), key: href };
 }
 
-const topMenuOptions: MenuOption[] = [
-  menuOption('首页', '/'),
-  menuOption('列表', '/novel-list'),
-  menuOption('编辑历史', '/patch'),
-  menuOption('反馈', '/feedback'),
-];
+const topMenuOptions = computed(() => {
+  const menus: MenuOption[] = [
+    menuOption('首页', '/'),
+    menuOption('列表', '/novel-list'),
+    menuOption('反馈', '/feedback'),
+  ];
 
-const collapsedMenuOptions: MenuOption[] = [
-  menuOption('首页', '/'),
-  {
-    label: '列表',
-    key: '/list',
-    children: [
-      menuOption('网络小说', '/novel-list'),
-      menuOption('文库小说', '/wenku-list'),
-      menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),
-      menuOption('成为小说家：综合', '/novel-rank/syosetu/2'),
-      menuOption('成为小说家：异世界转移/转生', '/novel-rank/syosetu/3'),
-    ],
-  },
-  menuOption('编辑历史', '/patch'),
-  menuOption('反馈', '/feedback'),
-];
+  if (atLeastMaintainer(authInfoStore.role)) {
+    menus.push(menuOption('控制台', '/admin/patch'));
+  }
+  return menus;
+});
+
+const collapsedMenuOptions = computed(() => {
+  const menus: MenuOption[] = [
+    menuOption('首页', '/'),
+    {
+      label: '列表',
+      key: '/list',
+      children: [
+        menuOption('网络小说', '/novel-list'),
+        menuOption('文库小说', '/wenku-list'),
+        menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),
+        menuOption('成为小说家：综合', '/novel-rank/syosetu/2'),
+        menuOption('成为小说家：异世界转移/转生', '/novel-rank/syosetu/3'),
+      ],
+    },
+    menuOption('反馈', '/feedback'),
+  ];
+  if (atLeastMaintainer(authInfoStore.role)) {
+    menus.push({
+      label: '控制台',
+      key: '/admin',
+      children: [
+        menuOption('编辑历史', '/admin/patch'),
+        menuOption('目录合并历史', '/admin/toc-merge'),
+      ],
+    });
+  }
+  return menus;
+});
 
 const path = useRoute().path;
 function getTopMenuOptionKey() {
-  if (path.startsWith('/patch')) {
-    return '/patch';
+  if (path.startsWith('/admin')) {
+    return '/admin/patch';
   } else if (path.startsWith('/feedback')) {
     return '/feedback';
   } else if (path === '/') {
@@ -92,7 +114,7 @@ function handleUserDropdownSelect(key: string | number) {
           <n-menu
             :value="path"
             :options="collapsedMenuOptions"
-            :default-expanded-keys="['/list']"
+            :default-expanded-keys="['/list', '/admin']"
           />
         </n-popover>
         <n-a class="on-desktop" href="/" target="_blank">

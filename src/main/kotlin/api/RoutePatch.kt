@@ -3,12 +3,10 @@ package api
 import data.web.BookPatch
 import data.web.BookPatchOutline
 import data.web.BookPatchRepository
-import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.resources.get
-import io.ktor.server.response.*
+import io.ktor.server.auth.*
+import io.ktor.server.resources.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
@@ -51,14 +49,18 @@ fun Route.routePatch() {
         call.respondResult(result)
     }
 
-//    delete<Patch.Self> { loc ->
-//        val result = service.deletePatch(
-//            providerId = loc.providerId,
-//            bookId = loc.bookId,
-//        )
-//        call.respondResult(result)
-//    }
-
+    authenticate {
+        delete<Patch.Self> { loc ->
+            if (!call.jwtUser().atLeastMaintainer()) {
+                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
+            }
+            val result = service.deletePatch(
+                providerId = loc.providerId,
+                bookId = loc.bookId,
+            )
+            call.respondResult(result)
+        }
+    }
 }
 
 class PatchService(

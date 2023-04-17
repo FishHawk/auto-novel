@@ -68,13 +68,20 @@ async function getPatch(
 
 async function deletePatch(
   providerId: string,
-  bookId: string
+  bookId: string,
+  token: string
 ): Promise<Result<string>> {
-  return runCatching(api.delete(`patch/self/${providerId}/${bookId}`).text());
+  return runCatching(
+    api
+      .delete(`patch/self/${providerId}/${bookId}`, {
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .text()
+  );
 }
 
 export default {
   list,
   getPatch,
-  // deletePatch,
+  deletePatch,
 };
