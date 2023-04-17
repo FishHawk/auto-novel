@@ -32,9 +32,12 @@ async function getEpisode() {
   }
 }
 
-function getTextList(
-  episode: BookEpisodeDto
-): ({ text: string; secondary: boolean } | null)[] {
+type Paragraph =
+  | { text: string; secondary: boolean }
+  | { imageUrl: string }
+  | null;
+
+function getTextList(episode: BookEpisodeDto): Paragraph[] {
   const styles: { paragraphs: string[]; secondary: boolean }[] = [];
   if (setting.mode === 'jp') {
     styles.push({ paragraphs: episode.paragraphs, secondary: false });
@@ -70,10 +73,12 @@ function getTextList(
     }
   }
 
-  const merged: ({ text: string; secondary: boolean } | null)[] = [];
+  const merged: Paragraph[] = [];
   for (let i = 0; i < episode.paragraphs.length; i++) {
     if (episode.paragraphs[i].trim().length === 0) {
       merged.push(null);
+    } else if (episode.paragraphs[i].startsWith('<图片>')) {
+      merged.push({ imageUrl: episode.paragraphs[i].slice(4) });
     } else {
       for (const style of styles) {
         merged.push({ text: style.paragraphs[i], secondary: style.secondary });
@@ -150,8 +155,11 @@ function getTextList(
 
       <div id="episode-content">
         <template v-for="p in getTextList(bookEpisode.value)">
-          <n-p v-if="p" :class="{ secondary: p.secondary }">{{ p.text }}</n-p>
-          <br v-else />
+          <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">{{
+            p.text
+          }}</n-p>
+          <br v-else-if="!p" />
+          <img v-else :src="p.imageUrl" :alt="p.imageUrl" style="width: 100%" />
         </template>
       </div>
 

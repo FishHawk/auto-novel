@@ -61,7 +61,7 @@ export class InputSegmenter {
 
     for (const line of this.input) {
       const realLine = line.replace(/\r?\n|\r/g, '');
-      if (realLine.trim() === '') {
+      if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
         continue;
       }
 
@@ -83,9 +83,8 @@ export class InputSegmenter {
   recover(output: string[]) {
     const recoveredOutput: string[] = [];
     for (const line of this.input) {
-      const realLine = line.replace('\n', '').trim();
-      const lineSize = realLine.length;
-      if (lineSize === 0) {
+      const realLine = line.replace(/\r?\n|\r/g, '');
+      if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
         recoveredOutput.push(line);
       } else {
         const outputLine = output.shift();
