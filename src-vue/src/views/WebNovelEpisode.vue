@@ -50,7 +50,7 @@ function getTextList(
       if (episode.youdaoParagraphs) {
         styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
       } else {
-        return [{ text: '百度翻译版本不存在', secondary: false }];
+        return [{ text: '有道翻译版本不存在', secondary: false }];
       }
     }
 
