@@ -82,9 +82,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       </template>
       <template v-else>
         <div style="color: #666">
-          日文({{ item.count }}/{{ item.total }}) 百度({{ item.countBaidu }}/{{
-            item.total
-          }}) 有道({{ item.countYoudao }}/{{ item.total }})
+          总计{{ item.total }} / 百度{{ item.countBaidu }} / 有道{{
+            item.countYoudao
+          }}
         </div>
       </template>
       <n-divider />

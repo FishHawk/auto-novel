@@ -65,34 +65,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
       <n-grid-item v-for="item in bookPage.value.items">
         <n-a :href="`/wenku/${item.bookId}`" target="_blank">
-          <n-card
-            size="small"
-            header-style="padding: 8px;"
-            :bordered="false"
-            style="box-shadow: 2px 2px 8px grey"
-          >
-            <template #cover>
-              <img
-                :src="item.cover"
-                alt="cover"
-                style="aspect-ratio: 1 / 1.5; object-fit: cover"
-              />
-            </template>
-          </n-card>
-
-          <div
-            style="
-              height: 2.5em;
-              display: -webkit-box;
-              -webkit-line-clamp: 2;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-              padding: 8px;
-              color: rgb(51, 54, 57);
-            "
-          >
-            {{ item.title }}
-          </div>
+          <ImageCard :src="item.cover" :title="item.title" />
         </n-a>
       </n-grid-item>
     </n-grid>

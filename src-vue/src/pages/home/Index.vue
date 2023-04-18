@@ -1,12 +1,17 @@
 <script lang="ts" setup>
-import { onMounted, Ref, ref } from 'vue';
+import { computed, onMounted, Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
+import { useWindowSize } from '@vueuse/core';
 
 import ApiWebNovel, { BookListItemDto } from '@/data/api/api_web_novel';
+import ApiWenkuNovel, { WenkuListItemDto } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { parseUrl } from '@/data/provider';
 import { Ok, ResultState } from '@/data/api/result';
+
+const { width } = useWindowSize();
+const isDesktop = computed(() => width.value > 600);
 
 const authInfoStore = useAuthInfoStore();
 
@@ -48,12 +53,23 @@ const latestUpdate = ref<ResultState<BookListItemDto[]>>();
 async function loadLatestUpdate() {
   const result = await ApiWebNovel.list(0, '', '');
   if (result.ok) {
-    favoriteList.value = Ok(result.value.items.slice(0, 8));
+    latestUpdate.value = Ok(result.value.items.slice(0, 8));
   } else {
-    favoriteList.value = result;
+    latestUpdate.value = result;
   }
 }
 onMounted(loadLatestUpdate);
+
+const latestUpdateWenku = ref<ResultState<WenkuListItemDto[]>>();
+async function loadLatestUpdateWenku() {
+  const result = await ApiWenkuNovel.list(0, '');
+  if (result.ok) {
+    latestUpdateWenku.value = Ok(result.value.items.slice(0, 12));
+  } else {
+    latestUpdateWenku.value = result;
+  }
+}
+onMounted(loadLatestUpdateWenku);
 </script>
 
 <template>
@@ -94,24 +110,24 @@ onMounted(loadLatestUpdate);
       </div>
     </template>
 
-    <div style="display: flex">
-      <div style="flex: 1; margin-right: 16px">
-        <n-h2 prefix="bar">公告</n-h2>
-        <n-p>
-          2023年4月10日，重写了插件以支持有道翻译，参见
-          <n-a href="/how-to-use" target="_blank">使用说明</n-a>
-          。 章节设置里可以切换百度和有道。 旧插件仍然能用，但只能用百度翻译。
-          大更新免不了有bug，欢迎反馈。
-        </n-p>
-        <n-p>
-          Alphapolis和Pixiv是我用自己的cookie垫进去的，如果加载不了就是我cookie过期了，请提醒我更新。
-        </n-p>
+    <template v-if="isDesktop">
+      <div style="display: flex">
+        <div style="flex: 1; margin-right: 16px">
+          <PanelAnnouncement />
+        </div>
+        <div style="flex: 1">
+          <PanelLinkExample />
+        </div>
       </div>
-      <div style="flex: 1">
-        <PanelLinkExample />
-      </div>
-    </div>
-    <n-divider />
+      <n-divider />
+    </template>
+
+    <template v-else>
+      <PanelAnnouncement />
+      <n-divider />
+      <PanelLinkExample />
+      <n-divider />
+    </template>
 
     <template v-if="authInfoStore.token">
       <n-space align="center" justify="space-between">
@@ -123,9 +139,17 @@ onMounted(loadLatestUpdate);
     </template>
 
     <n-space align="center" justify="space-between">
-      <n-h2 prefix="bar">最新更新</n-h2>
+      <n-h2 prefix="bar">最新更新-网络小说</n-h2>
       <n-a href="/novel-list">更多</n-a>
     </n-space>
-    <PanelWebBook :list="favoriteList" />
+    <PanelWebBook :list="latestUpdate" />
+    <n-divider />
+
+    <n-space align="center" justify="space-between">
+      <n-h2 prefix="bar" style="margin-bottom: 30px">最新更新-文库小说</n-h2>
+      <n-a href="/wenku-list">更多</n-a>
+    </n-space>
+    <PanelWenkuBook :list="latestUpdateWenku" />
+    <n-divider />
   </MainLayout>
 </template>

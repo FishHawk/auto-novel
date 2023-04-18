@@ -21,6 +21,13 @@ a {
   overflow-x: visible;
 }
 
+.text-2line {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 @media only screen and (max-width: 600px) {
   .on-desktop {
     display: none;

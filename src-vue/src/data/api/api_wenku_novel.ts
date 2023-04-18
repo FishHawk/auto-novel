@@ -5,7 +5,7 @@ export interface WenkuListPageDto {
   pageNumber: number;
   items: WenkuListItemDto[];
 }
-interface WenkuListItemDto {
+export interface WenkuListItemDto {
   bookId: string;
   title: string;
   cover: string;
