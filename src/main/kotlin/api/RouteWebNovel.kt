@@ -27,6 +27,7 @@ private class WebNovel {
     data class List(
         val parent: WebNovel = WebNovel(),
         val page: Int,
+        val pageSize: Int = 10,
         val provider: String = "",
         val query: String? = null,
     )
@@ -35,6 +36,8 @@ private class WebNovel {
     @Resource("/favorite")
     class Favorite(
         val parent: WebNovel = WebNovel(),
+        val page: Int,
+        val pageSize: Int = 10,
     )
 
     @Serializable
@@ -85,16 +88,20 @@ fun Route.routeWebNovel() {
         val result = service.list(
             queryString = loc.query?.ifBlank { null },
             providerId = loc.provider.ifEmpty { null },
-            page = loc.page,
-            pageSize = 10,
+            page = loc.page.coerceAtLeast(0),
+            pageSize = loc.pageSize.coerceAtMost(20),
         )
         call.respondResult(result)
     }
 
     authenticate {
-        get<WebNovel.Favorite> {
+        get<WebNovel.Favorite> { loc ->
             val jwtUser = call.jwtUser()
-            val result = service.listFavorite(jwtUser.username)
+            val result = service.listFavorite(
+                page = loc.page.coerceAtLeast(0),
+                pageSize = loc.pageSize.coerceAtMost(20),
+                username = jwtUser.username,
+            )
             call.respondResult(result)
         }
         post<WebNovel.FavoriteItem> { loc ->
@@ -192,7 +199,7 @@ class WebNovelService(
             queryString = queryString,
             providerId = providerId,
             page = page.coerceAtLeast(0),
-            pageSize = 10,
+            pageSize = pageSize,
         )
         val items = esPage.items.map {
             BookListPageDto.ItemDto(
@@ -214,29 +221,37 @@ class WebNovelService(
     }
 
     suspend fun listFavorite(
+        page: Int,
+        pageSize: Int,
         username: String,
     ): Result<BookListPageDto> {
         val user = userRepository.getByUsername(username)
             ?: return httpNotFound("用户不存在")
-        val items = user.favoriteBooks.mapNotNull {
-            val metadata = bookMetadataRepository.getLocal(
-                providerId = it.providerId,
-                bookId = it.bookId,
-            ) ?: return@mapNotNull null
+        val books = user.favoriteBooks
+        val items = books
+            .asSequence()
+            .drop(pageSize * page)
+            .take(pageSize)
+            .toList()
+            .mapNotNull {
+                val metadata = bookMetadataRepository.getLocal(
+                    providerId = it.providerId,
+                    bookId = it.bookId,
+                ) ?: return@mapNotNull null
 
-            BookListPageDto.ItemDto(
-                providerId = metadata.providerId,
-                bookId = metadata.bookId,
-                titleJp = metadata.titleJp,
-                titleZh = metadata.titleZh,
-                total = metadata.toc.count { it.episodeId != null },
-                count = bookEpisodeRepository.count(metadata.providerId, metadata.bookId),
-                countBaidu = bookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
-                countYoudao = bookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
-            )
-        }
+                BookListPageDto.ItemDto(
+                    providerId = metadata.providerId,
+                    bookId = metadata.bookId,
+                    titleJp = metadata.titleJp,
+                    titleZh = metadata.titleZh,
+                    total = metadata.toc.count { it.episodeId != null },
+                    count = bookEpisodeRepository.count(metadata.providerId, metadata.bookId),
+                    countBaidu = bookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
+                    countYoudao = bookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
+                )
+            }
         val dto = BookListPageDto(
-            pageNumber = 1,
+            pageNumber = (books.size / pageSize).toLong() + 1,
             items = items,
         )
         return Result.success(dto)

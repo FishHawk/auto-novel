@@ -20,23 +20,29 @@ export interface BookListItemDto {
 
 async function list(
   page: number,
+  pageSize: number,
   provider: string,
   query: string
 ): Promise<Result<BookListPageDto>> {
   return runCatching(
     api
       .get(`novel/list`, {
-        searchParams: { page, provider, query },
+        searchParams: { page, pageSize, provider, query },
       })
       .json()
   );
 }
 
-async function listFavorite(token: string): Promise<Result<BookListPageDto>> {
+async function listFavorite(
+  page: number,
+  pageSize: number,
+  token: string
+): Promise<Result<BookListPageDto>> {
   return runCatching(
     api
       .get(`novel/favorite`, {
         headers: { Authorization: 'Bearer ' + token },
+        searchParams: { page, pageSize },
       })
       .json()
   );

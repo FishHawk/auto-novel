@@ -22,7 +22,6 @@ const topMenuOptions = computed(() => {
     menuOption('列表', '/novel-list'),
     menuOption('反馈', '/feedback'),
   ];
-
   if (atLeastMaintainer(authInfoStore.role)) {
     menus.push(menuOption('控制台', '/admin/patch'));
   }

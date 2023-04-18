@@ -22,6 +22,10 @@ const routes = [
   },
 
   {
+    path: '/favorite-list',
+    component: () => import('./pages/list/FavoriteList.vue'),
+  },
+  {
     path: '/novel-list',
     component: () => import('./pages/list/WebNovelList.vue'),
   },

@@ -40,25 +40,25 @@ function query(url: string) {
 
 const favoriteList = ref<ResultState<BookListItemDto[]>>();
 async function loadPage() {
-  const result = await ApiWebNovel.listFavorite(authInfoStore.token!!);
+  const result = await ApiWebNovel.listFavorite(0, 8, authInfoStore.token!!);
   if (result.ok) {
-    favoriteList.value = Ok(result.value.items.slice(0, 8));
+    favoriteList.value = Ok(result.value.items);
   } else {
     favoriteList.value = result;
   }
 }
 onMounted(loadPage);
 
-const latestUpdate = ref<ResultState<BookListItemDto[]>>();
-async function loadLatestUpdate() {
-  const result = await ApiWebNovel.list(0, '', '');
+const latestUpdateWeb = ref<ResultState<BookListItemDto[]>>();
+async function loadLatestUpdateWeb() {
+  const result = await ApiWebNovel.list(0, 8, '', '');
   if (result.ok) {
-    latestUpdate.value = Ok(result.value.items.slice(0, 8));
+    latestUpdateWeb.value = Ok(result.value.items);
   } else {
-    latestUpdate.value = result;
+    latestUpdateWeb.value = result;
   }
 }
-onMounted(loadLatestUpdate);
+onMounted(loadLatestUpdateWeb);
 
 const latestUpdateWenku = ref<ResultState<WenkuListItemDto[]>>();
 async function loadLatestUpdateWenku() {
@@ -132,7 +132,7 @@ onMounted(loadLatestUpdateWenku);
     <template v-if="authInfoStore.token">
       <n-space align="center" justify="space-between">
         <n-h2 prefix="bar">我的收藏</n-h2>
-        <n-a>更多</n-a>
+        <n-a href="/favorite-list">更多</n-a>
       </n-space>
       <PanelWebBook :list="favoriteList" />
       <n-divider />
@@ -142,7 +142,7 @@ onMounted(loadLatestUpdateWenku);
       <n-h2 prefix="bar">最新更新-网络小说</n-h2>
       <n-a href="/novel-list">更多</n-a>
     </n-space>
-    <PanelWebBook :list="latestUpdate" />
+    <PanelWebBook :list="latestUpdateWeb" />
     <n-divider />
 
     <n-space align="center" justify="space-between">
