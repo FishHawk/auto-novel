@@ -4,18 +4,15 @@
 
 - 支持的小说网站：
 
-  - [Kakuyomu](https://kakuyomu.jp/)
-
-  - [小説家になろう](https://syosetu.com/)
-
-  - [Novelup](https://novelup.plus/)
-
-  - [Hameln](https://syosetu.org/)
-
-  - [Pixiv](https://www.pixiv.net/)
+- [Kakuyomu](https://kakuyomu.jp/)
+- [小説家になろう](https://syosetu.com/)
+- [Novelup](https://novelup.plus/)
+- [Hameln](https://syosetu.org/)
+- [Pixiv](https://www.pixiv.net/)
+- [Alphapolis](https://www.alphapolis.co.jp/)
+- [Novelism](https://novelism.jp/)
 
 
-- 使用百度网页版自动翻译小说。
+- 支持有道/百度翻译。
 - 可以在线阅读。
 - 可以下载 TXT 和 EPUB 到本地阅读，支持日文、中文以及中日对比三种版本。
-- 可以修改翻译结果。

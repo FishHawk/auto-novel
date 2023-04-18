@@ -87,6 +87,7 @@ async function loadMyFavorite(page: number, selected: number[]) {
       <br />
       大更新免不了有bug，欢迎反馈。
       <br />
+      另外，Alphapolis和Pixiv是我用自己的cookie垫进去的，如果加载不了就是我cookie过期了，请提醒我更新。
     </n-p>
 
     <template v-if="authInfoStore.token">
@@ -104,6 +105,7 @@ async function loadMyFavorite(page: number, selected: number[]) {
       <n-li>
         Alphapolis: https://www.alphapolis.co.jp/novel/638978238/525733370
       </n-li>
+      <n-li> Novelism: https://novelism.jp/novel/2m0xulekSsCxfixwam8d7g </n-li>
     </n-ul>
   </MainLayout>
 </template>
