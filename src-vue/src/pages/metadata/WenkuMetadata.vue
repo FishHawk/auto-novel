@@ -4,9 +4,9 @@ import { useRoute } from 'vue-router';
 import { UploadFileInfo, useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import { ResultState } from '../data/api/result';
-import ApiWenkuNovel, { WenkuMetadataDto } from '../data/api/api_wenku_novel';
-import { useAuthInfoStore, atLeastMaintainer } from '../data/stores/authInfo';
+import { ResultState } from '../../data/api/result';
+import ApiWenkuNovel, { WenkuMetadataDto } from '../../data/api/api_wenku_novel';
+import { useAuthInfoStore, atLeastMaintainer } from '../../data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 

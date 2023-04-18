@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
-import ApiAuth, { SignInDto } from '../data/api/api_auth';
+import ApiAuth, { SignInDto } from '@/data/api/api_auth';
 
 const emits = defineEmits<{ (e: 'signUp', user: SignInDto): void }>();
 

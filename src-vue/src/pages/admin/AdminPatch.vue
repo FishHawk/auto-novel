@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 
-import { ResultState } from '../data/api/result';
-import ApiPatch, { BookPatchPageDto } from '../data/api/api_patch';
-import { buildMetadataUrl } from '../data/provider';
+import { ResultState } from '@/data/api/result';
+import ApiPatch, { BookPatchPageDto } from '@/data/api/api_patch';
+import { buildMetadataUrl } from '@/data/provider';
 
 const currentPage = ref(1);
 const total = ref(1);

@@ -3,11 +3,11 @@ import { onMounted, ref, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme, useMessage } from 'naive-ui';
 
-import { ResultState } from '../data/api/result';
-import ApiWebNovel, { BookEpisodeDto } from '../data/api/api_web_novel';
-import { useAuthInfoStore } from '../data/stores/authInfo';
-import { useReaderSettingStore } from '../data/stores/readerSetting';
-import { buildEpisodeUrl } from '../data/provider';
+import { ResultState } from '@/data/api/result';
+import ApiWebNovel, { BookEpisodeDto } from '@/data/api/api_web_novel';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useReaderSettingStore } from '@/data/stores/readerSetting';
+import { buildEpisodeUrl } from '@/data/provider';
 
 const authInfoStore = useAuthInfoStore();
 const setting = useReaderSettingStore();

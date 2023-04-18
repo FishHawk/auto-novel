@@ -3,8 +3,8 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import ApiWebNovel, { BookMetadataDto } from '../data/api/api_web_novel';
-import { useAuthInfoStore } from '../data/stores/authInfo';
+import ApiWebNovel, { BookMetadataDto } from '@/data/api/api_web_novel';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const props = defineProps<{
   providerId: string;

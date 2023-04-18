@@ -13,22 +13,39 @@ function requireAtLeastMaintainer(from: any, to: any, next: any) {
 }
 
 const routes = [
-  { path: '/', component: () => import('./views/Query.vue') },
-  { path: '/feedback', component: () => import('./views/Feedback.vue') },
-  { path: '/how-to-use', component: () => import('./views/HowToUse.vue') },
+  { path: '/', component: () => import('./pages/home/Index.vue') },
 
-  { path: '/novel-list', component: () => import('./views/WebNovelList.vue') },
+  { path: '/feedback', component: () => import('./pages/other/Feedback.vue') },
+  {
+    path: '/how-to-use',
+    component: () => import('./pages/other/HowToUse.vue'),
+  },
+
+  {
+    path: '/novel-list',
+    component: () => import('./pages/list/WebNovelList.vue'),
+  },
   {
     path: '/novel-rank/:providerId/:typeId',
-    component: () => import('./views/WebNovelRank.vue'),
+    component: () => import('./pages/list/WebNovelRank.vue'),
   },
+  {
+    path: '/wenku-list',
+    component: () => import('./pages/list/WenkuNovelList.vue'),
+  },
+
   {
     path: '/novel/:providerId/:bookId',
-    component: () => import('./views/WebNovelMetadata.vue'),
+    component: () => import('./pages/metadata/WebMetadata.vue'),
   },
   {
+    path: '/wenku/:bookId',
+    component: () => import('./pages/metadata/WenkuMetadata.vue'),
+  },
+
+  {
     path: '/novel/:providerId/:bookId/:episodeId',
-    component: () => import('./views/WebNovelEpisode.vue'),
+    component: () => import('./pages/episode/NovelEpisode.vue'),
   },
 
   {
@@ -38,26 +55,17 @@ const routes = [
     children: [
       {
         path: '/admin/patch',
-        component: () => import('./views/AdminPatch.vue'),
+        component: () => import('./pages/admin/AdminPatch.vue'),
       },
       {
         path: '/admin/toc-merge',
-        component: () => import('./views/AdminTocMerge.vue'),
+        component: () => import('./pages/admin/AdminTocMerge.vue'),
       },
       {
         path: '/admin/patch/:providerId/:bookId',
-        component: () => import('./views/AdminPatchDetail.vue'),
+        component: () => import('./pages/admin/AdminPatchDetail.vue'),
       },
     ],
-  },
-
-  {
-    path: '/wenku-list',
-    component: () => import('./views/WenkuNovelList.vue'),
-  },
-  {
-    path: '/wenku/:bookId',
-    component: () => import('./views/WenkuNovelMetadata.vue'),
   },
 ];
 

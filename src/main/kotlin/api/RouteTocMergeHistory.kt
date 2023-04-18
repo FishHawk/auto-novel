@@ -111,7 +111,8 @@ class TocMergeHistoryService(
                 bookId = it.bookId,
                 tocOld = it.tocOld,
                 tocNew = it.tocNew,
-                reason = it.reason,
+                reason
+                = it.reason,
             )
         } ?: return httpNotFound("未找到")
         return Result.success(history)

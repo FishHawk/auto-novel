@@ -3,13 +3,10 @@ import { onMounted, Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 
-import ApiWebNovel, {
-  BookListItemDto,
-  BookListPageDto,
-} from '../data/api/api_web_novel';
-import { useAuthInfoStore } from '../data/stores/authInfo';
-import { parseUrl } from '../data/provider';
-import { Ok, Result, ResultState } from '../data/api/result';
+import ApiWebNovel, { BookListItemDto } from '@/data/api/api_web_novel';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { parseUrl } from '@/data/provider';
+import { Ok, ResultState } from '@/data/api/result';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -111,22 +108,7 @@ onMounted(loadLatestUpdate);
         </n-p>
       </div>
       <div style="flex: 1">
-        <n-h2 prefix="bar">链接示例</n-h2>
-        <n-ul>
-          <n-li>
-            Kakuyomu: https://kakuyomu.jp/works/16817139555217983105
-          </n-li>
-          <n-li> 成为小说家吧: https://ncode.syosetu.com/n0833hi </n-li>
-          <n-li> Novelup: https://novelup.plus/story/206612087 </n-li>
-          <n-li> Hameln: https://syosetu.org/novel/297874/ </n-li>
-          <n-li> Pixiv: https://www.pixiv.net/novel/series/9406879 </n-li>
-          <n-li>
-            Alphapolis: https://www.alphapolis.co.jp/novel/638978238/525733370
-          </n-li>
-          <n-li>
-            Novelism: https://novelism.jp/novel/2m0xulekSsCxfixwam8d7g
-          </n-li>
-        </n-ul>
+        <PanelLinkExample />
       </div>
     </div>
     <n-divider />
@@ -136,7 +118,7 @@ onMounted(loadLatestUpdate);
         <n-h2 prefix="bar">我的收藏</n-h2>
         <n-a>更多</n-a>
       </n-space>
-      <WebBookPanel :list="favoriteList" />
+      <PanelWebBook :list="favoriteList" />
       <n-divider />
     </template>
 
@@ -144,6 +126,6 @@ onMounted(loadLatestUpdate);
       <n-h2 prefix="bar">最新更新</n-h2>
       <n-a href="/novel-list">更多</n-a>
     </n-space>
-    <WebBookPanel :list="favoriteList" />
+    <PanelWebBook :list="favoriteList" />
   </MainLayout>
 </template>

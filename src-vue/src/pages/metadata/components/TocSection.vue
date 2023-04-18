@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { BookTocItemDto } from '../data/api/api_web_novel';
+import { BookTocItemDto } from '@/data/api/api_web_novel';
 
 defineProps<{
   providerId: string;

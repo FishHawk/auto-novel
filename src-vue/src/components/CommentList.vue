@@ -3,13 +3,9 @@ import { useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { CommentFilled } from '@vicons/material';
 
-import ApiComment, {
-  CommentDto,
-  CommentPageDto,
-} from '../data/api/api_comment';
-import { Ok, ResultState } from '../data/api/result';
-
-import { useAuthInfoStore } from '../data/stores/authInfo';
+import ApiComment, { CommentDto, CommentPageDto } from '@/data/api/api_comment';
+import { Ok, ResultState } from '@/data/api/result';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 

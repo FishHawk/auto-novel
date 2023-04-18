@@ -8,7 +8,7 @@ import {
   atLeastMaintainer,
   AuthInfo,
   useAuthInfoStore,
-} from '../data/stores/authInfo';
+} from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 

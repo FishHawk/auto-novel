@@ -7,8 +7,8 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import ApiComment, { SubCommentDto } from '../data/api/api_comment';
-import { useAuthInfoStore } from '../data/stores/authInfo';
+import ApiComment, { SubCommentDto } from '@/data/api/api_comment';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 

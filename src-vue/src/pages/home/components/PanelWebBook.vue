@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ResultState } from '../data/api/result';
-import { BookListItemDto } from '../data/api/api_web_novel';
+import { ResultState } from '@/data/api/result';
+import { BookListItemDto } from '@/data/api/api_web_novel';
 
 defineProps<{
   list: ResultState<BookListItemDto[]>;
@@ -11,7 +11,9 @@ defineProps<{
   <div v-if="list?.ok">
     <n-grid :x-gap="12" :y-gap="12" cols="1 600:4">
       <n-grid-item v-for="item in list.value" style="padding: 8px">
-        <n-a class="text-2line">{{ item.titleJp }}</n-a>
+        <n-a :href="`/novel/${item.providerId}/${item.bookId}`" class="text-2line">{{
+          item.titleJp
+        }}</n-a>
         <div class="text-2line">{{ item.titleZh }}</div>
         <div style="color: #666">
           总计{{ item.total }} / 百度{{ item.countBaidu }} / 有道{{

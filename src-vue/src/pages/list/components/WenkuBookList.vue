@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 
-import { Result, ResultState } from '../data/api/result';
-import { BookListPageDto, BookRankPageDto } from '../data/api/api_web_novel';
-import { buildMetadataUrl } from '../data/provider';
+import { Result, ResultState } from '@/data/api/result';
+import { WenkuListPageDto } from '@/data/api/api_wenku_novel';
 
 type Loader = (
   page: number,
   query: string,
   selected: number[]
-) => Promise<Result<BookListPageDto | BookRankPageDto>>;
+) => Promise<Result<WenkuListPageDto>>;
 
 const props = defineProps<{
   search: boolean;
@@ -19,7 +18,7 @@ const props = defineProps<{
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const bookPage = ref<ResultState<BookListPageDto | BookRankPageDto>>();
+const bookPage = ref<ResultState<WenkuListPageDto>>();
 
 const filters = ref({
   query: '',
@@ -33,6 +32,7 @@ async function loadPage(page: number) {
     filters.value.query,
     filters.value.selected
   );
+
   if (currentPage.value == page) {
     bookPage.value = result;
     if (result.ok) {
@@ -62,33 +62,40 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   />
   <n-divider />
   <div v-if="bookPage?.ok">
-    <div v-for="item in bookPage.value.items">
-      <n-h3 class="title" style="margin-bottom: 4px">
-        <n-a :href="`/novel/${item.providerId}/${item.bookId}`" target="_blank">
-          {{ item.titleJp }}
+    <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
+      <n-grid-item v-for="item in bookPage.value.items">
+        <n-a :href="`/wenku/${item.bookId}`" target="_blank">
+          <n-card
+            size="small"
+            header-style="padding: 8px;"
+            :bordered="false"
+            style="box-shadow: 2px 2px 8px grey"
+          >
+            <template #cover>
+              <img
+                :src="item.cover"
+                alt="cover"
+                style="aspect-ratio: 1 / 1.5; object-fit: cover"
+              />
+            </template>
+          </n-card>
+
+          <div
+            style="
+              height: 2.5em;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+              padding: 8px;
+              color: rgb(51, 54, 57);
+            "
+          >
+            {{ item.title }}
+          </div>
         </n-a>
-      </n-h3>
-      <div>{{ item.titleZh }}</div>
-      <n-a
-        :href="buildMetadataUrl(item.providerId, item.bookId)"
-        target="_blank"
-      >
-        {{ buildMetadataUrl(item.providerId, item.bookId) }}
-      </n-a>
-      <template v-if="'extra' in item">
-        <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
-          {{ extraLine }}
-        </div>
-      </template>
-      <template v-else>
-        <div style="color: #666">
-          日文({{ item.count }}/{{ item.total }}) 百度({{ item.countBaidu }}/{{
-            item.total
-          }}) 有道({{ item.countYoudao }}/{{ item.total }})
-        </div>
-      </template>
-      <n-divider />
-    </div>
+      </n-grid-item>
+    </n-grid>
 
     <n-empty v-if="bookPage.value.items.length === 0" description="空列表" />
   </div>

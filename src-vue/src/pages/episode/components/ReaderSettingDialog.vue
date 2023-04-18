@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useReaderSettingStore } from '../data/stores/readerSetting';
+import { useReaderSettingStore } from '../../../data/stores/readerSetting';
 
 const modeOptions = [
   { value: 'jp', label: '日文' },

@@ -3,10 +3,9 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useMessage } from 'naive-ui';
 
-import { ResultState } from '../data/api/result';
-import ApiPatch, { BookPatchDto } from '../data/api/api_patch';
-import TextDiff from '../components/TextDiff.vue';
-import { useAuthInfoStore } from '../data/stores/authInfo';
+import { ResultState } from '@/data/api/result';
+import ApiPatch, { BookPatchDto } from '@/data/api/api_patch';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const message = useMessage();
 const auth = useAuthInfoStore();

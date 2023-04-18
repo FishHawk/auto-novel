@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { YoudaoTranslator } from '../data/translator/youdao';
-import { BaiduTranslator } from '../data/translator/baidu';
+import { YoudaoTranslator } from '@/data/translator/youdao';
+import { BaiduTranslator } from '@/data/translator/baidu';
 
 const message = useMessage();
 

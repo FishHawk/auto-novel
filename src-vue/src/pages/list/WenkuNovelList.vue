@@ -2,9 +2,9 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import ApiWenkuNovel from '../data/api/api_wenku_novel';
-import Bangumi from '../data/api/bangumi';
-import { useAuthInfoStore, atLeastMaintainer } from '../data/stores/authInfo';
+import ApiWenkuNovel from '@/data/api/api_wenku_novel';
+import Bangumi from '@/data/api/bangumi';
+import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const message = useMessage();
 

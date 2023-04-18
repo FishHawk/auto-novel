@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import ListLayout from '../components/ListLayout.vue';
-import ApiWebNovel from '../data/api/api_web_novel';
+import ApiWebNovel from '@/data/api/api_web_novel';
 
 const route = useRoute();
 const providerId = route.params.providerId as string;

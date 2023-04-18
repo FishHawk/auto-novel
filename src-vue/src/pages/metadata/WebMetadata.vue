@@ -8,10 +8,10 @@ import {
 } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 
-import { ResultState } from '../data/api/result';
-import ApiWebNovel, { BookMetadataDto } from '../data/api/api_web_novel';
-import { buildMetadataUrl } from '../data/provider';
-import { useAuthInfoStore } from '../data/stores/authInfo';
+import { ResultState } from '@/data/api/result';
+import ApiWebNovel, { BookMetadataDto } from '@/data/api/api_web_novel';
+import { buildMetadataUrl } from '@/data/provider';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 

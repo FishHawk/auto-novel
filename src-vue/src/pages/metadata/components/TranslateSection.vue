@@ -2,9 +2,9 @@
 import { onMounted, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { ResultState } from '../data/api/result';
-import ApiWebNovel, { BookStateDto } from '../data/api/api_web_novel';
-import { update } from '../data/api/api_update';
+import { ResultState } from '@/data/api/result';
+import ApiWebNovel, { BookStateDto } from '@/data/api/api_web_novel';
+import { update } from '@/data/api/api_update';
 
 const props = defineProps<{
   providerId: string;

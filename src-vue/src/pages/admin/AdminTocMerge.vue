@@ -2,12 +2,12 @@
 import { ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { ResultState } from '../data/api/result';
+import { ResultState } from '@/data/api/result';
 import ApiTocMergeHistory, {
   TocMergeHistoryDto,
   TocMergeHistoryPageDto,
-} from '../data/api/api_toc_merge_history';
-import { useAuthInfoStore } from '../data/stores/authInfo';
+} from '@/data/api/api_toc_merge_history';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const message = useMessage();
 const auth = useAuthInfoStore();
