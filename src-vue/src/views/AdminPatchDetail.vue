@@ -9,6 +9,7 @@ import TextDiff from '../components/TextDiff.vue';
 import { useAuthInfoStore } from '../data/stores/authInfo';
 
 const message = useMessage();
+const auth = useAuthInfoStore();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
@@ -24,10 +25,8 @@ async function getMetadata() {
   }
 }
 
-const auth = useAuthInfoStore();
-
 async function deletePatch() {
-  const result = await ApiPatch.deletePatch(providerId, bookId, auth.token);
+  const result = await ApiPatch.deletePatch(providerId, bookId, auth.token!);
   if (result.ok) {
     message.info('删除成功');
   } else {

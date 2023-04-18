@@ -102,6 +102,7 @@ fun main() {
             routeWenkuNovel()
             routeWebNovel()
             routePatch()
+            routeTocMergeHistory()
             routeUpdate()
         }
     }.start(wait = true)
@@ -136,11 +137,12 @@ val appModule = module {
         val secret = System.getenv("JWT_SECRET")!!
         AuthService(secret, get(), get())
     }
+    single { PatchService(get()) }
+    single { TocMergeHistoryService(get()) }
     single { CommentService(get()) }
 
     single { PrepareBookService(get(), get(), get()) }
     single { WebNovelService(get(), get(), get(), get(), get()) }
-    single { PatchService(get()) }
     single { UpdateService(get(), get()) }
 
     single { WenkuNovelService(get(), get()) }

@@ -1,8 +1,6 @@
 package api
 
-import data.web.BookPatch
-import data.web.BookPatchOutline
-import data.web.BookPatchRepository
+import data.web.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -22,8 +20,8 @@ private class Patch {
     )
 
     @Serializable
-    @Resource("/self/{providerId}/{bookId}")
-    data class Self(
+    @Resource("/item/{providerId}/{bookId}")
+    data class Item(
         val parent: Patch = Patch(),
         val providerId: String,
         val bookId: String,
@@ -34,15 +32,15 @@ fun Route.routePatch() {
     val service by inject<PatchService>()
 
     get<Patch.List> { loc ->
-        val result = service.list(
+        val result = service.listPatch(
             page = loc.page,
             pageSize = 10,
         )
         call.respondResult(result)
     }
 
-    get<Patch.Self> { loc ->
-        val result = service.get(
+    get<Patch.Item> { loc ->
+        val result = service.getPatch(
             providerId = loc.providerId,
             bookId = loc.bookId,
         )
@@ -50,10 +48,9 @@ fun Route.routePatch() {
     }
 
     authenticate {
-        delete<Patch.Self> { loc ->
-            if (!call.jwtUser().atLeastMaintainer()) {
-                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
-            }
+        delete<Patch.Item> { loc ->
+            call.requireAtLeastMaintainer()
+                ?.let { return@delete call.respondResult(it) }
             val result = service.deletePatch(
                 providerId = loc.providerId,
                 bookId = loc.bookId,
@@ -64,31 +61,31 @@ fun Route.routePatch() {
 }
 
 class PatchService(
-    private val bookPatchRepository: BookPatchRepository,
+    private val patchRepo: BookPatchRepository,
 ) {
     @Serializable
-    data class BookPageDto(
+    data class PatchPageDto(
         val total: Long,
         val items: List<BookPatchOutline>,
     )
 
-    suspend fun list(
+    suspend fun listPatch(
         page: Int,
         pageSize: Int,
-    ): Result<BookPageDto> {
-        val items = bookPatchRepository.list(
+    ): Result<PatchPageDto> {
+        val items = patchRepo.list(
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )
-        val total = bookPatchRepository.count()
-        return Result.success(BookPageDto(total = total, items = items))
+        val total = patchRepo.count()
+        return Result.success(PatchPageDto(total = total, items = items))
     }
 
-    suspend fun get(
+    suspend fun getPatch(
         providerId: String,
         bookId: String,
     ): Result<BookPatch> {
-        val patch = bookPatchRepository.get(providerId, bookId)
+        val patch = patchRepo.get(providerId, bookId)
             ?: return httpNotFound("未找到")
         return Result.success(patch)
     }
@@ -97,11 +94,17 @@ class PatchService(
         providerId: String,
         bookId: String,
     ): Result<Unit> {
-        bookPatchRepository.deletePatch(
+        patchRepo.deletePatch(
             providerId = providerId,
             bookId = bookId,
         )
-
         return Result.success(Unit)
+    }
+
+    suspend fun revokePatch(
+        providerId: String,
+        bookId: String,
+    ): Result<Unit> {
+        TODO()
     }
 }

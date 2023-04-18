@@ -11,7 +11,7 @@ const bookPage = ref<ResultState<BookPatchPageDto>>();
 
 async function loadPage(page: number) {
   bookPage.value = undefined;
-  const result = await ApiPatch.list(currentPage.value - 1);
+  const result = await ApiPatch.listPatch(currentPage.value - 1);
   if (currentPage.value == page) {
     bookPage.value = result;
     if (result.ok) {

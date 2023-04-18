@@ -55,7 +55,7 @@ interface BookEpisodePatchDto {
   createAt: number;
 }
 
-async function list(page: number): Promise<Result<BookPatchPageDto>> {
+async function listPatch(page: number): Promise<Result<BookPatchPageDto>> {
   return runCatching(api.get(`patch/list`, { searchParams: { page } }).json());
 }
 
@@ -63,7 +63,7 @@ async function getPatch(
   providerId: string,
   bookId: string
 ): Promise<Result<BookPatchDto>> {
-  return runCatching(api.get(`patch/self/${providerId}/${bookId}`).json());
+  return runCatching(api.get(`patch/item/${providerId}/${bookId}`).json());
 }
 
 async function deletePatch(
@@ -73,7 +73,7 @@ async function deletePatch(
 ): Promise<Result<string>> {
   return runCatching(
     api
-      .delete(`patch/self/${providerId}/${bookId}`, {
+      .delete(`patch/item/${providerId}/${bookId}`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .text()
@@ -81,7 +81,7 @@ async function deletePatch(
 }
 
 export default {
-  list,
+  listPatch,
   getPatch,
   deletePatch,
 };

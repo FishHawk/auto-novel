@@ -29,3 +29,10 @@ fun ApplicationCall.jwtUser(): JwtUser =
 
 fun ApplicationCall.jwtUserOrNull(): JwtUser? =
     principal<JWTPrincipal>()?.toJwtUser()
+
+fun ApplicationCall.requireAtLeastMaintainer(): Result<Unit>? =
+    if (jwtUser().atLeastMaintainer()) {
+        null
+    } else {
+        httpUnauthorized("只有维护者及以上才有权限执行此操作")
+    }
