@@ -112,7 +112,7 @@ onMounted(loadLatestUpdateWenku);
 
     <template v-if="isDesktop">
       <div style="display: flex">
-        <div style="flex: 1; margin-right: 16px">
+        <div style="flex: 1; margin-right: 20px">
           <PanelAnnouncement />
         </div>
         <div style="flex: 1">
