@@ -104,7 +104,7 @@ private object TxtMakerJp : TxtWriter() {
 }
 
 private class TxtMakerZh(
-    private val getParagraphs: (BookEpisode) -> List<String>?
+    val getParagraphs: (BookEpisode) -> List<String>?
 ) : TxtWriter() {
     override fun BufferedWriter.writeTitle(metadata: BookMetadata) {
         write((metadata.titleZh ?: metadata.titleJp) + "\n")
@@ -150,10 +150,11 @@ private class TxtMakerMix(
     }
 
     override fun BufferedWriter.writeEpisode(episode: BookEpisode) {
-        if (episode.baiduParagraphs == null) {
+        val paragraphsZh = txtMakerZh.getParagraphs(episode)
+        if (paragraphsZh == null) {
             writeMissingEpisode()
         } else {
-            episode.paragraphs.zip(episode.baiduParagraphs).forEach { (textJp, textZh) ->
+            episode.paragraphs.zip(paragraphsZh).forEach { (textJp, textZh) ->
                 if (textJp.isNotBlank()) {
                     write(textZh + "\n")
                     write(textJp + "\n")
