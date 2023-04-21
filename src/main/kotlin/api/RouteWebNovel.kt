@@ -214,7 +214,7 @@ class WebNovelService(
             )
         }
         val dto = BookListPageDto(
-            pageNumber = esPage.total / pageSize,
+            pageNumber = (esPage.total / pageSize) + 1,
             items = items,
         )
         return Result.success(dto)

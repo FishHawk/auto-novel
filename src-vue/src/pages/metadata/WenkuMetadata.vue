@@ -5,8 +5,13 @@ import { UploadFileInfo, useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { ResultState } from '../../data/api/result';
-import ApiWenkuNovel, { WenkuMetadataDto } from '../../data/api/api_wenku_novel';
-import { useAuthInfoStore, atLeastMaintainer } from '../../data/stores/authInfo';
+import ApiWenkuNovel, {
+  WenkuMetadataDto,
+} from '../../data/api/api_wenku_novel';
+import {
+  useAuthInfoStore,
+  atLeastMaintainer,
+} from '../../data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -59,6 +64,22 @@ function handleFinish({
   refreshMetadata();
   return undefined;
 }
+
+async function updateMetadata() {
+  const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(bookId);
+  if (metadataResult.ok) {
+    const token = authInfoStore.token;
+    if (!token) return message.info('请先登录');
+    const result = await ApiWenkuNovel.putMetadata(metadataResult.value, token);
+    if (result.ok) {
+      message.success('更新成功');
+    } else {
+      message.error('更新失败:' + result.error.message);
+    }
+  } else {
+    message.error('无法从Bangumi获得数据:' + metadataResult.error.message);
+  }
+}
 </script>
 
 <template>
@@ -92,7 +113,11 @@ function handleFinish({
         </n-card>
         <div>
           <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
-            {{ novelMetadata.value.title }}
+            {{
+              novelMetadata.value.titleCn
+                ? novelMetadata.value.titleCn
+                : novelMetadata.value.title
+            }}
           </n-h1>
 
           <table style="border-spacing: 0px 8px">
@@ -116,6 +141,15 @@ function handleFinish({
         </div>
       </n-space>
 
+      <n-button
+        v-if="atLeastMaintainer(authInfoStore.role)"
+        @click="updateMetadata()"
+      >
+        <template #icon><n-icon :component="UploadFilled" /></template>
+        更新元数据
+      </n-button>
+
+      <n-p>原名：{{ novelMetadata.value.title }}</n-p>
       <n-p
         v-html="novelMetadata.value.introduction.replace(/\r\n/g, '<br />')"
       />

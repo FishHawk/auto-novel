@@ -65,7 +65,10 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
       <n-grid-item v-for="item in bookPage.value.items">
         <n-a :href="`/wenku/${item.bookId}`" target="_blank">
-          <ImageCard :src="item.cover" :title="item.title" />
+          <ImageCard
+            :src="item.cover"
+            :title="item.titleCn ? item.titleCn : item.title"
+          />
         </n-a>
       </n-grid-item>
     </n-grid>

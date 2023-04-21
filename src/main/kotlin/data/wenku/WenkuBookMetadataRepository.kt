@@ -8,7 +8,6 @@ import com.jillesvangurp.searchdsls.querydsl.sort
 import data.ElasticSearchDataSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import org.litote.kmongo.limit
 
 class WenkuBookMetadataRepository(
     private val es: ElasticSearchDataSource,
@@ -17,6 +16,7 @@ class WenkuBookMetadataRepository(
     data class Metadata(
         val bookId: String,
         val title: String,
+        val titleCn: String,
         val cover: String,
         val coverSmall: String,
         val author: String,
@@ -40,6 +40,7 @@ class WenkuBookMetadataRepository(
                     mappings(dynamicEnabled = false) {
                         keyword(Metadata::keywords)
                         text(Metadata::title) { analyzer = "icu_analyzer" }
+                        text(Metadata::titleCn) { analyzer = "icu_analyzer" }
                         keyword(Metadata::author)
                         keyword(Metadata::artist)
                         date(Metadata::updateAt)

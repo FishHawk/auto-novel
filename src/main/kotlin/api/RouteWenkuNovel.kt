@@ -121,6 +121,7 @@ class WenkuNovelService(
         data class ItemDto(
             val bookId: String,
             val title: String,
+            val titleCn: String,
             val cover: String,
             val author: String,
             val artists: String,
@@ -142,6 +143,7 @@ class WenkuNovelService(
             BookListPageDto.ItemDto(
                 bookId = it.bookId,
                 title = it.title,
+                titleCn = it.titleCn,
                 cover = it.cover,
                 author = it.author,
                 artists = it.artist,
@@ -149,7 +151,7 @@ class WenkuNovelService(
             )
         }
         val dto = BookListPageDto(
-            pageNumber = esPage.total / pageSize,
+            pageNumber = (esPage.total / pageSize) + 1,
             items = items,
         )
         return Result.success(dto)
@@ -159,6 +161,7 @@ class WenkuNovelService(
     data class MetadataDto(
         val bookId: String,
         val title: String,
+        val titleCn: String,
         val cover: String,
         val author: String,
         val artist: String,
@@ -177,6 +180,7 @@ class WenkuNovelService(
         val metadataDto = MetadataDto(
             bookId = metadataEs.bookId,
             title = metadataEs.title,
+            titleCn = metadataEs.titleCn,
             cover = metadataEs.cover,
             author = metadataEs.author,
             artist = metadataEs.artist,
@@ -192,6 +196,7 @@ class WenkuNovelService(
     data class MetadataCreateBody(
         val bookId: String,
         val title: String,
+        val titleCn: String,
         val cover: String,
         val coverSmall: String,
         val author: String,
@@ -212,6 +217,7 @@ class WenkuNovelService(
             WenkuBookMetadataRepository.Metadata(
                 bookId = bookId,
                 title = body.title,
+                titleCn = body.titleCn,
                 cover = body.cover,
                 coverSmall = body.coverSmall,
                 author = body.author,
@@ -234,6 +240,7 @@ class WenkuNovelService(
             WenkuBookMetadataRepository.Metadata(
                 bookId = bookId,
                 title = body.title,
+                titleCn = body.titleCn,
                 cover = body.cover,
                 coverSmall = body.coverSmall,
                 author = body.author,

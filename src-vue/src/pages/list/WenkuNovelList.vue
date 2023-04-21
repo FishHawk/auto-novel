@@ -3,7 +3,6 @@ import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import ApiWenkuNovel from '@/data/api/api_wenku_novel';
-import Bangumi from '@/data/api/bangumi';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const message = useMessage();
@@ -22,36 +21,21 @@ async function importMetadataFromBangumi(url: string) {
   if (!bookId) {
     return message.error('链接格式错误');
   }
-  const sectionResult = await Bangumi.getSection(bookId);
-  if (sectionResult.ok) {
+  const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(bookId);
+  if (metadataResult.ok) {
     const token = authInfoStore.token;
     if (!token) return message.info('请先登录');
-
-    const metadata = {
-      bookId,
-      title: sectionResult.value.name_cn,
-      cover: sectionResult.value.images.medium,
-      coverSmall: sectionResult.value.images.small,
-      author: '',
-      artist: '',
-      keywords: sectionResult.value.tags.map((it) => it.name),
-      introduction: sectionResult.value.summary,
-    };
-    sectionResult.value.infobox.forEach((it) => {
-      if (it.key == '作者') {
-        metadata.author = it.value;
-      } else if (it.key == '插图') {
-        metadata.artist = it.value;
-      }
-    });
-    const result = await ApiWenkuNovel.postMetadata(metadata, token);
+    const result = await ApiWenkuNovel.postMetadata(
+      metadataResult.value,
+      token
+    );
     if (result.ok) {
       message.success('创建成功');
     } else {
       message.error('创建失败:' + result.error.message);
     }
   } else {
-    message.error('无法从Bangumi获得数据:' + sectionResult.error.message);
+    message.error('无法从Bangumi获得数据:' + metadataResult.error.message);
   }
 }
 
