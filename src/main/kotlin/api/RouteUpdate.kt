@@ -316,8 +316,8 @@ class UpdateService(
             ?: return httpNotFound("章节不存在")
 
         if (body.version == "baidu") {
-            if (episode.baiduParagraphs != null) {
-                return httpConflict("翻译已经存在")
+            if (episode.baiduParagraphs == null) {
+                return httpNotFound("翻译不存在")
             }
             bookEpisodeRepository.updateBaidu(
                 providerId = providerId,
@@ -328,8 +328,8 @@ class UpdateService(
                 paragraphsZh = body.paragraphsZh,
             )
         } else {
-            if (episode.youdaoParagraphs != null) {
-                return httpConflict("翻译已经存在")
+            if (episode.youdaoParagraphs == null) {
+                return httpNotFound("翻译不存在")
             }
             bookEpisodeRepository.updateYoudao(
                 providerId = providerId,
