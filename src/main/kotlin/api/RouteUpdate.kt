@@ -33,6 +33,7 @@ private class Update {
         val providerId: String,
         val bookId: String,
         val episodeId: String,
+        val version: String = "jp",
     )
 }
 
@@ -65,6 +66,7 @@ fun Route.routeUpdate() {
             providerId = loc.providerId,
             bookId = loc.bookId,
             episodeId = loc.episodeId,
+            version = loc.version,
         )
         call.respondResult(result)
     }
@@ -75,6 +77,7 @@ fun Route.routeUpdate() {
             providerId = loc.providerId,
             bookId = loc.bookId,
             episodeId = loc.episodeId,
+            version = loc.version,
             body = body,
         )
         call.respondResult(result)
@@ -86,6 +89,7 @@ fun Route.routeUpdate() {
             providerId = loc.providerId,
             bookId = loc.bookId,
             episodeId = loc.episodeId,
+            version = loc.version,
             body = body,
         )
         call.respondResult(result)
@@ -222,13 +226,17 @@ class UpdateService(
         providerId: String,
         bookId: String,
         episodeId: String,
+        version: String,
     ): Result<EpisodeToTranslateDto> {
+        if (version != "baidu" && version != "youdao" && version != "jp")
+            return httpBadRequest("不支持的版本")
+
         val episode = bookEpisodeRepository.get(providerId, bookId, episodeId)
             .getOrElse { return httpInternalServerError(it.message) }
 
         return Result.success(
             EpisodeToTranslateDto(
-                glossary = episode.baiduGlossary,
+                glossary = if (version == "baidu") episode.baiduGlossary else episode.youdaoGlossary,
                 paragraphsJp = episode.paragraphs,
             )
         )
@@ -236,7 +244,6 @@ class UpdateService(
 
     @Serializable
     data class EpisodeUpdateBody(
-        val version: String,
         val glossaryUuid: String? = null,
         val paragraphsZh: List<String>,
     )
@@ -245,9 +252,10 @@ class UpdateService(
         providerId: String,
         bookId: String,
         episodeId: String,
+        version: String,
         body: EpisodeUpdateBody,
     ): Result<Unit> {
-        if (body.version != "baidu" && body.version != "youdao")
+        if (version != "baidu" && version != "youdao")
             return httpBadRequest("不支持的版本")
 
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
@@ -262,7 +270,7 @@ class UpdateService(
             return httpBadRequest("翻译文本长度不匹配")
         }
 
-        if (body.version == "baidu") {
+        if (version == "baidu") {
             if (episode.baiduParagraphs != null) {
                 return httpConflict("翻译已经存在")
             }
@@ -292,7 +300,6 @@ class UpdateService(
 
     @Serializable
     data class EpisodeUpdatePartlyBody(
-        val version: String,
         val glossaryUuid: String? = null,
         val paragraphsZh: Map<Int, String>,
     )
@@ -301,9 +308,10 @@ class UpdateService(
         providerId: String,
         bookId: String,
         episodeId: String,
+        version: String,
         body: EpisodeUpdatePartlyBody,
     ): Result<Unit> {
-        if (body.version != "baidu" && body.version != "youdao")
+        if (version != "baidu" && version != "youdao")
             return httpBadRequest("不支持的版本")
 
         val metadata = bookMetadataRepository.getLocal(providerId, bookId)
@@ -315,7 +323,7 @@ class UpdateService(
         val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
             ?: return httpNotFound("章节不存在")
 
-        if (body.version == "baidu") {
+        if (version == "baidu") {
             if (episode.baiduParagraphs == null) {
                 return httpNotFound("翻译不存在")
             }

@@ -54,25 +54,31 @@ interface EpisodeToTranslateDto {
 async function getEpisode(
   providerId: string,
   bookId: string,
-  episodeId: string
+  episodeId: string,
+  version: 'jp' | 'baidu' | 'youdao'
 ): Promise<EpisodeToTranslateDto> {
-  return api.get(`update/episode/${providerId}/${bookId}/${episodeId}`).json();
+  return api
+    .get(`update/episode/${providerId}/${bookId}/${episodeId}`, {
+      searchParams: { version },
+    })
+    .json();
 }
 
 interface EpisodeUpdateBody {
   glossaryUuid: string | undefined;
   paragraphsZh: string[];
-  version: 'baidu' | 'youdao';
 }
 
 async function postEpisode(
   providerId: string,
   bookId: string,
   episodeId: string,
+  version: 'baidu' | 'youdao',
   body: EpisodeUpdateBody
 ): Promise<string> {
   return api
     .post(`update/episode/${providerId}/${bookId}/${episodeId}`, {
+      searchParams: { version },
       json: body,
     })
     .text();
@@ -81,17 +87,18 @@ async function postEpisode(
 interface EpisodeUpdatePartlyBody {
   glossaryUuid: string | undefined;
   paragraphsZh: { [key: number]: string };
-  version: 'baidu' | 'youdao';
 }
 
 async function putEpisode(
   providerId: string,
   bookId: string,
   episodeId: string,
+  version: 'baidu' | 'youdao',
   body: EpisodeUpdatePartlyBody
 ): Promise<string> {
   return api
     .put(`update/episode/${providerId}/${bookId}/${episodeId}`, {
+      searchParams: { version },
       json: body,
     })
     .text();
@@ -219,18 +226,17 @@ export async function update(
   for (const episodeId of metadata.untranslatedEpisodeIds) {
     try {
       console.log(`获取章节 ${providerId}/${bookId}/${episodeId}`);
-      const episode = await getEpisode(providerId, bookId, episodeId);
+      const episode = await getEpisode(providerId, bookId, episodeId, version);
 
       const textsSrc = episode.paragraphsJp;
-      if (version !== 'jp' && translator && textsSrc.length > 0) {
+      if (version !== 'jp' && translator) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
         const textsDst = await translator.translate(textsSrc);
 
         console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
-        await postEpisode(providerId, bookId, episodeId, {
+        await postEpisode(providerId, bookId, episodeId, version, {
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh: textsDst,
-          version,
         });
       }
 
@@ -244,7 +250,7 @@ export async function update(
   for (const episodeId of metadata.expiredEpisodeIds) {
     try {
       console.log(`获取章节 ${providerId}/${bookId}/${episodeId}`);
-      const episode = await getEpisode(providerId, bookId, episodeId);
+      const episode = await getEpisode(providerId, bookId, episodeId, version);
       const expiredParagraphs = getExpiredParagraphs(
         episode,
         metadata.glossary
@@ -252,7 +258,7 @@ export async function update(
 
       const textsSrc = expiredParagraphs.map((it) => it.text);
       const paragraphsZh: { [key: number]: string } = {};
-      if (version !== 'jp' && translator && textsSrc.length > 0) {
+      if (version !== 'jp' && translator) {
         console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
         const textsDst = await translator.translate(textsSrc);
         expiredParagraphs.forEach((it, index) => {
@@ -260,10 +266,9 @@ export async function update(
         });
 
         console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
-        await putEpisode(providerId, bookId, episodeId, {
+        await putEpisode(providerId, bookId, episodeId, version, {
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh,
-          version,
         });
       }
       callback.onEpisodeTranslateSuccess();

@@ -126,6 +126,7 @@ export class TranslatorAdapter {
   }
 
   async translate(input: string[]): Promise<string[]> {
+    if (input.length === 0) return [];
     const encodedInput = this.glossaryTransformer.encode(input);
     const output = await this.translateInner(encodedInput);
     const decodedOutput = this.glossaryTransformer.decode(output);

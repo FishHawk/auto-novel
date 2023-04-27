@@ -1,5 +1,6 @@
 package data.web
 
+import com.mongodb.client.model.Updates
 import data.MongoDataSource
 import data.provider.ProviderDataSource
 import data.provider.SBookEpisode
@@ -172,7 +173,8 @@ class BookEpisodeRepository(
                     setValue(BookEpisode::baiduGlossaryUuid, glossaryUuid),
                     setValue(BookEpisode::baiduGlossary, glossary),
                 ) + paragraphsZh.map { (index, textZh) ->
-                    setValue(BookEpisode::baiduParagraphs.pos(index), textZh)
+                    // hacky, fix https://github.com/Litote/kmongo/issues/415
+                    Updates.set("paragraphsZh.${index}", textZh)
                 }
             ),
         )
