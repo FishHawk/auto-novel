@@ -185,10 +185,10 @@ class UpdateService(
             ?: return Result.success(Unit)
 
         val titleZh = body.title.takeIf {
-            metadata.titleZh == null
+            metadata.titleZh.isNullOrBlank()
         }
         val introductionZh = body.introduction.takeIf {
-            metadata.introductionZh == null
+            metadata.introductionZh.isNullOrBlank()
         }
         val tocZh = metadata.toc.mapIndexedNotNull { index, item ->
             if (item.titleZh == null) {

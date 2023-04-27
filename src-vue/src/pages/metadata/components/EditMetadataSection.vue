@@ -84,7 +84,9 @@ async function submitTranslate() {
   }
 
   function ifEdited(field: EditField) {
-    return field.zh != field.edit ? field.edit : undefined;
+    return field.edit?.trim() && field.zh != field.edit
+      ? field.edit
+      : undefined;
   }
 
   const patch = {
@@ -94,8 +96,8 @@ async function submitTranslate() {
     toc: Object.assign(
       {},
       ...editMetadata.value.toc
-        .filter((item) => item.zh != item.edit)
-        .map((item) => ({ [item.jp]: item.edit }))
+        .filter((item) => ifEdited(item))
+        .map((item) => ({ [item.jp]: ifEdited(item) }))
     ),
   };
   const result = await ApiWebNovel.putMetadata(
