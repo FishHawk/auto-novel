@@ -24,34 +24,38 @@ function getBaseBody(key: string) {
 
 export class YoudaoTranslator implements Translator {
   size = 2000;
-  key = '';
+  key = 'fsdsogkndfokasodnaso';
 
   static async create() {
     return await new this().init();
   }
 
   private async init() {
-    await ky.get('https://rlogs.youdao.com/rlog.php', {
-      searchParams: {
-        _npid: 'fanyiweb',
-        _ncat: 'pageview',
-        _ncoo: (2147483647 * Math.random()).toString(),
-        _nssn: 'NULL',
-        _nver: '1.2.0',
-        _ntms: Date.now().toString(),
-      },
-    });
-
-    const json: any = await ky
-      .get('https://dict.youdao.com/webtranslate/key', {
+    try {
+      await ky.get('https://rlogs.youdao.com/rlog.php', {
         searchParams: {
-          keyid: 'webfanyi-key-getter',
-          ...getBaseBody('asdjnjfenknafdfsdfsd'),
+          _npid: 'fanyiweb',
+          _ncat: 'pageview',
+          _ncoo: (2147483647 * Math.random()).toString(),
+          _nssn: 'NULL',
+          _nver: '1.2.0',
+          _ntms: Date.now().toString(),
         },
-      })
-      .json();
+      });
 
-    this.key = json['data']['secretKey'];
+      const json: any = await ky
+        .get('https://dict.youdao.com/webtranslate/key', {
+          searchParams: {
+            keyid: 'webfanyi-key-getter',
+            ...getBaseBody('asdjnjfenknafdfsdfsd'),
+          },
+        })
+        .json();
+
+      this.key = json['data']['secretKey'];
+    } catch (e) {
+      console.log('无法获得Key，使用默认值');
+    }
     return this;
   }
 
