@@ -73,7 +73,7 @@ const termsToAdd = ref(['', '']);
 
 const isSubmitting = ref(false);
 
-async function submitTranslate() {
+async function submit() {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
 
@@ -223,12 +223,12 @@ function addTerm() {
     type="primary"
     class="float"
     :loading="isSubmitting"
-    @click="submitTranslate()"
+    @click="submit()"
   >
     <template #icon>
       <n-icon><UploadFilled /></n-icon>
     </template>
-    提交翻译
+    提交
   </n-button>
 </template>
 
