@@ -12,10 +12,8 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 
-@Serializable
 @Resource("/comment")
 private class Comment {
-    @Serializable
     @Resource("/list")
     class List(
         val parent: Comment = Comment(),
@@ -23,7 +21,6 @@ private class Comment {
         val page: Int,
     )
 
-    @Serializable
     @Resource("/list-sub")
     class ListSub(
         val parent: Comment = Comment(),
@@ -32,7 +29,6 @@ private class Comment {
         val page: Int,
     )
 
-    @Serializable
     @Resource("/vote")
     class Vote(
         val parent: Comment = Comment(),

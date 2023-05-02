@@ -9,17 +9,14 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 
-@Serializable
 @Resource("/patch")
 private class Patch {
-    @Serializable
     @Resource("/list")
     data class List(
         val parent: Patch = Patch(),
         val page: Int,
     )
 
-    @Serializable
     @Resource("/item/{providerId}/{bookId}")
     data class Item(
         val parent: Patch = Patch(),

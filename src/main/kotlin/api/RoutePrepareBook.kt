@@ -12,7 +12,6 @@ import org.koin.ktor.ext.inject
 import java.time.ZoneId
 import kotlin.io.path.*
 
-@Serializable
 @Resource("/prepare-book/{providerId}/{bookId}/{lang}/{type}")
 private data class PrepareBook(
     val providerId: String,

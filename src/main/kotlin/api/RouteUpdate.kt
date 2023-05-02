@@ -12,10 +12,8 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 
-@Serializable
 @Resource("/update")
 private class Update {
-    @Serializable
     @Resource("/metadata/{providerId}/{bookId}")
     data class Metadata(
         val parent: Update = Update(),
@@ -26,7 +24,6 @@ private class Update {
         val endIndex: Int = 65536,
     )
 
-    @Serializable
     @Resource("/episode/{providerId}/{bookId}/{episodeId}")
     data class Episode(
         val parent: Update = Update(),

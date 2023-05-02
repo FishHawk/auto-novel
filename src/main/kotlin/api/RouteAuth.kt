@@ -19,25 +19,20 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-@Serializable
 @Resource("/auth")
 private class Auth {
-    @Serializable
     @Resource("/sign-in")
     class SignIn(val parent: Auth = Auth())
 
-    @Serializable
     @Resource("/sign-up")
     class SignUp(val parent: Auth = Auth())
 
-    @Serializable
     @Resource("/verify-email")
     class VerifyEmail(
         val parent: Auth = Auth(),
         val email: String,
     )
 
-    @Serializable
     @Resource("/reset-password")
     class ResetPassword(val parent: Auth = Auth())
 }

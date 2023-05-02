@@ -22,10 +22,8 @@ import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-@Serializable
 @Resource("/wenku")
 private class WenkuNovel {
-    @Serializable
     @Resource("/list")
     data class List(
         val parent: WenkuNovel = WenkuNovel(),
@@ -33,14 +31,12 @@ private class WenkuNovel {
         val query: String? = null,
     )
 
-    @Serializable
     @Resource("/metadata/{bookId}")
     data class Metadata(
         val parent: WenkuNovel = WenkuNovel(),
         val bookId: String,
     )
 
-    @Serializable
     @Resource("/episode/{bookId}")
     data class Episode(
         val parent: WenkuNovel = WenkuNovel(),

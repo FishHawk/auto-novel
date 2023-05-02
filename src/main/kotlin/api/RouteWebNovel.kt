@@ -19,10 +19,8 @@ import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.time.ZoneId
 
-@Serializable
 @Resource("/novel")
 private class WebNovel {
-    @Serializable
     @Resource("/list")
     data class List(
         val parent: WebNovel = WebNovel(),
@@ -32,7 +30,6 @@ private class WebNovel {
         val query: String? = null,
     )
 
-    @Serializable
     @Resource("/favorite")
     class Favorite(
         val parent: WebNovel = WebNovel(),
@@ -40,7 +37,6 @@ private class WebNovel {
         val pageSize: Int = 10,
     )
 
-    @Serializable
     @Resource("/favorite-item")
     class FavoriteItem(
         val parent: WebNovel = WebNovel(),
@@ -48,14 +44,12 @@ private class WebNovel {
         val bookId: String,
     )
 
-    @Serializable
     @Resource("/rank/{providerId}")
     data class Rank(
         val parent: WebNovel = WebNovel(),
         val providerId: String,
     )
 
-    @Serializable
     @Resource("/state/{providerId}/{bookId}")
     data class State(
         val parent: WebNovel = WebNovel(),
@@ -63,7 +57,6 @@ private class WebNovel {
         val bookId: String,
     )
 
-    @Serializable
     @Resource("/metadata/{providerId}/{bookId}")
     data class Metadata(
         val parent: WebNovel = WebNovel(),
@@ -71,7 +64,6 @@ private class WebNovel {
         val bookId: String,
     )
 
-    @Serializable
     @Resource("/episode/{providerId}/{bookId}/{episodeId}")
     data class Episode(
         val parent: WebNovel = WebNovel(),

@@ -9,17 +9,14 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 
-@Serializable
 @Resource("/toc-merge")
 private class TocMergeHistory {
-    @Serializable
     @Resource("/list")
     data class List(
         val parent: TocMergeHistory = TocMergeHistory(),
         val page: Int,
     )
 
-    @Serializable
     @Resource("/item/{id}")
     data class Item(
         val parent: TocMergeHistory = TocMergeHistory(),
