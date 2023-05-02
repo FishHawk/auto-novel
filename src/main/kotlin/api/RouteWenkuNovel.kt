@@ -10,7 +10,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
-import io.ktor.server.resources.put
+import io.ktor.server.resources.patch
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,10 +63,10 @@ fun Route.routeWenkuNovel() {
             call.respondResult(result)
         }
 
-        put<WenkuNovel.Id> { loc ->
+        patch<WenkuNovel.Id> { loc ->
             val result = call.requireAtLeastMaintainer {
                 val body = call.receive<WenkuNovelService.MetadataCreateBody>()
-                service.updateMetadata(loc.bookId, body)
+                service.patchMetadata(loc.bookId, body)
             }
             call.respondResult(result)
         }
@@ -144,6 +144,7 @@ class WenkuNovelService(
         val titleZh: String,
         val titleZhAlias: List<String>,
         val cover: String,
+        val coverSmall: String,
         val authors: List<String>,
         val artists: List<String>,
         val keywords: List<String>,
@@ -164,6 +165,7 @@ class WenkuNovelService(
             titleZh = metadata.titleZh,
             titleZhAlias = metadata.titleZhAlias,
             cover = metadata.cover,
+            coverSmall = metadata.coverSmall,
             authors = metadata.authors,
             artists = metadata.artists,
             keywords = metadata.keywords,
@@ -201,10 +203,20 @@ class WenkuNovelService(
             keywords = body.keywords,
             introduction = body.introduction,
         )
+        indexRepo.index(
+            id = bookId,
+            title = body.title,
+            titleZh = body.titleZh,
+            titleZhAlias = body.titleZhAlias,
+            cover = body.coverSmall,
+            authors = body.authors,
+            artists = body.artists,
+            keywords = body.keywords,
+        )
         return Result.success(bookId)
     }
 
-    suspend fun updateMetadata(
+    suspend fun patchMetadata(
         bookId: String,
         body: MetadataCreateBody,
     ): Result<Unit> {
@@ -221,6 +233,16 @@ class WenkuNovelService(
             artists = body.artists,
             keywords = body.keywords,
             introduction = body.introduction,
+        )
+        indexRepo.index(
+            id = bookId,
+            title = body.title,
+            titleZh = body.titleZh,
+            titleZhAlias = body.titleZhAlias,
+            cover = body.coverSmall,
+            authors = body.authors,
+            artists = body.artists,
+            keywords = body.keywords,
         )
         return Result.success(Unit)
     }

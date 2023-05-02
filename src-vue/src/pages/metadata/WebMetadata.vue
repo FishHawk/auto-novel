@@ -149,7 +149,7 @@ function enableEditMode() {
       </n-space>
 
       <template v-if="editMode">
-        <EditMetadataSection
+        <WebEditSection
           :provider-id="providerId"
           :book-id="bookId"
           v-model:book-metadata="bookMetadata.value"

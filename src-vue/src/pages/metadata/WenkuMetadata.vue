@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { UploadFileInfo, useMessage } from 'naive-ui';
-import { UploadFilled } from '@vicons/material';
+import { UploadFilled, EditNoteFilled } from '@vicons/material';
 
 import { ResultState } from '../../data/api/result';
 import ApiWenkuNovel, {
@@ -80,6 +80,15 @@ function handleFinish({
 //     message.error('无法从Bangumi获得数据:' + metadataResult.error.message);
 //   }
 // }
+
+const editMode = ref(false);
+function enableEditMode() {
+  if (!atLeastMaintainer(authInfoStore.role)) {
+    message.info('权限不够');
+    return;
+  }
+  editMode.value = true;
+}
 </script>
 
 <template>
@@ -141,70 +150,89 @@ function handleFinish({
         </div>
       </n-space>
 
-      <!-- <n-button
-        v-if="atLeastMaintainer(authInfoStore.role)"
-        @click="updateMetadata()"
-      >
-        <template #icon><n-icon :component="UploadFilled" /></template>
-        更新元数据
-      </n-button> -->
-
-      <n-p>原名：{{ novelMetadata.value.title }}</n-p>
-      <n-p
-        v-html="novelMetadata.value.introduction.replace(/\r\n/g, '<br />')"
-      />
-
-      <div class="on-mobile">
-        <n-space :size="[4, 4]">
-          <n-tag
-            v-for="tag of novelMetadata.value.keywords"
-            :bordered="false"
-            size="small"
-          >
-            {{ tag }}
-          </n-tag>
-        </n-space>
-      </div>
-
-      <n-upload
-        multiple
-        :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
-        :action="ApiWenkuNovel.createUploadUrl(bookId)"
-        :trigger-style="{ width: '100%' }"
-        @finish="handleFinish"
-        @before-upload="beforeUpload"
-      >
-        <n-space align="baseline" justify="space-between" style="width: 100">
-          <n-h2 prefix="bar">目录</n-h2>
-          <n-button v-if="atLeastMaintainer(authInfoStore.role)">
-            <template #icon><n-icon :component="UploadFilled" /></template>
-            上传章节
+      <n-space>
+        <templage v-if="atLeastMaintainer(authInfoStore.role)">
+          <n-button v-if="!editMode" @click="enableEditMode()">
+            <template #icon>
+              <n-icon> <EditNoteFilled /> </n-icon>
+            </template>
+            编辑
           </n-button>
-        </n-space>
-      </n-upload>
 
-      <n-ul>
-        <n-li
-          v-for="fileName in novelMetadata.value.files.sort((a, b) =>
-            a.localeCompare(b)
-          )"
+          <n-button v-else @click="editMode = false">
+            <template #icon>
+              <n-icon> <EditNoteFilled /> </n-icon>
+            </template>
+            退出编辑
+          </n-button>
+        </templage>
+      </n-space>
+
+      <template v-if="editMode">
+        <WenkuEditSection
+          :id="bookId"
+          v-model:metadata="novelMetadata.value"
+        />
+      </template>
+
+      <template v-else>
+        <n-p>原名：{{ novelMetadata.value.title }}</n-p>
+        <n-p
+          v-html="novelMetadata.value.introduction.replace(/\r\n/g, '<br />')"
+        />
+
+        <div class="on-mobile">
+          <n-space :size="[4, 4]">
+            <n-tag
+              v-for="tag of novelMetadata.value.keywords"
+              :bordered="false"
+              size="small"
+            >
+              {{ tag }}
+            </n-tag>
+          </n-space>
+        </div>
+
+        <n-upload
+          multiple
+          :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
+          :action="ApiWenkuNovel.createUploadUrl(bookId)"
+          :trigger-style="{ width: '100%' }"
+          @finish="handleFinish"
+          @before-upload="beforeUpload"
         >
-          <n-a
-            :href="`/files-wenku/${novelMetadata.value.bookId}/${fileName}`"
-            target="_blank"
-            :download="fileName"
+          <n-space align="baseline" justify="space-between" style="width: 100">
+            <n-h2 prefix="bar">目录</n-h2>
+            <n-button v-if="atLeastMaintainer(authInfoStore.role)">
+              <template #icon><n-icon :component="UploadFilled" /></template>
+              上传章节
+            </n-button>
+          </n-space>
+        </n-upload>
+
+        <n-ul>
+          <n-li
+            v-for="fileName in novelMetadata.value.files.sort((a, b) =>
+              a.localeCompare(b)
+            )"
           >
-            {{ fileName }}
-          </n-a>
-        </n-li>
-      </n-ul>
+            <n-a
+              :href="`/files-wenku/${novelMetadata.value.bookId}/${fileName}`"
+              target="_blank"
+              :download="fileName"
+            >
+              {{ fileName }}
+            </n-a>
+          </n-li>
+        </n-ul>
 
-      <n-empty
-        v-if="novelMetadata.value.files.length === 0"
-        description="空列表"
-      />
+        <n-empty
+          v-if="novelMetadata.value.files.length === 0"
+          description="空列表"
+        />
 
-      <CommentList :post-id="route.path" />
+        <CommentList :post-id="route.path" />
+      </template>
     </div>
 
     <div v-if="novelMetadata && !novelMetadata.ok">

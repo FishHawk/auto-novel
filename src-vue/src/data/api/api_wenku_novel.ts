@@ -32,6 +32,7 @@ export interface WenkuMetadataDto {
   titleZh: string;
   titleZhAlias: string[];
   cover: string;
+  coverSmall: string;
   authors: string[];
   artists: string[];
   keywords: string[];
@@ -70,14 +71,14 @@ async function postMetadata(
   );
 }
 
-async function putMetadata(
+async function patchMetadata(
   id: string,
   body: MetadataCreateBody,
   token: string
 ): Promise<Result<String>> {
   return runCatching(
     api
-      .put(`wenku/${id}`, {
+      .patch(`wenku/${id}`, {
         json: body,
         headers: { Authorization: 'Bearer ' + token },
       })
@@ -139,7 +140,7 @@ export default {
   list,
   getMetadata,
   postMetadata,
-  putMetadata,
+  patchMetadata,
   getMetadataFromBangumi,
   createUploadUrl,
 };
