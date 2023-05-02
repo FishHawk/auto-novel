@@ -65,21 +65,21 @@ function handleFinish({
   return undefined;
 }
 
-async function updateMetadata() {
-  const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(bookId);
-  if (metadataResult.ok) {
-    const token = authInfoStore.token;
-    if (!token) return message.info('请先登录');
-    const result = await ApiWenkuNovel.putMetadata(metadataResult.value, token);
-    if (result.ok) {
-      message.success('更新成功');
-    } else {
-      message.error('更新失败:' + result.error.message);
-    }
-  } else {
-    message.error('无法从Bangumi获得数据:' + metadataResult.error.message);
-  }
-}
+// async function updateMetadata() {
+//   const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(bookId);
+//   if (metadataResult.ok) {
+//     const token = authInfoStore.token;
+//     if (!token) return message.info('请先登录');
+//     const result = await ApiWenkuNovel.putMetadata(metadataResult.value, token);
+//     if (result.ok) {
+//       message.success('更新成功');
+//     } else {
+//       message.error('更新失败:' + result.error.message);
+//     }
+//   } else {
+//     message.error('无法从Bangumi获得数据:' + metadataResult.error.message);
+//   }
+// }
 </script>
 
 <template>
@@ -114,22 +114,22 @@ async function updateMetadata() {
         <div>
           <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
             {{
-              novelMetadata.value.titleCn
-                ? novelMetadata.value.titleCn
+              novelMetadata.value.titleZh
+                ? novelMetadata.value.titleZh
                 : novelMetadata.value.title
             }}
           </n-h1>
 
           <table style="border-spacing: 0px 8px">
             <TagGroup
-              v-if="novelMetadata.value.author"
+              v-if="novelMetadata.value.authors.length > 0"
               label="作者"
-              :tags="[novelMetadata.value.author]"
+              :tags="novelMetadata.value.authors"
             />
             <TagGroup
-              v-if="novelMetadata.value.artist"
+              v-if="novelMetadata.value.artists.length > 0"
               label="插图"
-              :tags="[novelMetadata.value.artist]"
+              :tags="novelMetadata.value.artists"
             />
             <TagGroup
               v-if="novelMetadata.value.keywords.length > 0"
@@ -141,13 +141,13 @@ async function updateMetadata() {
         </div>
       </n-space>
 
-      <n-button
+      <!-- <n-button
         v-if="atLeastMaintainer(authInfoStore.role)"
         @click="updateMetadata()"
       >
         <template #icon><n-icon :component="UploadFilled" /></template>
         更新元数据
-      </n-button>
+      </n-button> -->
 
       <n-p>原名：{{ novelMetadata.value.title }}</n-p>
       <n-p

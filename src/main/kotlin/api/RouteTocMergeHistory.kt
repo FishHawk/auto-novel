@@ -44,11 +44,9 @@ fun Route.routeTocMergeHistory() {
 
     authenticate {
         delete<TocMergeHistory.Item> { loc ->
-            call.requireAtLeastMaintainer()
-                ?.let { return@delete call.respondResult(it) }
-            val result = service.delete(
-                id = loc.id,
-            )
+            val result = call.requireAtLeastMaintainer {
+                service.delete(id = loc.id)
+            }
             call.respondResult(result)
         }
     }

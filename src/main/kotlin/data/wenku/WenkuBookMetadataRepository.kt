@@ -1,110 +1,112 @@
 package data.wenku
 
-import com.jillesvangurp.ktsearch.*
-import com.jillesvangurp.searchdsls.querydsl.bool
-import com.jillesvangurp.searchdsls.querydsl.disMax
-import com.jillesvangurp.searchdsls.querydsl.match
-import com.jillesvangurp.searchdsls.querydsl.sort
-import data.ElasticSearchDataSource
-import kotlinx.coroutines.runBlocking
+import com.mongodb.client.model.FindOneAndUpdateOptions
+import com.mongodb.client.model.ReturnDocument
+import data.MongoDataSource
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.conversions.Bson
+import org.bson.types.ObjectId
+import org.litote.kmongo.combine
+import org.litote.kmongo.eq
+import org.litote.kmongo.inc
+import org.litote.kmongo.setValue
 
 class WenkuBookMetadataRepository(
-    private val es: ElasticSearchDataSource,
+    private val mongo: MongoDataSource,
 ) {
+    private val col
+        get() = mongo.database.getCollection<WenkuMetadata>("wenku-metadata")
+
+    companion object {
+        private fun byId(id: String): Bson = WenkuMetadata::id eq ObjectId(id)
+    }
+
     @Serializable
-    data class Metadata(
-        val bookId: String,
+    data class WenkuMetadata(
+        @Contextual @SerialName("_id") val id: ObjectId,
         val title: String,
-        val titleCn: String,
+        val titleZh: String,
+        val titleZhAlias: List<String>,
         val cover: String,
         val coverSmall: String,
-        val author: String,
-        val artist: String,
+        val authors: List<String>,
+        val artists: List<String>,
         val keywords: List<String>,
         val introduction: String,
-        val updateAt: Long,
+        val visited: Long,
     )
 
-    data class MetadataPageList(
-        val items: List<Metadata>,
-        val total: Long,
-    )
-
-    private val indexName = "wenku-metadata"
-
-    init {
-        runBlocking {
-            runCatching {
-                es.client.createIndex(indexName) {
-                    mappings(dynamicEnabled = false) {
-                        keyword(Metadata::keywords)
-                        text(Metadata::title) { analyzer = "icu_analyzer" }
-                        text(Metadata::titleCn) { analyzer = "icu_analyzer" }
-                        keyword(Metadata::author)
-                        keyword(Metadata::artist)
-                        date(Metadata::updateAt)
-                    }
-                }
-            }.let { println(it) }
-        }
+    suspend fun findOne(id: String): WenkuMetadata? {
+        return col.findOne(byId(id))
     }
 
-    suspend fun get(
-        bangumiId: String,
-    ): Metadata? {
-        return runCatching {
-            es.client.getDocument(
-                id = bangumiId,
-                target = indexName,
-            ).document<Metadata>()
-        }.getOrNull()
-    }
-
-    suspend fun index(
-        metadata: Metadata,
-    ) {
-        es.client.indexDocument(
-            id = metadata.bookId,
-            target = indexName,
-            document = metadata,
-            refresh = Refresh.WaitFor,
+    suspend fun findOneAndIncreaseVisited(id: String): WenkuMetadata? {
+        return col.findOneAndUpdate(
+            byId(id),
+            inc(WenkuMetadata::visited, 1),
+            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
         )
     }
 
-    suspend fun search(
-        queryString: String?,
-        page: Int,
-        pageSize: Int,
-    ): MetadataPageList {
-        return es.client.search(
-            indexName,
-            from = page * pageSize,
-            size = pageSize
-        ) {
-            query = bool {
-                if (queryString != null) {
-                    must(
-                        disMax {
-                            queries(
-                                match(Metadata::title, queryString),
-                                match(Metadata::author, queryString),
-                                match(Metadata::artist, queryString),
-                                match(Metadata::keywords, queryString),
-                            )
-                        }
-                    )
-                } else {
-                    sort {
-                        add(Metadata::updateAt)
-                    }
-                }
-            }
-        }.let {
-            MetadataPageList(
-                items = it.hits?.hits?.map { hit -> hit.parseHit() } ?: emptyList(),
-                total = it.total,
+    suspend fun findOneAndUpdate(
+        id: String,
+        title: String,
+        titleZh: String,
+        titleZhAlias: List<String>,
+        cover: String,
+        coverSmall: String,
+        authors: List<String>,
+        artists: List<String>,
+        keywords: List<String>,
+        introduction: String,
+    ): WenkuMetadata? {
+        return col.findOneAndUpdate(
+            byId(id),
+            combine(
+                listOf(
+                    setValue(WenkuMetadata::title, title),
+                    setValue(WenkuMetadata::titleZh, titleZh),
+                    setValue(WenkuMetadata::titleZhAlias, titleZhAlias),
+                    setValue(WenkuMetadata::cover, cover),
+                    setValue(WenkuMetadata::coverSmall, coverSmall),
+                    setValue(WenkuMetadata::authors, authors),
+                    setValue(WenkuMetadata::artists, artists),
+                    setValue(WenkuMetadata::keywords, keywords),
+                    setValue(WenkuMetadata::introduction, introduction),
+                )
+            ),
+            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        )
+    }
+
+    suspend fun insertOne(
+        title: String,
+        titleZh: String,
+        titleZhAlias: List<String>,
+        cover: String,
+        coverSmall: String,
+        authors: List<String>,
+        artists: List<String>,
+        keywords: List<String>,
+        introduction: String,
+    ): String {
+        val insertResult = col.insertOne(
+            WenkuMetadata(
+                id = ObjectId(),
+                title = title,
+                titleZh = titleZh,
+                titleZhAlias = titleZhAlias,
+                cover = cover,
+                coverSmall = coverSmall,
+                authors = authors,
+                artists = artists,
+                keywords = keywords,
+                introduction = introduction,
+                visited = 0,
             )
-        }
+        )
+        return insertResult.insertedId!!.asObjectId().value.toHexString()
     }
 }

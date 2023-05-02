@@ -7,13 +7,10 @@ export interface WenkuListPageDto {
   items: WenkuListItemDto[];
 }
 export interface WenkuListItemDto {
-  bookId: string;
+  id: string;
   title: string;
-  titleCn: string;
+  titleZh: string;
   cover: string;
-  author: string;
-  artists: string;
-  keywords: string[];
 }
 
 async function list(
@@ -32,28 +29,29 @@ async function list(
 export interface WenkuMetadataDto {
   bookId: string;
   title: string;
-  titleCn: string;
+  titleZh: string;
+  titleZhAlias: string[];
   cover: string;
-  author: string;
-  artist: string;
+  authors: string[];
+  artists: string[];
   keywords: string[];
   introduction: string;
-  updateAt: number;
+  visited: number;
   files: string[];
 }
 
 async function getMetadata(novelId: string): Promise<Result<WenkuMetadataDto>> {
-  return runCatching(api.get(`wenku/metadata/${novelId}`).json());
+  return runCatching(api.get(`wenku/${novelId}`).json());
 }
 
 interface MetadataCreateBody {
-  bookId: string;
   title: string;
-  titleCn: string;
+  titleZh: string;
+  titleZhAlias: string[];
   cover: string;
   coverSmall: string;
-  author: string;
-  artist: string;
+  authors: string[];
+  artists: string[];
   keywords: string[];
   introduction: string;
 }
@@ -64,7 +62,7 @@ async function postMetadata(
 ): Promise<Result<String>> {
   return runCatching(
     api
-      .post(`wenku/metadata/${body.bookId}`, {
+      .post(`wenku`, {
         json: body,
         headers: { Authorization: 'Bearer ' + token },
       })
@@ -73,12 +71,13 @@ async function postMetadata(
 }
 
 async function putMetadata(
+  id: string,
   body: MetadataCreateBody,
   token: string
 ): Promise<Result<String>> {
   return runCatching(
     api
-      .put(`wenku/metadata/${body.bookId}`, {
+      .put(`wenku/${id}`, {
         json: body,
         headers: { Authorization: 'Bearer ' + token },
       })
@@ -109,21 +108,21 @@ async function getMetadataFromBangumi(
   );
   if (sectionResult.ok) {
     const metadata: MetadataCreateBody = {
-      bookId,
       title: sectionResult.value.name,
-      titleCn: sectionResult.value.name_cn,
+      titleZh: sectionResult.value.name_cn,
+      titleZhAlias: [],
       cover: sectionResult.value.images.medium,
       coverSmall: sectionResult.value.images.small,
-      author: '',
-      artist: '',
+      authors: [],
+      artists: [],
       keywords: sectionResult.value.tags.map((it) => it.name),
       introduction: sectionResult.value.summary,
     };
     sectionResult.value.infobox.forEach((it) => {
       if (it.key == '作者') {
-        metadata.author = it.value;
+        metadata.authors.push(it.value);
       } else if (it.key == '插图') {
-        metadata.artist = it.value;
+        metadata.artists.push(it.value);
       }
     });
     return Ok(metadata);
@@ -133,7 +132,7 @@ async function getMetadataFromBangumi(
 }
 
 function createUploadUrl(bookId: string) {
-  return `/api/wenku/episode/${bookId}`;
+  return `/api/wenku/${bookId}/episode`;
 }
 
 export default {

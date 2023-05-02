@@ -64,10 +64,10 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   <div v-if="bookPage?.ok">
     <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
       <n-grid-item v-for="item in bookPage.value.items">
-        <n-a :href="`/wenku/${item.bookId}`" target="_blank">
+        <n-a :href="`/wenku/${item.id}`" target="_blank">
           <ImageCard
             :src="item.cover"
-            :title="item.titleCn ? item.titleCn : item.title"
+            :title="item.titleZh ? item.titleZh : item.title"
           />
         </n-a>
       </n-grid-item>

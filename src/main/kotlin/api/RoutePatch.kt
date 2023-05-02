@@ -46,12 +46,12 @@ fun Route.routePatch() {
 
     authenticate {
         delete<Patch.Item> { loc ->
-            call.requireAtLeastMaintainer()
-                ?.let { return@delete call.respondResult(it) }
-            val result = service.deletePatch(
-                providerId = loc.providerId,
-                bookId = loc.bookId,
-            )
+            val result = call.requireAtLeastMaintainer {
+                service.deletePatch(
+                    providerId = loc.providerId,
+                    bookId = loc.bookId,
+                )
+            }
             call.respondResult(result)
         }
     }

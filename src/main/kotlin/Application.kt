@@ -6,6 +6,7 @@ import data.ElasticSearchDataSource
 import data.wenku.WenkuBookFileRepository
 import data.provider.ProviderDataSource
 import data.web.*
+import data.wenku.WenkuBookIndexRepository
 import data.wenku.WenkuBookMetadataRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -120,6 +121,7 @@ val appModule = module {
     single { ProviderDataSource() }
 
     single { WenkuBookFileRepository(root = Path("./data/files-wenku")) }
+    single { WenkuBookIndexRepository(get()) }
     single { WenkuBookMetadataRepository(get()) }
 
     single { BookMetadataRepository(get(), get(), get(), get()) }
@@ -145,5 +147,5 @@ val appModule = module {
     single { WebNovelService(get(), get(), get(), get(), get()) }
     single { UpdateService(get(), get()) }
 
-    single { WenkuNovelService(get(), get()) }
+    single { WenkuNovelService(get(), get(), get()) }
 }

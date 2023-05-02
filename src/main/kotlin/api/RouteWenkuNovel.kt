@@ -1,8 +1,8 @@
 package api
 
 import data.wenku.WenkuBookFileRepository
+import data.wenku.WenkuBookIndexRepository
 import data.wenku.WenkuBookMetadataRepository
-import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -12,15 +12,11 @@ import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.io.InputStream
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 @Resource("/wenku")
 private class WenkuNovel {
@@ -31,17 +27,14 @@ private class WenkuNovel {
         val query: String? = null,
     )
 
-    @Resource("/metadata/{bookId}")
-    data class Metadata(
+    @Resource("/{bookId}")
+    class Id(
         val parent: WenkuNovel = WenkuNovel(),
         val bookId: String,
-    )
-
-    @Resource("/episode/{bookId}")
-    data class Episode(
-        val parent: WenkuNovel = WenkuNovel(),
-        val bookId: String,
-    )
+    ) {
+        @Resource("/episode")
+        class Episode(val parent: Id)
+    }
 }
 
 fun Route.routeWenkuNovel() {
@@ -56,33 +49,29 @@ fun Route.routeWenkuNovel() {
         call.respondResult(result)
     }
 
-    get<WenkuNovel.Metadata> { loc ->
+    get<WenkuNovel.Id> { loc ->
         val result = service.getMetadata(loc.bookId)
         call.respondResult(result)
     }
 
     authenticate {
-        post<WenkuNovel.Metadata> { loc ->
-            val jwtUser = call.jwtUser()
-            if (!jwtUser.atLeastMaintainer()) {
-                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
+        post<WenkuNovel> {
+            val result = call.requireAtLeastMaintainer {
+                val body = call.receive<WenkuNovelService.MetadataCreateBody>()
+                service.createMetadata(body)
             }
-            val body = call.receive<WenkuNovelService.MetadataCreateBody>()
-            val result = service.createMetadata(loc.bookId, body)
             call.respondResult(result)
         }
 
-        put<WenkuNovel.Metadata> { loc ->
-            val jwtUser = call.jwtUser()
-            if (!jwtUser.atLeastMaintainer()) {
-                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
+        put<WenkuNovel.Id> { loc ->
+            val result = call.requireAtLeastMaintainer {
+                val body = call.receive<WenkuNovelService.MetadataCreateBody>()
+                service.updateMetadata(loc.bookId, body)
             }
-            val body = call.receive<WenkuNovelService.MetadataCreateBody>()
-            val result = service.updateMetadata(loc.bookId, body)
             call.respondResult(result)
         }
 
-        post<WenkuNovel.Episode> { loc ->
+        post<WenkuNovel.Id.Episode> { loc ->
             val jwtUser = call.jwtUser()
             if (!jwtUser.atLeastMaintainer()) {
                 call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
@@ -93,7 +82,7 @@ fun Route.routeWenkuNovel() {
                     val fileName = part.originalFileName!!
                     val inputStream = part.streamProvider()
                     val result = service.createEpisodeFile(
-                        loc.bookId, fileName, inputStream
+                        loc.parent.bookId, fileName, inputStream
                     )
                     call.respondResult(result)
                     return@forEachPart
@@ -105,8 +94,9 @@ fun Route.routeWenkuNovel() {
 }
 
 class WenkuNovelService(
-    private val metadataRepo: WenkuBookMetadataRepository,
     private val fileRepo: WenkuBookFileRepository,
+    private val indexRepo: WenkuBookIndexRepository,
+    private val metadataRepo: WenkuBookMetadataRepository,
 ) {
     @Serializable
     data class BookListPageDto(
@@ -115,13 +105,10 @@ class WenkuNovelService(
     ) {
         @Serializable
         data class ItemDto(
-            val bookId: String,
+            val id: String,
             val title: String,
-            val titleCn: String,
+            val titleZh: String,
             val cover: String,
-            val author: String,
-            val artists: String,
-            val keywords: List<String>,
         )
     }
 
@@ -130,20 +117,17 @@ class WenkuNovelService(
         page: Int,
         pageSize: Int,
     ): Result<BookListPageDto> {
-        val esPage = metadataRepo.search(
+        val esPage = indexRepo.search(
             queryString = queryString,
             page = page,
             pageSize = pageSize,
         )
         val items = esPage.items.map {
             BookListPageDto.ItemDto(
-                bookId = it.bookId,
+                id = it.id,
                 title = it.title,
-                titleCn = it.titleCn,
+                titleZh = it.titleZh,
                 cover = it.cover,
-                author = it.author,
-                artists = it.artist,
-                keywords = it.keywords,
             )
         }
         val dto = BookListPageDto(
@@ -155,34 +139,36 @@ class WenkuNovelService(
 
     @Serializable
     data class MetadataDto(
-        val bookId: String,
+        val id: String,
         val title: String,
-        val titleCn: String,
+        val titleZh: String,
+        val titleZhAlias: List<String>,
         val cover: String,
-        val author: String,
-        val artist: String,
+        val authors: List<String>,
+        val artists: List<String>,
         val keywords: List<String>,
         val introduction: String,
-        val updateAt: Long,
+        val visited: Long,
         val files: List<String>,
     )
 
     suspend fun getMetadata(
         bookId: String,
     ): Result<MetadataDto> {
-        val metadataEs = metadataRepo.get(bookId)
+        val metadata = metadataRepo.findOneAndIncreaseVisited(bookId)
             ?: return httpNotFound("书不存在")
         val files = fileRepo.list(bookId)
         val metadataDto = MetadataDto(
-            bookId = metadataEs.bookId,
-            title = metadataEs.title,
-            titleCn = metadataEs.titleCn,
-            cover = metadataEs.cover,
-            author = metadataEs.author,
-            artist = metadataEs.artist,
-            keywords = metadataEs.keywords,
-            introduction = metadataEs.introduction,
-            updateAt = metadataEs.updateAt,
+            id = metadata.id.toHexString(),
+            title = metadata.title,
+            titleZh = metadata.titleZh,
+            titleZhAlias = metadata.titleZhAlias,
+            cover = metadata.cover,
+            authors = metadata.authors,
+            artists = metadata.artists,
+            keywords = metadata.keywords,
+            introduction = metadata.introduction,
+            visited = metadata.visited,
             files = files,
         )
         return Result.success(metadataDto)
@@ -190,61 +176,51 @@ class WenkuNovelService(
 
     @Serializable
     data class MetadataCreateBody(
-        val bookId: String,
         val title: String,
-        val titleCn: String,
+        val titleZh: String,
+        val titleZhAlias: List<String>,
         val cover: String,
         val coverSmall: String,
-        val author: String,
-        val artist: String,
+        val authors: List<String>,
+        val artists: List<String>,
         val keywords: List<String>,
         val introduction: String,
     )
 
     suspend fun createMetadata(
-        bookId: String,
         body: MetadataCreateBody,
-    ): Result<Unit> {
-        val metadataEs = metadataRepo.get(bookId)
-        if (metadataEs != null) {
-            return httpConflict("书已经存在")
-        }
-        metadataRepo.index(
-            WenkuBookMetadataRepository.Metadata(
-                bookId = bookId,
-                title = body.title,
-                titleCn = body.titleCn,
-                cover = body.cover,
-                coverSmall = body.coverSmall,
-                author = body.author,
-                artist = body.artist,
-                keywords = body.keywords,
-                introduction = body.introduction,
-                updateAt = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond(),
-            )
+    ): Result<String> {
+        val bookId = metadataRepo.insertOne(
+            title = body.title,
+            titleZh = body.titleZh,
+            titleZhAlias = body.titleZhAlias,
+            cover = body.cover,
+            coverSmall = body.coverSmall,
+            authors = body.authors,
+            artists = body.artists,
+            keywords = body.keywords,
+            introduction = body.introduction,
         )
-        return Result.success(Unit)
+        return Result.success(bookId)
     }
 
     suspend fun updateMetadata(
         bookId: String,
         body: MetadataCreateBody,
     ): Result<Unit> {
-        metadataRepo.get(bookId)
+        metadataRepo.findOne(bookId)
             ?: return httpNotFound("书不存在")
-        metadataRepo.index(
-            WenkuBookMetadataRepository.Metadata(
-                bookId = bookId,
-                title = body.title,
-                titleCn = body.titleCn,
-                cover = body.cover,
-                coverSmall = body.coverSmall,
-                author = body.author,
-                artist = body.artist,
-                keywords = body.keywords,
-                introduction = body.introduction,
-                updateAt = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond(),
-            )
+        metadataRepo.findOneAndUpdate(
+            id = bookId,
+            title = body.title,
+            titleZh = body.titleZh,
+            titleZhAlias = body.titleZhAlias,
+            cover = body.cover,
+            coverSmall = body.coverSmall,
+            authors = body.authors,
+            artists = body.artists,
+            keywords = body.keywords,
+            introduction = body.introduction,
         )
         return Result.success(Unit)
     }
@@ -254,7 +230,7 @@ class WenkuNovelService(
         fileName: String,
         inputStream: InputStream,
     ): Result<Unit> {
-        metadataRepo.get(bookId)
+        metadataRepo.findOne(bookId)
             ?: return httpNotFound("书不存在")
 
         val outputStream = fileRepo.createAndOpen(bookId, fileName)

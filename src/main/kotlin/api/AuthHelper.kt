@@ -1,6 +1,5 @@
 package api
 
-import com.auth0.jwt.interfaces.Payload
 import data.User
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -30,9 +29,9 @@ fun ApplicationCall.jwtUser(): JwtUser =
 fun ApplicationCall.jwtUserOrNull(): JwtUser? =
     principal<JWTPrincipal>()?.toJwtUser()
 
-fun ApplicationCall.requireAtLeastMaintainer(): Result<Unit>? =
+inline fun <T> ApplicationCall.requireAtLeastMaintainer(block: () -> Result<T>) =
     if (jwtUser().atLeastMaintainer()) {
-        null
+        block()
     } else {
         httpUnauthorized("只有维护者及以上才有权限执行此操作")
     }

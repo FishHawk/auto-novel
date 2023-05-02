@@ -3,15 +3,16 @@ package data
 import appModule
 import com.mongodb.client.model.Updates
 import data.web.*
+import data.wenku.WenkuBookIndexRepository
+import data.wenku.WenkuBookMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
+import kotlinx.datetime.Clock
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
-import org.litote.kmongo.path
 import org.litote.kmongo.pos
 import org.litote.kmongo.setValue
-import org.litote.kmongo.util.KMongoUtil.toBson
 import java.io.File
 import java.time.ZoneId
 
@@ -26,28 +27,11 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val repoE by inject<BookEpisodeRepository>(BookEpisodeRepository::class.java)
     private val repoTMH by inject<WebBookTocMergeHistoryRepository>(WebBookTocMergeHistoryRepository::class.java)
 
+    private val repoWBM by inject<WenkuBookMetadataRepository>(WenkuBookMetadataRepository::class.java)
+    private val repoWBI by inject<WenkuBookIndexRepository>(WenkuBookIndexRepository::class.java)
+
     init {
         describe("test") {
-            val h = repoTMH.findOne()!!
-            println(h.providerId)
-            println(h.bookId)
-            println(h.reason)
-
-//            repoTMH.col.deleteOne(
-//                WebBookTocMergeHistoryRepository.TocMergedHistory::id eq h.id
-//            )
-
-//            repoB.setToc(h.providerId, h.bookId, h.tocOld)
-//            repoB.setPauseUpdate(h.providerId, h.bookId, true)
-            println(h.tocOld.size)
-            println(h.tocNew.size)
-//            h.tocNew.zip(h.tocOld).forEach {
-//                if (it.first.titleJp != it.second.titleJp) {
-//                    println()
-//                    println(it.first.titleJp)
-//                    println(it.second.titleJp)
-//                }
-//            }
         }
 
         describe("kmongo issue 415") {
@@ -70,6 +54,24 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                         changeAt = it.changeAt.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
                     )
                 })
+            }
+
+            it("es同步-文库") {
+                val col = mongo.database.getCollection<WenkuBookMetadataRepository.WenkuMetadata>("wenku-metadata")
+                val total = col.find().toList().map {
+                    WenkuBookIndexRepository.BookDocument(
+                        id = it.id.toHexString(),
+                        title = it.title,
+                        titleZh = it.titleZh,
+                        titleZhAlias = it.titleZhAlias,
+                        cover = it.cover,
+                        authors = it.authors,
+                        artists = it.artists,
+                        keywords = it.keywords,
+                        updateAt = Clock.System.now().epochSeconds
+                    )
+                }
+                repoWBI.addBunch(total)
             }
 
             it("sitemap") {
