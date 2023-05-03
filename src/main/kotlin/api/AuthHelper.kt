@@ -17,7 +17,7 @@ data class JwtUser(
 private fun JWTPrincipal.toJwtUser(): JwtUser = payload.let { payload ->
     val username = payload.getClaim("username").asString()
     val role = payload.getClaim("role")
-        .takeIf { !it.isNull }
+        .takeIf { !it.isMissing }
         ?.let { User.Role.valueOf(it.asString()) }
         ?: User.Role.Normal
     JwtUser(username, role)
