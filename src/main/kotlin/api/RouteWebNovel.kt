@@ -1,7 +1,7 @@
 package api
 
 import data.*
-import data.web.EsBookMetadataRepository
+import data.web.WebBookIndexRepository
 import data.web.*
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -157,11 +157,11 @@ fun Route.routeWebNovel() {
 }
 
 class WebNovelService(
-    private val bookMetadataRepository: BookMetadataRepository,
-    private val bookEpisodeRepository: BookEpisodeRepository,
+    private val webBookMetadataRepository: WebBookMetadataRepository,
+    private val webBookEpisodeRepository: WebBookEpisodeRepository,
     private val userRepository: UserRepository,
-    private val bookPatchRepository: BookPatchRepository,
-    private val esBookMetadataRepository: EsBookMetadataRepository,
+    private val webBookPatchRepository: WebBookPatchRepository,
+    private val webBookIndexRepository: WebBookIndexRepository,
 ) {
     @Serializable
     data class BookListPageDto(
@@ -187,7 +187,7 @@ class WebNovelService(
         page: Int,
         pageSize: Int,
     ): Result<BookListPageDto> {
-        val esPage = esBookMetadataRepository.search(
+        val esPage = webBookIndexRepository.search(
             queryString = queryString,
             providerId = providerId,
             page = page.coerceAtLeast(0),
@@ -199,10 +199,10 @@ class WebNovelService(
                 bookId = it.bookId,
                 titleJp = it.titleJp,
                 titleZh = it.titleZh,
-                total = bookMetadataRepository.getLocal(it.providerId, it.bookId)!!.toc.count { it.episodeId != null },
-                count = bookEpisodeRepository.count(it.providerId, it.bookId),
-                countBaidu = bookEpisodeRepository.countBaidu(it.providerId, it.bookId),
-                countYoudao = bookEpisodeRepository.countYoudao(it.providerId, it.bookId),
+                total = webBookMetadataRepository.getLocal(it.providerId, it.bookId)!!.toc.count { it.episodeId != null },
+                count = webBookEpisodeRepository.count(it.providerId, it.bookId),
+                countBaidu = webBookEpisodeRepository.countBaidu(it.providerId, it.bookId),
+                countYoudao = webBookEpisodeRepository.countYoudao(it.providerId, it.bookId),
             )
         }
         val dto = BookListPageDto(
@@ -226,7 +226,7 @@ class WebNovelService(
             .take(pageSize)
             .toList()
             .mapNotNull {
-                val metadata = bookMetadataRepository.getLocal(
+                val metadata = webBookMetadataRepository.getLocal(
                     providerId = it.providerId,
                     bookId = it.bookId,
                 ) ?: return@mapNotNull null
@@ -237,9 +237,9 @@ class WebNovelService(
                     titleJp = metadata.titleJp,
                     titleZh = metadata.titleZh,
                     total = metadata.toc.count { it.episodeId != null },
-                    count = bookEpisodeRepository.count(metadata.providerId, metadata.bookId),
-                    countBaidu = bookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
-                    countYoudao = bookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
+                    count = webBookEpisodeRepository.count(metadata.providerId, metadata.bookId),
+                    countBaidu = webBookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
+                    countYoudao = webBookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
                 )
             }
         val dto = BookListPageDto(
@@ -294,7 +294,7 @@ class WebNovelService(
         providerId: String,
         options: Map<String, String>,
     ): Result<BookRankPageDto> {
-        return bookMetadataRepository.listRank(
+        return webBookMetadataRepository.listRank(
             providerId = providerId,
             options = options,
         ).map {
@@ -325,14 +325,14 @@ class WebNovelService(
         providerId: String,
         bookId: String,
     ): Result<BookStateDto> {
-        val metadata = bookMetadataRepository.get(providerId, bookId)
+        val metadata = webBookMetadataRepository.get(providerId, bookId)
             .getOrElse { return httpInternalServerError(it.message) }
         return Result.success(
             BookStateDto(
                 total = metadata.toc.count { it.episodeId != null },
-                count = bookEpisodeRepository.count(metadata.providerId, metadata.bookId),
-                countBaidu = bookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
-                countYoudao = bookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
+                count = webBookEpisodeRepository.count(metadata.providerId, metadata.bookId),
+                countBaidu = webBookEpisodeRepository.countBaidu(metadata.providerId, metadata.bookId),
+                countYoudao = webBookEpisodeRepository.countYoudao(metadata.providerId, metadata.bookId),
             )
         )
     }
@@ -359,9 +359,9 @@ class WebNovelService(
     ): Result<BookMetadataDto> {
         val user = username?.let { userRepository.getByUsername(it) }
 
-        val metadata = bookMetadataRepository.get(providerId, bookId)
+        val metadata = webBookMetadataRepository.get(providerId, bookId)
             .getOrElse { return httpInternalServerError(it.message) }
-        bookMetadataRepository.increaseVisited(providerId, bookId)
+        webBookMetadataRepository.increaseVisited(providerId, bookId)
         return Result.success(
             BookMetadataDto(
                 titleJp = metadata.titleJp,
@@ -399,7 +399,7 @@ class WebNovelService(
             patch.toc.isEmpty()
         ) return httpInternalServerError("修改为空")
 
-        bookPatchRepository.addMetadataPatch(
+        webBookPatchRepository.addMetadataPatch(
             providerId = providerId,
             bookId = bookId,
             title = patch.title,
@@ -431,14 +431,14 @@ class WebNovelService(
         bookId: String,
         episodeId: String,
     ): Result<BookEpisodeDto> {
-        val metadata = bookMetadataRepository.get(providerId, bookId)
+        val metadata = webBookMetadataRepository.get(providerId, bookId)
             .getOrElse { return httpInternalServerError(it.message) }
 
         val toc = metadata.toc.filter { it.episodeId != null }
         val currIndex = toc.indexOfFirst { it.episodeId == episodeId }
         if (currIndex == -1) return httpInternalServerError("episode id not in toc")
 
-        val episode = bookEpisodeRepository.get(providerId, bookId, episodeId)
+        val episode = webBookEpisodeRepository.get(providerId, bookId, episodeId)
             .getOrElse { return httpInternalServerError(it.message) }
 
         return Result.success(

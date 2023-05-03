@@ -1,7 +1,7 @@
 package api
 
-import data.web.BookEpisodeRepository
-import data.web.BookMetadataRepository
+import data.web.WebBookEpisodeRepository
+import data.web.WebBookMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -94,8 +94,8 @@ fun Route.routeUpdate() {
 }
 
 class UpdateService(
-    private val bookMetadataRepository: BookMetadataRepository,
-    private val bookEpisodeRepository: BookEpisodeRepository,
+    private val webBookMetadataRepository: WebBookMetadataRepository,
+    private val webBookEpisodeRepository: WebBookEpisodeRepository,
 ) {
     @Serializable
     data class MetadataToTranslateDto(
@@ -115,7 +115,7 @@ class UpdateService(
         startIndex: Int,
         endIndex: Int,
     ): Result<MetadataToTranslateDto> {
-        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("元数据不存在")
 
         val title = metadata.titleJp.takeIf { metadata.titleZh == null }
@@ -132,7 +132,7 @@ class UpdateService(
             .mapNotNull { it.episodeId }
             .safeSubList(startIndex, endIndex)
             .forEach { episodeId ->
-                val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
+                val episode = webBookEpisodeRepository.getLocal(providerId, bookId, episodeId)
 
                 if (version == "jp") {
                     if (episode == null) {
@@ -178,7 +178,7 @@ class UpdateService(
         bookId: String,
         body: MetadataUpdateBody,
     ): Result<Unit> {
-        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
             ?: return Result.success(Unit)
 
         val titleZh = body.title.takeIf {
@@ -202,7 +202,7 @@ class UpdateService(
             return Result.success(Unit)
         }
 
-        bookMetadataRepository.updateZh(
+        webBookMetadataRepository.updateZh(
             providerId = providerId,
             bookId = bookId,
             titleZh = body.title,
@@ -228,7 +228,7 @@ class UpdateService(
         if (version != "baidu" && version != "youdao" && version != "jp")
             return httpBadRequest("不支持的版本")
 
-        val episode = bookEpisodeRepository.get(providerId, bookId, episodeId)
+        val episode = webBookEpisodeRepository.get(providerId, bookId, episodeId)
             .getOrElse { return httpInternalServerError(it.message) }
 
         return Result.success(
@@ -255,13 +255,13 @@ class UpdateService(
         if (version != "baidu" && version != "youdao")
             return httpBadRequest("不支持的版本")
 
-        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("元数据不存在")
         if (body.glossaryUuid != metadata.glossaryUuid) {
             return httpBadRequest("术语表uuid失效")
         }
 
-        val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
+        val episode = webBookEpisodeRepository.getLocal(providerId, bookId, episodeId)
             ?: return httpNotFound("章节不存在")
         if (episode.paragraphs.size != body.paragraphsZh.size) {
             return httpBadRequest("翻译文本长度不匹配")
@@ -271,7 +271,7 @@ class UpdateService(
             if (episode.baiduParagraphs != null) {
                 return httpConflict("翻译已经存在")
             }
-            bookEpisodeRepository.updateBaidu(
+            webBookEpisodeRepository.updateBaidu(
                 providerId = providerId,
                 bookId = bookId,
                 episodeId = episodeId,
@@ -283,7 +283,7 @@ class UpdateService(
             if (episode.youdaoParagraphs != null) {
                 return httpConflict("翻译已经存在")
             }
-            bookEpisodeRepository.updateYoudao(
+            webBookEpisodeRepository.updateYoudao(
                 providerId = providerId,
                 bookId = bookId,
                 episodeId = episodeId,
@@ -311,20 +311,20 @@ class UpdateService(
         if (version != "baidu" && version != "youdao")
             return httpBadRequest("不支持的版本")
 
-        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("元数据不存在")
         if (body.glossaryUuid != metadata.glossaryUuid) {
             return httpBadRequest("术语表uuid失效")
         }
 
-        val episode = bookEpisodeRepository.getLocal(providerId, bookId, episodeId)
+        val episode = webBookEpisodeRepository.getLocal(providerId, bookId, episodeId)
             ?: return httpNotFound("章节不存在")
 
         if (version == "baidu") {
             if (episode.baiduParagraphs == null) {
                 return httpNotFound("翻译不存在")
             }
-            bookEpisodeRepository.updateBaidu(
+            webBookEpisodeRepository.updateBaidu(
                 providerId = providerId,
                 bookId = bookId,
                 episodeId = episodeId,
@@ -336,7 +336,7 @@ class UpdateService(
             if (episode.youdaoParagraphs == null) {
                 return httpNotFound("翻译不存在")
             }
-            bookEpisodeRepository.updateYoudao(
+            webBookEpisodeRepository.updateYoudao(
                 providerId = providerId,
                 bookId = bookId,
                 episodeId = episodeId,

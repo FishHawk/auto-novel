@@ -68,10 +68,10 @@ data class BookEpisodePatch(
     )
 }
 
-class BookPatchRepository(
+class WebBookPatchRepository(
     private val mongoDataSource: MongoDataSource,
-    private val bookMetadataRepository: BookMetadataRepository,
-    private val bookEpisodeRepository: BookEpisodeRepository,
+    private val webBookMetadataRepository: WebBookMetadataRepository,
+    private val webBookEpisodeRepository: WebBookEpisodeRepository,
 ) {
     private val col
         get() = mongoDataSource.database.getCollection<BookPatch>("patch")
@@ -156,7 +156,7 @@ class BookPatchRepository(
         glossary: Map<String, String>?,
         toc: Map<String, String>,
     ) {
-        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
             ?: return
 
         fun createTextChangeOrNull(jp: String, zhOld: String?, zhNew: String?): BookMetadataPatch.TextChange? {
@@ -217,7 +217,7 @@ class BookPatchRepository(
         val tocZh = metadata.toc.mapIndexedNotNull { index, item ->
             toc[item.titleJp]?.let { index to it }
         }.toMap()
-        bookMetadataRepository.updateZh(
+        webBookMetadataRepository.updateZh(
             providerId = providerId,
             bookId = bookId,
             titleZh = title,

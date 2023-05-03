@@ -7,7 +7,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.litote.kmongo.limit
 
 data class EsBookPageList(
     val items: List<EsBookMetadata>,
@@ -24,7 +23,7 @@ data class EsBookMetadata(
     val changeAt: Long,
 )
 
-class EsBookMetadataRepository(
+class WebBookIndexRepository(
     source: ElasticSearchDataSource,
 ) {
     private val client = source.client

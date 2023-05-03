@@ -1,16 +1,13 @@
 package api
 
 import data.web.*
-import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.time.ZoneId
-import kotlin.io.path.*
 
 @Resource("/prepare-book/{providerId}/{bookId}/{lang}/{type}")
 private data class PrepareBook(
@@ -34,8 +31,8 @@ fun Route.routePrepareBook() {
 }
 
 class PrepareBookService(
-    private val bookMetadataRepository: BookMetadataRepository,
-    private val bookEpisodeRepository: BookEpisodeRepository,
+    private val webBookMetadataRepository: WebBookMetadataRepository,
+    private val webBookEpisodeRepository: WebBookEpisodeRepository,
     private val webBookFileRepository: WebBookFileRepository,
 ) {
     suspend fun updateBookFile(
@@ -46,7 +43,7 @@ class PrepareBookService(
     ): Result<String> {
         val fileName = "${providerId}.${bookId}.${lang.value}.${type.value}"
 
-        val metadata = bookMetadataRepository.getLocal(providerId, bookId)
+        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
             ?: return httpNotFound("小说不存在")
 
         val shouldMake = webBookFileRepository.getCreationTime(fileName)?.let { fileCreateAt ->
@@ -58,7 +55,7 @@ class PrepareBookService(
             val episodes = metadata.toc
                 .mapNotNull { it.episodeId }
                 .mapNotNull { episodeId ->
-                    bookEpisodeRepository
+                    webBookEpisodeRepository
                         .getLocal(providerId, bookId, episodeId)
                         ?.let { episodeId to it }
                 }
@@ -72,7 +69,7 @@ class PrepareBookService(
             )
         }
 
-        bookMetadataRepository.increaseDownloaded(providerId, bookId)
+        webBookMetadataRepository.increaseDownloaded(providerId, bookId)
         return Result.success("../../../../../files-web/$fileName")
     }
 }

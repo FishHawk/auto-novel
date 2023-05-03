@@ -124,11 +124,11 @@ val appModule = module {
     single { WenkuBookIndexRepository(get()) }
     single { WenkuBookMetadataRepository(get()) }
 
-    single { BookMetadataRepository(get(), get(), get(), get()) }
-    single { BookEpisodeRepository(get(), get(), get()) }
-    single { BookPatchRepository(get(), get(), get()) }
+    single { WebBookMetadataRepository(get(), get(), get(), get()) }
+    single { WebBookEpisodeRepository(get(), get(), get()) }
+    single { WebBookPatchRepository(get(), get(), get()) }
     single { WebBookFileRepository(root = Path("./data/files-web")) }
-    single { EsBookMetadataRepository(get()) }
+    single { WebBookIndexRepository(get()) }
     single { WebBookTocMergeHistoryRepository(get()) }
 
     single { CommentRepository(get()) }

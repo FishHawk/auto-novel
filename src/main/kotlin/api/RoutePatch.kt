@@ -58,7 +58,7 @@ fun Route.routePatch() {
 }
 
 class PatchService(
-    private val patchRepo: BookPatchRepository,
+    private val patchRepo: WebBookPatchRepository,
 ) {
     @Serializable
     data class PatchPageDto(

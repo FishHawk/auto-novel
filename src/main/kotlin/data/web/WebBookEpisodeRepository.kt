@@ -40,10 +40,10 @@ private fun SBookEpisode.toDb(providerId: String, bookId: String, episodeId: Str
     )
 
 
-class BookEpisodeRepository(
+class WebBookEpisodeRepository(
     private val providerDataSource: ProviderDataSource,
     private val mongoDataSource: MongoDataSource,
-    private val metadataRepository: BookMetadataRepository,
+    private val metadataRepository: WebBookMetadataRepository,
 ) {
     private val col
         get() = mongoDataSource.database.getCollection<BookEpisode>("episode")

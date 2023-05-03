@@ -70,10 +70,10 @@ private fun SBookMetadata.toDb(providerId: String, bookId: String) =
         changeAt = LocalDateTime.now(),
     )
 
-class BookMetadataRepository(
+class WebBookMetadataRepository(
     private val providerDataSource: ProviderDataSource,
     private val mongoDataSource: MongoDataSource,
-    private val esBookMetadataRepository: EsBookMetadataRepository,
+    private val webBookIndexRepository: WebBookIndexRepository,
     private val tocMergeHistoryRepository: WebBookTocMergeHistoryRepository,
 ) {
     private val col
@@ -270,7 +270,7 @@ class BookMetadataRepository(
         hasChange: Boolean,
     ) {
         if (hasChange) {
-            esBookMetadataRepository.index(
+            webBookIndexRepository.index(
                 metadata.providerId,
                 metadata.bookId,
                 metadata.titleJp,
@@ -279,7 +279,7 @@ class BookMetadataRepository(
                 LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond(),
             )
         } else {
-            esBookMetadataRepository.update(
+            webBookIndexRepository.update(
                 metadata.providerId,
                 metadata.bookId,
                 metadata.titleJp,

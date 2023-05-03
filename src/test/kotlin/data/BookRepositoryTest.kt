@@ -22,9 +22,9 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val es by inject<ElasticSearchDataSource>(ElasticSearchDataSource::class.java)
     private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
 
-    private val repoEs by inject<EsBookMetadataRepository>(EsBookMetadataRepository::class.java)
-    private val repoB by inject<BookMetadataRepository>(BookMetadataRepository::class.java)
-    private val repoE by inject<BookEpisodeRepository>(BookEpisodeRepository::class.java)
+    private val repoEs by inject<WebBookIndexRepository>(WebBookIndexRepository::class.java)
+    private val repoB by inject<WebBookMetadataRepository>(WebBookMetadataRepository::class.java)
+    private val repoE by inject<WebBookEpisodeRepository>(WebBookEpisodeRepository::class.java)
     private val repoTMH by inject<WebBookTocMergeHistoryRepository>(WebBookTocMergeHistoryRepository::class.java)
 
     private val repoWBM by inject<WenkuBookMetadataRepository>(WenkuBookMetadataRepository::class.java)
