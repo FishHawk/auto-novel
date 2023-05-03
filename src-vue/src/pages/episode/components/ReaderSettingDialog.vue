@@ -1,5 +1,11 @@
 <script lang="ts" setup>
-import { useReaderSettingStore } from '../../../data/stores/readerSetting';
+import { computed } from 'vue';
+import { useWindowSize } from '@vueuse/core';
+
+import { useReaderSettingStore } from '@/data/stores/readerSetting';
+
+const { width } = useWindowSize();
+const isDesktop = computed(() => width.value > 600);
 
 const modeOptions = [
   { value: 'jp', label: '日文' },
@@ -12,7 +18,12 @@ const translationOptions = [
   { value: 'baidu', label: '百度' },
   { value: 'youdao/baidu', label: '有道/百度' },
 ];
-const fontSizeOptions = ['14px', '16px', '18px', '20px'];
+const fontSizeOptions = [
+  { value: '14px', label: '14px' },
+  { value: '16px', label: '16px' },
+  { value: '18px', label: '18px' },
+  { value: '20px', label: '20px' },
+];
 const themeOptions = [
   { isDark: false, bodyColor: '#FFFFFF' },
   { isDark: false, bodyColor: '#FFF2E2' },
@@ -45,54 +56,26 @@ defineEmits<{
       role="dialog"
       aria-modal="true"
     >
-      <n-space vertical size="large">
-        <n-space :wrap="false">
-          <span class="label">语言</span>
-          <n-radio-group v-model:value="setting.mode" name="mode">
-            <n-space>
-              <n-radio
-                v-for="option in modeOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </n-radio>
-            </n-space>
-          </n-radio-group>
-        </n-space>
-
-        <n-space :wrap="false">
-          <span class="label">翻译</span>
-          <n-radio-group v-model:value="setting.translation" name="translator">
-            <n-space>
-              <n-radio
-                v-for="option in translationOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </n-radio>
-            </n-space>
-          </n-radio-group>
-        </n-space>
-
-        <n-space :wrap="false">
-          <span class="label">字体</span>
-          <n-radio-group v-model:value="setting.fontSize" name="fontSize">
-            <n-space>
-              <n-radio
-                v-for="option in fontSizeOptions"
-                :key="option"
-                :value="option"
-              >
-                {{ option }}
-              </n-radio>
-            </n-space>
-          </n-radio-group>
-        </n-space>
-
-        <n-space :wrap="false">
-          <span class="label">主题</span>
+      <n-space vertical size="large" style="width: 100%">
+        <ReaderSettingDialogSelect
+          :desktop="isDesktop"
+          label="语言"
+          v-model:value="setting.mode"
+          :options="modeOptions"
+        />
+        <ReaderSettingDialogSelect
+          :desktop="isDesktop"
+          label="翻译"
+          v-model:value="setting.translation"
+          :options="translationOptions"
+        />
+        <ReaderSettingDialogSelect
+          :desktop="isDesktop"
+          label="字体"
+          v-model:value="setting.fontSize"
+          :options="fontSizeOptions"
+        />
+        <ReaderSettingDialogSelect label="主题">
           <n-space>
             <n-radio
               v-for="theme of themeOptions"
@@ -104,22 +87,25 @@ defineEmits<{
                   color: theme.bodyColor,
                   textColor: theme.isDark ? 'white' : 'black',
                 }"
-                style="width: 8em"
+                :style="{
+                  width: isDesktop ? '7em' : '1.7em',
+                }"
               >
-                {{ theme.bodyColor }}
+                {{ isDesktop ? theme.bodyColor : 'A' }}
               </n-tag>
             </n-radio>
           </n-space>
-        </n-space>
+        </ReaderSettingDialogSelect>
 
-        <span class="label">日文透明度</span>
-        <n-slider
-          v-model:value="setting.mixJpOpacity"
-          :max="1"
-          :min="0"
-          :step="0.05"
-          :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
-        />
+        <ReaderSettingDialogSelect label="日文透明度">
+          <n-slider
+            v-model:value="setting.mixJpOpacity"
+            :max="1"
+            :min="0"
+            :step="0.05"
+            :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
+          />
+        </ReaderSettingDialogSelect>
       </n-space>
     </n-card>
   </n-modal>
