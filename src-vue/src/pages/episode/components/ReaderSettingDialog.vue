@@ -14,8 +14,8 @@ const modeOptions = [
   { value: 'mix-reverse', label: '日文/中文' },
 ];
 const translationOptions = [
-  { value: 'youdao', label: '有道' },
-  { value: 'baidu', label: '百度' },
+  { value: 'youdao', label: '有道优先' },
+  { value: 'baidu', label: '百度优先' },
   { value: 'youdao/baidu', label: '有道/百度' },
 ];
 const fontSizeOptions = [

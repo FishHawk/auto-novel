@@ -38,7 +38,9 @@ type Paragraph =
   | null;
 
 function getTextList(episode: BookEpisodeDto): Paragraph[] {
+  const merged: Paragraph[] = [];
   const styles: { paragraphs: string[]; secondary: boolean }[] = [];
+
   if (setting.mode === 'jp') {
     styles.push({ paragraphs: episode.paragraphs, secondary: false });
   } else {
@@ -46,25 +48,40 @@ function getTextList(episode: BookEpisodeDto): Paragraph[] {
       styles.push({ paragraphs: episode.paragraphs, secondary: true });
     }
 
-    if (
-      setting.translation === 'youdao' ||
-      setting.translation === 'youdao/baidu'
-    ) {
+    if (setting.translation === 'youdao') {
+      // 有道优先
       if (episode.youdaoParagraphs) {
         styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
-      } else {
-        return [{ text: '有道翻译版本不存在', secondary: false }];
-      }
-    }
-
-    if (
-      setting.translation === 'baidu' ||
-      setting.translation === 'youdao/baidu'
-    ) {
-      if (episode.baiduParagraphs) {
+      } else if (episode.baiduParagraphs) {
+        merged.push({ text: '有道翻译不存在，使用百度翻译', secondary: true });
         styles.push({ paragraphs: episode.baiduParagraphs, secondary: false });
       } else {
-        return [{ text: '百度翻译版本不存在', secondary: false }];
+        merged.push({ text: '无中文翻译', secondary: false });
+        return merged;
+      }
+    } else if (setting.translation === 'baidu') {
+      // 百度优先
+      if (episode.baiduParagraphs) {
+        styles.push({ paragraphs: episode.baiduParagraphs, secondary: false });
+      } else if (episode.youdaoParagraphs) {
+        merged.push({ text: '百度翻译不存在，使用有道翻译', secondary: true });
+        styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
+      } else {
+        merged.push({ text: '无中文翻译', secondary: false });
+        return merged;
+      }
+    } else if (setting.translation === 'youdao/baidu') {
+      if (episode.youdaoParagraphs && episode.baiduParagraphs) {
+        styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
+        styles.push({ paragraphs: episode.baiduParagraphs, secondary: false });
+      } else {
+        if (!episode.youdaoParagraphs) {
+          merged.push({ text: '有道翻译不存在', secondary: false });
+        }
+        if (!episode.baiduParagraphs) {
+          merged.push({ text: '百度翻译不存在', secondary: false });
+        }
+        return merged;
       }
     }
 
@@ -73,7 +90,6 @@ function getTextList(episode: BookEpisodeDto): Paragraph[] {
     }
   }
 
-  const merged: Paragraph[] = [];
   for (let i = 0; i < episode.paragraphs.length; i++) {
     if (episode.paragraphs[i].trim().length === 0) {
       merged.push(null);
