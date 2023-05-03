@@ -44,6 +44,9 @@ const collapsedMenuOptions = computed(() => {
     },
     menuOption('反馈', '/feedback'),
   ];
+  if (authInfoStore.info) {
+    menus[1].children!.unshift(menuOption('我的收藏', '/favorite-list'));
+  }
   if (atLeastMaintainer(authInfoStore.role)) {
     menus.push({
       label: '控制台',
