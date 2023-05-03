@@ -199,7 +199,10 @@ class WebNovelService(
                 bookId = it.bookId,
                 titleJp = it.titleJp,
                 titleZh = it.titleZh,
-                total = webBookMetadataRepository.getLocal(it.providerId, it.bookId)!!.toc.count { it.episodeId != null },
+                total = webBookMetadataRepository.getLocal(
+                    it.providerId,
+                    it.bookId
+                )!!.toc.count { it.episodeId != null },
                 count = webBookEpisodeRepository.count(it.providerId, it.bookId),
                 countBaidu = webBookEpisodeRepository.countBaidu(it.providerId, it.bookId),
                 countYoudao = webBookEpisodeRepository.countYoudao(it.providerId, it.bookId),
@@ -341,16 +344,22 @@ class WebNovelService(
     data class BookMetadataDto(
         val titleJp: String,
         val titleZh: String? = null,
-        val authors: List<BookAuthor>,
+        val authors: List<Author>,
         val introductionJp: String,
         val introductionZh: String? = null,
         val glossary: Map<String, String>,
-        val toc: List<BookTocItem>,
+        val toc: List<TocItem>,
         val visited: Long,
         val downloaded: Long,
         val syncAt: Long,
         val inFavorite: Boolean?,
-    )
+    ) {
+        @Serializable
+        data class Author(val name: String, val link: String?)
+
+        @Serializable
+        data class TocItem(val titleJp: String, val titleZh: String?, val episodeId: String?)
+    }
 
     suspend fun getMetadata(
         providerId: String,
@@ -366,11 +375,11 @@ class WebNovelService(
             BookMetadataDto(
                 titleJp = metadata.titleJp,
                 titleZh = metadata.titleZh,
-                authors = metadata.authors,
+                authors = metadata.authors.map { BookMetadataDto.Author(it.name, it.link) },
                 introductionJp = metadata.introductionJp,
                 introductionZh = metadata.introductionZh,
                 glossary = metadata.glossary,
-                toc = metadata.toc,
+                toc = metadata.toc.map { BookMetadataDto.TocItem(it.titleJp, it.titleZh, it.episodeId) },
                 visited = metadata.visited,
                 downloaded = metadata.downloaded,
                 syncAt = metadata.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),

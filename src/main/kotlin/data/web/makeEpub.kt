@@ -10,8 +10,8 @@ private const val MISSING_EPISODE_HINT = "该章节缺失。"
 suspend fun makeEpubFile(
     filePath: Path,
     lang: BookFileLang,
-    metadata: BookMetadata,
-    episodes: Map<String, BookEpisode>,
+    metadata: WebBookMetadataRepository.BookMetadata,
+    episodes: Map<String, WebBookEpisodeRepository.BookEpisode>,
 ) {
     val epub = EpubBook()
     val identifier = "${metadata.providerId}.${metadata.bookId}"
@@ -126,8 +126,8 @@ suspend fun makeEpubFile(
 }
 
 private fun tocToNavigationItems(
-    toc: List<BookTocItem>,
-    title: (BookTocItem) -> String
+    toc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+    title: (WebBookMetadataRepository.BookMetadata.TocItem) -> String
 ): List<Navigation.Item> {
     var index = 0
     return toc.map {

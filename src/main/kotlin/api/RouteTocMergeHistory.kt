@@ -93,8 +93,8 @@ class TocMergeHistoryService(
         val id: String,
         val providerId: String,
         val bookId: String,
-        val tocOld: List<BookTocItem>,
-        val tocNew: List<BookTocItem>,
+        val tocOld: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+        val tocNew: List<WebBookMetadataRepository.BookMetadata.TocItem>,
         val reason: String,
     )
 

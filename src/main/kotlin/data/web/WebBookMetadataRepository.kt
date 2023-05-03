@@ -4,7 +4,6 @@ import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import data.MongoDataSource
 import data.provider.ProviderDataSource
-import data.provider.SBookMetadata
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -15,69 +14,40 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-@Serializable
-data class BookAuthor(
-    val name: String,
-    val link: String?,
-)
-
-@Serializable
-data class BookTocItem(
-    val titleJp: String,
-    val titleZh: String?,
-    val episodeId: String?,
-)
-
-@Serializable
-data class BookMetadata(
-    val providerId: String,
-    val bookId: String,
-    val titleJp: String,
-    val titleZh: String?,
-    val authors: List<BookAuthor>,
-    val introductionJp: String,
-    val introductionZh: String?,
-    val glossaryUuid: String? = null,
-    val glossary: Map<String, String> = emptyMap(),
-    val toc: List<BookTocItem>,
-    val visited: Long,
-    val downloaded: Long,
-    val pauseUpdate: Boolean = false,
-    @Contextual val syncAt: LocalDateTime,
-    @Contextual val changeAt: LocalDateTime,
-)
-
-data class BookRankItem(
-    val bookId: String,
-    val titleJp: String,
-    val titleZh: String?,
-    val extra: String,
-)
-
-private fun SBookMetadata.toDb(providerId: String, bookId: String) =
-    BookMetadata(
-        providerId = providerId,
-        bookId = bookId,
-        titleJp = title,
-        titleZh = null,
-        authors = authors.map { BookAuthor(it.name, it.link) },
-        introductionJp = introduction,
-        introductionZh = null,
-        toc = toc.map { BookTocItem(it.title, null, it.episodeId) },
-        visited = 0,
-        downloaded = 0,
-        syncAt = LocalDateTime.now(),
-        changeAt = LocalDateTime.now(),
-    )
-
 class WebBookMetadataRepository(
-    private val providerDataSource: ProviderDataSource,
-    private val mongoDataSource: MongoDataSource,
+    private val provider: ProviderDataSource,
+    private val mongo: MongoDataSource,
     private val webBookIndexRepository: WebBookIndexRepository,
     private val tocMergeHistoryRepository: WebBookTocMergeHistoryRepository,
 ) {
+    @Serializable
+    data class BookMetadata(
+        val providerId: String,
+        val bookId: String,
+        val titleJp: String,
+        val titleZh: String?,
+        val authors: List<Author>,
+        val introductionJp: String,
+        val introductionZh: String?,
+        val glossaryUuid: String? = null,
+        val glossary: Map<String, String> = emptyMap(),
+        val toc: List<TocItem>,
+        val visited: Long,
+        val downloaded: Long,
+        val pauseUpdate: Boolean = false,
+        @Contextual val syncAt: LocalDateTime,
+        @Contextual val changeAt: LocalDateTime,
+    ) {
+        @Serializable
+        data class Author(val name: String, val link: String?)
+
+        @Serializable
+        data class TocItem(val titleJp: String, val titleZh: String?, val episodeId: String?)
+    }
+
+
     private val col
-        get() = mongoDataSource.database.getCollection<BookMetadata>("metadata")
+        get() = mongo.database.getCollection<BookMetadata>("metadata")
 
     init {
         runBlocking {
@@ -88,6 +58,13 @@ class WebBookMetadataRepository(
         }
     }
 
+    data class BookRankItem(
+        val bookId: String,
+        val titleJp: String,
+        val titleZh: String?,
+        val extra: String,
+    )
+
     suspend fun listRank(
         providerId: String,
         options: Map<String, String>,
@@ -95,7 +72,7 @@ class WebBookMetadataRepository(
         @Serializable
         data class BookIdWithTitleZh(val bookId: String, val titleZh: String?)
 
-        return providerDataSource.getRank(providerId, options).map { items ->
+        return provider.getRank(providerId, options).map { items ->
             val idToTitleZh = col
                 .withDocumentClass<BookIdWithTitleZh>()
                 .find(
@@ -144,9 +121,24 @@ class WebBookMetadataRepository(
     }
 
     private suspend fun getRemote(providerId: String, bookId: String): Result<BookMetadata> {
-        return providerDataSource
+        return provider
             .getMetadata(providerId, bookId)
-            .map { it.toDb(providerId, bookId) }
+            .map { s ->
+                BookMetadata(
+                    providerId = providerId,
+                    bookId = bookId,
+                    titleJp = s.title,
+                    titleZh = null,
+                    authors = s.authors.map { BookMetadata.Author(it.name, it.link) },
+                    introductionJp = s.introduction,
+                    introductionZh = null,
+                    toc = s.toc.map { BookMetadata.TocItem(it.title, null, it.episodeId) },
+                    visited = 0,
+                    downloaded = 0,
+                    syncAt = LocalDateTime.now(),
+                    changeAt = LocalDateTime.now(),
+                )
+            }
     }
 
     suspend fun get(providerId: String, bookId: String): Result<BookMetadata> {
@@ -246,7 +238,7 @@ class WebBookMetadataRepository(
             list.add(setValue(BookMetadata::glossary, it))
         }
         tocZh.forEach { (index, itemTitleZh) ->
-            list.add(setValue(BookMetadata::toc.pos(index) / BookTocItem::titleZh, itemTitleZh))
+            list.add(setValue(BookMetadata::toc.pos(index) / BookMetadata.TocItem::titleZh, itemTitleZh))
         }
         list.add(setValue(BookMetadata::changeAt, LocalDateTime.now()))
 
@@ -292,7 +284,7 @@ class WebBookMetadataRepository(
     suspend fun setToc(
         providerId: String,
         bookId: String,
-        toc: List<BookTocItem>,
+        toc: List<BookMetadata.TocItem>,
     ) {
         col.updateOne(
             bsonSpecifyMetadata(providerId, bookId),

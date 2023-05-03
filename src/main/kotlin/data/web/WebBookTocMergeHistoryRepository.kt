@@ -52,8 +52,8 @@ class WebBookTocMergeHistoryRepository(
         @Contextual @SerialName("_id") val id: ObjectId,
         val providerId: String,
         val bookId: String,
-        val tocOld: List<BookTocItem>,
-        val tocNew: List<BookTocItem>,
+        val tocOld: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+        val tocNew: List<WebBookMetadataRepository.BookMetadata.TocItem>,
         val reason: String,
     )
 
@@ -72,8 +72,8 @@ class WebBookTocMergeHistoryRepository(
     suspend fun insert(
         providerId: String,
         bookId: String,
-        tocOld: List<BookTocItem>,
-        tocNew: List<BookTocItem>,
+        tocOld: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+        tocNew: List<WebBookMetadataRepository.BookMetadata.TocItem>,
         reason: String,
     ) {
         col.insertOne(

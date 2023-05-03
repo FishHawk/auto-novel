@@ -8,14 +8,15 @@ fun isProviderIdUnstable(providerId: String): Boolean {
 }
 
 data class MergedResult(
-    val toc: List<BookTocItem>,
+    val toc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
     val hasChanged: Boolean,
     val reviewReason: String?,
 )
 
+
 fun mergeToc(
-    remoteToc: List<BookTocItem>,
-    localToc: List<BookTocItem>,
+    remoteToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+    localToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
     isIdUnstable: Boolean,
 ): MergedResult {
     return if (isIdUnstable) {
@@ -26,8 +27,8 @@ fun mergeToc(
 }
 
 private fun mergeTocUnstable(
-    remoteToc: List<BookTocItem>,
-    localToc: List<BookTocItem>,
+    remoteToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+    localToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
 ): MergedResult {
     val remoteIdToTitle = remoteToc.mapNotNull {
         if (it.episodeId == null) null
@@ -58,8 +59,8 @@ private fun mergeTocUnstable(
 }
 
 private fun mergeTocStable(
-    remoteToc: List<BookTocItem>,
-    localToc: List<BookTocItem>,
+    remoteToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+    localToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
 ): MergedResult {
     val remoteEpIds = remoteToc.mapNotNull { it.episodeId }
     val localEpIds = localToc.mapNotNull { it.episodeId }
@@ -73,9 +74,9 @@ private fun mergeTocStable(
 }
 
 private fun simpleMergeToc(
-    remoteToc: List<BookTocItem>,
-    localToc: List<BookTocItem>,
-): List<BookTocItem> {
+    remoteToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+    localToc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+): List<WebBookMetadataRepository.BookMetadata.TocItem> {
     return remoteToc.map { itemNew ->
         val itemOld = localToc.find { it.titleJp == itemNew.titleJp }
         if (itemOld?.titleZh == null) {

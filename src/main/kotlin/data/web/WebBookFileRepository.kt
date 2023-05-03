@@ -44,8 +44,8 @@ class WebBookFileRepository(
         fileName: String,
         lang: BookFileLang,
         type: BookFileType,
-        metadata: BookMetadata,
-        episodes: Map<String, BookEpisode>,
+        metadata: WebBookMetadataRepository.BookMetadata,
+        episodes: Map<String, WebBookEpisodeRepository.BookEpisode>,
     ) {
         val filePath = buildFilePath(fileName)
         when (type) {
