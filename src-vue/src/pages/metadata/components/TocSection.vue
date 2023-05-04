@@ -10,21 +10,15 @@ defineProps<{
 
 <template>
   <n-h2 prefix="bar">目录</n-h2>
-  <table style="width: 100%">
-    <template v-for="tocItem in toc">
+  <n-list>
+    <n-list-item v-for="tocItem in toc" style="padding: 0px">
       <n-a
         v-if="tocItem.episodeId"
         :href="`/novel/${providerId}/${bookId}/${tocItem.episodeId}`"
-        role="row"
-        style="display: table-row"
       >
         <TocItem :item="tocItem" />
       </n-a>
-      <tr v-else>
-        <TocItem :item="tocItem" />
-      </tr>
-      <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
-      <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
-    </template>
-  </table>
+      <TocItem v-else :item="tocItem" />
+    </n-list-item>
+  </n-list>
 </template>

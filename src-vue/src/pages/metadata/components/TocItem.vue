@@ -7,16 +7,16 @@ defineProps<{
 </script>
 
 <template>
-  <td style="width: 50%">
-    {{ item.titleJp }}
-    <br />
-    <span class="on-mobile" style="color: grey">{{ item.titleZh }}</span>
-  </td>
-  <td class="on-desktop" style="color: grey">{{ item.titleZh }}</td>
+  <div style="width: 100; display: flex; padding: 6px">
+    <span style="flex: 1 1 0">
+      {{ item.titleJp }}
+      <br />
+      <span class="on-mobile" style="color: grey">
+        {{ item.titleZh }}
+      </span>
+    </span>
+    <span class="on-desktop" style="color: grey; flex: 1 1 0">
+      {{ item.titleZh }}
+    </span>
+  </div>
 </template>
-
-<style scoped>
-td {
-  padding: 4px;
-}
-</style>

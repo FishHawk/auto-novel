@@ -157,10 +157,15 @@ function enableEditMode() {
       </template>
 
       <template v-else>
-        <n-p>{{ bookMetadata.value.introductionJp }}</n-p>
-        <n-p v-if="bookMetadata.value.introductionZh !== undefined">{{
-          bookMetadata.value.introductionZh
-        }}</n-p>
+        <n-p style="word-break: break-all">
+          {{ bookMetadata.value.introductionJp }}
+        </n-p>
+        <n-p
+          v-if="bookMetadata.value.introductionZh !== undefined"
+          style="word-break: break-all"
+        >
+          {{ bookMetadata.value.introductionZh }}
+        </n-p>
         <TranslateSection
           :provider-id="providerId"
           :book-id="bookId"

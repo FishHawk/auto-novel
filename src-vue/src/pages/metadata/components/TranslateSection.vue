@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { onMounted, Ref, ref } from 'vue';
+import { computed, onMounted, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
+import { useWindowSize } from '@vueuse/core';
 
 import { ResultState } from '@/data/api/result';
 import ApiWebNovel, { BookStateDto } from '@/data/api/api_web_novel';
@@ -18,6 +19,9 @@ interface UpdateProgress {
   finished: number;
   error: number;
 }
+
+const { width } = useWindowSize();
+const isDesktop = computed(() => width.value > 600);
 
 const showModal = ref(false);
 
@@ -131,8 +135,8 @@ function stateToFileList(): BookFiles[] {
       version: 'baidu',
       files: [
         createFile('TXT', 'zh-baidu', 'txt'),
-        createFile('EPUB', 'zh-baidu', 'epub'),
         createFile('中日对比TXT', 'mix-baidu', 'txt'),
+        createFile('EPUB', 'zh-baidu', 'epub'),
         createFile('中日对比EPUB', 'mix-baidu', 'epub'),
       ],
     },
@@ -141,8 +145,8 @@ function stateToFileList(): BookFiles[] {
       version: 'youdao',
       files: [
         createFile('TXT', 'zh-youdao', 'txt'),
-        createFile('EPUB', 'zh-youdao', 'epub'),
         createFile('中日对比TXT', 'mix-youdao', 'txt'),
+        createFile('EPUB', 'zh-youdao', 'epub'),
         createFile('中日对比EPUB', 'mix-youdao', 'epub'),
       ],
     },
@@ -233,7 +237,8 @@ function submitForm() {
       </n-collapse-item>
     </n-collapse>
   </n-p>
-  <n-table :bordered="false" :single-line="false">
+
+  <n-table v-if="isDesktop" :bordered="false" :single-line="false">
     <thead>
       <tr>
         <th>版本</th>
@@ -262,12 +267,39 @@ function submitForm() {
             size="small"
             @click="startUpdateTask(row.version, 0, 65536)"
           >
-            {{ row.version === 'jp' ? '更新' : '更新(需要插件)' }}
+           更新
           </n-button>
         </td>
       </tr>
     </tbody>
   </n-table>
+
+  <n-list v-else>
+    <n-list-item v-for="row in stateToFileList()">
+      <template #suffix>
+        <n-button
+          tertiary
+          size="small"
+          @click="startUpdateTask(row.version, 0, 65536)"
+        >
+          更新
+        </n-button>
+      </template>
+      <n-space vertical>
+        <span>{{ row.label }}</span>
+        <n-space>
+          <n-a
+            v-for="file in row.files"
+            :href="file.url"
+            :download="file.name"
+            target="_blank"
+          >
+            {{ file.label }}
+          </n-a>
+        </n-space>
+      </n-space>
+    </n-list-item>
+  </n-list>
 
   <div v-if="progress !== undefined">
     <n-space
