@@ -178,7 +178,7 @@ function enableEditMode() {
       <template v-else>
         <n-p>原名：{{ novelMetadata.value.title }}</n-p>
         <n-p
-          v-html="novelMetadata.value.introduction.replace(/\r\n/g, '<br />')"
+          v-html="novelMetadata.value.introduction.replace(/\n/g, '<br />')"
         />
 
         <div class="on-mobile">
