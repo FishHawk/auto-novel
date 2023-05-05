@@ -65,10 +65,6 @@ const routes = [
         path: '/admin/toc-merge',
         component: () => import('./pages/admin/AdminTocMerge.vue'),
       },
-      {
-        path: '/admin/patch/:providerId/:bookId',
-        component: () => import('./pages/admin/AdminPatchDetail.vue'),
-      },
     ],
   },
 ];
@@ -80,12 +76,5 @@ const router = createRouter({
     return { top: 0 };
   },
 });
-
-// router.beforeEach(async (to, from) => {
-//   if (!isAuthenticated && to.name !== 'Login') {
-//     // redirect the user to the login page
-//     return { name: 'Login' };
-//   }
-// });
 
 export default router;

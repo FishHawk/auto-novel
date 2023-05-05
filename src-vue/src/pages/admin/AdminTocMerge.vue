@@ -94,7 +94,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     <n-divider />
     <div v-if="bookPage?.ok">
       <div v-for="item in bookPage.value.items">
-        <n-p class="title">
+        <n-p>
           <n-a
             :href="`/novel/${item.providerId}/${item.bookId}`"
             target="_blank"
