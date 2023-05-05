@@ -17,8 +17,8 @@ private class Patch {
         val page: Int,
     )
 
-    @Resource("/item/{providerId}/{bookId}")
-    data class Item(
+    @Resource("/{providerId}/{bookId}")
+    data class Id(
         val parent: Patch = Patch(),
         val providerId: String,
         val bookId: String,
@@ -36,7 +36,7 @@ fun Route.routePatch() {
         call.respondResult(result)
     }
 
-    get<Patch.Item> { loc ->
+    get<Patch.Id> { loc ->
         val result = service.getPatch(
             providerId = loc.providerId,
             bookId = loc.bookId,
@@ -45,7 +45,7 @@ fun Route.routePatch() {
     }
 
     authenticate {
-        delete<Patch.Item> { loc ->
+        delete<Patch.Id> { loc ->
             val result = call.requireAtLeastMaintainer {
                 service.deletePatch(
                     providerId = loc.providerId,

@@ -112,7 +112,7 @@ async function getState(
   providerId: string,
   bookId: string
 ): Promise<Result<BookStateDto>> {
-  return runCatching(api.get(`novel/state/${providerId}/${bookId}`).json());
+  return runCatching(api.get(`novel/${providerId}/${bookId}/state`).json());
 }
 
 export interface BookTocItemDto {
@@ -145,7 +145,7 @@ async function getMetadata(
     options.headers = { Authorization: 'Bearer ' + token };
   }
   return runCatching(
-    api.get(`novel/metadata/${providerId}/${bookId}`, options).json()
+    api.get(`novel/${providerId}/${bookId}`, options).json()
   );
 }
 
@@ -164,7 +164,7 @@ async function putMetadata(
 ): Promise<Result<BookMetadataDto>> {
   return runCatching(
     api
-      .put(`novel/metadata/${providerId}/${bookId}`, {
+      .put(`novel/${providerId}/${bookId}`, {
         headers: { Authorization: 'Bearer ' + token },
         json: patch,
       })
@@ -188,28 +188,7 @@ async function getEpisode(
   episodeId: string
 ): Promise<Result<BookEpisodeDto>> {
   return runCatching(
-    api.get(`novel/episode/${providerId}/${bookId}/${episodeId}`).json()
-  );
-}
-
-interface BookEpisodePatchBody {
-  paragraphs: { [key: number]: string };
-}
-
-async function putEpisode(
-  providerId: string,
-  bookId: string,
-  episodeId: string,
-  patch: BookEpisodePatchBody,
-  token: string
-): Promise<Result<BookEpisodeDto>> {
-  return runCatching(
-    api
-      .put(`novel/episode/${providerId}/${bookId}/${episodeId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-        json: patch,
-      })
-      .json<BookEpisodeDto>()
+    api.get(`novel/${providerId}/${bookId}/episode/${episodeId}`).json()
   );
 }
 
@@ -223,5 +202,4 @@ export default {
   getMetadata,
   putMetadata,
   getEpisode,
-  putEpisode,
 };

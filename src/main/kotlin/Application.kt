@@ -135,17 +135,17 @@ val appModule = module {
     single { UserRepository(get()) }
     single { EmailCodeRepository(get()) }
 
-    single {
+    single(createdAtStart = true) {
         val secret = System.getenv("JWT_SECRET")!!
         AuthService(secret, get(), get())
     }
-    single { PatchService(get()) }
-    single { TocMergeHistoryService(get()) }
-    single { CommentService(get()) }
+    single(createdAtStart = true) { PatchService(get()) }
+    single(createdAtStart = true) { TocMergeHistoryService(get()) }
+    single(createdAtStart = true) { CommentService(get()) }
 
-    single { PrepareBookService(get(), get(), get()) }
-    single { WebNovelService(get(), get(), get(), get(), get()) }
-    single { UpdateService(get(), get()) }
+    single(createdAtStart = true) { PrepareBookService(get(), get(), get()) }
+    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { UpdateService(get(), get()) }
 
-    single { WenkuNovelService(get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelService(get(), get(), get()) }
 }

@@ -28,12 +28,12 @@ private class WenkuNovel {
     )
 
     @Resource("/{bookId}")
-    class Id(
+    class Book(
         val parent: WenkuNovel = WenkuNovel(),
         val bookId: String,
     ) {
         @Resource("/episode")
-        class Episode(val parent: Id)
+        class Episode(val parent: Book)
     }
 }
 
@@ -49,7 +49,7 @@ fun Route.routeWenkuNovel() {
         call.respondResult(result)
     }
 
-    get<WenkuNovel.Id> { loc ->
+    get<WenkuNovel.Book> { loc ->
         val result = service.getMetadata(loc.bookId)
         call.respondResult(result)
     }
@@ -63,7 +63,7 @@ fun Route.routeWenkuNovel() {
             call.respondResult(result)
         }
 
-        patch<WenkuNovel.Id> { loc ->
+        patch<WenkuNovel.Book> { loc ->
             val result = call.requireAtLeastMaintainer {
                 val body = call.receive<WenkuNovelService.MetadataCreateBody>()
                 service.patchMetadata(loc.bookId, body)
@@ -71,7 +71,7 @@ fun Route.routeWenkuNovel() {
             call.respondResult(result)
         }
 
-        post<WenkuNovel.Id.Episode> { loc ->
+        post<WenkuNovel.Book.Episode> { loc ->
             val jwtUser = call.jwtUser()
             if (!jwtUser.atLeastMaintainer()) {
                 call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))

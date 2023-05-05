@@ -63,7 +63,7 @@ async function getPatch(
   providerId: string,
   bookId: string
 ): Promise<Result<BookPatchDto>> {
-  return runCatching(api.get(`patch/item/${providerId}/${bookId}`).json());
+  return runCatching(api.get(`patch/${providerId}/${bookId}`).json());
 }
 
 async function deletePatch(
@@ -73,7 +73,7 @@ async function deletePatch(
 ): Promise<Result<string>> {
   return runCatching(
     api
-      .delete(`patch/item/${providerId}/${bookId}`, {
+      .delete(`patch/${providerId}/${bookId}`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .text()
