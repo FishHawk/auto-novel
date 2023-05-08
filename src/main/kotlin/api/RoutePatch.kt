@@ -5,6 +5,7 @@ import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.resources.*
+import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
@@ -22,7 +23,10 @@ private class Patch {
         val parent: Patch = Patch(),
         val providerId: String,
         val bookId: String,
-    )
+    ) {
+        @Resource("/revoke")
+        data class Revoke(val parent: Id)
+    }
 }
 
 fun Route.routePatch() {
@@ -37,20 +41,21 @@ fun Route.routePatch() {
     }
 
     get<Patch.Id> { loc ->
-        val result = service.getPatch(
-            providerId = loc.providerId,
-            bookId = loc.bookId,
-        )
+        val result = service.getPatch(loc.providerId, loc.bookId)
         call.respondResult(result)
     }
 
     authenticate {
         delete<Patch.Id> { loc ->
             val result = call.requireAtLeastMaintainer {
-                service.deletePatch(
-                    providerId = loc.providerId,
-                    bookId = loc.bookId,
-                )
+                service.deletePatch(loc.providerId, loc.bookId)
+            }
+            call.respondResult(result)
+        }
+
+        post<Patch.Id.Revoke> { loc ->
+            val result = call.requireAtLeastMaintainer {
+                service.revokePatch(loc.parent.providerId, loc.parent.bookId)
             }
             call.respondResult(result)
         }
@@ -59,6 +64,7 @@ fun Route.routePatch() {
 
 class PatchService(
     private val patchRepo: WebBookPatchRepository,
+    private val metadataRepo: WebBookMetadataRepository,
 ) {
     @Serializable
     data class PatchPageDto(
@@ -102,6 +108,23 @@ class PatchService(
         providerId: String,
         bookId: String,
     ): Result<Unit> {
-        TODO()
+        val patch = patchRepo.get(providerId, bookId)
+            ?: return httpNotFound("未找到")
+        val metadata = metadataRepo.getLocal(providerId, bookId)
+            ?: return httpNotFound("未找到对应小说")
+
+        var title: String? = null
+        var introduction: String? = null
+        val tocMap = mutableMapOf<String, String?>()
+        patch.patches.reversed().forEach { p ->
+            p.titleChange?.let { title = it.zhOld }
+            p.introductionChange?.let { introduction = it.zhOld }
+            p.tocChange.forEach { tocMap[it.jp] = it.zhOld }
+        }
+        val toc = metadata.toc.mapIndexedNotNull { index, toc ->
+            tocMap[toc.titleJp]?.let { index to it }
+        }.toMap()
+//        metadataRepo.updateZh()
+        return Result.success(Unit)
     }
 }

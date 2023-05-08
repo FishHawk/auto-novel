@@ -38,7 +38,7 @@ async function deletePatch(providerId: string, bookId: string) {
     message.info('删除成功');
     if (bookPage.value?.ok) {
       bookPage.value.value.items = bookPage.value.value.items.filter(
-        (it) => it.providerId !== providerId ||  it.bookId !== bookId
+        (it) => it.providerId !== providerId || it.bookId !== bookId
       );
     }
   } else {
@@ -47,7 +47,17 @@ async function deletePatch(providerId: string, bookId: string) {
 }
 
 async function revokePatch(providerId: string, bookId: string) {
-  message.info('暂未实现');
+  const result = await ApiPatch.revokePatch(providerId, bookId, auth.token!);
+  if (result.ok) {
+    message.info('撤销成功');
+    if (bookPage.value?.ok) {
+      // bookPage.value.value.items = bookPage.value.value.items.filter(
+      //   (it) => it.providerId !== providerId || it.bookId !== bookId
+      // );
+    }
+  } else {
+    message.error('撤销失败：' + result.error.message);
+  }
 }
 
 watch(currentPage, (page) => loadPage(page), { immediate: true });

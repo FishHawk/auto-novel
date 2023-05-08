@@ -80,8 +80,23 @@ async function deletePatch(
   );
 }
 
+async function revokePatch(
+  providerId: string,
+  bookId: string,
+  token: string
+): Promise<Result<string>> {
+  return runCatching(
+    api
+      .post(`patch/${providerId}/${bookId}/revoke`, {
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .text()
+  );
+}
+
 export default {
   listPatch,
   getPatch,
   deletePatch,
+  revokePatch,
 };

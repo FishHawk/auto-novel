@@ -126,7 +126,7 @@ val appModule = module {
 
     single { WebBookMetadataRepository(get(), get(), get(), get()) }
     single { WebBookEpisodeRepository(get(), get(), get()) }
-    single { WebBookPatchRepository(get(), get(), get()) }
+    single { WebBookPatchRepository(get(), get()) }
     single { WebBookFileRepository(root = Path("./data/files-web")) }
     single { WebBookIndexRepository(get()) }
     single { WebBookTocMergeHistoryRepository(get()) }
@@ -139,7 +139,7 @@ val appModule = module {
         val secret = System.getenv("JWT_SECRET")!!
         AuthService(secret, get(), get())
     }
-    single(createdAtStart = true) { PatchService(get()) }
+    single(createdAtStart = true) { PatchService(get(), get()) }
     single(createdAtStart = true) { TocMergeHistoryService(get()) }
     single(createdAtStart = true) { CommentService(get()) }
 

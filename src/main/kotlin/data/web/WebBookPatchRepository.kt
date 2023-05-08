@@ -71,7 +71,6 @@ data class BookEpisodePatch(
 class WebBookPatchRepository(
     private val mongoDataSource: MongoDataSource,
     private val webBookMetadataRepository: WebBookMetadataRepository,
-    private val webBookEpisodeRepository: WebBookEpisodeRepository,
 ) {
     private val col
         get() = mongoDataSource.database.getCollection<BookPatch>("patch")
