@@ -169,10 +169,7 @@ function enableEditMode() {
       </n-space>
 
       <template v-if="editMode">
-        <WenkuEditSection
-          :id="bookId"
-          v-model:metadata="novelMetadata.value"
-        />
+        <WenkuEditSection :id="bookId" v-model:metadata="novelMetadata.value" />
       </template>
 
       <template v-else>
@@ -217,7 +214,7 @@ function enableEditMode() {
             )"
           >
             <n-a
-              :href="`/files-wenku/${novelMetadata.value.bookId}/${fileName}`"
+              :href="`/files-wenku/${bookId}/${fileName}`"
               target="_blank"
               :download="fileName"
             >

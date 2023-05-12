@@ -27,7 +27,6 @@ async function list(
 }
 
 export interface WenkuMetadataDto {
-  bookId: string;
   title: string;
   titleZh: string;
   titleZhAlias: string[];

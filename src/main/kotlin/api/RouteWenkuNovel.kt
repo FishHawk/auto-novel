@@ -139,7 +139,6 @@ class WenkuNovelService(
 
     @Serializable
     data class MetadataDto(
-        val id: String,
         val title: String,
         val titleZh: String,
         val titleZhAlias: List<String>,
@@ -160,7 +159,6 @@ class WenkuNovelService(
             ?: return httpNotFound("书不存在")
         val files = fileRepo.list(bookId)
         val metadataDto = MetadataDto(
-            id = metadata.id.toHexString(),
             title = metadata.title,
             titleZh = metadata.titleZh,
             titleZhAlias = metadata.titleZhAlias,
