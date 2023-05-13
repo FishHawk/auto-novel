@@ -51,9 +51,9 @@ async function revokePatch(providerId: string, bookId: string) {
   if (result.ok) {
     message.info('撤销成功');
     if (bookPage.value?.ok) {
-      // bookPage.value.value.items = bookPage.value.value.items.filter(
-      //   (it) => it.providerId !== providerId || it.bookId !== bookId
-      // );
+      bookPage.value.value.items = bookPage.value.value.items.filter(
+        (it) => it.providerId !== providerId || it.bookId !== bookId
+      );
     }
   } else {
     message.error('撤销失败：' + result.error.message);

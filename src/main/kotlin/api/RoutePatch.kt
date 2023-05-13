@@ -9,6 +9,9 @@ import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
+import util.None
+import util.Optional
+import util.Some
 
 @Resource("/patch")
 private class Patch {
@@ -88,7 +91,7 @@ class PatchService(
         providerId: String,
         bookId: String,
     ): Result<BookPatch> {
-        val patch = patchRepo.get(providerId, bookId)
+        val patch = patchRepo.findOne(providerId, bookId)
             ?: return httpNotFound("未找到")
         return Result.success(patch)
     }
@@ -108,23 +111,38 @@ class PatchService(
         providerId: String,
         bookId: String,
     ): Result<Unit> {
-        val patch = patchRepo.get(providerId, bookId)
+        val patch = patchRepo.findOne(providerId, bookId)
             ?: return httpNotFound("未找到")
         val metadata = metadataRepo.getLocal(providerId, bookId)
             ?: return httpNotFound("未找到对应小说")
 
-        var title: String? = null
-        var introduction: String? = null
+        var titleZh: Optional<String?> = None
+        var introductionZh: Optional<String?> = None
         val tocMap = mutableMapOf<String, String?>()
         patch.patches.reversed().forEach { p ->
-            p.titleChange?.let { title = it.zhOld }
-            p.introductionChange?.let { introduction = it.zhOld }
+            p.titleChange?.let { titleZh = Some(it.zhOld) }
+            p.introductionChange?.let { introductionZh = Some(it.zhOld) }
             p.tocChange.forEach { tocMap[it.jp] = it.zhOld }
         }
-        val toc = metadata.toc.mapIndexedNotNull { index, toc ->
-            tocMap[toc.titleJp]?.let { index to it }
-        }.toMap()
-//        metadataRepo.updateZh()
+
+        val tocZh = mutableMapOf<Int, String?>()
+        metadata.toc.forEachIndexed { index, item ->
+            if (tocMap.containsKey(item.titleJp)) {
+                tocZh[index] = tocMap[item.titleJp]
+            }
+        }
+        metadataRepo.updateZh(
+            providerId = providerId,
+            bookId = bookId,
+            titleZh = titleZh,
+            introductionZh = introductionZh,
+            glossary = None,
+            tocZh = tocZh,
+        )
+        patchRepo.deletePatch(
+            providerId = providerId,
+            bookId = bookId,
+        )
         return Result.success(Unit)
     }
 }

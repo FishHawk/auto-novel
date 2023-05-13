@@ -126,7 +126,7 @@ val appModule = module {
 
     single { WebBookMetadataRepository(get(), get(), get(), get()) }
     single { WebBookEpisodeRepository(get(), get(), get()) }
-    single { WebBookPatchRepository(get(), get()) }
+    single { WebBookPatchRepository(get()) }
     single { WebBookFileRepository(root = Path("./data/files-web")) }
     single { WebBookIndexRepository(get()) }
     single { WebBookTocMergeHistoryRepository(get()) }

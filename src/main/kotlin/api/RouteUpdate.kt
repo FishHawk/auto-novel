@@ -11,6 +11,8 @@ import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
+import util.None
+import util.toOptional
 
 @Resource("/update")
 private class Update {
@@ -181,19 +183,17 @@ class UpdateService(
         val metadata = metadataRepo.getLocal(providerId, bookId)
             ?: return Result.success(Unit)
 
-        val titleZh = body.title.takeIf {
-            metadata.titleZh.isNullOrBlank()
-        }
-        val introductionZh = body.introduction.takeIf {
-            metadata.introductionZh.isNullOrBlank()
-        }
-        val tocZh = metadata.toc.mapIndexedNotNull { index, item ->
+        val titleZh = body.title.takeIf { metadata.titleZh == null }
+        val introductionZh = body.introduction.takeIf { metadata.introductionZh == null }
+        val tocZh = mutableMapOf<Int, String>()
+        metadata.toc.forEachIndexed { index, item ->
             if (item.titleZh == null) {
-                body.toc[item.titleJp]?.let { index to it }
-            } else {
-                null
+                val newTitleZh = body.toc[item.titleJp]
+                if (newTitleZh != null) {
+                    tocZh[index] = newTitleZh
+                }
             }
-        }.toMap()
+        }
 
         if (titleZh == null &&
             introductionZh == null &&
@@ -205,9 +205,9 @@ class UpdateService(
         metadataRepo.updateZh(
             providerId = providerId,
             bookId = bookId,
-            titleZh = body.title,
-            introductionZh = body.introduction,
-            glossary = null,
+            titleZh = titleZh.toOptional(),
+            introductionZh = introductionZh.toOptional(),
+            glossary = None,
             tocZh = tocZh,
         )
         return Result.success(Unit)

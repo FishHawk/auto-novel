@@ -68,12 +68,9 @@ data class BookEpisodePatch(
     )
 }
 
-class WebBookPatchRepository(
-    private val mongoDataSource: MongoDataSource,
-    private val webBookMetadataRepository: WebBookMetadataRepository,
-) {
+class WebBookPatchRepository(private val mongo: MongoDataSource) {
     private val col
-        get() = mongoDataSource.database.getCollection<BookPatch>("patch")
+        get() = mongo.database.getCollection<BookPatch>("patch")
 
     init {
         runBlocking {
@@ -116,7 +113,7 @@ class WebBookPatchRepository(
         )
     }
 
-    suspend fun get(
+    suspend fun findOne(
         providerId: String,
         bookId: String,
     ): BookPatch? {
@@ -147,57 +144,21 @@ class WebBookPatchRepository(
         )
     }
 
-    suspend fun addMetadataPatch(
+    suspend fun addPatch(
         providerId: String,
         bookId: String,
-        title: String?,
-        introduction: String?,
-        glossary: Map<String, String>?,
-        toc: Map<String, String>,
+        titleJp: String,
+        titleZh: String?,
+        titleChange: BookMetadataPatch.TextChange?,
+        introductionChange: BookMetadataPatch.TextChange?,
+        glossaryChange: Map<String, String>?,
+        tocChange: List<BookMetadataPatch.TextChange>,
     ) {
-        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
-            ?: return
-
-        fun createTextChangeOrNull(jp: String, zhOld: String?, zhNew: String?): BookMetadataPatch.TextChange? {
-            return if (zhNew != null && zhNew != zhOld) {
-                BookMetadataPatch.TextChange(jp, zhOld, zhNew)
-            } else null
-        }
-
-        val titleChange = createTextChangeOrNull(
-            metadata.titleJp,
-            metadata.titleZh,
-            title,
-        )
-        val introductionChange = createTextChangeOrNull(
-            metadata.introductionJp,
-            metadata.introductionZh,
-            introduction,
-        )
-        val glossaryChange = glossary?.takeIf {
-            glossary != metadata.glossary
-        }
-        val tocChange = toc.mapNotNull { (jp, zhNew) ->
-            metadata.toc.find { it.titleJp == jp }?.let { item ->
-                BookMetadataPatch.TextChange(jp = item.titleJp, zhOld = item.titleZh, zhNew = zhNew)
-            }
-        }
-
-        if (
-            titleChange == null &&
-            introductionChange == null &&
-            glossaryChange == null &&
-            tocChange.isEmpty()
-        ) {
-            return
-        }
-
-        // Add patch
         createIfNotExist(
             providerId = providerId,
             bookId = bookId,
-            titleJp = metadata.titleJp,
-            titleZh = metadata.titleZh,
+            titleJp = titleJp,
+            titleZh = titleZh,
         )
         val patch = BookMetadataPatch(
             uuid = UUID.randomUUID().toString(),
@@ -210,19 +171,6 @@ class WebBookPatchRepository(
         col.updateOne(
             bsonSpecifyPatch(providerId, bookId),
             push(BookPatch::patches, patch),
-        )
-
-        // Apply patch
-        val tocZh = metadata.toc.mapIndexedNotNull { index, item ->
-            toc[item.titleJp]?.let { index to it }
-        }.toMap()
-        webBookMetadataRepository.updateZh(
-            providerId = providerId,
-            bookId = bookId,
-            titleZh = title,
-            introductionZh = introduction,
-            glossary = glossaryChange,
-            tocZh = tocZh,
         )
     }
 

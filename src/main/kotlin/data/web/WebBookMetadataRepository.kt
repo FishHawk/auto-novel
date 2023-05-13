@@ -9,6 +9,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
+import util.Optional
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -221,19 +222,19 @@ class WebBookMetadataRepository(
     suspend fun updateZh(
         providerId: String,
         bookId: String,
-        titleZh: String?,
-        introductionZh: String?,
-        glossary: Map<String, String>?,
-        tocZh: Map<Int, String>,
-    ) {
+        titleZh: Optional<String?>,
+        introductionZh: Optional<String?>,
+        glossary: Optional<Map<String, String>>,
+        tocZh: Map<Int, String?>,
+    ): BookMetadata? {
         val list = mutableListOf<Bson>()
-        titleZh?.let {
+        titleZh.ifSome {
             list.add(setValue(BookMetadata::titleZh, it))
         }
-        introductionZh?.let {
+        introductionZh.ifSome {
             list.add(setValue(BookMetadata::introductionZh, it))
         }
-        glossary?.let {
+        glossary.ifSome {
             list.add(setValue(BookMetadata::glossaryUuid, UUID.randomUUID().toString()))
             list.add(setValue(BookMetadata::glossary, it))
         }
@@ -242,11 +243,11 @@ class WebBookMetadataRepository(
         }
         list.add(setValue(BookMetadata::changeAt, LocalDateTime.now()))
 
-        col.findOneAndUpdate(
+        return col.findOneAndUpdate(
             bsonSpecifyMetadata(providerId, bookId),
             combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-        )?.let { syncEs(it, false) }
+        )?.also { syncEs(it, false) }
     }
 
     suspend fun updateChangeAt(providerId: String, bookId: String) {

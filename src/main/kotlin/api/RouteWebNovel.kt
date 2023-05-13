@@ -17,7 +17,9 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
+import util.toOptional
 import java.time.ZoneId
+import java.util.*
 
 @Resource("/novel")
 private class WebNovel {
@@ -321,10 +323,10 @@ class WebNovelService(
     @Serializable
     data class BookMetadataDto(
         val titleJp: String,
-        val titleZh: String? = null,
+        val titleZh: String?,
         val authors: List<Author>,
         val introductionJp: String,
-        val introductionZh: String? = null,
+        val introductionZh: String?,
         val glossary: Map<String, String>,
         val toc: List<TocItem>,
         val visited: Long,
@@ -336,7 +338,28 @@ class WebNovelService(
         data class Author(val name: String, val link: String?)
 
         @Serializable
-        data class TocItem(val titleJp: String, val titleZh: String?, val episodeId: String?)
+        data class TocItem(val titleJp: String, val titleZh: String, val episodeId: String?)
+
+    }
+
+    private suspend fun createMetadataDto(
+        metadata: WebBookMetadataRepository.BookMetadata,
+        username: String?,
+    ): BookMetadataDto {
+        val user = username?.let { userRepo.getByUsername(it) }
+        return BookMetadataDto(
+            titleJp = metadata.titleJp,
+            titleZh = metadata.titleZh,
+            authors = metadata.authors.map { BookMetadataDto.Author(it.name, it.link) },
+            introductionJp = metadata.introductionJp,
+            introductionZh = metadata.introductionZh,
+            glossary = metadata.glossary,
+            toc = metadata.toc.map { BookMetadataDto.TocItem(it.titleJp, it.titleZh ?: "", it.episodeId) },
+            visited = metadata.visited,
+            downloaded = metadata.downloaded,
+            syncAt = metadata.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
+            inFavorite = user?.favoriteBooks?.any { it.providerId == metadata.providerId && it.bookId == metadata.bookId },
+        )
     }
 
     suspend fun getMetadata(
@@ -344,26 +367,11 @@ class WebNovelService(
         bookId: String,
         username: String?,
     ): Result<BookMetadataDto> {
-        val user = username?.let { userRepo.getByUsername(it) }
-
         val metadata = metadataRepo.get(providerId, bookId)
             .getOrElse { return httpInternalServerError(it.message) }
         metadataRepo.increaseVisited(providerId, bookId)
-        return Result.success(
-            BookMetadataDto(
-                titleJp = metadata.titleJp,
-                titleZh = metadata.titleZh,
-                authors = metadata.authors.map { BookMetadataDto.Author(it.name, it.link) },
-                introductionJp = metadata.introductionJp,
-                introductionZh = metadata.introductionZh,
-                glossary = metadata.glossary,
-                toc = metadata.toc.map { BookMetadataDto.TocItem(it.titleJp, it.titleZh, it.episodeId) },
-                visited = metadata.visited,
-                downloaded = metadata.downloaded,
-                syncAt = metadata.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
-                inFavorite = user?.favoriteBooks?.any { it.providerId == providerId && it.bookId == bookId },
-            )
-        )
+        val metadataDto = createMetadataDto(metadata, username)
+        return Result.success(metadataDto)
     }
 
     @Serializable
@@ -377,29 +385,83 @@ class WebNovelService(
     suspend fun patchMetadata(
         providerId: String,
         bookId: String,
-        patch: BookMetadataPatchBody,
+        body: BookMetadataPatchBody,
         username: String,
     ): Result<BookMetadataDto> {
-        if (patch.title == null &&
-            patch.introduction == null &&
-            patch.glossary == null &&
-            patch.toc.isEmpty()
+        if (body.title == null &&
+            body.introduction == null &&
+            body.glossary == null &&
+            body.toc.isEmpty()
         ) return httpInternalServerError("修改为空")
 
-        patchRepo.addMetadataPatch(
+        val metadata = metadataRepo.getLocal(providerId, bookId)
+            ?: return httpNotFound("小说不存在")
+
+        fun createTextChangeOrNull(jp: String, zhOld: String?, zhNew: String?): BookMetadataPatch.TextChange? {
+            return if (zhNew != null && zhNew != zhOld) {
+                BookMetadataPatch.TextChange(jp, zhOld, zhNew)
+            } else null
+        }
+
+        val titleChange = createTextChangeOrNull(
+            metadata.titleJp,
+            metadata.titleZh,
+            body.title,
+        )
+        val introductionChange = createTextChangeOrNull(
+            metadata.introductionJp,
+            metadata.introductionZh,
+            body.introduction,
+        )
+        val glossaryChange = body.glossary?.takeIf {
+            body.glossary != metadata.glossary
+        }
+        val tocChange = body.toc.mapNotNull { (jp, zhNew) ->
+            metadata.toc.find { it.titleJp == jp }?.let { item ->
+                BookMetadataPatch.TextChange(jp = item.titleJp, zhOld = item.titleZh, zhNew = zhNew)
+            }
+        }
+
+        if (
+            titleChange == null &&
+            introductionChange == null &&
+            glossaryChange == null &&
+            tocChange.isEmpty()
+        ) {
+            return httpInternalServerError("修改为空")
+        }
+
+        // Add patch
+        patchRepo.addPatch(
             providerId = providerId,
             bookId = bookId,
-            title = patch.title,
-            glossary = patch.glossary,
-            introduction = patch.introduction,
-            toc = patch.toc,
+            titleJp = metadata.titleJp,
+            titleZh = metadata.titleZh,
+            titleChange = titleChange,
+            introductionChange = introductionChange,
+            glossaryChange = glossaryChange,
+            tocChange = tocChange,
         )
 
-        return getMetadata(
+        val tocZh = mutableMapOf<Int, String>()
+        metadata.toc.forEachIndexed { index, item ->
+            val newTitleZh = body.toc[item.titleJp]
+            if (newTitleZh != null) {
+                tocZh[index] = newTitleZh
+            }
+        }
+
+        val newMetadata = metadataRepo.updateZh(
             providerId = providerId,
             bookId = bookId,
-            username = username,
+            titleZh = titleChange?.zhNew.toOptional(),
+            introductionZh = introductionChange?.zhNew.toOptional(),
+            glossary = glossaryChange.toOptional(),
+            tocZh = tocZh,
         )
+
+        val metadataDto = createMetadataDto(newMetadata!!, username)
+        return Result.success(metadataDto)
     }
 
     @Serializable
