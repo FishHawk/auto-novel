@@ -12,14 +12,30 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Serializable
-data class BookPatch(
+data class BookPatches(
     val providerId: String,
     val bookId: String,
     val titleJp: String,
     val titleZh: String?,
-    val patches: List<BookMetadataPatch>,
-    val toc: Map<String, BookEpisodePatches>,
-)
+    val patches: List<Patch>,
+) {
+    @Serializable
+    data class TextChange(
+        val jp: String,
+        val zhOld: String?,
+        val zhNew: String,
+    )
+
+    @Serializable
+    data class Patch(
+        val uuid: String,
+        val titleChange: TextChange?,
+        val introductionChange: TextChange?,
+        val glossary: Map<String, String>?,
+        val tocChange: List<TextChange>,
+        @Contextual val createAt: LocalDateTime,
+    )
+}
 
 @Serializable
 data class BookPatchOutline(
@@ -29,54 +45,16 @@ data class BookPatchOutline(
     val titleZh: String?,
 )
 
-@Serializable
-data class BookMetadataPatch(
-    val uuid: String,
-    val titleChange: TextChange?,
-    val introductionChange: TextChange?,
-    val glossary: Map<String, String>?,
-    val tocChange: List<TextChange>,
-    @Contextual val createAt: LocalDateTime,
-) {
-    @Serializable
-    data class TextChange(
-        val jp: String,
-        val zhOld: String?,
-        val zhNew: String,
-    )
-}
-
-@Serializable
-data class BookEpisodePatches(
-    val titleJp: String,
-    val titleZh: String?,
-    val patches: List<BookEpisodePatch>,
-)
-
-@Serializable
-data class BookEpisodePatch(
-    val uuid: String,
-    val paragraphsChange: List<TextChange>,
-    @Contextual val createAt: LocalDateTime,
-) {
-    @Serializable
-    data class TextChange(
-        val index: Int,
-        val jp: String,
-        val zhOld: String,
-        val zhNew: String,
-    )
-}
 
 class WebBookPatchRepository(private val mongo: MongoDataSource) {
     private val col
-        get() = mongo.database.getCollection<BookPatch>("patch")
+        get() = mongo.database.getCollection<BookPatches>("web-patch")
 
     init {
         runBlocking {
             col.ensureUniqueIndex(
-                BookPatch::providerId,
-                BookPatch::bookId,
+                BookPatches::providerId,
+                BookPatches::bookId,
             )
         }
     }
@@ -108,15 +86,15 @@ class WebBookPatchRepository(private val mongo: MongoDataSource) {
     // Element operations
     private fun bsonSpecifyPatch(providerId: String, bookId: String): Bson {
         return and(
-            BookPatch::providerId eq providerId,
-            BookPatch::bookId eq bookId,
+            BookPatches::providerId eq providerId,
+            BookPatches::bookId eq bookId,
         )
     }
 
     suspend fun findOne(
         providerId: String,
         bookId: String,
-    ): BookPatch? {
+    ): BookPatches? {
         return col.findOne(
             bsonSpecifyPatch(providerId, bookId),
         )
@@ -131,13 +109,12 @@ class WebBookPatchRepository(private val mongo: MongoDataSource) {
         col.updateOne(
             bsonSpecifyPatch(providerId, bookId),
             setValueOnInsert(
-                BookPatch(
+                BookPatches(
                     providerId = providerId,
                     bookId = bookId,
                     titleJp = titleJp,
                     titleZh = titleZh,
                     patches = emptyList(),
-                    toc = emptyMap(),
                 )
             ),
             UpdateOptions().upsert(true),
@@ -149,10 +126,10 @@ class WebBookPatchRepository(private val mongo: MongoDataSource) {
         bookId: String,
         titleJp: String,
         titleZh: String?,
-        titleChange: BookMetadataPatch.TextChange?,
-        introductionChange: BookMetadataPatch.TextChange?,
+        titleChange: BookPatches.TextChange?,
+        introductionChange: BookPatches.TextChange?,
         glossaryChange: Map<String, String>?,
-        tocChange: List<BookMetadataPatch.TextChange>,
+        tocChange: List<BookPatches.TextChange>,
     ) {
         createIfNotExist(
             providerId = providerId,
@@ -160,7 +137,7 @@ class WebBookPatchRepository(private val mongo: MongoDataSource) {
             titleJp = titleJp,
             titleZh = titleZh,
         )
-        val patch = BookMetadataPatch(
+        val patch = BookPatches.Patch(
             uuid = UUID.randomUUID().toString(),
             titleChange = titleChange,
             introductionChange = introductionChange,
@@ -170,7 +147,7 @@ class WebBookPatchRepository(private val mongo: MongoDataSource) {
         )
         col.updateOne(
             bsonSpecifyPatch(providerId, bookId),
-            push(BookPatch::patches, patch),
+            push(BookPatches::patches, patch),
         )
     }
 

@@ -397,9 +397,9 @@ class WebNovelService(
         val metadata = metadataRepo.getLocal(providerId, bookId)
             ?: return httpNotFound("小说不存在")
 
-        fun createTextChangeOrNull(jp: String, zhOld: String?, zhNew: String?): BookMetadataPatch.TextChange? {
+        fun createTextChangeOrNull(jp: String, zhOld: String?, zhNew: String?): BookPatches.TextChange? {
             return if (zhNew != null && zhNew != zhOld) {
-                BookMetadataPatch.TextChange(jp, zhOld, zhNew)
+                BookPatches.TextChange(jp, zhOld, zhNew)
             } else null
         }
 
@@ -418,7 +418,7 @@ class WebNovelService(
         }
         val tocChange = body.toc.mapNotNull { (jp, zhNew) ->
             metadata.toc.find { it.titleJp == jp }?.let { item ->
-                BookMetadataPatch.TextChange(jp = item.titleJp, zhOld = item.titleZh, zhNew = zhNew)
+                BookPatches.TextChange(jp = item.titleJp, zhOld = item.titleZh, zhNew = zhNew)
             }
         }
 

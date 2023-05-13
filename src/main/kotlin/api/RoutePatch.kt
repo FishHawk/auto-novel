@@ -90,7 +90,7 @@ class PatchService(
     suspend fun getPatch(
         providerId: String,
         bookId: String,
-    ): Result<BookPatch> {
+    ): Result<BookPatches> {
         val patch = patchRepo.findOne(providerId, bookId)
             ?: return httpNotFound("未找到")
         return Result.success(patch)

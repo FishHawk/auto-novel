@@ -1,68 +1,49 @@
 import api from './api';
 import { Result, runCatching } from './result';
 
-export interface BookPatchPageItemDto {
+export interface BookPatchesPageItemDto {
   providerId: string;
   bookId: string;
   titleJp: string;
   titleZh?: string;
 }
 
-export interface BookPatchPageDto {
+export interface BookPatchesPageDto {
   total: number;
-  items: BookPatchPageItemDto[];
+  items: BookPatchesPageItemDto[];
 }
 
-export interface BookPatchDto {
+export interface BookPatchesDto {
   providerId: string;
   bookId: string;
   titleJp: string;
   titleZh?: string;
-  patches: BookMetadataPatchDto[];
-  toc: { [key: string]: BookEpisodePatchesDto };
+  patches: BookPatchDto[];
 }
 
-interface BookMetadataTextChange {
+interface TextChange {
   jp: string;
   zhOld?: string;
   zhNew: string;
 }
 
-interface BookMetadataPatchDto {
+interface BookPatchDto {
   uuid: String;
-  titleChange?: BookMetadataTextChange;
-  introductionChange?: BookMetadataTextChange;
+  titleChange?: TextChange;
+  introductionChange?: TextChange;
   glossary?: { [key: string]: string };
-  tocChange: BookMetadataTextChange[];
+  tocChange: TextChange[];
   createAt: number;
 }
 
-interface BookEpisodePatchesDto {
-  titleJp: string;
-  titleZh?: string;
-  patches: BookEpisodePatchDto[];
-}
-
-interface BookEpisodeTextChange {
-  jp: string;
-  zhOld: string;
-  zhNew: string;
-}
-
-interface BookEpisodePatchDto {
-  uuid: string;
-  paragraphsChange: BookEpisodeTextChange[];
-  createAt: number;
-}
-
-async function listPatch(page: number): Promise<Result<BookPatchPageDto>> {
+async function listPatch(page: number): Promise<Result<BookPatchesPageDto>> {
   return runCatching(api.get(`patch/list`, { searchParams: { page } }).json());
 }
 
 async function getPatch(
   providerId: string,
   bookId: string
-): Promise<Result<BookPatchDto>> {
+): Promise<Result<BookPatchesDto>> {
   return runCatching(api.get(`patch/${providerId}/${bookId}`).json());
 }
 

@@ -3,7 +3,10 @@ import { ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
-import ApiPatch, { BookPatchPageDto, BookPatchDto } from '@/data/api/api_patch';
+import ApiPatch, {
+  BookPatchesPageDto,
+  BookPatchesDto,
+} from '@/data/api/api_patch';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const message = useMessage();
@@ -11,8 +14,8 @@ const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
 const total = ref(1);
-const bookPage = ref<ResultState<BookPatchPageDto>>();
-const details = ref<{ [key: string]: BookPatchDto }>({});
+const bookPage = ref<ResultState<BookPatchesPageDto>>();
+const details = ref<{ [key: string]: BookPatchesDto }>({});
 
 async function loadPage(page: number) {
   bookPage.value = undefined;
@@ -108,23 +111,6 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
             </n-space>
           </div>
 
-          <div
-            v-for="[episodeId, episodePatches] of Object.entries(
-              details[`${item.providerId}/${item.bookId}`].toc
-            )"
-          >
-            <n-h2 prefix="bar">{{ episodePatches.titleJp }}</n-h2>
-            <div v-for="episodePatch in episodePatches.patches">
-              <n-h4 prefix="bar">{{ episodePatch.uuid }}</n-h4>
-              <n-space vertical>
-                <TextDiff
-                  v-for="textChange of episodePatch.paragraphsChange"
-                  :diff="textChange"
-                />
-              </n-space>
-              <n-divider />
-            </div>
-          </div>
           <n-space>
             <n-button @click="deletePatch(item.providerId, item.bookId)">
               删除

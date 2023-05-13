@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { diffChars } from 'diff';
 defineProps<{
   diff: {
     jp: string;
@@ -11,16 +12,22 @@ defineProps<{
 <template>
   <div>
     <div>{{ diff.jp }}</div>
-    <div class="text-old">{{ diff.zhOld ?? '无' }}</div>
-    <div class="text-new">{{ diff.zhNew }}</div>
+    <n-p>
+      <template v-for="c in diffChars(diff.zhOld ?? '', diff.zhNew)">
+        <ins v-if="c.added">{{ c.value }}</ins>
+        <del v-else-if="c.removed">{{ c.value }}</del>
+        <template v-else>{{ c.value }}</template>
+      </template>
+    </n-p>
   </div>
 </template>
 
 <style scoped>
-.text-new {
+ins {
   background-color: #e6ffec;
+  text-decoration: none;
 }
-.text-old {
+del {
   background-color: #ffebe9;
 }
 </style>
