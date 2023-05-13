@@ -5,6 +5,7 @@ import {
   EditNoteFilled,
   FavoriteBorderFilled,
   FavoriteFilled,
+  BookFilled,
 } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 
@@ -146,6 +147,19 @@ function enableEditMode() {
           </template>
           收藏
         </n-button>
+
+        <n-a
+          v-if="bookMetadata.value.wenkuId"
+          :href="`/wenku/${bookMetadata.value.wenkuId}`"
+          target="_blank"
+        >
+          <n-button>
+            <template #icon>
+              <n-icon> <BookFilled /> </n-icon>
+            </template>
+            文库版
+          </n-button>
+        </n-a>
       </n-space>
 
       <template v-if="editMode">

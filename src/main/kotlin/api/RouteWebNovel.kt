@@ -3,6 +3,7 @@ package api
 import data.*
 import data.web.WebBookIndexRepository
 import data.web.*
+import data.wenku.WenkuBookMetadataRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
@@ -19,7 +20,6 @@ import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.toOptional
 import java.time.ZoneId
-import java.util.*
 
 @Resource("/novel")
 private class WebNovel {
@@ -60,6 +60,9 @@ private class WebNovel {
     ) {
         @Resource("/state")
         data class State(val parent: Book)
+
+        @Resource("/wenku")
+        data class Wenku(val parent: Book)
 
         @Resource("/episode/{episodeId}")
         data class Episode(val parent: Book, val episodeId: String)
@@ -130,6 +133,22 @@ fun Route.routeWebNovel() {
         call.respondResult(result)
     }
 
+    authenticate {
+        put<WebNovel.Book.Wenku> { loc ->
+            val body = call.receive<String>()
+            val result = call.requireAtLeastMaintainer { user ->
+                service.updateWenkuId(loc.parent.providerId, loc.parent.bookId, body, user.username)
+            }
+            call.respondResult(result)
+        }
+        delete<WebNovel.Book.Wenku> { loc ->
+            val result = call.requireAtLeastMaintainer { user ->
+                service.deleteWenkuId(loc.parent.providerId, loc.parent.bookId, user.username)
+            }
+            call.respondResult(result)
+        }
+    }
+
     get<WebNovel.Book.Episode> { loc ->
         val result = service.getEpisode(loc.parent.providerId, loc.parent.bookId, loc.episodeId)
         call.respondResult(result)
@@ -142,6 +161,7 @@ class WebNovelService(
     private val userRepo: UserRepository,
     private val patchRepo: WebBookPatchRepository,
     private val indexRepo: WebBookIndexRepository,
+    private val wenkuMetadataRepo: WenkuBookMetadataRepository,
 ) {
     @Serializable
     data class BookListPageDto(
@@ -322,6 +342,7 @@ class WebNovelService(
 
     @Serializable
     data class BookMetadataDto(
+        val wenkuId: String?,
         val titleJp: String,
         val titleZh: String?,
         val authors: List<Author>,
@@ -348,6 +369,7 @@ class WebNovelService(
     ): BookMetadataDto {
         val user = username?.let { userRepo.getByUsername(it) }
         return BookMetadataDto(
+            wenkuId = metadata.wenkuId,
             titleJp = metadata.titleJp,
             titleZh = metadata.titleZh,
             authors = metadata.authors.map { BookMetadataDto.Author(it.name, it.link) },
@@ -461,6 +483,31 @@ class WebNovelService(
         )
 
         val metadataDto = createMetadataDto(newMetadata!!, username)
+        return Result.success(metadataDto)
+    }
+
+    suspend fun updateWenkuId(
+        providerId: String,
+        bookId: String,
+        wenkuId: String,
+        username: String,
+    ): Result<BookMetadataDto> {
+        wenkuMetadataRepo.findOne(wenkuId)
+            ?: return httpNotFound("文库版不存在")
+        val metadata = metadataRepo.updateWenkuId(providerId, bookId, wenkuId)
+            ?: return httpNotFound("网页版不存在")
+        val metadataDto = createMetadataDto(metadata, username)
+        return Result.success(metadataDto)
+    }
+
+    suspend fun deleteWenkuId(
+        providerId: String,
+        bookId: String,
+        username: String,
+    ): Result<BookMetadataDto> {
+        val metadata = metadataRepo.updateWenkuId(providerId, bookId, null)
+            ?: return httpNotFound("网页版不存在")
+        val metadataDto = createMetadataDto(metadata, username)
         return Result.success(metadataDto)
     }
 

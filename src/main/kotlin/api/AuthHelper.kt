@@ -29,9 +29,11 @@ fun ApplicationCall.jwtUser(): JwtUser =
 fun ApplicationCall.jwtUserOrNull(): JwtUser? =
     principal<JWTPrincipal>()?.toJwtUser()
 
-inline fun <T> ApplicationCall.requireAtLeastMaintainer(block: () -> Result<T>) =
-    if (jwtUser().atLeastMaintainer()) {
-        block()
+inline fun <T> ApplicationCall.requireAtLeastMaintainer(block: (user: JwtUser) -> Result<T>): Result<T> {
+    val user = jwtUser()
+    return if (user.atLeastMaintainer()) {
+        block(user)
     } else {
         httpUnauthorized("只有维护者及以上才有权限执行此操作")
     }
+}

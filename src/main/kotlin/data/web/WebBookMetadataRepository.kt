@@ -25,6 +25,7 @@ class WebBookMetadataRepository(
     data class BookMetadata(
         val providerId: String,
         val bookId: String,
+        val wenkuId: String? = null,
         val titleJp: String,
         val titleZh: String?,
         val authors: List<Author>,
@@ -217,6 +218,18 @@ class WebBookMetadataRepository(
             combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )?.also { syncEs(it, merged.hasChanged) }
+    }
+
+    suspend fun updateWenkuId(
+        providerId: String,
+        bookId: String,
+        wenkuId: String?,
+    ): BookMetadata? {
+        return col.findOneAndUpdate(
+            bsonSpecifyMetadata(providerId, bookId),
+            setValue(BookMetadata::wenkuId, wenkuId),
+            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
+        )?.also { syncEs(it, false) }
     }
 
     suspend fun updateZh(

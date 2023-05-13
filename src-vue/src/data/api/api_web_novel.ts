@@ -122,6 +122,7 @@ export interface BookTocItemDto {
 }
 
 export interface BookMetadataDto {
+  wenkuId?: string;
   titleJp: string;
   titleZh?: string;
   authors: { name: string; link: string }[];
@@ -144,8 +145,36 @@ async function getMetadata(
   if (token) {
     options.headers = { Authorization: 'Bearer ' + token };
   }
+  return runCatching(api.get(`novel/${providerId}/${bookId}`, options).json());
+}
+
+async function putWenkuId(
+  providerId: string,
+  bookId: string,
+  wenkuId: string,
+  token: string
+): Promise<Result<BookMetadataDto>> {
   return runCatching(
-    api.get(`novel/${providerId}/${bookId}`, options).json()
+    api
+      .put(`novel/${providerId}/${bookId}/wenku`, {
+        headers: { Authorization: 'Bearer ' + token },
+        body: wenkuId,
+      })
+      .json()
+  );
+}
+
+async function deleteWenkuId(
+  providerId: string,
+  bookId: string,
+  token: string
+): Promise<Result<BookMetadataDto>> {
+  return runCatching(
+    api
+      .delete(`novel/${providerId}/${bookId}/wenku`, {
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .json()
   );
 }
 
@@ -201,5 +230,7 @@ export default {
   listRank,
   getMetadata,
   putMetadata,
+  putWenkuId,
+  deleteWenkuId,
   getEpisode,
 };

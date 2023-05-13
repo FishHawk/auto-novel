@@ -4,7 +4,7 @@ import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import ApiWebNovel, { BookMetadataDto } from '@/data/api/api_web_novel';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { atLeastMaintainer, useAuthInfoStore } from '@/data/stores/authInfo';
 
 const props = defineProps<{
   providerId: string;
@@ -130,9 +130,61 @@ function addTerm() {
     termsToAdd.value = ['', ''];
   }
 }
+
+const wenkuId = ref(props.bookMetadata.wenkuId);
+async function updateWenkuId() {
+  if (!wenkuId.value) {
+    message.info('文库版Id不能为空');
+    return;
+  }
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+  const result = await ApiWebNovel.putWenkuId(
+    props.providerId,
+    props.bookId,
+    wenkuId.value,
+    token
+  );
+  if (result.ok) {
+    emit('update:bookMetadata', result.value);
+    message.success('提交成功');
+  } else {
+    message.error('提交失败：' + result.error.message);
+  }
+}
+
+async function deleteWenkuId() {
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+  const result = await ApiWebNovel.deleteWenkuId(
+    props.providerId,
+    props.bookId,
+    token
+  );
+  if (result.ok) {
+    emit('update:bookMetadata', result.value);
+    message.success('提交成功');
+  } else {
+    message.error('提交失败：' + result.error.message);
+  }
+}
 </script>
 
 <template>
+  <n-p v-if="atLeastMaintainer(authInfoStore.role)">
+    <n-input-group>
+      <n-input v-model:value="wenkuId" placeholder="文库版Id" />
+      <n-button @click="updateWenkuId()">更新</n-button>
+      <n-button @click="deleteWenkuId()">删除</n-button>
+    </n-input-group>
+  </n-p>
+
   <n-p>{{ editMetadata.title.jp }}</n-p>
   <n-input
     v-model:value="editMetadata.title.edit"

@@ -144,7 +144,7 @@ val appModule = module {
     single(createdAtStart = true) { CommentService(get()) }
 
     single(createdAtStart = true) { PrepareBookService(get(), get(), get()) }
-    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { UpdateService(get(), get()) }
 
     single(createdAtStart = true) { WenkuNovelService(get(), get(), get()) }
