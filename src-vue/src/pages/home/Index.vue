@@ -6,14 +6,11 @@ import { useWindowSize } from '@vueuse/core';
 
 import ApiWebNovel, { BookListItemDto } from '@/data/api/api_web_novel';
 import ApiWenkuNovel, { WenkuListItemDto } from '@/data/api/api_wenku_novel';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { parseUrl } from '@/data/provider';
 import { Ok, ResultState } from '@/data/api/result';
 
 const { width } = useWindowSize();
 const isDesktop = computed(() => width.value > 600);
-
-const authInfoStore = useAuthInfoStore();
 
 const router = useRouter();
 const message = useMessage();
@@ -37,17 +34,6 @@ function query(url: string) {
   const novelUrl = `/novel/${providerId}/${bookId}`;
   router.push({ path: novelUrl });
 }
-
-const favoriteList = ref<ResultState<BookListItemDto[]>>();
-async function loadPage() {
-  const result = await ApiWebNovel.listFavorite(0, 8, authInfoStore.token!!);
-  if (result.ok) {
-    favoriteList.value = Ok(result.value.items);
-  } else {
-    favoriteList.value = result;
-  }
-}
-onMounted(loadPage);
 
 const latestUpdateWeb = ref<ResultState<BookListItemDto[]>>();
 async function loadLatestUpdateWeb() {
@@ -126,15 +112,6 @@ onMounted(loadLatestUpdateWenku);
       <PanelAnnouncement />
       <n-divider />
       <PanelLinkExample />
-      <n-divider />
-    </template>
-
-    <template v-if="authInfoStore.token">
-      <n-space align="center" justify="space-between">
-        <n-h2 prefix="bar">我的收藏</n-h2>
-        <n-a href="/favorite-list">更多</n-a>
-      </n-space>
-      <PanelWebBook :list="favoriteList" />
       <n-divider />
     </template>
 
