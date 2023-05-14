@@ -1,15 +1,21 @@
+<script lang="ts">
+type BookPage =
+  | { type: 'web'; page: BookListPageDto | BookRankPageDto }
+  | { type: 'wenku'; page: WenkuListPageDto };
+
+export type Loader = (
+  page: number,
+  query: string,
+  selected: number[]
+) => Promise<Result<BookPage>>;
+</script>
+
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 
 import { Result, ResultState } from '@/data/api/result';
 import { BookListPageDto, BookRankPageDto } from '@/data/api/api_web_novel';
-import { buildMetadataUrl } from '@/data/provider';
-
-type Loader = (
-  page: number,
-  query: string,
-  selected: number[]
-) => Promise<Result<BookListPageDto | BookRankPageDto>>;
+import { WenkuListPageDto } from '@/data/api/api_wenku_novel';
 
 const props = defineProps<{
   search: boolean;
@@ -19,7 +25,7 @@ const props = defineProps<{
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const bookPage = ref<ResultState<BookListPageDto | BookRankPageDto>>();
+const bookPage = ref<ResultState<BookPage>>();
 
 const filters = ref({
   query: '',
@@ -36,7 +42,7 @@ async function loadPage(page: number) {
   if (currentPage.value == page) {
     bookPage.value = result;
     if (result.ok) {
-      pageNumber.value = result.value.pageNumber;
+      pageNumber.value = result.value.page.pageNumber;
     }
   }
 }
@@ -62,35 +68,19 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   />
   <n-divider />
   <div v-if="bookPage?.ok">
-    <div v-for="item in bookPage.value.items">
-      <n-h3 class="title" style="margin-bottom: 4px">
-        <n-a :href="`/novel/${item.providerId}/${item.bookId}`" target="_blank">
-          {{ item.titleJp }}
-        </n-a>
-      </n-h3>
-      <div>{{ item.titleZh }}</div>
-      <n-a
-        :href="buildMetadataUrl(item.providerId, item.bookId)"
-        target="_blank"
-      >
-        {{ buildMetadataUrl(item.providerId, item.bookId) }}
-      </n-a>
-      <template v-if="'extra' in item">
-        <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
-          {{ extraLine }}
-        </div>
-      </template>
-      <template v-else>
-        <div style="color: #666">
-          总计{{ item.total }} / 百度{{ item.countBaidu }} / 有道{{
-            item.countYoudao
-          }}
-        </div>
-      </template>
-      <n-divider />
-    </div>
+    <BookListWeb
+      v-if="bookPage.value.type === 'web'"
+      :page="bookPage.value.page"
+    />
+    <BookListWenku
+      v-else-if="bookPage.value.type === 'wenku'"
+      :page="bookPage.value.page"
+    />
 
-    <n-empty v-if="bookPage.value.items.length === 0" description="空列表" />
+    <n-empty
+      v-if="bookPage.value.page.items.length === 0"
+      description="空列表"
+    />
   </div>
   <n-result
     v-if="bookPage && !bookPage.ok"

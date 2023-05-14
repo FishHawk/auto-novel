@@ -2,16 +2,17 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { UploadFileInfo, useMessage } from 'naive-ui';
-import { UploadFilled, EditNoteFilled } from '@vicons/material';
-
-import { ResultState } from '../../data/api/result';
-import ApiWenkuNovel, {
-  WenkuMetadataDto,
-} from '../../data/api/api_wenku_novel';
 import {
-  useAuthInfoStore,
-  atLeastMaintainer,
-} from '../../data/stores/authInfo';
+  UploadFilled,
+  EditNoteFilled,
+  FavoriteBorderFilled,
+  FavoriteFilled,
+} from '@vicons/material';
+
+import { ResultState } from '@/data/api/result';
+import ApiUser from '@/data/api/api_user';
+import ApiWenkuNovel, { WenkuMetadataDto } from '@/data/api/api_wenku_novel';
+import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -24,7 +25,7 @@ const novelMetadata = ref<ResultState<WenkuMetadataDto>>();
 
 onMounted(() => getMetadata());
 async function getMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(bookId);
+  const result = await ApiWenkuNovel.getMetadata(bookId, authInfoStore.token);
   novelMetadata.value = result;
   if (result.ok) {
     document.title = result.value.title;
@@ -32,7 +33,7 @@ async function getMetadata() {
 }
 
 async function refreshMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(bookId);
+  const result = await ApiWenkuNovel.getMetadata(bookId, authInfoStore.token);
   if (result.ok) {
     novelMetadata.value = result;
   }
@@ -65,21 +66,49 @@ function handleFinish({
   return undefined;
 }
 
-// async function updateMetadata() {
-//   const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(bookId);
-//   if (metadataResult.ok) {
-//     const token = authInfoStore.token;
-//     if (!token) return message.info('请先登录');
-//     const result = await ApiWenkuNovel.putMetadata(metadataResult.value, token);
-//     if (result.ok) {
-//       message.success('更新成功');
-//     } else {
-//       message.error('更新失败:' + result.error.message);
-//     }
-//   } else {
-//     message.error('无法从Bangumi获得数据:' + metadataResult.error.message);
-//   }
-// }
+var isFavoriteChanging = false;
+
+async function addFavorite() {
+  if (isFavoriteChanging) return;
+  isFavoriteChanging = true;
+
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+
+  const result = await ApiUser.putFavoritedWenkuBook(bookId, token);
+  if (result.ok) {
+    if (novelMetadata.value?.ok) {
+      novelMetadata.value.value.favored = true;
+    }
+  } else {
+    message.error('收藏错误：' + result.error.message);
+  }
+  isFavoriteChanging = false;
+}
+
+async function removeFavorite() {
+  if (isFavoriteChanging) return;
+  isFavoriteChanging = true;
+
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+
+  const result = await ApiUser.deleteFavoritedWenkuBook(bookId, token);
+  if (result.ok) {
+    if (novelMetadata.value?.ok) {
+      novelMetadata.value.value.favored = false;
+    }
+  } else {
+    message.error('取消收藏错误：' + result.error.message);
+  }
+  isFavoriteChanging = false;
+}
 
 const editMode = ref(false);
 function enableEditMode() {
@@ -114,7 +143,10 @@ function enableEditMode() {
     </template>
 
     <div v-if="novelMetadata?.ok">
-      <n-space :wrap="false" style="margin-top: 40px; min-height: 260px">
+      <n-space
+        :wrap="false"
+        style="margin-top: 40px; margin-bottom: 20px; min-height: 260px"
+      >
         <n-card size="small" style="width: 160px">
           <template #cover>
             <img :src="novelMetadata.value.cover" alt="cover" />
@@ -166,6 +198,23 @@ function enableEditMode() {
             退出编辑
           </n-button>
         </templage>
+
+        <n-button
+          v-if="novelMetadata.value.favored === true"
+          @click="removeFavorite()"
+        >
+          <template #icon>
+            <n-icon> <FavoriteFilled /> </n-icon>
+          </template>
+          取消收藏
+        </n-button>
+
+        <n-button v-else @click="addFavorite()">
+          <template #icon>
+            <n-icon> <FavoriteBorderFilled /> </n-icon>
+          </template>
+          收藏
+        </n-button>
       </n-space>
 
       <template v-if="editMode">

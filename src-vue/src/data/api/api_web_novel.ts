@@ -33,47 +33,6 @@ async function list(
   );
 }
 
-async function listFavorite(
-  page: number,
-  pageSize: number,
-  token: string
-): Promise<Result<BookListPageDto>> {
-  return runCatching(
-    api
-      .get(`novel/favorite`, {
-        headers: { Authorization: 'Bearer ' + token },
-        searchParams: { page, pageSize },
-      })
-      .json()
-  );
-}
-
-async function addFavorite(providerId: string, bookId: string, token: string) {
-  return runCatching(
-    api
-      .post(`novel/favorite-item`, {
-        headers: { Authorization: 'Bearer ' + token },
-        searchParams: { providerId, bookId },
-      })
-      .json()
-  );
-}
-
-async function removeFavorite(
-  providerId: string,
-  bookId: string,
-  token: string
-) {
-  return runCatching(
-    api
-      .delete(`novel/favorite-item`, {
-        headers: { Authorization: 'Bearer ' + token },
-        searchParams: { providerId, bookId },
-      })
-      .json()
-  );
-}
-
 export interface BookRankPageDto {
   pageNumber: number;
   items: BookRankItemDto[];
@@ -133,7 +92,7 @@ export interface BookMetadataDto {
   visited: number;
   downloaded: number;
   syncAt: number;
-  inFavorite?: boolean;
+  favored?: boolean;
 }
 
 async function getMetadata(
@@ -224,9 +183,6 @@ async function getEpisode(
 export default {
   getState,
   list,
-  listFavorite,
-  addFavorite,
-  removeFavorite,
   listRank,
   getMetadata,
   putMetadata,

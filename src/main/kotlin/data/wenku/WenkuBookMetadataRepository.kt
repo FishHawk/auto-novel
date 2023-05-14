@@ -1,5 +1,6 @@
 package data.wenku
 
+import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import data.MongoDataSource
@@ -21,6 +22,10 @@ class WenkuBookMetadataRepository(
 
     companion object {
         private fun byId(id: String): Bson = WenkuMetadata::id eq ObjectId(id)
+    }
+
+    suspend fun exist(bookId: String): Boolean {
+        return col.countDocuments(byId(bookId), CountOptions().limit(1)) != 0L
     }
 
     @Serializable

@@ -25,3 +25,7 @@ export async function runCatching<T>(
   }
   return it;
 }
+
+export function mapOk<T, R>(result: Result<T>, fn: (value: T) => R): Result<R> {
+  return result.ok === true ? { ok: true, value: fn(result.value) } : result;
+}

@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
+
+import { mapOk } from '@/data/api/result';
 import ApiWebNovel from '@/data/api/api_web_novel';
+import { Loader } from './components/BookList.vue';
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
@@ -79,7 +82,7 @@ const descriptors: {
 
 const descriptior = descriptors[typeId];
 
-async function loader(_page: number, _query: string, selected: number[]) {
+const loader: Loader = (_page: number, _query: string, selected: number[]) => {
   const types: { [key: string]: string } = {
     '1': '流派',
     '2': '综合',
@@ -91,14 +94,16 @@ async function loader(_page: number, _query: string, selected: number[]) {
   }
   const genre = optionNth(0);
   const range = optionNth(1);
-  return ApiWebNovel.listRank('syosetu', { type, genre, range });
-}
+  return ApiWebNovel.listRank('syosetu', { type, genre, range }).then(
+    (result) => mapOk(result, (page) => ({ type: 'web', page }))
+  );
+};
 </script>
 
 <template>
   <ListLayout>
     <n-h1>{{ descriptior.title }}</n-h1>
-    <WebBookList
+    <BookList
       :search="descriptior.search"
       :options="descriptior.options"
       :loader="loader"

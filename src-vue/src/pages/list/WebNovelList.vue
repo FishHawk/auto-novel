@@ -1,28 +1,28 @@
 <script lang="ts" setup>
 import ApiWebNovel from '@/data/api/api_web_novel';
+import { mapOk } from '@/data/api/result';
 
-const descriptior = {
-  search: true,
-  options: [
-    {
-      label: '来源',
-      tags: [
-        '全部',
-        'Kakuyomu',
-        '成为小说家吧',
-        'Novelup',
-        'Hameln',
-        'Pixiv',
-        'Alphapolis',
-        'Novelism',
-      ],
-    },
-  ],
-};
+import { Loader } from './components/BookList.vue';
 
-async function loader(page: number, query: string, selected: number[]) {
+const options = [
+  {
+    label: '来源',
+    tags: [
+      '全部',
+      'Kakuyomu',
+      '成为小说家吧',
+      'Novelup',
+      'Hameln',
+      'Pixiv',
+      'Alphapolis',
+      'Novelism',
+    ],
+  },
+];
+
+const loader: Loader = (page: number, query: string, selected: number[]) => {
   function optionNth(n: number): string {
-    return descriptior.options[n].tags[selected[n]];
+    return options[n].tags[selected[n]];
   }
   const providerMap: { [key: string]: string } = {
     全部: '',
@@ -35,17 +35,15 @@ async function loader(page: number, query: string, selected: number[]) {
     Novelism: 'novelism',
   };
 
-  return ApiWebNovel.list(page - 1, 10, providerMap[optionNth(0)], query);
-}
+  return ApiWebNovel.list(page - 1, 10, providerMap[optionNth(0)], query).then(
+    (result) => mapOk(result, (page) => ({ type: 'web', page }))
+  );
+};
 </script>
 
 <template>
   <ListLayout>
     <n-h1>网络小说</n-h1>
-    <WebBookList
-      :search="descriptior.search"
-      :options="descriptior.options"
-      :loader="loader"
-    />
+    <BookList search :options="options" :loader="loader" />
   </ListLayout>
 </template>

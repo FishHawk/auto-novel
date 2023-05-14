@@ -1,16 +1,41 @@
 <script lang="ts" setup>
-import ApiWebNovel from '@/data/api/api_web_novel';
+import ApiUser from '@/data/api/api_user';
+import { mapOk } from '@/data/api/result';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
+import { Loader } from './components/BookList.vue';
+
+const options = [
+  {
+    label: '类型',
+    tags: ['网页小说', '文库小说'],
+  },
+];
+
 const authInfoStore = useAuthInfoStore();
-async function loader(page: number) {
-  return ApiWebNovel.listFavorite(page - 1, 10, authInfoStore.token!);
-}
+const loader: Loader = (page, _query, selected) => {
+  function optionNth(n: number): string {
+    return options[n].tags[selected[n]];
+  }
+  if (optionNth(0) === '网页小说') {
+    return ApiUser.listFavoritedWebBook(
+      page - 1,
+      10,
+      authInfoStore.token!
+    ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
+  } else {
+    return ApiUser.listFavoritedWenkuBook(
+      page - 1,
+      10,
+      authInfoStore.token!
+    ).then((result) => mapOk(result, (page) => ({ type: 'wenku', page })));
+  }
+};
 </script>
 
 <template>
   <ListLayout>
     <n-h1>我的收藏</n-h1>
-    <WebBookList :search="false" :options="[]" :loader="loader" />
+    <BookList :search="false" :options="options" :loader="loader" />
   </ListLayout>
 </template>

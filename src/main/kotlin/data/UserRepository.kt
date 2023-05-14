@@ -1,13 +1,12 @@
 package data
 
+import com.mongodb.client.result.UpdateResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.litote.kmongo.addToSet
-import org.litote.kmongo.combine
-import org.litote.kmongo.eq
-import org.litote.kmongo.pull
+import org.bson.conversions.Bson
+import org.litote.kmongo.*
 import util.PBKDF2
 import java.time.LocalDateTime
 
@@ -20,6 +19,7 @@ data class User(
     val role: Role,
     @Contextual val createdAt: LocalDateTime,
     val favoriteBooks: List<FavoriteBook> = emptyList(),
+    val favoriteWenkuBooks: List<String> = emptyList(),
 ) {
     @Serializable
     enum class Role {
@@ -57,6 +57,10 @@ class UserRepository(
         }
     }
 
+    companion object {
+        private fun byUsername(username: String): Bson = User::username eq username
+    }
+
     suspend fun add(
         email: String,
         username: String,
@@ -82,42 +86,72 @@ class UserRepository(
     }
 
     suspend fun getByUsername(username: String): User? {
-        return col.findOne(User::username eq username)
+        return col.findOne(byUsername(username))
     }
 
-    suspend fun addFavorite(
+    suspend fun listFavoriteWebBook(username: String): List<User.FavoriteBook>? {
+        @Serializable
+        data class UserProjection(val favoriteBooks: List<User.FavoriteBook> = emptyList())
+        return col
+            .withDocumentClass<UserProjection>()
+            .find(byUsername(username))
+            .projection(User::favoriteBooks)
+            .first()
+            ?.favoriteBooks
+            ?.reversed()
+    }
+
+    suspend fun addFavoriteWebBook(
         username: String,
         providerId: String,
         bookId: String,
-    ) {
-        col.updateOne(
-            User::username eq username,
-            combine(
-                addToSet(
-                    User::favoriteBooks, User.FavoriteBook(
-                        providerId = providerId,
-                        bookId = bookId,
-                    )
-                ),
-            )
+    ): UpdateResult {
+        return col.updateOne(
+            byUsername(username),
+            addToSet(User::favoriteBooks, User.FavoriteBook(providerId, bookId)),
         )
     }
 
-    suspend fun removeFavorite(
+    suspend fun removeFavoriteWebBook(
         username: String,
         providerId: String,
         bookId: String,
-    ) {
-        col.updateOne(
-            User::username eq username,
-            combine(
-                pull(
-                    User::favoriteBooks, User.FavoriteBook(
-                        providerId = providerId,
-                        bookId = bookId,
-                    )
-                ),
-            )
+    ): UpdateResult {
+        return col.updateOne(
+            byUsername(username),
+            pull(User::favoriteBooks, User.FavoriteBook(providerId, bookId)),
+        )
+    }
+
+    suspend fun listFavoriteWenkuBook(username: String): List<String>? {
+        @Serializable
+        data class UserProjection(val favoriteWenkuBooks: List<String> = emptyList())
+        return col
+            .withDocumentClass<UserProjection>()
+            .find(byUsername(username))
+            .projection(User::favoriteWenkuBooks)
+            .first()
+            ?.favoriteWenkuBooks
+            ?.reversed()
+    }
+
+    suspend fun addFavoriteWenkuBook(
+        username: String,
+        bookId: String,
+    ): UpdateResult {
+        return col.updateOne(
+            byUsername(username),
+            addToSet(User::favoriteWenkuBooks, bookId),
+        )
+    }
+
+    suspend fun removeFavoriteWenkuBook(
+        username: String,
+        bookId: String,
+    ): UpdateResult {
+        return col.updateOne(
+            byUsername(username),
+            pull(User::favoriteWenkuBooks, bookId),
         )
     }
 }

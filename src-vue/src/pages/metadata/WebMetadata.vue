@@ -10,6 +10,7 @@ import {
 import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
+import ApiUser from '@/data/api/api_user';
 import ApiWebNovel, { BookMetadataDto } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
@@ -50,10 +51,10 @@ async function addFavorite() {
     return;
   }
 
-  const result = await ApiWebNovel.addFavorite(providerId, bookId, token);
+  const result = await ApiUser.putFavoritedWebBook(providerId, bookId, token);
   if (result.ok) {
     if (bookMetadata.value?.ok) {
-      bookMetadata.value.value.inFavorite = true;
+      bookMetadata.value.value.favored = true;
     }
   } else {
     message.error('收藏错误：' + result.error.message);
@@ -71,10 +72,10 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiWebNovel.removeFavorite(providerId, bookId, token);
+  const result = await ApiUser.deleteFavoritedWebBook(providerId, bookId, token);
   if (result.ok) {
     if (bookMetadata.value?.ok) {
-      bookMetadata.value.value.inFavorite = false;
+      bookMetadata.value.value.favored = false;
     }
   } else {
     message.error('取消收藏错误：' + result.error.message);
@@ -132,7 +133,7 @@ function enableEditMode() {
         </n-button>
 
         <n-button
-          v-if="bookMetadata.value.inFavorite === true"
+          v-if="bookMetadata.value.favored === true"
           @click="removeFavorite()"
         >
           <template #icon>

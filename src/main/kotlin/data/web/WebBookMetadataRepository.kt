@@ -1,5 +1,6 @@
 package data.web
 
+import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import data.MongoDataSource
@@ -95,30 +96,36 @@ class WebBookMetadataRepository(
     }
 
     // Element operations
-    private fun bsonSpecifyMetadata(providerId: String, bookId: String): Bson {
-        return and(
-            BookMetadata::providerId eq providerId,
-            BookMetadata::bookId eq bookId,
-        )
+    companion object {
+        private fun byId(providerId: String, bookId: String): Bson {
+            return and(
+                BookMetadata::providerId eq providerId,
+                BookMetadata::bookId eq bookId,
+            )
+        }
+    }
+
+    suspend fun exist(providerId: String, bookId: String): Boolean {
+        return col.countDocuments(byId(providerId, bookId), CountOptions().limit(1)) != 0L
     }
 
     suspend fun increaseVisited(providerId: String, bookId: String) {
         col.updateOne(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             inc(BookMetadata::visited, 1)
         )
     }
 
     suspend fun increaseDownloaded(providerId: String, bookId: String) {
         col.updateOne(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             inc(BookMetadata::downloaded, 1)
         )
     }
 
     suspend fun getLocal(providerId: String, bookId: String): BookMetadata? {
         return col.findOne(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
         )
     }
 
@@ -214,7 +221,7 @@ class WebBookMetadataRepository(
         list.add(setValue(BookMetadata::syncAt, LocalDateTime.now()))
 
         return col.findOneAndUpdate(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )?.also { syncEs(it, merged.hasChanged) }
@@ -226,7 +233,7 @@ class WebBookMetadataRepository(
         wenkuId: String?,
     ): BookMetadata? {
         return col.findOneAndUpdate(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             setValue(BookMetadata::wenkuId, wenkuId),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )?.also { syncEs(it, false) }
@@ -257,7 +264,7 @@ class WebBookMetadataRepository(
         list.add(setValue(BookMetadata::changeAt, LocalDateTime.now()))
 
         return col.findOneAndUpdate(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             combine(list),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )?.also { syncEs(it, false) }
@@ -265,7 +272,7 @@ class WebBookMetadataRepository(
 
     suspend fun updateChangeAt(providerId: String, bookId: String) {
         col.findOneAndUpdate(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             setValue(BookMetadata::changeAt, LocalDateTime.now()),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
         )
@@ -301,7 +308,7 @@ class WebBookMetadataRepository(
         toc: List<BookMetadata.TocItem>,
     ) {
         col.updateOne(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             setValue(BookMetadata::toc, toc),
         )
     }
@@ -312,7 +319,7 @@ class WebBookMetadataRepository(
         pauseUpdate: Boolean,
     ) {
         col.updateOne(
-            bsonSpecifyMetadata(providerId, bookId),
+            byId(providerId, bookId),
             setValue(BookMetadata::pauseUpdate, pauseUpdate),
         )
     }

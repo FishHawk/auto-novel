@@ -12,7 +12,6 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
-import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import io.ktor.util.*
@@ -30,20 +29,6 @@ private class WebNovel {
         val pageSize: Int = 10,
         val provider: String = "",
         val query: String? = null,
-    )
-
-    @Resource("/favorite")
-    class Favorite(
-        val parent: WebNovel = WebNovel(),
-        val page: Int,
-        val pageSize: Int = 10,
-    )
-
-    @Resource("/favorite-item")
-    class FavoriteItem(
-        val parent: WebNovel = WebNovel(),
-        val providerId: String,
-        val bookId: String,
     )
 
     @Resource("/rank/{providerId}")
@@ -80,28 +65,6 @@ fun Route.routeWebNovel() {
             pageSize = loc.pageSize.coerceAtMost(20),
         )
         call.respondResult(result)
-    }
-
-    authenticate {
-        get<WebNovel.Favorite> { loc ->
-            val jwtUser = call.jwtUser()
-            val result = service.listFavorite(
-                page = loc.page.coerceAtLeast(0),
-                pageSize = loc.pageSize.coerceAtMost(20),
-                username = jwtUser.username,
-            )
-            call.respondResult(result)
-        }
-        post<WebNovel.FavoriteItem> { loc ->
-            val jwtUser = call.jwtUser()
-            val result = service.addFavorite(jwtUser.username, loc.providerId, loc.bookId)
-            call.respondResult(result)
-        }
-        delete<WebNovel.FavoriteItem> { loc ->
-            val jwtUser = call.jwtUser()
-            val result = service.removeFavorite(jwtUser.username, loc.providerId, loc.bookId)
-            call.respondResult(result)
-        }
     }
 
     get<WebNovel.Rank> { loc ->
@@ -215,68 +178,6 @@ class WebNovelService(
         return Result.success(dto)
     }
 
-    suspend fun listFavorite(
-        page: Int,
-        pageSize: Int,
-        username: String,
-    ): Result<BookListPageDto> {
-        val user = userRepo.getByUsername(username)
-            ?: return httpNotFound("用户不存在")
-        val books = user.favoriteBooks
-        val items = books
-            .asSequence()
-            .drop(pageSize * page)
-            .take(pageSize)
-            .toList()
-            .mapNotNull {
-                val metadata = metadataRepo.getLocal(
-                    providerId = it.providerId,
-                    bookId = it.bookId,
-                ) ?: return@mapNotNull null
-
-                BookListPageDto.ItemDto(
-                    providerId = metadata.providerId,
-                    bookId = metadata.bookId,
-                    titleJp = metadata.titleJp,
-                    titleZh = metadata.titleZh,
-                    total = metadata.toc.count { it.episodeId != null },
-                    count = episodeRepo.count(metadata.providerId, metadata.bookId),
-                    countBaidu = episodeRepo.countBaidu(metadata.providerId, metadata.bookId),
-                    countYoudao = episodeRepo.countYoudao(metadata.providerId, metadata.bookId),
-                )
-            }
-        val dto = BookListPageDto(
-            pageNumber = (books.size / pageSize).toLong() + 1,
-            items = items,
-        )
-        return Result.success(dto)
-    }
-
-    suspend fun addFavorite(
-        username: String,
-        providerId: String,
-        bookId: String,
-    ): Result<Unit> {
-        userRepo.addFavorite(
-            username = username,
-            providerId = providerId,
-            bookId = bookId,
-        )
-        return Result.success(Unit)
-    }
-
-    suspend fun removeFavorite(
-        username: String,
-        providerId: String,
-        bookId: String,
-    ): Result<Unit> {
-        userRepo.removeFavorite(
-            username = username,
-            providerId = providerId,
-            bookId = bookId,
-        )
-        return Result.success(Unit)
-    }
 
     @Serializable
     data class BookRankPageDto(
@@ -353,7 +254,7 @@ class WebNovelService(
         val visited: Long,
         val downloaded: Long,
         val syncAt: Long,
-        val inFavorite: Boolean?,
+        val favored: Boolean?,
     ) {
         @Serializable
         data class Author(val name: String, val link: String?)
@@ -380,7 +281,7 @@ class WebNovelService(
             visited = metadata.visited,
             downloaded = metadata.downloaded,
             syncAt = metadata.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
-            inFavorite = user?.favoriteBooks?.any { it.providerId == metadata.providerId && it.bookId == metadata.bookId },
+            favored = user?.favoriteBooks?.any { it.providerId == metadata.providerId && it.bookId == metadata.bookId },
         )
     }
 

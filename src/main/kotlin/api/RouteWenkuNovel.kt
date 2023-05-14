@@ -1,5 +1,6 @@
 package api
 
+import data.UserRepository
 import data.wenku.WenkuBookFileRepository
 import data.wenku.WenkuBookIndexRepository
 import data.wenku.WenkuBookMetadataRepository
@@ -49,9 +50,12 @@ fun Route.routeWenkuNovel() {
         call.respondResult(result)
     }
 
-    get<WenkuNovel.Book> { loc ->
-        val result = service.getMetadata(loc.bookId)
-        call.respondResult(result)
+    authenticate(optional = true) {
+        get<WenkuNovel.Book> { loc ->
+            val user = call.jwtUserOrNull()
+            val result = service.getMetadata(loc.bookId, user?.username)
+            call.respondResult(result)
+        }
     }
 
     authenticate {
@@ -94,6 +98,7 @@ fun Route.routeWenkuNovel() {
 }
 
 class WenkuNovelService(
+    private val userRepo: UserRepository,
     private val fileRepo: WenkuBookFileRepository,
     private val indexRepo: WenkuBookIndexRepository,
     private val metadataRepo: WenkuBookMetadataRepository,
@@ -150,11 +155,14 @@ class WenkuNovelService(
         val introduction: String,
         val visited: Long,
         val files: List<String>,
+        val favored: Boolean?,
     )
 
     suspend fun getMetadata(
         bookId: String,
+        username: String?,
     ): Result<MetadataDto> {
+        val user = username?.let { userRepo.getByUsername(it) }
         val metadata = metadataRepo.findOneAndIncreaseVisited(bookId)
             ?: return httpNotFound("书不存在")
         val files = fileRepo.list(bookId)
@@ -170,6 +178,7 @@ class WenkuNovelService(
             introduction = metadata.introduction,
             visited = metadata.visited,
             files = files,
+            favored = user?.favoriteWenkuBooks?.contains(bookId),
         )
         return Result.success(metadataDto)
     }

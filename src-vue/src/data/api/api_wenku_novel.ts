@@ -1,4 +1,4 @@
-import ky from 'ky';
+import ky, { Options } from 'ky';
 import api from './api';
 import { Ok, Result, runCatching } from './result';
 
@@ -38,10 +38,18 @@ export interface WenkuMetadataDto {
   introduction: string;
   visited: number;
   files: string[];
+  favored?: boolean;
 }
 
-async function getMetadata(novelId: string): Promise<Result<WenkuMetadataDto>> {
-  return runCatching(api.get(`wenku/${novelId}`).json());
+async function getMetadata(
+  novelId: string,
+  token: string | undefined
+): Promise<Result<WenkuMetadataDto>> {
+  const options: Options = {};
+  if (token) {
+    options.headers = { Authorization: 'Bearer ' + token };
+  }
+  return runCatching(api.get(`wenku/${novelId}`, options).json());
 }
 
 interface MetadataCreateBody {

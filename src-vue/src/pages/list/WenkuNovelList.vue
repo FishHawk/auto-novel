@@ -4,14 +4,19 @@ import { ref } from 'vue';
 
 import ApiWenkuNovel from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
+import { mapOk } from '@/data/api/result';
+
+import { Loader } from './components/BookList.vue';
 
 const message = useMessage();
 
 const authInfoStore = useAuthInfoStore();
 
-async function loader(page: number, query: string, selected: number[]) {
-  return ApiWenkuNovel.list(page - 1, query);
-}
+const loader: Loader = (page: number, query: string, _selected: number[]) => {
+  return ApiWenkuNovel.list(page - 1, query).then((result) =>
+    mapOk(result, (page) => ({ type: 'wenku', page }))
+  );
+};
 
 const showModal = ref(false);
 const bangumiUrl = ref('');
@@ -55,7 +60,7 @@ function openDialog() {
         >创建</n-button
       >
     </n-space>
-    <WenkuBookList :search="true" :options="[]" :loader="loader" />
+    <BookList :search="true" :options="[]" :loader="loader" />
   </ListLayout>
 
   <n-modal v-model:show="showModal">

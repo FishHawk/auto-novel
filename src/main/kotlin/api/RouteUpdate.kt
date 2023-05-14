@@ -351,7 +351,7 @@ class UpdateService(
     }
 }
 
-private fun <T> List<T>.safeSubList(fromIndex: Int, toIndex: Int): List<T> {
+fun <T> List<T>.safeSubList(fromIndex: Int, toIndex: Int): List<T> {
     if (fromIndex >= size || toIndex <= 0 || fromIndex >= toIndex) {
         return emptyList()
     }

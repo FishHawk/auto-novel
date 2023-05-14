@@ -99,12 +99,15 @@ fun main() {
         routing {
             routeAuth()
             routeComment()
-            routePrepareBook()
-            routeWenkuNovel()
+            routeUser()
+
             routeWebNovel()
+            routePrepareBook()
             routePatch()
             routeTocMergeHistory()
             routeUpdate()
+
+            routeWenkuNovel()
         }
     }.start(wait = true)
 }
@@ -139,13 +142,14 @@ val appModule = module {
         val secret = System.getenv("JWT_SECRET")!!
         AuthService(secret, get(), get())
     }
+    single(createdAtStart = true) { CommentService(get()) }
+    single(createdAtStart = true) { UserService(get(), get(), get(), get()) }
+
+    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { PrepareBookService(get(), get(), get()) }
+    single(createdAtStart = true) { UpdateService(get(), get()) }
     single(createdAtStart = true) { PatchService(get(), get()) }
     single(createdAtStart = true) { TocMergeHistoryService(get()) }
-    single(createdAtStart = true) { CommentService(get()) }
 
-    single(createdAtStart = true) { PrepareBookService(get(), get(), get()) }
-    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get(), get()) }
-    single(createdAtStart = true) { UpdateService(get(), get()) }
-
-    single(createdAtStart = true) { WenkuNovelService(get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelService(get(), get(), get(), get()) }
 }
