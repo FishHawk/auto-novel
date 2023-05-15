@@ -100,7 +100,7 @@ function handleUserDropdownSelect(key: string | number) {
 </script>
 
 <template>
-  <n-layout>
+  <n-layout style="overflow-x: overlay">
     <n-layout-header bordered>
       <div class="header">
         <n-popover trigger="click" :width="280" style="padding: 0">
@@ -158,10 +158,11 @@ function handleUserDropdownSelect(key: string | number) {
         </n-button>
       </div>
     </n-layout-header>
-    <slot name="full-width" />
-    <div class="container">
-      <slot />
-    </div>
+
+    <n-layout :native-scrollbar="false" style="height: calc(100vh - 51px)">
+      <slot name="full-width" />
+      <div class="container"><slot /></div>
+    </n-layout>
   </n-layout>
 
   <n-modal v-model:show="showLoginModal">
@@ -193,6 +194,9 @@ function handleUserDropdownSelect(key: string | number) {
 </template>
 
 <style>
+div.n-scrollbar-rail {
+  z-index: 10000;
+}
 .header {
   margin: auto;
   display: flex;
