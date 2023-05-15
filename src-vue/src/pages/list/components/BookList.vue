@@ -11,11 +11,15 @@ export type Loader = (
 </script>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { Result, ResultState } from '@/data/api/result';
 import { BookListPageDto, BookRankPageDto } from '@/data/api/api_web_novel';
 import { WenkuListPageDto } from '@/data/api/api_wenku_novel';
+
+const route = useRoute();
+const router = useRouter();
 
 const props = defineProps<{
   search: boolean;
@@ -23,17 +27,43 @@ const props = defineProps<{
   loader: Loader;
 }>();
 
-const currentPage = ref(1);
+const currentPage = ref(parseInt(route.query.page as string) || 1);
 const pageNumber = ref(1);
 const bookPage = ref<ResultState<BookPage>>();
 
-const filters = ref({
-  query: '',
-  selected: Array(props.options.length).fill(0),
-});
+function parseFilters() {
+  let query = '';
+  if (typeof route.query.query === 'string') {
+    query = route.query.query;
+  }
+  let selected = Array(props.options.length).fill(0);
+  if (typeof route.query.selected === 'string') {
+    selected[0] = parseInt(route.query.selected) || 0;
+  } else if (route.query.selected) {
+    route.query.selected.forEach((it, index) => {
+      selected[index] = parseInt(it ?? '') || 0;
+    });
+  }
+  return {
+    query,
+    selected: selected,
+  };
+}
+
+const filters = ref(parseFilters());
 
 async function loadPage(page: number) {
   bookPage.value = undefined;
+
+  const query: { [key: string]: any } = { page };
+  if (props.search) {
+    query.query = filters.value.query;
+  }
+  if (props.options.length > 0) {
+    query.selected = filters.value.selected;
+  }
+  router.replace({ path: route.path, query });
+
   const result = await props.loader(
     page,
     filters.value.query,
@@ -52,8 +82,9 @@ async function refresh() {
   await loadPage(1);
 }
 
+loadPage(currentPage.value);
 watch(filters, (_) => refresh(), { deep: true });
-watch(currentPage, (page) => loadPage(page), { immediate: true });
+watch(currentPage, (page) => loadPage(page));
 </script>
 
 <template>
