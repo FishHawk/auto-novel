@@ -57,7 +57,6 @@ var token = function (r: any, _gtk: any) {
   );
 };
 
-
 export class BaiduTranslator implements Translator {
   size = 2000;
   private token = '';
@@ -79,7 +78,11 @@ export class BaiduTranslator implements Translator {
   }
 
   async translate(input: string[]): Promise<string[]> {
-    const query = input.join('\n');
+    // 开头的空格似乎会导致998错误
+    const newInput = input.slice();
+    newInput[0] = newInput[0].trimStart();
+
+    const query = newInput.join('\n');
     const sign = token(query, this.gtk);
     const data = {
       from: 'jp',
@@ -90,14 +93,17 @@ export class BaiduTranslator implements Translator {
       token: this.token,
       domain: 'common',
     };
+    const searchParams = new URLSearchParams();
+    for (const name in data) {
+      searchParams.append(name, (data as any)[name].toString());
+    }
 
     const json: any = await ky
       .post('https://fanyi.baidu.com/v2transapi', {
-        json: data,
+        body: searchParams,
         credentials: 'include',
       })
       .json();
-    console.log(1);
 
     if ('error' in json) {
       throw Error(`百度翻译错误：${json.error}: ${json.msg}`);
