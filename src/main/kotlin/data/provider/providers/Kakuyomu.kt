@@ -35,9 +35,11 @@ class Kakuyomu : BookProvider {
             }
 
         val introduction = doc
-            .selectFirst("p#introduction")!!
-            .wholeText().trimEnd()
-            .removeSuffix("…続きを読む")
+            .selectFirst("p#introduction")
+            ?.wholeText()
+            ?.trimEnd()
+            ?.removeSuffix("…続きを読む")
+            ?: ""
 
         val toc = doc
             .select("ol.widget-toc-items > li")
