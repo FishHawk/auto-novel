@@ -54,11 +54,17 @@ function openDialog() {
   <ListLayout>
     <n-space align="baseline" justify="space-between" style="width: 100">
       <n-h1>文库小说</n-h1>
-      <n-button
-        v-if="atLeastMaintainer(authInfoStore.role)"
-        @click="openDialog()"
-        >创建</n-button
-      >
+      <n-space>
+        <n-button
+          v-if="atLeastMaintainer(authInfoStore.role)"
+          @click="openDialog()"
+        >
+          创建
+        </n-button>
+        <n-a href="/wenku/non-archived" target="_blank">
+          <n-button> 翻译Epub </n-button>
+        </n-a>
+      </n-space>
     </n-space>
     <BookList :search="true" :options="[]" :loader="loader" />
   </ListLayout>

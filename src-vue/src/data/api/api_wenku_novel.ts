@@ -1,6 +1,9 @@
 import ky, { Options } from 'ky';
 import api from './api';
-import { Ok, Result, runCatching } from './result';
+import { Err, Ok, Result, runCatching } from './result';
+import { TranslatorAdapter } from '../translator/adapter';
+import { YoudaoTranslator } from '../translator/youdao';
+import { BaiduTranslator } from '../translator/baidu';
 
 export interface WenkuListPageDto {
   pageNumber: number;
@@ -143,6 +146,112 @@ function createUploadUrl(bookId: string) {
   return `/api/wenku/${bookId}/episode`;
 }
 
+export interface VolumeStateDto {
+  fileName: string;
+  jp: number;
+  baidu: number;
+  youdao: number;
+}
+
+async function listNonArchived(): Promise<Result<VolumeStateDto[]>> {
+  return runCatching(api.get('wenku/non-archived').json());
+}
+
+function createNonArchivedUploadUrl() {
+  return '/api/wenku/non-archived';
+}
+
+export interface ChapterStateDto {
+  chapterId: string;
+  baidu: boolean;
+  youdao: boolean;
+}
+
+function getNonArchivedState(
+  fileName: string
+): Promise<Result<ChapterStateDto[]>> {
+  return runCatching(api.get(`wenku/non-archived/${fileName}`).json());
+}
+
+function getNonArchivedEpubInfo(fileName: string): Promise<ChapterStateDto[]> {
+  return api.get(`wenku/non-archived/${fileName}`).json();
+}
+
+function getNonArchivedChapter(
+  fileName: string,
+  chapterId: string
+): Promise<string[]> {
+  return api.get(`wenku/non-archived/${fileName}/${chapterId}`).json();
+}
+
+function postNonArchivedChapter(
+  fileName: string,
+  chapterId: string,
+  version: 'baidu' | 'youdao',
+  content: string[]
+): Promise<string[]> {
+  return api
+    .post(`wenku/non-archived/${fileName}/${chapterId}/${version}`, {
+      json: content,
+    })
+    .json();
+}
+
+interface UpdateCallback {
+  onStart: (total: number) => void;
+  onEpisodeTranslateSuccess: () => void;
+  onEpisodeTranslateFailure: () => void;
+}
+
+async function update(
+  version: 'baidu' | 'youdao',
+  fileName: string,
+  callback: UpdateCallback
+): Promise<Result<undefined, any>> {
+  let total: number;
+  let chapterIds: string[];
+  let translator: TranslatorAdapter | undefined = undefined;
+  try {
+    console.log(`获取元数据 ${fileName}`);
+    const state = await getNonArchivedEpubInfo(fileName);
+    total = state.length;
+
+    try {
+      if (version === 'baidu') {
+        translator = new TranslatorAdapter(await BaiduTranslator.create(), {});
+        chapterIds = state.filter((it) => !it.baidu).map((it) => it.chapterId);
+      } else {
+        translator = new TranslatorAdapter(await YoudaoTranslator.create(), {});
+        chapterIds = state.filter((it) => !it.youdao).map((it) => it.chapterId);
+      }
+    } catch (e: any) {
+      return Err(e);
+    }
+  } catch (e: any) {
+    console.log(e);
+    return Err(e);
+  }
+
+  callback.onStart(total);
+
+  for (const episodeId of chapterIds) {
+    try {
+      console.log(`获取章节 ${fileName}/${episodeId}`);
+      const textsSrc = await getNonArchivedChapter(fileName, episodeId);
+      console.log(`翻译章节 ${fileName}/${episodeId}`);
+      const textsDst = await translator.translate(textsSrc);
+      console.log(`上传章节 ${fileName}/${episodeId}`);
+      await postNonArchivedChapter(fileName, episodeId, version, textsDst);
+      callback.onEpisodeTranslateSuccess();
+    } catch (e) {
+      console.log(e);
+      callback.onEpisodeTranslateFailure();
+    }
+  }
+
+  return Ok(undefined);
+}
+
 export default {
   list,
   getMetadata,
@@ -150,4 +259,9 @@ export default {
   patchMetadata,
   getMetadataFromBangumi,
   createUploadUrl,
+  //
+  listNonArchived,
+  createNonArchivedUploadUrl,
+  getNonArchivedState,
+  update,
 };

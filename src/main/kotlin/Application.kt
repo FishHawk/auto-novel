@@ -139,7 +139,7 @@ val appModule = module {
     single { EmailCodeRepository(get()) }
 
     single(createdAtStart = true) {
-        val secret = System.getenv("JWT_SECRET")!!
+        val secret = System.getenv("JWT_SECRET") ?: ""
         AuthService(secret, get(), get())
     }
     single(createdAtStart = true) { CommentService(get()) }

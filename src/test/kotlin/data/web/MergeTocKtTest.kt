@@ -7,6 +7,8 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
+private typealias BookTocItem = WebBookMetadataRepository.BookMetadata.TocItem
+
 fun dummyTocItem(s: String): BookTocItem {
     return BookTocItem(titleJp = "ep-$s", titleZh = null, episodeId = "id-$s")
 }

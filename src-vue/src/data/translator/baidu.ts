@@ -97,7 +97,6 @@ export class BaiduTranslator implements Translator {
         credentials: 'include',
       })
       .json();
-    console.log(1);
 
     if ('error' in json) {
       throw Error(`百度翻译错误：${json.error}: ${json.msg}`);
