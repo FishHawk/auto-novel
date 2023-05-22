@@ -1,8 +1,10 @@
 package data
 
+import api.WenkuNovelService
 import appModule
 import com.mongodb.client.model.Updates
 import data.web.*
+import data.wenku.WenkuBookFileRepository
 import data.wenku.WenkuBookIndexRepository
 import data.wenku.WenkuBookMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
@@ -29,20 +31,24 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     private val repoWBM by inject<WenkuBookMetadataRepository>(WenkuBookMetadataRepository::class.java)
     private val repoWBI by inject<WenkuBookIndexRepository>(WenkuBookIndexRepository::class.java)
+    private val repoWBF by inject<WenkuBookFileRepository>(WenkuBookFileRepository::class.java)
 
     init {
         describe("test") {
+//            repoWBF.unpackEpub("non-archived", "test.epub",)
+            repoWBF.makeFile("non-archived", "test.epub", BookFileLang.MIX_YOUDAO)
+            repoWBF.makeFile("non-archived", "test.epub", BookFileLang.ZH_YOUDAO)
         }
 
         describe("kmongo issue 415") {
-            println(setValue(BookEpisode::youdaoParagraphs.pos(0), "test").toBsonDocument())
-            println(setValue(BookEpisode::baiduParagraphs.pos(0), "test").toBsonDocument())
-            println(Updates.set("paragraphsZh.0", "test").toBsonDocument())
+//            println(setValue(BookEpisode::youdaoParagraphs.pos(0), "test").toBsonDocument())
+//            println(setValue(BookEpisode::baiduParagraphs.pos(0), "test").toBsonDocument())
+//            println(Updates.set("paragraphsZh.0", "test").toBsonDocument())
         }
 
         describe("script") {
             it("es同步") {
-                val col = mongo.database.getCollection<BookMetadata>("metadata")
+                val col = mongo.database.getCollection<WebBookMetadataRepository.BookMetadata>("metadata")
                 val total = col.find().toList()
                 repoEs.addBunch(total.map {
                     EsBookMetadata(
@@ -75,7 +81,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
             }
 
             it("sitemap") {
-                val col = mongo.database.getCollection<BookMetadata>("metadata")
+                val col = mongo.database.getCollection<WebBookMetadataRepository.BookMetadata>("metadata")
                 val list = col.find().toList()
                 File("sitemap.txt").printWriter().use { out ->
                     list.forEach {

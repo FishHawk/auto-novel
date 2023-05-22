@@ -22,7 +22,7 @@ class EpubBook {
         const val UNIQUE_IDENTIFIER = "pub-id"
     }
 
-    private data class PackageElement(
+    data class PackageElement(
         val tag: String,
         val value: String?,
         val attributes: Map<String, String>,
@@ -34,10 +34,10 @@ class EpubBook {
         }
     }
 
-    private val metadataSection = mutableListOf<PackageElement>()
-    private val manifestSection = mutableListOf<PackageElement>()
-    private val spineSection = mutableListOf<PackageElement>()
-    private val resources = mutableListOf<EpubResource>()
+    val metadataSection = mutableListOf<PackageElement>()
+    val manifestSection = mutableListOf<PackageElement>()
+    val spineSection = mutableListOf<PackageElement>()
+    val resources = mutableListOf<EpubResource>()
 
     @Suppress("UNCHECKED_CAST")
     private fun addPackageElement(

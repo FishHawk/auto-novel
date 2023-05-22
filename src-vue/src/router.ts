@@ -43,6 +43,10 @@ const routes = [
     component: () => import('./pages/metadata/WebMetadata.vue'),
   },
   {
+    path: '/wenku/non-archived',
+    component: () => import('./pages/metadata/WenkuNonArchived.vue'),
+  },
+  {
     path: '/wenku/:bookId',
     component: () => import('./pages/metadata/WenkuMetadata.vue'),
   },
