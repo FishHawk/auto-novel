@@ -1,20 +1,14 @@
 package data.wenku
 
 import data.web.BookFileLang
-import data.web.BookFileType
-import data.web.makeEpubFile
-import data.web.makeTxtFile
 import epub.EpubReader
+import epub.EpubResource
+import epub.EpubWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
 import java.io.OutputStream
 import java.lang.RuntimeException
-import java.nio.file.FileSystems
 import java.nio.file.Path
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
 import kotlin.io.path.*
 
 class WenkuBookFileRepository(
@@ -68,16 +62,16 @@ class WenkuBookFileRepository(
         if (unpackPath.notExists()) {
             unpackPath.createDirectories()
         }
-        val reader = EpubReader(filePath)
-        reader.listXhtmlFiles().forEach { xhtmlPath ->
-            val unpackTextPath = unpackPath / xhtmlPath.replace("/", ".")
-            val doc = reader.getXhtmlFile(xhtmlPath)
-            doc.select("rt").remove()
-            val text = doc.select("p")
-                .map { it.text() }
-                .filter { it.isNotBlank() }
-            if (text.isNotEmpty()) {
-                unpackTextPath.writeLines(text)
+        EpubReader(filePath).use { reader ->
+            reader.listXhtmlFiles().forEach { xhtmlPath ->
+                val doc = reader.readFileAsXHtml(xhtmlPath)
+                doc.select("rt").remove()
+                val text = doc.body().select("p")
+                    .mapNotNull { it.text().ifBlank { null } }
+                if (text.isNotEmpty()) {
+                    val unpackTextPath = unpackPath / xhtmlPath.replace("/", ".")
+                    unpackTextPath.writeLines(text)
+                }
             }
         }
     }
@@ -125,7 +119,56 @@ class WenkuBookFileRepository(
     ) = withContext(Dispatchers.IO) {
         val zhFilePath = root / novelId / "$fileName.unpack" / "${lang.value}.epub"
         val filePath = root / novelId / fileName
-        TODO()
+
+        val version = when (lang) {
+            BookFileLang.ZH_BAIDU, BookFileLang.MIX_BAIDU -> "baidu"
+            BookFileLang.ZH_YOUDAO, BookFileLang.MIX_YOUDAO -> "youdao"
+            else -> throw RuntimeException()
+        }
+        val mix = when (lang) {
+            BookFileLang.ZH_BAIDU, BookFileLang.ZH_YOUDAO -> false
+            BookFileLang.MIX_BAIDU, BookFileLang.MIX_YOUDAO -> true
+            else -> throw RuntimeException()
+        }
+        val unpackItems = listUnpackItems(novelId, fileName, version)
+
+        EpubReader(filePath).use { reader ->
+            EpubWriter(zhFilePath, reader.getOpfPath()).use { writer ->
+                writer.writeOpfFile(reader.readFileAsText(reader.getOpfPath()))
+                reader.listFiles().forEach { path ->
+                    if (path.endsWith("css")) {
+                        writer.writeTextFile(path, "")
+                        return@forEach
+                    }
+
+                    val escapedPath = path.replace("/", ".")
+                    if (escapedPath in unpackItems) {
+                        val zh = getUnpackItem(novelId, fileName, version, escapedPath)!!.lines()
+                        val doc = reader.readFileAsXHtml(path)
+                        doc.select("p")
+                            .filter { el -> el.text().isNotBlank() }
+                            .forEachIndexed { index, el ->
+                                if (mix) {
+                                    el.before("<p>${zh[index]}<p>")
+                                    el.attr("style", "opacity:0.4;")
+                                } else {
+                                    el.text(zh[index])
+                                }
+                            }
+                        doc.outputSettings().prettyPrint(true)
+                        writer.writeTextFile(
+                            path,
+                            doc.html(),
+                        )
+                    } else {
+                        writer.writeBinaryFile(
+                            path,
+                            reader.readFileAsBinary(path)
+                        )
+                    }
+                }
+            }
+        }
         return@withContext "$fileName.unpack/${lang.value}.epub"
     }
 }

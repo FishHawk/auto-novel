@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.io.InputStream
+import java.lang.RuntimeException
 import java.time.ZoneId
 
 @Resource("/wenku")
@@ -35,12 +36,11 @@ private class WenkuNovel {
     // 如果用的人多，看情况合并到Book里面
     @Resource("/non-archived")
     class NonArchived(val parent: WenkuNovel) {
-        @Resource("/prepare-book/{fileName}/{lang}/{version}")
+        @Resource("/prepare-book/{fileName}/{lang}")
         class PrepareBook(
             val parent: NonArchived,
             val fileName: String,
             val lang: BookFileLang,
-            val version: String,
         )
 
         @Resource("/{fileName}")
@@ -94,7 +94,7 @@ fun Route.routeWenkuNovel() {
     }
 
     get<WenkuNovel.NonArchived.PrepareBook> { loc ->
-        val result = service.updateBookFile(loc.fileName, loc.lang, loc.version)
+        val result = service.updateBookFile(loc.fileName, loc.lang)
         result.onSuccess {
             call.respondRedirect(it)
         }.onFailure {
@@ -448,10 +448,15 @@ class WenkuNovelService(
     suspend fun updateBookFile(
         fileName: String,
         lang: BookFileLang,
-        version: String,
     ): Result<String> {
         val novelId = "non-archived"
         val jpItems = fileRepo.listUnpackItems(novelId, fileName, "jp")
+
+        val version = when (lang) {
+            BookFileLang.ZH_YOUDAO, BookFileLang.MIX_YOUDAO -> "youdao"
+            BookFileLang.ZH_BAIDU, BookFileLang.MIX_BAIDU -> "baidu"
+            else -> throw RuntimeException()
+        }
         val zhItems =
             if (version == "baidu") fileRepo.listUnpackItems(novelId, fileName, "baidu")
             else fileRepo.listUnpackItems(novelId, fileName, "youdao")
