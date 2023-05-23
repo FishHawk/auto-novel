@@ -2,7 +2,7 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import ApiWenkuNovel from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 import { mapOk } from '@/data/api/result';
 

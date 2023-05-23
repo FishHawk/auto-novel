@@ -6,7 +6,7 @@ import { useWindowSize } from '@vueuse/core';
 
 import ApiUser from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelListItemDto } from '@/data/api/api_web_novel';
-import ApiWenkuNovel, { WenkuListItemDto } from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel, WenkuListItemDto } from '@/data/api/api_wenku_novel';
 import { parseUrl } from '@/data/provider';
 import { Ok, ResultState } from '@/data/api/result';
 import { useAuthInfoStore } from '@/data/stores/authInfo';

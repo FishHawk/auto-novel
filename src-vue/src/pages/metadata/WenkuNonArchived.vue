@@ -4,7 +4,7 @@ import { UploadFileInfo, useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { ResultState } from '@/data/api/result';
-import ApiWenkuNovel, { VolumeJpDto } from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
@@ -59,7 +59,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       @before-upload="beforeUpload"
     >
       <n-space align="baseline" justify="space-between" style="width: 100">
-        <n-h1>Epub翻译</n-h1>
+        <n-h1>日文Epub翻译</n-h1>
         <n-button>
           <template #icon><n-icon :component="UploadFilled" /></template>
           上传章节
@@ -77,7 +77,6 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
         Epub的格式千奇百怪，如果生成的中文版有问题，请向我
         <n-a href="/feedback" target="_blank"> 反馈</n-a>。
       </n-li>
-      <n-li>暂时必须一个翻译器翻译完全部章节才能下载中文版。</n-li>
       <n-li>因为还在测试，该功能可能会有变化。</n-li>
       <n-li>上传的小说是公开的。</n-li>
     </n-ul>
@@ -87,9 +86,12 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
         <n-h3 class="title" style="margin-bottom: 4px">
           {{ volume.volumeId }}
         </n-h3>
-        <TranslateSectionWenku
+        <WenkuTranslate
           :novel-id="novelId"
           :volume-id="volume.volumeId"
+          :total="volume.jp"
+          v-model:baidu="volume.baidu"
+          v-model:youdao="volume.youdao"
         />
       </div>
 

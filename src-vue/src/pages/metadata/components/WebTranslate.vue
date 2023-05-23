@@ -15,16 +15,17 @@ const props = defineProps<{
   providerId: string;
   novelId: string;
   total: number;
-  state: { jp: number; baidu: number; youdao: number };
+  jp: number;
+  baidu: number;
+  youdao: number;
   glossary: { [key: string]: string };
 }>();
 
-const state = ref({
-  total: props.total,
-  jp: props.state.jp,
-  baidu: props.state.baidu,
-  youdao: props.state.youdao,
-});
+const emits = defineEmits<{
+  (e: 'update:jp', v: number): void;
+  (e: 'update:baidu', v: number): void;
+  (e: 'update:youdao', v: number): void;
+}>();
 
 interface UpdateProgress {
   name: string;
@@ -60,13 +61,13 @@ async function startUpdateTask(translatorId: TranslatorId) {
       onStart: (total: number) => {
         progress.value!.total = total;
       },
-      onChapterTranslateSuccess: (newState) => {
+      onChapterTranslateSuccess: (state) => {
         if (translatorId === 'baidu') {
-          state.value.jp = newState.jp;
-          state.value.baidu = newState.zh;
+          emits('update:jp', state.jp);
+          emits('update:baidu', state.zh);
         } else {
-          state.value.jp = newState.jp;
-          state.value.youdao = newState.zh;
+          emits('update:jp', state.jp);
+          emits('update:youdao', state.zh);
         }
         progress.value!.finished += 1;
       },
@@ -117,12 +118,12 @@ function stateToFileList(): NovelFiles[] {
 
   return [
     {
-      label: `日文(${state.value.jp}/${state.value.total})`,
+      label: `日文(${props.jp}/${props.total})`,
       translatorId: 'jp',
       files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
     },
     {
-      label: `百度(${state.value.baidu}/${state.value.total})`,
+      label: `百度(${props.baidu}/${props.total})`,
       translatorId: 'baidu',
       files: [
         createFile('TXT', 'zh-baidu', 'txt'),
@@ -132,7 +133,7 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
-      label: `有道(${state.value.youdao}/${state.value.total})`,
+      label: `有道(${props.youdao}/${props.total})`,
       translatorId: 'youdao',
       files: [
         createFile('TXT', 'zh-youdao', 'txt'),

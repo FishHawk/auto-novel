@@ -132,7 +132,7 @@ fun Route.routeWebNovel() {
 
     post<WebNovel.Id.Translate.Metadata> { loc ->
         val metadataTranslated = call.receive<WebNovelService.TranslateMetadataUpdateBody>()
-        val result = service.updateMetadata(
+        val result = service.updateMetadataTranslation(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
             body = metadataTranslated,
@@ -152,7 +152,7 @@ fun Route.routeWebNovel() {
 
     post<WebNovel.Id.Translate.Chapter> { loc ->
         val body = call.receive<WebNovelService.TranslateChapterUpdateBody>()
-        val result = service.updateChapter(
+        val result = service.updateChapterTranslation(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
             translatorId = loc.parent.translatorId,
@@ -590,7 +590,7 @@ class WebNovelService(
         val toc: Map<String, String>,
     )
 
-    suspend fun updateMetadata(
+    suspend fun updateMetadataTranslation(
         providerId: String,
         novelId: String,
         body: TranslateMetadataUpdateBody,
@@ -663,7 +663,7 @@ class WebNovelService(
         val paragraphsZh: List<String>,
     )
 
-    suspend fun updateChapter(
+    suspend fun updateChapterTranslation(
         providerId: String,
         novelId: String,
         chapterId: String,

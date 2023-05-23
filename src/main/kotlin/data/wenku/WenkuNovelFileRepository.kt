@@ -3,6 +3,7 @@ package data.wenku
 import data.web.NovelFileLang
 import epub.EpubReader
 import epub.EpubWriter
+import epub.copyTo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
@@ -10,15 +11,16 @@ import java.lang.RuntimeException
 import java.nio.file.Path
 import kotlin.io.path.*
 
+private fun String.escapePath() = replace('/', '.')
+private fun String.unescapePath() = replace('.', '/')
+
 class WenkuNovelFileRepository(
     private val root: Path
 ) {
-    private suspend fun listVolume(
-        novelId: String,
-    ): List<String> = withContext(Dispatchers.IO) {
+    private fun listVolume(novelId: String): List<String> {
         val path = root / novelId
         val fileExtensions = listOf("epub", "txt")
-        return@withContext if (path.exists() && path.isDirectory()) {
+        return if (path.exists() && path.isDirectory()) {
             path.listDirectoryEntries()
                 .filter { it.isRegularFile() && it.fileName.extension in fileExtensions }
                 .map { it.fileName.toString() }
@@ -27,51 +29,58 @@ class WenkuNovelFileRepository(
         }
     }
 
-    suspend fun listVolumeZh(
-        novelId: String,
-    ): List<String> = withContext(Dispatchers.IO) {
-        listVolume(novelId)
-            .filter { !hasUnpacked(novelId, it) }
+    private fun hasUnpacked(novelId: String, volumeId: String): Boolean {
+        val unpackPath = root / novelId / "$volumeId.unpack"
+        return unpackPath.exists()
     }
 
-    suspend fun listVolumeJp(
-        novelId: String,
-    ): List<String> = withContext(Dispatchers.IO) {
-        listVolume(novelId)
-            .filter { hasUnpacked(novelId, it) }
+    suspend fun listVolumeZh(novelId: String) = withContext(Dispatchers.IO) {
+        listVolume(novelId).filter { !hasUnpacked(novelId, it) }
     }
 
-    suspend fun createAndOpen(
+    suspend fun listVolumeJp(novelId: String) = withContext(Dispatchers.IO) {
+        listVolume(novelId).filter { hasUnpacked(novelId, it) }
+    }
+
+    suspend fun isVolumeJpExisted(
         novelId: String,
-        fileName: String,
+        volumeId: String,
+    ) = withContext(Dispatchers.IO) {
+        val volumePath = root / novelId / volumeId
+        val unpackPath = root / novelId / "$volumeId.unpack"
+        return@withContext volumePath.exists() && unpackPath.exists()
+    }
+
+    suspend fun createVolumeAndOpen(
+        novelId: String,
+        volumeId: String,
     ): Result<OutputStream> = withContext(Dispatchers.IO) {
         val novelPath = root / novelId
         if (!novelPath.exists()) {
-            runCatching { novelPath.createDirectories() }
-                .onFailure { return@withContext Result.failure(it) }
+            novelPath.createDirectories()
         }
-        val filePath = novelPath / fileName
-        return@withContext runCatching {
-            filePath.createFile().outputStream()
-        }
-    }
-
-    suspend fun delete(
-        novelId: String,
-        fileName: String,
-    ) = withContext(Dispatchers.IO) {
-        val filePath = root / novelId / fileName
-        return@withContext runCatching {
-            filePath.deleteIfExists()
+        val filePath = novelPath / volumeId
+        return@withContext if (filePath.exists()) {
+            Result.failure(RuntimeException("文件已存在"))
+        } else {
+            Result.success(filePath.createFile().outputStream())
         }
     }
 
-    suspend fun unpackEpub(
+    suspend fun deleteVolumeIfExist(
         novelId: String,
-        fileName: String,
+        volumeId: String,
     ) = withContext(Dispatchers.IO) {
-        val filePath = root / novelId / fileName
-        val unpackPath = root / novelId / "$fileName.unpack" / "jp"
+        val filePath = root / novelId / volumeId
+        filePath.deleteIfExists()
+    }
+
+    suspend fun unpackVolume(
+        novelId: String,
+        volumeId: String,
+    ) = withContext(Dispatchers.IO) {
+        val filePath = root / novelId / volumeId
+        val unpackPath = root / novelId / "$volumeId.unpack" / "jp"
         if (unpackPath.notExists()) {
             unpackPath.createDirectories()
         }
@@ -79,69 +88,77 @@ class WenkuNovelFileRepository(
             reader.listXhtmlFiles().forEach { xhtmlPath ->
                 val doc = reader.readFileAsXHtml(xhtmlPath)
                 doc.select("rt").remove()
-                val text = doc.body().select("p")
+                val lines = doc.body().select("p")
                     .mapNotNull { it.text().ifBlank { null } }
-                if (text.isNotEmpty()) {
-                    val unpackTextPath = unpackPath / xhtmlPath.replace("/", ".")
-                    unpackTextPath.writeLines(text)
+                if (lines.isNotEmpty()) {
+                    val chapterPath = unpackPath / xhtmlPath.escapePath()
+                    chapterPath.writeLines(lines)
                 }
             }
         }
     }
 
-    suspend fun hasUnpacked(
+    suspend fun listUnpackedChapters(
         novelId: String,
-        fileName: String,
+        volumeId: String,
+        type: String,
     ) = withContext(Dispatchers.IO) {
-        val unpackPath = root / novelId / "$fileName.unpack"
-        return@withContext unpackPath.exists()
+        val unpackPath = root / novelId / "$volumeId.unpack" / type
+        return@withContext if (unpackPath.notExists()) {
+            emptyList()
+        } else {
+            unpackPath
+                .listDirectoryEntries()
+                .map { it.fileName.toString() }
+        }
     }
 
-    suspend fun listUnpackItems(
+    suspend fun isUnpackChapterExist(
         novelId: String,
-        fileName: String,
-        version: String,
+        volumeId: String,
+        type: String,
+        chapterId: String,
     ) = withContext(Dispatchers.IO) {
-        val unpackPath = root / novelId / "$fileName.unpack" / version
-        return@withContext if (unpackPath.notExists()) emptyList()
-        else unpackPath.listDirectoryEntries()
-            .map { it.fileName.toString() }
+        val path = root / novelId / "$volumeId.unpack" / type / chapterId
+        return@withContext path.exists()
     }
 
-    suspend fun getUnpackItem(
+    suspend fun getUnpackedChapter(
         novelId: String,
-        fileName: String,
-        version: String,
-        itemName: String,
+        volumeId: String,
+        type: String,
+        chapterId: String,
     ) = withContext(Dispatchers.IO) {
-        val path = root / novelId / "$fileName.unpack" / version / itemName
+        val path = root / novelId / "$volumeId.unpack" / type / chapterId
         return@withContext if (path.notExists()) null
-        else path.readText()
+        else path.readText().lines()
     }
 
-    suspend fun createUnpackItem(
+    suspend fun createUnpackedChapter(
         novelId: String,
-        fileName: String,
-        version: String,
-        itemName: String,
-        content: List<String>,
+        volumeId: String,
+        type: String,
+        chapterId: String,
+        lines: List<String>,
     ) = withContext(Dispatchers.IO) {
-        val path = root / novelId / "$fileName.unpack" / version / itemName
+        val path = root / novelId / "$volumeId.unpack" / type / chapterId
         if (path.parent.notExists()) {
             path.parent.createDirectories()
         }
-        if (path.notExists()) path.writeLines(content)
+        if (path.notExists()) {
+            path.writeLines(lines)
+        }
     }
 
     suspend fun makeFile(
         novelId: String,
-        fileName: String,
+        volumeId: String,
         lang: NovelFileLang,
     ) = withContext(Dispatchers.IO) {
-        val zhFilePath = root / novelId / "$fileName.unpack" / "${lang.value}.epub"
-        val filePath = root / novelId / fileName
+        val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.epub"
+        val jpPath = root / novelId / volumeId
 
-        val version = when (lang) {
+        val type = when (lang) {
             NovelFileLang.ZH_BAIDU, NovelFileLang.MIX_BAIDU -> "baidu"
             NovelFileLang.ZH_YOUDAO, NovelFileLang.MIX_YOUDAO -> "youdao"
             else -> throw RuntimeException()
@@ -151,45 +168,46 @@ class WenkuNovelFileRepository(
             NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO -> true
             else -> throw RuntimeException()
         }
-        val unpackItems = listUnpackItems(novelId, fileName, version)
+        val unpackChapters = listUnpackedChapters(novelId, volumeId, type)
 
-        EpubReader(filePath).use { reader ->
-            EpubWriter(zhFilePath, reader.getOpfPath()).use { writer ->
+        EpubReader(jpPath).use { reader ->
+            EpubWriter(zhPath, reader.getOpfPath()).use { writer ->
                 writer.writeOpfFile(reader.readFileAsText(reader.getOpfPath()))
                 reader.listFiles().forEach { path ->
+                    // Css文件，删除
                     if (path.endsWith("css")) {
                         writer.writeTextFile(path, "")
                         return@forEach
                     }
 
-                    val escapedPath = path.replace("/", ".")
-                    if (escapedPath in unpackItems) {
-                        val zh = getUnpackItem(novelId, fileName, version, escapedPath)!!.lines()
-                        val doc = reader.readFileAsXHtml(path)
-                        doc.select("p")
-                            .filter { el -> el.text().isNotBlank() }
-                            .forEachIndexed { index, el ->
-                                if (mix) {
-                                    el.before("<p>${zh[index]}<p>")
-                                    el.attr("style", "opacity:0.4;")
-                                } else {
-                                    el.text(zh[index])
+                    val escapedPath = path.escapePath()
+                    if (escapedPath in unpackChapters) {
+                        // XHtml文件，尝试生成翻译版
+                        val zhLines = getUnpackedChapter(novelId, volumeId, type, escapedPath)
+                        if (zhLines == null) {
+                            reader.copyTo(writer, path)
+                        } else {
+                            val doc = reader.readFileAsXHtml(path)
+                            doc.select("p")
+                                .filter { el -> el.text().isNotBlank() }
+                                .forEachIndexed { index, el ->
+                                    if (mix) {
+                                        el.before("<p>${zhLines[index]}<p>")
+                                        el.attr("style", "opacity:0.4;")
+                                    } else {
+                                        el.text(zhLines[index])
+                                    }
                                 }
-                            }
-                        doc.outputSettings().prettyPrint(true)
-                        writer.writeTextFile(
-                            path,
-                            doc.html(),
-                        )
+                            doc.outputSettings().prettyPrint(true)
+                            writer.writeTextFile(path, doc.html())
+                        }
                     } else {
-                        writer.writeBinaryFile(
-                            path,
-                            reader.readFileAsBinary(path)
-                        )
+                        // 其他文件
+                        reader.copyTo(writer, path)
                     }
                 }
             }
         }
-        return@withContext "$fileName.unpack/${lang.value}.epub"
+        return@withContext "$volumeId.unpack/${lang.value}.epub"
     }
 }

@@ -4,7 +4,7 @@ import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { atLeastMaintainer, useAuthInfoStore } from '@/data/stores/authInfo';
-import ApiWenkuNovel, { WenkuMetadataDto } from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 
 const props = defineProps<{
   id: string;

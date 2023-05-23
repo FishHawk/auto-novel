@@ -178,7 +178,6 @@ function createFileUrl(
   lang: 'jp' | 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao',
   type: 'epub' | 'txt'
 ) {
-  // const baseUrl = window.origin + `/api/prepare-book/`;
   return `/api/novel/${providerId}/${novelId}/file/${lang}/${type}`;
 }
 

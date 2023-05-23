@@ -11,7 +11,7 @@ import {
 
 import { ResultState } from '@/data/api/result';
 import ApiUser from '@/data/api/api_user';
-import ApiWenkuNovel, { WenkuMetadataDto } from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
@@ -218,7 +218,10 @@ function enableEditMode() {
       </n-space>
 
       <template v-if="editMode">
-        <WenkuEditSection :id="novelId" v-model:metadata="novelMetadata.value" />
+        <WenkuEditSection
+          :id="novelId"
+          v-model:metadata="novelMetadata.value"
+        />
       </template>
 
       <template v-else>

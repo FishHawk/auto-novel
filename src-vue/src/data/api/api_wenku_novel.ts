@@ -1,14 +1,14 @@
 import ky, { Options } from 'ky';
+
 import api from './api';
-import { Err, Ok, Result, runCatching } from './result';
-import { TranslatorAdapter } from '../translator/adapter';
-import { YoudaoTranslator } from '../translator/youdao';
-import { BaiduTranslator } from '../translator/baidu';
+import { Ok, Result, runCatching } from './result';
+import { translate } from './api_wenku_novel_translate';
 
 export interface WenkuListPageDto {
   pageNumber: number;
   items: WenkuListItemDto[];
 }
+
 export interface WenkuListItemDto {
   id: string;
   title: string;
@@ -162,111 +162,15 @@ function createVolumeJpUploadUrl(novelId: string) {
   return `/api/wenku/${novelId}/volume-jp`;
 }
 
-export interface ChapterStateDto {
-  chapterId: string;
-  baidu: boolean;
-  youdao: boolean;
-}
-
-function getTranslateState(
-  novelId: string,
-  volumeId: string
-): Promise<Result<ChapterStateDto[]>> {
-  return runCatching(api.get(`wenku/${novelId}/translate/${volumeId}`).json());
-}
-
-function getTranslateStateRaw(
-  novelId: string,
-  volumeId: string
-): Promise<ChapterStateDto[]> {
-  return api.get(`wenku/${novelId}/translate/${volumeId}`).json();
-}
-
-function getTranslateChapter(
+function createFileUrl(
   novelId: string,
   volumeId: string,
-  chapterId: string
-): Promise<string[]> {
-  return api.get(`wenku/${novelId}/translate/${volumeId}/${chapterId}`).json();
+  lang: 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao'
+) {
+  return `/api/wenku/${novelId}/file/${volumeId}/${lang}`;
 }
 
-function postTranslateChapter(
-  novelId: string,
-  volumeId: string,
-  chapterId: string,
-  version: 'baidu' | 'youdao',
-  content: string[]
-): Promise<string[]> {
-  return api
-    .post(`wenku/${novelId}/translate/${volumeId}/${chapterId}/${version}`, {
-      json: content,
-    })
-    .json();
-}
-
-interface UpdateCallback {
-  onStart: (total: number) => void;
-  onChapterTranslateSuccess: () => void;
-  onChapterTranslateFailure: () => void;
-}
-
-async function update(
-  version: 'baidu' | 'youdao',
-  novelId: string,
-  volumeId: string,
-  callback: UpdateCallback
-): Promise<Result<undefined, any>> {
-  let total: number;
-  let chapterIds: string[];
-  let translator: TranslatorAdapter | undefined = undefined;
-  try {
-    console.log(`获取元数据 ${volumeId}`);
-    const state = await getTranslateStateRaw(novelId, volumeId);
-    total = state.length;
-
-    try {
-      if (version === 'baidu') {
-        translator = new TranslatorAdapter(await BaiduTranslator.create(), {});
-        chapterIds = state.filter((it) => !it.baidu).map((it) => it.chapterId);
-      } else {
-        translator = new TranslatorAdapter(await YoudaoTranslator.create(), {});
-        chapterIds = state.filter((it) => !it.youdao).map((it) => it.chapterId);
-      }
-    } catch (e: any) {
-      return Err(e);
-    }
-  } catch (e: any) {
-    console.log(e);
-    return Err(e);
-  }
-
-  callback.onStart(total);
-
-  for (const chapterId of chapterIds) {
-    try {
-      console.log(`获取章节 ${volumeId}/${chapterId}`);
-      const textsSrc = await getTranslateChapter(novelId, volumeId, chapterId);
-      console.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsDst = await translator.translate(textsSrc);
-      console.log(`上传章节 ${volumeId}/${chapterId}`);
-      await postTranslateChapter(
-        novelId,
-        volumeId,
-        chapterId,
-        version,
-        textsDst
-      );
-      callback.onChapterTranslateSuccess();
-    } catch (e) {
-      console.log(e);
-      callback.onChapterTranslateFailure();
-    }
-  }
-
-  return Ok(undefined);
-}
-
-export default {
+export const ApiWenkuNovel = {
   list,
   listNonArchived,
   getMetadata,
@@ -275,6 +179,6 @@ export default {
   getMetadataFromBangumi,
   createVolumeZhUploadUrl,
   createVolumeJpUploadUrl,
-  getTranslateState,
-  update,
+  translate,
+  createFileUrl,
 };
