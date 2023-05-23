@@ -16,16 +16,25 @@ function menuOption(text: string, href: string): MenuOption {
   return { label: () => h('a', { href }, text), key: href };
 }
 
-const topMenuOptions = computed(() => {
+const topLeftMenuOptions = computed(() => {
   const menus: MenuOption[] = [
     menuOption('首页', '/'),
     menuOption('列表', '/novel-list'),
     menuOption('反馈', '/feedback'),
+    menuOption('Epub翻译', '/wenku/non-archived'),
   ];
   if (atLeastMaintainer(authInfoStore.role)) {
     menus.push(menuOption('控制台', '/admin/patch'));
   }
   return menus;
+});
+
+const topRightMenuOptions = computed(() => {
+  if (authInfoStore.token) {
+    return [menuOption('收藏', '/favorite-list')];
+  } else {
+    return [];
+  }
 });
 
 const collapsedMenuOptions = computed(() => {
@@ -64,10 +73,12 @@ const path = useRoute().path;
 function getTopMenuOptionKey() {
   if (path.startsWith('/admin')) {
     return '/admin/patch';
-  } else if (path.startsWith('/feedback')) {
+  } else if (path === '/feedback') {
     return '/feedback';
   } else if (path === '/') {
     return '/';
+  } else if (path === '/wenku/non-archived') {
+    return '/wenku/non-archived';
   } else {
     return '/novel-list';
   }
@@ -132,11 +143,13 @@ function handleUserDropdownSelect(key: string | number) {
           <n-menu
             :value="getTopMenuOptionKey()"
             mode="horizontal"
-            :options="topMenuOptions"
+            :options="topLeftMenuOptions"
           />
         </div>
+
         <div style="flex: 1"></div>
 
+        <n-menu mode="horizontal" :options="topRightMenuOptions" />
         <n-dropdown
           v-if="authInfoStore.username"
           trigger="click"

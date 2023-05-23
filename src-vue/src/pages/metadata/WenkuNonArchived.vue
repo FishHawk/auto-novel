@@ -59,7 +59,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       @before-upload="beforeUpload"
     >
       <n-space align="baseline" justify="space-between" style="width: 100">
-        <n-h1>日文Epub翻译</n-h1>
+        <n-h1>Epub翻译</n-h1>
         <n-button>
           <template #icon><n-icon :component="UploadFilled" /></template>
           上传章节
@@ -67,7 +67,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       </n-space>
     </n-upload>
     <n-p>
-      上传你的日文Epub小说，可以像翻译网络小说一样生成中文Epub。
+      上传日文Epub小说，可以像翻译网络小说一样生成中文Epub。
       如何使用翻译插件请参考
       <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
     </n-p>
@@ -77,7 +77,8 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
         Epub的格式千奇百怪，如果生成的中文版有问题，请向我
         <n-a href="/feedback" target="_blank"> 反馈</n-a>。
       </n-li>
-      <n-li>因为还在测试，该功能可能会有变化。</n-li>
+      <n-li>性能优化还没做，用的时候请不要太粗暴。</n-li>
+      <n-li>因为还在测试，生成的Epub格式可能会有变化。</n-li>
       <n-li>上传的小说是公开的。</n-li>
     </n-ul>
 

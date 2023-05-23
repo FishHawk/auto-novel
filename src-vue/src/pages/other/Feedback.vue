@@ -6,12 +6,9 @@ const route = useRoute();
 
 <template>
   <MainLayout>
-    <n-h2 prefix="bar">说明</n-h2>
-
+    <n-h1>反馈</n-h1>
     <n-p>这是给大家反馈的地方，有什么意见或者Bug都可以发到这里。</n-p>
-
     <n-p>如果是特定页面有问题记得附上链接。</n-p>
-
     <n-p>
       你也可以到
       <n-a
