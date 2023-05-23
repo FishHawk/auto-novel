@@ -3,6 +3,7 @@ import {
   WebNovelListPageDto,
   WebNovelRankPageDto,
 } from '@/data/api/api_web_novel';
+import { buildMetadataUrl } from '@/data/provider';
 
 defineProps<{
   page: WebNovelListPageDto | WebNovelRankPageDto;
@@ -17,6 +18,13 @@ defineProps<{
       </n-a>
     </n-h3>
     <div>{{ item.titleZh }}</div>
+    <n-a
+      :href="buildMetadataUrl(item.providerId, item.novelId)"
+      target="_blank"
+    >
+      {{ item.providerId + '.' + item.novelId }}
+    </n-a>
+
     <template v-if="'extra' in item">
       <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
         {{ extraLine }}
