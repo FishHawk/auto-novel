@@ -168,15 +168,10 @@ fun Route.routeWenkuNovel() {
             lang = loc.lang,
         )
         result.onSuccess {
-            call.respondRedirect {
-                path(
-                    "..",
-                    "files-wenku",
-                    loc.parent.novelId,
-                    "${loc.volumeId}.unpack",
-                    "${loc.lang.value}.epub",
-                )
-            }
+            val url = "../../../../../../files-wenku/${loc.parent.novelId}/" +
+                    "${loc.volumeId}.unpack".encodeURLPathPart() +
+                    "/${loc.lang.value}.epub"
+            call.respondRedirect(url)
         }.onFailure {
             call.respondResult(result)
         }

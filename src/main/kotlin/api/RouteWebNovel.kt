@@ -183,7 +183,8 @@ fun Route.routeWebNovel() {
             type = loc.type,
         )
         result.onSuccess {
-            call.respondRedirect { path("..", "files-web", it) }
+            val url = "../../../../../../../files-web/${it}"
+            call.respondRedirect(url)
         }.onFailure {
             call.respondResult(result)
         }
