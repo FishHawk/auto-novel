@@ -3,17 +3,17 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import ApiWebNovel, { BookMetadataDto } from '@/data/api/api_web_novel';
+import ApiWebNovel, { WebNovelMetadataDto } from '@/data/api/api_web_novel';
 import { atLeastMaintainer, useAuthInfoStore } from '@/data/stores/authInfo';
 
 const props = defineProps<{
   providerId: string;
-  bookId: string;
-  bookMetadata: BookMetadataDto;
+  novelId: string;
+  novelMetadata: WebNovelMetadataDto;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:bookMetadata', bookMetadata: BookMetadataDto): void;
+  (e: 'update:novelMetadata', novelMetadata: WebNovelMetadataDto): void;
 }>();
 
 const authInfoStore = useAuthInfoStore();
@@ -39,20 +39,20 @@ function createEditMetadata(): EditMetadata {
   const tocSet = new Set();
   return {
     title: {
-      jp: props.bookMetadata.titleJp,
-      zh: props.bookMetadata.titleZh,
-      edit: props.bookMetadata.titleZh ?? '',
+      jp: props.novelMetadata.titleJp,
+      zh: props.novelMetadata.titleZh,
+      edit: props.novelMetadata.titleZh ?? '',
     },
     introduction: {
-      jp: props.bookMetadata.introductionJp,
-      zh: props.bookMetadata.introductionZh,
-      edit: props.bookMetadata.introductionZh ?? '',
+      jp: props.novelMetadata.introductionJp,
+      zh: props.novelMetadata.introductionZh,
+      edit: props.novelMetadata.introductionZh ?? '',
     },
     glossary: {
-      origin: props.bookMetadata.glossary,
-      edit: props.bookMetadata.glossary,
+      origin: props.novelMetadata.glossary,
+      edit: props.novelMetadata.glossary,
     },
-    toc: props.bookMetadata.toc
+    toc: props.novelMetadata.toc
       .filter((item) => {
         const inTocSet = tocSet.has(item.titleJp);
         if (!inTocSet) tocSet.add(item.titleJp);
@@ -102,7 +102,7 @@ async function submit() {
   };
   const result = await ApiWebNovel.putMetadata(
     props.providerId,
-    props.bookId,
+    props.novelId,
     patch,
     token
   );
@@ -110,7 +110,7 @@ async function submit() {
   isSubmitting.value = false;
 
   if (result.ok) {
-    emit('update:bookMetadata', result.value);
+    emit('update:novelMetadata', result.value);
     message.success('提交成功');
   } else {
     message.error('提交失败：' + result.error.message);
@@ -131,7 +131,7 @@ function addTerm() {
   }
 }
 
-const wenkuId = ref(props.bookMetadata.wenkuId);
+const wenkuId = ref(props.novelMetadata.wenkuId);
 async function updateWenkuId() {
   if (!wenkuId.value) {
     message.info('文库版Id不能为空');
@@ -144,12 +144,12 @@ async function updateWenkuId() {
   }
   const result = await ApiWebNovel.putWenkuId(
     props.providerId,
-    props.bookId,
+    props.novelId,
     wenkuId.value,
     token
   );
   if (result.ok) {
-    emit('update:bookMetadata', result.value);
+    emit('update:novelMetadata', result.value);
     message.success('提交成功');
   } else {
     message.error('提交失败：' + result.error.message);
@@ -164,11 +164,11 @@ async function deleteWenkuId() {
   }
   const result = await ApiWebNovel.deleteWenkuId(
     props.providerId,
-    props.bookId,
+    props.novelId,
     token
   );
   if (result.ok) {
-    emit('update:bookMetadata', result.value);
+    emit('update:novelMetadata', result.value);
     message.success('提交成功');
   } else {
     message.error('提交失败：' + result.error.message);

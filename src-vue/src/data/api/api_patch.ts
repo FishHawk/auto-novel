@@ -1,24 +1,24 @@
 import api from './api';
 import { Result, runCatching } from './result';
 
-export interface BookPatchesPageItemDto {
+export interface WebNovelPatchHistoryPageItemDto {
   providerId: string;
-  bookId: string;
+  novelId: string;
   titleJp: string;
   titleZh?: string;
 }
 
-export interface BookPatchesPageDto {
+export interface WebNovelPatchHistoryPageDto {
   total: number;
-  items: BookPatchesPageItemDto[];
+  items: WebNovelPatchHistoryPageItemDto[];
 }
 
-export interface BookPatchesDto {
+export interface WebNovelPatchHistoryDto {
   providerId: string;
-  bookId: string;
+  novelId: string;
   titleJp: string;
   titleZh?: string;
-  patches: BookPatchDto[];
+  patches: WebNovelPatchDto[];
 }
 
 interface TextChange {
@@ -27,7 +27,7 @@ interface TextChange {
   zhNew: string;
 }
 
-interface BookPatchDto {
+interface WebNovelPatchDto {
   uuid: String;
   titleChange?: TextChange;
   introductionChange?: TextChange;
@@ -36,25 +36,27 @@ interface BookPatchDto {
   createAt: number;
 }
 
-async function listPatch(page: number): Promise<Result<BookPatchesPageDto>> {
+async function listPatch(
+  page: number
+): Promise<Result<WebNovelPatchHistoryPageDto>> {
   return runCatching(api.get(`patch/list`, { searchParams: { page } }).json());
 }
 
 async function getPatch(
   providerId: string,
-  bookId: string
-): Promise<Result<BookPatchesDto>> {
-  return runCatching(api.get(`patch/${providerId}/${bookId}`).json());
+  novelId: string
+): Promise<Result<WebNovelPatchHistoryDto>> {
+  return runCatching(api.get(`patch/${providerId}/${novelId}`).json());
 }
 
 async function deletePatch(
   providerId: string,
-  bookId: string,
+  novelId: string,
   token: string
 ): Promise<Result<string>> {
   return runCatching(
     api
-      .delete(`patch/${providerId}/${bookId}`, {
+      .delete(`patch/${providerId}/${novelId}`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .text()
@@ -63,12 +65,12 @@ async function deletePatch(
 
 async function revokePatch(
   providerId: string,
-  bookId: string,
+  novelId: string,
   token: string
 ): Promise<Result<string>> {
   return runCatching(
     api
-      .post(`patch/${providerId}/${bookId}/revoke`, {
+      .post(`patch/${providerId}/${novelId}/revoke`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .text()

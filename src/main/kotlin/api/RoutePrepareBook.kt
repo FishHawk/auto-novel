@@ -9,10 +9,10 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import java.time.ZoneId
 
-@Resource("/prepare-book/{providerId}/{bookId}/{lang}/{type}")
+@Resource("/prepare-book/{providerId}/{novelId}/{lang}/{type}")
 private data class PrepareBook(
     val providerId: String,
-    val bookId: String,
+    val novelId: String,
     val lang: BookFileLang,
     val type: BookFileType,
 )
@@ -21,7 +21,7 @@ fun Route.routePrepareBook() {
     val service by inject<PrepareBookService>()
 
     get<PrepareBook> { loc ->
-        val result = service.updateBookFile(loc.providerId, loc.bookId, loc.lang, loc.type)
+        val result = service.updateBookFile(loc.providerId, loc.novelId, loc.lang, loc.type)
         result.onSuccess {
             call.respondRedirect(it)
         }.onFailure {
@@ -31,36 +31,36 @@ fun Route.routePrepareBook() {
 }
 
 class PrepareBookService(
-    private val webBookMetadataRepository: WebBookMetadataRepository,
-    private val webBookEpisodeRepository: WebBookEpisodeRepository,
-    private val webBookFileRepository: WebBookFileRepository,
+    private val webNovelMetadataRepository: WebNovelMetadataRepository,
+    private val webChapterRepository: WebChapterRepository,
+    private val webNovelFileRepository: WebNovelFileRepository,
 ) {
     suspend fun updateBookFile(
         providerId: String,
-        bookId: String,
+        novelId: String,
         lang: BookFileLang,
         type: BookFileType,
     ): Result<String> {
-        val fileName = "${providerId}.${bookId}.${lang.value}.${type.value}"
+        val fileName = "${providerId}.${novelId}.${lang.value}.${type.value}"
 
-        val metadata = webBookMetadataRepository.getLocal(providerId, bookId)
+        val metadata = webNovelMetadataRepository.findOne(providerId, novelId)
             ?: return httpNotFound("小说不存在")
 
-        val shouldMake = webBookFileRepository.getCreationTime(fileName)?.let { fileCreateAt ->
+        val shouldMake = webNovelFileRepository.getCreationTime(fileName)?.let { fileCreateAt ->
             val updateAt = metadata.changeAt.atZone(ZoneId.systemDefault()).toInstant()
             updateAt > fileCreateAt
         } ?: true
 
         if (shouldMake) {
             val episodes = metadata.toc
-                .mapNotNull { it.episodeId }
-                .mapNotNull { episodeId ->
-                    webBookEpisodeRepository
-                        .getLocal(providerId, bookId, episodeId)
-                        ?.let { episodeId to it }
+                .mapNotNull { it.chapterId }
+                .mapNotNull { chapterId ->
+                    webChapterRepository
+                        .getLocal(providerId, novelId, chapterId)
+                        ?.let { chapterId to it }
                 }
                 .toMap()
-            webBookFileRepository.makeFile(
+            webNovelFileRepository.makeFile(
                 fileName = fileName,
                 lang = lang,
                 type = type,
@@ -69,7 +69,6 @@ class PrepareBookService(
             )
         }
 
-        webBookMetadataRepository.increaseDownloaded(providerId, bookId)
         return Result.success("../../../../../files-web/$fileName")
     }
 }

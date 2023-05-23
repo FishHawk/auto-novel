@@ -53,7 +53,7 @@ fun Route.routeTocMergeHistory() {
 }
 
 class TocMergeHistoryService(
-    private val tocMergeHistoryRepo: WebBookTocMergeHistoryRepository,
+    private val tocMergeHistoryRepo: WebNovelTocMergeHistoryRepository,
 ) {
     @Serializable
     data class TocMergeHistoryPageDto(
@@ -64,7 +64,7 @@ class TocMergeHistoryService(
         data class ItemDto(
             val id: String,
             val providerId: String,
-            val bookId: String,
+            val novelId: String,
             val reason: String,
         )
     }
@@ -80,7 +80,7 @@ class TocMergeHistoryService(
             TocMergeHistoryPageDto.ItemDto(
                 id = it.id.toHexString(),
                 providerId = it.providerId,
-                bookId = it.bookId,
+                novelId = it.novelId,
                 reason = it.reason,
             )
         }
@@ -92,29 +92,40 @@ class TocMergeHistoryService(
     data class TocMergeHistoryDto(
         val id: String,
         val providerId: String,
-        val bookId: String,
-        val tocOld: List<WebBookMetadataRepository.BookMetadata.TocItem>,
-        val tocNew: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+        val novelId: String,
+        val tocOld: List<WebNovelService.NovelMetadataDto.TocItem>,
+        val tocNew: List<WebNovelService.NovelMetadataDto.TocItem>,
         val reason: String,
     )
 
     suspend fun get(id: String): Result<TocMergeHistoryDto> {
-        val history = tocMergeHistoryRepo.get(id)?.let {
+        val history = tocMergeHistoryRepo.findOne(id)?.let {
             TocMergeHistoryDto(
                 id = it.id.toHexString(),
                 providerId = it.providerId,
-                bookId = it.bookId,
-                tocOld = it.tocOld,
-                tocNew = it.tocNew,
-                reason
-                = it.reason,
+                novelId = it.novelId,
+                tocOld = it.tocOld.map {
+                    WebNovelService.NovelMetadataDto.TocItem(
+                        it.titleJp,
+                        it.titleZh,
+                        it.chapterId,
+                    )
+                },
+                tocNew = it.tocNew.map {
+                    WebNovelService.NovelMetadataDto.TocItem(
+                        it.titleJp,
+                        it.titleZh,
+                        it.chapterId,
+                    )
+                },
+                reason = it.reason,
             )
         } ?: return httpNotFound("未找到")
         return Result.success(history)
     }
 
     suspend fun delete(id: String): Result<Unit> {
-        tocMergeHistoryRepo.delete(id)
+        tocMergeHistoryRepo.deleteOne(id)
         return Result.success(Unit)
     }
 }

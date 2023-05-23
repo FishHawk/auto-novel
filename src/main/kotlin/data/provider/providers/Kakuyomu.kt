@@ -3,25 +3,18 @@ package data.provider.providers
 import data.provider.*
 import io.ktor.client.request.*
 
-class Kakuyomu : BookProvider {
+class Kakuyomu : WebNovelProvider {
     companion object {
         const val id = "kakuyomu"
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
         TODO("Not yet implemented")
     }
 
-    private fun getMetadataUrl(bookId: String): String {
-        return "https://kakuyomu.jp/works/$bookId"
-    }
-
-    private fun getEpisodeUrl(bookId: String, episodeId: String): String {
-        return "https://kakuyomu.jp/works/$bookId/episodes/$episodeId"
-    }
-
-    override suspend fun getMetadata(bookId: String): SBookMetadata {
-        val doc = client.get(getMetadataUrl(bookId)).document()
+    override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
+        val url = "https://kakuyomu.jp/works/$novelId"
+        val doc = client.get(url).document()
 
         val title = doc
             .selectFirst("h1#workTitle > a")!!
@@ -31,7 +24,10 @@ class Kakuyomu : BookProvider {
             .selectFirst("span#workAuthor-activityName > a")!!
             .selectFirst("a")!!
             .let {
-                SBookAuthor(name = it.text(), link = "https://kakuyomu.jp" + it.attr("href"))
+                RemoteNovelMetadata.Author(
+                    name = it.text(),
+                    link = "https://kakuyomu.jp" + it.attr("href"),
+                )
             }
 
         val introduction = doc
@@ -44,13 +40,13 @@ class Kakuyomu : BookProvider {
         val toc = doc
             .select("ol.widget-toc-items > li")
             .map {
-                SBookTocItem(
+                RemoteNovelMetadata.TocItem(
                     title = it.selectFirst("span")!!.text(),
-                    episodeId = it.selectFirst("a")?.attr("href")?.substringAfterLast("/")
+                    chapterId = it.selectFirst("a")?.attr("href")?.substringAfterLast("/")
                 )
             }
 
-        return SBookMetadata(
+        return RemoteNovelMetadata(
             title = title,
             authors = listOf(author),
             introduction = introduction,
@@ -58,8 +54,9 @@ class Kakuyomu : BookProvider {
         )
     }
 
-    override suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode {
-        val doc = client.get(getEpisodeUrl(bookId, episodeId)).document()
-        return SBookEpisode(paragraphs = doc.select("div.widget-episodeBody > p").map { it.text() })
+    override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
+        val url = "https://kakuyomu.jp/works/$novelId/episodes/$chapterId"
+        val doc = client.get(url).document()
+        return RemoteChapter(paragraphs = doc.select("div.widget-episodeBody > p").map { it.text() })
     }
 }

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { BookTocItemDto } from '@/data/api/api_web_novel';
+import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 
 defineProps<{
-  item: BookTocItemDto;
+  item: WebNovelTocItemDto;
 }>();
 </script>
 

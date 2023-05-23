@@ -7,10 +7,10 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-private typealias BookTocItem = WebBookMetadataRepository.BookMetadata.TocItem
+private typealias BookTocItem = WebNovelMetadataRepository.NovelMetadata.TocItem
 
 fun dummyTocItem(s: String): BookTocItem {
-    return BookTocItem(titleJp = "ep-$s", titleZh = null, episodeId = "id-$s")
+    return BookTocItem(titleJp = "ep-$s", titleZh = null, chapterId = "id-$s")
 }
 
 fun dummyLocalToc(): List<BookTocItem> {

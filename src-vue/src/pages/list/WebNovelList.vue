@@ -2,7 +2,7 @@
 import ApiWebNovel from '@/data/api/api_web_novel';
 import { mapOk } from '@/data/api/result';
 
-import { Loader } from './components/BookList.vue';
+import { Loader } from './components/NovelList.vue';
 
 const options = [
   {
@@ -44,6 +44,6 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
 <template>
   <ListLayout>
     <n-h1>网络小说</n-h1>
-    <BookList search :options="options" :loader="loader" />
+    <NovelList search :options="options" :loader="loader" />
   </ListLayout>
 </template>

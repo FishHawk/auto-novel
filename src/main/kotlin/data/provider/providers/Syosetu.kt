@@ -7,7 +7,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.jsoup.nodes.Element
 
-class Syosetu : BookProvider {
+class Syosetu : WebNovelProvider {
     companion object {
         const val id = "syosetu"
         val rangeIds = mapOf(
@@ -61,7 +61,7 @@ class Syosetu : BookProvider {
         }
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
         val genre = options["genre"] ?: return emptyList()
         val range = options["range"] ?: return emptyList()
 
@@ -89,8 +89,8 @@ class Syosetu : BookProvider {
         return doc.select("div.ranking_inbox > div.ranking_list").map { parseListItem(it) }
     }
 
-    private fun parseListItem(item: Element): SBookListItem {
-        val bookId = item.selectFirst("a.tl")!!
+    private fun parseListItem(item: Element): RemoteNovelListItem {
+        val novelId = item.selectFirst("a.tl")!!
             .attr("href")
             .removeSuffix("/")
             .substringAfterLast("/")
@@ -107,33 +107,37 @@ class Syosetu : BookProvider {
             ).joinToString("\n")
         }
 
-        return SBookListItem(bookId = bookId, title = title, meta = meta)
+        return RemoteNovelListItem(novelId = novelId, title = title, meta = meta)
     }
 
-    private fun getMetadataUrl(bookId: String) =
-        "https://ncode.syosetu.com/$bookId"
-
-    private fun getEpisodeUrl(bookId: String, episodeId: String) =
-        if (episodeId == "default") "https://ncode.syosetu.com/$bookId"
-        else "https://ncode.syosetu.com/$bookId/$episodeId"
-
-    override suspend fun getMetadata(bookId: String): SBookMetadata {
-        val doc = client.get(getMetadataUrl(bookId)).document()
+    override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
+        val url = "https://ncode.syosetu.com/$novelId"
+        val doc = client.get(url).document()
 
         val title = doc.selectFirst("p.novel_title")!!.text()
 
         val author = doc.selectFirst("div.novel_writername")!!.let { el ->
             el.selectFirst("a")?.let {
-                SBookAuthor(name = it.text(), link = it.attr("href"))
-            } ?: SBookAuthor(name = el.text().removePrefix("作者："), link = null)
+                RemoteNovelMetadata.Author(
+                    name = it.text(),
+                    link = it.attr("href"),
+                )
+            } ?: RemoteNovelMetadata.Author(
+                name = el.text().removePrefix("作者："),
+            )
         }
 
         if (doc.selectFirst("div.index_box") == null) {
-            return SBookMetadata(
+            return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
                 introduction = "",
-                toc = listOf(SBookTocItem(title = "无名", episodeId = "default")),
+                toc = listOf(
+                    RemoteNovelMetadata.TocItem(
+                        title = "无名",
+                        chapterId = "default",
+                    )
+                ),
             )
         } else {
             val introduction = doc.selectFirst("div#novel_ex")!!.wholeText()
@@ -143,16 +147,18 @@ class Syosetu : BookProvider {
                 .children()
                 .map { child ->
                     child.selectFirst("a")?.let { a ->
-                        SBookTocItem(
+                        RemoteNovelMetadata.TocItem(
                             title = a.text(),
-                            episodeId = a.attr("href")
+                            chapterId = a.attr("href")
                                 .removeSuffix("/")
-                                .substringAfterLast("/")
+                                .substringAfterLast("/"),
                         )
-                    } ?: SBookTocItem(title = child.text())
+                    } ?: RemoteNovelMetadata.TocItem(
+                        title = child.text(),
+                    )
                 }
 
-            return SBookMetadata(
+            return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
                 introduction = introduction,
@@ -161,8 +167,11 @@ class Syosetu : BookProvider {
         }
     }
 
-    override suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode {
-        val doc = client.get(getEpisodeUrl(bookId, episodeId)).document()
-        return SBookEpisode(paragraphs = doc.select("div#novel_honbun > p").map { it.text() })
+    override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
+        val url =
+            if (chapterId == "default") "https://ncode.syosetu.com/$novelId"
+            else "https://ncode.syosetu.com/$novelId/$chapterId"
+        val doc = client.get(url).document()
+        return RemoteChapter(paragraphs = doc.select("div#novel_honbun > p").map { it.text() })
     }
 }

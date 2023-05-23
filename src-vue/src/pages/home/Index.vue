@@ -5,7 +5,7 @@ import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
 
 import ApiUser from '@/data/api/api_user';
-import ApiWebNovel, { BookListItemDto } from '@/data/api/api_web_novel';
+import ApiWebNovel, { WebNovelListItemDto } from '@/data/api/api_web_novel';
 import ApiWenkuNovel, { WenkuListItemDto } from '@/data/api/api_wenku_novel';
 import { parseUrl } from '@/data/provider';
 import { Ok, ResultState } from '@/data/api/result';
@@ -32,15 +32,19 @@ function query(url: string) {
   }
 
   const providerId = parseResult.providerId;
-  const bookId = parseResult.bookId;
-  const novelUrl = `/novel/${providerId}/${bookId}`;
+  const novelId = parseResult.novelId;
+  const novelUrl = `/novel/${providerId}/${novelId}`;
   router.push({ path: novelUrl });
 }
 
 const authInfoStore = useAuthInfoStore();
-const favoriteList = ref<ResultState<BookListItemDto[]>>();
+const favoriteList = ref<ResultState<WebNovelListItemDto[]>>();
 async function loadFavorite() {
-  const result = await ApiUser.listFavoritedWebBook(0, 8, authInfoStore.token!!);
+  const result = await ApiUser.listFavoritedWebNovel(
+    0,
+    8,
+    authInfoStore.token!!
+  );
   if (result.ok) {
     favoriteList.value = Ok(result.value.items);
   } else {
@@ -49,7 +53,7 @@ async function loadFavorite() {
 }
 onMounted(loadFavorite);
 
-const latestUpdateWeb = ref<ResultState<BookListItemDto[]>>();
+const latestUpdateWeb = ref<ResultState<WebNovelListItemDto[]>>();
 async function loadLatestUpdateWeb() {
   const result = await ApiWebNovel.list(0, 8, '', '');
   if (result.ok) {
@@ -134,7 +138,7 @@ onMounted(loadLatestUpdateWenku);
         <n-h2 prefix="bar">我的收藏</n-h2>
         <n-a href="/favorite-list">更多</n-a>
       </n-space>
-      <PanelWebBook :list="favoriteList" />
+      <PanelWebNovel :list="favoriteList" />
       <n-divider />
     </template>
 
@@ -142,14 +146,14 @@ onMounted(loadLatestUpdateWenku);
       <n-h2 prefix="bar">最新更新-网络小说</n-h2>
       <n-a href="/novel-list">更多</n-a>
     </n-space>
-    <PanelWebBook :list="latestUpdateWeb" />
+    <PanelWebNovel :list="latestUpdateWeb" />
     <n-divider />
 
     <n-space align="center" justify="space-between">
       <n-h2 prefix="bar" style="margin-bottom: 30px">最新更新-文库小说</n-h2>
       <n-a href="/wenku-list">更多</n-a>
     </n-space>
-    <PanelWenkuBook :list="latestUpdateWenku" />
+    <PanelWenkuNovel :list="latestUpdateWenku" />
     <n-divider />
   </MainLayout>
 </template>

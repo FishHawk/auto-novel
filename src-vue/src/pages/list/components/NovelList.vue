@@ -1,21 +1,24 @@
 <script lang="ts">
-type BookPage =
-  | { type: 'web'; page: BookListPageDto | BookRankPageDto }
+type NovelPage =
+  | { type: 'web'; page: WebNovelListPageDto | WebNovelRankPageDto }
   | { type: 'wenku'; page: WenkuListPageDto };
 
 export type Loader = (
   page: number,
   query: string,
   selected: number[]
-) => Promise<Result<BookPage>>;
+) => Promise<Result<NovelPage>>;
 </script>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Result, ResultState } from '@/data/api/result';
-import { BookListPageDto, BookRankPageDto } from '@/data/api/api_web_novel';
+import {
+  WebNovelListPageDto,
+  WebNovelRankPageDto,
+} from '@/data/api/api_web_novel';
 import { WenkuListPageDto } from '@/data/api/api_wenku_novel';
 
 const route = useRoute();
@@ -29,7 +32,7 @@ const props = defineProps<{
 
 const currentPage = ref(parseInt(route.query.page as string) || 1);
 const pageNumber = ref(1);
-const bookPage = ref<ResultState<BookPage>>();
+const novelPage = ref<ResultState<NovelPage>>();
 
 function parseFilters() {
   let query = '';
@@ -53,7 +56,7 @@ function parseFilters() {
 const filters = ref(parseFilters());
 
 async function loadPage(page: number) {
-  bookPage.value = undefined;
+  novelPage.value = undefined;
 
   const query: { [key: string]: any } = { page };
   if (props.search) {
@@ -70,7 +73,7 @@ async function loadPage(page: number) {
     filters.value.selected
   );
   if (currentPage.value == page) {
-    bookPage.value = result;
+    novelPage.value = result;
     if (result.ok) {
       pageNumber.value = result.value.page.pageNumber;
     }
@@ -98,26 +101,26 @@ watch(currentPage, (page) => loadPage(page));
     style="margin-top: 20px"
   />
   <n-divider />
-  <div v-if="bookPage?.ok">
-    <BookListWeb
-      v-if="bookPage.value.type === 'web'"
-      :page="bookPage.value.page"
+  <div v-if="novelPage?.ok">
+    <NovelListWeb
+      v-if="novelPage.value.type === 'web'"
+      :page="novelPage.value.page"
     />
-    <BookListWenku
-      v-else-if="bookPage.value.type === 'wenku'"
-      :page="bookPage.value.page"
+    <NovelListWenku
+      v-else-if="novelPage.value.type === 'wenku'"
+      :page="novelPage.value.page"
     />
 
     <n-empty
-      v-if="bookPage.value.page.items.length === 0"
+      v-if="novelPage.value.page.items.length === 0"
       description="空列表"
     />
   </div>
   <n-result
-    v-if="bookPage && !bookPage.ok"
+    v-if="novelPage && !novelPage.ok"
     status="error"
     title="加载错误"
-    :description="bookPage.error.message"
+    :description="novelPage.error.message"
   />
   <n-pagination
     v-if="pageNumber > 1"

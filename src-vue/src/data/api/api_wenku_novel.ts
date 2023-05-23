@@ -40,8 +40,20 @@ export interface WenkuMetadataDto {
   keywords: string[];
   introduction: string;
   visited: number;
-  files: string[];
   favored?: boolean;
+  volumeZh: string[];
+  volumeJp: VolumeJpDto[];
+}
+
+export interface VolumeJpDto {
+  volumeId: string;
+  jp: number;
+  baidu: number;
+  youdao: number;
+}
+
+async function listNonArchived(): Promise<Result<VolumeJpDto[]>> {
+  return runCatching(api.get(`wenku/non-archived`).json());
 }
 
 async function getMetadata(
@@ -112,10 +124,10 @@ interface BangumiSection {
 }
 
 async function getMetadataFromBangumi(
-  bookId: string
+  novelId: string
 ): Promise<Result<MetadataCreateBody>> {
   const sectionResult = await runCatching(
-    ky.get(`https://api.bgm.tv/v0/subjects/${bookId}`).json<BangumiSection>()
+    ky.get(`https://api.bgm.tv/v0/subjects/${novelId}`).json<BangumiSection>()
   );
   if (sectionResult.ok) {
     const metadata: MetadataCreateBody = {
@@ -142,23 +154,12 @@ async function getMetadataFromBangumi(
   }
 }
 
-function createUploadUrl(bookId: string) {
-  return `/api/wenku/${bookId}/episode`;
+function createVolumeZhUploadUrl(novelId: string) {
+  return `/api/wenku/${novelId}/volume-zh`;
 }
 
-export interface VolumeStateDto {
-  fileName: string;
-  jp: number;
-  baidu: number;
-  youdao: number;
-}
-
-async function listNonArchived(): Promise<Result<VolumeStateDto[]>> {
-  return runCatching(api.get('wenku/non-archived').json());
-}
-
-function createNonArchivedUploadUrl() {
-  return '/api/wenku/non-archived';
+function createVolumeJpUploadUrl(novelId: string) {
+  return `/api/wenku/${novelId}/volume-jp`;
 }
 
 export interface ChapterStateDto {
@@ -167,31 +168,37 @@ export interface ChapterStateDto {
   youdao: boolean;
 }
 
-function getNonArchivedState(
-  fileName: string
+function getTranslateState(
+  novelId: string,
+  volumeId: string
 ): Promise<Result<ChapterStateDto[]>> {
-  return runCatching(api.get(`wenku/non-archived/${fileName}`).json());
+  return runCatching(api.get(`wenku/${novelId}/translate/${volumeId}`).json());
 }
 
-function getNonArchivedEpubInfo(fileName: string): Promise<ChapterStateDto[]> {
-  return api.get(`wenku/non-archived/${fileName}`).json();
+function getTranslateStateRaw(
+  novelId: string,
+  volumeId: string
+): Promise<ChapterStateDto[]> {
+  return api.get(`wenku/${novelId}/translate/${volumeId}`).json();
 }
 
-function getNonArchivedChapter(
-  fileName: string,
+function getTranslateChapter(
+  novelId: string,
+  volumeId: string,
   chapterId: string
 ): Promise<string[]> {
-  return api.get(`wenku/non-archived/${fileName}/${chapterId}`).json();
+  return api.get(`wenku/${novelId}/translate/${volumeId}/${chapterId}`).json();
 }
 
-function postNonArchivedChapter(
-  fileName: string,
+function postTranslateChapter(
+  novelId: string,
+  volumeId: string,
   chapterId: string,
   version: 'baidu' | 'youdao',
   content: string[]
 ): Promise<string[]> {
   return api
-    .post(`wenku/non-archived/${fileName}/${chapterId}/${version}`, {
+    .post(`wenku/${novelId}/translate/${volumeId}/${chapterId}/${version}`, {
       json: content,
     })
     .json();
@@ -199,21 +206,22 @@ function postNonArchivedChapter(
 
 interface UpdateCallback {
   onStart: (total: number) => void;
-  onEpisodeTranslateSuccess: () => void;
-  onEpisodeTranslateFailure: () => void;
+  onChapterTranslateSuccess: () => void;
+  onChapterTranslateFailure: () => void;
 }
 
 async function update(
   version: 'baidu' | 'youdao',
-  fileName: string,
+  novelId: string,
+  volumeId: string,
   callback: UpdateCallback
 ): Promise<Result<undefined, any>> {
   let total: number;
   let chapterIds: string[];
   let translator: TranslatorAdapter | undefined = undefined;
   try {
-    console.log(`获取元数据 ${fileName}`);
-    const state = await getNonArchivedEpubInfo(fileName);
+    console.log(`获取元数据 ${volumeId}`);
+    const state = await getTranslateStateRaw(novelId, volumeId);
     total = state.length;
 
     try {
@@ -234,18 +242,24 @@ async function update(
 
   callback.onStart(total);
 
-  for (const episodeId of chapterIds) {
+  for (const chapterId of chapterIds) {
     try {
-      console.log(`获取章节 ${fileName}/${episodeId}`);
-      const textsSrc = await getNonArchivedChapter(fileName, episodeId);
-      console.log(`翻译章节 ${fileName}/${episodeId}`);
+      console.log(`获取章节 ${volumeId}/${chapterId}`);
+      const textsSrc = await getTranslateChapter(novelId, volumeId, chapterId);
+      console.log(`翻译章节 ${volumeId}/${chapterId}`);
       const textsDst = await translator.translate(textsSrc);
-      console.log(`上传章节 ${fileName}/${episodeId}`);
-      await postNonArchivedChapter(fileName, episodeId, version, textsDst);
-      callback.onEpisodeTranslateSuccess();
+      console.log(`上传章节 ${volumeId}/${chapterId}`);
+      await postTranslateChapter(
+        novelId,
+        volumeId,
+        chapterId,
+        version,
+        textsDst
+      );
+      callback.onChapterTranslateSuccess();
     } catch (e) {
       console.log(e);
-      callback.onEpisodeTranslateFailure();
+      callback.onChapterTranslateFailure();
     }
   }
 
@@ -254,14 +268,13 @@ async function update(
 
 export default {
   list,
+  listNonArchived,
   getMetadata,
   postMetadata,
   patchMetadata,
   getMetadataFromBangumi,
-  createUploadUrl,
-  //
-  listNonArchived,
-  createNonArchivedUploadUrl,
-  getNonArchivedState,
+  createVolumeZhUploadUrl,
+  createVolumeJpUploadUrl,
+  getTranslateState,
   update,
 };

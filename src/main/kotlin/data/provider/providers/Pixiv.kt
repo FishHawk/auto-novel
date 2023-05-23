@@ -10,7 +10,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 
-class Pixiv : BookProvider {
+class Pixiv : WebNovelProvider {
     companion object {
         const val id = "pixiv"
     }
@@ -29,63 +29,57 @@ class Pixiv : BookProvider {
         }
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
         TODO("Not yet implemented")
     }
 
-    private fun getMetadataUrl(bookId: String): String {
-        return if (bookId.startsWith("s")) {
-            getEpisodeUrl(bookId, bookId.removePrefix("s"))
-        } else {
-            "https://www.pixiv.net/novel/series/${bookId}"
-        }
-    }
-
-    private fun getEpisodeUrl(bookId: String, episodeId: String): String {
-        return "https://www.pixiv.net/novel/show.php?id=$episodeId"
-    }
-
-    override suspend fun getMetadata(bookId: String): SBookMetadata {
-        if (bookId.startsWith("s")) {
-            val episodeId = bookId.removePrefix("s")
-            val doc = get(getEpisodeUrl(bookId, episodeId)).document()
+    override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
+        if (novelId.startsWith("s")) {
+            val chapterId = novelId.removePrefix("s")
+            val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"
+            val doc = get(url).document()
             val jsonRaw = doc.selectFirst("meta#meta-preload-data")!!.attr("content")
-            val obj = Json.parseToJsonElement(jsonRaw).jsonObject["novel"]!!.jsonObject[episodeId]!!.jsonObject
+            val obj = Json.parseToJsonElement(jsonRaw).jsonObject["novel"]!!.jsonObject[chapterId]!!.jsonObject
             assert(obj["seriesNavData"] != null)
 
             val title = obj["title"]!!.jsonPrimitive.content
-            val author = SBookAuthor(
+            val author = RemoteNovelMetadata.Author(
                 name = obj["userName"]!!.jsonPrimitive.content,
                 link = "https://www.pixiv.net/users/" + obj["userId"]!!.jsonPrimitive.content
             )
             val introduction = obj["description"]!!.jsonPrimitive.content.replace("<br />", "\n")
 
-            return SBookMetadata(
+            return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
                 introduction = introduction,
-                toc = listOf(SBookTocItem(title = "无名", episodeId = episodeId)),
+                toc = listOf(
+                    RemoteNovelMetadata.TocItem(
+                        title = "无名",
+                        chapterId = chapterId,
+                    )
+                ),
             )
         } else {
-            val obj1 = get("https://www.pixiv.net/ajax/novel/series/$bookId").json()["body"]!!.jsonObject
+            val obj1 = get("https://www.pixiv.net/ajax/novel/series/$novelId").json()["body"]!!.jsonObject
             val title = obj1["title"]!!.jsonPrimitive.content
-            val author = SBookAuthor(
+            val author = RemoteNovelMetadata.Author(
                 name = obj1["userName"]!!.jsonPrimitive.content,
-                link = "https://www.pixiv.net/users/" + obj1["userId"]!!.jsonPrimitive.content
+                link = "https://www.pixiv.net/users/" + obj1["userId"]!!.jsonPrimitive.content,
             )
             val introduction = obj1["caption"]!!.jsonPrimitive.content
 
-            val obj2 = get("https://www.pixiv.net/ajax/novel/series/$bookId/content_titles").json()
+            val obj2 = get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles").json()
             val toc = obj2["body"]!!.jsonArray
                 .map { it.jsonObject }
                 .map {
-                    SBookTocItem(
+                    RemoteNovelMetadata.TocItem(
                         title = it["title"]!!.jsonPrimitive.content,
-                        episodeId = it["id"]!!.jsonPrimitive.content,
+                        chapterId = it["id"]!!.jsonPrimitive.content,
                     )
                 }
 
-            return SBookMetadata(
+            return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
                 introduction = introduction,
@@ -94,10 +88,11 @@ class Pixiv : BookProvider {
         }
     }
 
-    override suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode {
-        val doc = get(getEpisodeUrl(bookId, episodeId)).document()
+    override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
+        val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"
+        val doc = get(url).document()
         val jsonRaw = doc.selectFirst("meta#meta-preload-data")!!.attr("content")
-        val obj = Json.parseToJsonElement(jsonRaw).jsonObject["novel"]!!.jsonObject[episodeId]!!.jsonObject
-        return SBookEpisode(paragraphs = obj["content"]!!.jsonPrimitive.content.lines())
+        val obj = Json.parseToJsonElement(jsonRaw).jsonObject["novel"]!!.jsonObject[chapterId]!!.jsonObject
+        return RemoteChapter(paragraphs = obj["content"]!!.jsonPrimitive.content.lines())
     }
 }

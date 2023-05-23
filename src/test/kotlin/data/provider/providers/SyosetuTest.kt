@@ -20,9 +20,9 @@ class SyosetuTest : DescribeSpec({
             metadata.introduction.shouldStartWith("３４歳職歴無し住所不定無職童貞のニートは")
             metadata.introduction.shouldEndWith("http://ncode.syosetu.com/n4251cr/")
             metadata.toc[0].title.shouldBe("第１章　幼年期")
-            metadata.toc[0].episodeId.shouldBeNull()
+            metadata.toc[0].chapterId.shouldBeNull()
             metadata.toc[1].title.shouldBe("プロローグ")
-            metadata.toc[1].episodeId.shouldBe("1")
+            metadata.toc[1].chapterId.shouldBe("1")
         }
         it("常规，简介需要展开，但不需要处理") {
             // https://ncode.syosetu.com/n8473hv
@@ -45,19 +45,19 @@ class SyosetuTest : DescribeSpec({
     describe("getEpisode") {
         it("常规") {
             // https://ncode.syosetu.com/n9669bk/1
-            val episode = provider.getEpisode("n9669bk", "1")
+            val episode = provider.getChapter("n9669bk", "1")
             episode.paragraphs.first().shouldBe("　俺は34歳住所不定無職。")
             episode.paragraphs.last().shouldBe("　俺はトラックとコンクリートに挟まれて、トマトみたいに潰れて死んだ。")
         }
         it("常规，R18重定向") {
             // https://ncode.syosetu.com/n5305eg/1
-            val episode = provider.getEpisode("n5305eg", "1")
+            val episode = provider.getChapter("n5305eg", "1")
             episode.paragraphs.first().shouldBe("　「なんか、面白いことねーかなー」")
             episode.paragraphs.last().shouldBe("　プレイ確定！")
         }
         it("短篇") {
             // https://ncode.syosetu.com/n0916hw
-            val episode = provider.getEpisode("n0916hw", "default")
+            val episode = provider.getChapter("n0916hw", "default")
             episode.paragraphs.first().shouldBe("\n")
             episode.paragraphs.last().shouldBe("\n")
         }

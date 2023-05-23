@@ -3,11 +3,11 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import data.*
 import data.ElasticSearchDataSource
-import data.wenku.WenkuBookFileRepository
-import data.provider.ProviderDataSource
+import data.wenku.WenkuNovelFileRepository
+import data.provider.WebNovelProviderDataSource
 import data.web.*
-import data.wenku.WenkuBookIndexRepository
-import data.wenku.WenkuBookMetadataRepository
+import data.wenku.WenkuNovelIndexRepository
+import data.wenku.WenkuNovelMetadataRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -121,18 +121,18 @@ val appModule = module {
         val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
         ElasticSearchDataSource(url)
     }
-    single { ProviderDataSource() }
+    single { WebNovelProviderDataSource() }
 
-    single { WenkuBookFileRepository(root = Path("./data/files-wenku")) }
-    single { WenkuBookIndexRepository(get()) }
-    single { WenkuBookMetadataRepository(get()) }
+    single { WenkuNovelFileRepository(root = Path("./data/files-wenku")) }
+    single { WenkuNovelIndexRepository(get()) }
+    single { WenkuNovelMetadataRepository(get()) }
 
-    single { WebBookMetadataRepository(get(), get(), get(), get()) }
-    single { WebBookEpisodeRepository(get(), get(), get()) }
-    single { WebBookPatchRepository(get()) }
-    single { WebBookFileRepository(root = Path("./data/files-web")) }
-    single { WebBookIndexRepository(get()) }
-    single { WebBookTocMergeHistoryRepository(get()) }
+    single { WebNovelMetadataRepository(get(), get(), get(), get()) }
+    single { WebChapterRepository(get(), get(), get()) }
+    single { WebNovelPatchHistoryRepository(get()) }
+    single { WebNovelFileRepository(root = Path("./data/files-web")) }
+    single { WebNovelIndexRepository(get()) }
+    single { WebNovelTocMergeHistoryRepository(get()) }
 
     single { CommentRepository(get()) }
     single { UserRepository(get()) }

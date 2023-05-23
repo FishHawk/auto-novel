@@ -14,16 +14,16 @@ const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
 const total = ref(1);
-const bookPage = ref<ResultState<TocMergeHistoryPageDto>>();
+const novelPage = ref<ResultState<TocMergeHistoryPageDto>>();
 const details = ref<{ [key: string]: DiffTocItem[] }>({});
 
 async function loadPage(page: number) {
-  bookPage.value = undefined;
+  novelPage.value = undefined;
   const result = await ApiTocMergeHistory.listTocMergeHistory(
     currentPage.value - 1
   );
   if (currentPage.value == page) {
-    bookPage.value = result;
+    novelPage.value = result;
     if (result.ok) {
       total.value = result.value.total;
     }
@@ -41,8 +41,8 @@ async function deleteDetail(id: string) {
   const result = await ApiTocMergeHistory.deleteMergeHistory(id, auth.token!);
   if (result.ok) {
     message.info('删除成功');
-    if (bookPage.value?.ok) {
-      bookPage.value.value.items = bookPage.value.value.items.filter(
+    if (novelPage.value?.ok) {
+      novelPage.value.value.items = novelPage.value.value.items.filter(
         (it) => it.id !== id
       );
     }
@@ -53,8 +53,8 @@ async function deleteDetail(id: string) {
 
 interface DiffTocItem {
   same: boolean;
-  oldV?: { titleJp: string; episodeId?: string };
-  newV?: { titleJp: string; episodeId?: string };
+  oldV?: { titleJp: string; chapterId?: string };
+  newV?: { titleJp: string; chapterId?: string };
 }
 
 function diffToc(detail: TocMergeHistoryDto): DiffTocItem[] {
@@ -69,7 +69,7 @@ function diffToc(detail: TocMergeHistoryDto): DiffTocItem[] {
       oldV === undefined ||
       newV === undefined ||
       oldV.titleJp !== newV.titleJp ||
-      oldV.episodeId !== newV.episodeId;
+      oldV.chapterId !== newV.chapterId;
     if (diff) {
       firstDiff = diff;
     }
@@ -92,14 +92,14 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       :page-slot="7"
     />
     <n-divider />
-    <div v-if="bookPage?.ok">
-      <div v-for="item in bookPage.value.items">
+    <div v-if="novelPage?.ok">
+      <div v-for="item in novelPage.value.items">
         <n-p>
           <n-a
-            :href="`/novel/${item.providerId}/${item.bookId}`"
+            :href="`/novel/${item.providerId}/${item.novelId}`"
             target="_blank"
           >
-            {{ `${item.providerId}/${item.bookId}` }}
+            {{ `${item.providerId}/${item.novelId}` }}
           </n-a>
           <br />
           {{ item.reason }}
@@ -113,12 +113,12 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
             <td :style="{ color: t.same ? 'grey' : 'red' }">
               {{ t.oldV?.titleJp }}
               <br />
-              {{ t.oldV?.episodeId }}
+              {{ t.oldV?.chapterId }}
             </td>
             <td :style="{ color: t.same ? 'grey' : 'red' }">
               {{ t.newV?.titleJp }}
               <br />
-              {{ t.newV?.episodeId }}
+              {{ t.newV?.chapterId }}
             </td>
           </tr>
           <n-button @click="deleteDetail(item.id)">删除</n-button>

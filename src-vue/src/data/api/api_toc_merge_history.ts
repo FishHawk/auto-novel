@@ -1,4 +1,5 @@
 import api from './api';
+import { WebNovelTocItemDto } from './api_web_novel';
 import { Result, runCatching } from './result';
 
 export interface TocMergeHistoryPageDto {
@@ -8,7 +9,7 @@ export interface TocMergeHistoryPageDto {
 interface TocMergeHistoryPageItemDto {
   id: string;
   providerId: string;
-  bookId: string;
+  novelId: string;
   reason: string;
 }
 
@@ -20,14 +21,10 @@ async function listTocMergeHistory(
   );
 }
 
-interface BookTocItemDto {
-  titleJp: string;
-  titleZh?: string;
-  episodeId?: string;
-}
+
 export type TocMergeHistoryDto = TocMergeHistoryPageItemDto & {
-  tocOld: BookTocItemDto[];
-  tocNew: BookTocItemDto[];
+  tocOld: WebNovelTocItemDto[];
+  tocNew: WebNovelTocItemDto[];
 };
 
 async function getTocMergeHistory(

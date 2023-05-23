@@ -19,13 +19,13 @@ const authInfoStore = useAuthInfoStore();
 const message = useMessage();
 
 const route = useRoute();
-const bookId = route.params.bookId as string;
+const novelId = route.params.novelId as string;
 
 const novelMetadata = ref<ResultState<WenkuMetadataDto>>();
 
 onMounted(() => getMetadata());
 async function getMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(bookId, authInfoStore.token);
+  const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
   novelMetadata.value = result;
   if (result.ok) {
     document.title = result.value.title;
@@ -33,7 +33,7 @@ async function getMetadata() {
 }
 
 async function refreshMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(bookId, authInfoStore.token);
+  const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
   if (result.ok) {
     novelMetadata.value = result;
   }
@@ -78,7 +78,7 @@ async function addFavorite() {
     return;
   }
 
-  const result = await ApiUser.putFavoritedWenkuBook(bookId, token);
+  const result = await ApiUser.putFavoritedWenkuNovel(novelId, token);
   if (result.ok) {
     if (novelMetadata.value?.ok) {
       novelMetadata.value.value.favored = true;
@@ -99,7 +99,7 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiUser.deleteFavoritedWenkuBook(bookId, token);
+  const result = await ApiUser.deleteFavoritedWenkuNovel(novelId, token);
   if (result.ok) {
     if (novelMetadata.value?.ok) {
       novelMetadata.value.value.favored = false;
@@ -218,7 +218,7 @@ function enableEditMode() {
       </n-space>
 
       <template v-if="editMode">
-        <WenkuEditSection :id="bookId" v-model:metadata="novelMetadata.value" />
+        <WenkuEditSection :id="novelId" v-model:metadata="novelMetadata.value" />
       </template>
 
       <template v-else>
@@ -242,7 +242,7 @@ function enableEditMode() {
         <n-upload
           multiple
           :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
-          :action="ApiWenkuNovel.createUploadUrl(bookId)"
+          :action="ApiWenkuNovel.createVolumeZhUploadUrl(novelId)"
           :trigger-style="{ width: '100%' }"
           @finish="handleFinish"
           @before-upload="beforeUpload"
@@ -258,12 +258,12 @@ function enableEditMode() {
 
         <n-ul>
           <n-li
-            v-for="fileName in novelMetadata.value.files.sort((a, b) =>
+            v-for="fileName in novelMetadata.value.volumeZh.sort((a, b) =>
               a.localeCompare(b)
             )"
           >
             <n-a
-              :href="`/files-wenku/${bookId}/${fileName}`"
+              :href="`/files-wenku/${novelId}/${fileName}`"
               target="_blank"
               :download="fileName"
             >
@@ -273,7 +273,7 @@ function enableEditMode() {
         </n-ul>
 
         <n-empty
-          v-if="novelMetadata.value.files.length === 0"
+          v-if="novelMetadata.value.volumeZh.length === 0"
           description="空列表"
         />
 

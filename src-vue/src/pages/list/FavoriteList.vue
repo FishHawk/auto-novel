@@ -3,7 +3,7 @@ import ApiUser from '@/data/api/api_user';
 import { mapOk } from '@/data/api/result';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
-import { Loader } from './components/BookList.vue';
+import { Loader } from './components/NovelList.vue';
 
 const options = [
   {
@@ -18,13 +18,13 @@ const loader: Loader = (page, _query, selected) => {
     return options[n].tags[selected[n]];
   }
   if (optionNth(0) === '网页小说') {
-    return ApiUser.listFavoritedWebBook(
+    return ApiUser.listFavoritedWebNovel(
       page - 1,
       10,
       authInfoStore.token!
     ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
   } else {
-    return ApiUser.listFavoritedWenkuBook(
+    return ApiUser.listFavoritedWenkuNovel(
       page - 1,
       10,
       authInfoStore.token!
@@ -36,6 +36,6 @@ const loader: Loader = (page, _query, selected) => {
 <template>
   <ListLayout>
     <n-h1>我的收藏</n-h1>
-    <BookList :search="false" :options="options" :loader="loader" />
+    <NovelList :search="false" :options="options" :loader="loader" />
   </ListLayout>
 </template>

@@ -6,7 +6,7 @@ import ApiWenkuNovel from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 import { mapOk } from '@/data/api/result';
 
-import { Loader } from './components/BookList.vue';
+import { Loader } from './components/NovelList.vue';
 
 const message = useMessage();
 
@@ -22,11 +22,11 @@ const showModal = ref(false);
 const bangumiUrl = ref('');
 
 async function importMetadataFromBangumi(url: string) {
-  const bookId = /bangumi\.tv\/subject\/([0-9]+)/.exec(url)?.[1];
-  if (!bookId) {
+  const novelId = /bangumi\.tv\/subject\/([0-9]+)/.exec(url)?.[1];
+  if (!novelId) {
     return message.error('链接格式错误');
   }
-  const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(bookId);
+  const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(novelId);
   if (metadataResult.ok) {
     const token = authInfoStore.token;
     if (!token) return message.info('请先登录');
@@ -66,7 +66,7 @@ function openDialog() {
         </n-a>
       </n-space>
     </n-space>
-    <BookList :search="true" :options="[]" :loader="loader" />
+    <NovelList :search="true" :options="[]" :loader="loader" />
   </ListLayout>
 
   <n-modal v-model:show="showModal">

@@ -3,9 +3,9 @@ package data.provider
 import data.provider.providers.*
 import org.slf4j.LoggerFactory
 
-class ProviderDataSource {
+class WebNovelProviderDataSource {
     companion object {
-        private val logger = LoggerFactory.getLogger(ProviderDataSource::class.java)
+        private val logger = LoggerFactory.getLogger(WebNovelProviderDataSource::class.java)
         private val providers = mapOf(
             Hameln.id to Hameln(),
             Kakuyomu.id to Kakuyomu(),
@@ -17,7 +17,7 @@ class ProviderDataSource {
         )
     }
 
-    suspend fun getRank(providerId: String, options: Map<String, String>): Result<List<SBookListItem>> {
+    suspend fun getRank(providerId: String, options: Map<String, String>): Result<List<RemoteNovelListItem>> {
         return runCatching {
             providers[providerId]!!.getRank(options)
         }.onFailure {
@@ -25,19 +25,19 @@ class ProviderDataSource {
         }
     }
 
-    suspend fun getMetadata(providerId: String, bookId: String): Result<SBookMetadata> {
+    suspend fun getMetadata(providerId: String, novelId: String): Result<RemoteNovelMetadata> {
         return runCatching {
-            providers[providerId]!!.getMetadata(bookId)
+            providers[providerId]!!.getMetadata(novelId)
         }.onFailure {
-            logger.error("获取元数据失败 $providerId/$bookId", it)
+            logger.error("获取元数据失败 $providerId/$novelId", it)
         }
     }
 
-    suspend fun getEpisode(providerId: String, bookId: String, episodeId: String): Result<SBookEpisode> {
+    suspend fun getChapter(providerId: String, novelId: String, chapterId: String): Result<RemoteChapter> {
         return runCatching {
-            providers[providerId]!!.getEpisode(bookId, episodeId)
+            providers[providerId]!!.getChapter(novelId, chapterId)
         }.onFailure {
-            logger.error("获取章节失败 $providerId/$bookId/$episodeId", it)
+            logger.error("获取章节失败 $providerId/$novelId/$chapterId", it)
         }
     }
 }

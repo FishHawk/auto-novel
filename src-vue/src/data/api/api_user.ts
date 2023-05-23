@@ -1,13 +1,13 @@
 import api from './api';
 import { Result, runCatching } from './result';
-import { BookListPageDto } from './api_web_novel';
+import { WebNovelListPageDto } from './api_web_novel';
 import { WenkuListPageDto } from './api_wenku_novel';
 
-async function listFavoritedWebBook(
+async function listFavoritedWebNovel(
   page: number,
   pageSize: number,
   token: string
-): Promise<Result<BookListPageDto>> {
+): Promise<Result<WebNovelListPageDto>> {
   return runCatching(
     api
       .get(`user/favorited-web/list`, {
@@ -18,35 +18,35 @@ async function listFavoritedWebBook(
   );
 }
 
-async function putFavoritedWebBook(
+async function putFavoritedWebNovel(
   providerId: string,
-  bookId: string,
+  novelId: string,
   token: string
 ) {
   return runCatching(
     api
-      .put(`user/favorited-web/${providerId}/${bookId}`, {
+      .put(`user/favorited-web/${providerId}/${novelId}`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .json()
   );
 }
 
-async function deleteFavoritedWebBook(
+async function deleteFavoritedWebNovel(
   providerId: string,
-  bookId: string,
+  novelId: string,
   token: string
 ) {
   return runCatching(
     api
-      .delete(`user/favorited-web/${providerId}/${bookId}`, {
+      .delete(`user/favorited-web/${providerId}/${novelId}`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .json()
   );
 }
 
-async function listFavoritedWenkuBook(
+async function listFavoritedWenkuNovel(
   page: number,
   pageSize: number,
   token: string
@@ -61,30 +61,30 @@ async function listFavoritedWenkuBook(
   );
 }
 
-async function putFavoritedWenkuBook(bookId: string, token: string) {
+async function putFavoritedWenkuNovel(novelId: string, token: string) {
   return runCatching(
     api
-      .put(`user/favorited-wenku/${bookId}`, {
+      .put(`user/favorited-wenku/${novelId}`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .json()
   );
 }
 
-async function deleteFavoritedWenkuBook(bookId: string, token: string) {
+async function deleteFavoritedWenkuNovel(novelId: string, token: string) {
   return runCatching(
     api
-      .delete(`user/favorited-wenku/${bookId}`, {
+      .delete(`user/favorited-wenku/${novelId}`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .json()
   );
 }
 export default {
-  listFavoritedWebBook,
-  putFavoritedWebBook,
-  deleteFavoritedWebBook,
-  listFavoritedWenkuBook,
-  putFavoritedWenkuBook,
-  deleteFavoritedWenkuBook,
+  listFavoritedWebNovel,
+  putFavoritedWebNovel,
+  deleteFavoritedWebNovel,
+  listFavoritedWenkuNovel,
+  putFavoritedWenkuNovel,
+  deleteFavoritedWenkuNovel,
 };

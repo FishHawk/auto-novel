@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ResultState } from '@/data/api/result';
-import { BookListItemDto } from '@/data/api/api_web_novel';
+import { WebNovelListItemDto } from '@/data/api/api_web_novel';
 
 defineProps<{
-  list: ResultState<BookListItemDto[]>;
+  list: ResultState<WebNovelListItemDto[]>;
 }>();
 </script>
 
@@ -12,7 +12,7 @@ defineProps<{
     <n-grid :x-gap="12" :y-gap="12" cols="1 600:4">
       <n-grid-item v-for="item in list.value" style="padding: 8px">
         <n-a
-          :href="`/novel/${item.providerId}/${item.bookId}`"
+          :href="`/novel/${item.providerId}/${item.novelId}`"
           target="_blank"
           class="text-2line"
           >{{ item.titleJp }}</n-a

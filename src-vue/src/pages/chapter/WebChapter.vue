@@ -1,32 +1,28 @@
 <script lang="ts" setup>
 import { onMounted, ref, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
-import { NConfigProvider, lightTheme, darkTheme, useMessage } from 'naive-ui';
+import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
-import ApiWebNovel, { BookEpisodeDto } from '@/data/api/api_web_novel';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import ApiWebNovel, { WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
-import { buildEpisodeUrl } from '@/data/provider';
+import { buildChapterUrl } from '@/data/provider';
 
-const authInfoStore = useAuthInfoStore();
 const setting = useReaderSettingStore();
-
-const message = useMessage();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
-const bookId = route.params.bookId as string;
-const episodeId = route.params.episodeId as string;
-const url = buildEpisodeUrl(providerId, bookId, episodeId);
+const novelId = route.params.novelId as string;
+const chapterId = route.params.chapterId as string;
+const url = buildChapterUrl(providerId, novelId, chapterId);
 
 const showModal = ref(false);
 
-const bookEpisode = shallowRef<ResultState<BookEpisodeDto>>();
-onMounted(() => getEpisode());
-async function getEpisode() {
-  const result = await ApiWebNovel.getEpisode(providerId, bookId, episodeId);
-  bookEpisode.value = result;
+const chapter = shallowRef<ResultState<WebNovelChapterDto>>();
+onMounted(() => getChapter());
+async function getChapter() {
+  const result = await ApiWebNovel.getChapter(providerId, novelId, chapterId);
+  chapter.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
   }
@@ -37,48 +33,48 @@ type Paragraph =
   | { imageUrl: string }
   | null;
 
-function getTextList(episode: BookEpisodeDto): Paragraph[] {
+function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
   const merged: Paragraph[] = [];
   const styles: { paragraphs: string[]; secondary: boolean }[] = [];
 
   if (setting.mode === 'jp') {
-    styles.push({ paragraphs: episode.paragraphs, secondary: false });
+    styles.push({ paragraphs: chapter.paragraphs, secondary: false });
   } else {
     if (setting.mode === 'mix-reverse') {
-      styles.push({ paragraphs: episode.paragraphs, secondary: true });
+      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
     }
 
     if (setting.translation === 'youdao') {
       // 有道优先
-      if (episode.youdaoParagraphs) {
-        styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
-      } else if (episode.baiduParagraphs) {
+      if (chapter.youdaoParagraphs) {
+        styles.push({ paragraphs: chapter.youdaoParagraphs, secondary: false });
+      } else if (chapter.baiduParagraphs) {
         merged.push({ text: '有道翻译不存在，使用百度翻译', secondary: true });
-        styles.push({ paragraphs: episode.baiduParagraphs, secondary: false });
+        styles.push({ paragraphs: chapter.baiduParagraphs, secondary: false });
       } else {
         merged.push({ text: '无中文翻译', secondary: false });
         return merged;
       }
     } else if (setting.translation === 'baidu') {
       // 百度优先
-      if (episode.baiduParagraphs) {
-        styles.push({ paragraphs: episode.baiduParagraphs, secondary: false });
-      } else if (episode.youdaoParagraphs) {
+      if (chapter.baiduParagraphs) {
+        styles.push({ paragraphs: chapter.baiduParagraphs, secondary: false });
+      } else if (chapter.youdaoParagraphs) {
         merged.push({ text: '百度翻译不存在，使用有道翻译', secondary: true });
-        styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
+        styles.push({ paragraphs: chapter.youdaoParagraphs, secondary: false });
       } else {
         merged.push({ text: '无中文翻译', secondary: false });
         return merged;
       }
     } else if (setting.translation === 'youdao/baidu') {
-      if (episode.youdaoParagraphs && episode.baiduParagraphs) {
-        styles.push({ paragraphs: episode.youdaoParagraphs, secondary: false });
-        styles.push({ paragraphs: episode.baiduParagraphs, secondary: false });
+      if (chapter.youdaoParagraphs && chapter.baiduParagraphs) {
+        styles.push({ paragraphs: chapter.youdaoParagraphs, secondary: false });
+        styles.push({ paragraphs: chapter.baiduParagraphs, secondary: false });
       } else {
-        if (!episode.youdaoParagraphs) {
+        if (!chapter.youdaoParagraphs) {
           merged.push({ text: '有道翻译不存在', secondary: false });
         }
-        if (!episode.baiduParagraphs) {
+        if (!chapter.baiduParagraphs) {
           merged.push({ text: '百度翻译不存在', secondary: false });
         }
         return merged;
@@ -86,15 +82,15 @@ function getTextList(episode: BookEpisodeDto): Paragraph[] {
     }
 
     if (setting.mode === 'mix') {
-      styles.push({ paragraphs: episode.paragraphs, secondary: true });
+      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
     }
   }
 
-  for (let i = 0; i < episode.paragraphs.length; i++) {
-    if (episode.paragraphs[i].trim().length === 0) {
+  for (let i = 0; i < chapter.paragraphs.length; i++) {
+    if (chapter.paragraphs[i].trim().length === 0) {
       merged.push(null);
-    } else if (episode.paragraphs[i].startsWith('<图片>')) {
-      merged.push({ imageUrl: episode.paragraphs[i].slice(4) });
+    } else if (chapter.paragraphs[i].startsWith('<图片>')) {
+      merged.push({ imageUrl: chapter.paragraphs[i].slice(4) });
     } else {
       for (const style of styles) {
         merged.push({ text: style.paragraphs[i], secondary: style.secondary });
@@ -127,33 +123,27 @@ function getTextList(episode: BookEpisodeDto): Paragraph[] {
 
     <ReaderSettingDialog v-model:show="showModal" />
 
-    <div class="content" v-if="bookEpisode?.ok">
+    <div class="content" v-if="chapter?.ok">
       <n-h2 style="text-align: center; width: 100%">
-        <n-a :href="url" target="_blank">{{ bookEpisode.value.titleJp }}</n-a>
+        <n-a :href="url" target="_blank">{{ chapter.value.titleJp }}</n-a>
         <br />
-        <span style="color: gray">{{ bookEpisode.value.titleZh }}</span>
+        <span style="color: gray">{{ chapter.value.titleZh }}</span>
       </n-h2>
 
       <n-space align="center" justify="space-between" style="width: 100%">
         <n-a
-          v-if="bookEpisode.value.prevId"
-          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
+          v-if="chapter.value.prevId"
+          :href="`/novel/${providerId}/${novelId}/${chapter.value.prevId}`"
           >上一章</n-a
         >
         <n-text v-else style="color: grey">上一章</n-text>
 
-        <n-a :href="`/novel/${providerId}/${bookId}`">目录</n-a>
+        <n-a :href="`/novel/${providerId}/${novelId}`">目录</n-a>
         <n-a @click="showModal = true">设置</n-a>
 
-        <!-- <n-text v-if="!bookEpisode.value.paragraphsZh" style="color: grey">
-          编辑
-        </n-text>
-        <n-a v-else-if="!editMode" @click="enableEditMode()"> 编辑 </n-a>
-        <n-a v-else @click="editMode = false"> 返回 </n-a> -->
-
         <n-a
-          v-if="bookEpisode.value.nextId"
-          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
+          v-if="chapter.value.nextId"
+          :href="`/novel/${providerId}/${novelId}/${chapter.value.nextId}`"
           >下一章</n-a
         >
         <n-text v-else style="color: grey">下一章</n-text>
@@ -161,16 +151,8 @@ function getTextList(episode: BookEpisodeDto): Paragraph[] {
 
       <n-divider />
 
-      <!-- <EditEpisodeSection
-        v-if="editMode"
-        :provider-id="providerId"
-        :book-id="bookId"
-        :episode-id="episodeId"
-        v-model:book-episode="bookEpisode.value"
-      /> -->
-
-      <div id="episode-content">
-        <template v-for="p in getTextList(bookEpisode.value)">
+      <div id="chapter-content">
+        <template v-for="p in getTextList(chapter.value)">
           <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">{{
             p.text
           }}</n-p>
@@ -183,37 +165,37 @@ function getTextList(episode: BookEpisodeDto): Paragraph[] {
 
       <n-space align="center" justify="space-between" style="width: 100%">
         <n-a
-          v-if="bookEpisode.value.prevId"
-          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.prevId}`"
+          v-if="chapter.value.prevId"
+          :href="`/novel/${providerId}/${novelId}/${chapter.value.prevId}`"
           >上一章</n-a
         >
         <n-text v-else style="color: grey">上一章</n-text>
 
         <n-a
-          v-if="bookEpisode.value.nextId"
-          :href="`/novel/${providerId}/${bookId}/${bookEpisode.value.nextId}`"
+          v-if="chapter.value.nextId"
+          :href="`/novel/${providerId}/${novelId}/${chapter.value.nextId}`"
           >下一章</n-a
         >
         <n-text v-else style="color: grey">下一章</n-text>
       </n-space>
     </div>
 
-    <div v-if="bookEpisode && !bookEpisode.ok">
+    <div v-if="chapter && !chapter.ok">
       <n-result
         status="error"
         title="加载错误"
-        :description="bookEpisode.error.message"
+        :description="chapter.error.message"
       />
     </div>
   </n-config-provider>
 </template>
 
 <style scoped>
-#episode-content p {
+#chapter-content p {
   word-wrap: break-word;
   font-size: v-bind('setting.fontSize');
 }
-#episode-content .secondary {
+#chapter-content .secondary {
   opacity: v-bind('setting.mixJpOpacity');
 }
 .content {

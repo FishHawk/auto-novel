@@ -4,14 +4,14 @@ import { UploadFileInfo, useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { ResultState } from '@/data/api/result';
-import ApiUser from '@/data/api/api_user';
-import ApiWenkuNovel, { VolumeStateDto } from '@/data/api/api_wenku_novel';
-import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
+import ApiWenkuNovel, { VolumeJpDto } from '@/data/api/api_wenku_novel';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
 const message = useMessage();
 
-const nonArchived = ref<ResultState<VolumeStateDto[]>>();
+const novelId = 'non-archived';
+const nonArchived = ref<ResultState<VolumeJpDto[]>>();
 
 async function refreshList() {
   const result = await ApiWenkuNovel.listNonArchived();
@@ -53,7 +53,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     <n-upload
       multiple
       :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
-      :action="ApiWenkuNovel.createNonArchivedUploadUrl()"
+      :action="ApiWenkuNovel.createVolumeJpUploadUrl(novelId)"
       :trigger-style="{ width: '100%' }"
       @finish="handleFinish"
       @before-upload="beforeUpload"
@@ -85,9 +85,12 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     <template v-if="nonArchived?.ok">
       <div v-for="volume in nonArchived.value" style="padding: 0px">
         <n-h3 class="title" style="margin-bottom: 4px">
-          {{ volume.fileName }}
+          {{ volume.volumeId }}
         </n-h3>
-        <TranslateSectionWenku :file-name="volume.fileName" />
+        <TranslateSectionWenku
+          :novel-id="novelId"
+          :volume-id="volume.volumeId"
+        />
       </div>
 
       <n-empty v-if="nonArchived.value.length === 0" description="空列表" />

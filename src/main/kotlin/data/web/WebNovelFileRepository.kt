@@ -34,7 +34,7 @@ enum class BookFileType(val value: String) {
     TXT("txt")
 }
 
-class WebBookFileRepository(
+class WebNovelFileRepository(
     private val root: Path,
 ) {
     private fun buildFilePath(fileName: String) =
@@ -44,8 +44,8 @@ class WebBookFileRepository(
         fileName: String,
         lang: BookFileLang,
         type: BookFileType,
-        metadata: WebBookMetadataRepository.BookMetadata,
-        episodes: Map<String, WebBookEpisodeRepository.BookEpisode>,
+        metadata: WebNovelMetadataRepository.NovelMetadata,
+        episodes: Map<String, WebChapterRepository.NovelChapter>,
     ) {
         val filePath = buildFilePath(fileName)
         when (type) {

@@ -4,22 +4,33 @@ import data.MongoDataSource
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
 import org.litote.kmongo.util.KMongoUtil.toBson
 
-class WebBookTocMergeHistoryRepository(
+private typealias TocItem = WebNovelMetadataRepository.NovelMetadata.TocItem
+
+class WebNovelTocMergeHistoryRepository(
     private val mongo: MongoDataSource,
 ) {
     private val col
         get() = mongo.database.getCollection<TocMergeHistory>("toc-merge-history")
 
+    companion object {
+        private fun byId(id: String): Bson {
+            return TocMergeHistory::id eq ObjectId(id)
+        }
+    }
+
     // List operations
     @Serializable
     data class TocMergedHistoryOutline(
-        @Contextual @SerialName("_id") val id: ObjectId,
+        @Contextual @SerialName("_id")
+        val id: ObjectId,
         val providerId: String,
-        val bookId: String,
+        @SerialName("bookId")
+        val novelId: String,
         val reason: String,
     )
 
@@ -36,7 +47,7 @@ class WebBookTocMergeHistoryRepository(
             .projection(
                 TocMergedHistoryOutline::id,
                 TocMergedHistoryOutline::providerId,
-                TocMergedHistoryOutline::bookId,
+                TocMergedHistoryOutline::novelId,
                 TocMergedHistoryOutline::reason,
             )
             .toList()
@@ -49,46 +60,36 @@ class WebBookTocMergeHistoryRepository(
     // Element operations
     @Serializable
     data class TocMergeHistory(
-        @Contextual @SerialName("_id") val id: ObjectId,
+        @Contextual @SerialName("_id")
+        val id: ObjectId,
         val providerId: String,
-        val bookId: String,
-        val tocOld: List<WebBookMetadataRepository.BookMetadata.TocItem>,
-        val tocNew: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+        @SerialName("bookId")
+        val novelId: String,
+        val tocOld: List<TocItem>,
+        val tocNew: List<TocItem>,
         val reason: String,
     )
 
-    suspend fun get(id: String): TocMergeHistory? {
-        return col.findOne(
-            TocMergeHistory::id eq ObjectId(id),
-        )
-    }
+    suspend fun findOne(id: String): TocMergeHistory? = col.findOne(byId(id))
 
-    suspend fun delete(id: String) {
-        col.deleteOne(
-            TocMergeHistory::id eq ObjectId(id),
-        )
-    }
+    suspend fun findOne(): TocMergeHistory? = col.findOne()
 
-    suspend fun insert(
+    suspend fun deleteOne(id: String) = col.deleteOne(byId(id))
+
+    suspend fun insertOne(
         providerId: String,
-        bookId: String,
-        tocOld: List<WebBookMetadataRepository.BookMetadata.TocItem>,
-        tocNew: List<WebBookMetadataRepository.BookMetadata.TocItem>,
+        novelId: String,
+        tocOld: List<TocItem>,
+        tocNew: List<TocItem>,
         reason: String,
-    ) {
-        col.insertOne(
-            TocMergeHistory(
-                id = ObjectId(),
-                providerId = providerId,
-                bookId = bookId,
-                tocOld = tocOld,
-                tocNew = tocNew,
-                reason = reason,
-            )
+    ) = col.insertOne(
+        TocMergeHistory(
+            id = ObjectId(),
+            providerId = providerId,
+            novelId = novelId,
+            tocOld = tocOld,
+            tocNew = tocNew,
+            reason = reason,
         )
-    }
-
-    suspend fun findOne(): TocMergeHistory? {
-        return col.findOne()
-    }
+    )
 }

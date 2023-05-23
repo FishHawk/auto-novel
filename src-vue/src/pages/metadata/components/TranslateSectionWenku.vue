@@ -4,12 +4,11 @@ import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
 
 import { ResultState } from '@/data/api/result';
-import ApiWebNovel, { BookStateDto } from '@/data/api/api_web_novel';
 import ApiWenkuNovel, { ChapterStateDto } from '@/data/api/api_wenku_novel';
-import { update } from '@/data/api/api_update';
 
 const props = defineProps<{
-  fileName: string;
+  novelId: string;
+  volumeId: string;
 }>();
 
 interface UpdateProgress {
@@ -19,21 +18,21 @@ interface UpdateProgress {
   error: number;
 }
 
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
-
 const message = useMessage();
 
-const bookState = ref<ResultState<ChapterStateDto[]>>();
+const novelState = ref<ResultState<ChapterStateDto[]>>();
 const progress: Ref<UpdateProgress | undefined> = ref();
 
 onMounted(() => getState());
 let lastPoll = false;
 async function getState() {
-  const result = await ApiWenkuNovel.getNonArchivedState(props.fileName);
+  const result = await ApiWenkuNovel.getTranslateState(
+    props.novelId,
+    props.volumeId
+  );
 
   if (result.ok) {
-    bookState.value = result;
+    novelState.value = result;
   }
 
   if (progress.value || lastPoll) {
@@ -64,14 +63,19 @@ async function startUpdateTask(
     error: 0,
   };
 
-  const result = await ApiWenkuNovel.update(version, props.fileName, {
-    onStart: (total: number) => {
-      progress.value!.total = total;
-      getState();
-    },
-    onEpisodeTranslateSuccess: () => (progress.value!.finished += 1),
-    onEpisodeTranslateFailure: () => (progress.value!.error += 1),
-  });
+  const result = await ApiWenkuNovel.update(
+    version,
+    props.novelId,
+    props.volumeId,
+    {
+      onStart: (total: number) => {
+        progress.value!.total = total;
+        getState();
+      },
+      onChapterTranslateSuccess: () => (progress.value!.finished += 1),
+      onChapterTranslateFailure: () => (progress.value!.error += 1),
+    }
+  );
 
   if (result.ok) {
     const total = progress.value.total;
@@ -88,24 +92,24 @@ async function startUpdateTask(
   progress.value = undefined;
 }
 
-interface BookFiles {
+interface NovelFiles {
   label: string;
   version: 'baidu' | 'youdao';
   files: { label: string; url: string; name: string }[];
 }
 
-function stateToFileList(): BookFiles[] {
+function stateToFileList(): NovelFiles[] {
   function createFile(label: string, lang: string) {
     return {
       label,
-      url: `/api/wenku/non-archived/prepare-book/${props.fileName}/${lang}`,
+      url: `/api/wenku/non-archived/prepare-book/${props.volumeId}/${lang}`,
       name: `${lang}.epub`,
     };
   }
 
   let state: ChapterStateDto[] | undefined;
-  if (bookState.value?.ok) {
-    state = bookState.value.value;
+  if (novelState.value?.ok) {
+    state = novelState.value.value;
   } else {
     state = undefined;
   }

@@ -11,7 +11,7 @@ import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
 import ApiUser from '@/data/api/api_user';
-import ApiWebNovel, { BookMetadataDto } from '@/data/api/api_web_novel';
+import ApiWebNovel, { WebNovelMetadataDto } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
@@ -21,19 +21,19 @@ const message = useMessage();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
-const bookId = route.params.bookId as string;
-const url = buildMetadataUrl(providerId, bookId);
+const novelId = route.params.novelId as string;
+const url = buildMetadataUrl(providerId, novelId);
 
-const bookMetadata = ref<ResultState<BookMetadataDto>>();
+const metadata = ref<ResultState<WebNovelMetadataDto>>();
 
 onMounted(() => getMetadata());
 async function getMetadata() {
   const result = await ApiWebNovel.getMetadata(
     providerId,
-    bookId,
+    novelId,
     authInfoStore.token
   );
-  bookMetadata.value = result;
+  metadata.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
   }
@@ -51,10 +51,10 @@ async function addFavorite() {
     return;
   }
 
-  const result = await ApiUser.putFavoritedWebBook(providerId, bookId, token);
+  const result = await ApiUser.putFavoritedWebNovel(providerId, novelId, token);
   if (result.ok) {
-    if (bookMetadata.value?.ok) {
-      bookMetadata.value.value.favored = true;
+    if (metadata.value?.ok) {
+      metadata.value.value.favored = true;
     }
   } else {
     message.error('收藏错误：' + result.error.message);
@@ -72,10 +72,10 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiUser.deleteFavoritedWebBook(providerId, bookId, token);
+  const result = await ApiUser.deleteFavoritedWebNovel(providerId, novelId, token);
   if (result.ok) {
-    if (bookMetadata.value?.ok) {
-      bookMetadata.value.value.favored = false;
+    if (metadata.value?.ok) {
+      metadata.value.value.favored = false;
     }
   } else {
     message.error('取消收藏错误：' + result.error.message);
@@ -96,24 +96,23 @@ function enableEditMode() {
 
 <template>
   <MainLayout>
-    <div v-if="bookMetadata?.ok">
+    <div v-if="metadata?.ok">
       <n-h1 prefix="bar" style="font-size: 22px">
-        <n-a :href="url" target="_blank">{{ bookMetadata.value.titleJp }}</n-a>
+        <n-a :href="url" target="_blank">{{ metadata.value.titleJp }}</n-a>
         <br />
-        <span style="color: grey">{{ bookMetadata.value.titleZh }}</span>
+        <span style="color: grey">{{ metadata.value.titleZh }}</span>
       </n-h1>
 
-      <n-p v-if="bookMetadata.value.authors.length > 0">
+      <n-p v-if="metadata.value.authors.length > 0">
         作者：
-        <span v-for="author in bookMetadata.value.authors">
+        <span v-for="author in metadata.value.authors">
           <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
         </span>
       </n-p>
 
       <n-p>
         <n-space>
-          <span>浏览次数:{{ bookMetadata.value.visited }}</span>
-          <span>下载次数:{{ bookMetadata.value.downloaded }}</span>
+          <span>浏览次数:{{ metadata.value.visited }}</span>
         </n-space>
       </n-p>
 
@@ -133,7 +132,7 @@ function enableEditMode() {
         </n-button>
 
         <n-button
-          v-if="bookMetadata.value.favored === true"
+          v-if="metadata.value.favored === true"
           @click="removeFavorite()"
         >
           <template #icon>
@@ -150,8 +149,8 @@ function enableEditMode() {
         </n-button>
 
         <n-a
-          v-if="bookMetadata.value.wenkuId"
-          :href="`/wenku/${bookMetadata.value.wenkuId}`"
+          v-if="metadata.value.wenkuId"
+          :href="`/wenku/${metadata.value.wenkuId}`"
           target="_blank"
         >
           <n-button>
@@ -166,40 +165,40 @@ function enableEditMode() {
       <template v-if="editMode">
         <WebEditSection
           :provider-id="providerId"
-          :book-id="bookId"
-          v-model:book-metadata="bookMetadata.value"
+          :novel-id="novelId"
+          v-model:novel-metadata="metadata.value"
         />
       </template>
 
       <template v-else>
         <n-p style="word-break: break-all">
-          {{ bookMetadata.value.introductionJp }}
+          {{ metadata.value.introductionJp }}
         </n-p>
         <n-p
-          v-if="bookMetadata.value.introductionZh !== undefined"
+          v-if="metadata.value.introductionZh !== undefined"
           style="word-break: break-all"
         >
-          {{ bookMetadata.value.introductionZh }}
+          {{ metadata.value.introductionZh }}
         </n-p>
         <TranslateSection
           :provider-id="providerId"
-          :book-id="bookId"
-          :glossary="bookMetadata.value.glossary"
+          :novel-id="novelId"
+          :glossary="metadata.value.glossary"
         />
         <TocSection
           :provider-id="providerId"
-          :book-id="bookId"
-          :toc="bookMetadata.value.toc"
+          :novel-id="novelId"
+          :toc="metadata.value.toc"
         />
         <CommentList :post-id="route.path" />
       </template>
     </div>
 
-    <div v-if="bookMetadata && !bookMetadata.ok">
+    <div v-if="metadata && !metadata.ok">
       <n-result
         status="error"
         title="加载错误"
-        :description="bookMetadata.error.message"
+        :description="metadata.error.message"
       />
     </div>
   </MainLayout>

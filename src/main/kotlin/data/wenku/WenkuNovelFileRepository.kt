@@ -2,7 +2,6 @@ package data.wenku
 
 import data.web.BookFileLang
 import epub.EpubReader
-import epub.EpubResource
 import epub.EpubWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,10 +10,10 @@ import java.lang.RuntimeException
 import java.nio.file.Path
 import kotlin.io.path.*
 
-class WenkuBookFileRepository(
+class WenkuNovelFileRepository(
     private val root: Path
 ) {
-    suspend fun list(
+    private suspend fun listVolume(
         novelId: String,
     ): List<String> = withContext(Dispatchers.IO) {
         val path = root / novelId
@@ -26,6 +25,20 @@ class WenkuBookFileRepository(
         } else {
             emptyList()
         }
+    }
+
+    suspend fun listVolumeZh(
+        novelId: String,
+    ): List<String> = withContext(Dispatchers.IO) {
+        listVolume(novelId)
+            .filter { !hasUnpacked(novelId, it) }
+    }
+
+    suspend fun listVolumeJp(
+        novelId: String,
+    ): List<String> = withContext(Dispatchers.IO) {
+        listVolume(novelId)
+            .filter { hasUnpacked(novelId, it) }
     }
 
     suspend fun createAndOpen(
@@ -74,6 +87,14 @@ class WenkuBookFileRepository(
                 }
             }
         }
+    }
+
+    suspend fun hasUnpacked(
+        novelId: String,
+        fileName: String,
+    ) = withContext(Dispatchers.IO) {
+        val unpackPath = root / novelId / "$fileName.unpack"
+        return@withContext unpackPath.exists()
     }
 
     suspend fun listUnpackItems(

@@ -11,8 +11,8 @@ import kotlin.io.path.notExists
 suspend fun makeTxtFile(
     filePath: Path,
     lang: BookFileLang,
-    metadata: WebBookMetadataRepository.BookMetadata,
-    episodes: Map<String, WebBookEpisodeRepository.BookEpisode>,
+    metadata: WebNovelMetadataRepository.NovelMetadata,
+    episodes: Map<String, WebChapterRepository.NovelChapter>,
 ) {
     withContext(Dispatchers.IO) {
         if (filePath.notExists()) {
@@ -34,12 +34,12 @@ suspend fun makeTxtFile(
 private const val MISSING_EPISODE_HINT = "该章节缺失。\n\n"
 
 private abstract class TxtWriter {
-    abstract fun BufferedWriter.writeTitle(metadata: WebBookMetadataRepository.BookMetadata)
-    abstract fun BufferedWriter.writeIntroduction(metadata: WebBookMetadataRepository.BookMetadata)
-    abstract fun BufferedWriter.writeTocItemTitle(item: WebBookMetadataRepository.BookMetadata.TocItem)
-    abstract fun BufferedWriter.writeEpisode(episode: WebBookEpisodeRepository.BookEpisode)
+    abstract fun BufferedWriter.writeTitle(metadata: WebNovelMetadataRepository.NovelMetadata)
+    abstract fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadataRepository.NovelMetadata)
+    abstract fun BufferedWriter.writeTocItemTitle(item: WebNovelMetadataRepository.NovelMetadata.TocItem)
+    abstract fun BufferedWriter.writeEpisode(episode: WebChapterRepository.NovelChapter)
 
-    fun BufferedWriter.writeAuthor(metadata: WebBookMetadataRepository.BookMetadata) {
+    fun BufferedWriter.writeAuthor(metadata: WebNovelMetadataRepository.NovelMetadata) {
         metadata.authors.forEach { author ->
             write(author.name)
             if (author.link != null) {
@@ -54,8 +54,8 @@ private abstract class TxtWriter {
     }
 
     fun BufferedWriter.writeBook(
-        metadata: WebBookMetadataRepository.BookMetadata,
-        episodes: Map<String, WebBookEpisodeRepository.BookEpisode>,
+        metadata: WebNovelMetadataRepository.NovelMetadata,
+        episodes: Map<String, WebChapterRepository.NovelChapter>,
     ) {
         writeTitle(metadata)
         write("\n")
@@ -69,8 +69,8 @@ private abstract class TxtWriter {
             writeTocItemTitle(item)
             write("\n")
 
-            if (item.episodeId != null) {
-                val episode = episodes[item.episodeId]
+            if (item.chapterId != null) {
+                val episode = episodes[item.chapterId]
                 if (episode == null) {
                     writeMissingEpisode()
                 } else {
@@ -83,45 +83,45 @@ private abstract class TxtWriter {
 }
 
 private object TxtMakerJp : TxtWriter() {
-    override fun BufferedWriter.writeTitle(metadata: WebBookMetadataRepository.BookMetadata) {
+    override fun BufferedWriter.writeTitle(metadata: WebNovelMetadataRepository.NovelMetadata) {
         write(metadata.titleJp + "\n")
     }
 
-    override fun BufferedWriter.writeIntroduction(metadata: WebBookMetadataRepository.BookMetadata) {
+    override fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadataRepository.NovelMetadata) {
         if (metadata.introductionJp.isNotBlank()) {
             write(metadata.introductionJp)
             write("\n")
         }
     }
 
-    override fun BufferedWriter.writeTocItemTitle(item: WebBookMetadataRepository.BookMetadata.TocItem) {
+    override fun BufferedWriter.writeTocItemTitle(item: WebNovelMetadataRepository.NovelMetadata.TocItem) {
         write("# ${item.titleJp}\n")
     }
 
-    override fun BufferedWriter.writeEpisode(episode: WebBookEpisodeRepository.BookEpisode) {
+    override fun BufferedWriter.writeEpisode(episode: WebChapterRepository.NovelChapter) {
         episode.paragraphs.forEach { text -> write(text + "\n") }
     }
 }
 
 private class TxtMakerZh(
-    val getParagraphs: (WebBookEpisodeRepository.BookEpisode) -> List<String>?
+    val getParagraphs: (WebChapterRepository.NovelChapter) -> List<String>?
 ) : TxtWriter() {
-    override fun BufferedWriter.writeTitle(metadata: WebBookMetadataRepository.BookMetadata) {
+    override fun BufferedWriter.writeTitle(metadata: WebNovelMetadataRepository.NovelMetadata) {
         write((metadata.titleZh ?: metadata.titleJp) + "\n")
     }
 
-    override fun BufferedWriter.writeIntroduction(metadata: WebBookMetadataRepository.BookMetadata) {
+    override fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadataRepository.NovelMetadata) {
         if (!metadata.introductionZh.isNullOrBlank()) {
             write(metadata.introductionZh)
             write("\n")
         }
     }
 
-    override fun BufferedWriter.writeTocItemTitle(item: WebBookMetadataRepository.BookMetadata.TocItem) {
+    override fun BufferedWriter.writeTocItemTitle(item: WebNovelMetadataRepository.NovelMetadata.TocItem) {
         write("# ${item.titleZh ?: item.titleJp}\n")
     }
 
-    override fun BufferedWriter.writeEpisode(episode: WebBookEpisodeRepository.BookEpisode) {
+    override fun BufferedWriter.writeEpisode(episode: WebChapterRepository.NovelChapter) {
         val paragraphs = getParagraphs(episode)
         if (paragraphs == null) {
             writeMissingEpisode()
@@ -134,22 +134,22 @@ private class TxtMakerZh(
 private class TxtMakerMix(
     private val txtMakerZh: TxtMakerZh,
 ) : TxtWriter() {
-    override fun BufferedWriter.writeTitle(metadata: WebBookMetadataRepository.BookMetadata) {
+    override fun BufferedWriter.writeTitle(metadata: WebNovelMetadataRepository.NovelMetadata) {
         with(TxtMakerJp) { writeTitle(metadata) }
         with(txtMakerZh) { writeTitle(metadata) }
     }
 
-    override fun BufferedWriter.writeIntroduction(metadata: WebBookMetadataRepository.BookMetadata) {
+    override fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadataRepository.NovelMetadata) {
         with(TxtMakerJp) { writeIntroduction(metadata) }
         with(txtMakerZh) { writeIntroduction(metadata) }
     }
 
-    override fun BufferedWriter.writeTocItemTitle(item: WebBookMetadataRepository.BookMetadata.TocItem) {
+    override fun BufferedWriter.writeTocItemTitle(item: WebNovelMetadataRepository.NovelMetadata.TocItem) {
         with(TxtMakerJp) { writeTocItemTitle(item) }
         with(txtMakerZh) { writeTocItemTitle(item) }
     }
 
-    override fun BufferedWriter.writeEpisode(episode: WebBookEpisodeRepository.BookEpisode) {
+    override fun BufferedWriter.writeEpisode(episode: WebChapterRepository.NovelChapter) {
         val paragraphsZh = txtMakerZh.getParagraphs(episode)
         if (paragraphsZh == null) {
             writeMissingEpisode()

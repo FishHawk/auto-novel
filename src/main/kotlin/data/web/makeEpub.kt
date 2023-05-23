@@ -10,11 +10,11 @@ private const val MISSING_EPISODE_HINT = "该章节缺失。"
 suspend fun makeEpubFile(
     filePath: Path,
     lang: BookFileLang,
-    metadata: WebBookMetadataRepository.BookMetadata,
-    episodes: Map<String, WebBookEpisodeRepository.BookEpisode>,
+    metadata: WebNovelMetadataRepository.NovelMetadata,
+    episodes: Map<String, WebChapterRepository.NovelChapter>,
 ) {
     val epub = EpubBook()
-    val identifier = "${metadata.providerId}.${metadata.bookId}"
+    val identifier = "${metadata.providerId}.${metadata.novelId}"
     epub.addIdentifier(identifier, true)
 
     when (lang) {
@@ -50,10 +50,10 @@ suspend fun makeEpubFile(
         epub.addCreator(it.name)
     }
 
-    metadata.toc.filter { it.episodeId != null }.forEachIndexed { index, token ->
+    metadata.toc.filter { it.chapterId != null }.forEachIndexed { index, token ->
         val id = "episode${index + 1}.xhtml"
         val path = "Text/$id"
-        val episode = episodes[token.episodeId]
+        val episode = episodes[token.chapterId]
         val resource = when (lang) {
             BookFileLang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
                 it.appendElement("h1").appendText(token.titleJp)
@@ -126,12 +126,12 @@ suspend fun makeEpubFile(
 }
 
 private fun tocToNavigationItems(
-    toc: List<WebBookMetadataRepository.BookMetadata.TocItem>,
-    title: (WebBookMetadataRepository.BookMetadata.TocItem) -> String
+    toc: List<WebNovelMetadataRepository.NovelMetadata.TocItem>,
+    title: (WebNovelMetadataRepository.NovelMetadata.TocItem) -> String
 ): List<Navigation.Item> {
     var index = 0
     return toc.map {
-        if (it.episodeId != null) {
+        if (it.chapterId != null) {
             index += 1
             Navigation.Item("episode$index.xhtml", title(it))
         } else {

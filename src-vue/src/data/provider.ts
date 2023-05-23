@@ -1,23 +1,23 @@
 interface ParseResult {
   providerId: string;
-  bookId: string;
+  novelId: string;
 }
 
 interface Provider {
   parseUrl(url: string): string | undefined;
-  buildMetadataUrl(bookId: string): string;
-  buildEpisodeUrl(bookId: string, episodeId: string): string;
+  buildMetadataUrl(novelId: string): string;
+  buildChapterUrl(novelId: string, chapterId: string): string;
 }
 
 const kakuyomu: Provider = {
   parseUrl(url: string): string | undefined {
     return /kakuyomu\.jp\/works\/([0-9]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(bookId: string): string {
-    return `https://kakuyomu.jp/works/${bookId}`;
+  buildMetadataUrl(novelId: string): string {
+    return `https://kakuyomu.jp/works/${novelId}`;
   },
-  buildEpisodeUrl(bookId: string, episodeId: string): string {
-    return `https://kakuyomu.jp/works/${bookId}/episodes/${episodeId}`;
+  buildChapterUrl(novelId: string, chapterId: string): string {
+    return `https://kakuyomu.jp/works/${novelId}/episodes/${chapterId}`;
   },
 };
 
@@ -25,14 +25,14 @@ const syosetu: Provider = {
   parseUrl(url: string): string | undefined {
     return /syosetu\.com\/([A-Za-z0-9]+)/.exec(url)?.[1].toLowerCase();
   },
-  buildMetadataUrl(bookId: string): string {
-    return `https://ncode.syosetu.com/${bookId}`;
+  buildMetadataUrl(novelId: string): string {
+    return `https://ncode.syosetu.com/${novelId}`;
   },
-  buildEpisodeUrl(bookId: string, episodeId: string): string {
-    if (episodeId == 'default') {
-      return `https://ncode.syosetu.com/${bookId}`;
+  buildChapterUrl(novelId: string, chapterId: string): string {
+    if (chapterId == 'default') {
+      return `https://ncode.syosetu.com/${novelId}`;
     } else {
-      return `https://ncode.syosetu.com/${bookId}/${episodeId}`;
+      return `https://ncode.syosetu.com/${novelId}/${chapterId}`;
     }
   },
 };
@@ -41,11 +41,11 @@ const novelup: Provider = {
   parseUrl(url: string): string | undefined {
     return /novelup\.plus\/story\/([0-9]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(bookId: string): string {
-    return `https://novelup.plus/story/${bookId}`;
+  buildMetadataUrl(novelId: string): string {
+    return `https://novelup.plus/story/${novelId}`;
   },
-  buildEpisodeUrl(bookId: string, episodeId: string): string {
-    return `https://novelup.plus/story/${bookId}/${episodeId}`;
+  buildChapterUrl(novelId: string, chapterId: string): string {
+    return `https://novelup.plus/story/${novelId}/${chapterId}`;
   },
 };
 
@@ -53,38 +53,38 @@ const hameln: Provider = {
   parseUrl(url: string): string | undefined {
     return /syosetu\.org\/novel\/([0-9]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(bookId: string): string {
-    return `https://syosetu.org/novel/${bookId}`;
+  buildMetadataUrl(novelId: string): string {
+    return `https://syosetu.org/novel/${novelId}`;
   },
-  buildEpisodeUrl(bookId: string, episodeId: string): string {
-    if (episodeId == 'default') {
-      return `https://syosetu.org/novel/${bookId}/`;
+  buildChapterUrl(novelId: string, chapterId: string): string {
+    if (chapterId == 'default') {
+      return `https://syosetu.org/novel/${novelId}/`;
     } else {
-      return `https://syosetu.org/novel/${bookId}/${episodeId}.html`;
+      return `https://syosetu.org/novel/${novelId}/${chapterId}.html`;
     }
   },
 };
 
 const pixiv: Provider = {
   parseUrl(url: string): string | undefined {
-    let bookId = /pixiv\.net\/novel\/series\/([0-9]+)/.exec(url)?.[1];
-    if (bookId === undefined) {
-      bookId = /pixiv\.net\/novel\/show.php\?id=([0-9]+)/.exec(url)?.[1];
-      if (bookId !== undefined) {
-        bookId = 's' + bookId;
+    let novelId = /pixiv\.net\/novel\/series\/([0-9]+)/.exec(url)?.[1];
+    if (novelId === undefined) {
+      novelId = /pixiv\.net\/novel\/show.php\?id=([0-9]+)/.exec(url)?.[1];
+      if (novelId !== undefined) {
+        novelId = 's' + novelId;
       }
     }
-    return bookId;
+    return novelId;
   },
-  buildMetadataUrl(bookId: string): string {
-    if (bookId[0] === 's') {
-      return `https://www.pixiv.net/novel/show.php?id=${bookId.substring(1)}`;
+  buildMetadataUrl(novelId: string): string {
+    if (novelId[0] === 's') {
+      return `https://www.pixiv.net/novel/show.php?id=${novelId.substring(1)}`;
     } else {
-      return `https://www.pixiv.net/novel/series/${bookId}`;
+      return `https://www.pixiv.net/novel/series/${novelId}`;
     }
   },
-  buildEpisodeUrl(bookId: string, episodeId: string): string {
-    return `https://www.pixiv.net/novel/show.php?id=${episodeId}`;
+  buildChapterUrl(novelId: string, chapterId: string): string {
+    return `https://www.pixiv.net/novel/show.php?id=${chapterId}`;
   },
 };
 
@@ -99,13 +99,13 @@ const alphapolis: Provider = {
       return undefined;
     }
   },
-  buildMetadataUrl(bookId: string): string {
-    const realBookId = bookId.replace('-', '/');
-    return `https://www.alphapolis.co.jp/novel/${realBookId}`;
+  buildMetadataUrl(novelId: string): string {
+    const realNovelId = novelId.replace('-', '/');
+    return `https://www.alphapolis.co.jp/novel/${realNovelId}`;
   },
-  buildEpisodeUrl(bookId: string, episodeId: string): string {
-    const realBookId = bookId.replace('-', '/');
-    return `https://www.alphapolis.co.jp/novel/${realBookId}/episode/${episodeId}`;
+  buildChapterUrl(novelId: string, chapterId: string): string {
+    const realNovelId = novelId.replace('-', '/');
+    return `https://www.alphapolis.co.jp/novel/${realNovelId}/episode/${chapterId}`;
   },
 };
 
@@ -113,11 +113,11 @@ const novelism: Provider = {
   parseUrl(url: string): string | undefined {
     return /novelism\.jp\/novel\/([^\/]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(bookId: string): string {
-    return `https://novelism.jp/novel/${bookId}`;
+  buildMetadataUrl(novelId: string): string {
+    return `https://novelism.jp/novel/${novelId}`;
   },
-  buildEpisodeUrl(bookId: string, episodeId: string): string {
-    return `https://novelism.jp/novel/${bookId}/article/${episodeId}/`;
+  buildChapterUrl(novelId: string, chapterId: string): string {
+    return `https://novelism.jp/novel/${novelId}/article/${chapterId}/`;
   },
 };
 
@@ -134,22 +134,22 @@ const providers: { [id: string]: Provider } = {
 export function parseUrl(url: string): ParseResult | undefined {
   for (const providerId in providers) {
     const provider = providers[providerId];
-    const bookId = provider.parseUrl(url);
-    if (bookId !== undefined) {
-      return { providerId, bookId };
+    const novelId = provider.parseUrl(url);
+    if (novelId !== undefined) {
+      return { providerId, novelId };
     }
   }
   return undefined;
 }
 
-export function buildMetadataUrl(providerId: string, bookId: string): string {
-  return providers[providerId].buildMetadataUrl(bookId);
+export function buildMetadataUrl(providerId: string, novelId: string): string {
+  return providers[providerId].buildMetadataUrl(novelId);
 }
 
-export function buildEpisodeUrl(
+export function buildChapterUrl(
   providerId: string,
-  bookId: string,
-  episodeId: string
+  novelId: string,
+  chapterId: string
 ): string {
-  return providers[providerId].buildEpisodeUrl(bookId, episodeId);
+  return providers[providerId].buildChapterUrl(novelId, chapterId);
 }

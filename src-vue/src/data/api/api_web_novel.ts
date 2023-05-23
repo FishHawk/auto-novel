@@ -2,14 +2,14 @@ import { Options } from 'ky';
 import api from './api';
 import { Result, runCatching } from './result';
 
-export interface BookListPageDto {
+export interface WebNovelListPageDto {
   pageNumber: number;
-  items: BookListItemDto[];
+  items: WebNovelListItemDto[];
 }
 
-export interface BookListItemDto {
+export interface WebNovelListItemDto {
   providerId: string;
-  bookId: string;
+  novelId: string;
   titleJp: string;
   titleZh?: string;
   total: number;
@@ -23,7 +23,7 @@ async function list(
   pageSize: number,
   provider: string,
   query: string
-): Promise<Result<BookListPageDto>> {
+): Promise<Result<WebNovelListPageDto>> {
   return runCatching(
     api
       .get(`novel/list`, {
@@ -33,14 +33,14 @@ async function list(
   );
 }
 
-export interface BookRankPageDto {
+export interface WebNovelRankPageDto {
   pageNumber: number;
-  items: BookRankItemDto[];
+  items: WebNovelRankItemDto[];
 }
 
-export interface BookRankItemDto {
+export interface WebNovelRankItemDto {
   providerId: string;
-  bookId: string;
+  novelId: string;
   titleJp: string;
   titleZh?: string;
   extra: string;
@@ -49,7 +49,7 @@ export interface BookRankItemDto {
 async function listRank(
   providerId: string,
   options: { [key: string]: string }
-): Promise<Result<BookListPageDto>> {
+): Promise<Result<WebNovelListPageDto>> {
   return runCatching(
     api
       .get(`novel/rank/${providerId}`, {
@@ -60,7 +60,7 @@ async function listRank(
   );
 }
 
-export interface BookStateDto {
+export interface WebNovelStateDto {
   total: number;
   count: number;
   countBaidu: number;
@@ -69,18 +69,18 @@ export interface BookStateDto {
 
 async function getState(
   providerId: string,
-  bookId: string
-): Promise<Result<BookStateDto>> {
-  return runCatching(api.get(`novel/${providerId}/${bookId}/state`).json());
+  novelId: string
+): Promise<Result<WebNovelStateDto>> {
+  return runCatching(api.get(`novel/${providerId}/${novelId}/state`).json());
 }
 
-export interface BookTocItemDto {
+export interface WebNovelTocItemDto {
   titleJp: string;
   titleZh?: string;
-  episodeId?: string;
+  chapterId?: string;
 }
 
-export interface BookMetadataDto {
+export interface WebNovelMetadataDto {
   wenkuId?: string;
   titleJp: string;
   titleZh?: string;
@@ -88,34 +88,33 @@ export interface BookMetadataDto {
   introductionJp: string;
   introductionZh?: string;
   glossary: { [key: string]: string };
-  toc: BookTocItemDto[];
+  toc: WebNovelTocItemDto[];
   visited: number;
-  downloaded: number;
   syncAt: number;
   favored?: boolean;
 }
 
 async function getMetadata(
   providerId: string,
-  bookId: string,
+  novelId: string,
   token: string | undefined
-): Promise<Result<BookMetadataDto>> {
+): Promise<Result<WebNovelMetadataDto>> {
   const options: Options = {};
   if (token) {
     options.headers = { Authorization: 'Bearer ' + token };
   }
-  return runCatching(api.get(`novel/${providerId}/${bookId}`, options).json());
+  return runCatching(api.get(`novel/${providerId}/${novelId}`, options).json());
 }
 
 async function putWenkuId(
   providerId: string,
-  bookId: string,
+  novelId: string,
   wenkuId: string,
   token: string
-): Promise<Result<BookMetadataDto>> {
+): Promise<Result<WebNovelMetadataDto>> {
   return runCatching(
     api
-      .put(`novel/${providerId}/${bookId}/wenku`, {
+      .put(`novel/${providerId}/${novelId}/wenku`, {
         headers: { Authorization: 'Bearer ' + token },
         body: wenkuId,
       })
@@ -125,19 +124,19 @@ async function putWenkuId(
 
 async function deleteWenkuId(
   providerId: string,
-  bookId: string,
+  novelId: string,
   token: string
-): Promise<Result<BookMetadataDto>> {
+): Promise<Result<WebNovelMetadataDto>> {
   return runCatching(
     api
-      .delete(`novel/${providerId}/${bookId}/wenku`, {
+      .delete(`novel/${providerId}/${novelId}/wenku`, {
         headers: { Authorization: 'Bearer ' + token },
       })
       .json()
   );
 }
 
-interface BookMetadataPatchBody {
+interface WebNovelMetadataPatchBody {
   title?: string;
   introduction?: string;
   glossary?: { [key: string]: string };
@@ -146,13 +145,13 @@ interface BookMetadataPatchBody {
 
 async function putMetadata(
   providerId: string,
-  bookId: string,
-  patch: BookMetadataPatchBody,
+  novelId: string,
+  patch: WebNovelMetadataPatchBody,
   token: string
-): Promise<Result<BookMetadataDto>> {
+): Promise<Result<WebNovelMetadataDto>> {
   return runCatching(
     api
-      .put(`novel/${providerId}/${bookId}`, {
+      .put(`novel/${providerId}/${novelId}`, {
         headers: { Authorization: 'Bearer ' + token },
         json: patch,
       })
@@ -160,7 +159,7 @@ async function putMetadata(
   );
 }
 
-export interface BookEpisodeDto {
+export interface WebNovelChapterDto {
   titleJp: string;
   titleZh: string | undefined;
   prevId: string | undefined;
@@ -170,13 +169,13 @@ export interface BookEpisodeDto {
   youdaoParagraphs: string[] | undefined;
 }
 
-async function getEpisode(
+async function getChapter(
   providerId: string,
-  bookId: string,
-  episodeId: string
-): Promise<Result<BookEpisodeDto>> {
+  novelId: string,
+  chapterId: string
+): Promise<Result<WebNovelChapterDto>> {
   return runCatching(
-    api.get(`novel/${providerId}/${bookId}/episode/${episodeId}`).json()
+    api.get(`novel/${providerId}/${novelId}/chapter/${chapterId}`).json()
   );
 }
 
@@ -188,5 +187,5 @@ export default {
   putMetadata,
   putWenkuId,
   deleteWenkuId,
-  getEpisode,
+  getChapter,
 };

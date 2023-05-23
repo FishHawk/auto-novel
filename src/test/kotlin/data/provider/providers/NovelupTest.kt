@@ -19,9 +19,9 @@ class NovelupTest : DescribeSpec({
             metadata.introduction.shouldStartWith("ケフェウス帝国の貴族であるクロノ・クロフォードには秘密があった。")
             metadata.introduction.shouldEndWith("小説家になろう様にマルチ投稿中")
             metadata.toc[0].title.shouldBe("第１部：立志編")
-            metadata.toc[0].episodeId.shouldBeNull()
+            metadata.toc[0].chapterId.shouldBeNull()
             metadata.toc[1].title.shouldBe("001　第１話：クロノ")
-            metadata.toc[1].episodeId.shouldBe("614254159")
+            metadata.toc[1].chapterId.shouldBe("614254159")
         }
         it("常规，单页") {
             // https://novelup.plus/story/358276052
@@ -33,7 +33,7 @@ class NovelupTest : DescribeSpec({
     describe("getEpisode") {
         it("常规，有罗马音") {
             // https://novelup.plus/story/206612087/614254159
-            val episode = provider.getEpisode("206612087", "614254159")
+            val episode = provider.getChapter("206612087", "614254159")
             episode.paragraphs.first().shouldBe("※")
             episode.paragraphs.last().shouldBe("　空を見上げ、クロノは小さく呟いた。")
         }

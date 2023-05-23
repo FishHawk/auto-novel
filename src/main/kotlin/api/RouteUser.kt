@@ -1,9 +1,9 @@
 package api
 
 import data.UserRepository
-import data.web.WebBookEpisodeRepository
-import data.web.WebBookMetadataRepository
-import data.wenku.WenkuBookMetadataRepository
+import data.web.WebChapterRepository
+import data.web.WebNovelMetadataRepository
+import data.wenku.WenkuNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -25,11 +25,11 @@ private class R {
 //        val direction:asc|desc
         )
 
-        @Resource("/{providerId}/{bookId}")
+        @Resource("/{providerId}/{novelId}")
         data class Book(
             val parent: FavoritedWeb,
             val providerId: String,
-            val bookId: String,
+            val novelId: String,
         )
     }
 
@@ -42,10 +42,10 @@ private class R {
             val pageSize: Int = 10,
         )
 
-        @Resource("/{bookId}")
+        @Resource("/{novelId}")
         data class Book(
             val parent: FavoritedWenku,
-            val bookId: String,
+            val novelId: String,
         )
     }
 }
@@ -65,12 +65,12 @@ fun Route.routeUser() {
         }
         put<R.FavoritedWeb.Book> { loc ->
             val jwtUser = call.jwtUser()
-            val result = service.setFavoriteWebBook(jwtUser.username, loc.providerId, loc.bookId)
+            val result = service.setFavoriteWebBook(jwtUser.username, loc.providerId, loc.novelId)
             call.respondResult(result)
         }
         delete<R.FavoritedWeb.Book> { loc ->
             val jwtUser = call.jwtUser()
-            val result = service.removeFavoriteWebBook(jwtUser.username, loc.providerId, loc.bookId)
+            val result = service.removeFavoriteWebBook(jwtUser.username, loc.providerId, loc.novelId)
             call.respondResult(result)
         }
 
@@ -85,12 +85,12 @@ fun Route.routeUser() {
         }
         put<R.FavoritedWenku.Book> { loc ->
             val jwtUser = call.jwtUser()
-            val result = service.setFavoriteWenkuBook(jwtUser.username, loc.bookId)
+            val result = service.setFavoriteWenkuBook(jwtUser.username, loc.novelId)
             call.respondResult(result)
         }
         delete<R.FavoritedWenku.Book> { loc ->
             val jwtUser = call.jwtUser()
-            val result = service.removeFavoriteWenkuBook(jwtUser.username, loc.bookId)
+            val result = service.removeFavoriteWenkuBook(jwtUser.username, loc.novelId)
             call.respondResult(result)
         }
     }
@@ -98,51 +98,51 @@ fun Route.routeUser() {
 
 class UserService(
     private val userRepo: UserRepository,
-    private val webRepo: WebBookMetadataRepository,
-    private val wenkuRepo: WenkuBookMetadataRepository,
-    private val webEpisodeRepo: WebBookEpisodeRepository,
+    private val webRepo: WebNovelMetadataRepository,
+    private val wenkuRepo: WenkuNovelMetadataRepository,
+    private val webEpisodeRepo: WebChapterRepository,
 ) {
     suspend fun listFavoriteWebBook(
         username: String,
         page: Int,
         pageSize: Int,
-    ): Result<WebNovelService.BookListPageDto> {
-        val books = userRepo.listFavoriteWebBook(username)
+    ): Result<WebNovelService.NovelListPageDto> {
+        val novels = userRepo.listFavoriteWebBook(username)
             ?: return httpNotFound("用户不存在")
-        val items = books
+        val items = novels
             .asSequence()
             .drop(page * pageSize)
             .take(pageSize)
             .toList()
             .mapNotNull {
-                val metadata = webRepo.getLocal(it.providerId, it.bookId)
+                val metadata = webRepo.findOne(it.providerId, it.novelId)
                     ?: return@mapNotNull null
-                WebNovelService.BookListPageDto.ItemDto(
+                WebNovelService.NovelListPageDto.ItemDto(
                     providerId = metadata.providerId,
-                    bookId = metadata.bookId,
+                    novelId = metadata.novelId,
                     titleJp = metadata.titleJp,
                     titleZh = metadata.titleZh,
-                    total = metadata.toc.count { it.episodeId != null },
-                    count = webEpisodeRepo.count(metadata.providerId, metadata.bookId),
-                    countBaidu = webEpisodeRepo.countBaidu(metadata.providerId, metadata.bookId),
-                    countYoudao = webEpisodeRepo.countYoudao(metadata.providerId, metadata.bookId),
+                    total = metadata.toc.count { it.chapterId != null },
+                    count = webEpisodeRepo.count(metadata.providerId, metadata.novelId),
+                    countBaidu = webEpisodeRepo.countBaidu(metadata.providerId, metadata.novelId),
+                    countYoudao = webEpisodeRepo.countYoudao(metadata.providerId, metadata.novelId),
                 )
             }
-        val dto = WebNovelService.BookListPageDto(
-            pageNumber = (books.size / pageSize).toLong() + 1,
+        val dto = WebNovelService.NovelListPageDto(
+            pageNumber = (novels.size / pageSize).toLong() + 1,
             items = items,
         )
         return Result.success(dto)
     }
 
-    suspend fun setFavoriteWebBook(username: String, providerId: String, bookId: String): Result<Unit> {
-        if (!webRepo.exist(providerId, bookId)) {
+    suspend fun setFavoriteWebBook(username: String, providerId: String, novelId: String): Result<Unit> {
+        if (!webRepo.exist(providerId, novelId)) {
             return httpNotFound("书不存在")
         }
         val updateResult = userRepo.addFavoriteWebBook(
             username = username,
             providerId = providerId,
-            bookId = bookId,
+            novelId = novelId,
         )
         return if (updateResult.matchedCount == 0L) {
             httpNotFound("用户不存在")
@@ -151,14 +151,14 @@ class UserService(
         }
     }
 
-    suspend fun removeFavoriteWebBook(username: String, providerId: String, bookId: String): Result<Unit> {
-        if (!webRepo.exist(providerId, bookId)) {
+    suspend fun removeFavoriteWebBook(username: String, providerId: String, novelId: String): Result<Unit> {
+        if (!webRepo.exist(providerId, novelId)) {
             return httpNotFound("书不存在")
         }
         val updateResult = userRepo.removeFavoriteWebBook(
             username = username,
             providerId = providerId,
-            bookId = bookId,
+            novelId = novelId,
         )
         return if (updateResult.matchedCount == 0L) {
             httpNotFound("用户不存在")
@@ -171,10 +171,10 @@ class UserService(
         username: String,
         page: Int,
         pageSize: Int,
-    ): Result<WenkuNovelService.BookListPageDto> {
-        val books = userRepo.listFavoriteWenkuBook(username)
+    ): Result<WenkuNovelService.NovelListPageDto> {
+        val novels = userRepo.listFavoriteWenkuBook(username)
             ?: return httpNotFound("用户不存在")
-        val items = books
+        val items = novels
             .asSequence()
             .drop(page * pageSize)
             .take(pageSize)
@@ -182,27 +182,27 @@ class UserService(
             .mapNotNull {
                 val metadata = wenkuRepo.findOne(it)
                     ?: return@mapNotNull null
-                WenkuNovelService.BookListPageDto.ItemDto(
+                WenkuNovelService.NovelListPageDto.ItemDto(
                     id = metadata.id.toHexString(),
                     title = metadata.title,
                     titleZh = metadata.titleZh,
                     cover = metadata.cover,
                 )
             }
-        val dto = WenkuNovelService.BookListPageDto(
-            pageNumber = (books.size / pageSize).toLong() + 1,
+        val dto = WenkuNovelService.NovelListPageDto(
+            pageNumber = (novels.size / pageSize).toLong() + 1,
             items = items,
         )
         return Result.success(dto)
     }
 
-    suspend fun setFavoriteWenkuBook(username: String, bookId: String): Result<Unit> {
-        if (!wenkuRepo.exist(bookId)) {
+    suspend fun setFavoriteWenkuBook(username: String, novelId: String): Result<Unit> {
+        if (!wenkuRepo.exist(novelId)) {
             return httpNotFound("书不存在")
         }
         val updateResult = userRepo.addFavoriteWenkuBook(
             username = username,
-            bookId = bookId,
+            novelId = novelId,
         )
         return if (updateResult.matchedCount == 0L) {
             httpNotFound("用户不存在")
@@ -211,13 +211,13 @@ class UserService(
         }
     }
 
-    suspend fun removeFavoriteWenkuBook(username: String, bookId: String): Result<Unit> {
-        if (!wenkuRepo.exist(bookId)) {
+    suspend fun removeFavoriteWenkuBook(username: String, novelId: String): Result<Unit> {
+        if (!wenkuRepo.exist(novelId)) {
             return httpNotFound("书不存在")
         }
         val updateResult = userRepo.removeFavoriteWenkuBook(
             username = username,
-            bookId = bookId,
+            novelId = novelId,
         )
         return if (updateResult.matchedCount == 0L) {
             httpNotFound("用户不存在")

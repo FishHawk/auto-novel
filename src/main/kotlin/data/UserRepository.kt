@@ -36,7 +36,8 @@ data class User(
     @Serializable
     data class FavoriteBook(
         val providerId: String,
-        val bookId: String,
+        @SerialName("bookId")
+        val novelId: String,
     )
 
     fun validatePassword(password: String): Boolean {
@@ -104,22 +105,22 @@ class UserRepository(
     suspend fun addFavoriteWebBook(
         username: String,
         providerId: String,
-        bookId: String,
+        novelId: String,
     ): UpdateResult {
         return col.updateOne(
             byUsername(username),
-            addToSet(User::favoriteBooks, User.FavoriteBook(providerId, bookId)),
+            addToSet(User::favoriteBooks, User.FavoriteBook(providerId, novelId)),
         )
     }
 
     suspend fun removeFavoriteWebBook(
         username: String,
         providerId: String,
-        bookId: String,
+        novelId: String,
     ): UpdateResult {
         return col.updateOne(
             byUsername(username),
-            pull(User::favoriteBooks, User.FavoriteBook(providerId, bookId)),
+            pull(User::favoriteBooks, User.FavoriteBook(providerId, novelId)),
         )
     }
 
@@ -137,21 +138,21 @@ class UserRepository(
 
     suspend fun addFavoriteWenkuBook(
         username: String,
-        bookId: String,
+        novelId: String,
     ): UpdateResult {
         return col.updateOne(
             byUsername(username),
-            addToSet(User::favoriteWenkuBooks, bookId),
+            addToSet(User::favoriteWenkuBooks, novelId),
         )
     }
 
     suspend fun removeFavoriteWenkuBook(
         username: String,
-        bookId: String,
+        novelId: String,
     ): UpdateResult {
         return col.updateOne(
             byUsername(username),
-            pull(User::favoriteWenkuBooks, bookId),
+            pull(User::favoriteWenkuBooks, novelId),
         )
     }
 }

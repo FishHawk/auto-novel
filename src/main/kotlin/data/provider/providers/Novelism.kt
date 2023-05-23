@@ -4,23 +4,28 @@ import data.provider.*
 import io.ktor.client.request.*
 import kotlinx.serialization.json.*
 
-class Novelism : BookProvider {
+class Novelism : WebNovelProvider {
     companion object {
         const val id = "novelism"
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
         return emptyList()
     }
 
-    override suspend fun getMetadata(bookId: String): SBookMetadata {
-        val doc = client.get("https://novelism.jp/novel/$bookId").document()
+    override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
+        val doc = client.get("https://novelism.jp/novel/$novelId").document()
 
         val title = doc.selectFirst("h1.mb-2 > span")!!.text()
 
         val author = doc
             .selectFirst("div.mb-1 > a.text-sm")!!
-            .let { SBookAuthor(name = it.text(), link = "https://novelism.jp" + it.attr("href")) }
+            .let {
+                RemoteNovelMetadata.Author(
+                    name = it.text(),
+                    link = "https://novelism.jp" + it.attr("href"),
+                )
+            }
 
         val introduction = doc.selectFirst("div.my-4 > div.text-sm")!!.text()
 
@@ -28,15 +33,19 @@ class Novelism : BookProvider {
             val h3 = col.selectFirst("h3 > span")?.text()
             val li = col.select("ol > li").mapNotNull { el ->
                 if (el.selectFirst("button") != null) null
-                else SBookTocItem(
+                else RemoteNovelMetadata.TocItem(
                     title = el.selectFirst("div.leading-6")!!.text(),
-                    episodeId = el.selectFirst("a")!!.attr("href").removeSuffix("/").substringAfterLast("/"),
+                    chapterId = el.selectFirst("a")!!.attr("href").removeSuffix("/").substringAfterLast("/"),
                 )
             }
-            if (h3 == null) li else listOf(SBookTocItem(title = h3)) + li
+            if (h3 == null) li else listOf(
+                RemoteNovelMetadata.TocItem(
+                    title = h3,
+                )
+            ) + li
         }.flatten()
 
-        return SBookMetadata(
+        return RemoteNovelMetadata(
             title = title,
             authors = listOf(author),
             introduction = introduction,
@@ -44,8 +53,8 @@ class Novelism : BookProvider {
         )
     }
 
-    override suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode {
-        val doc = client.get("https://novelism.jp/novel/$bookId/article/$episodeId/").document()
+    override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
+        val doc = client.get("https://novelism.jp/novel/$novelId/article/$chapterId/").document()
         val jsonRaw = doc.select("script")
             .map { it.html() }
             .filter { it.isNotBlank() && "gtm" !in it }
@@ -68,6 +77,6 @@ class Novelism : BookProvider {
                     }
             }
             .split("\\n")
-        return SBookEpisode(paragraphs = content)
+        return RemoteChapter(paragraphs = content)
     }
 }

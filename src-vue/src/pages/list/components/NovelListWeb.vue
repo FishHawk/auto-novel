@@ -1,23 +1,22 @@
 <script lang="ts" setup>
-import { BookListPageDto, BookRankPageDto } from '@/data/api/api_web_novel';
-import { buildMetadataUrl } from '@/data/provider';
+import {
+  WebNovelListPageDto,
+  WebNovelRankPageDto,
+} from '@/data/api/api_web_novel';
 
 defineProps<{
-  page: BookListPageDto | BookRankPageDto;
+  page: WebNovelListPageDto | WebNovelRankPageDto;
 }>();
 </script>
 
 <template>
   <div v-for="item in page.items">
     <n-h3 class="title" style="margin-bottom: 4px">
-      <n-a :href="`/novel/${item.providerId}/${item.bookId}`" target="_blank">
+      <n-a :href="`/novel/${item.providerId}/${item.novelId}`" target="_blank">
         {{ item.titleJp }}
       </n-a>
     </n-h3>
     <div>{{ item.titleZh }}</div>
-    <n-a :href="buildMetadataUrl(item.providerId, item.bookId)" target="_blank">
-      {{ buildMetadataUrl(item.providerId, item.bookId) }}
-    </n-a>
     <template v-if="'extra' in item">
       <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
         {{ extraLine }}

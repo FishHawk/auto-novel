@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router';
 
 import { mapOk } from '@/data/api/result';
 import ApiWebNovel from '@/data/api/api_web_novel';
-import { Loader } from './components/BookList.vue';
+import { Loader } from './components/NovelList.vue';
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
@@ -103,7 +103,7 @@ const loader: Loader = (_page: number, _query: string, selected: number[]) => {
 <template>
   <ListLayout>
     <n-h1>{{ descriptior.title }}</n-h1>
-    <BookList
+    <NovelList
       :search="descriptior.search"
       :options="descriptior.options"
       :loader="loader"

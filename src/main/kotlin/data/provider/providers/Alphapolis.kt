@@ -6,7 +6,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 
-class Alphapolis : BookProvider {
+class Alphapolis : WebNovelProvider {
     companion object {
         const val id = "alphapolis"
     }
@@ -20,59 +20,67 @@ class Alphapolis : BookProvider {
         }
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
         TODO("Not yet implemented")
     }
 
-    private fun getMetadataUrl(bookId: String): String {
-        return "https://www.alphapolis.co.jp/novel/" + bookId.split('-').joinToString("/")
+    private fun getMetadataUrl(novelId: String): String {
+        return "https://www.alphapolis.co.jp/novel/" + novelId.split('-').joinToString("/")
     }
 
-    private fun getEpisodeUrl(bookId: String, episodeId: String): String {
-        return getMetadataUrl(bookId) + "/episode/" + episodeId
+    private fun getEpisodeUrl(novelId: String, chapterId: String): String {
+        return getMetadataUrl(novelId) + "/episode/" + chapterId
     }
 
-    override suspend fun getMetadata(bookId: String): SBookMetadata {
-        val doc = clientText.get(getMetadataUrl(bookId)).document()
+    override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
+        val doc = clientText.get(getMetadataUrl(novelId)).document()
         val main = doc.selectFirst("div.content-main")!!
         val title = main.selectFirst("h1.title")!!.text()
         val author = main
             .selectFirst("div.author")!!
             .selectFirst("a")!!
             .let {
-                SBookAuthor(
+                RemoteNovelMetadata.Author(
                     name = it.text(),
                     link = "https://www.alphapolis.co.jp" + it.attr("href"),
                 )
             }
         val introduction = main.selectFirst("div.abstract")!!.text()
 
-        val toc = mutableListOf<SBookTocItem>()
+        val toc = mutableListOf<RemoteNovelMetadata.TocItem>()
         doc.selectFirst("div.episodes")!!.children().forEach { el ->
             if (el.hasClass("chapter-rental")) {
-                toc.add(SBookTocItem(title = el.selectFirst("h3")!!.text()))
+                toc.add(
+                    RemoteNovelMetadata.TocItem(
+                        title = el.selectFirst("h3")!!.text(),
+                    )
+                )
             } else if (el.hasClass("rental")) {
                 el.select("div.rental-episode > a").not("[class]").forEach {
                     toc.add(
-                        SBookTocItem(
+                        RemoteNovelMetadata.TocItem(
                             title = it.text(),
-                            episodeId = it.attr("href").substringAfterLast("/"),
+                            chapterId = it.attr("href").substringAfterLast("/"),
                         )
                     )
                 }
             } else if (el.tagName() == "h3") {
-                toc.add(SBookTocItem(title = el.text()))
+                toc.add(
+                    RemoteNovelMetadata.TocItem(
+                        title = el.text(),
+                    )
+                )
             } else if (el.hasClass("episode")) {
                 toc.add(
-                    SBookTocItem(
+                    RemoteNovelMetadata.TocItem(
                         title = el.selectFirst("span.title")!!.text(),
-                        episodeId = el.selectFirst("a")!!.attr("href").substringAfterLast("/"),
+                        chapterId = el.selectFirst("a")!!.attr("href").substringAfterLast("/"),
                     )
                 )
             }
         }
 
-        return SBookMetadata(
+        return RemoteNovelMetadata(
             title = title,
             authors = listOf(author),
             introduction = introduction,
@@ -80,13 +88,13 @@ class Alphapolis : BookProvider {
         )
     }
 
-    override suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode {
-        val doc = clientText.get(getEpisodeUrl(bookId, episodeId)).document()
+    override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
+        val doc = clientText.get(getEpisodeUrl(novelId, chapterId)).document()
         val paragraphs = doc.selectFirst("div#novelBoby")!!.textNodes()
             .map { it.text().removePrefix(" ") }
         if (paragraphs.size < 5) {
             throw RuntimeException("章节内容太少，爬取频率太快导致未加载")
         }
-        return SBookEpisode(paragraphs = paragraphs)
+        return RemoteChapter(paragraphs = paragraphs)
     }
 }

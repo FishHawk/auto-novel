@@ -4,12 +4,12 @@ import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
 
 import { ResultState } from '@/data/api/result';
-import ApiWebNovel, { BookStateDto } from '@/data/api/api_web_novel';
+import ApiWebNovel, { WebNovelStateDto } from '@/data/api/api_web_novel';
 import { update } from '@/data/api/api_update';
 
 const props = defineProps<{
   providerId: string;
-  bookId: string;
+  novelId: string;
   glossary: { [key: string]: string };
 }>();
 
@@ -27,16 +27,16 @@ const showModal = ref(false);
 
 const message = useMessage();
 
-const bookState = ref<ResultState<BookStateDto>>();
+const novelState = ref<ResultState<WebNovelStateDto>>();
 const progress: Ref<UpdateProgress | undefined> = ref();
 
 onMounted(() => getFileGroups());
 let lastPoll = false;
 async function getFileGroups() {
-  const result = await ApiWebNovel.getState(props.providerId, props.bookId);
+  const result = await ApiWebNovel.getState(props.providerId, props.novelId);
 
   if (result.ok) {
-    bookState.value = result;
+    novelState.value = result;
   }
 
   if (progress.value || lastPoll) {
@@ -72,7 +72,7 @@ async function startUpdateTask(
   const result = await update(
     version,
     props.providerId,
-    props.bookId,
+    props.novelId,
     startIndex,
     endIndex,
     {
@@ -80,8 +80,8 @@ async function startUpdateTask(
         progress.value!.total = total;
         getFileGroups();
       },
-      onEpisodeTranslateSuccess: () => (progress.value!.finished += 1),
-      onEpisodeTranslateFailure: () => (progress.value!.error += 1),
+      onChapterTranslateSuccess: () => (progress.value!.finished += 1),
+      onChapterTranslateFailure: () => (progress.value!.error += 1),
     }
   );
 
@@ -100,26 +100,26 @@ async function startUpdateTask(
   progress.value = undefined;
 }
 
-interface BookFiles {
+interface NovelFiles {
   label: string;
   version: 'jp' | 'baidu' | 'youdao';
   files: { label: string; url: string; name: string }[];
 }
 
-function stateToFileList(): BookFiles[] {
+function stateToFileList(): NovelFiles[] {
   const baseUrl = window.origin + `/api/prepare-book/`;
 
   function createFile(label: string, lang: string, type: string) {
     return {
       label,
-      url: baseUrl + `${props.providerId}/${props.bookId}/${lang}/${type}`,
-      name: `${props.providerId}.${props.bookId}.${lang}.${type}`,
+      url: baseUrl + `${props.providerId}/${props.novelId}/${lang}/${type}`,
+      name: `${props.providerId}.${props.novelId}.${lang}.${type}`,
     };
   }
 
-  let state: BookStateDto | undefined;
-  if (bookState.value?.ok) {
-    state = bookState.value.value;
+  let state: WebNovelStateDto | undefined;
+  if (novelState.value?.ok) {
+    state = novelState.value.value;
   } else {
     state = undefined;
   }

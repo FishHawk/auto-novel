@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { BookTocItemDto } from '@/data/api/api_web_novel';
+import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 
 defineProps<{
   providerId: string;
-  bookId: string;
-  toc: BookTocItemDto[];
+  novelId: string;
+  toc: WebNovelTocItemDto[];
 }>();
 </script>
 
@@ -13,8 +13,8 @@ defineProps<{
   <n-list>
     <n-list-item v-for="tocItem in toc" style="padding: 0px">
       <n-a
-        v-if="tocItem.episodeId"
-        :href="`/novel/${providerId}/${bookId}/${tocItem.episodeId}`"
+        v-if="tocItem.chapterId"
+        :href="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
       >
         <TocItem :item="tocItem" />
       </n-a>

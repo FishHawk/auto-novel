@@ -4,8 +4,8 @@ import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
 import ApiPatch, {
-  BookPatchesPageDto,
-  BookPatchesDto,
+  WebNovelPatchHistoryPageDto,
+  WebNovelPatchHistoryDto,
 } from '@/data/api/api_patch';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
@@ -14,34 +14,34 @@ const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
 const total = ref(1);
-const bookPage = ref<ResultState<BookPatchesPageDto>>();
-const details = ref<{ [key: string]: BookPatchesDto }>({});
+const novelPage = ref<ResultState<WebNovelPatchHistoryPageDto>>();
+const details = ref<{ [key: string]: WebNovelPatchHistoryDto }>({});
 
 async function loadPage(page: number) {
-  bookPage.value = undefined;
+  novelPage.value = undefined;
   const result = await ApiPatch.listPatch(currentPage.value - 1);
   if (currentPage.value == page) {
-    bookPage.value = result;
+    novelPage.value = result;
     if (result.ok) {
       total.value = result.value.total;
     }
   }
 }
 
-async function loadPatch(providerId: string, bookId: string) {
-  const result = await ApiPatch.getPatch(providerId, bookId);
+async function loadPatch(providerId: string, novelId: string) {
+  const result = await ApiPatch.getPatch(providerId, novelId);
   if (result.ok) {
-    details.value[`${providerId}/${bookId}`] = result.value;
+    details.value[`${providerId}/${novelId}`] = result.value;
   }
 }
 
-async function deletePatch(providerId: string, bookId: string) {
-  const result = await ApiPatch.deletePatch(providerId, bookId, auth.token!);
+async function deletePatch(providerId: string, novelId: string) {
+  const result = await ApiPatch.deletePatch(providerId, novelId, auth.token!);
   if (result.ok) {
     message.info('删除成功');
-    if (bookPage.value?.ok) {
-      bookPage.value.value.items = bookPage.value.value.items.filter(
-        (it) => it.providerId !== providerId || it.bookId !== bookId
+    if (novelPage.value?.ok) {
+      novelPage.value.value.items = novelPage.value.value.items.filter(
+        (it) => it.providerId !== providerId || it.novelId !== novelId
       );
     }
   } else {
@@ -49,13 +49,13 @@ async function deletePatch(providerId: string, bookId: string) {
   }
 }
 
-async function revokePatch(providerId: string, bookId: string) {
-  const result = await ApiPatch.revokePatch(providerId, bookId, auth.token!);
+async function revokePatch(providerId: string, novelId: string) {
+  const result = await ApiPatch.revokePatch(providerId, novelId, auth.token!);
   if (result.ok) {
     message.info('撤销成功');
-    if (bookPage.value?.ok) {
-      bookPage.value.value.items = bookPage.value.value.items.filter(
-        (it) => it.providerId !== providerId || it.bookId !== bookId
+    if (novelPage.value?.ok) {
+      novelPage.value.value.items = novelPage.value.value.items.filter(
+        (it) => it.providerId !== providerId || it.novelId !== novelId
       );
     }
   } else {
@@ -75,23 +75,23 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       :page-slot="7"
     />
     <n-divider />
-    <div v-if="bookPage?.ok">
-      <div v-for="item in bookPage.value.items">
+    <div v-if="novelPage?.ok">
+      <div v-for="item in novelPage.value.items">
         <n-p>
           <n-a
-            :href="`/novel/${item.providerId}/${item.bookId}`"
+            :href="`/novel/${item.providerId}/${item.novelId}`"
             target="_blank"
           >
-            {{ `${item.providerId}/${item.bookId}` }}
+            {{ `${item.providerId}/${item.novelId}` }}
           </n-a>
           <br />
           {{ item.titleJp }}
           <br />
           {{ item.titleZh }}
         </n-p>
-        <template v-if="`${item.providerId}/${item.bookId}` in details">
+        <template v-if="`${item.providerId}/${item.novelId}` in details">
           <div
-            v-for="p of details[`${item.providerId}/${item.bookId}`].patches"
+            v-for="p of details[`${item.providerId}/${item.novelId}`].patches"
           >
             <n-p prefix="bar">{{ p.uuid }}</n-p>
             <n-space vertical>
@@ -112,15 +112,15 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
           </div>
 
           <n-space>
-            <n-button @click="deletePatch(item.providerId, item.bookId)">
+            <n-button @click="deletePatch(item.providerId, item.novelId)">
               删除
             </n-button>
-            <n-button @click="revokePatch(item.providerId, item.bookId)">
+            <n-button @click="revokePatch(item.providerId, item.novelId)">
               撤销
             </n-button>
           </n-space>
         </template>
-        <n-button v-else @click="loadPatch(item.providerId, item.bookId)">
+        <n-button v-else @click="loadPatch(item.providerId, item.novelId)">
           加载
         </n-button>
         <n-divider />

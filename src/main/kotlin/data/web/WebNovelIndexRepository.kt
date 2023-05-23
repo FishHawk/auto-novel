@@ -4,29 +4,31 @@ import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
 import data.ElasticSearchDataSource
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 data class EsBookPageList(
-    val items: List<EsBookMetadata>,
+    val items: List<NovelMetadata>,
     val total: Long,
 )
 
 @Serializable
-data class EsBookMetadata(
+data class NovelMetadata(
     val providerId: String,
-    val bookId: String,
+    @SerialName("bookId")
+    val novelId: String,
     val titleJp: String,
     val titleZh: String?,
     val authors: List<String>,
     val changeAt: Long,
 )
 
-class WebBookIndexRepository(
-    source: ElasticSearchDataSource,
+class WebNovelIndexRepository(
+    es: ElasticSearchDataSource,
 ) {
-    private val client = source.client
+    private val client = es.client
     private val indexName = "metadata"
 
     init {
@@ -34,15 +36,15 @@ class WebBookIndexRepository(
             runCatching {
                 client.createIndex(indexName) {
                     mappings(dynamicEnabled = false) {
-                        keyword(EsBookMetadata::providerId)
-                        text(EsBookMetadata::titleJp) {
+                        keyword(NovelMetadata::providerId)
+                        text(NovelMetadata::titleJp) {
                             analyzer = "icu_analyzer"
                         }
-                        text(EsBookMetadata::titleZh) {
+                        text(NovelMetadata::titleZh) {
                             analyzer = "icu_analyzer"
                         }
-                        keyword(EsBookMetadata::authors)
-                        date(EsBookMetadata::changeAt)
+                        keyword(NovelMetadata::authors)
+                        date(NovelMetadata::changeAt)
                     }
                 }
             }
@@ -51,18 +53,18 @@ class WebBookIndexRepository(
 
     suspend fun index(
         providerId: String,
-        bookId: String,
+        novelId: String,
         titleJp: String,
         titleZh: String?,
         authors: List<String>,
         changeAt: Long,
     ) {
         client.indexDocument(
-            id = "${providerId}.${bookId}",
+            id = "${providerId}.${novelId}",
             target = indexName,
-            document = EsBookMetadata(
+            document = NovelMetadata(
                 providerId = providerId,
-                bookId = bookId,
+                novelId = novelId,
                 titleJp = titleJp,
                 titleZh = titleZh,
                 authors = authors,
@@ -81,14 +83,14 @@ class WebBookIndexRepository(
 
     suspend fun update(
         providerId: String,
-        bookId: String,
+        novelId: String,
         titleJp: String,
         titleZh: String?,
         authors: List<String>,
     ) {
         client.updateDocument(
             target = indexName,
-            id = "${providerId}.${bookId}",
+            id = "${providerId}.${novelId}",
             docJson = Json.encodeToString(EsBookMetadataUpdate(titleJp, titleZh, authors)),
             refresh = Refresh.WaitFor,
         )
@@ -108,22 +110,22 @@ class WebBookIndexRepository(
             query = bool {
                 if (providerId != null) {
                     filter(
-                        term(EsBookMetadata::providerId, providerId)
+                        term(NovelMetadata::providerId, providerId)
                     )
                 }
                 if (queryString != null) {
                     must(
                         disMax {
                             queries(
-                                match(EsBookMetadata::titleJp, queryString),
-                                match(EsBookMetadata::titleZh, queryString),
-                                match(EsBookMetadata::authors, queryString),
+                                match(NovelMetadata::titleJp, queryString),
+                                match(NovelMetadata::titleZh, queryString),
+                                match(NovelMetadata::authors, queryString),
                             )
                         }
                     )
                 } else {
                     sort {
-                        add(EsBookMetadata::changeAt)
+                        add(NovelMetadata::changeAt)
                     }
                 }
             }
@@ -136,13 +138,13 @@ class WebBookIndexRepository(
     }
 
     suspend fun addBunch(
-        list: List<EsBookMetadata>,
+        list: List<NovelMetadata>,
     ) {
         client.bulk {
             list.forEach {
                 index(
                     doc = it,
-                    id = "${it.providerId}.${it.bookId}",
+                    id = "${it.providerId}.${it.novelId}",
                     index = "metadata",
                 )
             }

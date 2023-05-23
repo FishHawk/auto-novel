@@ -2,10 +2,9 @@ package api
 
 import data.UserRepository
 import data.web.BookFileLang
-import data.web.BookFileType
-import data.wenku.WenkuBookFileRepository
-import data.wenku.WenkuBookIndexRepository
-import data.wenku.WenkuBookMetadataRepository
+import data.wenku.WenkuNovelFileRepository
+import data.wenku.WenkuNovelIndexRepository
+import data.wenku.WenkuNovelMetadataRepository
 import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -22,7 +21,6 @@ import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.io.InputStream
 import java.lang.RuntimeException
-import java.time.ZoneId
 
 @Resource("/wenku")
 private class WenkuNovel {
@@ -33,20 +31,24 @@ private class WenkuNovel {
         val query: String? = null,
     )
 
-    // 如果用的人多，看情况合并到Book里面
     @Resource("/non-archived")
-    class NonArchived(val parent: WenkuNovel) {
-        @Resource("/prepare-book/{fileName}/{lang}")
-        class PrepareBook(
-            val parent: NonArchived,
-            val fileName: String,
-            val lang: BookFileLang,
-        )
+    class NonArchived(val parent: WenkuNovel)
 
-        @Resource("/{fileName}")
-        class EpubInfo(val parent: NonArchived, val fileName: String) {
+    @Resource("/{novelId}")
+    class Id(val parent: WenkuNovel, val novelId: String) {
+        @Resource("/volume-zh")
+        class VolumeZh(val parent: Id)
+
+        @Resource("/volume-jp")
+        class VolumeJp(val parent: Id)
+
+        @Resource("/volume-generated/{volumeId}/{lang}")
+        class VolumeGenerated(val parent: Id, val volumeId: String, val lang: BookFileLang)
+
+        @Resource("/translate/{volumeId}")
+        class Translate(val parent: Id, val volumeId: String) {
             @Resource("/{chapterId}")
-            class Chapter(val parent: EpubInfo, val chapterId: String) {
+            class Chapter(val parent: Translate, val chapterId: String) {
                 @Resource("/baidu")
                 class Baidu(val parent: Chapter)
 
@@ -54,12 +56,6 @@ private class WenkuNovel {
                 class Youdao(val parent: Chapter)
             }
         }
-    }
-
-    @Resource("/{bookId}")
-    class Book(val parent: WenkuNovel, val bookId: String) {
-        @Resource("/episode")
-        class Episode(val parent: Book)
     }
 }
 
@@ -75,68 +71,16 @@ fun Route.routeWenkuNovel() {
         call.respondResult(result)
     }
 
-    get<WenkuNovel.NonArchived> {
-        val result = service.listNonArchived()
+
+    get<WenkuNovel.NonArchived> { loc ->
+        val result = service.getNonArchived()
         call.respondResult(result)
-    }
-
-    post<WenkuNovel.NonArchived> {
-        call.receiveMultipart().forEachPart { part ->
-            if (part is PartData.FileItem) {
-                val fileName = part.originalFileName!!
-                val inputStream = part.streamProvider()
-                val result = service.createNonArchived(fileName, inputStream)
-                call.respondResult(result)
-                return@forEachPart
-            }
-            part.dispose()
-        }
-    }
-
-    get<WenkuNovel.NonArchived.PrepareBook> { loc ->
-        val result = service.updateBookFile(loc.fileName, loc.lang)
-        result.onSuccess {
-            call.respondRedirect(it)
-        }.onFailure {
-            call.respondResult(result)
-        }
-    }
-
-    get<WenkuNovel.NonArchived.EpubInfo> { loc ->
-        val result = service.getEpubInfo(loc.fileName)
-        call.respondResult(result)
-    }
-
-    get<WenkuNovel.NonArchived.EpubInfo.Chapter> { loc ->
-        val result = service.getEpubChapter(loc.parent.fileName, loc.chapterId)
-        call.respondResult(result)
-    }
-
-    post<WenkuNovel.NonArchived.EpubInfo.Chapter.Baidu> { loc ->
-        val body = call.receive<List<String>>()
-        val result = service.updateEpubChapter(loc.parent.parent.fileName, loc.parent.chapterId, "baidu", body)
-        call.respondResult(result)
-    }
-
-    post<WenkuNovel.NonArchived.EpubInfo.Chapter.Youdao> { loc ->
-        val body = call.receive<List<String>>()
-        val result = service.updateEpubChapter(loc.parent.parent.fileName, loc.parent.chapterId, "youdao", body)
-        call.respondResult(result)
-    }
-
-    get<WenkuNovel.NonArchived.PrepareBook> { loc ->
-//        val result = service.prepareBook(loc.fileName, loc.lang, loc.type)
-//        result.onSuccess {
-//            call.respondRedirect(it)
-//        }.onFailure {
-//            call.respondResult(result)
-//        }
     }
 
     authenticate(optional = true) {
-        get<WenkuNovel.Book> { loc ->
+        get<WenkuNovel.Id> { loc ->
             val user = call.jwtUserOrNull()
-            val result = service.getMetadata(loc.bookId, user?.username)
+            val result = service.getMetadata(loc.novelId, user?.username)
             call.respondResult(result)
         }
     }
@@ -150,44 +94,85 @@ fun Route.routeWenkuNovel() {
             call.respondResult(result)
         }
 
-        patch<WenkuNovel.Book> { loc ->
+        patch<WenkuNovel.Id> { loc ->
             val result = call.requireAtLeastMaintainer {
                 val body = call.receive<WenkuNovelService.MetadataCreateBody>()
-                service.patchMetadata(loc.bookId, body)
+                service.patchMetadata(loc.novelId, body)
             }
             call.respondResult(result)
         }
+    }
 
-        post<WenkuNovel.Book.Episode> { loc ->
-            val jwtUser = call.jwtUser()
-            if (!jwtUser.atLeastMaintainer()) {
-                call.respondResult(httpUnauthorized("只有维护者及以上才有权限执行此操作"))
+    post<WenkuNovel.Id.VolumeZh> { loc ->
+        call.receiveMultipart().forEachPart { part ->
+            if (part is PartData.FileItem) {
+                val fileName = part.originalFileName!!
+                val inputStream = part.streamProvider()
+                val result = service.createVolume(
+                    loc.parent.novelId, fileName, inputStream
+                )
+                call.respondResult(result)
+                return@forEachPart
             }
-            val multipartData = call.receiveMultipart()
-            multipartData.forEachPart { part ->
-                if (part is PartData.FileItem) {
-                    val fileName = part.originalFileName!!
-                    val inputStream = part.streamProvider()
-                    val result = service.createEpisodeFile(
-                        loc.parent.bookId, fileName, inputStream
-                    )
-                    call.respondResult(result)
-                    return@forEachPart
-                }
-                part.dispose()
-            }
+            part.dispose()
         }
+    }
+
+    post<WenkuNovel.Id.VolumeJp> { loc ->
+        call.receiveMultipart().forEachPart { part ->
+            if (part is PartData.FileItem) {
+                val fileName = part.originalFileName!!
+                val inputStream = part.streamProvider()
+                val result = service.createVolumeAndUnpack(
+                    loc.parent.novelId, fileName, inputStream
+                )
+                call.respondResult(result)
+                return@forEachPart
+            }
+            part.dispose()
+        }
+    }
+
+    get<WenkuNovel.Id.VolumeGenerated> { loc ->
+        val result = service.updateBookFile(loc.parent.novelId, loc.volumeId, loc.lang)
+        result.onSuccess { filePath ->
+            call.respondRedirect("../../../../../../files-wenku/${loc.parent.novelId}/${filePath}")
+        }.onFailure {
+            call.respondResult(result)
+        }
+    }
+
+    get<WenkuNovel.Id.Translate> { loc ->
+        val result = service.getEpubInfo(loc.volumeId)
+        call.respondResult(result)
+    }
+
+    get<WenkuNovel.Id.Translate.Chapter> { loc ->
+        val result = service.getEpubChapter(loc.parent.volumeId, loc.chapterId)
+        call.respondResult(result)
+    }
+
+    post<WenkuNovel.Id.Translate.Chapter.Baidu> { loc ->
+        val body = call.receive<List<String>>()
+        val result = service.updateEpubChapter(loc.parent.parent.volumeId, loc.parent.chapterId, "baidu", body)
+        call.respondResult(result)
+    }
+
+    post<WenkuNovel.Id.Translate.Chapter.Youdao> { loc ->
+        val body = call.receive<List<String>>()
+        val result = service.updateEpubChapter(loc.parent.parent.volumeId, loc.parent.chapterId, "youdao", body)
+        call.respondResult(result)
     }
 }
 
 class WenkuNovelService(
     private val userRepo: UserRepository,
-    private val fileRepo: WenkuBookFileRepository,
-    private val indexRepo: WenkuBookIndexRepository,
-    private val metadataRepo: WenkuBookMetadataRepository,
+    private val fileRepo: WenkuNovelFileRepository,
+    private val indexRepo: WenkuNovelIndexRepository,
+    private val metadataRepo: WenkuNovelMetadataRepository,
 ) {
     @Serializable
-    data class BookListPageDto(
+    data class NovelListPageDto(
         val pageNumber: Long,
         val items: List<ItemDto>,
     ) {
@@ -204,21 +189,21 @@ class WenkuNovelService(
         queryString: String?,
         page: Int,
         pageSize: Int,
-    ): Result<BookListPageDto> {
+    ): Result<NovelListPageDto> {
         val esPage = indexRepo.search(
             queryString = queryString,
             page = page,
             pageSize = pageSize,
         )
         val items = esPage.items.map {
-            BookListPageDto.ItemDto(
+            NovelListPageDto.ItemDto(
                 id = it.id,
                 title = it.title,
                 titleZh = it.titleZh,
                 cover = it.cover,
             )
         }
-        val dto = BookListPageDto(
+        val dto = NovelListPageDto(
             pageNumber = (esPage.total / pageSize) + 1,
             items = items,
         )
@@ -237,18 +222,50 @@ class WenkuNovelService(
         val keywords: List<String>,
         val introduction: String,
         val visited: Long,
-        val files: List<String>,
         val favored: Boolean?,
+        val volumeZh: List<String>,
+        val volumeJp: List<VolumeJpDto>,
     )
 
+    @Serializable
+    data class VolumeJpDto(
+        val volumeId: String,
+        val jp: Int,
+        val baidu: Int,
+        val youdao: Int,
+    )
+
+    suspend fun getNonArchived(): Result<List<VolumeJpDto>> {
+        val novelId = "non-archived"
+        val volumes = fileRepo.listVolumeJp(novelId).map { volumeId ->
+            VolumeJpDto(
+                volumeId = volumeId,
+                jp = fileRepo.listUnpackItems(novelId, volumeId, "jp").size,
+                baidu = fileRepo.listUnpackItems(novelId, volumeId, "baidu").size,
+                youdao = fileRepo.listUnpackItems(novelId, volumeId, "youdao").size,
+            )
+        }
+        return Result.success(volumes)
+    }
+
     suspend fun getMetadata(
-        bookId: String,
+        novelId: String,
         username: String?,
     ): Result<MetadataDto> {
         val user = username?.let { userRepo.getByUsername(it) }
-        val metadata = metadataRepo.findOneAndIncreaseVisited(bookId)
+        val metadata = metadataRepo.findOneAndIncreaseVisited(novelId)
             ?: return httpNotFound("书不存在")
-        val files = fileRepo.list(bookId)
+
+        val volumeZh = fileRepo.listVolumeZh(novelId)
+        val volumeJp = fileRepo.listVolumeJp(novelId).map { volumeId ->
+            VolumeJpDto(
+                volumeId = volumeId,
+                jp = fileRepo.listUnpackItems(novelId, volumeId, "jp").size,
+                baidu = fileRepo.listUnpackItems(novelId, volumeId, "baidu").size,
+                youdao = fileRepo.listUnpackItems(novelId, volumeId, "youdao").size,
+            )
+        }
+
         val metadataDto = MetadataDto(
             title = metadata.title,
             titleZh = metadata.titleZh,
@@ -260,8 +277,9 @@ class WenkuNovelService(
             keywords = metadata.keywords,
             introduction = metadata.introduction,
             visited = metadata.visited,
-            files = files,
-            favored = user?.favoriteWenkuBooks?.contains(bookId),
+            favored = user?.favoriteWenkuBooks?.contains(novelId),
+            volumeZh = volumeZh,
+            volumeJp = volumeJp,
         )
         return Result.success(metadataDto)
     }
@@ -282,7 +300,7 @@ class WenkuNovelService(
     suspend fun createMetadata(
         body: MetadataCreateBody,
     ): Result<String> {
-        val bookId = metadataRepo.insertOne(
+        val novelId = metadataRepo.insertOne(
             title = body.title,
             titleZh = body.titleZh,
             titleZhAlias = body.titleZhAlias,
@@ -294,7 +312,7 @@ class WenkuNovelService(
             introduction = body.introduction,
         )
         indexRepo.index(
-            id = bookId,
+            novelId = novelId,
             title = body.title,
             titleZh = body.titleZh,
             titleZhAlias = body.titleZhAlias,
@@ -303,17 +321,17 @@ class WenkuNovelService(
             artists = body.artists,
             keywords = body.keywords,
         )
-        return Result.success(bookId)
+        return Result.success(novelId)
     }
 
     suspend fun patchMetadata(
-        bookId: String,
+        novelId: String,
         body: MetadataCreateBody,
     ): Result<Unit> {
-        metadataRepo.findOne(bookId)
+        metadataRepo.findOne(novelId)
             ?: return httpNotFound("书不存在")
         metadataRepo.findOneAndUpdate(
-            id = bookId,
+            novelId = novelId,
             title = body.title,
             titleZh = body.titleZh,
             titleZhAlias = body.titleZhAlias,
@@ -325,7 +343,7 @@ class WenkuNovelService(
             introduction = body.introduction,
         )
         indexRepo.index(
-            id = bookId,
+            novelId = novelId,
             title = body.title,
             titleZh = body.titleZh,
             titleZhAlias = body.titleZhAlias,
@@ -337,15 +355,15 @@ class WenkuNovelService(
         return Result.success(Unit)
     }
 
-    suspend fun createEpisodeFile(
-        bookId: String,
-        fileName: String,
+    suspend fun createVolume(
+        novelId: String,
+        volumeId: String,
         inputStream: InputStream,
     ): Result<Unit> {
-        metadataRepo.findOne(bookId)
+        metadataRepo.findOne(novelId)
             ?: return httpNotFound("书不存在")
 
-        val outputStream = fileRepo.createAndOpen(bookId, fileName)
+        val outputStream = fileRepo.createAndOpen(novelId, volumeId)
             .getOrElse {
                 return if (it is FileAlreadyExistsException) {
                     httpConflict("文件已经存在")
@@ -373,36 +391,26 @@ class WenkuNovelService(
         }
 
         return if (fileTooLarge) {
-            fileRepo.delete(bookId, fileName)
+            fileRepo.delete(novelId, volumeId)
             httpBadRequest("文件大小不能超过40MB")
         } else {
             Result.success(Unit)
         }
     }
 
-    @Serializable
-    data class VolumeStateDto(val fileName: String, val jp: Int, val baidu: Int, val youdao: Int)
-
-    suspend fun listNonArchived(): Result<List<VolumeStateDto>> {
-        val novelId = "non-archived"
-        val states = fileRepo.list(novelId).map { fileName ->
-            val jpItems = fileRepo.listUnpackItems(novelId, fileName, "jp")
-            val baiduItems = fileRepo.listUnpackItems(novelId, fileName, "baidu")
-            val youdaoItems = fileRepo.listUnpackItems(novelId, fileName, "youdao")
-            VolumeStateDto(fileName, jp = jpItems.size, baidu = baiduItems.size, youdao = youdaoItems.size)
+    suspend fun createVolumeAndUnpack(
+        novelId: String,
+        volumeId: String,
+        inputStream: InputStream,
+    ): Result<Unit> {
+        val result = createVolume(novelId, volumeId, inputStream)
+        if (result.isFailure) return result
+        return runCatching {
+            fileRepo.unpackEpub(novelId, volumeId)
+        }.onFailure {
+            fileRepo.delete(novelId, volumeId)
         }
-        return Result.success(states)
     }
-
-    suspend fun createNonArchived(fileName: String, inputStream: InputStream) =
-        createEpisodeFile("non-archived", fileName, inputStream)
-            .onSuccess {
-                runCatching {
-                    fileRepo.unpackEpub("non-archived", fileName)
-                }.onFailure {
-                    fileRepo.delete("non-archived", fileName)
-                }
-            }
 
     @Serializable
     data class ChapterStateDto(val chapterId: String, val baidu: Boolean, val youdao: Boolean)
@@ -446,11 +454,11 @@ class WenkuNovelService(
     }
 
     suspend fun updateBookFile(
-        fileName: String,
+        novelId: String,
+        volumeId: String,
         lang: BookFileLang,
     ): Result<String> {
-        val novelId = "non-archived"
-        val jpItems = fileRepo.listUnpackItems(novelId, fileName, "jp")
+        val jpItems = fileRepo.listUnpackItems(novelId, volumeId, "jp")
 
         val version = when (lang) {
             BookFileLang.ZH_YOUDAO, BookFileLang.MIX_YOUDAO -> "youdao"
@@ -458,16 +466,16 @@ class WenkuNovelService(
             else -> throw RuntimeException()
         }
         val zhItems =
-            if (version == "baidu") fileRepo.listUnpackItems(novelId, fileName, "baidu")
-            else fileRepo.listUnpackItems(novelId, fileName, "youdao")
+            if (version == "baidu") fileRepo.listUnpackItems(novelId, volumeId, "baidu")
+            else fileRepo.listUnpackItems(novelId, volumeId, "youdao")
         if (jpItems.size != zhItems.size) {
             return httpBadRequest("还没有翻译完成")
         }
         val newFileName = fileRepo.makeFile(
             novelId = novelId,
-            fileName = fileName,
+            fileName = volumeId,
             lang = lang,
         )
-        return Result.success("../../../../../../files-wenku/non-archived/$newFileName")
+        return Result.success(newFileName)
     }
 }

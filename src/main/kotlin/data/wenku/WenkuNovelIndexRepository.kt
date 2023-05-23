@@ -10,11 +10,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
-class WenkuBookIndexRepository(
+class WenkuNovelIndexRepository(
     private val es: ElasticSearchDataSource,
 ) {
     @Serializable
-    data class BookDocument(
+    data class Novel(
         val id: String,
         val title: String,
         val titleZh: String,
@@ -26,8 +26,8 @@ class WenkuBookIndexRepository(
         val updateAt: Long,
     )
 
-    data class BookPage(
-        val items: List<BookDocument>,
+    data class NovelPage(
+        val items: List<Novel>,
         val total: Long,
     )
 
@@ -38,13 +38,13 @@ class WenkuBookIndexRepository(
             runCatching {
                 es.client.createIndex(indexName) {
                     mappings(dynamicEnabled = false) {
-                        text(BookDocument::title) { analyzer = "icu_analyzer" }
-                        text(BookDocument::titleZh) { analyzer = "icu_analyzer" }
-                        text(BookDocument::titleZhAlias) { analyzer = "icu_analyzer" }
-                        keyword(BookDocument::authors)
-                        keyword(BookDocument::artists)
-                        keyword(BookDocument::keywords)
-                        date(BookDocument::updateAt)
+                        text(Novel::title) { analyzer = "icu_analyzer" }
+                        text(Novel::titleZh) { analyzer = "icu_analyzer" }
+                        text(Novel::titleZhAlias) { analyzer = "icu_analyzer" }
+                        keyword(Novel::authors)
+                        keyword(Novel::artists)
+                        keyword(Novel::keywords)
+                        date(Novel::updateAt)
                     }
                 }
             }
@@ -52,7 +52,7 @@ class WenkuBookIndexRepository(
     }
 
     suspend fun index(
-        id: String,
+        novelId: String,
         title: String,
         titleZh: String,
         titleZhAlias: List<String>,
@@ -62,10 +62,10 @@ class WenkuBookIndexRepository(
         keywords: List<String>,
     ) {
         es.client.indexDocument(
-            id = id,
+            id = novelId,
             target = indexName,
-            document = BookDocument(
-                id = id,
+            document = Novel(
+                id = novelId,
                 title = title,
                 titleZh = titleZh,
                 titleZhAlias = titleZhAlias,
@@ -83,7 +83,7 @@ class WenkuBookIndexRepository(
         queryString: String?,
         page: Int,
         pageSize: Int,
-    ): BookPage {
+    ): NovelPage {
         return es.client.search(
             indexName,
             from = page * pageSize,
@@ -94,23 +94,23 @@ class WenkuBookIndexRepository(
                     must(
                         disMax {
                             queries(
-                                match(BookDocument::title, queryString),
-                                match(BookDocument::titleZh, queryString),
-                                match(BookDocument::titleZhAlias, queryString),
-                                match(BookDocument::authors, queryString),
-                                match(BookDocument::artists, queryString),
-                                match(BookDocument::keywords, queryString),
+                                match(Novel::title, queryString),
+                                match(Novel::titleZh, queryString),
+                                match(Novel::titleZhAlias, queryString),
+                                match(Novel::authors, queryString),
+                                match(Novel::artists, queryString),
+                                match(Novel::keywords, queryString),
                             )
                         }
                     )
                 } else {
                     sort {
-                        add(BookDocument::updateAt)
+                        add(Novel::updateAt)
                     }
                 }
             }
         }.let {
-            BookPage(
+            NovelPage(
                 items = it.hits?.hits?.map { hit -> hit.parseHit() } ?: emptyList(),
                 total = it.total,
             )
@@ -118,7 +118,7 @@ class WenkuBookIndexRepository(
     }
 
     suspend fun addBunch(
-        list: List<BookDocument>,
+        list: List<Novel>,
     ) {
         es.client.bulk {
             list.forEach {

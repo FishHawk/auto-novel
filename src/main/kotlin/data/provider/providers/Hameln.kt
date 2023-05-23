@@ -6,7 +6,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 
-class Hameln : BookProvider {
+class Hameln : WebNovelProvider {
     companion object {
         const val id = "hameln"
     }
@@ -20,40 +20,44 @@ class Hameln : BookProvider {
         }
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<SBookListItem> {
+    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
         TODO("Not yet implemented")
     }
 
-    private fun getMetadataUrl(bookId: String): String {
-        return "https://syosetu.org/novel/$bookId"
-    }
-
-    private fun getEpisodeUrl(bookId: String, episodeId: String): String {
-        return if (episodeId == "default") "https://syosetu.org/novel/$bookId"
-        else "https://syosetu.org/novel/$bookId/$episodeId.html"
-    }
-
-    override suspend fun getMetadata(bookId: String): SBookMetadata {
-        val doc = client.get(getMetadataUrl(bookId)).document()
+    override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
+        val url = "https://syosetu.org/novel/$novelId"
+        val doc = client.get(url).document()
 
         if (doc.selectFirst("span[itemprop=name]") != null) {
             val title = doc.selectFirst("span[itemprop=name]")!!.text()
 
             val authorTag = doc.selectFirst("span[itemprop=author]")!!
             val author = authorTag.selectFirst("a")
-                ?.let { SBookAuthor(name = it.text(), link = "https:" + it.attr("href")) }
-                ?: SBookAuthor(name = authorTag.text())
+                ?.let {
+                    RemoteNovelMetadata.Author(
+                        name = it.text(),
+                        link = "https:" + it.attr("href"),
+                    )
+                }
+                ?: RemoteNovelMetadata.Author(
+                    name = authorTag.text(),
+                )
 
             val introduction = doc.select("div.ss")[1].wholeText().trimEnd()
 
             val toc = doc.select("tbody > tr").map { trTag ->
                 trTag.selectFirst("a")?.let {
-                    val episodeId = it.attr("href").removePrefix("./").removeSuffix(".html")
-                    SBookTocItem(title = it.text(), episodeId = episodeId)
-                } ?: SBookTocItem(title = trTag.text())
+                    val chapterId = it.attr("href").removePrefix("./").removeSuffix(".html")
+                    RemoteNovelMetadata.TocItem(
+                        title = it.text(),
+                        chapterId = chapterId,
+                    )
+                } ?: RemoteNovelMetadata.TocItem(
+                    title = trTag.text(),
+                )
             }
 
-            return SBookMetadata(
+            return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
                 introduction = introduction,
@@ -65,23 +69,36 @@ class Hameln : BookProvider {
                 val aList = pTag.select("a")
                 val title = aList[0].text()
                 val author = aList.getOrNull(1)?.let {
-                    SBookAuthor(name = it.text(), link = "https:" + it.attr("href"))
-                } ?: SBookAuthor(name = pTag.text().substringAfter(" 　 作："))
+                    RemoteNovelMetadata.Author(
+                        name = it.text(),
+                        link = "https:" + it.attr("href"),
+                    )
+                } ?: RemoteNovelMetadata.Author(
+                    name = pTag.text().substringAfter(" 　 作："),
+                )
                 Pair(title, author)
             }
             val introduction = ssList[1].text()
 
-            return SBookMetadata(
+            return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
                 introduction = introduction,
-                toc = listOf(SBookTocItem(title = "无名", episodeId = "default")),
+                toc = listOf(
+                    RemoteNovelMetadata.TocItem(
+                        title = "无名",
+                        chapterId = "default",
+                    )
+                ),
             )
         }
     }
 
-    override suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode {
-        val doc = client.get(getEpisodeUrl(bookId, episodeId)).document()
-        return SBookEpisode(paragraphs = doc.select("div#honbun > p").map { it.text() })
+    override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
+        val url =
+            if (chapterId == "default") "https://syosetu.org/novel/$novelId"
+            else "https://syosetu.org/novel/$novelId/$chapterId.html"
+        val doc = client.get(url).document()
+        return RemoteChapter(paragraphs = doc.select("div#honbun > p").map { it.text() })
     }
 }

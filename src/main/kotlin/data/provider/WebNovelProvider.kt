@@ -13,37 +13,31 @@ import kotlinx.serialization.json.JsonObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-data class SBookAuthor(
-    val name: String,
-    val link: String? = null,
-)
 
-data class SBookTocItem(
+data class RemoteNovelMetadata(
     val title: String,
-    val episodeId: String? = null,
-)
-
-data class SBookMetadata(
-    val title: String,
-    val authors: List<SBookAuthor>,
+    val authors: List<Author>,
     val introduction: String,
-    val toc: List<SBookTocItem>,
-)
+    val toc: List<TocItem>,
+) {
+    data class Author(val name: String, val link: String? = null)
+    data class TocItem(val title: String, val chapterId: String? = null)
+}
 
-data class SBookEpisode(
+data class RemoteChapter(
     val paragraphs: List<String>,
 )
 
-data class SBookListItem(
-    val bookId: String,
+data class RemoteNovelListItem(
+    val novelId: String,
     val title: String,
     val meta: String,
 )
 
-interface BookProvider {
-    suspend fun getRank(options: Map<String, String>): List<SBookListItem>
-    suspend fun getMetadata(bookId: String): SBookMetadata
-    suspend fun getEpisode(bookId: String, episodeId: String): SBookEpisode
+interface WebNovelProvider {
+    suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem>
+    suspend fun getMetadata(novelId: String): RemoteNovelMetadata
+    suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
 }
 
 val cookies = AcceptAllCookiesStorage()

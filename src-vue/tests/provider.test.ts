@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { parseUrl } from '../src/data/provider';
 
 function test_parse_url(providerId: string, benches: [string, string][]) {
-  for (const [url, bookId] of benches) {
+  for (const [url, novelId] of benches) {
     const parseResult = parseUrl(url);
     expect(parseResult?.providerId).toBe(providerId);
-    expect(parseResult?.bookId).toBe(bookId);
+    expect(parseResult?.novelId).toBe(novelId);
   }
 }
 

@@ -39,7 +39,7 @@ const routes = [
   },
 
   {
-    path: '/novel/:providerId/:bookId',
+    path: '/novel/:providerId/:novelId',
     component: () => import('./pages/metadata/WebMetadata.vue'),
   },
   {
@@ -47,13 +47,13 @@ const routes = [
     component: () => import('./pages/metadata/WenkuNonArchived.vue'),
   },
   {
-    path: '/wenku/:bookId',
+    path: '/wenku/:novelId',
     component: () => import('./pages/metadata/WenkuMetadata.vue'),
   },
 
   {
-    path: '/novel/:providerId/:bookId/:episodeId',
-    component: () => import('./pages/episode/NovelEpisode.vue'),
+    path: '/novel/:providerId/:novelId/:chapterId',
+    component: () => import('./pages/chapter/WebChapter.vue'),
   },
 
   {

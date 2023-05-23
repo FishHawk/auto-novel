@@ -10,19 +10,19 @@ interface MetadataToTranslateDto {
   toc: string[];
   glossaryUuid?: string;
   glossary: { [key: string]: string };
-  untranslatedEpisodeIds: string[];
-  expiredEpisodeIds: string[];
+  untranslatedChapterIds: string[];
+  expiredChapterIds: string[];
 }
 
 async function getMetadata(
   providerId: string,
-  bookId: string,
+  novelId: string,
   version: 'jp' | 'baidu' | 'youdao',
   startIndex: number,
   endIndex: number
 ): Promise<MetadataToTranslateDto> {
   return api
-    .get(`update/metadata/${providerId}/${bookId}`, {
+    .get(`update/metadata/${providerId}/${novelId}`, {
       searchParams: { version, startIndex, endIndex },
     })
     .json();
@@ -36,68 +36,68 @@ interface MetadataUpdateBody {
 
 async function postMetadata(
   providerId: string,
-  bookId: string,
+  novelId: string,
   body: MetadataUpdateBody
 ): Promise<string> {
   return api
-    .post(`update/metadata/${providerId}/${bookId}`, {
+    .post(`update/metadata/${providerId}/${novelId}`, {
       json: body,
     })
     .text();
 }
 
-interface EpisodeToTranslateDto {
+interface ChapterToTranslateDto {
   glossary: { [key: string]: string };
   paragraphsJp: string[];
 }
 
-async function getEpisode(
+async function getChapter(
   providerId: string,
-  bookId: string,
-  episodeId: string,
+  novelId: string,
+  chapterId: string,
   version: 'jp' | 'baidu' | 'youdao'
-): Promise<EpisodeToTranslateDto> {
+): Promise<ChapterToTranslateDto> {
   return api
-    .get(`update/episode/${providerId}/${bookId}/${episodeId}`, {
+    .get(`update/chapter/${providerId}/${novelId}/${chapterId}`, {
       searchParams: { version },
     })
     .json();
 }
 
-interface EpisodeUpdateBody {
+interface ChapterUpdateBody {
   glossaryUuid: string | undefined;
   paragraphsZh: string[];
 }
 
-async function postEpisode(
+async function postChapter(
   providerId: string,
-  bookId: string,
-  episodeId: string,
+  novelId: string,
+  chapterId: string,
   version: 'baidu' | 'youdao',
-  body: EpisodeUpdateBody
+  body: ChapterUpdateBody
 ): Promise<string> {
   return api
-    .post(`update/episode/${providerId}/${bookId}/${episodeId}`, {
+    .post(`update/chapter/${providerId}/${novelId}/${chapterId}`, {
       searchParams: { version },
       json: body,
     })
     .text();
 }
 
-interface EpisodeUpdatePartlyBody {
+interface ChapterUpdatePartlyBody {
   glossaryUuid: string | undefined;
   paragraphsZh: { [key: number]: string };
 }
 
-async function putEpisode(
+async function putChapter(
   providerId: string,
-  bookId: string,
-  episodeId: string,
+  novelId: string,
+  chapterId: string,
   version: 'baidu' | 'youdao',
-  body: EpisodeUpdatePartlyBody
+  body: ChapterUpdatePartlyBody
 ): Promise<string> {
   return api
-    .put(`update/episode/${providerId}/${bookId}/${episodeId}`, {
+    .put(`update/chapter/${providerId}/${novelId}/${chapterId}`, {
       searchParams: { version },
       json: body,
     })
@@ -134,21 +134,21 @@ function decodeAsMetadataTranslated(
 }
 
 function getExpiredParagraphs(
-  episode: EpisodeToTranslateDto,
+  chapter: ChapterToTranslateDto,
   glossary: { [key: string]: string }
 ) {
   const changedWords: string[] = [];
   for (const word in glossary) {
-    if (episode.glossary[word] != glossary[word]) {
+    if (chapter.glossary[word] != glossary[word]) {
       changedWords.push(word);
     }
   }
-  for (const word in episode.glossary) {
+  for (const word in chapter.glossary) {
     if (!(word in glossary)) {
       changedWords.push(word);
     }
   }
-  return episode.paragraphsJp
+  return chapter.paragraphsJp
     .map((text, index) => ({ text, index }))
     .filter((it) => {
       for (const word of changedWords) {
@@ -160,14 +160,14 @@ function getExpiredParagraphs(
 
 interface UpdateCallback {
   onStart: (total: number) => void;
-  onEpisodeTranslateSuccess: () => void;
-  onEpisodeTranslateFailure: () => void;
+  onChapterTranslateSuccess: () => void;
+  onChapterTranslateFailure: () => void;
 }
 
 export async function update(
   version: 'jp' | 'baidu' | 'youdao',
   providerId: string,
-  bookId: string,
+  novelId: string,
   startIndex: number,
   endIndex: number,
   callback: UpdateCallback
@@ -175,10 +175,10 @@ export async function update(
   let metadata: MetadataToTranslateDto;
   let translator: TranslatorAdapter | undefined = undefined;
   try {
-    console.log(`获取元数据 ${providerId}/${bookId}`);
+    console.log(`获取元数据 ${providerId}/${novelId}`);
     metadata = await getMetadata(
       providerId,
-      bookId,
+      novelId,
       version,
       startIndex,
       endIndex
@@ -203,15 +203,15 @@ export async function update(
 
       const textsSrc = encodeMetadataToTranslate(metadata);
       if (textsSrc.length > 0) {
-        console.log(`翻译元数据 ${providerId}/${bookId}`);
+        console.log(`翻译元数据 ${providerId}/${novelId}`);
         const textsDst = await translator.translate(textsSrc);
 
-        console.log(`上传元数据 ${providerId}/${bookId}`);
+        console.log(`上传元数据 ${providerId}/${novelId}`);
         const metadataTranslated = decodeAsMetadataTranslated(
           metadata,
           textsDst
         );
-        await postMetadata(providerId, bookId, metadataTranslated);
+        await postMetadata(providerId, novelId, metadataTranslated);
       }
     }
   } catch (e: any) {
@@ -220,61 +220,61 @@ export async function update(
   }
 
   callback.onStart(
-    metadata.untranslatedEpisodeIds.length + metadata.expiredEpisodeIds.length
+    metadata.untranslatedChapterIds.length + metadata.expiredChapterIds.length
   );
 
-  for (const episodeId of metadata.untranslatedEpisodeIds) {
+  for (const chapterId of metadata.untranslatedChapterIds) {
     try {
-      console.log(`获取章节 ${providerId}/${bookId}/${episodeId}`);
-      const episode = await getEpisode(providerId, bookId, episodeId, version);
+      console.log(`获取章节 ${providerId}/${novelId}/${chapterId}`);
+      const chapter = await getChapter(providerId, novelId, chapterId, version);
 
-      const textsSrc = episode.paragraphsJp;
+      const textsSrc = chapter.paragraphsJp;
       if (version !== 'jp' && translator) {
-        console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
+        console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
         const textsDst = await translator.translate(textsSrc);
 
-        console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
-        await postEpisode(providerId, bookId, episodeId, version, {
+        console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+        await postChapter(providerId, novelId, chapterId, version, {
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh: textsDst,
         });
       }
 
-      callback.onEpisodeTranslateSuccess();
+      callback.onChapterTranslateSuccess();
     } catch (e) {
       console.log(e);
-      callback.onEpisodeTranslateFailure();
+      callback.onChapterTranslateFailure();
     }
   }
 
-  for (const episodeId of metadata.expiredEpisodeIds) {
+  for (const chapterId of metadata.expiredChapterIds) {
     try {
-      console.log(`获取章节 ${providerId}/${bookId}/${episodeId}`);
-      const episode = await getEpisode(providerId, bookId, episodeId, version);
+      console.log(`获取章节 ${providerId}/${novelId}/${chapterId}`);
+      const chapter = await getChapter(providerId, novelId, chapterId, version);
       const expiredParagraphs = getExpiredParagraphs(
-        episode,
+        chapter,
         metadata.glossary
       );
 
       const textsSrc = expiredParagraphs.map((it) => it.text);
       const paragraphsZh: { [key: number]: string } = {};
       if (version !== 'jp' && translator) {
-        console.log(`翻译章节 ${providerId}/${bookId}/${episodeId}`);
+        console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
         const textsDst = await translator.translate(textsSrc);
         expiredParagraphs.forEach((it, index) => {
           paragraphsZh[it.index] = textsDst[index];
         });
 
-        console.log(`上传章节 ${providerId}/${bookId}/${episodeId}`);
-        await putEpisode(providerId, bookId, episodeId, version, {
+        console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+        await putChapter(providerId, novelId, chapterId, version, {
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh,
         });
       }
-      callback.onEpisodeTranslateSuccess();
+      callback.onChapterTranslateSuccess();
     } catch (e) {
       console.log(e);
-      callback.onEpisodeTranslateFailure();
+      callback.onChapterTranslateFailure();
     }
   }
 

@@ -18,7 +18,7 @@ class AlphapolibTest : DescribeSpec({
             metadata.introduction.shouldStartWith("「今日限りでお前をこの")
             metadata.introduction.shouldEndWith("っていたのだった。")
             metadata.toc[0].title.shouldBe("第一話")
-            metadata.toc[0].episodeId.shouldBe("6857738")
+            metadata.toc[0].chapterId.shouldBe("6857738")
         }
 
         it("折叠") {
@@ -30,7 +30,7 @@ class AlphapolibTest : DescribeSpec({
     describe("getEpisode") {
         it("常规") {
             // https://www.alphapolis.co.jp/novel/638978238/525733370/episode/6857739
-            val episode = provider.getEpisode("638978238-525733370", "6857739")
+            val episode = provider.getChapter("638978238-525733370", "6857739")
             episode.paragraphs.getOrNull(1).shouldBe("「これからどうすっかなぁ…」")
         }
     }

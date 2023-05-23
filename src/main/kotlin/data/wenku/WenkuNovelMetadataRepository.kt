@@ -14,22 +14,22 @@ import org.litote.kmongo.eq
 import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
 
-class WenkuBookMetadataRepository(
+class WenkuNovelMetadataRepository(
     private val mongo: MongoDataSource,
 ) {
     private val col
-        get() = mongo.database.getCollection<WenkuMetadata>("wenku-metadata")
+        get() = mongo.database.getCollection<NovelMetadata>("wenku-metadata")
 
     companion object {
-        private fun byId(id: String): Bson = WenkuMetadata::id eq ObjectId(id)
+        private fun byId(id: String): Bson = NovelMetadata::id eq ObjectId(id)
     }
 
-    suspend fun exist(bookId: String): Boolean {
-        return col.countDocuments(byId(bookId), CountOptions().limit(1)) != 0L
+    suspend fun exist(novelId: String): Boolean {
+        return col.countDocuments(byId(novelId), CountOptions().limit(1)) != 0L
     }
 
     @Serializable
-    data class WenkuMetadata(
+    data class NovelMetadata(
         @Contextual @SerialName("_id") val id: ObjectId,
         val title: String,
         val titleZh: String,
@@ -43,20 +43,20 @@ class WenkuBookMetadataRepository(
         val visited: Long,
     )
 
-    suspend fun findOne(id: String): WenkuMetadata? {
-        return col.findOne(byId(id))
+    suspend fun findOne(novelId: String): NovelMetadata? {
+        return col.findOne(byId(novelId))
     }
 
-    suspend fun findOneAndIncreaseVisited(id: String): WenkuMetadata? {
+    suspend fun findOneAndIncreaseVisited(novelId: String): NovelMetadata? {
         return col.findOneAndUpdate(
-            byId(id),
-            inc(WenkuMetadata::visited, 1),
+            byId(novelId),
+            inc(NovelMetadata::visited, 1),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
         )
     }
 
     suspend fun findOneAndUpdate(
-        id: String,
+        novelId: String,
         title: String,
         titleZh: String,
         titleZhAlias: List<String>,
@@ -66,20 +66,20 @@ class WenkuBookMetadataRepository(
         artists: List<String>,
         keywords: List<String>,
         introduction: String,
-    ): WenkuMetadata? {
+    ): NovelMetadata? {
         return col.findOneAndUpdate(
-            byId(id),
+            byId(novelId),
             combine(
                 listOf(
-                    setValue(WenkuMetadata::title, title),
-                    setValue(WenkuMetadata::titleZh, titleZh),
-                    setValue(WenkuMetadata::titleZhAlias, titleZhAlias),
-                    setValue(WenkuMetadata::cover, cover),
-                    setValue(WenkuMetadata::coverSmall, coverSmall),
-                    setValue(WenkuMetadata::authors, authors),
-                    setValue(WenkuMetadata::artists, artists),
-                    setValue(WenkuMetadata::keywords, keywords),
-                    setValue(WenkuMetadata::introduction, introduction),
+                    setValue(NovelMetadata::title, title),
+                    setValue(NovelMetadata::titleZh, titleZh),
+                    setValue(NovelMetadata::titleZhAlias, titleZhAlias),
+                    setValue(NovelMetadata::cover, cover),
+                    setValue(NovelMetadata::coverSmall, coverSmall),
+                    setValue(NovelMetadata::authors, authors),
+                    setValue(NovelMetadata::artists, artists),
+                    setValue(NovelMetadata::keywords, keywords),
+                    setValue(NovelMetadata::introduction, introduction),
                 )
             ),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
@@ -98,7 +98,7 @@ class WenkuBookMetadataRepository(
         introduction: String,
     ): String {
         val insertResult = col.insertOne(
-            WenkuMetadata(
+            NovelMetadata(
                 id = ObjectId(),
                 title = title,
                 titleZh = titleZh,
