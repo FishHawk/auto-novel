@@ -14,6 +14,7 @@ import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
@@ -53,6 +54,9 @@ private class WebNovel {
             @Resource("/chapter/{chapterId}")
             class Chapter(val parent: Translate, val chapterId: String)
         }
+
+        @Resource("/file/{lang}/{type}")
+        data class File(val parent: Id, val lang: NovelFileLang, val type: NovelFileType)
     }
 }
 
@@ -169,11 +173,27 @@ fun Route.routeWebNovel() {
         )
         call.respondResult(result)
     }
+
+    // File
+    get<WebNovel.Id.File> { loc ->
+        val result = service.updateFile(
+            providerId = loc.parent.providerId,
+            novelId = loc.parent.novelId,
+            lang = loc.lang,
+            type = loc.type,
+        )
+        result.onSuccess {
+            call.respondRedirect { path("..", "files-web", it) }
+        }.onFailure {
+            call.respondResult(result)
+        }
+    }
 }
 
 class WebNovelService(
     private val metadataRepo: WebNovelMetadataRepository,
     private val chapterRepo: WebChapterRepository,
+    private val fileRepo: WebNovelFileRepository,
     private val userRepo: UserRepository,
     private val patchRepo: WebNovelPatchHistoryRepository,
     private val indexRepo: WebNovelIndexRepository,
@@ -762,5 +782,41 @@ class WebNovelService(
             }
         )
         return Result.success(translateState)
+    }
+
+    suspend fun updateFile(
+        providerId: String,
+        novelId: String,
+        lang: NovelFileLang,
+        type: NovelFileType,
+    ): Result<String> {
+        val fileName = "${providerId}.${novelId}.${lang.value}.${type.value}"
+
+        val metadata = metadataRepo.findOne(providerId, novelId)
+            ?: return httpNotFound("小说不存在")
+
+        val shouldMake = fileRepo.getCreationTime(fileName)?.let { fileCreateAt ->
+            val updateAt = metadata.changeAt.atZone(ZoneId.systemDefault()).toInstant()
+            updateAt > fileCreateAt
+        } ?: true
+
+        if (shouldMake) {
+            val chapters = metadata.toc
+                .mapNotNull { it.chapterId }
+                .mapNotNull { chapterId ->
+                    chapterRepo
+                        .getLocal(providerId, novelId, chapterId)
+                        ?.let { chapterId to it }
+                }
+                .toMap()
+            fileRepo.makeFile(
+                fileName = fileName,
+                lang = lang,
+                type = type,
+                metadata = metadata,
+                episodes = chapters,
+            )
+        }
+        return Result.success(fileName)
     }
 }

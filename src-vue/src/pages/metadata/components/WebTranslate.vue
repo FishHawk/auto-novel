@@ -98,12 +98,19 @@ interface NovelFiles {
 }
 
 function stateToFileList(): NovelFiles[] {
-  const baseUrl = window.origin + `/api/prepare-book/`;
-
-  function createFile(label: string, lang: string, type: string) {
+  function createFile(
+    label: string,
+    lang: 'jp' | 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao',
+    type: 'epub' | 'txt'
+  ) {
     return {
       label,
-      url: baseUrl + `${props.providerId}/${props.novelId}/${lang}/${type}`,
+      url: ApiWebNovel.createFileUrl(
+        props.providerId,
+        props.novelId,
+        lang,
+        type
+      ),
       name: `${props.providerId}.${props.novelId}.${lang}.${type}`,
     };
   }

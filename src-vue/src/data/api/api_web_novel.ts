@@ -172,6 +172,16 @@ async function getChapter(
   );
 }
 
+function createFileUrl(
+  providerId: string,
+  novelId: string,
+  lang: 'jp' | 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao',
+  type: 'epub' | 'txt'
+) {
+  // const baseUrl = window.origin + `/api/prepare-book/`;
+  return `/api/novel/${providerId}/${novelId}/file/${lang}/${type}`;
+}
+
 export const ApiWebNovel = {
   list,
   listRank,
@@ -181,4 +191,5 @@ export const ApiWebNovel = {
   deleteWenkuId,
   getChapter,
   translate,
+  createFileUrl,
 };

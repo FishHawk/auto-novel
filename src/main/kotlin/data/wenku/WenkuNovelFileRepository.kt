@@ -1,6 +1,6 @@
 package data.wenku
 
-import data.web.BookFileLang
+import data.web.NovelFileLang
 import epub.EpubReader
 import epub.EpubWriter
 import kotlinx.coroutines.Dispatchers
@@ -136,19 +136,19 @@ class WenkuNovelFileRepository(
     suspend fun makeFile(
         novelId: String,
         fileName: String,
-        lang: BookFileLang,
+        lang: NovelFileLang,
     ) = withContext(Dispatchers.IO) {
         val zhFilePath = root / novelId / "$fileName.unpack" / "${lang.value}.epub"
         val filePath = root / novelId / fileName
 
         val version = when (lang) {
-            BookFileLang.ZH_BAIDU, BookFileLang.MIX_BAIDU -> "baidu"
-            BookFileLang.ZH_YOUDAO, BookFileLang.MIX_YOUDAO -> "youdao"
+            NovelFileLang.ZH_BAIDU, NovelFileLang.MIX_BAIDU -> "baidu"
+            NovelFileLang.ZH_YOUDAO, NovelFileLang.MIX_YOUDAO -> "youdao"
             else -> throw RuntimeException()
         }
         val mix = when (lang) {
-            BookFileLang.ZH_BAIDU, BookFileLang.ZH_YOUDAO -> false
-            BookFileLang.MIX_BAIDU, BookFileLang.MIX_YOUDAO -> true
+            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO -> false
+            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO -> true
             else -> throw RuntimeException()
         }
         val unpackItems = listUnpackItems(novelId, fileName, version)

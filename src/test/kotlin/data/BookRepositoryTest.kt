@@ -32,8 +32,8 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     init {
         describe("test") {
 //            repoWBF.unpackEpub("non-archived", "test.epub",)
-            repoWBF.makeFile("non-archived", "test.epub", BookFileLang.MIX_YOUDAO)
-            repoWBF.makeFile("non-archived", "test.epub", BookFileLang.ZH_YOUDAO)
+            repoWBF.makeFile("non-archived", "test.epub", NovelFileLang.MIX_YOUDAO)
+            repoWBF.makeFile("non-archived", "test.epub", NovelFileLang.ZH_YOUDAO)
         }
 
         describe("kmongo issue 415") {

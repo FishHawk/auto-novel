@@ -8,7 +8,7 @@ import java.time.Instant
 import kotlin.io.path.*
 
 @Serializable
-enum class BookFileLang(val value: String) {
+enum class NovelFileLang(val value: String) {
     @SerialName("jp")
     JP("jp"),
 
@@ -26,7 +26,7 @@ enum class BookFileLang(val value: String) {
 }
 
 @Serializable
-enum class BookFileType(val value: String) {
+enum class NovelFileType(val value: String) {
     @SerialName("epub")
     EPUB("epub"),
 
@@ -42,15 +42,15 @@ class WebNovelFileRepository(
 
     suspend fun makeFile(
         fileName: String,
-        lang: BookFileLang,
-        type: BookFileType,
+        lang: NovelFileLang,
+        type: NovelFileType,
         metadata: WebNovelMetadataRepository.NovelMetadata,
         episodes: Map<String, WebChapterRepository.NovelChapter>,
     ) {
         val filePath = buildFilePath(fileName)
         when (type) {
-            BookFileType.EPUB -> makeEpubFile(filePath, lang, metadata, episodes)
-            BookFileType.TXT -> makeTxtFile(filePath, lang, metadata, episodes)
+            NovelFileType.EPUB -> makeEpubFile(filePath, lang, metadata, episodes)
+            NovelFileType.TXT -> makeTxtFile(filePath, lang, metadata, episodes)
         }
     }
 

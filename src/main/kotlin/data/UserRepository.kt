@@ -90,7 +90,7 @@ class UserRepository(
         return col.findOne(byUsername(username))
     }
 
-    suspend fun listFavoriteWebBook(username: String): List<User.FavoriteBook>? {
+    suspend fun listFavoriteWebNovel(username: String): List<User.FavoriteBook>? {
         @Serializable
         data class UserProjection(val favoriteBooks: List<User.FavoriteBook> = emptyList())
         return col
@@ -102,7 +102,7 @@ class UserRepository(
             ?.reversed()
     }
 
-    suspend fun addFavoriteWebBook(
+    suspend fun addFavoriteWebNovel(
         username: String,
         providerId: String,
         novelId: String,
@@ -113,7 +113,7 @@ class UserRepository(
         )
     }
 
-    suspend fun removeFavoriteWebBook(
+    suspend fun removeFavoriteWebNovel(
         username: String,
         providerId: String,
         novelId: String,
@@ -124,7 +124,7 @@ class UserRepository(
         )
     }
 
-    suspend fun listFavoriteWenkuBook(username: String): List<String>? {
+    suspend fun listFavoriteWenkuNovel(username: String): List<String>? {
         @Serializable
         data class UserProjection(val favoriteWenkuBooks: List<String> = emptyList())
         return col
@@ -136,7 +136,7 @@ class UserRepository(
             ?.reversed()
     }
 
-    suspend fun addFavoriteWenkuBook(
+    suspend fun addFavoriteWenkuNovel(
         username: String,
         novelId: String,
     ): UpdateResult {
@@ -146,7 +146,7 @@ class UserRepository(
         )
     }
 
-    suspend fun removeFavoriteWenkuBook(
+    suspend fun removeFavoriteWenkuNovel(
         username: String,
         novelId: String,
     ): UpdateResult {

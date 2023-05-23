@@ -9,7 +9,7 @@ private const val MISSING_EPISODE_HINT = "该章节缺失。"
 
 suspend fun makeEpubFile(
     filePath: Path,
-    lang: BookFileLang,
+    lang: NovelFileLang,
     metadata: WebNovelMetadataRepository.NovelMetadata,
     episodes: Map<String, WebChapterRepository.NovelChapter>,
 ) {
@@ -18,7 +18,7 @@ suspend fun makeEpubFile(
     epub.addIdentifier(identifier, true)
 
     when (lang) {
-        BookFileLang.JP -> {
+        NovelFileLang.JP -> {
             epub.addTitle(metadata.titleJp)
             epub.addLanguage("jp")
             epub.addDescription(metadata.introductionJp)
@@ -55,7 +55,7 @@ suspend fun makeEpubFile(
         val path = "Text/$id"
         val episode = episodes[token.chapterId]
         val resource = when (lang) {
-            BookFileLang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
+            NovelFileLang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
                 it.appendElement("h1").appendText(token.titleJp)
                 if (episode == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
@@ -66,14 +66,14 @@ suspend fun makeEpubFile(
                 }
             }
 
-            BookFileLang.ZH_BAIDU, BookFileLang.ZH_YOUDAO -> createEpubXhtml(
+            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO -> createEpubXhtml(
                 path,
                 id,
                 "zh",
                 token.titleZh ?: token.titleJp
             ) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
-                val paragraphs = if (lang == BookFileLang.ZH_BAIDU) {
+                val paragraphs = if (lang == NovelFileLang.ZH_BAIDU) {
                     episode?.baiduParagraphs
                 } else {
                     episode?.youdaoParagraphs
@@ -87,7 +87,7 @@ suspend fun makeEpubFile(
                 }
             }
 
-            BookFileLang.MIX_BAIDU, BookFileLang.MIX_YOUDAO -> createEpubXhtml(
+            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO -> createEpubXhtml(
                 path,
                 id,
                 "zh",
@@ -100,7 +100,7 @@ suspend fun makeEpubFile(
                     it.appendElement("p").appendText(token.titleJp)
                         .attr("style", "opacity:0.4;")
                 }
-                val paragraphs = if (lang == BookFileLang.MIX_BAIDU) {
+                val paragraphs = if (lang == NovelFileLang.MIX_BAIDU) {
                     episode?.baiduParagraphs
                 } else {
                     episode?.youdaoParagraphs

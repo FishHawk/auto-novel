@@ -102,7 +102,6 @@ fun main() {
             routeUser()
 
             routeWebNovel()
-            routePrepareBook()
             routePatch()
             routeTocMergeHistory()
 
@@ -144,8 +143,7 @@ val appModule = module {
     single(createdAtStart = true) { CommentService(get()) }
     single(createdAtStart = true) { UserService(get(), get(), get(), get()) }
 
-    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get(), get()) }
-    single(createdAtStart = true) { PrepareBookService(get(), get(), get()) }
+    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { PatchService(get(), get()) }
     single(createdAtStart = true) { TocMergeHistoryService(get()) }
 

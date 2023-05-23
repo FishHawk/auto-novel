@@ -10,7 +10,7 @@ import kotlin.io.path.notExists
 
 suspend fun makeTxtFile(
     filePath: Path,
-    lang: BookFileLang,
+    lang: NovelFileLang,
     metadata: WebNovelMetadataRepository.NovelMetadata,
     episodes: Map<String, WebChapterRepository.NovelChapter>,
 ) {
@@ -20,11 +20,11 @@ suspend fun makeTxtFile(
         }
         filePath.bufferedWriter().use {
             val writer: TxtWriter = when (lang) {
-                BookFileLang.JP -> TxtMakerJp
-                BookFileLang.ZH_BAIDU -> TxtMakerZh { ep -> ep.baiduParagraphs }
-                BookFileLang.ZH_YOUDAO -> TxtMakerZh { ep -> ep.youdaoParagraphs }
-                BookFileLang.MIX_BAIDU -> TxtMakerMix(TxtMakerZh { ep -> ep.baiduParagraphs })
-                BookFileLang.MIX_YOUDAO -> TxtMakerMix(TxtMakerZh { ep -> ep.youdaoParagraphs })
+                NovelFileLang.JP -> TxtMakerJp
+                NovelFileLang.ZH_BAIDU -> TxtMakerZh { ep -> ep.baiduParagraphs }
+                NovelFileLang.ZH_YOUDAO -> TxtMakerZh { ep -> ep.youdaoParagraphs }
+                NovelFileLang.MIX_BAIDU -> TxtMakerMix(TxtMakerZh { ep -> ep.baiduParagraphs })
+                NovelFileLang.MIX_YOUDAO -> TxtMakerMix(TxtMakerZh { ep -> ep.youdaoParagraphs })
             }
             with(it) { with(writer) { writeBook(metadata, episodes) } }
         }

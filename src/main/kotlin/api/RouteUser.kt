@@ -107,7 +107,7 @@ class UserService(
         page: Int,
         pageSize: Int,
     ): Result<WebNovelService.NovelListPageDto> {
-        val novels = userRepo.listFavoriteWebBook(username)
+        val novels = userRepo.listFavoriteWebNovel(username)
             ?: return httpNotFound("用户不存在")
         val items = novels
             .asSequence()
@@ -139,7 +139,7 @@ class UserService(
         if (!webRepo.exist(providerId, novelId)) {
             return httpNotFound("书不存在")
         }
-        val updateResult = userRepo.addFavoriteWebBook(
+        val updateResult = userRepo.addFavoriteWebNovel(
             username = username,
             providerId = providerId,
             novelId = novelId,
@@ -155,7 +155,7 @@ class UserService(
         if (!webRepo.exist(providerId, novelId)) {
             return httpNotFound("书不存在")
         }
-        val updateResult = userRepo.removeFavoriteWebBook(
+        val updateResult = userRepo.removeFavoriteWebNovel(
             username = username,
             providerId = providerId,
             novelId = novelId,
@@ -172,7 +172,7 @@ class UserService(
         page: Int,
         pageSize: Int,
     ): Result<WenkuNovelService.NovelListPageDto> {
-        val novels = userRepo.listFavoriteWenkuBook(username)
+        val novels = userRepo.listFavoriteWenkuNovel(username)
             ?: return httpNotFound("用户不存在")
         val items = novels
             .asSequence()
@@ -200,7 +200,7 @@ class UserService(
         if (!wenkuRepo.exist(novelId)) {
             return httpNotFound("书不存在")
         }
-        val updateResult = userRepo.addFavoriteWenkuBook(
+        val updateResult = userRepo.addFavoriteWenkuNovel(
             username = username,
             novelId = novelId,
         )
@@ -215,7 +215,7 @@ class UserService(
         if (!wenkuRepo.exist(novelId)) {
             return httpNotFound("书不存在")
         }
-        val updateResult = userRepo.removeFavoriteWenkuBook(
+        val updateResult = userRepo.removeFavoriteWenkuNovel(
             username = username,
             novelId = novelId,
         )

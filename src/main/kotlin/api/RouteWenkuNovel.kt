@@ -1,7 +1,7 @@
 package api
 
 import data.UserRepository
-import data.web.BookFileLang
+import data.web.NovelFileLang
 import data.wenku.WenkuNovelFileRepository
 import data.wenku.WenkuNovelIndexRepository
 import data.wenku.WenkuNovelMetadataRepository
@@ -43,7 +43,7 @@ private class WenkuNovel {
         class VolumeJp(val parent: Id)
 
         @Resource("/volume-generated/{volumeId}/{lang}")
-        class VolumeGenerated(val parent: Id, val volumeId: String, val lang: BookFileLang)
+        class VolumeGenerated(val parent: Id, val volumeId: String, val lang: NovelFileLang)
 
         @Resource("/translate/{volumeId}")
         class Translate(val parent: Id, val volumeId: String) {
@@ -456,13 +456,13 @@ class WenkuNovelService(
     suspend fun updateBookFile(
         novelId: String,
         volumeId: String,
-        lang: BookFileLang,
+        lang: NovelFileLang,
     ): Result<String> {
         val jpItems = fileRepo.listUnpackItems(novelId, volumeId, "jp")
 
         val version = when (lang) {
-            BookFileLang.ZH_YOUDAO, BookFileLang.MIX_YOUDAO -> "youdao"
-            BookFileLang.ZH_BAIDU, BookFileLang.MIX_BAIDU -> "baidu"
+            NovelFileLang.ZH_YOUDAO, NovelFileLang.MIX_YOUDAO -> "youdao"
+            NovelFileLang.ZH_BAIDU, NovelFileLang.MIX_BAIDU -> "baidu"
             else -> throw RuntimeException()
         }
         val zhItems =
