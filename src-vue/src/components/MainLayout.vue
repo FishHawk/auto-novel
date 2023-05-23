@@ -16,7 +16,7 @@ function menuOption(text: string, href: string): MenuOption {
   return { label: () => h('a', { href }, text), key: href };
 }
 
-const topLeftMenuOptions = computed(() => {
+const topMenuOptions = computed(() => {
   const menus: MenuOption[] = [
     menuOption('首页', '/'),
     menuOption('列表', '/novel-list'),
@@ -27,14 +27,6 @@ const topLeftMenuOptions = computed(() => {
     menus.push(menuOption('控制台', '/admin/patch'));
   }
   return menus;
-});
-
-const topRightMenuOptions = computed(() => {
-  if (authInfoStore.token) {
-    return [menuOption('收藏', '/favorite-list')];
-  } else {
-    return [];
-  }
 });
 
 const collapsedMenuOptions = computed(() => {
@@ -52,6 +44,7 @@ const collapsedMenuOptions = computed(() => {
       ],
     },
     menuOption('反馈', '/feedback'),
+    menuOption('Epub翻译', '/wenku/non-archived'),
   ];
   if (authInfoStore.info) {
     menus[1].children!.unshift(menuOption('我的收藏', '/favorite-list'));
@@ -143,23 +136,26 @@ function handleUserDropdownSelect(key: string | number) {
           <n-menu
             :value="getTopMenuOptionKey()"
             mode="horizontal"
-            :options="topLeftMenuOptions"
+            :options="topMenuOptions"
           />
         </div>
 
         <div style="flex: 1"></div>
 
-        <n-menu mode="horizontal" :options="topRightMenuOptions" />
-        <n-dropdown
-          v-if="authInfoStore.username"
-          trigger="click"
-          :options="userDropdownOptions"
-          @select="handleUserDropdownSelect"
-        >
-          <n-button quaternary style="margin-right: 4px">
-            @{{ authInfoStore.username }}
-          </n-button>
-        </n-dropdown>
+        <n-space v-if="authInfoStore.username">
+          <n-a class="on-desktop" href="/favorite-list">
+            <n-button quaternary>收藏</n-button>
+          </n-a>
+          <n-dropdown
+            trigger="click"
+            :options="userDropdownOptions"
+            @select="handleUserDropdownSelect"
+          >
+            <n-button quaternary style="margin-right: 4px">
+              @{{ authInfoStore.username }}
+            </n-button>
+          </n-dropdown>
+        </n-space>
 
         <n-button
           v-else

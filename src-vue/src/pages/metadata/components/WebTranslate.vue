@@ -216,7 +216,7 @@ function stateToFileList(): NovelFiles[] {
             v-if="row.translatorId !== 'jp'"
             tertiary
             size="small"
-            @click="startUpdateTask(row.translatorId)"
+            @click="startUpdateTask(row.translatorId as any)"
           >
             更新
           </n-button>
@@ -232,7 +232,7 @@ function stateToFileList(): NovelFiles[] {
           v-if="row.translatorId !== 'jp'"
           tertiary
           size="small"
-          @click="startUpdateTask(row.translatorId)"
+          @click="startUpdateTask(row.translatorId as any)"
         >
           更新
         </n-button>
