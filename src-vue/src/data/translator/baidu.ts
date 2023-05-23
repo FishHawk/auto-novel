@@ -58,6 +58,7 @@ var token = function (r: any, _gtk: any) {
 };
 
 export class BaiduTranslator implements Translator {
+  static label = '百度';
   size = 2000;
   private token = '';
   private gtk = '';

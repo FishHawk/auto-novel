@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
-import ApiWebNovel, { WebNovelChapterDto } from '@/data/api/api_web_novel';
+import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
 import { buildChapterUrl } from '@/data/provider';
 

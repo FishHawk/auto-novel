@@ -1,6 +1,8 @@
 import { Options } from 'ky';
+
 import api from './api';
 import { Result, runCatching } from './result';
+import { translate } from './api_web_novel_translate';
 
 export interface WebNovelListPageDto {
   pageNumber: number;
@@ -60,20 +62,6 @@ async function listRank(
   );
 }
 
-export interface WebNovelStateDto {
-  total: number;
-  count: number;
-  countBaidu: number;
-  countYoudao: number;
-}
-
-async function getState(
-  providerId: string,
-  novelId: string
-): Promise<Result<WebNovelStateDto>> {
-  return runCatching(api.get(`novel/${providerId}/${novelId}/state`).json());
-}
-
 export interface WebNovelTocItemDto {
   titleJp: string;
   titleZh?: string;
@@ -92,6 +80,11 @@ export interface WebNovelMetadataDto {
   visited: number;
   syncAt: number;
   favored?: boolean;
+  translateState: {
+    jp: number;
+    baidu: number;
+    youdao: number;
+  };
 }
 
 async function getMetadata(
@@ -179,8 +172,7 @@ async function getChapter(
   );
 }
 
-export default {
-  getState,
+export const ApiWebNovel = {
   list,
   listRank,
   getMetadata,
@@ -188,4 +180,5 @@ export default {
   putWenkuId,
   deleteWenkuId,
   getChapter,
+  translate,
 };

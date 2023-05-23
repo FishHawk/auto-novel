@@ -1,17 +1,30 @@
 <script lang="ts" setup>
-import { computed, onMounted, Ref, ref } from 'vue';
+import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
 
-import { ResultState } from '@/data/api/result';
-import ApiWebNovel, { WebNovelStateDto } from '@/data/api/api_web_novel';
-import { update } from '@/data/api/api_update';
+import { ApiWebNovel } from '@/data/api/api_web_novel';
+import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
+
+const { width } = useWindowSize();
+const isDesktop = computed(() => width.value > 600);
+
+const message = useMessage();
 
 const props = defineProps<{
   providerId: string;
   novelId: string;
+  total: number;
+  state: { jp: number; baidu: number; youdao: number };
   glossary: { [key: string]: string };
 }>();
+
+const state = ref({
+  total: props.total,
+  jp: props.state.jp,
+  baidu: props.state.baidu,
+  youdao: props.state.youdao,
+});
 
 interface UpdateProgress {
   name: string;
@@ -20,68 +33,46 @@ interface UpdateProgress {
   error: number;
 }
 
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
-
-const showModal = ref(false);
-
-const message = useMessage();
-
-const novelState = ref<ResultState<WebNovelStateDto>>();
+const startIndex = ref<number | null>(1);
+const endIndex = ref<number | null>(65536);
 const progress: Ref<UpdateProgress | undefined> = ref();
 
-onMounted(() => getFileGroups());
-let lastPoll = false;
-async function getFileGroups() {
-  const result = await ApiWebNovel.getState(props.providerId, props.novelId);
-
-  if (result.ok) {
-    novelState.value = result;
-  }
-
-  if (progress.value || lastPoll) {
-    lastPoll = progress.value !== undefined;
-    window.setTimeout(() => getFileGroups(), 2000);
-  }
-}
-
-async function startUpdateTask(
-  version: 'jp' | 'baidu' | 'youdao',
-  startIndex: number,
-  endIndex: number
-) {
+async function startUpdateTask(translatorId: TranslatorId) {
   if (progress.value !== undefined) {
     message.info('已有任务在运行。');
     return;
   }
-  let name;
-  if (version === 'jp') {
-    name = '更新日文';
-  } else if (version === 'baidu') {
-    name = '百度翻译';
-  } else {
-    name = '有道翻译';
-  }
 
+  const name = `${getTranslatorLabel(translatorId)}翻译`;
   progress.value = {
     name,
     finished: 0,
     error: 0,
   };
 
-  const result = await update(
-    version,
+  const result = await ApiWebNovel.translate(
     props.providerId,
     props.novelId,
-    startIndex,
-    endIndex,
+    translatorId,
+    (startIndex.value ?? 1) - 1,
+    (endIndex.value ?? 65536) - 1,
     {
       onStart: (total: number) => {
         progress.value!.total = total;
-        getFileGroups();
       },
-      onChapterTranslateSuccess: () => (progress.value!.finished += 1),
-      onChapterTranslateFailure: () => (progress.value!.error += 1),
+      onChapterTranslateSuccess: (newState) => {
+        if (translatorId === 'baidu') {
+          state.value.jp = newState.jp;
+          state.value.baidu = newState.zh;
+        } else {
+          state.value.jp = newState.jp;
+          state.value.youdao = newState.zh;
+        }
+        progress.value!.finished += 1;
+      },
+      onChapterTranslateFailure: () => {
+        progress.value!.error += 1;
+      },
     }
   );
 
@@ -102,7 +93,7 @@ async function startUpdateTask(
 
 interface NovelFiles {
   label: string;
-  version: 'jp' | 'baidu' | 'youdao';
+  translatorId: 'jp' | 'baidu' | 'youdao';
   files: { label: string; url: string; name: string }[];
 }
 
@@ -117,22 +108,15 @@ function stateToFileList(): NovelFiles[] {
     };
   }
 
-  let state: WebNovelStateDto | undefined;
-  if (novelState.value?.ok) {
-    state = novelState.value.value;
-  } else {
-    state = undefined;
-  }
-
   return [
     {
-      label: `日文(${state?.count ?? '-'}/${state?.total ?? '-'})`,
-      version: 'jp',
+      label: `日文(${state.value.jp}/${state.value.total})`,
+      translatorId: 'jp',
       files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
     },
     {
-      label: `百度(${state?.countBaidu ?? '-'}/${state?.total ?? '-'})`,
-      version: 'baidu',
+      label: `百度(${state.value.baidu}/${state.value.total})`,
+      translatorId: 'baidu',
       files: [
         createFile('TXT', 'zh-baidu', 'txt'),
         createFile('中日对比TXT', 'mix-baidu', 'txt'),
@@ -141,8 +125,8 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
-      label: `有道(${state?.countYoudao ?? '-'}/${state?.total ?? '-'})`,
-      version: 'youdao',
+      label: `有道(${state.value.youdao}/${state.value.total})`,
+      translatorId: 'youdao',
       files: [
         createFile('TXT', 'zh-youdao', 'txt'),
         createFile('中日对比TXT', 'mix-youdao', 'txt'),
@@ -152,81 +136,39 @@ function stateToFileList(): NovelFiles[] {
     },
   ];
 }
-
-const formStartIndex = ref(1);
-const formEndIndex = ref(65536);
-const formMode = ref<'jp' | 'baidu' | 'youdao'>('jp');
-const formModeOptions = [
-  { label: '日文', value: 'jp' },
-  { label: '百度', value: 'baidu' },
-  { label: '有道', value: 'youdao' },
-];
-
-function submitForm() {
-  startUpdateTask(
-    formMode.value,
-    formStartIndex.value - 1,
-    formEndIndex.value - 1
-  );
-  showModal.value = false;
-}
 </script>
 
 <template>
-  <n-modal v-model:show="showModal">
-    <n-card
-      style="width: min(500px, calc(100% - 16px))"
-      title="高级"
-      :bordered="false"
-      size="huge"
-      role="dialog"
-      aria-modal="true"
-    >
-      <n-space>
-        <span>从这章开始更新</span>
-        <n-input-number v-model:value="formStartIndex" :min="1" clearable />
-      </n-space>
-
-      <n-space style="margin-top: 15px">
-        <span>到这章为止</span>
-        <n-input-number v-model:value="formEndIndex" :min="1" clearable />
-      </n-space>
-
-      <n-space style="margin-top: 15px">
-        <span>语言</span>
-        <n-radio-group v-model:value="formMode" name="update-mode">
-          <n-space>
-            <n-radio
-              v-for="option in formModeOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </n-radio>
-          </n-space>
-        </n-radio-group>
-      </n-space>
-      <n-space style="margin-top: 15px">
-        <n-button @click="submitForm()">更新</n-button>
-        <n-button @click="showModal = false">取消</n-button>
-      </n-space>
-    </n-card>
-  </n-modal>
-
-  <n-h2 prefix="bar">翻译</n-h2>
   <n-p>
-    网页端翻译需要安装插件，请查看
-    <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
-    移动端暂时无法翻译。
-  </n-p>
-  <n-p>
-    如果需要自定义更新范围，请使用
-    <n-a @click="showModal = true">高级模式</n-a>
-    。如果要编辑术语表，请先进入编辑界面。
-  </n-p>
-  <n-p v-if="Object.keys(glossary).length">
     <n-collapse>
-      <n-collapse-item title="术语表">
+      <n-collapse-item title="高级模式">
+        <n-p>自定义更新范围</n-p>
+        <n-p style="padding-left: 16px">
+          <n-input-group>
+            <n-input-group-label>从</n-input-group-label>
+            <n-input-number
+              v-model:value="startIndex"
+              :min="1"
+              clearable
+              style="width: 150px"
+            />
+            <n-input-group-label>到</n-input-group-label>
+            <n-input-number
+              v-model:value="endIndex"
+              :min="1"
+              clearable
+              style="width: 150px"
+            />
+          </n-input-group>
+        </n-p>
+
+        <n-p>术语表[如果想编辑，请先进入编辑界面]</n-p>
+        <n-p
+          v-if="Object.keys(glossary).length === 0"
+          style="margin-left: 16px"
+        >
+          还没设置术语表
+        </n-p>
         <table style="border-spacing: 16px 0px">
           <tr v-for="(termZh, termJp) in glossary">
             <td>{{ termJp }}</td>
@@ -263,11 +205,12 @@ function submitForm() {
         </td>
         <td>
           <n-button
+            v-if="row.translatorId !== 'jp'"
             tertiary
             size="small"
-            @click="startUpdateTask(row.version, 0, 65536)"
+            @click="startUpdateTask(row.translatorId)"
           >
-           更新
+            更新
           </n-button>
         </td>
       </tr>
@@ -278,9 +221,10 @@ function submitForm() {
     <n-list-item v-for="row in stateToFileList()">
       <template #suffix>
         <n-button
+          v-if="row.translatorId !== 'jp'"
           tertiary
           size="small"
-          @click="startUpdateTask(row.version, 0, 65536)"
+          @click="startUpdateTask(row.translatorId)"
         >
           更新
         </n-button>

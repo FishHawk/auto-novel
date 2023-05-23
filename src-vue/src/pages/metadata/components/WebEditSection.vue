@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import ApiWebNovel, { WebNovelMetadataDto } from '@/data/api/api_web_novel';
+import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
 import { atLeastMaintainer, useAuthInfoStore } from '@/data/stores/authInfo';
 
 const props = defineProps<{

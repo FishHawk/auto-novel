@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ApiWebNovel from '@/data/api/api_web_novel';
+import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { mapOk } from '@/data/api/result';
 
 import { Loader } from './components/NovelList.vue';

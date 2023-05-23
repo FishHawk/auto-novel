@@ -2,7 +2,7 @@
 import { useRoute } from 'vue-router';
 
 import { mapOk } from '@/data/api/result';
-import ApiWebNovel from '@/data/api/api_web_novel';
+import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { Loader } from './components/NovelList.vue';
 
 const route = useRoute();

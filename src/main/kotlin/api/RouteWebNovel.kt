@@ -12,11 +12,14 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
+import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
+import util.None
+import util.safeSubList
 import util.toOptional
 import java.time.ZoneId
 
@@ -36,14 +39,20 @@ private class WebNovel {
 
     @Resource("/{providerId}/{novelId}")
     data class Id(val parent: WebNovel, val providerId: String, val novelId: String) {
-        @Resource("/state")
-        data class State(val parent: Id)
-
         @Resource("/wenku")
         data class Wenku(val parent: Id)
 
         @Resource("/chapter/{chapterId}")
         data class Chapter(val parent: Id, val chapterId: String)
+
+        @Resource("/translate/{translatorId}")
+        class Translate(val parent: Id, val translatorId: String) {
+            @Resource("/metadata")
+            data class Metadata(val parent: Translate, val startIndex: Int = 0, val endIndex: Int = 65536)
+
+            @Resource("/chapter/{chapterId}")
+            class Chapter(val parent: Translate, val chapterId: String)
+        }
     }
 }
 
@@ -84,11 +93,6 @@ fun Route.routeWebNovel() {
         }
     }
 
-    get<WebNovel.Id.State> { loc ->
-        val result = service.getState(loc.parent.providerId, loc.parent.novelId)
-        call.respondResult(result)
-    }
-
     authenticate {
         put<WebNovel.Id.Wenku> { loc ->
             val body = call.receive<String>()
@@ -109,11 +113,67 @@ fun Route.routeWebNovel() {
         val result = service.getChapter(loc.parent.providerId, loc.parent.novelId, loc.chapterId)
         call.respondResult(result)
     }
+
+    // Translator
+    get<WebNovel.Id.Translate.Metadata> { loc ->
+        val result = service.getMetadataToTranslate(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+            translatorId = loc.parent.translatorId,
+            startIndex = loc.startIndex,
+            endIndex = loc.endIndex,
+        )
+        call.respondResult(result)
+    }
+
+    post<WebNovel.Id.Translate.Metadata> { loc ->
+        val metadataTranslated = call.receive<WebNovelService.TranslateMetadataUpdateBody>()
+        val result = service.updateMetadata(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+            body = metadataTranslated,
+        )
+        call.respondResult(result)
+    }
+
+    get<WebNovel.Id.Translate.Chapter> { loc ->
+        val result = service.getChapterToTranslate(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+            translatorId = loc.parent.translatorId,
+            chapterId = loc.chapterId,
+        )
+        call.respondResult(result)
+    }
+
+    post<WebNovel.Id.Translate.Chapter> { loc ->
+        val body = call.receive<WebNovelService.TranslateChapterUpdateBody>()
+        val result = service.updateChapter(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+            translatorId = loc.parent.translatorId,
+            chapterId = loc.chapterId,
+            body = body,
+        )
+        call.respondResult(result)
+    }
+
+    put<WebNovel.Id.Translate.Chapter> { loc ->
+        val body = call.receive<WebNovelService.TranslateChapterUpdatePartlyBody>()
+        val result = service.updateChapterPartly(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+            translatorId = loc.parent.translatorId,
+            chapterId = loc.chapterId,
+            body = body,
+        )
+        call.respondResult(result)
+    }
 }
 
 class WebNovelService(
     private val metadataRepo: WebNovelMetadataRepository,
-    private val episodeRepo: WebChapterRepository,
+    private val chapterRepo: WebChapterRepository,
     private val userRepo: UserRepository,
     private val patchRepo: WebNovelPatchHistoryRepository,
     private val indexRepo: WebNovelIndexRepository,
@@ -159,9 +219,9 @@ class WebNovelService(
                     it.providerId,
                     it.novelId
                 )!!.toc.count { it.chapterId != null },
-                count = episodeRepo.count(it.providerId, it.novelId),
-                countBaidu = episodeRepo.countBaidu(it.providerId, it.novelId),
-                countYoudao = episodeRepo.countYoudao(it.providerId, it.novelId),
+                count = chapterRepo.count(it.providerId, it.novelId),
+                countBaidu = chapterRepo.countBaidu(it.providerId, it.novelId),
+                countYoudao = chapterRepo.countYoudao(it.providerId, it.novelId),
             )
         }
         val dto = NovelListPageDto(
@@ -211,30 +271,6 @@ class WebNovelService(
     }
 
     @Serializable
-    data class NovelStateDto(
-        val total: Int,
-        val count: Long,
-        val countBaidu: Long,
-        val countYoudao: Long,
-    )
-
-    suspend fun getState(
-        providerId: String,
-        novelId: String,
-    ): Result<NovelStateDto> {
-        val metadata = metadataRepo.fineOneOrFetchRemote(providerId, novelId)
-            .getOrElse { return httpInternalServerError(it.message) }
-        return Result.success(
-            NovelStateDto(
-                total = metadata.toc.count { it.chapterId != null },
-                count = episodeRepo.count(metadata.providerId, metadata.novelId),
-                countBaidu = episodeRepo.countBaidu(metadata.providerId, metadata.novelId),
-                countYoudao = episodeRepo.countYoudao(metadata.providerId, metadata.novelId),
-            )
-        )
-    }
-
-    @Serializable
     data class NovelMetadataDto(
         val wenkuId: String?,
         val titleJp: String,
@@ -247,6 +283,7 @@ class WebNovelService(
         val visited: Long,
         val syncAt: Long,
         val favored: Boolean?,
+        val translateState: TranslateState,
     ) {
         @Serializable
         data class Author(val name: String, val link: String?)
@@ -254,6 +291,8 @@ class WebNovelService(
         @Serializable
         data class TocItem(val titleJp: String, val titleZh: String?, val chapterId: String?)
 
+        @Serializable
+        data class TranslateState(val jp: Long, val baidu: Long, val youdao: Long)
     }
 
     private suspend fun createMetadataDto(
@@ -261,6 +300,11 @@ class WebNovelService(
         username: String?,
     ): NovelMetadataDto {
         val user = username?.let { userRepo.getByUsername(it) }
+        val translateState = NovelMetadataDto.TranslateState(
+            jp = chapterRepo.count(metadata.providerId, metadata.novelId),
+            baidu = chapterRepo.countBaidu(metadata.providerId, metadata.novelId),
+            youdao = chapterRepo.countYoudao(metadata.providerId, metadata.novelId),
+        )
         return NovelMetadataDto(
             wenkuId = metadata.wenkuId,
             titleJp = metadata.titleJp,
@@ -273,6 +317,7 @@ class WebNovelService(
             visited = metadata.visited,
             syncAt = metadata.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
             favored = user?.favoriteBooks?.any { it.providerId == metadata.providerId && it.novelId == metadata.novelId },
+            translateState = translateState,
         )
     }
 
@@ -434,7 +479,7 @@ class WebNovelService(
         val currIndex = toc.indexOfFirst { it.chapterId == chapterId }
         if (currIndex == -1) return httpInternalServerError("episode id not in toc")
 
-        val episode = episodeRepo.get(providerId, novelId, chapterId)
+        val episode = chapterRepo.get(providerId, novelId, chapterId)
             .getOrElse { return httpInternalServerError(it.message) }
 
         return Result.success(
@@ -448,5 +493,274 @@ class WebNovelService(
                 youdaoParagraphs = episode.youdaoParagraphs,
             )
         )
+    }
+
+    // Translator
+    @Serializable
+    data class TranslateMetadataDto(
+        val title: String? = null,
+        val introduction: String? = null,
+        val toc: List<String>,
+        val glossaryUuid: String?,
+        val glossary: Map<String, String>,
+        val untranslatedChapterIds: List<String>,
+        val expiredChapterIds: List<String>,
+    )
+
+    suspend fun getMetadataToTranslate(
+        providerId: String,
+        novelId: String,
+        translatorId: String,
+        startIndex: Int,
+        endIndex: Int,
+    ): Result<TranslateMetadataDto> {
+        val metadata = metadataRepo.findOne(providerId, novelId)
+            ?: return httpNotFound("元数据不存在")
+
+        val title = metadata.titleJp.takeIf { metadata.titleZh == null }
+        val introduction = metadata.introductionJp.takeIf { metadata.introductionZh == null }
+        val toc = metadata.toc
+            .mapNotNull { tocItem -> tocItem.titleJp.takeIf { tocItem.titleZh == null } }
+            .distinct()
+
+        val untranslatedChapterIds = mutableListOf<String>()
+        val expiredChapterIds = mutableListOf<String>()
+        metadata.toc
+            .mapNotNull { it.chapterId }
+            .safeSubList(startIndex, endIndex)
+            .forEach { chapterId ->
+                val chapter = chapterRepo.getLocal(providerId, novelId, chapterId)
+
+                if (translatorId == "jp") {
+                    if (chapter == null) {
+                        untranslatedChapterIds.add(chapterId)
+                    }
+                } else if (translatorId == "baidu") {
+                    if (chapter?.baiduParagraphs == null) {
+                        untranslatedChapterIds.add(chapterId)
+                    } else if (chapter.baiduGlossaryUuid != metadata.glossaryUuid) {
+                        expiredChapterIds.add(chapterId)
+                    }
+                } else {
+                    if (chapter?.youdaoParagraphs == null) {
+                        untranslatedChapterIds.add(chapterId)
+                    } else if (chapter.youdaoGlossaryUuid != metadata.glossaryUuid) {
+                        expiredChapterIds.add(chapterId)
+                    }
+                }
+            }
+
+        return Result.success(
+            TranslateMetadataDto(
+                title = title,
+                introduction = introduction,
+                toc = toc,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                untranslatedChapterIds = untranslatedChapterIds,
+                expiredChapterIds = expiredChapterIds,
+            )
+        )
+    }
+
+    @Serializable
+    data class TranslateMetadataUpdateBody(
+        val title: String? = null,
+        val introduction: String? = null,
+        val toc: Map<String, String>,
+    )
+
+    suspend fun updateMetadata(
+        providerId: String,
+        novelId: String,
+        body: TranslateMetadataUpdateBody,
+    ): Result<Unit> {
+        val metadata = metadataRepo.findOne(providerId, novelId)
+            ?: return Result.success(Unit)
+
+        val titleZh = body.title.takeIf { metadata.titleZh == null }
+        val introductionZh = body.introduction.takeIf { metadata.introductionZh == null }
+        val tocZh = mutableMapOf<Int, String>()
+        metadata.toc.forEachIndexed { index, item ->
+            if (item.titleZh == null) {
+                val newTitleZh = body.toc[item.titleJp]
+                if (newTitleZh != null) {
+                    tocZh[index] = newTitleZh
+                }
+            }
+        }
+
+        if (titleZh == null &&
+            introductionZh == null &&
+            tocZh.isEmpty()
+        ) {
+            return Result.success(Unit)
+        }
+
+        metadataRepo.updateZh(
+            providerId = providerId,
+            novelId = novelId,
+            titleZh = titleZh.toOptional(),
+            introductionZh = introductionZh.toOptional(),
+            glossary = None,
+            tocZh = tocZh,
+        )
+        return Result.success(Unit)
+    }
+
+    @Serializable
+    data class TranslateChapterDto(
+        val glossary: Map<String, String>,
+        val paragraphsJp: List<String>,
+    )
+
+    suspend fun getChapterToTranslate(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        translatorId: String,
+    ): Result<TranslateChapterDto> {
+        if (translatorId != "baidu" && translatorId != "youdao" && translatorId != "jp")
+            return httpBadRequest("不支持的版本")
+
+        val chapter = chapterRepo.get(providerId, novelId, chapterId)
+            .getOrElse { return httpInternalServerError(it.message) }
+
+        return Result.success(
+            TranslateChapterDto(
+                glossary = if (translatorId == "baidu") chapter.baiduGlossary else chapter.youdaoGlossary,
+                paragraphsJp = chapter.paragraphs,
+            )
+        )
+    }
+
+    @Serializable
+    data class TranslateChapterState(val jp: Long, val zh: Long)
+
+    @Serializable
+    data class TranslateChapterUpdateBody(
+        val glossaryUuid: String? = null,
+        val paragraphsZh: List<String>,
+    )
+
+    suspend fun updateChapter(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        translatorId: String,
+        body: TranslateChapterUpdateBody,
+    ): Result<TranslateChapterState> {
+        if (translatorId != "baidu" && translatorId != "youdao")
+            return httpBadRequest("不支持的版本")
+
+        val metadata = metadataRepo.findOne(providerId, novelId)
+            ?: return httpNotFound("元数据不存在")
+        if (body.glossaryUuid != metadata.glossaryUuid) {
+            return httpBadRequest("术语表uuid失效")
+        }
+
+        val chapter = chapterRepo.getLocal(providerId, novelId, chapterId)
+            ?: return httpNotFound("章节不存在")
+        if (chapter.paragraphs.size != body.paragraphsZh.size) {
+            return httpBadRequest("翻译文本长度不匹配")
+        }
+
+        if (translatorId == "baidu") {
+            if (chapter.baiduParagraphs != null) {
+                return httpConflict("翻译已经存在")
+            }
+            chapterRepo.updateBaidu(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        } else {
+            if (chapter.youdaoParagraphs != null) {
+                return httpConflict("翻译已经存在")
+            }
+            chapterRepo.updateYoudao(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        }
+        metadataRepo.updateChangeAt(providerId, novelId)
+
+        val translateState = TranslateChapterState(
+            jp = chapterRepo.count(providerId, novelId),
+            zh = when (translatorId) {
+                "baidu" -> chapterRepo.countBaidu(providerId, novelId)
+                else /* youdao */ -> chapterRepo.countYoudao(providerId, novelId)
+            }
+        )
+        return Result.success(translateState)
+    }
+
+    @Serializable
+    data class TranslateChapterUpdatePartlyBody(
+        val glossaryUuid: String? = null,
+        val paragraphsZh: Map<Int, String>,
+    )
+
+    suspend fun updateChapterPartly(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        translatorId: String,
+        body: TranslateChapterUpdatePartlyBody,
+    ): Result<TranslateChapterState> {
+        if (translatorId != "baidu" && translatorId != "youdao")
+            return httpBadRequest("不支持的版本")
+
+        val metadata = metadataRepo.findOne(providerId, novelId)
+            ?: return httpNotFound("元数据不存在")
+        if (body.glossaryUuid != metadata.glossaryUuid) {
+            return httpBadRequest("术语表uuid失效")
+        }
+
+        val chapter = chapterRepo.getLocal(providerId, novelId, chapterId)
+            ?: return httpNotFound("章节不存在")
+
+        if (translatorId == "baidu") {
+            if (chapter.baiduParagraphs == null) {
+                return httpNotFound("翻译不存在")
+            }
+            chapterRepo.updateBaidu(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        } else {
+            if (chapter.youdaoParagraphs == null) {
+                return httpNotFound("翻译不存在")
+            }
+            chapterRepo.updateYoudao(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                glossaryUuid = metadata.glossaryUuid,
+                glossary = metadata.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        }
+        metadataRepo.updateChangeAt(providerId, novelId)
+
+        val translateState = TranslateChapterState(
+            jp = chapterRepo.count(providerId, novelId),
+            zh = when (translatorId) {
+                "baidu" -> chapterRepo.countBaidu(providerId, novelId)
+                else /* youdao */ -> chapterRepo.countYoudao(providerId, novelId)
+            }
+        )
+        return Result.success(translateState)
     }
 }

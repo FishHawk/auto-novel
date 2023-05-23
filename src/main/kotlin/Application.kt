@@ -105,7 +105,6 @@ fun main() {
             routePrepareBook()
             routePatch()
             routeTocMergeHistory()
-            routeUpdate()
 
             routeWenkuNovel()
         }
@@ -147,7 +146,6 @@ val appModule = module {
 
     single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { PrepareBookService(get(), get(), get()) }
-    single(createdAtStart = true) { UpdateService(get(), get()) }
     single(createdAtStart = true) { PatchService(get(), get()) }
     single(createdAtStart = true) { TocMergeHistoryService(get()) }
 

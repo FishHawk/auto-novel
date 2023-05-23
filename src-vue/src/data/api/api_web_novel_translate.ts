@@ -1,10 +1,10 @@
+import { TranslatorId, createTranslator } from '@/data/translator/translator';
+import { TranslatorAdapter } from '@/data/translator/adapter';
+
 import api from './api';
 import { Result, Ok, Err } from './result';
-import { TranslatorAdapter } from '../translator/adapter';
-import { BaiduTranslator } from '../translator/baidu';
-import { YoudaoTranslator } from '../translator/youdao';
 
-interface MetadataToTranslateDto {
+interface MetadataDto {
   title?: string;
   introduction?: string;
   toc: string[];
@@ -17,15 +17,12 @@ interface MetadataToTranslateDto {
 async function getMetadata(
   providerId: string,
   novelId: string,
-  version: 'jp' | 'baidu' | 'youdao',
+  translatorId: TranslatorId,
   startIndex: number,
   endIndex: number
-): Promise<MetadataToTranslateDto> {
-  return api
-    .get(`update/metadata/${providerId}/${novelId}`, {
-      searchParams: { version, startIndex, endIndex },
-    })
-    .json();
+): Promise<MetadataDto> {
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/metadata`;
+  return api.get(url, { searchParams: { startIndex, endIndex } }).json();
 }
 
 interface MetadataUpdateBody {
@@ -37,13 +34,11 @@ interface MetadataUpdateBody {
 async function postMetadata(
   providerId: string,
   novelId: string,
+  translatorId: TranslatorId,
   body: MetadataUpdateBody
 ): Promise<string> {
-  return api
-    .post(`update/metadata/${providerId}/${novelId}`, {
-      json: body,
-    })
-    .text();
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/metadata`;
+  return api.post(url, { json: body }).text();
 }
 
 interface ChapterToTranslateDto {
@@ -54,14 +49,16 @@ interface ChapterToTranslateDto {
 async function getChapter(
   providerId: string,
   novelId: string,
-  chapterId: string,
-  version: 'jp' | 'baidu' | 'youdao'
+  translatorId: TranslatorId,
+  chapterId: string
 ): Promise<ChapterToTranslateDto> {
-  return api
-    .get(`update/chapter/${providerId}/${novelId}/${chapterId}`, {
-      searchParams: { version },
-    })
-    .json();
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
+  return api.get(url).json();
+}
+
+interface TranslateState {
+  jp: number;
+  zh: number;
 }
 
 interface ChapterUpdateBody {
@@ -72,16 +69,12 @@ interface ChapterUpdateBody {
 async function postChapter(
   providerId: string,
   novelId: string,
+  translatorId: TranslatorId,
   chapterId: string,
-  version: 'baidu' | 'youdao',
   body: ChapterUpdateBody
-): Promise<string> {
-  return api
-    .post(`update/chapter/${providerId}/${novelId}/${chapterId}`, {
-      searchParams: { version },
-      json: body,
-    })
-    .text();
+): Promise<TranslateState> {
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
+  return api.post(url, { json: body }).json();
 }
 
 interface ChapterUpdatePartlyBody {
@@ -92,19 +85,15 @@ interface ChapterUpdatePartlyBody {
 async function putChapter(
   providerId: string,
   novelId: string,
+  translatorId: TranslatorId,
   chapterId: string,
-  version: 'baidu' | 'youdao',
   body: ChapterUpdatePartlyBody
-): Promise<string> {
-  return api
-    .put(`update/chapter/${providerId}/${novelId}/${chapterId}`, {
-      searchParams: { version },
-      json: body,
-    })
-    .text();
+): Promise<TranslateState> {
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
+  return api.put(url, { json: body }).json();
 }
 
-function encodeMetadataToTranslate(metadata: MetadataToTranslateDto): string[] {
+function encodeMetadataToTranslate(metadata: MetadataDto): string[] {
   const query = [];
   if (metadata.title) {
     query.push(metadata.title);
@@ -117,7 +106,7 @@ function encodeMetadataToTranslate(metadata: MetadataToTranslateDto): string[] {
 }
 
 function decodeAsMetadataTranslated(
-  metadata: MetadataToTranslateDto,
+  metadata: MetadataDto,
   translated: string[]
 ): MetadataUpdateBody {
   const obj: MetadataUpdateBody = { toc: {} };
@@ -160,59 +149,44 @@ function getExpiredParagraphs(
 
 interface UpdateCallback {
   onStart: (total: number) => void;
-  onChapterTranslateSuccess: () => void;
+  onChapterTranslateSuccess: (state: TranslateState) => void;
   onChapterTranslateFailure: () => void;
 }
 
-export async function update(
-  version: 'jp' | 'baidu' | 'youdao',
+export async function translate(
   providerId: string,
   novelId: string,
+  translatorId: TranslatorId,
   startIndex: number,
   endIndex: number,
   callback: UpdateCallback
 ): Promise<Result<undefined, any>> {
-  let metadata: MetadataToTranslateDto;
+  let metadata: MetadataDto;
   let translator: TranslatorAdapter | undefined = undefined;
   try {
     console.log(`获取元数据 ${providerId}/${novelId}`);
     metadata = await getMetadata(
       providerId,
       novelId,
-      version,
+      translatorId,
       startIndex,
       endIndex
     );
 
-    if (version !== 'jp') {
-      try {
-        if (version === 'baidu') {
-          translator = new TranslatorAdapter(
-            await BaiduTranslator.create(),
-            metadata.glossary
-          );
-        } else {
-          translator = new TranslatorAdapter(
-            await YoudaoTranslator.create(),
-            metadata.glossary
-          );
-        }
-      } catch (e: any) {
-        return Err(e);
-      }
+    try {
+      translator = await createTranslator(translatorId, metadata.glossary);
+    } catch (e: any) {
+      return Err(e);
+    }
 
-      const textsSrc = encodeMetadataToTranslate(metadata);
-      if (textsSrc.length > 0) {
-        console.log(`翻译元数据 ${providerId}/${novelId}`);
-        const textsDst = await translator.translate(textsSrc);
+    const textsSrc = encodeMetadataToTranslate(metadata);
+    if (textsSrc.length > 0) {
+      console.log(`翻译元数据 ${providerId}/${novelId}`);
+      const textsDst = await translator.translate(textsSrc);
 
-        console.log(`上传元数据 ${providerId}/${novelId}`);
-        const metadataTranslated = decodeAsMetadataTranslated(
-          metadata,
-          textsDst
-        );
-        await postMetadata(providerId, novelId, metadataTranslated);
-      }
+      console.log(`上传元数据 ${providerId}/${novelId}`);
+      const metadataTranslated = decodeAsMetadataTranslated(metadata, textsDst);
+      await postMetadata(providerId, novelId, translatorId, metadataTranslated);
     }
   } catch (e: any) {
     console.log(e);
@@ -226,21 +200,29 @@ export async function update(
   for (const chapterId of metadata.untranslatedChapterIds) {
     try {
       console.log(`获取章节 ${providerId}/${novelId}/${chapterId}`);
-      const chapter = await getChapter(providerId, novelId, chapterId, version);
+      const chapter = await getChapter(
+        providerId,
+        novelId,
+        translatorId,
+        chapterId
+      );
 
       const textsSrc = chapter.paragraphsJp;
-      if (version !== 'jp' && translator) {
-        console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
-        const textsDst = await translator.translate(textsSrc);
+      console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
+      const textsDst = await translator.translate(textsSrc);
 
-        console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
-        await postChapter(providerId, novelId, chapterId, version, {
+      console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+      const state = await postChapter(
+        providerId,
+        novelId,
+        translatorId,
+        chapterId,
+        {
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh: textsDst,
-        });
-      }
-
-      callback.onChapterTranslateSuccess();
+        }
+      );
+      callback.onChapterTranslateSuccess(state);
     } catch (e) {
       console.log(e);
       callback.onChapterTranslateFailure();
@@ -250,7 +232,12 @@ export async function update(
   for (const chapterId of metadata.expiredChapterIds) {
     try {
       console.log(`获取章节 ${providerId}/${novelId}/${chapterId}`);
-      const chapter = await getChapter(providerId, novelId, chapterId, version);
+      const chapter = await getChapter(
+        providerId,
+        novelId,
+        translatorId,
+        chapterId
+      );
       const expiredParagraphs = getExpiredParagraphs(
         chapter,
         metadata.glossary
@@ -258,20 +245,25 @@ export async function update(
 
       const textsSrc = expiredParagraphs.map((it) => it.text);
       const paragraphsZh: { [key: number]: string } = {};
-      if (version !== 'jp' && translator) {
-        console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
-        const textsDst = await translator.translate(textsSrc);
-        expiredParagraphs.forEach((it, index) => {
-          paragraphsZh[it.index] = textsDst[index];
-        });
 
-        console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
-        await putChapter(providerId, novelId, chapterId, version, {
+      console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
+      const textsDst = await translator.translate(textsSrc);
+      expiredParagraphs.forEach((it, index) => {
+        paragraphsZh[it.index] = textsDst[index];
+      });
+
+      console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+      const state = await putChapter(
+        providerId,
+        novelId,
+        translatorId,
+        chapterId,
+        {
           glossaryUuid: metadata.glossaryUuid,
           paragraphsZh,
-        });
-      }
-      callback.onChapterTranslateSuccess();
+        }
+      );
+      callback.onChapterTranslateSuccess(state);
     } catch (e) {
       console.log(e);
       callback.onChapterTranslateFailure();

@@ -11,7 +11,7 @@ import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
 import ApiUser from '@/data/api/api_user';
-import ApiWebNovel, { WebNovelMetadataDto } from '@/data/api/api_web_novel';
+import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
@@ -72,7 +72,11 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiUser.deleteFavoritedWebNovel(providerId, novelId, token);
+  const result = await ApiUser.deleteFavoritedWebNovel(
+    providerId,
+    novelId,
+    token
+  );
   if (result.ok) {
     if (metadata.value?.ok) {
       metadata.value.value.favored = false;
@@ -108,12 +112,9 @@ function enableEditMode() {
         <span v-for="author in metadata.value.authors">
           <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
         </span>
-      </n-p>
-
-      <n-p>
-        <n-space>
-          <span>浏览次数:{{ metadata.value.visited }}</span>
-        </n-space>
+        <span style="margin-left: 20px">
+          浏览次数:{{ metadata.value.visited }}
+        </span>
       </n-p>
 
       <n-space>
@@ -180,11 +181,21 @@ function enableEditMode() {
         >
           {{ metadata.value.introductionZh }}
         </n-p>
-        <TranslateSection
+
+        <n-h2 prefix="bar">翻译</n-h2>
+        <n-p>
+          网页端翻译需要安装插件，请查看
+          <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
+          移动端暂时无法翻译。
+        </n-p>
+        <WebTranslate
           :provider-id="providerId"
           :novel-id="novelId"
+          :total="metadata.value.toc.filter((it) => it.chapterId).length"
+          :state="metadata.value.translateState"
           :glossary="metadata.value.glossary"
         />
+
         <TocSection
           :provider-id="providerId"
           :novel-id="novelId"

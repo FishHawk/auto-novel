@@ -23,6 +23,7 @@ function getBaseBody(key: string) {
 }
 
 export class YoudaoTranslator implements Translator {
+  static label = '有道';
   size = 2000;
   key = 'fsdsogkndfokasodnaso';
 
