@@ -40,15 +40,15 @@ const routes = [
 
   {
     path: '/novel/:providerId/:novelId',
-    component: () => import('./pages/metadata/WebMetadata.vue'),
+    component: () => import('./pages/novel/WebNovel.vue'),
   },
   {
     path: '/wenku/non-archived',
-    component: () => import('./pages/metadata/WenkuNonArchived.vue'),
+    component: () => import('./pages/novel/WenkuNonArchived.vue'),
   },
   {
     path: '/wenku/:novelId',
-    component: () => import('./pages/metadata/WenkuMetadata.vue'),
+    component: () => import('./pages/novel/WenkuNovel.vue'),
   },
 
   {
