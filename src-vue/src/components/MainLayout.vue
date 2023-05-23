@@ -170,7 +170,7 @@ function handleUserDropdownSelect(key: string | number) {
 
     <n-layout :native-scrollbar="false" style="height: calc(100vh - 51px)">
       <slot name="full-width" />
-      <div class="container"><slot /></div>
+      <div class="container" style="padding-bottom: 48px"><slot /></div>
     </n-layout>
   </n-layout>
 
@@ -220,7 +220,7 @@ div.n-scrollbar-rail {
     padding-right: 30px;
   }
   .container {
-    margin: 0 auto 48px;
+    margin: 0 auto;
   }
 }
 @media only screen and (max-width: 600px) {
@@ -229,7 +229,7 @@ div.n-scrollbar-rail {
     width: auto;
   }
   .container {
-    margin: 0 12px 48px;
+    margin: 0 12px;
   }
 }
 </style>

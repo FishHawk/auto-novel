@@ -127,61 +127,62 @@ function enableEditMode() {
         v-if="novelMetadata?.ok"
         :style="{
           background:
-            'linear-gradient( to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.7)), ' +
+            'linear-gradient( to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.4)), ' +
             `url(${novelMetadata.value.cover})`,
         }"
         style="
-          position: absolute;
-          left: 0;
-          right: 0;
-          height: 300px;
+          width: 100%;
           clip: rect(0, auto, auto, 0);
           background-size: cover;
-          background-position: center 25%;
+          background-position: center 15%;
         "
-      />
+      >
+        <div style="width: 100%; height: 100%; backdrop-filter: blur(4px)">
+          <div class="container" style="filter: ">
+            <n-space
+              :wrap="false"
+              style="padding-top: 40px; padding-bottom: 20px; min-height: 260px"
+            >
+              <n-card size="small" style="width: 160px">
+                <template #cover>
+                  <img :src="novelMetadata.value.cover" alt="cover" />
+                </template>
+              </n-card>
+              <div>
+                <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
+                  {{
+                    novelMetadata.value.titleZh
+                      ? novelMetadata.value.titleZh
+                      : novelMetadata.value.title
+                  }}
+                </n-h1>
+
+                <table style="border-spacing: 0px 8px">
+                  <TagGroup
+                    v-if="novelMetadata.value.authors.length > 0"
+                    label="作者"
+                    :tags="novelMetadata.value.authors"
+                  />
+                  <TagGroup
+                    v-if="novelMetadata.value.artists.length > 0"
+                    label="插图"
+                    :tags="novelMetadata.value.artists"
+                  />
+                  <TagGroup
+                    v-if="novelMetadata.value.keywords.length > 0"
+                    class="on-desktop"
+                    label="标签"
+                    :tags="novelMetadata.value.keywords"
+                  />
+                </table>
+              </div>
+            </n-space>
+          </div>
+        </div>
+      </div>
     </template>
 
     <div v-if="novelMetadata?.ok">
-      <n-space
-        :wrap="false"
-        style="margin-top: 40px; margin-bottom: 20px; min-height: 260px"
-      >
-        <n-card size="small" style="width: 160px">
-          <template #cover>
-            <img :src="novelMetadata.value.cover" alt="cover" />
-          </template>
-        </n-card>
-        <div>
-          <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
-            {{
-              novelMetadata.value.titleZh
-                ? novelMetadata.value.titleZh
-                : novelMetadata.value.title
-            }}
-          </n-h1>
-
-          <table style="border-spacing: 0px 8px">
-            <TagGroup
-              v-if="novelMetadata.value.authors.length > 0"
-              label="作者"
-              :tags="novelMetadata.value.authors"
-            />
-            <TagGroup
-              v-if="novelMetadata.value.artists.length > 0"
-              label="插图"
-              :tags="novelMetadata.value.artists"
-            />
-            <TagGroup
-              v-if="novelMetadata.value.keywords.length > 0"
-              class="on-desktop"
-              label="标签"
-              :tags="novelMetadata.value.keywords"
-            />
-          </table>
-        </div>
-      </n-space>
-
       <n-space>
         <templage v-if="atLeastMaintainer(authInfoStore.role)">
           <n-button v-if="!editMode" @click="enableEditMode()">
