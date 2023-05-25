@@ -1,7 +1,7 @@
 package api
 
-import data.web.WebNovelMetadataRepository
-import data.web.WebNovelPatchHistoryRepository
+import infra.web.WebNovelMetadataRepository
+import infra.web.WebNovelPatchHistoryRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

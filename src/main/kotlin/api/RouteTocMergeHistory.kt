@@ -1,6 +1,6 @@
 package api
 
-import data.web.*
+import infra.web.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

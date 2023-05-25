@@ -1,9 +1,9 @@
 package api
 
-import data.*
-import data.web.WebNovelIndexRepository
-import data.web.*
-import data.wenku.WenkuNovelMetadataRepository
+import infra.*
+import infra.web.WebNovelIndexRepository
+import infra.web.*
+import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*

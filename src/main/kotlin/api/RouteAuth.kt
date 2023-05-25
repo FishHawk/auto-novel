@@ -2,9 +2,9 @@ package api
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import data.EmailCodeRepository
-import data.User
-import data.UserRepository
+import infra.EmailCodeRepository
+import infra.User
+import infra.UserRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

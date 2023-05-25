@@ -1,9 +1,9 @@
 package api
 
-import data.UserRepository
-import data.web.WebChapterRepository
-import data.web.WebNovelMetadataRepository
-import data.wenku.WenkuNovelMetadataRepository
+import infra.UserRepository
+import infra.web.WebChapterRepository
+import infra.web.WebNovelMetadataRepository
+import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
