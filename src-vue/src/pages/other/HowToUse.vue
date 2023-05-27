@@ -38,7 +38,7 @@ async function testYoudao() {
 
     <n-h2 prefix="bar">网页端</n-h2>
     <n-p>
-      网页端中文翻译需要从你的浏览器访问翻译网站，因此需要安装插件解决跨域的问题。
+      网页端中文翻译需要从你的浏览器访问翻译网站，因此需要安装扩展解决跨域的问题。
     </n-p>
     <n-p>
       此外，连续翻译太多的话，会被翻译站禁一段时间，等几个小时就好了，也可以换台机子。
@@ -53,12 +53,12 @@ async function testYoudao() {
       <tbody>
         <tr>
           <td nowrap="nowrap">Chrome</td>
-          <td><n-a href="/extension.zip" target="_blank">浏览器插件</n-a></td>
+          <td><n-a href="/extension.zip" target="_blank">浏览器扩展</n-a></td>
         </tr>
         <tr>
           <td nowrap="nowrap">Edge</td>
           <td>
-            <n-a href="/extension.zip" target="_blank">浏览器插件</n-a>
+            <n-a href="/extension.zip" target="_blank">浏览器扩展</n-a>
             （只支持使用了Chrome内核之后的Edge版本）
           </td>
         </tr>
@@ -73,15 +73,24 @@ async function testYoudao() {
       </tbody>
     </n-table>
 
-    <n-h4 prefix="bar">Chrome/Edge插件安装步骤</n-h4>
-    <n-ul>
-      <n-li>下载插件zip，解压到文件夹。</n-li>
-      <n-li>进入插件页面，启用开发者模式。</n-li>
-      <n-li>点击“加载已解压的扩展程序”，选择解压的文件夹。</n-li>
-    </n-ul>
+    <n-h4 prefix="bar">Chrome/Edge扩展安装步骤</n-h4>
+    <n-p>
+      首先下载上面的链接，解压下载的zip压缩包到文件夹，会有一个叫做extension的文件夹。
+    </n-p>
+    <n-p>然后打开浏览器，进入扩展管理页面，按照下面步骤安装扩展。</n-p>
+    <n-ol>
+      <n-li>启用开发者模式。</n-li>
+      <n-li>点击“加载已解压的扩展程序”，选择之前解压出的extension文件夹。</n-li>
+      <n-li>安装成功后，会出现名为“日本网文机翻机器人”的扩展。</n-li>
+    </n-ol>
+    <n-p>具体可以参考下面的图片。</n-p>
+    <n-p>Chrome:</n-p>
+    <img src="/chrome.png" style="width: 100%" />
+    <n-p>Edge:</n-p>
+    <img src="/edge.png" style="width: 100%" />
 
     <n-h4 prefix="bar">测试翻译</n-h4>
-    <n-p>安装好插件后可以用下面的按钮来测试能否翻译。</n-p>
+    <n-p>安装好扩展后可以用下面的按钮来测试能否翻译。</n-p>
     <n-p>日文：{{ textJp }}</n-p>
     <n-p>百度：{{ textBaidu }}</n-p>
     <n-p>有道：{{ textYoudao }}</n-p>
