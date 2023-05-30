@@ -12,17 +12,17 @@ import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 
 @Resource("/comment")
-private class Comment {
+private class CommentRes {
     @Resource("/list")
     class List(
-        val parent: Comment = Comment(),
+        val parent: CommentRes = CommentRes(),
         val postId: String,
         val page: Int,
     )
 
     @Resource("/list-sub")
     class ListSub(
-        val parent: Comment = Comment(),
+        val parent: CommentRes = CommentRes(),
         val postId: String,
         val parentId: String,
         val page: Int,
@@ -30,7 +30,7 @@ private class Comment {
 
     @Resource("/vote")
     class Vote(
-        val parent: Comment = Comment(),
+        val parent: CommentRes = CommentRes(),
         val commentId: String,
         val isUpvote: Boolean,
         val isCancel: Boolean,
@@ -38,38 +38,38 @@ private class Comment {
 }
 
 fun Route.routeComment() {
-    val service by inject<CommentService>()
+    val service by inject<CommentApi>()
 
     authenticate(optional = true) {
-        get<Comment.List> { loc ->
+        get<CommentRes.List> { loc ->
             val jwtUser = call.jwtUserOrNull()
             val result = service.list(jwtUser?.username, loc.postId, loc.page)
             call.respondResult(result)
         }
 
-        get<Comment.ListSub> { loc ->
+        get<CommentRes.ListSub> { loc ->
             val jwtUser = call.jwtUserOrNull()
             val result = service.listSub(jwtUser?.username, loc.postId, loc.parentId, loc.page)
             call.respondResult(result)
         }
     }
     authenticate {
-        post<Comment.Vote> { loc ->
+        post<CommentRes.Vote> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.vote(loc.commentId, loc.isUpvote, loc.isCancel, jwtUser.username)
             call.respondResult(result)
         }
 
-        post<Comment> {
+        post<CommentRes> {
             val jwtUser = call.jwtUser()
-            val body = call.receive<CommentService.CommentBody>()
+            val body = call.receive<CommentApi.CommentBody>()
             val result = service.createComment(body, jwtUser.username)
             call.respondResult(result)
         }
     }
 }
 
-class CommentService(
+class CommentApi(
     private val commentRepository: CommentRepository,
 ) {
     @Serializable

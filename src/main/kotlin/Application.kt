@@ -5,11 +5,10 @@ import domain.WebNovelUpdateService
 import infra.*
 import infra.ElasticSearchDataSource
 import infra.MongoDataSource
-import infra.wenku.WenkuNovelFileRepository
 import infra.provider.WebNovelProviderDataSource
 import infra.web.*
-import infra.wenku.WenkuNovelIndexRepository
 import infra.wenku.WenkuNovelMetadataRepository
+import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -38,7 +37,6 @@ import org.koin.logger.slf4jLogger
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import kotlin.io.path.Path
 
 object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     override val descriptor = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.LONG)
@@ -123,9 +121,6 @@ val appModule = module {
     }
     single { WebNovelProviderDataSource() }
 
-    // Service
-    single { WebNovelUpdateService(get(), get(), get()) }
-
     // Repository
     single { WebNovelMetadataRepository(get(), get(), get()) }
     single { WebNovelChapterRepository(get(), get()) }
@@ -133,24 +128,27 @@ val appModule = module {
     single { WebNovelPatchHistoryRepository(get()) }
     single { WebNovelTocMergeHistoryRepository(get()) }
 
-    single { WenkuNovelFileRepository(root = Path("./data/files-wenku")) }
-    single { WenkuNovelIndexRepository(get()) }
-    single { WenkuNovelMetadataRepository(get()) }
+    single { WenkuNovelMetadataRepository(get(), get()) }
+    single { WenkuNovelVolumeRepository() }
 
     single { CommentRepository(get()) }
     single { UserRepository(get()) }
     single { EmailCodeRepository(get()) }
 
+    // Service
+    single { WebNovelUpdateService(get(), get(), get()) }
+
+    // Api
     single(createdAtStart = true) {
         val secret = System.getenv("JWT_SECRET") ?: ""
-        AuthService(secret, get(), get())
+        AuthApi(secret, get(), get())
     }
-    single(createdAtStart = true) { CommentService(get()) }
-    single(createdAtStart = true) { UserService(get(), get(), get(), get()) }
+    single(createdAtStart = true) { CommentApi(get()) }
+    single(createdAtStart = true) { UserApi(get(), get(), get(), get()) }
 
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WebNovelPatchApi(get(), get()) }
     single(createdAtStart = true) { TocMergeHistoryApi(get()) }
 
-    single(createdAtStart = true) { WenkuNovelService(get(), get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get()) }
 }

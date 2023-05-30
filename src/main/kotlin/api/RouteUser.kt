@@ -2,6 +2,7 @@ package api
 
 import api.dto.PageDto
 import api.dto.WebNovelOutlineDto
+import api.dto.WenkuNovelOutlineDto
 import infra.UserRepository
 import infra.model.Page
 import infra.web.WebNovelChapterRepository
@@ -54,7 +55,7 @@ private class R {
 }
 
 fun Route.routeUser() {
-    val service by inject<UserService>()
+    val service by inject<UserApi>()
 
     authenticate {
         get<R.FavoritedWeb.List> { loc ->
@@ -99,7 +100,7 @@ fun Route.routeUser() {
     }
 }
 
-class UserService(
+class UserApi(
     private val userRepo: UserRepository,
     private val webRepo: WebNovelMetadataRepository,
     private val webChapterRepo: WebNovelChapterRepository,
@@ -162,28 +163,19 @@ class UserService(
         username: String,
         page: Int,
         pageSize: Int,
-    ): Result<WenkuNovelService.NovelListPageDto> {
-        val novels = userRepo.listFavoriteWenkuNovel(username)
+    ): Result<PageDto<WenkuNovelOutlineDto>> {
+        val novelIds = userRepo.listFavoriteWenkuNovel(username)
             ?: return httpNotFound("用户不存在")
-        val items = novels
+        val items = novelIds
             .asSequence()
             .drop(page * pageSize)
             .take(pageSize)
             .toList()
-            .mapNotNull {
-                val metadata = wenkuRepo.findOne(it)
-                    ?: return@mapNotNull null
-                WenkuNovelService.NovelListPageDto.ItemDto(
-                    id = metadata.id.toHexString(),
-                    title = metadata.title,
-                    titleZh = metadata.titleZh,
-                    cover = metadata.cover,
-                )
-            }
-        val dto = WenkuNovelService.NovelListPageDto(
-            pageNumber = (novels.size / pageSize).toLong() + 1,
-            items = items,
-        )
+            .mapNotNull { wenkuRepo.findOne(it) }
+        val novelPage = Page(items = items, total = novelIds.size.toLong())
+        val dto = PageDto.fromPage(novelPage, pageSize) {
+            WenkuNovelOutlineDto.fromDomain(it)
+        }
         return Result.success(dto)
     }
 

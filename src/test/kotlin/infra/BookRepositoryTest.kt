@@ -4,7 +4,6 @@ import appModule
 import infra.model.NovelFileLang
 import infra.web.*
 import infra.wenku.WenkuNovelFileRepository
-import infra.wenku.WenkuNovelIndexRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
@@ -23,14 +22,9 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val repoTMH by inject<WebNovelTocMergeHistoryRepository>(WebNovelTocMergeHistoryRepository::class.java)
 
     private val repoWBM by inject<WenkuNovelMetadataRepository>(WenkuNovelMetadataRepository::class.java)
-    private val repoWBI by inject<WenkuNovelIndexRepository>(WenkuNovelIndexRepository::class.java)
-    private val repoWBF by inject<WenkuNovelFileRepository>(WenkuNovelFileRepository::class.java)
 
     init {
         describe("test") {
-//            repoWBF.unpackEpub("non-archived", "test.epub",)
-            repoWBF.makeFile("non-archived", "test.epub", NovelFileLang.MIX_YOUDAO)
-            repoWBF.makeFile("non-archived", "test.epub", NovelFileLang.ZH_YOUDAO)
         }
 
         describe("kmongo issue 415") {

@@ -20,50 +20,50 @@ import java.time.ZoneId
 import java.util.*
 
 @Resource("/auth")
-private class Auth {
+private class AuthRes {
     @Resource("/sign-in")
-    class SignIn(val parent: Auth = Auth())
+    class SignIn(val parent: AuthRes = AuthRes())
 
     @Resource("/sign-up")
-    class SignUp(val parent: Auth = Auth())
+    class SignUp(val parent: AuthRes = AuthRes())
 
     @Resource("/verify-email")
     class VerifyEmail(
-        val parent: Auth = Auth(),
+        val parent: AuthRes = AuthRes(),
         val email: String,
     )
 
     @Resource("/reset-password")
-    class ResetPassword(val parent: Auth = Auth())
+    class ResetPassword(val parent: AuthRes = AuthRes())
 }
 
 fun Route.routeAuth() {
-    val service by inject<AuthService>()
+    val service by inject<AuthApi>()
 
-    post<Auth.SignIn> {
-        val body = call.receive<AuthService.SignInBody>()
+    post<AuthRes.SignIn> {
+        val body = call.receive<AuthApi.SignInBody>()
         val result = service.signIn(body)
         call.respondResult(result)
     }
 
-    post<Auth.SignUp> {
-        val body = call.receive<AuthService.SignUpBody>()
+    post<AuthRes.SignUp> {
+        val body = call.receive<AuthApi.SignUpBody>()
         val result = service.signUp(body)
         call.respondResult(result)
     }
 
-    post<Auth.VerifyEmail> { loc ->
+    post<AuthRes.VerifyEmail> { loc ->
         val result = service.verifyEmail(loc.email)
         call.respondResult(result)
     }
 
-    post<Auth.ResetPassword> {
+    post<AuthRes.ResetPassword> {
         val result = service.resetPassword()
         call.respondResult(result)
     }
 }
 
-class AuthService(
+class AuthApi(
     private val secret: String,
     private val userRepository: UserRepository,
     private val emailCodeRepository: EmailCodeRepository,

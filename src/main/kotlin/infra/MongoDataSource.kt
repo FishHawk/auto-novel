@@ -1,9 +1,6 @@
 package infra
 
-import infra.model.WebNovelChapter
-import infra.model.WebNovelMetadata
-import infra.model.WebNovelPatchHistory
-import infra.model.WebNovelTocMergeHistory
+import infra.model.*
 import kotlinx.coroutines.runBlocking
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
@@ -51,4 +48,8 @@ class MongoDataSource(url: String) {
 
     val webNovelTocMergeHistoryCollection
         get() = database.getCollection<WebNovelTocMergeHistory>("toc-merge-history")
+
+    //
+    val wenkuNovelMetadataCollection
+        get() = database.getCollection<WenkuNovelMetadata>("wenku-metadata")
 }
