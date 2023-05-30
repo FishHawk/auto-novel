@@ -24,17 +24,16 @@ defineProps<{
     >
       {{ item.providerId + '.' + item.novelId }}
     </n-a>
-
-    <template v-if="'extra' in item">
-      <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
-        {{ extraLine }}
-      </div>
-    </template>
-    <template v-else>
+    <template v-if="'total' in item">
       <div style="color: #666">
         总计{{ item.total }} / 百度{{ item.countBaidu }} / 有道{{
           item.countYoudao
         }}
+      </div>
+    </template>
+    <template v-else>
+      <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
+        {{ extraLine }}
       </div>
     </template>
     <n-divider />

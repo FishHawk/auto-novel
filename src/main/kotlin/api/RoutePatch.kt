@@ -1,30 +1,32 @@
 package api
 
-import infra.web.WebNovelMetadataRepository
+import api.dto.PageDto
+import api.dto.WebNovelPatchHistoryDto
+import api.dto.WebNovelPatchHistoryOutlineDto
 import infra.web.WebNovelPatchHistoryRepository
+import infra.web.WebNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.None
 import util.Optional
 import util.Some
 
 @Resource("/patch")
-private class Patch {
+private class WebNovelPatchRes {
     @Resource("/list")
     data class List(
-        val parent: Patch = Patch(),
+        val parent: WebNovelPatchRes,
         val page: Int,
     )
 
     @Resource("/{providerId}/{novelId}")
     data class Id(
-        val parent: Patch = Patch(),
+        val parent: WebNovelPatchRes,
         val providerId: String,
         val novelId: String,
     ) {
@@ -34,97 +36,63 @@ private class Patch {
 }
 
 fun Route.routePatch() {
-    val service by inject<PatchService>()
+    val api by inject<WebNovelPatchApi>()
 
-    get<Patch.List> { loc ->
-        val result = service.listPatch(
+    get<WebNovelPatchRes.List> { loc ->
+        val result = api.listPatch(
             page = loc.page,
             pageSize = 10,
         )
         call.respondResult(result)
     }
 
-    get<Patch.Id> { loc ->
-        val result = service.getPatch(loc.providerId, loc.novelId)
+    get<WebNovelPatchRes.Id> { loc ->
+        val result = api.getPatch(loc.providerId, loc.novelId)
         call.respondResult(result)
     }
 
     authenticate {
-        delete<Patch.Id> { loc ->
+        delete<WebNovelPatchRes.Id> { loc ->
             val result = call.requireAtLeastMaintainer {
-                service.deletePatch(loc.providerId, loc.novelId)
+                api.deletePatch(loc.providerId, loc.novelId)
             }
             call.respondResult(result)
         }
 
-        post<Patch.Id.Revoke> { loc ->
+        post<WebNovelPatchRes.Id.Revoke> { loc ->
             val result = call.requireAtLeastMaintainer {
-                service.revokePatch(loc.parent.providerId, loc.parent.novelId)
+                api.revokePatch(loc.parent.providerId, loc.parent.novelId)
             }
             call.respondResult(result)
         }
     }
 }
 
-class PatchService(
+class WebNovelPatchApi(
     private val patchRepo: WebNovelPatchHistoryRepository,
-    private val metadataRepo: WebNovelMetadataRepository,
+    private val novelRepo: WebNovelMetadataRepository,
 ) {
-    @Serializable
-    data class PatchHistoryPageDto(
-        val total: Long,
-        val items: List<PatchHistoryOutlineDto>,
-    )
-
-    @Serializable
-    data class PatchHistoryOutlineDto(
-        val providerId: String,
-        val novelId: String,
-        val titleJp: String,
-        val titleZh: String?,
-    )
-
     suspend fun listPatch(
         page: Int,
         pageSize: Int,
-    ): Result<PatchHistoryPageDto> {
-        val items = patchRepo.list(
+    ): Result<PageDto<WebNovelPatchHistoryOutlineDto>> {
+        val patchPage = patchRepo.list(
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )
-        val total = patchRepo.count()
-        return Result.success(PatchHistoryPageDto(total = total, items = items.map {
-            PatchHistoryOutlineDto(
-                providerId = it.providerId,
-                novelId = it.novelId,
-                titleJp = it.titleJp,
-                titleZh = it.titleZh,
-            )
-        }))
+        val dto = PageDto.fromPage(patchPage, pageSize) {
+            WebNovelPatchHistoryOutlineDto.fromDomain(it)
+        }
+        return Result.success(dto)
     }
-
-    @Serializable
-    data class NovelPatchHistoryDto(
-        val providerId: String,
-        val novelId: String,
-        val titleJp: String,
-        val titleZh: String?,
-        val patches: List<WebNovelPatchHistoryRepository.NovelPatchHistory.Patch>,
-    )
 
     suspend fun getPatch(
         providerId: String,
         novelId: String,
-    ): Result<NovelPatchHistoryDto> {
+    ): Result<WebNovelPatchHistoryDto> {
         val patch = patchRepo.findOne(providerId, novelId)
             ?: return httpNotFound("未找到")
-        val dto = NovelPatchHistoryDto(
-            providerId = patch.providerId,
-            novelId = patch.novelId,
-            titleJp = patch.titleJp,
-            titleZh = patch.titleZh,
-            patches = patch.patches,
-        )
+        val dto = WebNovelPatchHistoryDto.fromDomain(patch)
         return Result.success(dto)
     }
 
@@ -145,7 +113,7 @@ class PatchService(
     ): Result<Unit> {
         val patch = patchRepo.findOne(providerId, novelId)
             ?: return httpNotFound("未找到")
-        val metadata = metadataRepo.findOne(providerId, novelId)
+        val novel = novelRepo.get(providerId, novelId)
             ?: return httpNotFound("未找到对应小说")
 
         var titleZh: Optional<String?> = None
@@ -158,12 +126,12 @@ class PatchService(
         }
 
         val tocZh = mutableMapOf<Int, String?>()
-        metadata.toc.forEachIndexed { index, item ->
+        novel.toc.forEachIndexed { index, item ->
             if (tocMap.containsKey(item.titleJp)) {
                 tocZh[index] = tocMap[item.titleJp]
             }
         }
-        metadataRepo.updateZh(
+        novelRepo.updateZh(
             providerId = providerId,
             novelId = novelId,
             titleZh = titleZh,

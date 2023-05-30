@@ -13,7 +13,7 @@ const message = useMessage();
 const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
-const total = ref(1);
+const pageNumber = ref(1);
 const novelPage = ref<ResultState<TocMergeHistoryPageDto>>();
 const details = ref<{ [key: string]: DiffTocItem[] }>({});
 
@@ -25,7 +25,7 @@ async function loadPage(page: number) {
   if (currentPage.value == page) {
     novelPage.value = result;
     if (result.ok) {
-      total.value = result.value.total;
+      pageNumber.value = result.value.pageNumber;
     }
   }
 }
@@ -87,8 +87,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   <AdminLayout>
     <n-h1>目录合并历史</n-h1>
     <n-pagination
+      v-if="pageNumber > 1"
       v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
+      :page-count="pageNumber"
       :page-slot="7"
     />
     <n-divider />
@@ -128,8 +129,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       </div>
     </div>
     <n-pagination
+      v-if="pageNumber > 1"
       v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
+      :page-count="pageNumber"
       :page-slot="7"
     />
   </AdminLayout>

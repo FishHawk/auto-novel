@@ -1,6 +1,6 @@
 package infra.wenku
 
-import infra.web.NovelFileLang
+import infra.model.NovelFileLang
 import util.epub.EpubReader
 import util.epub.EpubWriter
 import util.epub.copyTo

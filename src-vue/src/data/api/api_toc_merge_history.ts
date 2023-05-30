@@ -3,7 +3,7 @@ import { WebNovelTocItemDto } from './api_web_novel';
 import { Result, runCatching } from './result';
 
 export interface TocMergeHistoryPageDto {
-  total: number;
+  pageNumber: number;
   items: TocMergeHistoryPageItemDto[];
 }
 interface TocMergeHistoryPageItemDto {

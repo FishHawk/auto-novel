@@ -1,7 +1,10 @@
 package api
 
+import api.dto.PageDto
+import api.dto.WebNovelOutlineDto
 import infra.UserRepository
-import infra.web.WebChapterRepository
+import infra.model.Page
+import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.resources.*
@@ -99,39 +102,27 @@ fun Route.routeUser() {
 class UserService(
     private val userRepo: UserRepository,
     private val webRepo: WebNovelMetadataRepository,
+    private val webChapterRepo: WebNovelChapterRepository,
     private val wenkuRepo: WenkuNovelMetadataRepository,
-    private val webEpisodeRepo: WebChapterRepository,
 ) {
     suspend fun listFavoriteWebBook(
         username: String,
         page: Int,
         pageSize: Int,
-    ): Result<WebNovelService.NovelListPageDto> {
-        val novels = userRepo.listFavoriteWebNovel(username)
+    ): Result<PageDto<WebNovelOutlineDto>> {
+        val novelIds = userRepo.listFavoriteWebNovel(username)
             ?: return httpNotFound("用户不存在")
-        val items = novels
+        val items = novelIds
             .asSequence()
             .drop(page * pageSize)
             .take(pageSize)
             .toList()
-            .mapNotNull {
-                val metadata = webRepo.findOne(it.providerId, it.novelId)
-                    ?: return@mapNotNull null
-                WebNovelService.NovelListPageDto.ItemDto(
-                    providerId = metadata.providerId,
-                    novelId = metadata.novelId,
-                    titleJp = metadata.titleJp,
-                    titleZh = metadata.titleZh,
-                    total = metadata.toc.count { it.chapterId != null },
-                    count = webEpisodeRepo.count(metadata.providerId, metadata.novelId),
-                    countBaidu = webEpisodeRepo.countBaidu(metadata.providerId, metadata.novelId),
-                    countYoudao = webEpisodeRepo.countYoudao(metadata.providerId, metadata.novelId),
-                )
-            }
-        val dto = WebNovelService.NovelListPageDto(
-            pageNumber = (novels.size / pageSize).toLong() + 1,
-            items = items,
-        )
+            .mapNotNull { webRepo.get(it.providerId, it.novelId) }
+        val novelPage = Page(items = items, total = novelIds.size.toLong())
+        val dto = PageDto.fromPage(novelPage, pageSize) { outline ->
+            val state = webChapterRepo.findState(outline.providerId, outline.novelId)
+            WebNovelOutlineDto.fromDomain(outline, state)
+        }
         return Result.success(dto)
     }
 

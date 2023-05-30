@@ -13,7 +13,6 @@ import kotlinx.serialization.json.JsonObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-
 data class RemoteNovelMetadata(
     val title: String,
     val authors: List<Author>,

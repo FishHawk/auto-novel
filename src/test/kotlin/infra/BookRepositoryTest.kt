@@ -1,6 +1,7 @@
 package infra
 
 import appModule
+import infra.model.NovelFileLang
 import infra.web.*
 import infra.wenku.WenkuNovelFileRepository
 import infra.wenku.WenkuNovelIndexRepository
@@ -8,11 +9,9 @@ import infra.wenku.WenkuNovelMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
-import kotlinx.datetime.Clock
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import java.io.File
-import java.time.ZoneId
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
@@ -20,9 +19,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val es by inject<ElasticSearchDataSource>(ElasticSearchDataSource::class.java)
     private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
 
-    private val repoEs by inject<WebNovelIndexRepository>(WebNovelIndexRepository::class.java)
-    private val repoB by inject<WebNovelMetadataRepository>(WebNovelMetadataRepository::class.java)
-    private val repoE by inject<WebChapterRepository>(WebChapterRepository::class.java)
+    private val repoE by inject<WebNovelChapterRepository>(WebNovelChapterRepository::class.java)
     private val repoTMH by inject<WebNovelTocMergeHistoryRepository>(WebNovelTocMergeHistoryRepository::class.java)
 
     private val repoWBM by inject<WenkuNovelMetadataRepository>(WenkuNovelMetadataRepository::class.java)
@@ -43,41 +40,8 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
         }
 
         describe("script") {
-            it("es同步") {
-                val col = mongo.database.getCollection<WebNovelMetadataRepository.NovelMetadata>("metadata")
-                val total = col.find().toList()
-                repoEs.addBunch(total.map {
-                    NovelMetadata(
-                        providerId = it.providerId,
-                        novelId = it.novelId,
-                        titleJp = it.titleJp,
-                        titleZh = it.titleZh,
-                        authors = it.authors.map { it.name },
-                        changeAt = it.changeAt.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
-                    )
-                })
-            }
-
-            it("es同步-文库") {
-                val col = mongo.database.getCollection<WenkuNovelMetadataRepository.NovelMetadata>("wenku-metadata")
-                val total = col.find().toList().map {
-                    WenkuNovelIndexRepository.Novel(
-                        id = it.id.toHexString(),
-                        title = it.title,
-                        titleZh = it.titleZh,
-                        titleZhAlias = it.titleZhAlias,
-                        cover = it.cover,
-                        authors = it.authors,
-                        artists = it.artists,
-                        keywords = it.keywords,
-                        updateAt = Clock.System.now().epochSeconds
-                    )
-                }
-                repoWBI.addBunch(total)
-            }
-
             it("sitemap") {
-                val col = mongo.database.getCollection<WebNovelMetadataRepository.NovelMetadata>("metadata")
+                val col = mongo.webNovelMetadataCollection
                 val list = col.find().toList()
                 File("sitemap.txt").printWriter().use { out ->
                     list.forEach {

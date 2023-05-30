@@ -1,7 +1,7 @@
 package api
 
 import infra.UserRepository
-import infra.web.NovelFileLang
+import infra.model.NovelFileLang
 import infra.wenku.WenkuNovelFileRepository
 import infra.wenku.WenkuNovelIndexRepository
 import infra.wenku.WenkuNovelMetadataRepository

@@ -1,8 +1,10 @@
 import api.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import domain.WebNovelUpdateService
 import infra.*
 import infra.ElasticSearchDataSource
+import infra.MongoDataSource
 import infra.wenku.WenkuNovelFileRepository
 import infra.provider.WebNovelProviderDataSource
 import infra.web.*
@@ -121,16 +123,19 @@ val appModule = module {
     }
     single { WebNovelProviderDataSource() }
 
+    // Service
+    single { WebNovelUpdateService(get(), get(), get()) }
+
+    // Repository
+    single { WebNovelMetadataRepository(get(), get(), get()) }
+    single { WebNovelChapterRepository(get(), get()) }
+    single { WebNovelFileRepository(get()) }
+    single { WebNovelPatchHistoryRepository(get()) }
+    single { WebNovelTocMergeHistoryRepository(get()) }
+
     single { WenkuNovelFileRepository(root = Path("./data/files-wenku")) }
     single { WenkuNovelIndexRepository(get()) }
     single { WenkuNovelMetadataRepository(get()) }
-
-    single { WebNovelMetadataRepository(get(), get(), get(), get()) }
-    single { WebChapterRepository(get(), get(), get()) }
-    single { WebNovelPatchHistoryRepository(get()) }
-    single { WebNovelFileRepository(root = Path("./data/files-web")) }
-    single { WebNovelIndexRepository(get()) }
-    single { WebNovelTocMergeHistoryRepository(get()) }
 
     single { CommentRepository(get()) }
     single { UserRepository(get()) }
@@ -143,9 +148,9 @@ val appModule = module {
     single(createdAtStart = true) { CommentService(get()) }
     single(createdAtStart = true) { UserService(get(), get(), get(), get()) }
 
-    single(createdAtStart = true) { WebNovelService(get(), get(), get(), get(), get(), get(), get()) }
-    single(createdAtStart = true) { PatchService(get(), get()) }
-    single(createdAtStart = true) { TocMergeHistoryService(get()) }
+    single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { WebNovelPatchApi(get(), get()) }
+    single(createdAtStart = true) { TocMergeHistoryApi(get()) }
 
     single(createdAtStart = true) { WenkuNovelService(get(), get(), get(), get()) }
 }

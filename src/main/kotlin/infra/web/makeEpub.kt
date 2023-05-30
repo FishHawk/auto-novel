@@ -1,5 +1,9 @@
 package infra.web
 
+import infra.model.NovelFileLang
+import infra.model.WebNovelChapter
+import infra.model.WebNovelMetadata
+import infra.model.WebNovelTocItem
 import util.epub.EpubBook
 import util.epub.Navigation
 import util.epub.createEpubXhtml
@@ -10,8 +14,8 @@ private const val MISSING_EPISODE_HINT = "该章节缺失。"
 suspend fun makeEpubFile(
     filePath: Path,
     lang: NovelFileLang,
-    metadata: WebNovelMetadataRepository.NovelMetadata,
-    episodes: Map<String, WebChapterRepository.NovelChapter>,
+    metadata: WebNovelMetadata,
+    episodes: Map<String, WebNovelChapter>,
 ) {
     val epub = EpubBook()
     val identifier = "${metadata.providerId}.${metadata.novelId}"
@@ -126,8 +130,8 @@ suspend fun makeEpubFile(
 }
 
 private fun tocToNavigationItems(
-    toc: List<WebNovelMetadataRepository.NovelMetadata.TocItem>,
-    title: (WebNovelMetadataRepository.NovelMetadata.TocItem) -> String
+    toc: List<WebNovelTocItem>,
+    title: (WebNovelTocItem) -> String
 ): List<Navigation.Item> {
     var index = 0
     return toc.map {

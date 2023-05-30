@@ -14,6 +14,7 @@ export interface WebNovelListItemDto {
   novelId: string;
   titleJp: string;
   titleZh?: string;
+  extra?: string;
   total: number;
   count: number;
   countBaidu: number;

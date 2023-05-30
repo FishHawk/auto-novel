@@ -17,7 +17,7 @@ class WebNovelProviderDataSource {
         )
     }
 
-    suspend fun getRank(providerId: String, options: Map<String, String>): Result<List<RemoteNovelListItem>> {
+    suspend fun listRank(providerId: String, options: Map<String, String>): Result<List<RemoteNovelListItem>> {
         return runCatching {
             providers[providerId]!!.getRank(options)
         }.onFailure {

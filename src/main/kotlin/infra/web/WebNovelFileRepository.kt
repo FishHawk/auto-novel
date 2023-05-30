@@ -1,65 +1,63 @@
 package infra.web
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import infra.MongoDataSource
+import infra.model.NovelFileLang
+import infra.model.NovelFileType
+import infra.model.WebNovelChapter
+import infra.model.WebNovelMetadata
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
-import kotlin.io.path.*
-
-@Serializable
-enum class NovelFileLang(val value: String) {
-    @SerialName("jp")
-    JP("jp"),
-
-    @SerialName("zh-baidu")
-    ZH_BAIDU("zh-baidu"),
-
-    @SerialName("mix-baidu")
-    MIX_BAIDU("mix-baidu"),
-
-    @SerialName("zh-youdao")
-    ZH_YOUDAO("zh-youdao"),
-
-    @SerialName("mix-youdao")
-    MIX_YOUDAO("mix-youdao")
-}
-
-@Serializable
-enum class NovelFileType(val value: String) {
-    @SerialName("util/epub")
-    EPUB("util/epub"),
-
-    @SerialName("txt")
-    TXT("txt")
-}
+import java.time.ZoneId
+import kotlin.io.path.Path
+import kotlin.io.path.div
+import kotlin.io.path.exists
+import kotlin.io.path.readAttributes
 
 class WebNovelFileRepository(
-    private val root: Path,
+    private val mongo: MongoDataSource,
 ) {
-    private fun buildFilePath(fileName: String) =
-        root / fileName
+    private val root = Path("./data/files-web")
 
     suspend fun makeFile(
-        fileName: String,
+        providerId: String,
+        novelId: String,
         lang: NovelFileLang,
         type: NovelFileType,
-        metadata: WebNovelMetadataRepository.NovelMetadata,
-        episodes: Map<String, WebChapterRepository.NovelChapter>,
-    ) {
-        val filePath = buildFilePath(fileName)
-        when (type) {
-            NovelFileType.EPUB -> makeEpubFile(filePath, lang, metadata, episodes)
-            NovelFileType.TXT -> makeTxtFile(filePath, lang, metadata, episodes)
-        }
-    }
+    ): Path? {
+        val filePath = root / "${providerId}.${novelId}.${lang.value}.${type.value}"
 
-    fun getCreationTime(fileName: String): Instant? {
-        val filePath = buildFilePath(fileName)
-        return if (filePath.exists()) {
-            filePath.readAttributes<BasicFileAttributes>()
+        val novel = mongo
+            .webNovelMetadataCollection
+            .findOne(WebNovelMetadata.byId(providerId, novelId))
+            ?: return null
+
+        val shouldMake = if (filePath.exists()) {
+            val createAt = filePath.readAttributes<BasicFileAttributes>()
                 .creationTime()
                 .toInstant()
-        } else null
+            val updateAt = novel.changeAt
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+            updateAt > createAt
+        } else true
+
+
+        if (shouldMake) {
+            val chapters = novel.toc
+                .mapNotNull { it.chapterId }
+                .mapNotNull { chapterId ->
+                    mongo.webNovelChapterCollection
+                        .findOne(WebNovelChapter.byId(providerId, novelId, chapterId))
+                        ?.let { chapterId to it }
+                }
+                .toMap()
+            when (type) {
+                NovelFileType.EPUB -> makeEpubFile(filePath, lang, novel, chapters)
+                NovelFileType.TXT -> makeTxtFile(filePath, lang, novel, chapters)
+            }
+        }
+
+        return filePath.relativize(root)
     }
 }
