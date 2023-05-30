@@ -20,8 +20,8 @@ class EpubWriter(
     override fun close() = stream.close()
 
     init {
-        writeTextFile("META-INF/container.xml", TEMPLATE_CONTAINER.format(opfPath))
         writeTextFile("mimetype", "application/epub+zip")
+        writeTextFile("META-INF/container.xml", TEMPLATE_CONTAINER.format(opfPath))
     }
 
     private val opfDir
