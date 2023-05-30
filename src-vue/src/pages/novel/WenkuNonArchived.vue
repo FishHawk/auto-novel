@@ -36,15 +36,15 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     return false;
   }
   if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error('文件大小不能超过20MB');
+    message.error('文件大小不能超过40MB');
     return false;
   }
-  if (file.type === 'application/epub+zip') {
-    return true;
-  } else {
-    message.error('只能上传epub格式的文件');
-    return false;
-  }
+  // if (file.type === 'application/epub+zip') {
+  //   return true;
+  // } else {
+  //   message.error('只能上传epub格式的文件');
+  //   return false;
+  // }
 }
 </script>
 
