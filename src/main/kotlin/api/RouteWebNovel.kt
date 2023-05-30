@@ -559,18 +559,13 @@ class WebNovelApi(
         val chapter = novelService.getChapterAndSave(providerId, novelId, chapterId)
             .getOrElse { return httpInternalServerError(it.message) }
 
-        //TODO 还没想好
-//        val glossary = if (translatorId == "baidu") chapter.baiduGlossary else chapter.youdaoGlossary
         return Result.success(
             TranslateChapterDto(
-                glossary = emptyMap(),
+                glossary = if (translatorId == "baidu") chapter.baiduGlossary else chapter.youdaoGlossary,
                 paragraphsJp = chapter.paragraphs,
             )
         )
     }
-
-    @Serializable
-    data class TranslateChapterState(val jp: Long, val zh: Long)
 
     @Serializable
     data class TranslateChapterUpdateBody(

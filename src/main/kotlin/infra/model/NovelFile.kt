@@ -23,8 +23,8 @@ enum class NovelFileLang(val value: String) {
 
 @Serializable
 enum class NovelFileType(val value: String) {
-    @SerialName("util/epub")
-    EPUB("util/epub"),
+    @SerialName("epub")
+    EPUB("epub"),
 
     @SerialName("txt")
     TXT("txt")

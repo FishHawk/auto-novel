@@ -8,10 +8,7 @@ import infra.model.WebNovelMetadata
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.ZoneId
-import kotlin.io.path.Path
-import kotlin.io.path.div
-import kotlin.io.path.exists
-import kotlin.io.path.readAttributes
+import kotlin.io.path.*
 
 class WebNovelFileRepository(
     private val mongo: MongoDataSource,
@@ -57,6 +54,6 @@ class WebNovelFileRepository(
             }
         }
 
-        return filePath.relativize(root)
+        return filePath.relativeTo(root)
     }
 }
