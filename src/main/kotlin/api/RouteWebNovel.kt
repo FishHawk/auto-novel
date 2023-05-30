@@ -243,10 +243,9 @@ class WebNovelApi(
         val novelId = novel.novelId
         val state = chapterRepo.findState(providerId, novelId)
             ?: throw RuntimeException("Should not reach")
-        val favored = username
-            ?.let { userRepo.getByUsername(it) }
-            ?.favoriteBooks
-            ?.any { it.providerId == providerId && it.novelId == novelId }
+        val favored = username?.let {
+            userRepo.isUserFavoriteWebNovel(it, novel.id.toHexString())
+        }
         return WebNovelDto.fromDomain(novel, state, favored)
     }
 

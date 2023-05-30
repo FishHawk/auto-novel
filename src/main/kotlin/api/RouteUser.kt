@@ -15,6 +15,7 @@ import io.ktor.server.resources.*
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import kotlin.system.measureTimeMillis
 
 @Resource("/user")
 private class UserRes {
@@ -111,15 +112,11 @@ class UserApi(
         page: Int,
         pageSize: Int,
     ): Result<PageDto<WebNovelOutlineDto>> {
-        val novelIds = userRepo.listFavoriteWebNovel(username)
-            ?: return httpNotFound("用户不存在")
-        val items = novelIds
-            .asSequence()
-            .drop(page * pageSize)
-            .take(pageSize)
-            .toList()
-            .mapNotNull { webRepo.get(it.providerId, it.novelId) }
-        val novelPage = Page(items = items, total = novelIds.size.toLong())
+        val novelPage = userRepo.listFavoriteWebNovel(
+            username = username,
+            page = page,
+            pageSize = pageSize,
+        )
         val dto = PageDto.fromPage(novelPage, pageSize) { outline ->
             val state = webChapterRepo.findState(outline.providerId, outline.novelId)
             WebNovelOutlineDto.fromDomain(outline, state)
@@ -128,13 +125,11 @@ class UserApi(
     }
 
     suspend fun setFavoriteWebBook(username: String, providerId: String, novelId: String): Result<Unit> {
-        if (!webRepo.exist(providerId, novelId)) {
-            return httpNotFound("书不存在")
-        }
+        val id = webRepo.get(providerId, novelId)?.id
+            ?: return httpNotFound("书不存在")
         val updateResult = userRepo.addFavoriteWebNovel(
             username = username,
-            providerId = providerId,
-            novelId = novelId,
+            novelId = id.toHexString(),
         )
         return if (updateResult.matchedCount == 0L) {
             httpNotFound("用户不存在")
@@ -144,13 +139,11 @@ class UserApi(
     }
 
     suspend fun removeFavoriteWebBook(username: String, providerId: String, novelId: String): Result<Unit> {
-        if (!webRepo.exist(providerId, novelId)) {
-            return httpNotFound("书不存在")
-        }
+        val id = webRepo.get(providerId, novelId)?.id
+            ?: return httpNotFound("书不存在")
         val updateResult = userRepo.removeFavoriteWebNovel(
             username = username,
-            providerId = providerId,
-            novelId = novelId,
+            novelId = id.toHexString(),
         )
         return if (updateResult.matchedCount == 0L) {
             httpNotFound("用户不存在")
@@ -164,15 +157,11 @@ class UserApi(
         page: Int,
         pageSize: Int,
     ): Result<PageDto<WenkuNovelOutlineDto>> {
-        val novelIds = userRepo.listFavoriteWenkuNovel(username)
-            ?: return httpNotFound("用户不存在")
-        val items = novelIds
-            .asSequence()
-            .drop(page * pageSize)
-            .take(pageSize)
-            .toList()
-            .mapNotNull { wenkuRepo.findOne(it) }
-        val novelPage = Page(items = items, total = novelIds.size.toLong())
+        val novelPage = userRepo.listFavoriteWenkuNovel(
+            username = username,
+            page = page,
+            pageSize = pageSize,
+        )
         val dto = PageDto.fromPage(novelPage, pageSize) {
             WenkuNovelOutlineDto.fromDomain(it)
         }

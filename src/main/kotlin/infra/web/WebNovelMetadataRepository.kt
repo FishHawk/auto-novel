@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.bson.conversions.Bson
+import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import util.Optional
 import java.time.LocalDateTime
@@ -102,12 +103,12 @@ class WebNovelMetadataRepository(
     suspend fun getRemote(
         providerId: String,
         novelId: String,
-        shouldInsert: Boolean,
     ): Result<WebNovelMetadata> {
         val remote = provider
             .getMetadata(providerId, novelId)
             .getOrElse { return Result.failure(it) }
         val model = WebNovelMetadata(
+            id = ObjectId(),
             providerId = providerId,
             novelId = novelId,
             titleJp = remote.title,
@@ -115,13 +116,30 @@ class WebNovelMetadataRepository(
             introductionJp = remote.introduction,
             toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId) },
         )
-        if (shouldInsert) {
-            mongo
-                .webNovelMetadataCollection
-                .insertOne(model)
-            syncEs(model, true)
-        }
         return Result.success(model)
+    }
+
+    suspend fun getRemoteAndSave(
+        providerId: String,
+        novelId: String,
+    ): Result<WebNovelMetadata> {
+        val remote = provider
+            .getMetadata(providerId, novelId)
+            .getOrElse { return Result.failure(it) }
+        val model = WebNovelMetadata(
+            id = ObjectId(),
+            providerId = providerId,
+            novelId = novelId,
+            titleJp = remote.title,
+            authors = remote.authors.map { WebNovelAuthor(it.name, it.link) },
+            introductionJp = remote.introduction,
+            toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId) },
+        )
+        mongo
+            .webNovelMetadataCollection
+            .insertOne(model)
+        syncEs(model, true)
+        return Result.success(get(providerId, novelId)!!)
     }
 
     suspend fun exist(providerId: String, novelId: String): Boolean {

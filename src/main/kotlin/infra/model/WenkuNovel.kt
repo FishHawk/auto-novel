@@ -7,6 +7,7 @@ import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
 
+@Serializable
 data class WenkuNovelMetadataOutline(
     val id: String,
     val title: String,

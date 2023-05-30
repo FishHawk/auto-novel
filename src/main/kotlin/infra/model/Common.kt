@@ -3,6 +3,7 @@ package infra.model
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.litote.kmongo.Id
 import org.litote.kmongo.eq
 import java.time.LocalDateTime
 
@@ -10,6 +11,8 @@ data class Page<T>(
     val items: List<T>,
     val total: Long,
 )
+
+fun <T> emptyPage() = Page<T>(items = emptyList(), total = 0L)
 
 @Serializable
 data class CommentView(
@@ -34,6 +37,9 @@ data class User(
     @Contextual val createdAt: LocalDateTime,
     val favoriteBooks: List<FavoriteBook> = emptyList(),
     val favoriteWenkuBooks: List<String> = emptyList(),
+
+    val favoriteWebNovels: List<@Contextual Id<WebNovelMetadata>> = emptyList(),
+    val favoriteWenkuNovels: List<@Contextual Id<WenkuNovelMetadata>> = emptyList(),
 ) {
     @Serializable
     enum class Role {

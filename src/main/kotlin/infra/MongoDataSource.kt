@@ -9,8 +9,6 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
-import util.PBKDF2
-import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -73,8 +71,9 @@ class MongoDataSource(url: String) {
     }
 
     //
+    val webNovelMetadataCollectionName = "metadata"
     val webNovelMetadataCollection
-        get() = database.getCollection<WebNovelMetadata>("metadata")
+        get() = database.getCollection<WebNovelMetadata>(webNovelMetadataCollectionName)
 
     init {
         runBlocking {
@@ -114,6 +113,7 @@ class MongoDataSource(url: String) {
         get() = database.getCollection<WebNovelTocMergeHistory>("toc-merge-history")
 
     //
+    val wenkuNovelMetadataCollectionName = "wenku-metadata"
     val wenkuNovelMetadataCollection
-        get() = database.getCollection<WenkuNovelMetadata>("wenku-metadata")
+        get() = database.getCollection<WenkuNovelMetadata>(wenkuNovelMetadataCollectionName)
 }

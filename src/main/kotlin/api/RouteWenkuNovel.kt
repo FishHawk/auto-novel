@@ -25,7 +25,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.io.InputStream
-import java.lang.RuntimeException
 
 @Resource("/wenku")
 private class WenkuNovelRes {
@@ -215,7 +214,10 @@ class WenkuNovelApi(
         novelId: String,
         username: String?,
     ): Result<WenkuNovelDto> {
-        val user = username?.let { userRepo.getByUsername(it) }
+        val favored = username?.let {
+            userRepo.isUserFavoriteWenkuNovel(it, novelId)
+        }
+
         val metadata = metadataRepo.findOneAndIncreaseVisited(novelId)
             ?: return httpNotFound("书不存在")
 
@@ -236,7 +238,7 @@ class WenkuNovelApi(
             keywords = metadata.keywords,
             introduction = metadata.introduction,
             visited = metadata.visited,
-            favored = user?.favoriteWenkuBooks?.contains(novelId),
+            favored = favored,
             volumeZh = volumes.zh,
             volumeJp = volumeJp,
         )

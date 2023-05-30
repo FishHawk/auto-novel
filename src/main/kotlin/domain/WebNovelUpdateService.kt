@@ -23,7 +23,7 @@ class WebNovelUpdateService(
     ): Result<WebNovelMetadata> {
         // 不在数据库中
         val novelLocal = novelRepo.get(providerId, novelId)
-            ?: return novelRepo.getRemote(providerId, novelId, true)
+            ?: return novelRepo.getRemoteAndSave(providerId, novelId)
 
         // 在数据库中，暂停更新
         if (novelLocal.pauseUpdate) {
@@ -38,7 +38,7 @@ class WebNovelUpdateService(
         }
 
         // 在数据库中，过期，合并
-        val remoteNovel = novelRepo.getRemote(providerId, novelId, false)
+        val remoteNovel = novelRepo.getRemote(providerId, novelId)
             .getOrElse { return Result.failure(it) }
         val merged = mergeNovel(
             providerId = providerId,

@@ -4,20 +4,24 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
+import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import java.time.LocalDateTime
 
+@Serializable
 data class WebNovelMetadataOutline(
     val providerId: String,
+    @SerialName("bookId")
     val novelId: String,
     val titleJp: String,
     val titleZh: String?,
-    val extra: String?,
+    val extra: String? = null,
 )
 
 @Serializable
 class WebNovelMetadata(
+    @Contextual @SerialName("_id") val id: ObjectId,
     val providerId: String,
     @SerialName("bookId")
     val novelId: String,

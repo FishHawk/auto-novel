@@ -2,14 +2,21 @@ package infra
 
 import appModule
 import infra.model.NovelFileLang
+import infra.model.User
+import infra.model.WebNovelMetadata
+import infra.model.WenkuNovelMetadata
 import infra.web.*
 import infra.wenku.WenkuNovelFileRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
+import org.bson.types.ObjectId
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
+import org.litote.kmongo.combine
+import org.litote.kmongo.id.toId
+import org.litote.kmongo.setValue
 import java.io.File
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
@@ -18,13 +25,33 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val es by inject<ElasticSearchDataSource>(ElasticSearchDataSource::class.java)
     private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
 
-    private val repoE by inject<WebNovelChapterRepository>(WebNovelChapterRepository::class.java)
+    private val repoWNC by inject<WebNovelChapterRepository>(WebNovelChapterRepository::class.java)
+    private val repoWNM by inject<WebNovelMetadataRepository>(WebNovelMetadataRepository::class.java)
     private val repoTMH by inject<WebNovelTocMergeHistoryRepository>(WebNovelTocMergeHistoryRepository::class.java)
-
-    private val repoWBM by inject<WenkuNovelMetadataRepository>(WenkuNovelMetadataRepository::class.java)
 
     init {
         describe("test") {
+            val users = mongo.userCollection.find().toList()
+//            users.filter { it.favoriteWenkuBooks.isNotEmpty() }
+//                .map {
+//                    val ids = it.favoriteWenkuBooks.map { ObjectId(it).toId<WenkuNovelMetadata>() }
+//                    mongo.userCollection.updateOne(
+//                        User.byUsername(it.username),
+//                        setValue(User::favoriteWenkuNovels, ids),
+//                    )
+//                }
+
+//            users.filter { it.favoriteBooks.isNotEmpty() }
+//                .map {
+//                    val ids = it.favoriteBooks.map {
+//                        val id = repoWNM.get(it.providerId, it.novelId)!!.id
+//                        id.toId<WebNovelMetadata>()
+//                    }
+//                    mongo.userCollection.updateOne(
+//                        User.byUsername(it.username),
+//                        setValue(User::favoriteWebNovels, ids),
+//                    )
+//                }
         }
 
         describe("kmongo issue 415") {
