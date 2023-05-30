@@ -15,7 +15,7 @@ suspend fun makeEpubFile(
     filePath: Path,
     lang: NovelFileLang,
     metadata: WebNovelMetadata,
-    episodes: Map<String, WebNovelChapter>,
+    chapters: Map<String, WebNovelChapter>,
 ) {
     val epub = EpubBook()
     val identifier = "${metadata.providerId}.${metadata.novelId}"
@@ -57,14 +57,14 @@ suspend fun makeEpubFile(
     metadata.toc.filter { it.chapterId != null }.forEachIndexed { index, token ->
         val id = "episode${index + 1}.xhtml"
         val path = "Text/$id"
-        val episode = episodes[token.chapterId]
+        val chapter = chapters[token.chapterId]
         val resource = when (lang) {
             NovelFileLang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
                 it.appendElement("h1").appendText(token.titleJp)
-                if (episode == null) {
+                if (chapter == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    episode.paragraphs.forEach { text ->
+                    chapter.paragraphs.forEach { text ->
                         it.appendElement("p").appendText(text)
                     }
                 }
@@ -78,9 +78,9 @@ suspend fun makeEpubFile(
             ) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
                 val paragraphs = if (lang == NovelFileLang.ZH_BAIDU) {
-                    episode?.baiduParagraphs
+                    chapter?.baiduParagraphs
                 } else {
-                    episode?.youdaoParagraphs
+                    chapter?.youdaoParagraphs
                 }
                 if (paragraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
@@ -105,14 +105,14 @@ suspend fun makeEpubFile(
                         .attr("style", "opacity:0.4;")
                 }
                 val paragraphs = if (lang == NovelFileLang.MIX_BAIDU) {
-                    episode?.baiduParagraphs
+                    chapter?.baiduParagraphs
                 } else {
-                    episode?.youdaoParagraphs
+                    chapter?.youdaoParagraphs
                 }
-                if (episode == null || paragraphs == null) {
+                if (chapter == null || paragraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 } else {
-                    paragraphs.zip(episode.paragraphs).forEach { (textZh, textJp) ->
+                    paragraphs.zip(chapter.paragraphs).forEach { (textZh, textJp) ->
                         if (textJp.isBlank()) {
                             it.appendElement("p").appendText(textJp)
                         } else {

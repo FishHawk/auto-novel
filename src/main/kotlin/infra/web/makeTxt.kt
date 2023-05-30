@@ -1,9 +1,6 @@
 package infra.web
 
-import infra.model.NovelFileLang
-import infra.model.WebNovelChapter
-import infra.model.WebNovelMetadata
-import infra.model.WebNovelTocItem
+import infra.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
@@ -16,35 +13,37 @@ suspend fun makeTxtFile(
     filePath: Path,
     lang: NovelFileLang,
     metadata: WebNovelMetadata,
-    episodes: Map<String, WebNovelChapter>,
+    chapters: Map<String, WebNovelChapter>,
 ) {
     withContext(Dispatchers.IO) {
         if (filePath.notExists()) {
             filePath.createFile()
         }
         filePath.bufferedWriter().use {
-            val writer: TxtWriter = when (lang) {
-                NovelFileLang.JP -> TxtMakerJp
-                NovelFileLang.ZH_BAIDU -> TxtMakerZh { ep -> ep.baiduParagraphs }
-                NovelFileLang.ZH_YOUDAO -> TxtMakerZh { ep -> ep.youdaoParagraphs }
-                NovelFileLang.MIX_BAIDU -> TxtMakerMix(TxtMakerZh { ep -> ep.baiduParagraphs })
-                NovelFileLang.MIX_YOUDAO -> TxtMakerMix(TxtMakerZh { ep -> ep.youdaoParagraphs })
+            with(TxtWriter(lang)) {
+                it.writeNovel(metadata, chapters)
             }
-            with(it) { with(writer) { writeBook(metadata, episodes) } }
         }
     }
 }
 
-private const val MISSING_EPISODE_HINT = "该章节缺失。\n\n"
+private class TxtWriter(
+    private val lang: NovelFileLang,
+) {
+    private val jp = lang != NovelFileLang.ZH_BAIDU && lang != NovelFileLang.ZH_YOUDAO
+    private val zh = lang != NovelFileLang.JP
 
-private abstract class TxtWriter {
-    abstract fun BufferedWriter.writeTitle(metadata: WebNovelMetadata)
-    abstract fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadata)
-    abstract fun BufferedWriter.writeTocItemTitle(item: WebNovelTocItem)
-    abstract fun BufferedWriter.writeEpisode(episode: WebNovelChapter)
+    companion object {
+        private const val MISSING_EPISODE_HINT = "该章节缺失。\n\n"
+    }
 
-    fun BufferedWriter.writeAuthor(metadata: WebNovelMetadata) {
-        metadata.authors.forEach { author ->
+    private fun BufferedWriter.writeTitle(novel: WebNovelMetadata) {
+        if (jp) write(novel.titleJp + "\n")
+        if (zh) write(novel.titleZh + "\n")
+    }
+
+    private fun BufferedWriter.writeAuthor(novel: WebNovelMetadata) {
+        novel.authors.forEach { author ->
             write(author.name)
             if (author.link != null) {
                 write("[${author.link}]")
@@ -53,118 +52,90 @@ private abstract class TxtWriter {
         }
     }
 
-    fun BufferedWriter.writeMissingEpisode() {
+    private fun BufferedWriter.writeIntroduction(novel: WebNovelMetadata) {
+        if (jp && novel.introductionJp.isNotBlank()) {
+            write(novel.introductionJp)
+            write("\n")
+        }
+        if (zh && !novel.introductionZh.isNullOrBlank()) {
+            write(novel.introductionZh)
+            write("\n")
+        }
+    }
+
+    private fun BufferedWriter.writeTocItemTitle(item: WebNovelTocItem) {
+        if (jp) write("# ${item.titleJp}\n")
+        if (zh) write("# ${item.titleZh ?: item.titleJp}\n")
+    }
+
+    private fun BufferedWriter.writeMissingEpisode() {
         write(MISSING_EPISODE_HINT)
     }
 
-    fun BufferedWriter.writeBook(
-        metadata: WebNovelMetadata,
-        episodes: Map<String, WebNovelChapter>,
+    private fun BufferedWriter.writeOneParagraph(
+        p: List<String>?,
     ) {
-        writeTitle(metadata)
+        if (p == null) {
+            writeMissingEpisode()
+        } else {
+            p.forEach { write(it + "\n") }
+        }
+    }
+
+    private fun BufferedWriter.writeTwoParagraph(
+        pJp: List<String>,
+        pZh: List<String>?,
+    ) {
+        if (pZh == null) {
+            writeMissingEpisode()
+        } else {
+            pJp.zip(pZh).forEach { (tZh, tJp) ->
+                if (tZh.isNotBlank()) {
+                    write(tJp + "\n")
+                    write(tZh + "\n")
+                } else {
+                    write(tZh + "\n")
+                }
+            }
+        }
+    }
+
+    private fun BufferedWriter.writeChapter(
+        chapter: WebNovelChapter,
+    ) {
+        when (lang) {
+            NovelFileLang.JP -> writeOneParagraph(chapter.paragraphs)
+            NovelFileLang.ZH_BAIDU -> writeOneParagraph(chapter.baiduParagraphs)
+            NovelFileLang.ZH_YOUDAO -> writeOneParagraph(chapter.youdaoParagraphs)
+            NovelFileLang.MIX_BAIDU -> writeTwoParagraph(chapter.paragraphs, chapter.baiduParagraphs)
+            NovelFileLang.MIX_YOUDAO -> writeTwoParagraph(chapter.paragraphs, chapter.youdaoParagraphs)
+        }
+    }
+
+    fun BufferedWriter.writeNovel(
+        novel: WebNovelMetadata,
+        chapters: Map<String, WebNovelChapter>,
+    ) {
+        writeTitle(novel)
         write("\n")
-        writeAuthor(metadata)
+        writeAuthor(novel)
         write("\n")
         write("#".repeat(12) + "\n")
-        writeIntroduction(metadata)
+        writeIntroduction(novel)
         write("\n\n\n")
 
-        metadata.toc.forEach { item ->
+        novel.toc.forEach { item ->
             writeTocItemTitle(item)
             write("\n")
 
             if (item.chapterId != null) {
-                val episode = episodes[item.chapterId]
-                if (episode == null) {
+                val chapter = chapters[item.chapterId]
+                if (chapter == null) {
                     writeMissingEpisode()
                 } else {
-                    writeEpisode(episode)
+                    writeChapter(chapter)
                 }
                 write("\n\n\n")
-            }
-        }
-    }
-}
-
-private object TxtMakerJp : TxtWriter() {
-    override fun BufferedWriter.writeTitle(metadata: WebNovelMetadata) {
-        write(metadata.titleJp + "\n")
-    }
-
-    override fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadata) {
-        if (metadata.introductionJp.isNotBlank()) {
-            write(metadata.introductionJp)
-            write("\n")
-        }
-    }
-
-    override fun BufferedWriter.writeTocItemTitle(item: WebNovelTocItem) {
-        write("# ${item.titleJp}\n")
-    }
-
-    override fun BufferedWriter.writeEpisode(episode: WebNovelChapter) {
-        episode.paragraphs.forEach { text -> write(text + "\n") }
-    }
-}
-
-private class TxtMakerZh(
-    val getParagraphs: (WebNovelChapter) -> List<String>?
-) : TxtWriter() {
-    override fun BufferedWriter.writeTitle(metadata: WebNovelMetadata) {
-        write((metadata.titleZh ?: metadata.titleJp) + "\n")
-    }
-
-    override fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadata) {
-        if (!metadata.introductionZh.isNullOrBlank()) {
-            write(metadata.introductionZh)
-            write("\n")
-        }
-    }
-
-    override fun BufferedWriter.writeTocItemTitle(item: WebNovelTocItem) {
-        write("# ${item.titleZh ?: item.titleJp}\n")
-    }
-
-    override fun BufferedWriter.writeEpisode(episode: WebNovelChapter) {
-        val paragraphs = getParagraphs(episode)
-        if (paragraphs == null) {
-            writeMissingEpisode()
-        } else {
-            paragraphs.forEach { text -> write(text + "\n") }
-        }
-    }
-}
-
-private class TxtMakerMix(
-    private val txtMakerZh: TxtMakerZh,
-) : TxtWriter() {
-    override fun BufferedWriter.writeTitle(metadata: WebNovelMetadata) {
-        with(TxtMakerJp) { writeTitle(metadata) }
-        with(txtMakerZh) { writeTitle(metadata) }
-    }
-
-    override fun BufferedWriter.writeIntroduction(metadata: WebNovelMetadata) {
-        with(TxtMakerJp) { writeIntroduction(metadata) }
-        with(txtMakerZh) { writeIntroduction(metadata) }
-    }
-
-    override fun BufferedWriter.writeTocItemTitle(item: WebNovelTocItem) {
-        with(TxtMakerJp) { writeTocItemTitle(item) }
-        with(txtMakerZh) { writeTocItemTitle(item) }
-    }
-
-    override fun BufferedWriter.writeEpisode(episode: WebNovelChapter) {
-        val paragraphsZh = txtMakerZh.getParagraphs(episode)
-        if (paragraphsZh == null) {
-            writeMissingEpisode()
-        } else {
-            episode.paragraphs.zip(paragraphsZh).forEach { (textJp, textZh) ->
-                if (textJp.isNotBlank()) {
-                    write(textZh + "\n")
-                    write(textJp + "\n")
-                } else {
-                    write(textJp + "\n")
-                }
             }
         }
     }
