@@ -585,7 +585,7 @@ class WebNovelApi(
         chapterId: String,
         translatorId: String,
         body: TranslateChapterUpdateBody,
-    ): Result<TranslateChapterState> {
+    ): Result<Long> {
         val realTranslatorId = when (translatorId) {
             "baidu" -> TranslatorId.Baidu
             "youdao" -> TranslatorId.Youdao
@@ -624,14 +624,12 @@ class WebNovelApi(
         novelRepo.updateChangeAt(providerId, novelId)
 
         val translationState = chapterRepo.findState(providerId, novelId)!!
-        val translateState = TranslateChapterState(
-            jp = translationState.jp,
-            zh = when (realTranslatorId) {
+        return Result.success(
+            when (realTranslatorId) {
                 TranslatorId.Baidu -> translationState.baidu
                 TranslatorId.Youdao -> translationState.youdao
-            },
+            }
         )
-        return Result.success(translateState)
     }
 
     @Serializable
@@ -646,7 +644,7 @@ class WebNovelApi(
         chapterId: String,
         translatorId: String,
         body: TranslateChapterUpdatePartlyBody,
-    ): Result<TranslateChapterState> {
+    ): Result<Long> {
         val realTranslatorId = when (translatorId) {
             "baidu" -> TranslatorId.Baidu
             "youdao" -> TranslatorId.Youdao
@@ -679,14 +677,12 @@ class WebNovelApi(
         novelRepo.updateChangeAt(providerId, novelId)
 
         val translationState = chapterRepo.findState(providerId, novelId)!!
-        val translateState = TranslateChapterState(
-            jp = translationState.jp,
-            zh = when (realTranslatorId) {
+        return Result.success(
+            when (realTranslatorId) {
                 TranslatorId.Baidu -> translationState.baidu
                 TranslatorId.Youdao -> translationState.youdao
-            },
+            }
         )
-        return Result.success(translateState)
     }
 
     suspend fun updateFile(

@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { WenkuListPageDto } from '@/data/api/api_wenku_novel';
+import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
 
 defineProps<{
-  page: WenkuListPageDto;
+  items: WenkuNovelOutlineDto[];
 }>();
 </script>
 
 <template>
   <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
-    <n-grid-item v-for="item in page.items">
+    <n-grid-item v-for="item in items">
       <n-a :href="`/wenku/${item.id}`" target="_blank">
         <ImageCard
           :src="item.cover"

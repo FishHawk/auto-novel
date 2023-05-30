@@ -3,13 +3,9 @@ import ky, { Options } from 'ky';
 import api from './api';
 import { Ok, Result, runCatching } from './result';
 import { translate } from './api_wenku_novel_translate';
+import { Page } from './page';
 
-export interface WenkuListPageDto {
-  pageNumber: number;
-  items: WenkuListItemDto[];
-}
-
-export interface WenkuListItemDto {
+export interface WenkuNovelOutlineDto {
   id: string;
   title: string;
   titleZh: string;
@@ -19,7 +15,7 @@ export interface WenkuListItemDto {
 async function list(
   page: number,
   query: string
-): Promise<Result<WenkuListPageDto>> {
+): Promise<Result<Page<WenkuNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`wenku/list`, {

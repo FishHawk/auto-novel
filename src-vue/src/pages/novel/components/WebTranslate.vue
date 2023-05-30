@@ -15,14 +15,12 @@ const props = defineProps<{
   providerId: string;
   novelId: string;
   total: number;
-  jp: number;
   baidu: number;
   youdao: number;
   glossary: { [key: string]: string };
 }>();
 
 const emits = defineEmits<{
-  (e: 'update:jp', v: number): void;
   (e: 'update:baidu', v: number): void;
   (e: 'update:youdao', v: number): void;
 }>();
@@ -63,11 +61,9 @@ async function startUpdateTask(translatorId: TranslatorId) {
       },
       onChapterTranslateSuccess: (state) => {
         if (translatorId === 'baidu') {
-          emits('update:jp', state.jp);
-          emits('update:baidu', state.zh);
+          emits('update:baidu', state);
         } else {
-          emits('update:jp', state.jp);
-          emits('update:youdao', state.zh);
+          emits('update:youdao', state);
         }
         progress.value!.finished += 1;
       },
@@ -117,11 +113,6 @@ function stateToFileList(): NovelFiles[] {
   }
 
   return [
-    {
-      label: `日文(${props.jp}/${props.total})`,
-      translatorId: 'jp',
-      files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
-    },
     {
       label: `百度(${props.baidu}/${props.total})`,
       translatorId: 'baidu',

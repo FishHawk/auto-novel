@@ -5,8 +5,11 @@ import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
 
 import ApiUser from '@/data/api/api_user';
-import { ApiWebNovel, WebNovelListItemDto } from '@/data/api/api_web_novel';
-import { ApiWenkuNovel, WenkuListItemDto } from '@/data/api/api_wenku_novel';
+import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
+import {
+  ApiWenkuNovel,
+  WenkuNovelOutlineDto,
+} from '@/data/api/api_wenku_novel';
 import { parseUrl } from '@/data/provider';
 import { Ok, ResultState } from '@/data/api/result';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
@@ -38,7 +41,7 @@ function query(url: string) {
 }
 
 const authInfoStore = useAuthInfoStore();
-const favoriteList = ref<ResultState<WebNovelListItemDto[]>>();
+const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadFavorite() {
   const result = await ApiUser.listFavoritedWebNovel(
     0,
@@ -53,7 +56,7 @@ async function loadFavorite() {
 }
 onMounted(loadFavorite);
 
-const latestUpdateWeb = ref<ResultState<WebNovelListItemDto[]>>();
+const latestUpdateWeb = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadLatestUpdateWeb() {
   const result = await ApiWebNovel.list(0, 8, '', '');
   if (result.ok) {
@@ -64,7 +67,7 @@ async function loadLatestUpdateWeb() {
 }
 onMounted(loadLatestUpdateWeb);
 
-const latestUpdateWenku = ref<ResultState<WenkuListItemDto[]>>();
+const latestUpdateWenku = ref<ResultState<WenkuNovelOutlineDto[]>>();
 async function loadLatestUpdateWenku() {
   const result = await ApiWenkuNovel.list(0, '');
   if (result.ok) {

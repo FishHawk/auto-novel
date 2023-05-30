@@ -7,7 +7,6 @@ import api.dto.WenkuNovelOutlineDto
 import infra.UserRepository
 import infra.model.NovelFileLang
 import infra.model.TranslatorId
-import infra.wenku.WenkuNovelFileRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*

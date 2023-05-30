@@ -3,22 +3,17 @@ import { Options } from 'ky';
 import api from './api';
 import { Result, runCatching } from './result';
 import { translate } from './api_web_novel_translate';
+import { Page } from './page';
 
-export interface WebNovelListPageDto {
-  pageNumber: number;
-  items: WebNovelListItemDto[];
-}
-
-export interface WebNovelListItemDto {
+export interface WebNovelOutlineDto {
   providerId: string;
   novelId: string;
   titleJp: string;
   titleZh?: string;
   extra?: string;
-  total: number;
-  count: number;
-  countBaidu: number;
-  countYoudao: number;
+  total?: number;
+  baidu?: number;
+  youdao?: number;
 }
 
 async function list(
@@ -26,7 +21,7 @@ async function list(
   pageSize: number,
   provider: string,
   query: string
-): Promise<Result<WebNovelListPageDto>> {
+): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`novel/list`, {
@@ -36,23 +31,10 @@ async function list(
   );
 }
 
-export interface WebNovelRankPageDto {
-  pageNumber: number;
-  items: WebNovelRankItemDto[];
-}
-
-export interface WebNovelRankItemDto {
-  providerId: string;
-  novelId: string;
-  titleJp: string;
-  titleZh?: string;
-  extra: string;
-}
-
 async function listRank(
   providerId: string,
   options: { [key: string]: string }
-): Promise<Result<WebNovelListPageDto>> {
+): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`novel/rank/${providerId}`, {
@@ -82,7 +64,6 @@ export interface WebNovelMetadataDto {
   syncAt: number;
   favored?: boolean;
   translateState: {
-    jp: number;
     baidu: number;
     youdao: number;
   };

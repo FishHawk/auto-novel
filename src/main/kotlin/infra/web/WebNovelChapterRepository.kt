@@ -76,7 +76,7 @@ class WebNovelChapterRepository(
                 and(
                     WebNovelChapter::providerId eq providerId,
                     WebNovelChapter::novelId eq novelId,
-                    WebNovelChapter::baiduParagraphs ne null,
+                    WebNovelChapter::youdaoParagraphs ne null,
                 )
             )
     }
@@ -88,7 +88,6 @@ class WebNovelChapterRepository(
         val total = countTotal(providerId, novelId) ?: return null
         return TranslationState(
             total = total,
-            jp = countJp(providerId, novelId),
             baidu = countBaidu(providerId, novelId),
             youdao = countYoudao(providerId, novelId),
         )

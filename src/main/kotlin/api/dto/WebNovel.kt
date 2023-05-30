@@ -12,9 +12,8 @@ data class WebNovelOutlineDto(
     val titleZh: String?,
     val extra: String?,
     val total: Long?,
-    val count: Long?,
-    val countBaidu: Long?,
-    val countYoudao: Long?,
+    val baidu: Long?,
+    val youdao: Long?,
 ) {
     companion object {
         fun fromDomain(
@@ -27,9 +26,8 @@ data class WebNovelOutlineDto(
             titleZh = outline.titleZh,
             extra = outline.extra,
             total = state?.total,
-            count = state?.jp,
-            countBaidu = state?.baidu,
-            countYoudao = state?.youdao,
+            baidu = state?.baidu,
+            youdao = state?.youdao,
         )
 
         fun fromDomain(
@@ -42,9 +40,8 @@ data class WebNovelOutlineDto(
             titleZh = outline.titleZh,
             extra = null,
             total = state?.total,
-            count = state?.jp,
-            countBaidu = state?.baidu,
-            countYoudao = state?.youdao,
+            baidu = state?.baidu,
+            youdao = state?.youdao,
         )
     }
 }
@@ -118,14 +115,12 @@ data class WebNovelTocItemDto(
 
 @Serializable
 data class TranslationStateDto(
-    val jp: Long,
     val baidu: Long,
     val youdao: Long,
 ) {
     companion object {
         fun fromDomain(domain: TranslationState) =
             TranslationStateDto(
-                jp = domain.jp,
                 baidu = domain.baidu,
                 youdao = domain.youdao,
             )

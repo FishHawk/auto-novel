@@ -1,25 +1,59 @@
 import api from './api';
+import { WebNovelTocItemDto } from './api_web_novel';
+import { Page } from './page';
 import { Result, runCatching } from './result';
 
-export interface WebNovelPatchHistoryPageItemDto {
+// Toc merge
+export interface TocMergeHistoryOutlineDto {
+  id: string;
+  providerId: string;
+  novelId: string;
+  reason: string;
+}
+
+async function listTocMergeHistory(
+  page: number
+): Promise<Result<Page<TocMergeHistoryOutlineDto>>> {
+  return runCatching(
+    api.get(`toc-merge/list`, { searchParams: { page } }).json()
+  );
+}
+
+export type TocMergeHistoryDto = TocMergeHistoryOutlineDto & {
+  tocOld: WebNovelTocItemDto[];
+  tocNew: WebNovelTocItemDto[];
+};
+
+async function getTocMergeHistory(
+  id: string
+): Promise<Result<TocMergeHistoryDto>> {
+  return runCatching(api.get(`toc-merge/item/${id}`).json());
+}
+
+async function deleteMergeHistory(
+  id: string,
+  token: string
+): Promise<Result<string>> {
+  return runCatching(
+    api
+      .delete(`toc-merge/item/${id}`, {
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .text()
+  );
+}
+
+// Patch
+export interface WebNovelPatchHistoryOutlineDto {
   providerId: string;
   novelId: string;
   titleJp: string;
   titleZh?: string;
 }
 
-export interface WebNovelPatchHistoryPageDto {
-  total: number;
-  items: WebNovelPatchHistoryPageItemDto[];
-}
-
-export interface WebNovelPatchHistoryDto {
-  providerId: string;
-  novelId: string;
-  titleJp: string;
-  titleZh?: string;
+export type WebNovelPatchHistoryDto = WebNovelPatchHistoryOutlineDto & {
   patches: WebNovelPatchDto[];
-}
+};
 
 interface TextChange {
   jp: string;
@@ -38,7 +72,7 @@ interface WebNovelPatchDto {
 
 async function listPatch(
   page: number
-): Promise<Result<WebNovelPatchHistoryPageDto>> {
+): Promise<Result<Page<WebNovelPatchHistoryOutlineDto>>> {
   return runCatching(api.get(`patch/list`, { searchParams: { page } }).json());
 }
 
@@ -77,7 +111,11 @@ async function revokePatch(
   );
 }
 
-export default {
+export const ApiWebNovelHistory = {
+  listTocMergeHistory,
+  getTocMergeHistory,
+  deleteMergeHistory,
+  //
   listPatch,
   getPatch,
   deletePatch,

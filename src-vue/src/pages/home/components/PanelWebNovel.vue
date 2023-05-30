@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ResultState } from '@/data/api/result';
-import { WebNovelListItemDto } from '@/data/api/api_web_novel';
+import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
 
 defineProps<{
-  list: ResultState<WebNovelListItemDto[]>;
+  list: ResultState<WebNovelOutlineDto[]>;
 }>();
 </script>
 
@@ -19,9 +19,7 @@ defineProps<{
         >
         <div class="text-2line">{{ item.titleZh }}</div>
         <div style="color: #666">
-          总计{{ item.total }} / 百度{{ item.countBaidu }} / 有道{{
-            item.countYoudao
-          }}
+          总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }}
         </div>
       </n-grid-item>
     </n-grid>

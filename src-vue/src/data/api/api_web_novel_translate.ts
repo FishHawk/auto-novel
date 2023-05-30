@@ -56,11 +56,6 @@ async function getChapter(
   return api.get(url).json();
 }
 
-interface TranslateState {
-  jp: number;
-  zh: number;
-}
-
 interface ChapterUpdateBody {
   glossaryUuid: string | undefined;
   paragraphsZh: string[];
@@ -72,7 +67,7 @@ async function postChapter(
   translatorId: TranslatorId,
   chapterId: string,
   body: ChapterUpdateBody
-): Promise<TranslateState> {
+): Promise<number> {
   const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
   return api.post(url, { json: body }).json();
 }
@@ -88,7 +83,7 @@ async function putChapter(
   translatorId: TranslatorId,
   chapterId: string,
   body: ChapterUpdatePartlyBody
-): Promise<TranslateState> {
+): Promise<number> {
   const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
   return api.put(url, { json: body }).json();
 }
@@ -149,7 +144,7 @@ function getExpiredParagraphs(
 
 interface UpdateCallback {
   onStart: (total: number) => void;
-  onChapterTranslateSuccess: (state: TranslateState) => void;
+  onChapterTranslateSuccess: (state: number) => void;
   onChapterTranslateFailure: () => void;
 }
 

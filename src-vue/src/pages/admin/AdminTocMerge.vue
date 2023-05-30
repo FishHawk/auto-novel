@@ -3,23 +3,25 @@ import { ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
-import ApiTocMergeHistory, {
+import {
+  ApiWebNovelHistory,
   TocMergeHistoryDto,
-  TocMergeHistoryPageDto,
-} from '@/data/api/api_toc_merge_history';
+  TocMergeHistoryOutlineDto,
+} from '@/data/api/api_web_novel_history';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { Page } from '@/data/api/page';
 
 const message = useMessage();
 const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const novelPage = ref<ResultState<TocMergeHistoryPageDto>>();
+const novelPage = ref<ResultState<Page<TocMergeHistoryOutlineDto>>>();
 const details = ref<{ [key: string]: DiffTocItem[] }>({});
 
 async function loadPage(page: number) {
   novelPage.value = undefined;
-  const result = await ApiTocMergeHistory.listTocMergeHistory(
+  const result = await ApiWebNovelHistory.listTocMergeHistory(
     currentPage.value - 1
   );
   if (currentPage.value == page) {
@@ -31,14 +33,14 @@ async function loadPage(page: number) {
 }
 
 async function loadDetail(id: string) {
-  const result = await ApiTocMergeHistory.getTocMergeHistory(id);
+  const result = await ApiWebNovelHistory.getTocMergeHistory(id);
   if (result.ok) {
     details.value[id] = diffToc(result.value);
   }
 }
 
 async function deleteDetail(id: string) {
-  const result = await ApiTocMergeHistory.deleteMergeHistory(id, auth.token!);
+  const result = await ApiWebNovelHistory.deleteMergeHistory(id, auth.token!);
   if (result.ok) {
     message.info('删除成功');
     if (novelPage.value?.ok) {

@@ -1,13 +1,14 @@
 import api from './api';
 import { Result, runCatching } from './result';
-import { WebNovelListPageDto } from './api_web_novel';
-import { WenkuListPageDto } from './api_wenku_novel';
+import { WenkuNovelOutlineDto } from './api_wenku_novel';
+import { WebNovelOutlineDto } from './api_web_novel';
+import { Page } from './page';
 
 async function listFavoritedWebNovel(
   page: number,
   pageSize: number,
   token: string
-): Promise<Result<WebNovelListPageDto>> {
+): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`user/favorited-web/list`, {
@@ -50,7 +51,7 @@ async function listFavoritedWenkuNovel(
   page: number,
   pageSize: number,
   token: string
-): Promise<Result<WenkuListPageDto>> {
+): Promise<Result<Page<WenkuNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`user/favorited-wenku/list`, {

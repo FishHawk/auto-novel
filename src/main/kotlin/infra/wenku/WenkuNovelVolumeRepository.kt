@@ -52,7 +52,6 @@ class WenkuNovelVolumeRepository {
     ): TranslationState {
         return TranslationState(
             total = listUnpackedChapters(novelId, volumeId, "jp").size.toLong(),
-            jp = listUnpackedChapters(novelId, volumeId, "jp").size.toLong(),
             baidu = listUnpackedChapters(novelId, volumeId, "baidu").size.toLong(),
             youdao = listUnpackedChapters(novelId, volumeId, "youdao").size.toLong(),
         )

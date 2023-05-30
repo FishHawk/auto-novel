@@ -26,7 +26,7 @@ const loader: Loader = (page, _query, selected) => {
   } else {
     return ApiUser.listFavoritedWenkuNovel(
       page - 1,
-      10,
+      24,
       authInfoStore.token!
     ).then((result) => mapOk(result, (page) => ({ type: 'wenku', page })));
   }

@@ -1,7 +1,7 @@
 <script lang="ts">
 type NovelPage =
-  | { type: 'web'; page: WebNovelListPageDto | WebNovelRankPageDto }
-  | { type: 'wenku'; page: WenkuListPageDto };
+  | { type: 'web'; page: Page<WebNovelOutlineDto> }
+  | { type: 'wenku'; page: Page<WenkuNovelOutlineDto> };
 
 export type Loader = (
   page: number,
@@ -15,11 +15,9 @@ import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Result, ResultState } from '@/data/api/result';
-import {
-  WebNovelListPageDto,
-  WebNovelRankPageDto,
-} from '@/data/api/api_web_novel';
-import { WenkuListPageDto } from '@/data/api/api_wenku_novel';
+import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
+import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
+import { Page } from '@/data/api/page';
 
 const route = useRoute();
 const router = useRouter();
@@ -104,11 +102,11 @@ watch(currentPage, (page) => loadPage(page));
   <div v-if="novelPage?.ok">
     <NovelListWeb
       v-if="novelPage.value.type === 'web'"
-      :page="novelPage.value.page"
+      :items="novelPage.value.page.items"
     />
     <NovelListWenku
       v-else-if="novelPage.value.type === 'wenku'"
-      :page="novelPage.value.page"
+      :items="novelPage.value.page.items"
     />
 
     <n-empty

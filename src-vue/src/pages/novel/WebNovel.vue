@@ -192,7 +192,6 @@ function enableEditMode() {
           :provider-id="providerId"
           :novel-id="novelId"
           :total="metadata.value.toc.filter((it) => it.chapterId).length"
-          v-model:jp="metadata.value.translateState.jp"
           v-model:baidu="metadata.value.translateState.baidu"
           v-model:youdao="metadata.value.translateState.youdao"
           :glossary="metadata.value.glossary"

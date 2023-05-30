@@ -3,40 +3,46 @@ import { ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
-import ApiPatch, {
-  WebNovelPatchHistoryPageDto,
+import {
+  ApiWebNovelHistory,
   WebNovelPatchHistoryDto,
-} from '@/data/api/api_patch';
+  WebNovelPatchHistoryOutlineDto,
+} from '@/data/api/api_web_novel_history';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { Page } from '@/data/api/page';
 
 const message = useMessage();
 const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
-const total = ref(1);
-const novelPage = ref<ResultState<WebNovelPatchHistoryPageDto>>();
+const pageNumber = ref(1);
+const novelPage = ref<ResultState<Page<WebNovelPatchHistoryOutlineDto>>>();
 const details = ref<{ [key: string]: WebNovelPatchHistoryDto }>({});
 
 async function loadPage(page: number) {
   novelPage.value = undefined;
-  const result = await ApiPatch.listPatch(currentPage.value - 1);
+  const result = await ApiWebNovelHistory.listPatch(currentPage.value - 1);
   if (currentPage.value == page) {
     novelPage.value = result;
     if (result.ok) {
-      total.value = result.value.total;
+      pageNumber.value = result.value.pageNumber;
     }
   }
 }
 
 async function loadPatch(providerId: string, novelId: string) {
-  const result = await ApiPatch.getPatch(providerId, novelId);
+  const result = await ApiWebNovelHistory.getPatch(providerId, novelId);
   if (result.ok) {
     details.value[`${providerId}/${novelId}`] = result.value;
   }
 }
 
 async function deletePatch(providerId: string, novelId: string) {
-  const result = await ApiPatch.deletePatch(providerId, novelId, auth.token!);
+  const result = await ApiWebNovelHistory.deletePatch(
+    providerId,
+    novelId,
+    auth.token!
+  );
   if (result.ok) {
     message.info('删除成功');
     if (novelPage.value?.ok) {
@@ -50,7 +56,11 @@ async function deletePatch(providerId: string, novelId: string) {
 }
 
 async function revokePatch(providerId: string, novelId: string) {
-  const result = await ApiPatch.revokePatch(providerId, novelId, auth.token!);
+  const result = await ApiWebNovelHistory.revokePatch(
+    providerId,
+    novelId,
+    auth.token!
+  );
   if (result.ok) {
     message.info('撤销成功');
     if (novelPage.value?.ok) {
@@ -70,8 +80,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   <AdminLayout>
     <n-h1>编辑历史</n-h1>
     <n-pagination
+      v-if="pageNumber > 1"
       v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
+      :page-count="pageNumber"
       :page-slot="7"
     />
     <n-divider />
@@ -127,8 +138,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       </div>
     </div>
     <n-pagination
+      v-if="pageNumber > 1"
       v-model:page="currentPage"
-      :page-count="Math.floor(total / 10)"
+      :page-count="pageNumber"
       :page-slot="7"
     />
   </AdminLayout>
