@@ -1,11 +1,9 @@
 package infra.model
 
-import infra.web.WebNovelPatchHistoryRepository
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
-import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import java.time.LocalDateTime
@@ -16,11 +14,6 @@ data class WebNovelMetadataOutline(
     val titleJp: String,
     val titleZh: String?,
     val extra: String?,
-)
-
-data class Page<T>(
-    val items: List<T>,
-    val total: Long,
 )
 
 @Serializable

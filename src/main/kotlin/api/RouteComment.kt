@@ -1,5 +1,8 @@
 package api
 
+import api.dto.CommentDto
+import api.dto.PageDto
+import api.dto.SubCommentDto
 import infra.CommentRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -72,56 +75,20 @@ fun Route.routeComment() {
 class CommentApi(
     private val commentRepository: CommentRepository,
 ) {
-    @Serializable
-    data class SubCommentDto(
-        val id: String,
-        val createAt: Int,
-        val username: String,
-        val receiver: String?,
-        val upvote: Int,
-        val downvote: Int,
-        val viewerVote: Boolean?,
-        val content: String,
-    )
-
-    @Serializable
-    data class CommentDto(
-        val id: String,
-        val createAt: Int,
-        val username: String,
-        val upvote: Int,
-        val downvote: Int,
-        val viewerVote: Boolean?,
-        val content: String,
-        val pageNumber: Int,
-        val items: List<SubCommentDto>,
-    )
-
-    @Serializable
-    data class CommentPageDto(
-        val pageNumber: Int,
-        val items: List<CommentDto>,
-    )
-
-    @Serializable
-    data class SubCommentPageDto(
-        val pageNumber: Int,
-        val items: List<SubCommentDto>,
-    )
-
     suspend fun listSub(
         viewer: String?,
         postId: String,
         parentId: String,
         page: Int,
-    ): Result<SubCommentPageDto> {
-        val comments = commentRepository.list(
+    ): Result<PageDto<SubCommentDto>> {
+        val commentPage = commentRepository.list(
             postId = postId,
             parentId = parentId,
             viewer = viewer,
             page = page,
             pageSize = 10,
-        ).map {
+        )
+        val dto = PageDto.fromPage(commentPage, pageSize = 10) {
             SubCommentDto(
                 id = it.id,
                 createAt = it.createAt,
@@ -133,41 +100,29 @@ class CommentApi(
                 content = it.content,
             )
         }
-        val count = commentRepository.count(
-            postId = postId,
-            parentId = parentId,
-        )
-        return Result.success(
-            SubCommentPageDto(
-                pageNumber = (count / 10).toInt(),
-                items = comments,
-            )
-        )
+        return Result.success(dto)
     }
 
     suspend fun list(
         viewer: String?,
         postId: String,
         page: Int,
-    ): Result<CommentPageDto> {
-        val comments = commentRepository.list(
+    ): Result<PageDto<CommentDto>> {
+        val commentPage = commentRepository.list(
             postId = postId,
             parentId = null,
             viewer = viewer,
             page = page,
             pageSize = 10,
             reverse = true,
-        ).map {
-            val subComments = commentRepository.list(
+        )
+        val dto = PageDto.fromPage(commentPage, pageSize = 10) {
+            val subCommentPage = commentRepository.list(
                 postId = postId,
                 parentId = it.id,
                 viewer = viewer,
                 page = 0,
                 pageSize = 10,
-            )
-            val count = commentRepository.count(
-                postId = postId,
-                parentId = it.id,
             )
             CommentDto(
                 id = it.id,
@@ -177,8 +132,8 @@ class CommentApi(
                 downvote = it.downvote,
                 viewerVote = it.viewerVote,
                 content = it.content,
-                pageNumber = (count / 10).toInt(),
-                items = subComments.map {
+                pageNumber = (subCommentPage.total / 10).toInt(),
+                items = subCommentPage.items.map {
                     SubCommentDto(
                         id = it.id,
                         createAt = it.createAt,
@@ -192,16 +147,7 @@ class CommentApi(
                 }
             )
         }
-        val count = commentRepository.count(
-            postId = postId,
-            parentId = null,
-        )
-        return Result.success(
-            CommentPageDto(
-                pageNumber = (count / 10).toInt(),
-                items = comments,
-            )
-        )
+        return Result.success(dto)
     }
 
     suspend fun vote(

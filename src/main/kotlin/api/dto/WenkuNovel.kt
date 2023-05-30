@@ -2,7 +2,6 @@ package api.dto
 
 import infra.model.*
 import kotlinx.serialization.Serializable
-import java.time.ZoneId
 
 @Serializable
 data class WenkuNovelOutlineDto(

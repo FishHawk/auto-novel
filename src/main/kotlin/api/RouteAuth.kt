@@ -3,8 +3,8 @@ package api
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.EmailCodeRepository
-import infra.User
 import infra.UserRepository
+import infra.model.User
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -15,6 +15,7 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.Email
+import util.PBKDF2
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
@@ -109,6 +110,9 @@ class AuthApi(
             ?: userRepository.getByUsername(body.emailOrUsername)
             ?: return httpNotFound("用户不存在")
 
+        fun User.validatePassword(password: String): Boolean {
+            return this.password == PBKDF2.hash(password, salt)
+        }
         if (!user.validatePassword(body.password))
             return httpUnauthorized("密码错误")
 

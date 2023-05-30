@@ -17,9 +17,9 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 @Resource("/user")
-private class R {
+private class UserRes {
     @Resource("/favorited-web")
-    class FavoritedWeb(val parent: R = R()) {
+    class FavoritedWeb(val parent: UserRes = UserRes()) {
         @Resource("/list")
         data class List(
             val parent: FavoritedWeb,
@@ -38,7 +38,7 @@ private class R {
     }
 
     @Resource("/favorited-wenku")
-    class FavoritedWenku(val parent: R = R()) {
+    class FavoritedWenku(val parent: UserRes = UserRes()) {
         @Resource("/list")
         data class List(
             val parent: FavoritedWenku,
@@ -58,7 +58,7 @@ fun Route.routeUser() {
     val service by inject<UserApi>()
 
     authenticate {
-        get<R.FavoritedWeb.List> { loc ->
+        get<UserRes.FavoritedWeb.List> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.listFavoriteWebBook(
                 page = loc.page.coerceAtLeast(0),
@@ -67,18 +67,18 @@ fun Route.routeUser() {
             )
             call.respondResult(result)
         }
-        put<R.FavoritedWeb.Book> { loc ->
+        put<UserRes.FavoritedWeb.Book> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.setFavoriteWebBook(jwtUser.username, loc.providerId, loc.novelId)
             call.respondResult(result)
         }
-        delete<R.FavoritedWeb.Book> { loc ->
+        delete<UserRes.FavoritedWeb.Book> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.removeFavoriteWebBook(jwtUser.username, loc.providerId, loc.novelId)
             call.respondResult(result)
         }
 
-        get<R.FavoritedWenku.List> { loc ->
+        get<UserRes.FavoritedWenku.List> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.listFavoriteWenkuBook(
                 page = loc.page.coerceAtLeast(0),
@@ -87,12 +87,12 @@ fun Route.routeUser() {
             )
             call.respondResult(result)
         }
-        put<R.FavoritedWenku.Book> { loc ->
+        put<UserRes.FavoritedWenku.Book> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.setFavoriteWenkuBook(jwtUser.username, loc.novelId)
             call.respondResult(result)
         }
-        delete<R.FavoritedWenku.Book> { loc ->
+        delete<UserRes.FavoritedWenku.Book> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.removeFavoriteWenkuBook(jwtUser.username, loc.novelId)
             call.respondResult(result)

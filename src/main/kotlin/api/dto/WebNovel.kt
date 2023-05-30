@@ -5,23 +5,6 @@ import kotlinx.serialization.Serializable
 import java.time.ZoneId
 
 @Serializable
-data class PageDto<T>(
-    val items: List<T>,
-    val pageNumber: Long,
-) {
-    companion object {
-        inline fun <T, R> fromPage(
-            page: Page<R>,
-            pageSize: Int,
-            transform: (R) -> T,
-        ) = PageDto(
-            items = page.items.map(transform),
-            pageNumber = page.total / pageSize + 1,
-        )
-    }
-}
-
-@Serializable
 data class WebNovelOutlineDto(
     val providerId: String,
     val novelId: String,

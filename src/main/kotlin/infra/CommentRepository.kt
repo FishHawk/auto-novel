@@ -1,5 +1,8 @@
 package infra
 
+import com.mongodb.client.model.CountOptions
+import infra.model.Page
+import infra.model.WenkuNovelMetadata
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -8,19 +11,7 @@ import org.bson.types.ObjectId
 import org.litote.kmongo.*
 
 @Serializable
-private data class Comment(
-    @Contextual @SerialName("_id") val id: ObjectId,
-    @Contextual val parentId: ObjectId?,
-    val postId: String,
-    val username: String,
-    val receiver: String?,
-    val upvoteUsers: Set<String>,
-    val downvoteUsers: Set<String>,
-    val content: String,
-)
-
-@Serializable
-data class CommentView(
+data class Comment(
     val id: String,
     val createAt: Int,
     val parentId: String?,
@@ -33,50 +24,8 @@ data class CommentView(
 )
 
 class CommentRepository(
-    private val mongoDataSource: MongoDataSource,
+    private val mongo: MongoDataSource,
 ) {
-    private val col
-        get() = mongoDataSource.database.getCollection<Comment>("comment")
-
-    init {
-        runBlocking {
-            col.ensureIndex(
-                Comment::postId,
-                Comment::parentId,
-                Comment::id,
-            )
-        }
-    }
-
-    suspend fun exist(
-        id: String?,
-    ): Boolean {
-        return col.findOne(
-            Comment::id eq ObjectId(id)
-        ) != null
-    }
-
-    suspend fun add(
-        postId: String,
-        parentId: String?,
-        username: String,
-        receiver: String?,
-        content: String,
-    ) {
-        col.insertOne(
-            Comment(
-                id = ObjectId(),
-                parentId = parentId?.let { ObjectId(it) },
-                postId = postId,
-                username = username,
-                receiver = receiver,
-                upvoteUsers = emptySet(),
-                downvoteUsers = emptySet(),
-                content = content,
-            )
-        )
-    }
-
     suspend fun list(
         postId: String,
         parentId: String?,
@@ -84,17 +33,27 @@ class CommentRepository(
         page: Int,
         pageSize: Int,
         reverse: Boolean = false,
-    ): List<CommentView> {
-        return col.find(
-            Comment::postId eq postId,
-            Comment::parentId eq parentId?.let { ObjectId(it) },
-        )
-            .let { if (reverse) it.descendingSort(Comment::id) else it }
+    ): Page<Comment> {
+        val total = mongo
+            .commentCollection
+            .countDocuments(
+                and(
+                    CommentModel::postId eq postId,
+                    CommentModel::parentId eq parentId?.let { ObjectId(it) },
+                )
+            )
+        val items = mongo
+            .commentCollection
+            .find(
+                CommentModel::postId eq postId,
+                CommentModel::parentId eq parentId?.let { ObjectId(it) },
+            )
+            .let { if (reverse) it.descendingSort(CommentModel::id) else it }
             .skip(page * pageSize)
             .limit(pageSize)
             .toList()
             .map {
-                CommentView(
+                Comment(
                     id = it.id.toHexString(),
                     createAt = it.id.timestamp,
                     parentId = it.parentId?.toHexString(),
@@ -114,51 +73,82 @@ class CommentRepository(
                     content = it.content,
                 )
             }
+        return Page(items = items, total = total)
     }
 
-    suspend fun count(
+    suspend fun exist(
+        id: String?,
+    ): Boolean {
+        return mongo
+            .commentCollection
+            .countDocuments(
+                CommentModel::id eq ObjectId(id),
+                CountOptions().limit(1),
+            ) != 0L
+    }
+
+    suspend fun add(
         postId: String,
         parentId: String?,
-    ): Long {
-        return col.countDocuments(
-            and(
-                Comment::postId eq postId,
-                Comment::parentId eq parentId?.let { ObjectId(it) },
+        username: String,
+        receiver: String?,
+        content: String,
+    ) {
+        mongo
+            .commentCollection
+            .insertOne(
+                CommentModel(
+                    id = ObjectId(),
+                    parentId = parentId?.let { ObjectId(it) },
+                    postId = postId,
+                    username = username,
+                    receiver = receiver,
+                    upvoteUsers = emptySet(),
+                    downvoteUsers = emptySet(),
+                    content = content,
+                )
             )
-        )
     }
 
     suspend fun upvote(commentId: String, username: String) {
-        col.updateOne(
-            Comment::id eq ObjectId(commentId),
-            combine(
-                addToSet(Comment::upvoteUsers, username),
-                pull(Comment::downvoteUsers, username)
+        mongo
+            .commentCollection
+            .updateOne(
+                CommentModel::id eq ObjectId(commentId),
+                combine(
+                    addToSet(CommentModel::upvoteUsers, username),
+                    pull(CommentModel::downvoteUsers, username)
+                )
             )
-        )
     }
 
     suspend fun cancelUpvote(commentId: String, username: String) {
-        col.updateOne(
-            Comment::id eq ObjectId(commentId),
-            pull(Comment::upvoteUsers, username)
-        )
+        mongo
+            .commentCollection
+            .updateOne(
+                CommentModel::id eq ObjectId(commentId),
+                pull(CommentModel::upvoteUsers, username)
+            )
     }
 
     suspend fun downvote(commentId: String, username: String) {
-        col.updateOne(
-            Comment::id eq ObjectId(commentId),
-            combine(
-                addToSet(Comment::downvoteUsers, username),
-                pull(Comment::upvoteUsers, username)
+        mongo
+            .commentCollection
+            .updateOne(
+                CommentModel::id eq ObjectId(commentId),
+                combine(
+                    addToSet(CommentModel::downvoteUsers, username),
+                    pull(CommentModel::upvoteUsers, username)
+                )
             )
-        )
     }
 
     suspend fun cancelDownvote(commentId: String, username: String) {
-        col.updateOne(
-            Comment::id eq ObjectId(commentId),
-            pull(Comment::downvoteUsers, username)
-        )
+        mongo
+            .commentCollection
+            .updateOne(
+                CommentModel::id eq ObjectId(commentId),
+                pull(CommentModel::downvoteUsers, username)
+            )
     }
 }
