@@ -105,6 +105,16 @@ class WenkuNovelVolumeRepository {
         filePath.deleteIfExists()
     }
 
+    suspend fun deleteVolumeJpIfExist(
+        novelId: String,
+        volumeId: String,
+    ) = withContext(Dispatchers.IO) {
+        val filePath = root / novelId / volumeId
+        val unpackPath = root / novelId / "$volumeId.unpack"
+        filePath.moveTo(root / novelId / "deleted" / volumeId)
+        unpackPath.deleteIfExists()
+    }
+
     suspend fun unpackVolume(
         novelId: String,
         volumeId: String,
@@ -148,7 +158,7 @@ class WenkuNovelVolumeRepository {
         type: String,
         chapterId: String,
     ) = withContext(Dispatchers.IO) {
-        val path = root / novelId / "$volumeId.unpack" / "jp" / chapterId
+        val path = root / novelId / "$volumeId.unpack" / type / chapterId
         return@withContext if (path.notExists()) null
         else path.readText().lines()
     }

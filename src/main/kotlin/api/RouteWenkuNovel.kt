@@ -349,7 +349,7 @@ class WenkuNovelApi(
         return runCatching {
             volumeRepo.unpackVolume(novelId, volumeId)
         }.onFailure {
-            volumeRepo.deleteVolumeIfExist(novelId, volumeId)
+            volumeRepo.deleteVolumeJpIfExist(novelId, volumeId)
         }
     }
 
