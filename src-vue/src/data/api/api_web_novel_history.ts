@@ -14,9 +14,8 @@ export interface TocMergeHistoryOutlineDto {
 async function listTocMergeHistory(
   page: number
 ): Promise<Result<Page<TocMergeHistoryOutlineDto>>> {
-  return runCatching(
-    api.get(`toc-merge/list`, { searchParams: { page } }).json()
-  );
+  const url = `web-novel-admin/toc-merge/`;
+  return runCatching(api.get(url, { searchParams: { page } }).json());
 }
 
 export type TocMergeHistoryDto = TocMergeHistoryOutlineDto & {
@@ -27,19 +26,17 @@ export type TocMergeHistoryDto = TocMergeHistoryOutlineDto & {
 async function getTocMergeHistory(
   id: string
 ): Promise<Result<TocMergeHistoryDto>> {
-  return runCatching(api.get(`toc-merge/item/${id}`).json());
+  const url = `web-novel-admin/toc-merge/${id}`;
+  return runCatching(api.get(url).json());
 }
 
 async function deleteMergeHistory(
   id: string,
   token: string
 ): Promise<Result<string>> {
+  const url = `web-novel-admin/toc-merge/${id}`;
   return runCatching(
-    api
-      .delete(`toc-merge/item/${id}`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
+    api.delete(url, { headers: { Authorization: 'Bearer ' + token } }).text()
   );
 }
 
@@ -73,14 +70,16 @@ interface WebNovelPatchDto {
 async function listPatch(
   page: number
 ): Promise<Result<Page<WebNovelPatchHistoryOutlineDto>>> {
-  return runCatching(api.get(`patch/list`, { searchParams: { page } }).json());
+  const url = `web-novel-admin/patch/`;
+  return runCatching(api.get(url, { searchParams: { page } }).json());
 }
 
 async function getPatch(
   providerId: string,
   novelId: string
 ): Promise<Result<WebNovelPatchHistoryDto>> {
-  return runCatching(api.get(`patch/${providerId}/${novelId}`).json());
+  const url = `web-novel-admin/patch/${providerId}/${novelId}`;
+  return runCatching(api.get(url).json());
 }
 
 async function deletePatch(
@@ -88,12 +87,9 @@ async function deletePatch(
   novelId: string,
   token: string
 ): Promise<Result<string>> {
+  const url = `web-novel-admin/patch/${providerId}/${novelId}`;
   return runCatching(
-    api
-      .delete(`patch/${providerId}/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
+    api.delete(url, { headers: { Authorization: 'Bearer ' + token } }).text()
   );
 }
 
@@ -102,12 +98,9 @@ async function revokePatch(
   novelId: string,
   token: string
 ): Promise<Result<string>> {
+  const url = `web-novel-admin/patch/${providerId}/${novelId}/revoke`;
   return runCatching(
-    api
-      .post(`patch/${providerId}/${novelId}/revoke`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
+    api.post(url, { headers: { Authorization: 'Bearer ' + token } }).text()
   );
 }
 

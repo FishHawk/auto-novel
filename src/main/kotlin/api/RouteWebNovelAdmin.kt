@@ -1,10 +1,9 @@
 package api
 
-import api.dto.PageDto
-import api.dto.WebNovelPatchHistoryDto
-import api.dto.WebNovelPatchHistoryOutlineDto
-import infra.web.WebNovelPatchHistoryRepository
+import api.dto.*
 import infra.web.WebNovelMetadataRepository
+import infra.web.WebNovelPatchHistoryRepository
+import infra.web.WebNovelTocMergeHistoryRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -16,29 +15,58 @@ import util.None
 import util.Optional
 import util.Some
 
-@Resource("/patch")
-private class WebNovelPatchRes {
-    @Resource("/list")
-    data class List(
-        val parent: WebNovelPatchRes,
-        val page: Int,
-    )
+@Resource("/web-novel-admin")
+private class WebNovelAdminRes {
+    @Resource("/toc-merge")
+    class TocMergeHistory(val parent: WebNovelAdminRes) {
+        @Resource("/")
+        data class List(val parent: TocMergeHistory, val page: Int)
 
-    @Resource("/{providerId}/{novelId}")
-    data class Id(
-        val parent: WebNovelPatchRes,
-        val providerId: String,
-        val novelId: String,
-    ) {
-        @Resource("/revoke")
-        data class Revoke(val parent: Id)
+        @Resource("/{id}")
+        data class Id(val parent: TocMergeHistory, val id: String)
+    }
+
+    @Resource("/patch")
+    class PatchHistory(val parent: WebNovelAdminRes) {
+        @Resource("/")
+        class List(val parent: PatchHistory, val page: Int)
+
+        @Resource("/{providerId}/{novelId}")
+        data class Id(val parent: PatchHistory, val providerId: String, val novelId: String) {
+            @Resource("/revoke")
+            data class Revoke(val parent: Id)
+        }
     }
 }
 
-fun Route.routePatch() {
-    val api by inject<WebNovelPatchApi>()
+fun Route.routeWebNovelAdmin() {
+    val api by inject<WebNovelAdminApi>()
 
-    get<WebNovelPatchRes.List> { loc ->
+    get<WebNovelAdminRes.TocMergeHistory.List> { loc ->
+        val result = api.listTocMergeHistory(
+            page = loc.page,
+            pageSize = 10,
+        )
+        call.respondResult(result)
+    }
+
+    get<WebNovelAdminRes.TocMergeHistory.Id> { loc ->
+        val result = api.getTocMergeHistory(
+            id = loc.id,
+        )
+        call.respondResult(result)
+    }
+
+    authenticate {
+        delete<WebNovelAdminRes.TocMergeHistory.Id> { loc ->
+            val result = call.requireAtLeastMaintainer {
+                api.deleteTocMergeHistory(id = loc.id)
+            }
+            call.respondResult(result)
+        }
+    }
+
+    get<WebNovelAdminRes.PatchHistory.List> { loc ->
         val result = api.listPatch(
             page = loc.page,
             pageSize = 10,
@@ -46,20 +74,20 @@ fun Route.routePatch() {
         call.respondResult(result)
     }
 
-    get<WebNovelPatchRes.Id> { loc ->
+    get<WebNovelAdminRes.PatchHistory.Id> { loc ->
         val result = api.getPatch(loc.providerId, loc.novelId)
         call.respondResult(result)
     }
 
     authenticate {
-        delete<WebNovelPatchRes.Id> { loc ->
+        delete<WebNovelAdminRes.PatchHistory.Id> { loc ->
             val result = call.requireAtLeastMaintainer {
                 api.deletePatch(loc.providerId, loc.novelId)
             }
             call.respondResult(result)
         }
 
-        post<WebNovelPatchRes.Id.Revoke> { loc ->
+        post<WebNovelAdminRes.PatchHistory.Id.Revoke> { loc ->
             val result = call.requireAtLeastMaintainer {
                 api.revokePatch(loc.parent.providerId, loc.parent.novelId)
             }
@@ -68,10 +96,37 @@ fun Route.routePatch() {
     }
 }
 
-class WebNovelPatchApi(
+class WebNovelAdminApi(
+    private val tocMergeHistoryRepo: WebNovelTocMergeHistoryRepository,
     private val patchRepo: WebNovelPatchHistoryRepository,
     private val novelRepo: WebNovelMetadataRepository,
 ) {
+    suspend fun listTocMergeHistory(
+        page: Int,
+        pageSize: Int,
+    ): Result<PageDto<WebNovelTocMergeHistoryOutlineDto>> {
+        val historyPage = tocMergeHistoryRepo.list(
+            page = page.coerceAtLeast(0),
+            pageSize = pageSize,
+        )
+        val dtoPage = PageDto.fromPage(historyPage, pageSize) {
+            WebNovelTocMergeHistoryOutlineDto.fromDomain(it)
+        }
+        return Result.success(dtoPage)
+    }
+
+    suspend fun getTocMergeHistory(id: String): Result<WebNovelTocMergeHistoryDto> {
+        val history = tocMergeHistoryRepo.get(id)?.let {
+            WebNovelTocMergeHistoryDto.fromDomain(it)
+        } ?: return httpNotFound("未找到")
+        return Result.success(history)
+    }
+
+    suspend fun deleteTocMergeHistory(id: String): Result<Unit> {
+        tocMergeHistoryRepo.delete(id)
+        return Result.success(Unit)
+    }
+
     suspend fun listPatch(
         page: Int,
         pageSize: Int,

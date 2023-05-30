@@ -102,8 +102,7 @@ fun main() {
             routeUser()
 
             routeWebNovel()
-            routePatch()
-            routeTocMergeHistory()
+            routeWebNovelAdmin()
 
             routeWenkuNovel()
         }
@@ -147,8 +146,7 @@ val appModule = module {
     single(createdAtStart = true) { UserApi(get(), get(), get(), get()) }
 
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
-    single(createdAtStart = true) { WebNovelPatchApi(get(), get()) }
-    single(createdAtStart = true) { TocMergeHistoryApi(get()) }
+    single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
 
     single(createdAtStart = true) { WenkuNovelApi(get(), get(), get()) }
 }
