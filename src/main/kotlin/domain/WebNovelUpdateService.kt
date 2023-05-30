@@ -20,6 +20,7 @@ class WebNovelUpdateService(
     suspend fun getNovelAndSave(
         providerId: String,
         novelId: String,
+        expiredMinutes: Int = 20 * 60,
     ): Result<WebNovelMetadata> {
         // 不在数据库中
         val novelLocal = novelRepo.get(providerId, novelId)
@@ -31,8 +32,8 @@ class WebNovelUpdateService(
         }
 
         // 在数据库中，没有过期
-        val hours = ChronoUnit.HOURS.between(novelLocal.syncAt, LocalDateTime.now())
-        val isExpired = hours > 20
+        val minutes = ChronoUnit.MINUTES.between(novelLocal.syncAt, LocalDateTime.now())
+        val isExpired = minutes > expiredMinutes
         if (!isExpired) {
             return Result.success(novelLocal)
         }

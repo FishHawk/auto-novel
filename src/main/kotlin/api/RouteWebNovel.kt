@@ -448,8 +448,8 @@ class WebNovelApi(
             else -> return httpBadRequest("不支持的版本")
         }
 
-        val novel = novelRepo.get(providerId, novelId)
-            ?: return httpNotFound("元数据不存在")
+        val novel = novelService.getNovelAndSave(providerId, novelId, 10)
+            .getOrElse { return httpNotFound("元数据获取失败") }
 
         val title = novel.titleJp.takeIf { novel.titleZh == null }
         val introduction = novel.introductionJp.takeIf { novel.introductionZh == null }
