@@ -90,7 +90,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
         <WenkuTranslate
           :novel-id="novelId"
           :volume-id="volume.volumeId"
-          :total="volume.jp"
+          :total="volume.total"
           v-model:baidu="volume.baidu"
           v-model:youdao="volume.youdao"
         />

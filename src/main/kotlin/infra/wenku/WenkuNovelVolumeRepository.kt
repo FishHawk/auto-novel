@@ -22,7 +22,7 @@ class WenkuNovelVolumeRepository {
         novelId: String,
     ): WenkuNovelVolumeList = withContext(Dispatchers.IO) {
         val path = root / novelId
-        val fileExtensions = listOf("util/epub", "txt")
+        val fileExtensions = listOf("epub", "txt")
 
         val volumesJp = mutableListOf<String>()
         val volumesZh = mutableListOf<String>()
@@ -30,6 +30,7 @@ class WenkuNovelVolumeRepository {
             path.listDirectoryEntries()
                 .filter { it.isRegularFile() && it.fileName.extension in fileExtensions }
                 .forEach {
+                    println(it)
                     val volumeId = it.fileName.toString()
                     if (hasUnpacked(novelId, volumeId)) {
                         volumesJp.add(volumeId)

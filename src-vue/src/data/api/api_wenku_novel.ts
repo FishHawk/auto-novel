@@ -43,7 +43,7 @@ export interface WenkuMetadataDto {
 
 export interface VolumeJpDto {
   volumeId: string;
-  jp: number;
+  total: number;
   baidu: number;
   youdao: number;
 }
