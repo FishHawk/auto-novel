@@ -1,7 +1,9 @@
 package infra
 
 import appModule
-import infra.web.*
+import infra.web.WebNovelChapterRepository
+import infra.web.WebNovelMetadataRepository
+import infra.web.WebNovelTocMergeHistoryRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
@@ -21,27 +23,6 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-            val users = mongo.userCollection.find().toList()
-//            users.filter { it.favoriteWenkuBooks.isNotEmpty() }
-//                .map {
-//                    val ids = it.favoriteWenkuBooks.map { ObjectId(it).toId<WenkuNovelMetadata>() }
-//                    mongo.userCollection.updateOne(
-//                        User.byUsername(it.username),
-//                        setValue(User::favoriteWenkuNovels, ids),
-//                    )
-//                }
-
-//            users.filter { it.favoriteBooks.isNotEmpty() }
-//                .map {
-//                    val ids = it.favoriteBooks.map {
-//                        val id = repoWNM.get(it.providerId, it.novelId)!!.id
-//                        id.toId<WebNovelMetadata>()
-//                    }
-//                    mongo.userCollection.updateOne(
-//                        User.byUsername(it.username),
-//                        setValue(User::favoriteWebNovels, ids),
-//                    )
-//                }
         }
 
         describe("kmongo issue 415") {

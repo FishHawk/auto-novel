@@ -1,23 +1,10 @@
 package infra
 
 import com.mongodb.client.model.CountOptions
+import infra.model.Comment
 import infra.model.Page
-import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
-
-@Serializable
-data class Comment(
-    val id: String,
-    val createAt: Int,
-    val parentId: String?,
-    val username: String,
-    val receiver: String?,
-    val upvote: Int,
-    val downvote: Int,
-    val viewerVote: Boolean?,
-    val content: String,
-)
 
 class CommentRepository(
     private val mongo: MongoDataSource,
