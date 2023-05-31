@@ -172,6 +172,8 @@ class Syosetu : WebNovelProvider {
             if (chapterId == "default") "https://ncode.syosetu.com/$novelId"
             else "https://ncode.syosetu.com/$novelId/$chapterId"
         val doc = client.get(url).document()
+        doc.select("rp").remove()
+        doc.select("rt").remove()
         return RemoteChapter(paragraphs = doc.select("div#novel_honbun > p").map { it.text() })
     }
 }

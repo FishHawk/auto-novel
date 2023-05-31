@@ -61,5 +61,11 @@ class SyosetuTest : DescribeSpec({
             episode.paragraphs.first().shouldBe("\n")
             episode.paragraphs.last().shouldBe("\n")
         }
+        it("ruby标签过滤") {
+            // https://ncode.syosetu.com/n2907ga/74
+            val episode = provider.getChapter("n2907ga", "74")
+            episode.paragraphs[17].shouldEndWith("皮肉にも人の理の外にあるものだったのか」")
+            episode.paragraphs[29].shouldBe("「私が思うのと同程度に、彼女があなたにとって大事な存在になっただって？　―――あり得ない話だ」")
+        }
     }
 })
