@@ -114,6 +114,11 @@ function stateToFileList(): NovelFiles[] {
 
   return [
     {
+      label: `日文`,
+      translatorId: 'jp',
+      files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
+    },
+    {
       label: `百度(${props.baidu}/${props.total})`,
       translatorId: 'baidu',
       files: [
