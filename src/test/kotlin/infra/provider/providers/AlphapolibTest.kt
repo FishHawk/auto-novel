@@ -33,5 +33,10 @@ class AlphapolibTest : DescribeSpec({
             val episode = provider.getChapter("638978238-525733370", "6857739")
             episode.paragraphs.getOrNull(1).shouldBe("「これからどうすっかなぁ…」")
         }
+        it("ruby标签") {
+            // https://www.alphapolis.co.jp/novel/606793319/240579102/episode/5375163
+            val episode = provider.getChapter("606793319-240579102", "5375163")
+            episode.paragraphs.first().shouldBe("海斗の携帯は瑛人の顔に当たり、地面に落ちる")
+        }
     }
 })

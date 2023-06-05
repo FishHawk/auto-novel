@@ -5,6 +5,11 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
+import org.jsoup.nodes.TextNode
+import org.jsoup.safety.Safelist
+import kotlin.system.measureTimeMillis
 
 class Alphapolis : WebNovelProvider {
     companion object {
@@ -90,8 +95,22 @@ class Alphapolis : WebNovelProvider {
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
         val doc = clientText.get(getEpisodeUrl(novelId, chapterId)).document()
-        val paragraphs = doc.selectFirst("div#novelBoby")!!.textNodes()
-            .map { it.text().removePrefix(" ") }
+        val els = doc.selectFirst("div#novelBoby")!!
+        els.select("rp").remove()
+        els.select("rt").remove()
+        val str = StringBuilder()
+        els.childNodes().forEach {
+            if (it is Element) {
+                if (it.tagName() == "br") {
+                    str.append('\n')
+                } else {
+                    str.append(it.text())
+                }
+            } else if (it is TextNode) {
+                str.append(it.text())
+            }
+        }
+        val paragraphs = str.lines().map { it.trimStart() }
         if (paragraphs.size < 5) {
             throw RuntimeException("章节内容太少，爬取频率太快导致未加载")
         }
