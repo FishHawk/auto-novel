@@ -16,6 +16,10 @@ data class WebNovelMetadataOutline(
     val novelId: String,
     val titleJp: String,
     val titleZh: String?,
+    val total: Long = 0,
+    val jp: Long = 0,
+    val baidu: Long = 0,
+    val youdao: Long = 0,
     val extra: String? = null,
 )
 
@@ -34,6 +38,11 @@ class WebNovelMetadata(
     val glossaryUuid: String? = null,
     val glossary: Map<String, String> = emptyMap(),
     val toc: List<WebNovelTocItem>,
+    // Translate state
+    val jp: Long = 0,
+    val baidu: Long = 0,
+    val youdao: Long = 0,
+    // Misc
     val visited: Long = 0,
     val pauseUpdate: Boolean = false,
     @Contextual val syncAt: LocalDateTime = LocalDateTime.now(),

@@ -215,9 +215,8 @@ class WebNovelApi(
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )
-        val dtoPage = PageDto.fromPage(novelPage, pageSize) { outline ->
-            val state = chapterRepo.findState(outline.providerId, outline.novelId)
-            WebNovelOutlineDto.fromDomain(outline, state)
+        val dtoPage = PageDto.fromPage(novelPage, pageSize) {
+            WebNovelOutlineDto.fromDomain(it)
         }
         return Result.success(dtoPage)
     }
@@ -230,8 +229,7 @@ class WebNovelApi(
             .getOrElse { return Result.failure(it) }
         val pageDto = PageDto(
             items = items.map { outline ->
-                val state = chapterRepo.findState(outline.providerId, outline.novelId)
-                WebNovelOutlineDto.fromDomain(outline, state)
+                WebNovelOutlineDto.fromDomain(outline)
             },
             pageNumber = 1,
         )
@@ -239,14 +237,8 @@ class WebNovelApi(
     }
 
     private suspend fun buildNovelDto(novel: WebNovelMetadata, username: String?): WebNovelDto {
-        val providerId = novel.providerId
-        val novelId = novel.novelId
-        val state = chapterRepo.findState(providerId, novelId)
-            ?: throw RuntimeException("Should not reach")
-        val favored = username?.let {
-            userRepo.isUserFavoriteWebNovel(it, novel.id.toHexString())
-        }
-        return WebNovelDto.fromDomain(novel, state, favored)
+        val favored = username?.let { userRepo.isUserFavoriteWebNovel(it, novel.id.toHexString()) }
+        return WebNovelDto.fromDomain(novel, favored)
     }
 
     suspend fun getMetadata(
@@ -553,15 +545,20 @@ class WebNovelApi(
         chapterId: String,
         translatorId: String,
     ): Result<TranslateChapterDto> {
-        if (translatorId != "baidu" && translatorId != "youdao" && translatorId != "jp")
-            return httpBadRequest("不支持的版本")
+        val realTranslatorId = when (translatorId) {
+            "baidu" -> TranslatorId.Baidu
+            "youdao" -> TranslatorId.Youdao
+            else -> return httpBadRequest("不支持的版本")
+        }
 
         val chapter = novelService.getChapterAndSave(providerId, novelId, chapterId)
             .getOrElse { return httpInternalServerError(it.message) }
-
         return Result.success(
             TranslateChapterDto(
-                glossary = if (translatorId == "baidu") chapter.baiduGlossary else chapter.youdaoGlossary,
+                glossary = when (realTranslatorId) {
+                    TranslatorId.Baidu -> chapter.baiduGlossary
+                    TranslatorId.Youdao -> chapter.youdaoGlossary
+                },
                 paragraphsJp = chapter.paragraphs,
             )
         )
@@ -615,15 +612,8 @@ class WebNovelApi(
             glossary = metadata.glossary,
             paragraphsZh = body.paragraphsZh,
         )
-        novelRepo.updateChangeAt(providerId, novelId)
-
-        val translationState = chapterRepo.findState(providerId, novelId)!!
-        return Result.success(
-            when (realTranslatorId) {
-                TranslatorId.Baidu -> translationState.baidu
-                TranslatorId.Youdao -> translationState.youdao
-            }
-        )
+        val zh = novelRepo.updateTranslateStateZh(providerId, novelId, realTranslatorId)
+        return Result.success(zh)
     }
 
     @Serializable
@@ -668,15 +658,8 @@ class WebNovelApi(
             glossary = metadata.glossary,
             paragraphsZh = body.paragraphsZh,
         )
-        novelRepo.updateChangeAt(providerId, novelId)
-
-        val translationState = chapterRepo.findState(providerId, novelId)!!
-        return Result.success(
-            when (realTranslatorId) {
-                TranslatorId.Baidu -> translationState.baidu
-                TranslatorId.Youdao -> translationState.youdao
-            }
-        )
+        val zh = novelRepo.updateTranslateStateZh(providerId, novelId, realTranslatorId)
+        return Result.success(zh)
     }
 
     suspend fun updateFile(

@@ -92,7 +92,7 @@ class WebNovelUpdateService(
         if (chapterLocal != null) return Result.success(chapterLocal)
 
         return chapterRepo.getRemoteAndSave(providerId, novelId, chapterId)
-            .onSuccess { novelRepo.updateChangeAt(providerId, novelId) }
+            .onSuccess { novelRepo.updateTranslateStateJp(providerId, novelId) }
     }
 }
 

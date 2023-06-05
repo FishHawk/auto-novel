@@ -5,6 +5,7 @@ import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.Facet
 import com.mongodb.client.result.UpdateResult
 import infra.model.*
+import infra.web.toOutline
 import kotlinx.serialization.Serializable
 import org.bson.Document
 import org.bson.types.ObjectId
@@ -69,7 +70,7 @@ class UserRepository(
         pageSize: Int,
     ): Page<WebNovelMetadataOutline> {
         @Serializable
-        data class NovelPage(val total: Int, val items: List<WebNovelMetadataOutline>)
+        data class NovelPage(val total: Int, val items: List<WebNovelMetadata>)
 
         val doc = mongo
             .userCollection
@@ -98,12 +99,16 @@ class UserRepository(
                             ),
                             unwind("novel".projection),
                             replaceRoot("novel".projection),
-                            project(
-                                WebNovelMetadata::providerId,
-                                WebNovelMetadata::novelId,
-                                WebNovelMetadata::titleJp,
-                                WebNovelMetadata::titleZh,
-                            ),
+//                            project(
+//                                WebNovelMetadata::providerId,
+//                                WebNovelMetadata::novelId,
+//                                WebNovelMetadata::titleJp,
+//                                WebNovelMetadata::titleZh,
+//                                WebNovelMetadataOutline::total from  WebNovelMetadata::toc.size(),
+//                                WebNovelMetadata::jp,
+//                                WebNovelMetadata::baidu,
+//                                WebNovelMetadata::youdao,
+//                            ),
                         )
                     )
                 ),
@@ -116,7 +121,7 @@ class UserRepository(
         return if (doc == null) {
             emptyPage()
         } else {
-            Page(total = doc.total.toLong(), items = doc.items)
+            Page(total = doc.total.toLong(), items = doc.items.map { it.toOutline() })
         }
     }
 

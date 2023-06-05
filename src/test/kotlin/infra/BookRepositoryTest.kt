@@ -1,12 +1,14 @@
 package infra
 
 import appModule
+import infra.model.TranslatorId
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelMetadataRepository
 import infra.web.WebNovelTocMergeHistoryRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
+import kotlinx.serialization.Serializable
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import java.io.File
@@ -23,6 +25,17 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
+            @Serializable
+            data class TT(val providerId: String, val bookId: String)
+
+            val ids = mongo.webNovelMetadataCollection.withDocumentClass<TT>().find().toList()
+            val size = ids.size
+            ids.forEachIndexed { index, it ->
+                println("$index/$size  ${it.providerId}/${it.bookId}")
+                repoWNM.updateTranslateStateJp(it.providerId, it.bookId)
+                repoWNM.updateTranslateStateZh(it.providerId, it.bookId, TranslatorId.Baidu)
+                repoWNM.updateTranslateStateZh(it.providerId, it.bookId, TranslatorId.Youdao)
+            }
         }
 
         describe("kmongo issue 415") {

@@ -42,10 +42,9 @@ class WebNovelMetadataRepository(
 //                    WebNovelMetadataModel.byId(providerId, it.novelId)
 //                )
 //                .first()
-            val titleZh = mongo.webNovelMetadataCollection
+            val novel = mongo.webNovelMetadataCollection
                 .findOne(WebNovelMetadata.byId(providerId, it.novelId))
-                ?.titleZh
-            it.toOutline(providerId, titleZh)
+            it.toOutline(providerId, novel)
         }
         return Result.success(items)
     }
@@ -85,7 +84,12 @@ class WebNovelMetadataRepository(
             }
         }
         val items = response.hits?.hits
-            ?.map { hit -> hit.parseHit<WebNovelMetadataEsModel>().toOutline() }
+            ?.map { hit ->
+                val esNovel = hit.parseHit<WebNovelMetadataEsModel>()
+                mongo.webNovelMetadataCollection
+                    .findOne(WebNovelMetadata.byId(esNovel.providerId, esNovel.novelId))!!
+                    .toOutline()
+            }
             ?: emptyList()
         val total = response.total
         return Page(items = items, total = total)
@@ -204,6 +208,59 @@ class WebNovelMetadataRepository(
             )
     }
 
+
+    suspend fun updateTranslateStateJp(
+        providerId: String,
+        novelId: String,
+    ) {
+        val jp = mongo.webNovelChapterCollection
+            .countDocuments(
+                WebNovelChapter.byNovelId(providerId, novelId)
+            )
+        mongo
+            .webNovelMetadataCollection
+            .updateOne(
+                WebNovelMetadata.byId(providerId, novelId),
+                combine(
+                    setValue(WebNovelMetadata::jp, jp),
+                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
+                ),
+            )
+    }
+
+    suspend fun updateTranslateStateZh(
+        providerId: String,
+        novelId: String,
+        translatorId: TranslatorId,
+    ): Long {
+        val zhProperty1 = when (translatorId) {
+            TranslatorId.Baidu -> WebNovelChapter::baiduParagraphs
+            TranslatorId.Youdao -> WebNovelChapter::youdaoParagraphs
+        }
+        val zh = mongo.webNovelChapterCollection
+            .countDocuments(
+                and(
+                    WebNovelChapter::providerId eq providerId,
+                    WebNovelChapter::novelId eq novelId,
+                    zhProperty1 ne null,
+                )
+            )
+        val zhProperty = when (translatorId) {
+            TranslatorId.Baidu -> WebNovelMetadata::baidu
+            TranslatorId.Youdao -> WebNovelMetadata::youdao
+        }
+        mongo
+            .webNovelMetadataCollection
+            .updateOne(
+                WebNovelMetadata.byId(providerId, novelId),
+                combine(
+                    setValue(zhProperty, zh),
+                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
+                ),
+            )
+        return zh
+    }
+
     suspend fun updateZh(
         providerId: String,
         novelId: String,
@@ -236,16 +293,6 @@ class WebNovelMetadataRepository(
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )
             ?.also { syncEs(it, false) }
-    }
-
-    suspend fun updateChangeAt(providerId: String, novelId: String) {
-        mongo
-            .webNovelMetadataCollection
-            .findOneAndUpdate(
-                WebNovelMetadata.byId(providerId, novelId),
-                setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
-                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-            )
     }
 
     private suspend fun syncEs(
@@ -283,21 +330,29 @@ class WebNovelMetadataRepository(
 
 private fun RemoteNovelListItem.toOutline(
     providerId: String,
-    titleZh: String?,
+    novel: WebNovelMetadata?,
 ) =
     WebNovelMetadataOutline(
         providerId = providerId,
         novelId = novelId,
         titleJp = title,
-        titleZh = titleZh,
+        titleZh = novel?.titleZh,
+        total = novel?.toc?.count { it.chapterId != null }?.toLong() ?: 0,
+        jp = novel?.jp ?: 0,
+        baidu = novel?.baidu ?: 0,
+        youdao = novel?.youdao ?: 0,
         extra = meta,
     )
 
-private fun WebNovelMetadataEsModel.toOutline() =
+fun WebNovelMetadata.toOutline() =
     WebNovelMetadataOutline(
         providerId = providerId,
         novelId = novelId,
         titleJp = titleJp,
         titleZh = titleZh,
+        total = toc.count { it.chapterId != null }.toLong(),
+        jp = jp,
+        baidu = baidu,
+        youdao = youdao,
         extra = null,
     )

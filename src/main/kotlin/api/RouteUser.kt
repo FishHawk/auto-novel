@@ -115,9 +115,8 @@ class UserApi(
             page = page,
             pageSize = pageSize,
         )
-        val dto = PageDto.fromPage(novelPage, pageSize) { outline ->
-            val state = webChapterRepo.findState(outline.providerId, outline.novelId)
-            WebNovelOutlineDto.fromDomain(outline, state)
+        val dto = PageDto.fromPage(novelPage, pageSize) {
+            WebNovelOutlineDto.fromDomain(it)
         }
         return Result.success(dto)
     }

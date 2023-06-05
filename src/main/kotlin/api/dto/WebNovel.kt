@@ -11,38 +11,24 @@ data class WebNovelOutlineDto(
     val titleJp: String,
     val titleZh: String?,
     val extra: String?,
-    val total: Long?,
-    val baidu: Long?,
-    val youdao: Long?,
+    val total: Long,
+    val jp: Long,
+    val baidu: Long,
+    val youdao: Long,
 ) {
     companion object {
-        fun fromDomain(
-            outline: WebNovelMetadataOutline,
-            state: TranslationState?,
-        ) = WebNovelOutlineDto(
-            providerId = outline.providerId,
-            novelId = outline.novelId,
-            titleJp = outline.titleJp,
-            titleZh = outline.titleZh,
-            extra = outline.extra,
-            total = state?.total,
-            baidu = state?.baidu,
-            youdao = state?.youdao,
-        )
-
-        fun fromDomain(
-            outline: WebNovelMetadata,
-            state: TranslationState?,
-        ) = WebNovelOutlineDto(
-            providerId = outline.providerId,
-            novelId = outline.novelId,
-            titleJp = outline.titleJp,
-            titleZh = outline.titleZh,
-            extra = null,
-            total = state?.total,
-            baidu = state?.baidu,
-            youdao = state?.youdao,
-        )
+        fun fromDomain(domain: WebNovelMetadataOutline) =
+            WebNovelOutlineDto(
+                providerId = domain.providerId,
+                novelId = domain.novelId,
+                titleJp = domain.titleJp,
+                titleZh = domain.titleZh,
+                extra = domain.extra,
+                total = domain.total,
+                jp = domain.jp,
+                baidu = domain.baidu,
+                youdao = domain.youdao,
+            )
     }
 }
 
@@ -64,7 +50,6 @@ data class WebNovelDto(
     companion object {
         fun fromDomain(
             novel: WebNovelMetadata,
-            state: TranslationState,
             favored: Boolean?,
         ) = WebNovelDto(
             wenkuId = novel.wenkuId,
@@ -78,7 +63,7 @@ data class WebNovelDto(
             visited = novel.visited,
             syncAt = novel.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
             favored = favored,
-            translateState = TranslationStateDto.fromDomain(state)
+            translateState = TranslationStateDto.fromDomain(novel)
         )
     }
 }
@@ -119,7 +104,7 @@ data class TranslationStateDto(
     val youdao: Long,
 ) {
     companion object {
-        fun fromDomain(domain: TranslationState) =
+        fun fromDomain(domain: WebNovelMetadata) =
             TranslationStateDto(
                 baidu = domain.baidu,
                 youdao = domain.youdao,

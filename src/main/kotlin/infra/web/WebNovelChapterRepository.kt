@@ -1,13 +1,13 @@
 package infra.web
 
 import com.mongodb.client.model.Updates
-import infra.model.TranslationState
-import infra.model.TranslatorId
 import infra.MongoDataSource
+import infra.model.TranslatorId
 import infra.model.WebNovelChapter
-import infra.model.WebNovelMetadata
 import infra.provider.WebNovelProviderDataSource
-import org.litote.kmongo.*
+import org.litote.kmongo.combine
+import org.litote.kmongo.pos
+import org.litote.kmongo.setValue
 
 class WebNovelChapterRepository(
     private val provider: WebNovelProviderDataSource,
@@ -41,56 +41,6 @@ class WebNovelChapterRepository(
             .webNovelChapterCollection
             .insertOne(model)
         return Result.success(model)
-    }
-
-    private suspend fun countTotal(providerId: String, novelId: String): Long? {
-        return mongo.webNovelMetadataCollection
-            .findOne(WebNovelMetadata.byId(providerId, novelId))
-            ?.toc
-            ?.count { it.chapterId != null }
-            ?.toLong()
-            ?: return null
-    }
-
-    private suspend fun countJp(providerId: String, novelId: String): Long {
-        return mongo.webNovelChapterCollection
-            .countDocuments(
-                WebNovelChapter.byNovelId(providerId, novelId)
-            )
-    }
-
-    private suspend fun countBaidu(providerId: String, novelId: String): Long {
-        return mongo.webNovelChapterCollection
-            .countDocuments(
-                and(
-                    WebNovelChapter::providerId eq providerId,
-                    WebNovelChapter::novelId eq novelId,
-                    WebNovelChapter::baiduParagraphs ne null,
-                )
-            )
-    }
-
-    private suspend fun countYoudao(providerId: String, novelId: String): Long {
-        return mongo.webNovelChapterCollection
-            .countDocuments(
-                and(
-                    WebNovelChapter::providerId eq providerId,
-                    WebNovelChapter::novelId eq novelId,
-                    WebNovelChapter::youdaoParagraphs ne null,
-                )
-            )
-    }
-
-    suspend fun findState(
-        providerId: String,
-        novelId: String,
-    ): TranslationState? {
-        val total = countTotal(providerId, novelId) ?: return null
-        return TranslationState(
-            total = total,
-            baidu = countBaidu(providerId, novelId),
-            youdao = countYoudao(providerId, novelId),
-        )
     }
 
     suspend fun updateTranslation(
