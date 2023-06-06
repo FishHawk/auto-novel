@@ -18,14 +18,6 @@ data class WenkuNovelOutlineDto(
                 titleZh = domain.titleZh,
                 cover = domain.cover,
             )
-
-        fun fromDomain(domain: WenkuNovelMetadata): WenkuNovelOutlineDto =
-            WenkuNovelOutlineDto(
-                id = domain.id.toHexString(),
-                title = domain.title,
-                titleZh = domain.titleZh,
-                cover = domain.cover,
-            )
     }
 }
 

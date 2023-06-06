@@ -45,7 +45,9 @@ data class WebNovelDto(
     val visited: Long,
     val syncAt: Long,
     val favored: Boolean?,
-    val translateState: TranslationStateDto,
+    val jp: Long,
+    val baidu: Long,
+    val youdao: Long,
 ) {
     companion object {
         fun fromDomain(
@@ -63,7 +65,9 @@ data class WebNovelDto(
             visited = novel.visited,
             syncAt = novel.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
             favored = favored,
-            translateState = TranslationStateDto.fromDomain(novel)
+            jp = novel.jp,
+            baidu = novel.baidu,
+            youdao = novel.youdao,
         )
     }
 }
@@ -94,20 +98,6 @@ data class WebNovelTocItemDto(
                 titleJp = domain.titleJp,
                 titleZh = domain.titleZh,
                 chapterId = domain.chapterId,
-            )
-    }
-}
-
-@Serializable
-data class TranslationStateDto(
-    val baidu: Long,
-    val youdao: Long,
-) {
-    companion object {
-        fun fromDomain(domain: WebNovelMetadata) =
-            TranslationStateDto(
-                baidu = domain.baidu,
-                youdao = domain.youdao,
             )
     }
 }

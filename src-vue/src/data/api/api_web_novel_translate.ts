@@ -46,6 +46,11 @@ interface ChapterToTranslateDto {
   paragraphsJp: string[];
 }
 
+interface TranslateStateDto {
+  jp: number;
+  zh: number;
+}
+
 async function getChapter(
   providerId: string,
   novelId: string,
@@ -67,7 +72,7 @@ async function postChapter(
   translatorId: TranslatorId,
   chapterId: string,
   body: ChapterUpdateBody
-): Promise<number> {
+): Promise<TranslateStateDto> {
   const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
   return api.post(url, { json: body }).json();
 }
@@ -83,7 +88,7 @@ async function putChapter(
   translatorId: TranslatorId,
   chapterId: string,
   body: ChapterUpdatePartlyBody
-): Promise<number> {
+): Promise<TranslateStateDto> {
   const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
   return api.put(url, { json: body }).json();
 }
@@ -144,7 +149,7 @@ function getExpiredParagraphs(
 
 interface UpdateCallback {
   onStart: (total: number) => void;
-  onChapterTranslateSuccess: (state: number) => void;
+  onChapterTranslateSuccess: (state: TranslateStateDto) => void;
   onChapterTranslateFailure: () => void;
 }
 

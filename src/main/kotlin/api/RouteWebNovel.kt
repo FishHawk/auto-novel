@@ -539,6 +539,12 @@ class WebNovelApi(
         val paragraphsJp: List<String>,
     )
 
+    @Serializable
+    data class TranslateStateDto(
+        val jp: Long,
+        val zh: Long,
+    )
+
     suspend fun getChapterToTranslate(
         providerId: String,
         novelId: String,
@@ -576,16 +582,16 @@ class WebNovelApi(
         chapterId: String,
         translatorId: String,
         body: TranslateChapterUpdateBody,
-    ): Result<Long> {
+    ): Result<TranslateStateDto> {
         val realTranslatorId = when (translatorId) {
             "baidu" -> TranslatorId.Baidu
             "youdao" -> TranslatorId.Youdao
             else -> return httpBadRequest("不支持的版本")
         }
 
-        val metadata = novelRepo.get(providerId, novelId)
+        val novel = novelRepo.get(providerId, novelId)
             ?: return httpNotFound("元数据不存在")
-        if (body.glossaryUuid != metadata.glossaryUuid) {
+        if (body.glossaryUuid != novel.glossaryUuid) {
             return httpBadRequest("术语表uuid失效")
         }
 
@@ -608,12 +614,12 @@ class WebNovelApi(
             novelId = novelId,
             chapterId = chapterId,
             translatorId = realTranslatorId,
-            glossaryUuid = metadata.glossaryUuid,
-            glossary = metadata.glossary,
+            glossaryUuid = novel.glossaryUuid,
+            glossary = novel.glossary,
             paragraphsZh = body.paragraphsZh,
         )
         val zh = novelRepo.updateTranslateStateZh(providerId, novelId, realTranslatorId)
-        return Result.success(zh)
+        return Result.success(TranslateStateDto(jp = novel.jp, zh = zh))
     }
 
     @Serializable
@@ -628,16 +634,16 @@ class WebNovelApi(
         chapterId: String,
         translatorId: String,
         body: TranslateChapterUpdatePartlyBody,
-    ): Result<Long> {
+    ): Result<TranslateStateDto> {
         val realTranslatorId = when (translatorId) {
             "baidu" -> TranslatorId.Baidu
             "youdao" -> TranslatorId.Youdao
             else -> return httpBadRequest("不支持的版本")
         }
 
-        val metadata = novelRepo.get(providerId, novelId)
+        val novel = novelRepo.get(providerId, novelId)
             ?: return httpNotFound("元数据不存在")
-        if (body.glossaryUuid != metadata.glossaryUuid) {
+        if (body.glossaryUuid != novel.glossaryUuid) {
             return httpBadRequest("术语表uuid失效")
         }
 
@@ -654,12 +660,12 @@ class WebNovelApi(
             novelId = novelId,
             chapterId = chapterId,
             translatorId = realTranslatorId,
-            glossaryUuid = metadata.glossaryUuid,
-            glossary = metadata.glossary,
+            glossaryUuid = novel.glossaryUuid,
+            glossary = novel.glossary,
             paragraphsZh = body.paragraphsZh,
         )
         val zh = novelRepo.updateTranslateStateZh(providerId, novelId, realTranslatorId)
-        return Result.success(zh)
+        return Result.success(TranslateStateDto(jp = novel.jp, zh = zh))
     }
 
     suspend fun updateFile(

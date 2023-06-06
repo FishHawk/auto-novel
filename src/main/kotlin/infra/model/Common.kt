@@ -46,8 +46,6 @@ data class User(
     val password: String,
     val role: Role,
     @Contextual val createdAt: LocalDateTime,
-    val favoriteWebNovels: List<@Contextual Id<WebNovelMetadata>> = emptyList(),
-    val favoriteWenkuNovels: List<@Contextual Id<WenkuNovelMetadata>> = emptyList(),
 ) {
     @Serializable
     enum class Role {

@@ -12,6 +12,7 @@ export interface WebNovelOutlineDto {
   titleZh?: string;
   extra?: string;
   total?: number;
+  jp?: number;
   baidu?: number;
   youdao?: number;
 }
@@ -63,10 +64,9 @@ export interface WebNovelMetadataDto {
   visited: number;
   syncAt: number;
   favored?: boolean;
-  translateState: {
-    baidu: number;
-    youdao: number;
-  };
+  jp?: number;
+  baidu?: number;
+  youdao?: number;
 }
 
 async function getMetadata(

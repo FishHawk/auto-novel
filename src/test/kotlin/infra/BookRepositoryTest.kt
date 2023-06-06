@@ -31,50 +31,6 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-//            val users = mongo.userCollection.find().toList()
-//                .filter { it.favoriteWebNovels.isNotEmpty() }
-//            val userSize = users.size
-//            users.forEachIndexed { index, user ->
-//                println("$index/$userSize")
-//                user.favoriteWebNovels.forEach {
-//                    val novel = mongo.webNovelMetadataCollection.findOneById(it)!!
-//                    val esnovel = es.client.getDocument(
-//                        target = ElasticSearchDataSource.webNovelIndexName,
-//                        id = "${novel.providerId}.${novel.novelId}",
-//                    ).document<WebNovelMetadataEsModel>()
-//                    mongo.webNovelFavoriteCollection.insertOne(
-//                        WebNovelFavoriteModel(
-//                            user.id.toId(),
-//                            it,
-//                            createAt = Clock.System.now(),
-//                            updateAt = Instant.fromEpochSeconds(esnovel.changeAt),
-//                        )
-//                    )
-//                }
-//            }
-
-            val users = mongo.userCollection.find().toList()
-                .filter { it.favoriteWenkuNovels.isNotEmpty() }
-            val userSize = users.size
-            users.forEachIndexed { index, user ->
-                println("$index/$userSize")
-                user.favoriteWenkuNovels.forEach {
-                    val novel = mongo.wenkuNovelMetadataCollection.findOneById(it)!!
-
-                    val esnovel = es.client.getDocument(
-                        target = ElasticSearchDataSource.wenkuNovelIndexName,
-                        id = novel.id.toHexString(),
-                    ).document<WenkuNovelMetadataEsModel>()
-                    mongo.wenkuNovelFavoriteCollection.insertOne(
-                        WenkuNovelFavoriteModel(
-                            user.id.toId(),
-                            it,
-                            createAt = Clock.System.now(),
-                            updateAt = Instant.fromEpochSeconds(esnovel.updateAt),
-                        )
-                    )
-                }
-            }
         }
 
         describe("kmongo issue 415") {
