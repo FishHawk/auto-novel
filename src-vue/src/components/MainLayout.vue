@@ -12,8 +12,8 @@ import {
 
 const authInfoStore = useAuthInfoStore();
 
-function menuOption(text: string, href: string): MenuOption {
-  return { label: () => h('a', { href }, text), key: href };
+function menuOption(text: string, href: string, show?: boolean): MenuOption {
+  return { label: () => h('a', { href }, text), key: href, show };
 }
 
 const topMenuOptions = computed(() => {
@@ -22,20 +22,21 @@ const topMenuOptions = computed(() => {
     menuOption('列表', '/novel-list'),
     menuOption('反馈', '/feedback'),
     menuOption('Epub翻译', '/wenku/non-archived'),
+    menuOption('控制台', '/admin/patch', atLeastMaintainer(authInfoStore.role)),
   ];
-  if (atLeastMaintainer(authInfoStore.role)) {
-    menus.push(menuOption('控制台', '/admin/patch'));
-  }
   return menus;
 });
 
 const collapsedMenuOptions = computed(() => {
-  const menus: MenuOption[] = [
+  const signed = authInfoStore.info !== undefined;
+  return [
     menuOption('首页', '/'),
     {
       label: '列表',
       key: '/list',
       children: [
+        menuOption('我的收藏', '/favorite-list', signed),
+        menuOption('阅读历史', '/read-history', signed),
         menuOption('网络小说', '/novel-list'),
         menuOption('文库小说', '/wenku-list'),
         menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),
@@ -45,21 +46,16 @@ const collapsedMenuOptions = computed(() => {
     },
     menuOption('反馈', '/feedback'),
     menuOption('Epub翻译', '/wenku/non-archived'),
-  ];
-  if (authInfoStore.info) {
-    menus[1].children!.unshift(menuOption('我的收藏', '/favorite-list'));
-  }
-  if (atLeastMaintainer(authInfoStore.role)) {
-    menus.push({
+    {
       label: '控制台',
       key: '/admin',
+      show: atLeastMaintainer(authInfoStore.role),
       children: [
         menuOption('编辑历史', '/admin/patch'),
         menuOption('目录合并历史', '/admin/toc-merge'),
       ],
-    });
-  }
-  return menus;
+    },
+  ];
 });
 
 const path = useRoute().path;
@@ -143,6 +139,9 @@ function handleUserDropdownSelect(key: string | number) {
         <div style="flex: 1"></div>
 
         <n-space v-if="authInfoStore.username">
+          <n-a class="on-desktop" href="/read-history">
+            <n-button quaternary>历史</n-button>
+          </n-a>
           <n-a class="on-desktop" href="/favorite-list">
             <n-button quaternary>收藏</n-button>
           </n-a>

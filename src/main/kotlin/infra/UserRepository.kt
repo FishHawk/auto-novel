@@ -4,6 +4,7 @@ import com.jillesvangurp.ktsearch.getDocument
 import com.mongodb.client.model.Aggregates.count
 import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.Facet
+import com.mongodb.client.model.UpdateOptions
 import infra.model.*
 import infra.web.toOutline
 import kotlinx.datetime.Clock
@@ -65,6 +66,73 @@ class UserRepository(
             .findValue(User::id)!!
     }
 
+    suspend fun listReaderHistoryWebNovel(
+        username: String,
+        page: Int,
+        pageSize: Int,
+    ): Page<WebNovelMetadataOutline> {
+        @Serializable
+        data class NovelPage(val total: Int = 0, val items: List<WebNovelMetadata>)
+
+        val doc = mongo
+            .webNovelReadHistoryCollection
+            .aggregate<NovelPage>(
+                match(WebNovelReadHistoryModel::userId eq getUserIdByUsername(username).toId()),
+                sort(Document(WebNovelReadHistoryModel::createAt.path(), -1)),
+                facet(
+                    Facet("count", count()),
+                    Facet(
+                        "items",
+                        skip(page * pageSize),
+                        limit(pageSize),
+                        lookup(
+                            from = mongo.webNovelMetadataCollectionName,
+                            localField = WebNovelReadHistoryModel::novelId.path(),
+                            foreignField = WebNovelMetadata::id.path(),
+                            newAs = "novel"
+                        ),
+                        unwind("novel".projection),
+                        replaceRoot("novel".projection),
+                    )
+                ),
+                project(
+                    NovelPage::total from arrayElemAt("count.count".projection, 0),
+                    NovelPage::items from "items".projection,
+                )
+            )
+            .first()
+        return if (doc == null) {
+            emptyPage()
+        } else {
+            Page(
+                total = doc.total.toLong(),
+                items = doc.items.map { it.toOutline() },
+            )
+        }
+    }
+
+    suspend fun updateReadHistoryWebNovel(
+        username: String,
+        novelId: String,
+        chapterId: String,
+    ) {
+        mongo
+            .webNovelReadHistoryCollection
+            .updateOne(
+                and(
+                    WebNovelFavoriteModel::userId eq getUserIdByUsername(username).toId(),
+                    WebNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
+                ),
+                WebNovelReadHistoryModel(
+                    userId = getUserIdByUsername(username).toId(),
+                    novelId = ObjectId(novelId).toId(),
+                    chapterId = chapterId,
+                    createAt = Clock.System.now(),
+                ),
+                UpdateOptions().upsert(true),
+            )
+    }
+
     suspend fun isUserFavoriteWebNovel(
         username: String,
         novelId: String,
@@ -85,7 +153,7 @@ class UserRepository(
         sort: FavoriteListSort,
     ): Page<WebNovelMetadataOutline> {
         @Serializable
-        data class NovelPage(val total: Int, val items: List<WebNovelMetadata>)
+        data class NovelPage(val total: Int = 0, val items: List<WebNovelMetadata>)
 
         val sortProperty = when (sort) {
             FavoriteListSort.CreateAt -> WebNovelFavoriteModel::createAt
@@ -98,36 +166,25 @@ class UserRepository(
                 match(WebNovelFavoriteModel::userId eq getUserIdByUsername(username).toId()),
                 sort(Document(sortProperty.path(), -1)),
                 facet(
-                    Facet("count", listOf(count())),
+                    Facet("count", count()),
                     Facet(
-                        "items", listOf(
-                            skip(page * pageSize),
-                            limit(pageSize),
-                            lookup(
-                                from = mongo.webNovelMetadataCollectionName,
-                                localField = WebNovelFavoriteModel::novelId.path(),
-                                foreignField = WebNovelMetadata::id.path(),
-                                newAs = "novel"
-                            ),
-                            unwind("novel".projection),
-                            replaceRoot("novel".projection),
-//                            project(
-//                                WebNovelMetadataOutline::providerId from WebNovelMetadataOutline::providerId,
-//                                WebNovelMetadataOutline::novelId from WebNovelMetadataOutline::novelId,
-//                                WebNovelMetadataOutline::titleJp from WebNovelMetadataOutline::titleJp,
-//                                WebNovelMetadataOutline::titleZh from WebNovelMetadataOutline::titleZh,
-//                                WebNovelMetadataOutline::total from WebNovelMetadata::jp,
-//                                WebNovelMetadataOutline::jp from WebNovelMetadataOutline::jp,
-//                                WebNovelMetadataOutline::baidu from WebNovelMetadataOutline::baidu,
-//                                WebNovelMetadataOutline::youdao from WebNovelMetadataOutline::youdao,
-//                            ),
-                        )
+                        "items",
+                        skip(page * pageSize),
+                        limit(pageSize),
+                        lookup(
+                            from = mongo.webNovelMetadataCollectionName,
+                            localField = WebNovelFavoriteModel::novelId.path(),
+                            foreignField = WebNovelMetadata::id.path(),
+                            newAs = "novel"
+                        ),
+                        unwind("novel".projection),
+                        replaceRoot("novel".projection),
                     )
                 ),
                 project(
                     NovelPage::total from arrayElemAt("count.count".projection, 0),
                     NovelPage::items from "items".projection,
-                )
+                ),
             )
             .first()
         return if (doc == null) {
@@ -195,7 +252,7 @@ class UserRepository(
         sort: FavoriteListSort,
     ): Page<WenkuNovelMetadataOutline> {
         @Serializable
-        data class NovelPage(val total: Int, val items: List<WenkuNovelMetadata>)
+        data class NovelPage(val total: Int = 0, val items: List<WenkuNovelMetadata>)
 
         val sortProperty = when (sort) {
             FavoriteListSort.CreateAt -> WenkuNovelFavoriteModel::createAt
@@ -208,26 +265,25 @@ class UserRepository(
                 match(WenkuNovelFavoriteModel::userId eq getUserIdByUsername(username).toId()),
                 sort(Document(sortProperty.path(), -1)),
                 facet(
-                    Facet("count", listOf(count())),
+                    Facet("count", count()),
                     Facet(
-                        "items", listOf(
-                            skip(page * pageSize),
-                            limit(pageSize),
-                            lookup(
-                                from = mongo.wenkuNovelMetadataCollectionName,
-                                localField = WenkuNovelFavoriteModel::novelId.path(),
-                                foreignField = WenkuNovelMetadata::id.path(),
-                                newAs = "novel"
-                            ),
-                            unwind("novel".projection),
-                            replaceRoot("novel".projection),
-                        )
+                        "items",
+                        skip(page * pageSize),
+                        limit(pageSize),
+                        lookup(
+                            from = mongo.wenkuNovelMetadataCollectionName,
+                            localField = WenkuNovelFavoriteModel::novelId.path(),
+                            foreignField = WenkuNovelMetadata::id.path(),
+                            newAs = "novel"
+                        ),
+                        unwind("novel".projection),
+                        replaceRoot("novel".projection),
                     )
                 ),
                 project(
                     NovelPage::total from arrayElemAt("count.count".projection, 0),
                     NovelPage::items from "items".projection,
-                )
+                ),
             )
             .first()
         return if (doc == null) {

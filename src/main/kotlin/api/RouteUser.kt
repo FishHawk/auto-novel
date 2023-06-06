@@ -10,6 +10,7 @@ import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
@@ -17,6 +18,23 @@ import org.koin.ktor.ext.inject
 
 @Resource("/user")
 private class UserRes {
+    @Resource("/read-history-web")
+    class ReadHistoryWeb(val parent: UserRes = UserRes()) {
+        @Resource("/list")
+        data class List(
+            val parent: ReadHistoryWeb,
+            val page: Int,
+            val pageSize: Int = 10,
+        )
+
+        @Resource("/{providerId}/{novelId}")
+        data class Book(
+            val parent: ReadHistoryWeb,
+            val providerId: String,
+            val novelId: String,
+        )
+    }
+
     @Resource("/favorited-web")
     class FavoritedWeb(val parent: UserRes = UserRes()) {
         @Resource("/list")
@@ -57,6 +75,22 @@ fun Route.routeUser() {
     val service by inject<UserApi>()
 
     authenticate {
+        get<UserRes.ReadHistoryWeb.List> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.listReadHistoryWebBook(
+                username = jwtUser.username,
+                page = loc.page.coerceAtLeast(0),
+                pageSize = loc.pageSize.coerceAtMost(20),
+            )
+            call.respondResult(result)
+        }
+        put<UserRes.ReadHistoryWeb.Book> { loc ->
+            val jwtUser = call.jwtUser()
+            val chapterId = call.receive<String>()
+            val result = service.updateReadHistoryWebBook(jwtUser.username, loc.providerId, loc.novelId, chapterId)
+            call.respondResult(result)
+        }
+
         get<UserRes.FavoritedWeb.List> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.listFavoriteWebBook(
@@ -106,6 +140,38 @@ class UserApi(
     private val webRepo: WebNovelMetadataRepository,
     private val wenkuRepo: WenkuNovelMetadataRepository,
 ) {
+    suspend fun listReadHistoryWebBook(
+        username: String,
+        page: Int,
+        pageSize: Int,
+    ): Result<PageDto<WebNovelOutlineDto>> {
+        val novelPage = userRepo.listReaderHistoryWebNovel(
+            username = username,
+            page = page,
+            pageSize = pageSize,
+        )
+        val dto = PageDto.fromPage(novelPage, pageSize) {
+            WebNovelOutlineDto.fromDomain(it)
+        }
+        return Result.success(dto)
+    }
+
+    suspend fun updateReadHistoryWebBook(
+        username: String,
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+    ): Result<Unit> {
+        val id = webRepo.get(providerId, novelId)?.id
+            ?: return httpNotFound("书不存在")
+        userRepo.updateReadHistoryWebNovel(
+            username = username,
+            novelId = id.toHexString(),
+            chapterId = chapterId,
+        )
+        return Result.success(Unit)
+    }
+
     suspend fun listFavoriteWebBook(
         username: String,
         page: Int,

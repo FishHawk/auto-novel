@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ApiUser from '@/data/api/api_user';
+import { ApiUser } from '@/data/api/api_user';
 import { mapOk } from '@/data/api/result';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
@@ -50,6 +50,6 @@ const loader: Loader = (page, _query, selected) => {
 <template>
   <ListLayout>
     <n-h1>我的收藏</n-h1>
-    <NovelList :search="false" :options="options" :loader="loader" />
+    <NovelList :options="options" :loader="loader" />
   </ListLayout>
 </template>

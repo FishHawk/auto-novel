@@ -10,7 +10,7 @@ import {
 } from '@vicons/material';
 
 import { ResultState } from '@/data/api/result';
-import ApiUser from '@/data/api/api_user';
+import { ApiUser } from '@/data/api/api_user';
 import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 

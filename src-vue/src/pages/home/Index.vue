@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
 
-import ApiUser from '@/data/api/api_user';
+import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
   ApiWenkuNovel,

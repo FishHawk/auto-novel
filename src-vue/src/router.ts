@@ -26,6 +26,10 @@ const routes = [
     component: () => import('./pages/list/FavoriteList.vue'),
   },
   {
+    path: '/read-history',
+    component: () => import('./pages/list/ReadHistoryList.vue'),
+  },
+  {
     path: '/novel-list',
     component: () => import('./pages/list/WebNovelList.vue'),
   },

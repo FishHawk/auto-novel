@@ -22,11 +22,17 @@ import { Page } from '@/data/api/page';
 const route = useRoute();
 const router = useRouter();
 
-const props = defineProps<{
-  search: boolean;
-  options: { label: string; tags: string[] }[];
-  loader: Loader;
-}>();
+const props = withDefaults(
+  defineProps<{
+    search: boolean;
+    options: { label: string; tags: string[] }[];
+    loader: Loader;
+  }>(),
+  {
+    search: false,
+    options: () => [],
+  }
+);
 
 const currentPage = ref(parseInt(route.query.page as string) || 1);
 const pageNumber = ref(1);

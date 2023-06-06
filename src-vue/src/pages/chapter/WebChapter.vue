@@ -4,9 +4,13 @@ import { useRoute } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
+import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
 import { buildChapterUrl } from '@/data/provider';
+
+const authInfoStore = useAuthInfoStore();
 
 const setting = useReaderSettingStore();
 
@@ -19,14 +23,22 @@ const url = buildChapterUrl(providerId, novelId, chapterId);
 const showModal = ref(false);
 
 const chapter = shallowRef<ResultState<WebNovelChapterDto>>();
-onMounted(() => getChapter());
 async function getChapter() {
   const result = await ApiWebNovel.getChapter(providerId, novelId, chapterId);
   chapter.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
+    if (authInfoStore.token) {
+      ApiUser.putReadHistoryWebNovel(
+        providerId,
+        novelId,
+        chapterId,
+        authInfoStore.token
+      );
+    }
   }
 }
+getChapter();
 
 type Paragraph =
   | { text: string; secondary: boolean }
@@ -99,16 +111,6 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
   }
   return merged;
 }
-
-// const editMode = ref(false);
-// function enableEditMode() {
-//   const token = authInfoStore.token;
-//   if (!token) {
-//     message.info('请先登录');
-//     return;
-//   }
-//   editMode.value = true;
-// }
 </script>
 
 <template>

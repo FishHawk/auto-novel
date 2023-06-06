@@ -10,7 +10,7 @@ import {
 import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
-import ApiUser from '@/data/api/api_user';
+import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
