@@ -29,7 +29,6 @@ class NovelismTest : DescribeSpec({
             val metadata = provider.getMetadata("TOOiVkXdS1ewhzdZSgiRmw")
             metadata.toc[0].title.shouldBe("01話　プロローグ・シリアスな現実からシュールな異世界へ")
             metadata.toc[0].chapterId.shouldBe("ogpNPjmxTTyzqDI18BUndw")
-            metadata.toc.forEach { println(it) }
         }
     }
 
@@ -37,7 +36,6 @@ class NovelismTest : DescribeSpec({
         it("常规") {
             // https://novelism.jp/novel/2m0xulekSsCxfixwam8d7g/article/FPx-5OgYTGKkU_9HV3xahQ/
             val episode = provider.getChapter("2m0xulekSsCxfixwam8d7g", "FPx-5OgYTGKkU_9HV3xahQ")
-            println(episode.paragraphs)
             episode.paragraphs.first().shouldBe("Play like singing slowly and carefully")
         }
 

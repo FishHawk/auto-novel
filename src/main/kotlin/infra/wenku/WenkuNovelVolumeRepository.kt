@@ -30,7 +30,6 @@ class WenkuNovelVolumeRepository {
             path.listDirectoryEntries()
                 .filter { it.isRegularFile() && it.fileName.extension in fileExtensions }
                 .forEach {
-                    println(it)
                     val volumeId = it.fileName.toString()
                     if (hasUnpacked(novelId, volumeId)) {
                         volumesJp.add(volumeId)

@@ -4,7 +4,7 @@ import api.dto.PageDto
 import api.dto.WebNovelOutlineDto
 import api.dto.WenkuNovelOutlineDto
 import infra.UserRepository
-import infra.web.WebNovelChapterRepository
+import infra.model.FavoriteListSort
 import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.resources.*
@@ -24,8 +24,7 @@ private class UserRes {
             val parent: FavoritedWeb,
             val page: Int,
             val pageSize: Int = 10,
-//        val sort:created|updated
-//        val direction:asc|desc
+            val sort: FavoriteListSort,
         )
 
         @Resource("/{providerId}/{novelId}")
@@ -43,6 +42,7 @@ private class UserRes {
             val parent: FavoritedWenku,
             val page: Int,
             val pageSize: Int = 10,
+            val sort: FavoriteListSort,
         )
 
         @Resource("/{novelId}")
@@ -60,9 +60,10 @@ fun Route.routeUser() {
         get<UserRes.FavoritedWeb.List> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.listFavoriteWebBook(
+                username = jwtUser.username,
                 page = loc.page.coerceAtLeast(0),
                 pageSize = loc.pageSize.coerceAtMost(20),
-                username = jwtUser.username,
+                sort = loc.sort,
             )
             call.respondResult(result)
         }
@@ -80,9 +81,10 @@ fun Route.routeUser() {
         get<UserRes.FavoritedWenku.List> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.listFavoriteWenkuBook(
+                username = jwtUser.username,
                 page = loc.page.coerceAtLeast(0),
                 pageSize = loc.pageSize.coerceAtMost(20),
-                username = jwtUser.username,
+                sort = loc.sort,
             )
             call.respondResult(result)
         }
@@ -102,18 +104,19 @@ fun Route.routeUser() {
 class UserApi(
     private val userRepo: UserRepository,
     private val webRepo: WebNovelMetadataRepository,
-    private val webChapterRepo: WebNovelChapterRepository,
     private val wenkuRepo: WenkuNovelMetadataRepository,
 ) {
     suspend fun listFavoriteWebBook(
         username: String,
         page: Int,
         pageSize: Int,
+        sort: FavoriteListSort,
     ): Result<PageDto<WebNovelOutlineDto>> {
         val novelPage = userRepo.listFavoriteWebNovel(
             username = username,
             page = page,
             pageSize = pageSize,
+            sort = sort,
         )
         val dto = PageDto.fromPage(novelPage, pageSize) {
             WebNovelOutlineDto.fromDomain(it)
@@ -124,40 +127,34 @@ class UserApi(
     suspend fun setFavoriteWebBook(username: String, providerId: String, novelId: String): Result<Unit> {
         val id = webRepo.get(providerId, novelId)?.id
             ?: return httpNotFound("书不存在")
-        val updateResult = userRepo.addFavoriteWebNovel(
+        userRepo.addFavoriteWebNovel(
             username = username,
             novelId = id.toHexString(),
         )
-        return if (updateResult.matchedCount == 0L) {
-            httpNotFound("用户不存在")
-        } else {
-            Result.success(Unit)
-        }
+        return Result.success(Unit)
     }
 
     suspend fun removeFavoriteWebBook(username: String, providerId: String, novelId: String): Result<Unit> {
         val id = webRepo.get(providerId, novelId)?.id
             ?: return httpNotFound("书不存在")
-        val updateResult = userRepo.removeFavoriteWebNovel(
+        userRepo.removeFavoriteWebNovel(
             username = username,
             novelId = id.toHexString(),
         )
-        return if (updateResult.matchedCount == 0L) {
-            httpNotFound("用户不存在")
-        } else {
-            Result.success(Unit)
-        }
+        return Result.success(Unit)
     }
 
     suspend fun listFavoriteWenkuBook(
         username: String,
         page: Int,
         pageSize: Int,
+        sort: FavoriteListSort,
     ): Result<PageDto<WenkuNovelOutlineDto>> {
         val novelPage = userRepo.listFavoriteWenkuNovel(
             username = username,
             page = page,
             pageSize = pageSize,
+            sort = sort,
         )
         val dto = PageDto.fromPage(novelPage, pageSize) {
             WenkuNovelOutlineDto.fromDomain(it)
@@ -169,30 +166,22 @@ class UserApi(
         if (!wenkuRepo.exist(novelId)) {
             return httpNotFound("书不存在")
         }
-        val updateResult = userRepo.addFavoriteWenkuNovel(
+        userRepo.addFavoriteWenkuNovel(
             username = username,
             novelId = novelId,
         )
-        return if (updateResult.matchedCount == 0L) {
-            httpNotFound("用户不存在")
-        } else {
-            Result.success(Unit)
-        }
+        return Result.success(Unit)
     }
 
     suspend fun removeFavoriteWenkuBook(username: String, novelId: String): Result<Unit> {
         if (!wenkuRepo.exist(novelId)) {
             return httpNotFound("书不存在")
         }
-        val updateResult = userRepo.removeFavoriteWenkuNovel(
+        userRepo.removeFavoriteWenkuNovel(
             username = username,
             novelId = novelId,
         )
-        return if (updateResult.matchedCount == 0L) {
-            httpNotFound("用户不存在")
-        } else {
-            Result.success(Unit)
-        }
+        return Result.success(Unit)
     }
 }
 

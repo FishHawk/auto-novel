@@ -5,11 +5,8 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
-import org.jsoup.safety.Safelist
-import kotlin.system.measureTimeMillis
 
 class Alphapolis : WebNovelProvider {
     companion object {

@@ -10,6 +10,10 @@ const options = [
     label: '类型',
     tags: ['网页小说', '文库小说'],
   },
+  {
+    label: '排序',
+    tags: ['更新时间', '收藏时间'],
+  },
 ];
 
 const authInfoStore = useAuthInfoStore();
@@ -17,16 +21,26 @@ const loader: Loader = (page, _query, selected) => {
   function optionNth(n: number): string {
     return options[n].tags[selected[n]];
   }
+  function optionSort() {
+    const option = optionNth(1);
+    if (option === '更新时间') {
+      return 'update';
+    } else {
+      return 'create';
+    }
+  }
   if (optionNth(0) === '网页小说') {
     return ApiUser.listFavoritedWebNovel(
       page - 1,
       10,
+      optionSort(),
       authInfoStore.token!
     ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
   } else {
     return ApiUser.listFavoritedWenkuNovel(
       page - 1,
       24,
+      optionSort(),
       authInfoStore.token!
     ).then((result) => mapOk(result, (page) => ({ type: 'wenku', page })));
   }

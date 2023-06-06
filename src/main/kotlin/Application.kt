@@ -131,7 +131,7 @@ val appModule = module {
     single { WenkuNovelVolumeRepository() }
 
     single { CommentRepository(get()) }
-    single { UserRepository(get()) }
+    single { UserRepository(get(), get()) }
     single { EmailCodeRepository(get()) }
 
     // Service
@@ -143,7 +143,7 @@ val appModule = module {
         AuthApi(secret, get(), get())
     }
     single(createdAtStart = true) { CommentApi(get()) }
-    single(createdAtStart = true) { UserApi(get(), get(), get(), get()) }
+    single(createdAtStart = true) { UserApi(get(), get(), get()) }
 
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }

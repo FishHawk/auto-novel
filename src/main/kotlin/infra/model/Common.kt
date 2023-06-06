@@ -3,6 +3,7 @@ package infra.model
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.types.ObjectId
 import org.litote.kmongo.Id
 import org.litote.kmongo.eq
 import java.time.LocalDateTime
@@ -13,6 +14,15 @@ data class Page<T>(
 )
 
 fun <T> emptyPage() = Page<T>(items = emptyList(), total = 0L)
+
+@Serializable
+enum class FavoriteListSort {
+    @SerialName("create")
+    CreateAt,
+
+    @SerialName("update")
+    UpdateAt,
+}
 
 @Serializable
 data class Comment(
@@ -29,6 +39,7 @@ data class Comment(
 
 @Serializable
 data class User(
+    @Contextual @SerialName("_id") val id: ObjectId,
     val email: String,
     val username: String,
     val salt: String,
@@ -49,13 +60,6 @@ data class User(
         @SerialName("normal")
         Normal,
     }
-
-    @Serializable
-    data class FavoriteBook(
-        val providerId: String,
-        @SerialName("bookId")
-        val novelId: String,
-    )
 
     companion object {
         fun byUsername(username: String) = User::username eq username

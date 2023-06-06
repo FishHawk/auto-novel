@@ -50,12 +50,8 @@ class ElasticSearchDataSource(url: String) {
                 client.createIndex(webNovelIndexName) {
                     mappings(dynamicEnabled = false) {
                         keyword(WebNovelMetadataEsModel::providerId)
-                        text(WebNovelMetadataEsModel::titleJp) {
-                            analyzer = "icu_analyzer"
-                        }
-                        text(WebNovelMetadataEsModel::titleZh) {
-                            analyzer = "icu_analyzer"
-                        }
+                        text(WebNovelMetadataEsModel::titleJp) { analyzer = "icu_analyzer" }
+                        text(WebNovelMetadataEsModel::titleZh) { analyzer = "icu_analyzer" }
                         keyword(WebNovelMetadataEsModel::authors)
                         date(WebNovelMetadataEsModel::changeAt)
                     }

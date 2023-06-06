@@ -46,6 +46,7 @@ async function loadFavorite() {
   const result = await ApiUser.listFavoritedWebNovel(
     0,
     8,
+    'update',
     authInfoStore.token!!
   );
   if (result.ok) {

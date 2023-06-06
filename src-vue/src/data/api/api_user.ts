@@ -7,13 +7,14 @@ import { Page } from './page';
 async function listFavoritedWebNovel(
   page: number,
   pageSize: number,
+  sort: 'create' | 'update',
   token: string
 ): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`user/favorited-web/list`, {
         headers: { Authorization: 'Bearer ' + token },
-        searchParams: { page, pageSize },
+        searchParams: { page, pageSize, sort },
       })
       .json()
   );
@@ -50,13 +51,14 @@ async function deleteFavoritedWebNovel(
 async function listFavoritedWenkuNovel(
   page: number,
   pageSize: number,
+  sort: 'create' | 'update',
   token: string
 ): Promise<Result<Page<WenkuNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`user/favorited-wenku/list`, {
         headers: { Authorization: 'Bearer ' + token },
-        searchParams: { page, pageSize },
+        searchParams: { page, pageSize, sort },
       })
       .json()
   );
