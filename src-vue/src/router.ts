@@ -16,6 +16,7 @@ const routes = [
   { path: '/', component: () => import('./pages/home/Index.vue') },
 
   { path: '/feedback', component: () => import('./pages/other/Feedback.vue') },
+  { path: '/donate', component: () => import('./pages/other/Donate.vue') },
   {
     path: '/how-to-use',
     component: () => import('./pages/other/HowToUse.vue'),

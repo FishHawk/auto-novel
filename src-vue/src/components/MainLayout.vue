@@ -22,6 +22,7 @@ const topMenuOptions = computed(() => {
     menuOption('列表', '/novel-list'),
     menuOption('反馈', '/feedback'),
     menuOption('Epub翻译', '/wenku/non-archived'),
+    menuOption('赞助', '/donate'),
     menuOption('控制台', '/admin/patch', atLeastMaintainer(authInfoStore.role)),
   ];
   return menus;
@@ -46,6 +47,7 @@ const collapsedMenuOptions = computed(() => {
     },
     menuOption('反馈', '/feedback'),
     menuOption('Epub翻译', '/wenku/non-archived'),
+    menuOption('赞助', '/donate'),
     {
       label: '控制台',
       key: '/admin',
@@ -68,6 +70,8 @@ function getTopMenuOptionKey() {
     return '/';
   } else if (path === '/wenku/non-archived') {
     return '/wenku/non-archived';
+  } else if (path === '/donate') {
+    return '/donate';
   } else {
     return '/novel-list';
   }
