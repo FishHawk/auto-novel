@@ -5,7 +5,10 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Instant
+import kotlinx.datetime.toKotlinInstant
 import org.jsoup.nodes.Element
+import java.text.SimpleDateFormat
 
 class Syosetu : WebNovelProvider {
     companion object {
@@ -152,6 +155,10 @@ class Syosetu : WebNovelProvider {
                             chapterId = a.attr("href")
                                 .removeSuffix("/")
                                 .substringAfterLast("/"),
+                            createAt =
+                            SimpleDateFormat("yyyy/MM/dd HH:mm").parse(
+                                child.selectFirst("dt")!!.firstChild().toString().trim()
+                            ).toInstant().toKotlinInstant(),
                         )
                     } ?: RemoteNovelMetadata.TocItem(
                         title = child.text(),

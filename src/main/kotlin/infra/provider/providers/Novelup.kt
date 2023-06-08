@@ -5,6 +5,8 @@ import io.ktor.client.request.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import kotlinx.datetime.toKotlinInstant
+import java.text.SimpleDateFormat
 
 class Novelup : WebNovelProvider {
     companion object {
@@ -49,7 +51,10 @@ class Novelup : WebNovelProvider {
                     li.selectFirst("a")?.let {
                         RemoteNovelMetadata.TocItem(
                             title = it.text(),
-                            chapterId = it.attr("href").substringAfterLast("/")
+                            chapterId = it.attr("href").substringAfterLast("/"),
+                            createAt = SimpleDateFormat("yyyy/M/dd HH:mm").parse(
+                                li.selectFirst("div.update_date > p > span > span")!!.text()
+                            ).toInstant().toKotlinInstant(),
                         )
                     } ?: RemoteNovelMetadata.TocItem(
                         title = li.text(),

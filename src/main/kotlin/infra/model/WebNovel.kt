@@ -1,5 +1,6 @@
 package infra.model
 
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -69,6 +70,7 @@ data class WebNovelTocItem(
     val titleZh: String?,
     @SerialName("episodeId")
     val chapterId: String?,
+    @Contextual val createAt: Instant? = null,
 )
 
 @Serializable

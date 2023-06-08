@@ -50,6 +50,7 @@ export interface WebNovelTocItemDto {
   titleJp: string;
   titleZh?: string;
   chapterId?: string;
+  createAt?: number;
 }
 
 export interface WebNovelMetadataDto {

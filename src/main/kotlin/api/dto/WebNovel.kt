@@ -91,6 +91,7 @@ data class WebNovelTocItemDto(
     val titleJp: String,
     val titleZh: String?,
     val chapterId: String?,
+    val createAt: Long?,
 ) {
     companion object {
         fun fromDomain(domain: WebNovelTocItem) =
@@ -98,6 +99,7 @@ data class WebNovelTocItemDto(
                 titleJp = domain.titleJp,
                 titleZh = domain.titleZh,
                 chapterId = domain.chapterId,
+                createAt = domain.createAt?.epochSeconds,
             )
     }
 }

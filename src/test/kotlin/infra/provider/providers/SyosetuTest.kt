@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeEmpty
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
+import kotlinx.datetime.Instant
 
 class SyosetuTest : DescribeSpec({
     val provider = Syosetu()
@@ -21,13 +22,15 @@ class SyosetuTest : DescribeSpec({
             metadata.introduction.shouldEndWith("http://ncode.syosetu.com/n4251cr/")
             metadata.toc[0].title.shouldBe("第１章　幼年期")
             metadata.toc[0].chapterId.shouldBeNull()
+            metadata.toc[0].createAt.shouldBeNull()
             metadata.toc[1].title.shouldBe("プロローグ")
             metadata.toc[1].chapterId.shouldBe("1")
+            metadata.toc[1].createAt.shouldBe(Instant.parse("2012-11-22T09:00:00Z"))
         }
         it("常规，简介需要展开，但不需要处理") {
             // https://ncode.syosetu.com/n8473hv
             val metadata = provider.getMetadata("n8473hv")
-            metadata.introduction.shouldEndWith("たくさんの大切なもので満たされていくお話です。")
+            metadata.introduction.shouldEndWith("カクヨム様でも掲載中です。")
         }
         it("常规，R18重定向") {
             // https://ncode.syosetu.com/n5305eg
@@ -58,8 +61,8 @@ class SyosetuTest : DescribeSpec({
         it("短篇") {
             // https://ncode.syosetu.com/n0916hw
             val episode = provider.getChapter("n0916hw", "default")
-            episode.paragraphs.first().shouldBe("\n")
-            episode.paragraphs.last().shouldBe("\n")
+            episode.paragraphs.first().shouldBe("")
+            episode.paragraphs.last().shouldBe("")
         }
         it("ruby标签过滤") {
             // https://ncode.syosetu.com/n2907ga/74

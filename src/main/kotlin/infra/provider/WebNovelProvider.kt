@@ -8,6 +8,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.jsoup.Jsoup
@@ -20,7 +21,11 @@ data class RemoteNovelMetadata(
     val toc: List<TocItem>,
 ) {
     data class Author(val name: String, val link: String? = null)
-    data class TocItem(val title: String, val chapterId: String? = null)
+    data class TocItem(
+        val title: String,
+        val chapterId: String? = null,
+        val createAt: Instant? = null,
+    )
 }
 
 data class RemoteChapter(

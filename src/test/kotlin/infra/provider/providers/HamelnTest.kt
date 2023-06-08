@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import kotlinx.datetime.Instant
 
 class HamelnTest : DescribeSpec({
     val provider = Hameln()
@@ -14,9 +15,12 @@ class HamelnTest : DescribeSpec({
             val metadata = provider.getMetadata("232822")
             metadata.title.shouldBe("和風ファンタジーな鬱エロゲーの名無し戦闘員に転生したんだが周囲の女がヤベー奴ばかりで嫌な予感しかしない件")
             metadata.introduction.shouldStartWith("どうやら和風ファンタジーゲ")
-            metadata.toc[0].title.shouldBe("人物紹介(仮設)")
-            metadata.toc[0].chapterId.shouldBe("1")
-            metadata.toc[1].title.shouldBe("第一章　チュートリアルすら始まってないのに詰みそうな件")
+            metadata.toc[0].title.shouldBe("人物紹介・短編等")
+            metadata.toc[0].chapterId.shouldBeNull()
+            metadata.toc[0].createAt.shouldBeNull()
+            metadata.toc[1].title.shouldBe("人物紹介(仮設)")
+            metadata.toc[1].chapterId.shouldBe("1")
+            metadata.toc[1].createAt.shouldBe(Instant.parse("2021-06-19T23:00:00Z"))
         }
         it("常规，作者无链接") {
             // https://syosetu.org/novel/305149
@@ -53,7 +57,7 @@ class HamelnTest : DescribeSpec({
         it("常规") {
             // https://syosetu.org/novel/232822/1.html
             val episode = provider.getChapter("232822", "1")
-            episode.paragraphs.size.shouldBe(553)
+            episode.paragraphs.size.shouldBe(671)
             episode.paragraphs.first().shouldBe("伴部(ともべ)")
         }
         it("短篇") {

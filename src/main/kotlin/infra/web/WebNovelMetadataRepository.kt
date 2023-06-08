@@ -33,15 +33,7 @@ class WebNovelMetadataRepository(
     ): Result<List<WebNovelMetadataOutline>> {
         val ranks = provider.listRank(providerId, options)
             .getOrElse { return Result.failure(it) }
-
-        // TODO: 太慢了
         val items = ranks.map {
-//            val titleZh = mongo.webNovelMetadataCollection
-//                .projection(
-//                    WebNovelMetadataModel::titleZh,
-//                    WebNovelMetadataModel.byId(providerId, it.novelId)
-//                )
-//                .first()
             val novel = mongo.webNovelMetadataCollection
                 .findOne(WebNovelMetadata.byId(providerId, it.novelId))
             it.toOutline(providerId, novel)
@@ -118,7 +110,7 @@ class WebNovelMetadataRepository(
             titleJp = remote.title,
             authors = remote.authors.map { WebNovelAuthor(it.name, it.link) },
             introductionJp = remote.introduction,
-            toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId) },
+            toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId, it.createAt) },
         )
         return Result.success(model)
     }

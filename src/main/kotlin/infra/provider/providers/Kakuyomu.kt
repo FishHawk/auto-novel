@@ -2,6 +2,7 @@ package infra.provider.providers
 
 import infra.provider.*
 import io.ktor.client.request.*
+import kotlinx.datetime.Instant
 
 class Kakuyomu : WebNovelProvider {
     companion object {
@@ -42,7 +43,8 @@ class Kakuyomu : WebNovelProvider {
             .map {
                 RemoteNovelMetadata.TocItem(
                     title = it.selectFirst("span")!!.text(),
-                    chapterId = it.selectFirst("a")?.attr("href")?.substringAfterLast("/")
+                    chapterId = it.selectFirst("a")?.attr("href")?.substringAfterLast("/"),
+                    createAt = it.selectFirst("time")?.attr("datetime")?.let { Instant.parse(it) },
                 )
             }
 

@@ -2,7 +2,9 @@ package infra.provider.providers
 
 import infra.provider.*
 import io.ktor.client.request.*
+import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.json.*
+import java.text.SimpleDateFormat
 
 class Novelism : WebNovelProvider {
     companion object {
@@ -35,7 +37,16 @@ class Novelism : WebNovelProvider {
                 if (el.selectFirst("button") != null) null
                 else RemoteNovelMetadata.TocItem(
                     title = el.selectFirst("div.leading-6")!!.text(),
-                    chapterId = el.selectFirst("a")!!.attr("href").removeSuffix("/").substringAfterLast("/"),
+                    chapterId = el.selectFirst("a")!!
+                        .attr("href")
+                        .removeSuffix("/")
+                        .substringAfterLast("/"),
+                    createAt = SimpleDateFormat("yyyy年M月d日HH:mm").parse(
+                        el.selectFirst("div.text-xs")!!.child(1).text().let {
+                            it.substringBefore('(') +
+                                    it.substringAfter(' ').substringBefore('(')
+                        }
+                    ).toInstant().toKotlinInstant(),
                 )
             }
             if (h3 == null) li else listOf(

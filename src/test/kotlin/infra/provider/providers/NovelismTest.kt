@@ -5,23 +5,26 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
+import kotlinx.datetime.Instant
 
 class NovelismTest : DescribeSpec({
     val provider = Novelism()
 
     describe("getMetadata") {
         it("常规") {
-            // https://novelism.jp/novel/2m0xulekSsCxfixwam8d7g
-            val metadata = provider.getMetadata("2m0xulekSsCxfixwam8d7g")
-            metadata.title.shouldBe("第四大戦")
-            metadata.authors.first().name.shouldBe("十文字青")
-            metadata.authors.first().link.shouldBe("https://novelism.jp/user/100010/")
-            metadata.introduction.shouldStartWith("　人類は有史以前から人外勢力")
-            metadata.introduction.shouldEndWith("戦いと日常の記録だ。")
-            metadata.toc[0].title.shouldBe("世羽黙示録　Apocalypse of Yohane")
+            // https://novelism.jp/novel/vDL5vTz_TTqrsEALu5zaOw
+            val metadata = provider.getMetadata("vDL5vTz_TTqrsEALu5zaOw")
+            metadata.title.shouldBe("鮮血王女、皆殺す")
+            metadata.authors.first().name.shouldBe("kiki")
+            metadata.authors.first().link.shouldBe("https://novelism.jp/user/100008/")
+            metadata.introduction.shouldStartWith("メアリーは、")
+            metadata.introduction.shouldEndWith("メアリーは姉を殺した全ての者への復讐を決意する。")
+            metadata.toc[0].title.shouldBe("序章　産声が上がるのは君が死んだから")
             metadata.toc[0].chapterId.shouldBeNull()
-            metadata.toc[1].title.shouldBe("第１章　ゆっくり、丁寧に、歌うように")
-            metadata.toc[1].chapterId.shouldBe("FPx-5OgYTGKkU_9HV3xahQ")
+            metadata.toc[0].createAt.shouldBeNull()
+            metadata.toc[1].title.shouldBe("001　大切なもの、この両手からこぼれおちて")
+            metadata.toc[1].chapterId.shouldBe("sKk9F9hLTJu3EA2k3hYLdg")
+            metadata.toc[1].createAt.shouldBe(Instant.parse("2021-03-19T05:56:00Z"))
         }
 
         it("目录没有分段") {

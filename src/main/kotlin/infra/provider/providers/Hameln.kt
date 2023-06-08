@@ -5,6 +5,9 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinInstant
+import org.jsoup.nodes.Element
+import java.text.SimpleDateFormat
 
 class Hameln : WebNovelProvider {
     companion object {
@@ -51,6 +54,12 @@ class Hameln : WebNovelProvider {
                     RemoteNovelMetadata.TocItem(
                         title = it.text(),
                         chapterId = chapterId,
+                        createAt = SimpleDateFormat("yyyy年MM月dd日 HH:mm").parse(
+                            trTag.selectFirst("nobr")!!.childNode(0)
+                                .let { if (it is Element) it.text() else it.toString() }
+                                .replace("\\(.*?\\)".toRegex(), "")
+
+                        ).toInstant().toKotlinInstant(),
                     )
                 } ?: RemoteNovelMetadata.TocItem(
                     title = trTag.text(),
