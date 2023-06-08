@@ -17,7 +17,6 @@ const isDesktop = computed(() => width.value > 600);
       <n-li>
         如何使用翻译插件请参考
         <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
-        翻译Pixiv的朋友有合集请翻译合集，<b>尽量不要一章一章的翻</b>。
         Alphapolis和Pixiv是我用自己的cookie垫进去的，如果加载不了就是我cookie过期了，请提醒我更新。
       </n-li>
     </n-ul>
