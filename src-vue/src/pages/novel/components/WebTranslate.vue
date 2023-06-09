@@ -14,6 +14,7 @@ const message = useMessage();
 const props = defineProps<{
   providerId: string;
   novelId: string;
+  title: string;
   total: number;
   jp: number;
   baidu: number;
@@ -98,6 +99,7 @@ interface NovelFiles {
 }
 
 function stateToFileList(): NovelFiles[] {
+  const validTitle = props.title.replace(/[\/|\\:*?"<>]/g, '');
   function createFile(
     label: string,
     lang: 'jp' | 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao',
@@ -111,7 +113,7 @@ function stateToFileList(): NovelFiles[] {
         lang,
         type
       ),
-      name: `${props.providerId}.${props.novelId}.${lang}.${type}`,
+      name: `${props.providerId}.${props.novelId}.${lang}.${validTitle}.${type}`,
     };
   }
 
