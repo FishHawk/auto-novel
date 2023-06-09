@@ -40,7 +40,10 @@ class WebNovelUpdateService(
 
         // 在数据库中，过期，合并
         val remoteNovel = novelRepo.getRemote(providerId, novelId)
-            .getOrElse { return Result.failure(it) }
+            .getOrElse {
+                // 无法更新，大概率小说被删了
+                return Result.success(novelLocal)
+            }
         val merged = mergeNovel(
             providerId = providerId,
             novelId = novelId,
