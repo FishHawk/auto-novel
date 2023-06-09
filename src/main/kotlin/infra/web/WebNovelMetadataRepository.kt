@@ -7,16 +7,20 @@ import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import infra.ElasticSearchDataSource
 import infra.MongoDataSource
+import infra.WebNovelFavoriteModel
 import infra.WebNovelMetadataEsModel
 import infra.model.*
 import infra.provider.RemoteNovelListItem
 import infra.provider.WebNovelProviderDataSource
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
+import org.litote.kmongo.id.toId
 import util.Optional
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -292,6 +296,7 @@ class WebNovelMetadataRepository(
         hasChange: Boolean,
     ) {
         if (hasChange) {
+            val updateAt = Clock.System.now()
             es.client.indexDocument(
                 id = "${novel.providerId}.${novel.novelId}",
                 target = ElasticSearchDataSource.webNovelIndexName,
@@ -301,9 +306,13 @@ class WebNovelMetadataRepository(
                     titleJp = novel.titleJp,
                     titleZh = novel.titleZh,
                     authors = novel.authors.map { it.name },
-                    changeAt = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond(),
+                    changeAt = updateAt.epochSeconds,
                 ),
                 refresh = Refresh.WaitFor,
+            )
+            mongo.webNovelFavoriteCollection.updateMany(
+                WebNovelFavoriteModel::novelId eq novel.id.toId(),
+                setValue(WebNovelFavoriteModel::updateAt, updateAt)
             )
         } else {
             @Serializable
