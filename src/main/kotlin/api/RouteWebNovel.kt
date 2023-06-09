@@ -4,6 +4,7 @@ import api.dto.*
 import api.dto.WebNovelDto
 import infra.*
 import infra.model.*
+import infra.provider.providers.Syosetu
 import infra.web.*
 import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.http.*
@@ -11,6 +12,7 @@ import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
@@ -62,6 +64,12 @@ private class WebNovelRes {
     }
 }
 
+private fun syosetuNovelIdMustBeLowercase(providerId: String, novelId: String) {
+    if (providerId == Syosetu.id && novelId != novelId.lowercase()) {
+        throw BadRequestException("成为小说家id应当小写")
+    }
+}
+
 fun Route.routeWebNovel() {
     val service by inject<WebNovelApi>()
 
@@ -84,6 +92,7 @@ fun Route.routeWebNovel() {
 
     authenticate(optional = true) {
         get<WebNovelRes.Id> { loc ->
+            syosetuNovelIdMustBeLowercase(loc.providerId, loc.novelId)
             val jwtUser = call.jwtUserOrNull()
             val result = service.getMetadata(loc.providerId, loc.novelId, jwtUser?.username)
             call.respondResult(result)
@@ -116,12 +125,17 @@ fun Route.routeWebNovel() {
     }
 
     get<WebNovelRes.Id.Chapter> { loc ->
+        syosetuNovelIdMustBeLowercase(loc.parent.providerId, loc.parent.novelId)
         val result = service.getChapter(loc.parent.providerId, loc.parent.novelId, loc.chapterId)
         call.respondResult(result)
     }
 
     // Translator
     get<WebNovelRes.Id.Translate.Metadata> { loc ->
+        syosetuNovelIdMustBeLowercase(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+        )
         val result = service.getMetadataToTranslate(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
