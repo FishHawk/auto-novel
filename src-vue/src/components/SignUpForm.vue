@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
-import ApiAuth, { SignInDto } from '@/data/api/api_auth';
+import { ApiAuth, SignInDto } from '@/data/api/api_auth';
 
 const emits = defineEmits<{ (e: 'signUp', user: SignInDto): void }>();
 
@@ -79,55 +79,13 @@ function signUp() {
     }
   });
 }
-
-type VerifyState =
-  | { state: 'sending' }
-  | { state: 'cooldown'; seconds: number }
-  | undefined;
-
-const verifyState = ref<VerifyState>(undefined);
-
-async function verifyEmail() {
-  if (verifyState.value !== undefined) return;
-
+const allowSendEmail = () => {
   const email = formValue.value.email;
-  if (!emailRegex.test(email)) {
-    message.error('邮箱不合法');
-    return;
-  }
-
-  verifyState.value = { state: 'sending' };
-  const result = await ApiAuth.verifyEmail(email);
-
-  if (result.ok) {
-    verifyState.value = { state: 'cooldown', seconds: 60 };
-    message.info(result.value);
-
-    const timer = window.setInterval(() => {
-      if (
-        verifyState.value?.state === 'cooldown' &&
-        verifyState.value.seconds > 0
-      ) {
-        verifyState.value.seconds--;
-      } else {
-        verifyState.value = undefined;
-        window.clearInterval(timer);
-      }
-    }, 1000);
-  } else {
-    verifyState.value = undefined;
-    message.error('发送验证码失败:' + result.error.message);
-  }
-}
-const verifyButtonLabel = computed(() => {
-  if (verifyState.value === undefined) {
-    return '发送验证码';
-  } else if (verifyState.value.state === 'sending') {
-    return '发送中';
-  } else {
-    return `${verifyState.value.seconds}秒冷却`;
-  }
-});
+  const allow = emailRegex.test(email);
+  if (!allow) message.error('邮箱不合法');
+  return allow;
+};
+const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
 </script>
 
 <template>
@@ -144,14 +102,11 @@ const verifyButtonLabel = computed(() => {
     <n-form-item-row path="emailCode">
       <n-input-group>
         <n-input v-model:value="formValue.emailCode" placeholder="邮箱验证码" />
-        <n-button
-          type="primary"
-          :disabled="verifyState"
-          @click="verifyEmail()"
-          style="width: 100px"
-        >
-          {{ verifyButtonLabel }}
-        </n-button>
+        <EmailButton
+          label="发送验证码"
+          :allow-send-email="allowSendEmail"
+          :send-email="sendEmail"
+        />
       </n-input-group>
     </n-form-item-row>
     <n-form-item-row path="username">

@@ -17,6 +17,7 @@ const routes = [
 
   { path: '/feedback', component: () => import('./pages/other/Feedback.vue') },
   { path: '/donate', component: () => import('./pages/other/Donate.vue') },
+  { path: '/reset-password', component: () => import('./pages/other/ResetPassword.vue') },
   {
     path: '/how-to-use',
     component: () => import('./pages/other/HowToUse.vue'),

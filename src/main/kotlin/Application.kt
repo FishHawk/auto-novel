@@ -133,6 +133,7 @@ val appModule = module {
     single { CommentRepository(get()) }
     single { UserRepository(get(), get()) }
     single { EmailCodeRepository(get()) }
+    single { ResetPasswordTokenRepository(get()) }
 
     // Service
     single { WebNovelUpdateService(get(), get(), get()) }
@@ -140,7 +141,7 @@ val appModule = module {
     // Api
     single(createdAtStart = true) {
         val secret = System.getenv("JWT_SECRET") ?: ""
-        AuthApi(secret, get(), get())
+        AuthApi(secret, get(), get(), get())
     }
     single(createdAtStart = true) { CommentApi(get()) }
     single(createdAtStart = true) { UserApi(get(), get(), get()) }

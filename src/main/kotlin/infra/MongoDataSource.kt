@@ -34,6 +34,13 @@ data class EmailCodeModel(
 )
 
 @Serializable
+data class ResetPasswordToken(
+    @Contextual val userId: Id<User>,
+    val token: String,
+    @Contextual val createAt: Instant,
+)
+
+@Serializable
 data class WebNovelFavoriteModel(
     @Contextual val userId: Id<User>,
     @Contextual val novelId: Id<WebNovelMetadata>,
@@ -63,6 +70,8 @@ class MongoDataSource(url: String) {
 
     val emailCodeCollection
         get() = database.getCollection<EmailCodeModel>("email-code")
+    val resetPasswordTokenCollection
+        get() = database.getCollection<ResetPasswordToken>("reset-password-token")
     val userCollection
         get() = database.getCollection<User>("user")
     val commentCollection
@@ -98,6 +107,11 @@ class MongoDataSource(url: String) {
         runBlocking {
             emailCodeCollection.ensureIndex(
                 EmailCodeModel::createdAt,
+                indexOptions = IndexOptions().expireAfter(15, TimeUnit.MINUTES),
+            )
+            resetPasswordTokenCollection.ensureUniqueIndex(ResetPasswordToken::userId)
+            resetPasswordTokenCollection.ensureIndex(
+                ResetPasswordToken::createAt,
                 indexOptions = IndexOptions().expireAfter(15, TimeUnit.MINUTES),
             )
             userCollection.ensureUniqueIndex(User::email)

@@ -48,8 +48,37 @@ async function verifyEmail(email: string): Promise<Result<string>> {
   );
 }
 
-export default {
+async function sendResetPasswordEmail(
+  emailOrUsername: string
+): Promise<Result<string>> {
+  return runCatching(
+    api
+      .post('auth/reset-password-email', {
+        searchParams: { emailOrUsername },
+      })
+      .text()
+  );
+}
+
+async function resetPassword(
+  emailOrUsername: string,
+  token: string,
+  password: string
+): Promise<Result<string>> {
+  return runCatching(
+    api
+      .post('auth/reset-password', {
+        searchParams: { emailOrUsername },
+        json: { token, password },
+      })
+      .text()
+  );
+}
+
+export const ApiAuth = {
   signIn,
   signUp,
   verifyEmail,
+  sendResetPasswordEmail,
+  resetPassword,
 };

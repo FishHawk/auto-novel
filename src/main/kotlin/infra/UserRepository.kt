@@ -44,6 +44,20 @@ class UserRepository(
             )
     }
 
+    suspend fun updatePassword(userId: ObjectId, password: String) {
+        val salt = PBKDF2.randomSalt()
+        val hashedPassword = PBKDF2.hash(password, salt)
+        mongo
+            .userCollection
+            .updateOne(
+                User::id eq userId,
+                combine(
+                    setValue(User::salt, salt),
+                    setValue(User::password, hashedPassword),
+                )
+            )
+    }
+
     suspend fun getByEmail(email: String): User? {
         return mongo
             .userCollection
@@ -54,6 +68,17 @@ class UserRepository(
         return mongo
             .userCollection
             .findOne(User.byUsername(username))
+    }
+
+    suspend fun getByUsernameOrEmail(emailOrUsername: String): User? {
+        return mongo
+            .userCollection
+            .findOne(
+                or(
+                    User::email eq emailOrUsername,
+                    User::username eq emailOrUsername,
+                )
+            )
     }
 
     private suspend fun getUserIdByUsername(username: String): ObjectId {

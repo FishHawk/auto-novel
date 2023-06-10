@@ -3,6 +3,7 @@ package api
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.EmailCodeRepository
+import infra.ResetPasswordTokenRepository
 import infra.UserRepository
 import infra.model.User
 import io.ktor.resources.*
@@ -34,8 +35,11 @@ private class AuthRes {
         val email: String,
     )
 
+    @Resource("/reset-password-email")
+    class ResetPasswordEmail(val parent: AuthRes = AuthRes(), val emailOrUsername: String)
+
     @Resource("/reset-password")
-    class ResetPassword(val parent: AuthRes = AuthRes())
+    class ResetPassword(val parent: AuthRes = AuthRes(), val emailOrUsername: String)
 }
 
 fun Route.routeAuth() {
@@ -52,14 +56,18 @@ fun Route.routeAuth() {
         val result = service.signUp(body)
         call.respondResult(result)
     }
-
     post<AuthRes.VerifyEmail> { loc ->
-        val result = service.verifyEmail(loc.email)
+        val result = service.sendVerifyEmail(loc.email)
         call.respondResult(result)
     }
 
-    post<AuthRes.ResetPassword> {
-        val result = service.resetPassword()
+    post<AuthRes.ResetPasswordEmail> { loc ->
+        val result = service.sendResetPasswordTokenEmail(loc.emailOrUsername)
+        call.respondResult(result)
+    }
+    post<AuthRes.ResetPassword> { loc ->
+        val body = call.receive<AuthApi.ResetPasswordBody>()
+        val result = service.resetPassword(loc.emailOrUsername, body)
         call.respondResult(result)
     }
 }
@@ -68,6 +76,7 @@ class AuthApi(
     private val secret: String,
     private val userRepository: UserRepository,
     private val emailCodeRepository: EmailCodeRepository,
+    private val resetPasswordTokenRepository: ResetPasswordTokenRepository,
 ) {
     private fun generateToken(
         username: String,
@@ -175,7 +184,7 @@ class AuthApi(
         )
     }
 
-    suspend fun verifyEmail(email: String): Result<String> {
+    suspend fun sendVerifyEmail(email: String): Result<Unit> {
         userRepository.getByEmail(email)?.let {
             return httpConflict("邮箱已经被使用")
         }
@@ -201,11 +210,51 @@ class AuthApi(
         }
 
         emailCodeRepository.add(email, emailCode)
+        return Result.success(Unit)
+    }
+
+    suspend fun sendResetPasswordTokenEmail(emailOrUsername: String): Result<String> {
+        val user = userRepository.getByUsernameOrEmail(emailOrUsername)
+            ?: return httpNotFound("用户不存在")
+
+        try {
+            InternetAddress(user.email).apply { validate() }
+        } catch (e: AddressException) {
+            return httpBadRequest("邮箱不合法")
+        }
+
+        val token = UUID.randomUUID().toString()
+
+        try {
+            Email.send(
+                to = user.email,
+                subject = "日本网文机翻机器人 重置密码口令",
+                text = "您的重置密码口令为 $token\n" +
+                        "口令将会在15分钟后失效,请尽快重置密码\n" +
+                        "如果发送了多个口令，请使用最新的口令，旧的口令将失效\n" +
+                        "这是系统邮件，请勿回复"
+            )
+        } catch (e: AddressException) {
+            return httpInternalServerError("邮件发送失败")
+        }
+
+        resetPasswordTokenRepository.set(user.id, token)
         return Result.success("邮件已发送")
     }
 
-    suspend fun resetPassword(): Result<String> {
-        // TODO
-        return httpInternalServerError("未实现")
+    @Serializable
+    data class ResetPasswordBody(
+        val token: String,
+        val password: String,
+    )
+
+    suspend fun resetPassword(emailOrUsername: String, body: ResetPasswordBody): Result<Unit> {
+        val user = userRepository.getByUsernameOrEmail(emailOrUsername)
+            ?: return httpNotFound("用户不存在")
+        if (!resetPasswordTokenRepository.validate(user.id, body.token)) {
+            return httpBadRequest("口令不合法")
+        }
+        userRepository.updatePassword(user.id, body.password)
+        return Result.success(Unit)
     }
 }
