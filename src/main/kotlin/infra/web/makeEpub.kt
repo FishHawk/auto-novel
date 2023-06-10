@@ -54,10 +54,12 @@ suspend fun makeEpubFile(
         epub.addCreator(it.name)
     }
 
+
     metadata.toc.filter { it.chapterId != null }.forEachIndexed { index, token ->
         val id = "episode${index + 1}.xhtml"
         val path = "Text/$id"
         val chapter = chapters[token.chapterId]
+
         val resource = when (lang) {
             NovelFileLang.JP -> createEpubXhtml(path, id, "jp", token.titleJp) {
                 it.appendElement("h1").appendText(token.titleJp)
@@ -118,6 +120,36 @@ suspend fun makeEpubFile(
                         } else {
                             it.appendElement("p").appendText(textZh.trimEnd())
                             it.appendElement("p").appendText(textJp.trimStart())
+                                .attr("style", "opacity:0.4;")
+                        }
+                    }
+                }
+            }
+
+            NovelFileLang.MIX_ALL -> createEpubXhtml(
+                path,
+                id,
+                "zh",
+                token.titleZh ?: token.titleJp
+            ) {
+                if (token.titleZh == null) {
+                    it.appendElement("h1").appendText(token.titleJp)
+                } else {
+                    it.appendElement("h1").appendText(token.titleZh)
+                    it.appendElement("p").appendText(token.titleJp)
+                        .attr("style", "opacity:0.4;")
+                }
+                if (chapter?.baiduParagraphs == null || chapter.youdaoParagraphs == null) {
+                    it.appendElement("p").appendText(MISSING_EPISODE_HINT)
+                } else {
+                    for (i in chapter.paragraphs.indices) {
+                        val textJp = chapter.paragraphs[i]
+                        if (textJp.isBlank()) {
+                            it.appendElement("p").appendText(textJp)
+                        } else {
+                            it.appendElement("p").appendText(chapter.youdaoParagraphs[i])
+                            it.appendElement("p").appendText(chapter.baiduParagraphs[i])
+                            it.appendElement("p").appendText(textJp)
                                 .attr("style", "opacity:0.4;")
                         }
                     }

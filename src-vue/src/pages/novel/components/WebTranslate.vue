@@ -94,7 +94,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
 
 interface NovelFiles {
   label: string;
-  translatorId: 'jp' | 'baidu' | 'youdao';
+  translatorId?: 'baidu' | 'youdao';
   files: { label: string; url: string; name: string }[];
 }
 
@@ -102,7 +102,13 @@ function stateToFileList(): NovelFiles[] {
   const validTitle = props.title.replace(/[\/|\\:*?"<>]/g, '');
   function createFile(
     label: string,
-    lang: 'jp' | 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao',
+    lang:
+      | 'jp'
+      | 'zh-baidu'
+      | 'zh-youdao'
+      | 'mix-baidu'
+      | 'mix-youdao'
+      | 'mix-all',
     type: 'epub' | 'txt'
   ) {
     return {
@@ -120,7 +126,6 @@ function stateToFileList(): NovelFiles[] {
   return [
     {
       label: `日文(${props.jp}/${props.total})`,
-      translatorId: 'jp',
       files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
     },
     {
@@ -141,6 +146,13 @@ function stateToFileList(): NovelFiles[] {
         createFile('中日对比TXT', 'mix-youdao', 'txt'),
         createFile('EPUB', 'zh-youdao', 'epub'),
         createFile('中日对比EPUB', 'mix-youdao', 'epub'),
+      ],
+    },
+    {
+      label: `有道/百度`,
+      files: [
+        createFile('TXT', 'mix-all', 'txt'),
+        createFile('EPUB', 'mix-all', 'epub'),
       ],
     },
   ];
@@ -214,7 +226,7 @@ function stateToFileList(): NovelFiles[] {
         </td>
         <td>
           <n-button
-            v-if="row.translatorId !== 'jp'"
+            v-if="row.translatorId"
             tertiary
             size="small"
             @click="startUpdateTask(row.translatorId as any)"
@@ -230,7 +242,7 @@ function stateToFileList(): NovelFiles[] {
     <n-list-item v-for="row in stateToFileList()">
       <template #suffix>
         <n-button
-          v-if="row.translatorId !== 'jp'"
+          v-if="row.translatorId"
           tertiary
           size="small"
           @click="startUpdateTask(row.translatorId as any)"

@@ -158,7 +158,13 @@ async function getChapter(
 function createFileUrl(
   providerId: string,
   novelId: string,
-  lang: 'jp' | 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao',
+  lang:
+    | 'jp'
+    | 'zh-baidu'
+    | 'zh-youdao'
+    | 'mix-baidu'
+    | 'mix-youdao'
+    | 'mix-all',
   type: 'epub' | 'txt'
 ) {
   return `/api/novel/${providerId}/${novelId}/file/${lang}/${type}`;

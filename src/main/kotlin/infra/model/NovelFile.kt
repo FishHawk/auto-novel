@@ -18,7 +18,10 @@ enum class NovelFileLang(val value: String) {
     ZH_YOUDAO("zh-youdao"),
 
     @SerialName("mix-youdao")
-    MIX_YOUDAO("mix-youdao")
+    MIX_YOUDAO("mix-youdao"),
+
+    @SerialName("mix-all")
+    MIX_ALL("mix-all")
 }
 
 @Serializable

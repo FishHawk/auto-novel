@@ -100,6 +100,27 @@ private class TxtWriter(
         }
     }
 
+    private fun BufferedWriter.writeThreeParagraph(
+        pJp: List<String>,
+        pZh1: List<String>?,
+        pZh2: List<String>?,
+    ) {
+        if (pZh1 == null || pZh2 == null) {
+            writeMissingEpisode()
+        } else {
+            for (i in pJp.indices) {
+                val tJp = pJp[i]
+                if (tJp.isNotBlank()) {
+                    write(tJp + "\n")
+                    write(pZh1[i] + "\n")
+                    write(pZh2[i] + "\n")
+                } else {
+                    write(tJp + "\n")
+                }
+            }
+        }
+    }
+
     private fun BufferedWriter.writeChapter(
         chapter: WebNovelChapter,
     ) {
@@ -109,6 +130,11 @@ private class TxtWriter(
             NovelFileLang.ZH_YOUDAO -> writeOneParagraph(chapter.youdaoParagraphs)
             NovelFileLang.MIX_BAIDU -> writeTwoParagraph(chapter.paragraphs, chapter.baiduParagraphs)
             NovelFileLang.MIX_YOUDAO -> writeTwoParagraph(chapter.paragraphs, chapter.youdaoParagraphs)
+            NovelFileLang.MIX_ALL -> writeThreeParagraph(
+                chapter.paragraphs,
+                chapter.youdaoParagraphs,
+                chapter.baiduParagraphs
+            )
         }
     }
 
