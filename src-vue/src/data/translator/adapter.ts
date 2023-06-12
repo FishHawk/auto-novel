@@ -29,7 +29,7 @@ class GlossaryTransformer {
     return input.map((text) => {
       for (const wordSrc in this.glossaryJpToUuid) {
         const wordDst = this.glossaryJpToUuid[wordSrc];
-        text = text.replace(wordSrc, wordDst);
+        text = text.replaceAll(wordSrc, wordDst);
       }
       return text;
     });
@@ -39,7 +39,7 @@ class GlossaryTransformer {
     return input.map((text) => {
       for (const wordSrc in this.glossaryUuidToZh) {
         const wordDst = this.glossaryUuidToZh[wordSrc];
-        text = text.replace(wordSrc, wordDst);
+        text = text.replaceAll(wordSrc, wordDst);
       }
       return text;
     });
