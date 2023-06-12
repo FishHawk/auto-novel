@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 class Syosetu : WebNovelProvider {
     companion object {
         const val id = "syosetu"
-        val rangeIds = mapOf(
+        private val rangeIds = mapOf(
             "每日" to "daily",
             "每周" to "weekly",
             "每月" to "monthly",
@@ -21,7 +21,7 @@ class Syosetu : WebNovelProvider {
             "每年" to "yearly",
             "总计" to "total",
         )
-        val genreIdsV1 = mapOf(
+        private val genreIdsV1 = mapOf(
             "恋爱：异世界" to "101",
             "恋爱：现实世界" to "102",
             "幻想：高幻想" to "201",
@@ -42,13 +42,13 @@ class Syosetu : WebNovelProvider {
             "其他：散文" to "9903",
             "其他：其他" to "9999",
         )
-        val genreIdsV2 = mapOf(
+        private val genreIdsV2 = mapOf(
             "全部" to "total",
             "短篇" to "t",
             "连载" to "r",
             "完结" to "er",
         )
-        val genreIdsV3 = mapOf(
+        private val genreIdsV3 = mapOf(
             "恋爱" to "1",
             "幻想" to "2",
             "文学/科幻/其他" to "o",

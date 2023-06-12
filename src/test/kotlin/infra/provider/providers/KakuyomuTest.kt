@@ -10,6 +10,12 @@ import kotlinx.datetime.Instant
 class KakuyomuTest : DescribeSpec({
     val provider = Kakuyomu()
 
+    describe("getRank") {
+        it("常规") {
+            val ranks = provider.getRank(mapOf("genre" to "综合", "range" to "每周"))
+        }
+    }
+
     describe("getMetadata") {
         it("常规") {
             // https://kakuyomu.jp/works/1177354054892870623
