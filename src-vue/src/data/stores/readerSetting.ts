@@ -7,7 +7,6 @@ export interface ReaderSetting {
   translation: 'youdao' | 'baidu' | 'youdao/baidu';
   fontSize: '14px' | '16px' | '18px' | '20px';
   theme: { isDark: boolean; bodyColor: string };
-  debugCompare: boolean;
 }
 
 export const useReaderSettingStore = defineStore('readerSetting', {
@@ -19,7 +18,6 @@ export const useReaderSettingStore = defineStore('readerSetting', {
       translation: 'youdao',
       fontSize: '14px',
       theme: { isDark: false, bodyColor: '#FFFFFF' },
-      debugCompare: false,
     },
   persist: true,
 });

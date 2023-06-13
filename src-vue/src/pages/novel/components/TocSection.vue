@@ -4,6 +4,7 @@ import { computed, ref } from 'vue';
 import { useWindowSize } from '@vueuse/core';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
+import { useSettingStore } from '@/data/stores/setting';
 
 const { width } = useWindowSize();
 const isDesktop = computed(() => width.value > 600);
@@ -14,24 +15,24 @@ const props = defineProps<{
   toc: WebNovelTocItemDto[];
 }>();
 
-const isReverse = ref(false);
+const setting = useSettingStore();
 const reverseToc = computed(() => props.toc.slice().reverse());
 </script>
 
 <template>
   <n-space align="baseline" justify="space-between" style="width: 100">
     <n-h2 prefix="bar">目录</n-h2>
-    <n-button @click="isReverse = !isReverse">
+    <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
       <template #icon>
         <n-icon> <SortFilled /> </n-icon>
       </template>
-      {{ isReverse ? '倒序' : '正序' }}
+      {{ setting.tocSortReverse ? '倒序' : '正序' }}
     </n-button>
   </n-space>
 
   <n-list>
     <n-list-item
-      v-for="tocItem in isReverse ? reverseToc : toc"
+      v-for="tocItem in setting.tocSortReverse ? reverseToc : toc"
       style="padding: 0px"
     >
       <n-a
