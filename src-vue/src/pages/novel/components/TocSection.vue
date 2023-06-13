@@ -15,8 +15,26 @@ const props = defineProps<{
   toc: WebNovelTocItemDto[];
 }>();
 
+function readableDate(createAt: number) {
+  return new Date(createAt * 1000).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 const setting = useSettingStore();
-const reverseToc = computed(() => props.toc.slice().reverse());
+const readableToc = props.toc.map((it) => {
+  return {
+    titleJp: it.titleJp,
+    titleZh: it.titleZh,
+    chapterId: it.chapterId,
+    createAt: it.createAt ? readableDate(it.createAt) : undefined,
+  };
+});
+const reverseToc = computed(() => readableToc.slice().reverse());
 </script>
 
 <template>
@@ -32,7 +50,7 @@ const reverseToc = computed(() => props.toc.slice().reverse());
 
   <n-list>
     <n-list-item
-      v-for="tocItem in setting.tocSortReverse ? reverseToc : toc"
+      v-for="tocItem in setting.tocSortReverse ? reverseToc : readableToc"
       style="padding: 0px"
     >
       <n-a
