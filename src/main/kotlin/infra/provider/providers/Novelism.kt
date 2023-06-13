@@ -5,6 +5,7 @@ import io.ktor.client.request.*
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.json.*
 import java.text.SimpleDateFormat
+import java.util.*
 
 class Novelism : WebNovelProvider {
     companion object {
@@ -41,7 +42,7 @@ class Novelism : WebNovelProvider {
                         .attr("href")
                         .removeSuffix("/")
                         .substringAfterLast("/"),
-                    createAt = SimpleDateFormat("yyyy年M月d日HH:mm").parse(
+                    createAt = SimpleDateFormat("yyyy年M月d日HH:mm", Locale.JAPAN).parse(
                         el.selectFirst("div.text-xs")!!.child(1).text().let {
                             it.substringBefore('(') +
                                     it.substringAfter(' ').substringBefore('(')

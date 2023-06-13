@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinInstant
 import org.jsoup.nodes.Element
 import java.text.SimpleDateFormat
+import java.util.*
 
 class Hameln : WebNovelProvider {
     companion object {
@@ -54,7 +55,7 @@ class Hameln : WebNovelProvider {
                     RemoteNovelMetadata.TocItem(
                         title = it.text(),
                         chapterId = chapterId,
-                        createAt = SimpleDateFormat("yyyy年MM月dd日 HH:mm").parse(
+                        createAt = SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.JAPAN).parse(
                             trTag.selectFirst("nobr")!!.childNode(0)
                                 .let { if (it is Element) it.text() else it.toString() }
                                 .replace("\\(.*?\\)".toRegex(), "")

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.toKotlinInstant
 import java.text.SimpleDateFormat
+import java.util.*
 
 class Novelup : WebNovelProvider {
     companion object {
@@ -52,7 +53,7 @@ class Novelup : WebNovelProvider {
                         RemoteNovelMetadata.TocItem(
                             title = it.text(),
                             chapterId = it.attr("href").substringAfterLast("/"),
-                            createAt = SimpleDateFormat("yyyy/M/dd HH:mm").parse(
+                            createAt = SimpleDateFormat("yyyy/M/dd HH:mm", Locale.JAPAN).parse(
                                 li.selectFirst("div.update_date > p > span > span")!!.text()
                             ).toInstant().toKotlinInstant(),
                         )

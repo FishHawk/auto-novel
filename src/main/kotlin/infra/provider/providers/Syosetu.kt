@@ -4,11 +4,14 @@ import infra.provider.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.server.util.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
 import org.jsoup.nodes.Element
 import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.util.*
 
 class Syosetu : WebNovelProvider {
     companion object {
@@ -155,8 +158,7 @@ class Syosetu : WebNovelProvider {
                             chapterId = a.attr("href")
                                 .removeSuffix("/")
                                 .substringAfterLast("/"),
-                            createAt =
-                            SimpleDateFormat("yyyy/MM/dd HH:mm").parse(
+                            createAt = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.JAPAN).parse(
                                 child.selectFirst("dt")!!.firstChild().toString().trim()
                             ).toInstant().toKotlinInstant(),
                         )
