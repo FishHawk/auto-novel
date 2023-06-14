@@ -172,7 +172,7 @@ fun Route.routeWenkuNovel() {
         result.onSuccess {
             val url = "../../../../../../files-wenku/${loc.parent.novelId}/" +
                     "${loc.volumeId}.unpack".encodeURLPathPart() +
-                    "/${loc.lang.value}.epub"
+                    "/$it"
             call.respondRedirect(url)
         }.onFailure {
             call.respondResult(result)

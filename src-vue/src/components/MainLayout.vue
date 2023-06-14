@@ -21,7 +21,7 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('列表', '/novel-list'),
     menuOption('反馈', '/feedback'),
-    menuOption('Epub翻译', '/wenku/non-archived'),
+    menuOption('文件翻译', '/wenku/non-archived'),
     menuOption('赞助', '/donate'),
     menuOption('控制台', '/admin/patch', atLeastMaintainer(authInfoStore.role)),
   ];
@@ -47,7 +47,7 @@ const collapsedMenuOptions = computed(() => {
       ],
     },
     menuOption('反馈', '/feedback'),
-    menuOption('Epub翻译', '/wenku/non-archived'),
+    menuOption('文件翻译', '/wenku/non-archived'),
     menuOption('赞助', '/donate'),
     {
       label: '控制台',

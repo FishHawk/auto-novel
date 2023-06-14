@@ -39,12 +39,6 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     message.error('文件大小不能超过40MB');
     return false;
   }
-  // if (file.type === 'application/epub+zip') {
-  //   return true;
-  // } else {
-  //   message.error('只能上传epub格式的文件');
-  //   return false;
-  // }
 }
 </script>
 
@@ -59,7 +53,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       @before-upload="beforeUpload"
     >
       <n-space align="baseline" justify="space-between" style="width: 100">
-        <n-h1>Epub翻译</n-h1>
+        <n-h1>Epub/Txt翻译</n-h1>
         <n-button>
           <template #icon><n-icon :component="UploadFilled" /></template>
           上传章节
@@ -67,12 +61,13 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       </n-space>
     </n-upload>
     <n-p>
-      上传日文Epub小说，可以像翻译网络小说一样生成中文Epub。
+      上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。
       如何使用翻译插件请参考
       <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
     </n-p>
     <n-p> 本功能还在测试中，请注意： </n-p>
     <n-ul>
+      <n-li>是Epub还是Txt是用后缀名区分的。</n-li>
       <n-li>
         Epub的格式千奇百怪，如果生成的中文版有问题，请向我
         <n-a href="/feedback" target="_blank"> 反馈</n-a>。

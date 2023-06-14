@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.0"
+    val ktorVersion = "2.3.1"
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")

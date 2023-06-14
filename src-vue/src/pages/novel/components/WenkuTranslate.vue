@@ -84,6 +84,12 @@ interface NovelFiles {
 }
 
 function stateToFileList(): NovelFiles[] {
+  let ext: string;
+  if (props.volumeId.toLowerCase().endsWith('.txt')) {
+    ext = 'txt';
+  } else {
+    ext = 'epub';
+  }
   function createFile(
     label: string,
     lang: 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao'
@@ -91,24 +97,25 @@ function stateToFileList(): NovelFiles[] {
     return {
       label,
       url: ApiWenkuNovel.createFileUrl(props.novelId, props.volumeId, lang),
-      name: `${lang}.epub`,
+      name: `${lang}.${ext}`,
     };
   }
+  const extUpper = ext.toUpperCase();
   return [
     {
       label: `百度(${props.baidu}/${props.total})`,
       translatorId: 'baidu',
       files: [
-        createFile('EPUB', 'zh-baidu'),
-        createFile('中日对比EPUB', 'mix-baidu'),
+        createFile(extUpper, 'zh-baidu'),
+        createFile(`中日对比${extUpper}`, 'mix-baidu'),
       ],
     },
     {
       label: `有道(${props.youdao}/${props.total})`,
       translatorId: 'youdao',
       files: [
-        createFile('EPUB', 'zh-youdao'),
-        createFile('中日对比EPUB', 'mix-youdao'),
+        createFile(extUpper, 'zh-youdao'),
+        createFile(`中日对比${extUpper}`, 'mix-youdao'),
       ],
     },
   ];

@@ -11,6 +11,7 @@ import util.epub.EpubWriter
 import util.epub.copyTo
 import java.io.OutputStream
 import java.lang.RuntimeException
+import java.nio.charset.Charset
 import kotlin.io.path.*
 
 private fun String.escapePath() = replace('/', '.')
@@ -115,24 +116,40 @@ class WenkuNovelVolumeRepository {
         unpackPath.deleteIfExists()
     }
 
+    private fun isTxt(volumeId: String): Boolean {
+        return volumeId.lowercase().endsWith(".txt")
+    }
+
     suspend fun unpackVolume(
         novelId: String,
         volumeId: String,
-    ) = withContext(Dispatchers.IO) {
+    ): Unit = withContext(Dispatchers.IO) {
         val filePath = root / novelId / volumeId
         val unpackPath = root / novelId / "$volumeId.unpack" / "jp"
         if (unpackPath.notExists()) {
             unpackPath.createDirectories()
         }
-        EpubReader(filePath).use { reader ->
-            reader.listXhtmlFiles().forEach { xhtmlPath ->
-                val doc = reader.readFileAsXHtml(xhtmlPath)
-                doc.select("rt").remove()
-                val lines = doc.body().select("p")
-                    .mapNotNull { it.text().ifBlank { null } }
-                if (lines.isNotEmpty()) {
-                    val chapterPath = unpackPath / xhtmlPath.escapePath()
-                    chapterPath.writeLines(lines)
+        if (isTxt(volumeId)) {
+            val jpLines = runCatching {
+                filePath.readLines()
+            }.getOrElse {
+                filePath.readLines(Charset.forName("GBK"))
+            }
+            jpLines.chunked(1000).forEachIndexed { index, lines ->
+                val chapterPath = unpackPath / "${String.format("%04d", index)}.txt"
+                chapterPath.writeLines(lines)
+            }
+        } else {
+            EpubReader(filePath).use { reader ->
+                reader.listXhtmlFiles().forEach { xhtmlPath ->
+                    val doc = reader.readFileAsXHtml(xhtmlPath)
+                    doc.select("rt").remove()
+                    val lines = doc.body().select("p")
+                        .mapNotNull { it.text().ifBlank { null } }
+                    if (lines.isNotEmpty()) {
+                        val chapterPath = unpackPath / xhtmlPath.escapePath()
+                        chapterPath.writeLines(lines)
+                    }
                 }
             }
         }
@@ -208,9 +225,6 @@ class WenkuNovelVolumeRepository {
         volumeId: String,
         lang: NovelFileLang,
     ) = withContext(Dispatchers.IO) {
-        val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.epub"
-        val jpPath = root / novelId / volumeId
-
         val type = when (lang) {
             NovelFileLang.ZH_BAIDU, NovelFileLang.MIX_BAIDU -> "baidu"
             NovelFileLang.ZH_YOUDAO, NovelFileLang.MIX_YOUDAO -> "youdao"
@@ -221,46 +235,75 @@ class WenkuNovelVolumeRepository {
             NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO -> true
             else -> throw RuntimeException()
         }
-        val unpackChapters = listUnpackedChapters(novelId, volumeId, type)
 
-        EpubReader(jpPath).use { reader ->
-            EpubWriter(zhPath, reader.getOpfPath()).use { writer ->
-                writer.writeOpfFile(reader.readFileAsText(reader.getOpfPath()))
-                reader.listFiles().forEach { path ->
-                    // Css文件，删除
-                    if (path.endsWith("css")) {
-                        writer.writeTextFile(path, "")
-                        return@forEach
-                    }
+        if (isTxt(volumeId)) {
+            val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.txt"
 
-                    val escapedPath = path.escapePath()
-                    if (escapedPath in unpackChapters) {
-                        // XHtml文件，尝试生成翻译版
-                        val zhLines = getChapter(novelId, volumeId, type, escapedPath)
-                        if (zhLines == null) {
-                            reader.copyTo(writer, path)
-                        } else {
-                            val doc = reader.readFileAsXHtml(path)
-                            doc.select("p")
-                                .filter { el -> el.text().isNotBlank() }
-                                .forEachIndexed { index, el ->
-                                    if (mix) {
-                                        el.before("<p>${zhLines[index]}<p>")
-                                        el.attr("style", "opacity:0.4;")
-                                    } else {
-                                        el.text(zhLines[index])
-                                    }
-                                }
-                            doc.outputSettings().prettyPrint(true)
-                            writer.writeTextFile(path, doc.html())
+            if (zhPath.notExists()) {
+                zhPath.createFile()
+            }
+
+            zhPath.bufferedWriter().use {
+                listUnpackedChapters(novelId, volumeId, "jp").sorted().forEach { chapterId ->
+                    val jpLines = getChapter(novelId, volumeId, chapterId)!!
+                    val zhLines = getChapter(novelId, volumeId, type, chapterId)
+                    if (zhLines == null) {
+                        it.appendLine("分段缺失")
+                    } else if (mix) {
+                        jpLines.forEachIndexed { index, jpLine ->
+                            it.appendLine(jpLine)
+                            if (jpLine.isNotBlank()) it.appendLine(zhLines[index])
                         }
                     } else {
-                        // 其他文件
-                        reader.copyTo(writer, path)
+                        zhLines.forEach { zhLine -> it.appendLine(zhLine) }
                     }
                 }
             }
+            return@withContext "${lang.value}.txt"
+        } else {
+            val unpackChapters = listUnpackedChapters(novelId, volumeId, type)
+            val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.epub"
+            val jpPath = root / novelId / volumeId
+
+            EpubReader(jpPath).use { reader ->
+                EpubWriter(zhPath, reader.getOpfPath()).use { writer ->
+                    writer.writeOpfFile(reader.readFileAsText(reader.getOpfPath()))
+                    reader.listFiles().forEach { path ->
+                        // Css文件，删除
+                        if (path.endsWith("css")) {
+                            writer.writeTextFile(path, "")
+                            return@forEach
+                        }
+
+                        val escapedPath = path.escapePath()
+                        if (escapedPath in unpackChapters) {
+                            // XHtml文件，尝试生成翻译版
+                            val zhLines = getChapter(novelId, volumeId, type, escapedPath)
+                            if (zhLines == null) {
+                                reader.copyTo(writer, path)
+                            } else {
+                                val doc = reader.readFileAsXHtml(path)
+                                doc.select("p")
+                                    .filter { el -> el.text().isNotBlank() }
+                                    .forEachIndexed { index, el ->
+                                        if (mix) {
+                                            el.before("<p>${zhLines[index]}<p>")
+                                            el.attr("style", "opacity:0.4;")
+                                        } else {
+                                            el.text(zhLines[index])
+                                        }
+                                    }
+                                doc.outputSettings().prettyPrint(true)
+                                writer.writeTextFile(path, doc.html())
+                            }
+                        } else {
+                            // 其他文件
+                            reader.copyTo(writer, path)
+                        }
+                    }
+                }
+            }
+            return@withContext "${lang.value}.epub"
         }
-        return@withContext "$volumeId.unpack/${lang.value}.epub"
     }
 }
