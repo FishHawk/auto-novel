@@ -81,7 +81,7 @@ async function testYoudao() {
     <n-ol>
       <n-li>启用开发者模式。</n-li>
       <n-li>点击“加载已解压的扩展程序”，选择之前解压出的extension文件夹。</n-li>
-      <n-li>安装成功后，会出现名为“日本网文机翻机器人”的扩展。</n-li>
+      <n-li>安装成功后，会出现名为“轻小说机翻机器人”的扩展。</n-li>
     </n-ol>
     <n-p>具体可以参考下面的图片。</n-p>
     <n-p>Chrome:</n-p>

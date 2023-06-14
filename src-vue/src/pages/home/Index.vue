@@ -101,7 +101,7 @@ onMounted(loadLatestUpdateWenku);
               filter: drop-shadow(0.05em 0.05em black);
             "
           >
-            日本网文机翻机器人
+            轻小说机翻机器人
           </n-h1>
           <n-input-group>
             <n-input
