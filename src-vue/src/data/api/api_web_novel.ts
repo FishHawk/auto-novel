@@ -23,13 +23,15 @@ export interface WebNovelOutlineDto {
 async function list(
   page: number,
   pageSize: number,
+  query: string,
   provider: string,
-  query: string
+  type: number,
+  level: number
 ): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`novel/list`, {
-        searchParams: { page, pageSize, provider, query },
+        searchParams: { page, pageSize, query, provider, type, level },
       })
       .json()
   );

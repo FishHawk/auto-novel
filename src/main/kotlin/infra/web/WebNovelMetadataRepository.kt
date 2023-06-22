@@ -13,7 +13,7 @@ import infra.model.*
 import infra.provider.RemoteNovelListItem
 import infra.provider.WebNovelProviderDataSource
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -23,8 +23,15 @@ import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
 import util.Optional
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.*
+
+object WebNovelFilter {
+    enum class Type { 全部, 连载中, 已完结, 短篇 }
+    enum class Level { 全部, 一般向, R18 }
+}
+
+private fun Enum<*>.serialName(): String =
+    javaClass.getDeclaredField(name).getAnnotation(SerialName::class.java)!!.value
 
 class WebNovelMetadataRepository(
     private val provider: WebNovelProviderDataSource,
@@ -35,6 +42,7 @@ class WebNovelMetadataRepository(
         providerId: String,
         options: Map<String, String>,
     ): Result<List<WebNovelMetadataOutline>> {
+        WebNovelType
         val ranks = provider.listRank(providerId, options)
             .getOrElse { return Result.failure(it) }
         val items = ranks.map {
@@ -47,7 +55,9 @@ class WebNovelMetadataRepository(
 
     suspend fun search(
         queryString: String?,
-        providerId: String?,
+        filterProvider: String?,
+        filterType: WebNovelFilter.Type,
+        filterLevel: WebNovelFilter.Level,
         page: Int,
         pageSize: Int,
     ): Page<WebNovelMetadataOutline> {
@@ -57,11 +67,35 @@ class WebNovelMetadataRepository(
             size = pageSize
         ) {
             query = bool {
-                if (providerId != null) {
-                    filter(
-                        term(WebNovelMetadataEsModel::providerId, providerId)
+                filter(buildList {
+                    if (filterProvider != null) {
+                        add(term(WebNovelMetadataEsModel::providerId, filterProvider))
+                    }
+                    when (filterType) {
+                        WebNovelFilter.Type.连载中 -> WebNovelType.连载中
+                        WebNovelFilter.Type.已完结 -> WebNovelType.已完结
+                        WebNovelFilter.Type.短篇 -> WebNovelType.短篇
+                        else -> null
+                    }?.let {
+                        add(term(WebNovelMetadataEsModel::type, it.serialName()))
+                    }
+                    if (filterLevel == WebNovelFilter.Level.R18) add(
+                        terms(
+                            WebNovelMetadataEsModel::attentions,
+                            WebNovelAttention.R18.serialName(),
+                            WebNovelAttention.性描写.serialName(),
+                        )
                     )
-                }
+                })
+
+                if (filterLevel == WebNovelFilter.Level.一般向) mustNot(
+                    terms(
+                        WebNovelMetadataEsModel::attentions,
+                        WebNovelAttention.R18.serialName(),
+                        WebNovelAttention.性描写.serialName(),
+                    )
+                )
+
                 if (queryString != null) {
                     must(
                         disMax {
@@ -186,7 +220,7 @@ class WebNovelMetadataRepository(
             setValue(WebNovelMetadata::syncAt, LocalDateTime.now())
         )
         if (toc != null) {
-             list.add(setValue(WebNovelMetadata::toc, toc))
+            list.add(setValue(WebNovelMetadata::toc, toc))
         }
         if (hasChanged) {
             list.add(setValue(WebNovelMetadata::changeAt, LocalDateTime.now()))
@@ -320,6 +354,8 @@ class WebNovelMetadataRepository(
                     titleJp = novel.titleJp,
                     titleZh = novel.titleZh,
                     authors = novel.authors.map { it.name },
+                    type = novel.type,
+                    attentions = novel.attentions,
                     changeAt = updateAt.epochSeconds,
                 ),
                 refresh = Refresh.WaitFor,
@@ -330,9 +366,21 @@ class WebNovelMetadataRepository(
             )
         } else {
             @Serializable
-            data class EsNovelUpdate(val titleJp: String, val titleZh: String?, val authors: List<String>)
+            data class EsNovelUpdate(
+                val titleJp: String,
+                val titleZh: String?,
+                val authors: List<String>,
+                val type: WebNovelType,
+                val attentions: List<WebNovelAttention>,
+            )
 
-            val update = EsNovelUpdate(novel.titleJp, novel.titleZh, novel.authors.map { it.name })
+            val update = EsNovelUpdate(
+                titleJp = novel.titleJp,
+                titleZh = novel.titleZh,
+                authors = novel.authors.map { it.name },
+                type = novel.type,
+                attentions = novel.attentions,
+            )
             es.client.updateDocument(
                 id = "${novel.providerId}.${novel.novelId}",
                 target = ElasticSearchDataSource.webNovelIndexName,

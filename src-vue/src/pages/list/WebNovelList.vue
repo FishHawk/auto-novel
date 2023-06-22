@@ -18,6 +18,14 @@ const options = [
       'Novelism',
     ],
   },
+  {
+    label: '类型',
+    tags: ['全部', '连载中', '已完结', '短篇'],
+  },
+  {
+    label: '分级',
+    tags: ['全部', '一般向', 'R18'],
+  },
 ];
 
 const loader: Loader = (page: number, query: string, selected: number[]) => {
@@ -34,10 +42,14 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
     Alphapolis: 'alphapolis',
     Novelism: 'novelism',
   };
-
-  return ApiWebNovel.list(page - 1, 10, providerMap[optionNth(0)], query).then(
-    (result) => mapOk(result, (page) => ({ type: 'web', page }))
-  );
+  return ApiWebNovel.list(
+    page - 1,
+    10,
+    query,
+    providerMap[optionNth(0)],
+    selected[1],
+    selected[2]
+  ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
 };
 </script>
 

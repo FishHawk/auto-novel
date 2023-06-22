@@ -1,7 +1,12 @@
 package infra
 
 import appModule
+import com.jillesvangurp.ktsearch.bulk
+import com.jillesvangurp.ktsearch.index
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
 import infra.model.WebNovelMetadata
+import infra.model.WebNovelType
 import infra.provider.WebNovelProviderDataSource
 import infra.provider.providers.*
 import infra.web.WebNovelChapterRepository
@@ -12,11 +17,16 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.ktor.client.plugins.*
 import io.ktor.http.*
-import org.bson.Document
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.*
 import java.io.File
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
@@ -31,45 +41,55 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
+            @Serializable
+            data class WNMP(
+                val providerId: String,
+                val bookId: String,
+                val titleJp: String,
+                val titleZh: String? = null,
+                val authors: List<WebNovelAuthor>,
+                val type: WebNovelType = WebNovelType.连载中,
+                val attentions: List<WebNovelAttention> = emptyList(),
+                @Contextual val changeAt: LocalDateTime = LocalDateTime.now(),
+            )
+
             val list = mongo
                 .webNovelMetadataCollection
-                .withDocumentClass<Document>()
-                .find(
-                    WebNovelMetadata::providerId eq Pixiv.id,
-                    WebNovelMetadata::keywords exists false,
-                )
+                .withDocumentClass<WNMP>()
+                .find()
                 .projection(
                     WebNovelMetadata::providerId,
                     WebNovelMetadata::novelId,
+                    WebNovelMetadata::titleJp,
+                    WebNovelMetadata::titleZh,
+                    WebNovelMetadata::authors,
+                    WebNovelMetadata::type,
+                    WebNovelMetadata::attentions,
+                    WebNovelMetadata::changeAt,
                 )
+                .skip(10 * 1000)
+                .limit(1100)
                 .toList()
-            list.forEachIndexed { i, it ->
-                if (i < 120) return@forEachIndexed
-                val pid = it["providerId"].toString()
-                val nid = it["bookId"].toString()
-                println("$i/${list.size} $pid/$nid")
-                val rn = provider.getMetadata(pid, nid).getOrElse {
-                    if (it is ClientRequestException) {
-                        if (it.response.status == HttpStatusCode.NotFound) {
-                            println("not found")
-                            return@forEachIndexed
-                        } else if (it.response.status == HttpStatusCode.TooManyRequests) {
-                            return@describe
-                        }
-                    }
-                    println(it.message)
-                    return@forEachIndexed
-                }
-                mongo
-                    .webNovelMetadataCollection
-                    .updateOne(
-                        WebNovelMetadata.byId(pid, nid),
-                        combine(
-                            setValue(WebNovelMetadata::type, rn.type),
-                            setValue(WebNovelMetadata::attentions, rn.attentions),
-                            setValue(WebNovelMetadata::keywords, rn.keywords),
-                        )
+            es.client.bulk(target = ElasticSearchDataSource.webNovelIndexName) {
+                @Serializable
+                data class ESU(val type: WebNovelType, val attentions: List<WebNovelAttention>)
+
+                list.forEachIndexed { i, it ->
+                    println("$i/${list.size} ${it.providerId}/${it.bookId}")
+                    index(
+                        doc = WebNovelMetadataEsModel(
+                            providerId = it.providerId,
+                            novelId = it.bookId,
+                            authors = it.authors.map { it.name },
+                            titleJp = it.titleJp,
+                            titleZh = it.titleZh,
+                            type = it.type,
+                            attentions = it.attentions,
+                            changeAt = it.changeAt.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
+                        ),
+                        id = "${it.providerId}.${it.bookId}",
                     )
+                }
             }
         }
 

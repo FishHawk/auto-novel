@@ -1,9 +1,8 @@
 package infra
 
-import com.jillesvangurp.ktsearch.KtorRestClient
-import com.jillesvangurp.ktsearch.Node
-import com.jillesvangurp.ktsearch.SearchClient
-import com.jillesvangurp.ktsearch.createIndex
+import com.jillesvangurp.ktsearch.*
+import infra.model.WebNovelAttention
+import infra.model.WebNovelType
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,6 +15,8 @@ data class WebNovelMetadataEsModel(
     val titleJp: String,
     val titleZh: String?,
     val authors: List<String>,
+    val type: WebNovelType = WebNovelType.连载中,
+    val attentions: List<WebNovelAttention> = emptyList(),
     val changeAt: Long,
 )
 
@@ -53,6 +54,8 @@ class ElasticSearchDataSource(url: String) {
                         text(WebNovelMetadataEsModel::titleJp) { analyzer = "icu_analyzer" }
                         text(WebNovelMetadataEsModel::titleZh) { analyzer = "icu_analyzer" }
                         keyword(WebNovelMetadataEsModel::authors)
+                        keyword(WebNovelMetadataEsModel::type)
+                        keyword(WebNovelMetadataEsModel::attentions)
                         date(WebNovelMetadataEsModel::changeAt)
                     }
                 }

@@ -59,7 +59,7 @@ onMounted(loadFavorite);
 
 const latestUpdateWeb = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadLatestUpdateWeb() {
-  const result = await ApiWebNovel.list(0, 8, '', '');
+  const result = await ApiWebNovel.list(0, 8, '', '', 0, 0);
   if (result.ok) {
     latestUpdateWeb.value = Ok(result.value.items);
   } else {

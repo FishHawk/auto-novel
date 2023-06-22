@@ -36,6 +36,8 @@ private class WebNovelRes {
         val page: Int,
         val pageSize: Int = 10,
         val provider: String = "",
+        val type: Int = 0,
+        val level: Int = 0,
         val query: String? = null,
     )
 
@@ -76,7 +78,18 @@ fun Route.routeWebNovel() {
     get<WebNovelRes.List> { loc ->
         val result = service.list(
             queryString = loc.query?.ifBlank { null },
-            providerId = loc.provider.ifEmpty { null },
+            filterProvider = loc.provider.ifEmpty { null },
+            filterType = when (loc.type) {
+                1 -> WebNovelFilter.Type.连载中
+                2 -> WebNovelFilter.Type.已完结
+                3 -> WebNovelFilter.Type.短篇
+                else -> WebNovelFilter.Type.全部
+            },
+            filterLevel = when (loc.level) {
+                1 -> WebNovelFilter.Level.一般向
+                2 -> WebNovelFilter.Level.R18
+                else -> WebNovelFilter.Level.全部
+            },
             page = loc.page.coerceAtLeast(0),
             pageSize = loc.pageSize.coerceAtMost(20),
         )
@@ -219,13 +232,17 @@ class WebNovelApi(
 ) {
     suspend fun list(
         queryString: String?,
-        providerId: String?,
+        filterProvider: String?,
+        filterType: WebNovelFilter.Type,
+        filterLevel: WebNovelFilter.Level,
         page: Int,
         pageSize: Int,
     ): Result<PageDto<WebNovelOutlineDto>> {
         val novelPage = novelRepo.search(
             queryString = queryString,
-            providerId = providerId,
+            filterProvider = filterProvider,
+            filterType = filterType,
+            filterLevel = filterLevel,
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )
