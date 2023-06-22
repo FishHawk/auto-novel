@@ -1,5 +1,8 @@
 package infra.provider.providers
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
+import infra.model.WebNovelType
 import infra.provider.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
@@ -36,18 +39,49 @@ class Alphapolis : WebNovelProvider {
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
         val doc = clientText.get(getMetadataUrl(novelId)).document()
-        val main = doc.selectFirst("div.content-main")!!
-        val title = main.selectFirst("h1.title")!!.text()
-        val author = main
+
+        val infoEl = doc.selectFirst("div.content-info > div.content-statuses")!!
+        val mainEl = doc.selectFirst("div.content-main")!!
+
+        val title = mainEl
+            .selectFirst("h1.title")!!
+            .text()
+
+        val author = mainEl
             .selectFirst("div.author")!!
             .selectFirst("a")!!
             .let {
-                RemoteNovelMetadata.Author(
+                WebNovelAuthor(
                     name = it.text(),
                     link = "https://www.alphapolis.co.jp" + it.attr("href"),
                 )
             }
-        val introduction = main.selectFirst("div.abstract")!!.text()
+
+        val type = infoEl
+            .selectFirst("span.complete")!!
+            .text()
+            .let {
+                when (it) {
+                    "連載中" -> WebNovelType.连载中
+                    "完結" -> WebNovelType.已完结
+                    else -> throw RuntimeException("无法解析的小说类型:$it")
+                }
+            }
+
+        val attention = infoEl
+            .selectFirst("span.rating")
+            ?.text()
+            .let {
+                when (it) {
+                    "R18" -> WebNovelAttention.R18
+                    "R15" -> WebNovelAttention.R15
+                    else -> null
+                }
+            }
+
+        val introduction = mainEl
+            .selectFirst("div.abstract")!!
+            .text()
 
         val toc = mutableListOf<RemoteNovelMetadata.TocItem>()
         doc.selectFirst("div.episodes")!!.children().forEach { el ->
@@ -85,6 +119,9 @@ class Alphapolis : WebNovelProvider {
         return RemoteNovelMetadata(
             title = title,
             authors = listOf(author),
+            type = type,
+            attentions = attention?.let { listOf(it) } ?: emptyList(),
+            keywords = emptyList(),
             introduction = introduction,
             toc = toc,
         )

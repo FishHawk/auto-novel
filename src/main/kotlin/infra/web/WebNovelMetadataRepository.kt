@@ -113,6 +113,9 @@ class WebNovelMetadataRepository(
             novelId = novelId,
             titleJp = remote.title,
             authors = remote.authors.map { WebNovelAuthor(it.name, it.link) },
+            type = remote.type,
+            keywords = remote.keywords,
+            attentions = remote.attentions,
             introductionJp = remote.introduction,
             toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId, it.createAt) },
         )
@@ -132,6 +135,9 @@ class WebNovelMetadataRepository(
             novelId = novelId,
             titleJp = remote.title,
             authors = remote.authors.map { WebNovelAuthor(it.name, it.link) },
+            type = remote.type,
+            keywords = remote.keywords,
+            attentions = remote.attentions,
             introductionJp = remote.introduction,
             toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId) },
         )
@@ -164,15 +170,24 @@ class WebNovelMetadataRepository(
         providerId: String,
         novelId: String,
         titleJp: String?,
+        type: WebNovelType,
+        attentions: List<WebNovelAttention>,
+        keywords: List<String>,
         introductionJp: String?,
         toc: List<WebNovelTocItem>?,
         hasChanged: Boolean,
     ): WebNovelMetadata? {
-        val list = mutableListOf<Bson>()
-        titleJp?.let { list.add(setValue(WebNovelMetadata::titleJp, it)) }
-        introductionJp?.let { list.add(setValue(WebNovelMetadata::introductionJp, it)) }
-        toc?.let { list.add(setValue(WebNovelMetadata::toc, toc)) }
-        list.add(setValue(WebNovelMetadata::syncAt, LocalDateTime.now()))
+        val list = mutableListOf(
+            setValue(WebNovelMetadata::titleJp, titleJp),
+            setValue(WebNovelMetadata::type, type),
+            setValue(WebNovelMetadata::attentions, attentions),
+            setValue(WebNovelMetadata::keywords, keywords),
+            setValue(WebNovelMetadata::introductionJp, introductionJp),
+            setValue(WebNovelMetadata::syncAt, LocalDateTime.now())
+        )
+        if (toc != null) {
+             list.add(setValue(WebNovelMetadata::toc, toc))
+        }
         if (hasChanged) {
             list.add(setValue(WebNovelMetadata::changeAt, LocalDateTime.now()))
         }
@@ -203,7 +218,6 @@ class WebNovelMetadataRepository(
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )
     }
-
 
     suspend fun updateTranslateStateJp(
         providerId: String,
@@ -338,6 +352,9 @@ private fun RemoteNovelListItem.toOutline(
         novelId = novelId,
         titleJp = title,
         titleZh = novel?.titleZh,
+        type = null,
+        attentions = emptyList(),
+        keywords = emptyList(),
         total = novel?.toc?.count { it.chapterId != null }?.toLong() ?: 0,
         jp = novel?.jp ?: 0,
         baidu = novel?.baidu ?: 0,
@@ -351,6 +368,9 @@ fun WebNovelMetadata.toOutline() =
         novelId = novelId,
         titleJp = titleJp,
         titleZh = titleZh,
+        type = type,
+        attentions = attentions,
+        keywords = keywords,
         total = toc.count { it.chapterId != null }.toLong(),
         jp = jp,
         baidu = baidu,

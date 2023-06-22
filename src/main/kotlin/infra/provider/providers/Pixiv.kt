@@ -1,13 +1,13 @@
 package infra.provider.providers
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
+import infra.model.WebNovelType
 import infra.provider.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 
 
 class Pixiv : WebNovelProvider {
@@ -43,15 +43,33 @@ class Pixiv : WebNovelProvider {
             assert(obj["seriesNavData"] != null)
 
             val title = obj["title"]!!.jsonPrimitive.content
-            val author = RemoteNovelMetadata.Author(
+
+            val author = WebNovelAuthor(
                 name = obj["userName"]!!.jsonPrimitive.content,
                 link = "https://www.pixiv.net/users/" + obj["userId"]!!.jsonPrimitive.content
             )
-            val introduction = obj["description"]!!.jsonPrimitive.content.replace("<br />", "\n")
+
+            val keywords = obj["tags"]!!.jsonObject["tags"]!!.jsonArray
+                .map { it.jsonObject["tag"]!!.jsonPrimitive.content }
+                .filter { it != "R-18" }
+
+            val attentions = obj["xRestrict"]!!.jsonPrimitive.int
+                .let {
+                    when (it) {
+                        0 -> emptyList()
+                        else -> listOf(WebNovelAttention.R18)
+                    }
+                }
+
+            val introduction = obj["description"]!!.jsonPrimitive.content
+                .replace("<br />", "\n")
 
             return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
+                type = WebNovelType.短篇,
+                keywords = keywords,
+                attentions = attentions,
                 introduction = introduction,
                 toc = listOf(
                     RemoteNovelMetadata.TocItem(
@@ -63,10 +81,22 @@ class Pixiv : WebNovelProvider {
         } else {
             val obj1 = get("https://www.pixiv.net/ajax/novel/series/$novelId").json()["body"]!!.jsonObject
             val title = obj1["title"]!!.jsonPrimitive.content
-            val author = RemoteNovelMetadata.Author(
+            val author = WebNovelAuthor(
                 name = obj1["userName"]!!.jsonPrimitive.content,
                 link = "https://www.pixiv.net/users/" + obj1["userId"]!!.jsonPrimitive.content,
             )
+
+            val keywords = obj1["tags"]!!.jsonArray
+                .map { it.jsonPrimitive.content }
+
+            val attentions = obj1["xRestrict"]!!.jsonPrimitive.int
+                .let {
+                    when (it) {
+                        0 -> emptyList()
+                        else -> listOf(WebNovelAttention.R18)
+                    }
+                }
+
             val introduction = obj1["caption"]!!.jsonPrimitive.content
 
             val obj2 = get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles").json()
@@ -82,6 +112,9 @@ class Pixiv : WebNovelProvider {
             return RemoteNovelMetadata(
                 title = title,
                 authors = listOf(author),
+                type = WebNovelType.连载中,
+                keywords = keywords,
+                attentions = attentions,
                 introduction = introduction,
                 toc = toc,
             )

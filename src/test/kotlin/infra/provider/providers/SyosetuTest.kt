@@ -27,6 +27,12 @@ class SyosetuTest : DescribeSpec({
             metadata.toc[1].chapterId.shouldBe("1")
             metadata.toc[1].createAt.shouldBe(Instant.parse("2012-11-22T09:00:00Z"))
         }
+
+        it("常规，作者无链接") {
+            // https://ncode.syosetu.com/n0123fj
+            val metadata = provider.getMetadata("n0123fj")
+            metadata.authors.first().link.shouldBeNull()
+        }
         it("常规，简介需要展开，但不需要处理") {
             // https://ncode.syosetu.com/n8473hv
             val metadata = provider.getMetadata("n8473hv")
@@ -40,7 +46,6 @@ class SyosetuTest : DescribeSpec({
         it("短篇") {
             // https://ncode.syosetu.com/n0916hw
             val metadata = provider.getMetadata("n0916hw")
-            metadata.introduction.shouldBeEmpty()
             metadata.toc.size.shouldBe(1)
         }
     }

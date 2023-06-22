@@ -1,6 +1,9 @@
 package infra.provider.providers
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelType
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
@@ -20,10 +23,12 @@ class KakuyomuTest : DescribeSpec({
         it("常规") {
             // https://kakuyomu.jp/works/1177354054892870623
             val metadata = provider.getMetadata("1177354054892870623")
-            metadata.toc.forEach { println(it) }
             metadata.title.shouldBe("転生七女ではじめる異世界ライフ 〜万能魔力があれば貴族社会も余裕で生きられると聞いたのですが？！〜")
             metadata.authors.first().name.shouldBe("四葉夕卜")
             metadata.authors.first().link.shouldBe("https://kakuyomu.jp/users/yutoyotsuba")
+            metadata.type.shouldBe(WebNovelType.连载中)
+            metadata.attentions.shouldBe(listOf(WebNovelAttention.残酷描写))
+            metadata.keywords.shouldContain("マイペース女主人公")
             metadata.toc[0].title.shouldBe("第１章　アトウッド家")
             metadata.toc[0].chapterId.shouldBeNull()
             metadata.toc[0].createAt.shouldBeNull()
@@ -42,6 +47,10 @@ class KakuyomuTest : DescribeSpec({
             val metadata = provider.getMetadata("16817139555217983105")
             metadata.introduction.shouldStartWith("俺はふとした時")
             metadata.introduction.shouldEndWith("てこうなった。")
+        }
+        it("神奇格式，标题没了") {
+            // https://kakuyomu.jp/works/1177354054891338293
+            val metadata = provider.getMetadata("1177354054891338293")
         }
     }
 

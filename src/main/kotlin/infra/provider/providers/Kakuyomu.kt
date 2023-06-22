@@ -1,5 +1,8 @@
 package infra.provider.providers
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
+import infra.model.WebNovelType
 import infra.provider.*
 import io.ktor.client.request.*
 import kotlinx.datetime.Instant
@@ -52,19 +55,46 @@ class Kakuyomu : WebNovelProvider {
         val url = "https://kakuyomu.jp/works/$novelId"
         val doc = client.get(url).document()
 
-        val title = doc
-            .selectFirst("h1#workTitle > a")!!
+        val infoEl = doc.selectFirst("section#work-information")!!
+
+        val title = infoEl
+            .selectFirst("header > h4 > a")!!
             .text()
 
-        val author = doc
-            .selectFirst("span#workAuthor-activityName > a")!!
-            .selectFirst("a")!!
+        val author = infoEl
+            .selectFirst("header > h5 > a")!!
             .let {
-                RemoteNovelMetadata.Author(
-                    name = it.text(),
+                WebNovelAuthor(
+                    name = it.child(0).text(),
                     link = "https://kakuyomu.jp" + it.attr("href"),
                 )
             }
+
+        val type = doc
+            .selectFirst("p.widget-toc-workStatus > span")!!
+            .text()
+            .let {
+                when (it) {
+                    "完結済" -> WebNovelType.已完结
+                    "連載中" -> WebNovelType.连载中
+                    else -> throw RuntimeException("无法解析的小说类型:$it")
+                }
+            }
+
+        val attentions = doc
+            .select("ul#workMeta-attention > li")
+            .mapNotNull {
+                when (it.text()) {
+                    "残酷描写有り" -> WebNovelAttention.残酷描写
+                    "暴力描写有り" -> WebNovelAttention.暴力描写
+                    "性描写有り" -> WebNovelAttention.性描写
+                    else -> null
+                }
+            }
+
+        val keywords = doc
+            .select("ul#workMeta-tags > li")
+            .mapNotNull { it.text() }
 
         val introduction = doc
             .selectFirst("p#introduction")
@@ -86,6 +116,9 @@ class Kakuyomu : WebNovelProvider {
         return RemoteNovelMetadata(
             title = title,
             authors = listOf(author),
+            type = type,
+            attentions = attentions,
+            keywords = keywords,
             introduction = introduction,
             toc = toc,
         )

@@ -1,5 +1,8 @@
 package infra.provider.providers
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
+import infra.model.WebNovelType
 import infra.provider.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.flow.asFlow
@@ -22,18 +25,59 @@ class Novelup : WebNovelProvider {
         val url = "https://novelup.plus/story/$novelId"
         val doc = client.get(url).document()
 
-        val title = doc.selectFirst("div.novel_title > h1")!!.text()
+        val infoEl = doc.selectFirst("div#section_episode_info_table > div.content_wrapper > table")!!
 
-        val author = doc
-            .selectFirst("div.novel_author > p > a")!!
+        val title = infoEl
+            .selectFirst("th:containsOwn(作品名)")!!
+            .nextElementSibling()!!
+            .text()
+
+        val author = infoEl
+            .selectFirst("th:containsOwn(作者名)")!!
+            .nextElementSibling()!!
+            .selectFirst("a")!!
             .let {
-                RemoteNovelMetadata.Author(
+                WebNovelAuthor(
                     name = it.text(),
                     link = it.attr("href"),
                 )
             }
 
-        val introduction = doc.selectFirst("div.novel_synopsis")!!.text()
+        val type = doc
+            .selectFirst("div.state_lamp_set")!!
+            .select("span")
+            .last()!!
+            .text()
+            .let {
+                when (it) {
+                    "連載中" -> WebNovelType.连载中
+                    "完結済" -> WebNovelType.已完结
+                    else -> throw RuntimeException("无法解析的小说类型:$it")
+                }
+            }
+
+        val attentions = infoEl
+            .selectFirst("th:containsOwn(セルフレイティング)")!!
+            .nextElementSibling()!!
+            .textNodes()
+            .mapNotNull {
+                when (it.text().trim()) {
+                    "残酷描写あり" -> WebNovelAttention.残酷描写
+                    "暴力描写あり" -> WebNovelAttention.暴力描写
+                    "性的表現あり" -> WebNovelAttention.性描写
+                    else -> null
+                }
+            }
+
+        val keywords = infoEl
+            .selectFirst("th:containsOwn(タグ)")!!
+            .nextElementSibling()!!
+            .children()
+            .map { it.text() }
+
+        val introduction = doc
+            .selectFirst("div.novel_synopsis")!!
+            .text()
 
         val totalPage = doc.selectFirst("ul.pagination")!!.children().last()!!.let {
             it.selectFirst("a")
@@ -66,6 +110,9 @@ class Novelup : WebNovelProvider {
         return RemoteNovelMetadata(
             title = title,
             authors = listOf(author),
+            type = type,
+            attentions = attentions,
+            keywords = keywords,
             introduction = introduction,
             toc = toc,
         )

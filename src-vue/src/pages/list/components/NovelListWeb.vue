@@ -5,6 +5,11 @@ import { buildMetadataUrl } from '@/data/provider';
 defineProps<{
   items: WebNovelOutlineDto[];
 }>();
+
+function sort(strList: string[]) {
+  strList.sort();
+  return strList;
+}
 </script>
 
 <template>
@@ -28,8 +33,18 @@ defineProps<{
       </div>
     </template>
 
+    <template v-else>
+      <div style="color: #666">
+        <template v-for="attention in sort(item.attentions)">
+          <b>{{ attention }}</b> /
+        </template>
+        <template v-for="keyword in item.keywords"> {{ keyword }} / </template>
+      </div>
+    </template>
+
     <template v-if="item.total">
       <div style="color: #666">
+        {{ item.type ? item.type + ' / ' : '' }}
         总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }}
       </div>
     </template>

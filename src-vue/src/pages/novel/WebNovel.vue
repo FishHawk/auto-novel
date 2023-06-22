@@ -182,6 +182,25 @@ function enableEditMode() {
           {{ metadata.value.introductionZh }}
         </n-p>
 
+        <div>
+          <n-space :size="[4, 4]">
+            <n-tag
+              v-for="tag of metadata.value.attentions"
+              :bordered="false"
+              size="small"
+            >
+              <b> {{ tag }} </b>
+            </n-tag>
+            <n-tag
+              v-for="tag of metadata.value.keywords"
+              :bordered="false"
+              size="small"
+            >
+              {{ tag }}
+            </n-tag>
+          </n-space>
+        </div>
+
         <n-h2 prefix="bar">翻译</n-h2>
         <n-p>
           网页端翻译需要安装插件，请查看

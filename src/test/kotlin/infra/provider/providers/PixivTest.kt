@@ -22,6 +22,10 @@ class PixivTest : DescribeSpec({
             metadata.toc[1].title.shouldBe("女装→メス堕ち→TSF")
             metadata.toc[1].chapterId.shouldBe("18457702")
         }
+        it("常规，非R18") {
+            // https://www.pixiv.net/novel/series/10539710
+            val metadata = provider.getMetadata("10539710")
+        }
         it("常规，目录很多页") {
             // https://www.pixiv.net/novel/series/870363
             val metadata = provider.getMetadata("870363")
@@ -29,14 +33,13 @@ class PixivTest : DescribeSpec({
             metadata.toc[0].chapterId.shouldBe("8592479")
         }
         it("短篇") {
-            // https://www.pixiv.net/novel/show.php?id=18827415
-            val metadata = provider.getMetadata("s18827415")
-            metadata.title.shouldBe("三百年生きた魔女の、素敵なクリスマス")
-            metadata.authors.first().name.shouldBe("るう子")
-            metadata.authors.first().link.shouldBe("https://www.pixiv.net/users/3013449")
-            metadata.introduction.shouldBe("ブックサンタ2022参加のために書きました。ほっこりしていただけましたら幸いです。")
+            // https://www.pixiv.net/novel/show.php?id=19776346
+            val metadata = provider.getMetadata("s19776346")
+            metadata.title.shouldBe("メカクレ青年が全自動矯正機で熟女にとりさんにされる話")
+            metadata.authors.first().name.shouldBe("たれ")
+            metadata.authors.first().link.shouldBe("https://www.pixiv.net/users/60498514")
             metadata.toc[0].title.shouldBe("无名")
-            metadata.toc[0].chapterId.shouldBe("18827415")
+            metadata.toc[0].chapterId.shouldBe("19776346")
         }
     }
 

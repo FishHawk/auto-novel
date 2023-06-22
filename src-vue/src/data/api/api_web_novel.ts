@@ -10,6 +10,9 @@ export interface WebNovelOutlineDto {
   novelId: string;
   titleJp: string;
   titleZh?: string;
+  type: string;
+  attentions: string[];
+  keywords: string[];
   extra?: string;
   total?: number;
   jp?: number;
@@ -58,6 +61,9 @@ export interface WebNovelMetadataDto {
   titleJp: string;
   titleZh?: string;
   authors: { name: string; link: string }[];
+  type: string;
+  attentions: string[];
+  keywords: string[];
   introductionJp: string;
   introductionZh?: string;
   glossary: { [key: string]: string };

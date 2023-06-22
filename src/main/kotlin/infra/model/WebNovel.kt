@@ -11,12 +11,45 @@ import org.litote.kmongo.eq
 import java.time.LocalDateTime
 
 @Serializable
+enum class WebNovelAttention {
+    @SerialName("R15")
+    R15,
+
+    @SerialName("R18")
+    R18,
+
+    @SerialName("残酷描写")
+    残酷描写,
+
+    @SerialName("暴力描写")
+    暴力描写,
+
+    @SerialName("性描写")
+    性描写,
+}
+
+@Serializable
+enum class WebNovelType {
+    @SerialName("连载中")
+    连载中,
+
+    @SerialName("已完结")
+    已完结,
+
+    @SerialName("短篇")
+    短篇,
+}
+
+@Serializable
 data class WebNovelMetadataOutline(
     val providerId: String,
     @SerialName("bookId")
     val novelId: String,
     val titleJp: String,
     val titleZh: String?,
+    val type: WebNovelType?,
+    val attentions: List<WebNovelAttention>,
+    val keywords: List<String>,
     val total: Long = 0,
     val jp: Long = 0,
     val baidu: Long = 0,
@@ -34,6 +67,9 @@ class WebNovelMetadata(
     val titleJp: String,
     val titleZh: String? = null,
     val authors: List<WebNovelAuthor>,
+    val type: WebNovelType = WebNovelType.连载中,
+    val attentions: List<WebNovelAttention> = emptyList(),
+    val keywords: List<String> = emptyList(),
     val introductionJp: String,
     val introductionZh: String? = null,
     val glossaryUuid: String? = null,

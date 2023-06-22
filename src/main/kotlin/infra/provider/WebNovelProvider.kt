@@ -1,5 +1,8 @@
 package infra.provider
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
+import infra.model.WebNovelType
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -16,11 +19,13 @@ import org.jsoup.nodes.Document
 
 data class RemoteNovelMetadata(
     val title: String,
-    val authors: List<Author>,
+    val authors: List<WebNovelAuthor>,
+    val type: WebNovelType,
+    val attentions: List<WebNovelAttention>,
+    val keywords: List<String>,
     val introduction: String,
     val toc: List<TocItem>,
 ) {
-    data class Author(val name: String, val link: String? = null)
     data class TocItem(
         val title: String,
         val chapterId: String? = null,

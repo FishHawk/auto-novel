@@ -59,9 +59,6 @@ class WebNovelUpdateService(
         novelLocal: WebNovelMetadata,
         novelRemote: WebNovelMetadata,
     ): WebNovelMetadata {
-        val titleJp = novelRemote.titleJp.takeIf { it != novelLocal.titleJp }
-        val introductionJp = novelRemote.introductionJp.takeIf { it != novelLocal.introductionJp }
-
         val merged = mergeToc(
             remoteToc = novelRemote.toc,
             localToc = novelLocal.toc,
@@ -78,11 +75,15 @@ class WebNovelUpdateService(
         }
 
         return novelRepo.update(
-            providerId, novelId,
-            titleJp,
-            introductionJp,
-            merged.toc,
-            merged.hasChanged,
+            providerId = providerId,
+            novelId = novelId,
+            titleJp = novelRemote.titleJp,
+            type = novelRemote.type,
+            attentions = novelRemote.attentions,
+            keywords = novelRemote.keywords,
+            introductionJp = novelRemote.introductionJp,
+            toc = merged.toc,
+            hasChanged = merged.hasChanged,
         ) ?: throw RuntimeException("更新网络小说时，小说不存在。不应当触发。")
     }
 

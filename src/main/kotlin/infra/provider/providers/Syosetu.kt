@@ -1,16 +1,20 @@
 package infra.provider.providers
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
+import infra.model.WebNovelType
 import infra.provider.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.server.util.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
 import org.jsoup.nodes.Element
+import java.lang.RuntimeException
 import java.text.SimpleDateFormat
-import java.time.ZoneId
 import java.util.*
 
 class Syosetu : WebNovelProvider {
@@ -117,38 +121,78 @@ class Syosetu : WebNovelProvider {
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
-        val url = "https://ncode.syosetu.com/$novelId"
-        val doc = client.get(url).document()
-
-        val title = doc.selectFirst("p.novel_title")!!.text()
-
-        val author = doc.selectFirst("div.novel_writername")!!.let { el ->
-            el.selectFirst("a")?.let {
-                RemoteNovelMetadata.Author(
-                    name = it.text(),
-                    link = it.attr("href"),
-                )
-            } ?: RemoteNovelMetadata.Author(
-                name = el.text().removePrefix("作者："),
-            )
+        val (doc1, doc2) = coroutineScope {
+            val url1 = "https://ncode.syosetu.com/$novelId"
+            val url2 = "https://ncode.syosetu.com/novelview/infotop/ncode/$novelId"
+            return@coroutineScope listOf(
+                async { client.get(url1).document() },
+                async { client.get(url2).document() },
+            ).awaitAll()
         }
 
-        if (doc.selectFirst("div.index_box") == null) {
-            return RemoteNovelMetadata(
-                title = title,
-                authors = listOf(author),
-                introduction = "",
-                toc = listOf(
-                    RemoteNovelMetadata.TocItem(
-                        title = "无名",
-                        chapterId = "default",
-                    )
-                ),
+        val title = doc2
+            .selectFirst("h1")!!
+            .text()
+
+        val author = doc2
+            .selectFirst("th:containsOwn(作者名)")!!
+            .nextElementSibling()!!
+            .let { el ->
+                WebNovelAuthor(
+                    name = el.text(),
+                    link = el.selectFirst("a")?.attr("href"),
+                )
+            }
+
+        val type = (doc2.selectFirst("div#pre_info > span#noveltype_notend")
+            ?: doc2.selectFirst("div#pre_info > span#noveltype")!!
+                )
+            .text()
+            .let {
+                when (it) {
+                    "完結済" -> WebNovelType.已完结
+                    "連載中" -> WebNovelType.连载中
+                    "短編" -> WebNovelType.短篇
+                    else -> throw RuntimeException("无法解析的小说类型:$it")
+                }
+            }
+
+        val attentions = mutableSetOf<WebNovelAttention>()
+        val keywords = mutableListOf<String>()
+        doc2
+            .selectFirst("th:containsOwn(キーワード)")
+            ?.nextElementSibling()
+            ?.text()
+            ?.split(" ")
+            ?.forEach {
+                when (it) {
+                    "R15" -> attentions.add(WebNovelAttention.R15)
+                    "残酷な描写あり" -> attentions.add(WebNovelAttention.残酷描写)
+                    else -> keywords.add(it)
+                }
+            }
+        doc2
+            .selectFirst("div#pre_info > span#age_limit")
+            ?.text()
+            ?.let {
+                if (it == "R18") attentions.add(WebNovelAttention.R18)
+                else throw RuntimeException("无法解析的小说标签:$it")
+            }
+
+        val introduction = doc2
+            .selectFirst("th:containsOwn(あらすじ)")!!
+            .nextElementSibling()!!
+            .text()
+
+        val toc = if (doc1.selectFirst("div.index_box") == null) {
+            listOf(
+                RemoteNovelMetadata.TocItem(
+                    title = "无名",
+                    chapterId = "default",
+                )
             )
         } else {
-            val introduction = doc.selectFirst("div#novel_ex")!!.wholeText()
-
-            val toc = doc
+            doc1
                 .selectFirst("div.index_box")!!
                 .children()
                 .map { child ->
@@ -166,14 +210,16 @@ class Syosetu : WebNovelProvider {
                         title = child.text(),
                     )
                 }
-
-            return RemoteNovelMetadata(
-                title = title,
-                authors = listOf(author),
-                introduction = introduction,
-                toc = toc,
-            )
         }
+        return RemoteNovelMetadata(
+            title = title,
+            authors = listOf(author),
+            type = type,
+            attentions = attentions.toList(),
+            keywords = keywords,
+            introduction = introduction,
+            toc = toc,
+        )
     }
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {

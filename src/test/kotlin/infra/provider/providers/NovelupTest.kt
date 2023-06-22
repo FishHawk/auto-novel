@@ -1,6 +1,7 @@
 package infra.provider.providers
 
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
@@ -30,6 +31,11 @@ class NovelupTest : DescribeSpec({
             // https://novelup.plus/story/358276052
             val metadata = provider.getMetadata("358276052")
             metadata.toc.size.shouldBe(1)
+        }
+        it("常规，无标签") {
+            // https://novelup.plus/story/140197887
+            val metadata = provider.getMetadata("140197887")
+            metadata.keywords.shouldBeEmpty()
         }
     }
 

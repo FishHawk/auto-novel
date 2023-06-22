@@ -1,12 +1,19 @@
 package infra.provider.providers
 
+import infra.model.WebNovelAttention
+import infra.model.WebNovelAuthor
+import infra.model.WebNovelType
 import infra.provider.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinInstant
 import org.jsoup.nodes.Element
+import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,27 +36,68 @@ class Hameln : WebNovelProvider {
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
-        val url = "https://syosetu.org/novel/$novelId"
-        val doc = client.get(url).document()
+        val (doc1, doc2) = coroutineScope {
+            val url1 = "https://syosetu.org/novel/$novelId"
+            val url2 = "https://syosetu.org/?mode=ss_detail&nid=$novelId"
+            return@coroutineScope listOf(
+                async { client.get(url1).document() },
+                async { client.get(url2).document() },
+            ).awaitAll()
+        }
 
-        if (doc.selectFirst("span[itemprop=name]") != null) {
-            val title = doc.selectFirst("span[itemprop=name]")!!.text()
+        fun qTable(str: String) = "td:matches(^$str\$)"
+        val title = doc2
+            .selectFirst(qTable("タイトル"))!!
+            .nextElementSibling()!!
+            .text()
 
-            val authorTag = doc.selectFirst("span[itemprop=author]")!!
-            val author = authorTag.selectFirst("a")
-                ?.let {
-                    RemoteNovelMetadata.Author(
-                        name = it.text(),
-                        link = "https:" + it.attr("href"),
-                    )
-                }
-                ?: RemoteNovelMetadata.Author(
-                    name = authorTag.text(),
+        val author = doc2
+            .selectFirst(qTable("作者"))!!
+            .nextElementSibling()!!
+            .let { el ->
+                WebNovelAuthor(
+                    name = el.text(),
+                    link = el.selectFirst("a")?.attr("href")?.let { "https:$it" },
                 )
+            }
 
-            val introduction = doc.select("div.ss")[1].wholeText().trimEnd()
+        val type = doc2
+            .selectFirst(qTable("話数"))!!
+            .nextElementSibling()!!
+            .text()
+            .let {
+                when {
+                    it.startsWith("連載(完結)") -> WebNovelType.已完结
+                    it.startsWith("連載(未完)") -> WebNovelType.连载中
+                    it.startsWith("連載(連載中)") -> WebNovelType.连载中
+                    it.startsWith("短編") -> WebNovelType.短篇
+                    else -> throw RuntimeException("无法解析的小说类型:$it")
+                }
+            }
 
-            val toc = doc.select("tbody > tr").map { trTag ->
+        val attentions = mutableSetOf<WebNovelAttention>()
+        val keywords = mutableListOf<String>()
+        listOf(
+            doc2.selectFirst(qTable("タグ")),
+            doc2.selectFirst(qTable("必須タグ"))
+        )
+            .flatMap { it!!.nextElementSibling()!!.select("a") }
+            .map { it.text() }
+            .forEach {
+                when (it) {
+                    "残酷な描写" -> attentions.add(WebNovelAttention.残酷描写)
+                    "R-15" -> attentions.add(WebNovelAttention.R15)
+                    "R-18" -> attentions.add(WebNovelAttention.R18)
+                    else -> keywords.add(it)
+                }
+            }
+        val introduction = doc2
+            .selectFirst(qTable("あらすじ"))!!
+            .nextElementSibling()!!
+            .text()
+
+        val toc = if (doc1.selectFirst("span[itemprop=name]") != null) {
+            doc1.select("tbody > tr").map { trTag ->
                 trTag.selectFirst("a")?.let {
                     val chapterId = it.attr("href").removePrefix("./").removeSuffix(".html")
                     RemoteNovelMetadata.TocItem(
@@ -66,42 +114,24 @@ class Hameln : WebNovelProvider {
                     title = trTag.text(),
                 )
             }
-
-            return RemoteNovelMetadata(
-                title = title,
-                authors = listOf(author),
-                introduction = introduction,
-                toc = toc,
-            )
         } else {
-            val ssList = doc.select("div.ss")
-            val (title, author) = ssList[0].selectFirst("div.ss > p")!!.let { pTag ->
-                val aList = pTag.select("a")
-                val title = aList[0].text()
-                val author = aList.getOrNull(1)?.let {
-                    RemoteNovelMetadata.Author(
-                        name = it.text(),
-                        link = "https:" + it.attr("href"),
-                    )
-                } ?: RemoteNovelMetadata.Author(
-                    name = pTag.text().substringAfter(" 　 作："),
+            listOf(
+                RemoteNovelMetadata.TocItem(
+                    title = "无名",
+                    chapterId = "default",
                 )
-                Pair(title, author)
-            }
-            val introduction = ssList[1].text()
-
-            return RemoteNovelMetadata(
-                title = title,
-                authors = listOf(author),
-                introduction = introduction,
-                toc = listOf(
-                    RemoteNovelMetadata.TocItem(
-                        title = "无名",
-                        chapterId = "default",
-                    )
-                ),
             )
         }
+
+        return RemoteNovelMetadata(
+            title = title,
+            authors = listOf(author),
+            type = type,
+            attentions = attentions.toList(),
+            keywords = keywords,
+            introduction = introduction,
+            toc = toc,
+        )
     }
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
