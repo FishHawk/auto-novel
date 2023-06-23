@@ -1,15 +1,11 @@
 <script lang="ts" setup>
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
+import { tryTranslateKeywords } from '@/data/keyword_translate';
 import { buildMetadataUrl } from '@/data/provider';
 
 defineProps<{
   items: WebNovelOutlineDto[];
 }>();
-
-function sort(strList: string[]) {
-  strList.sort();
-  return strList;
-}
 </script>
 
 <template>
@@ -35,10 +31,12 @@ function sort(strList: string[]) {
 
     <template v-else>
       <div style="color: #666">
-        <template v-for="attention in sort(item.attentions)">
+        <template v-for="attention in item.attentions.sort()">
           <b>{{ attention }}</b> /
         </template>
-        <template v-for="keyword in item.keywords"> {{ keyword }} / </template>
+        <template v-for="keyword in tryTranslateKeywords(item.keywords)">
+          {{ keyword }} /
+        </template>
       </div>
     </template>
 

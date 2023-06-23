@@ -14,6 +14,7 @@ import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { tryTranslateKeywords } from '@/data/keyword_translate';
 
 const authInfoStore = useAuthInfoStore();
 
@@ -192,7 +193,7 @@ function enableEditMode() {
               <b> {{ tag }} </b>
             </n-tag>
             <n-tag
-              v-for="tag of metadata.value.keywords"
+              v-for="tag of tryTranslateKeywords(metadata.value.keywords)"
               :bordered="false"
               size="small"
             >
