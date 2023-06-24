@@ -160,59 +160,106 @@ function stateToFileList(): NovelFiles[] {
 </script>
 
 <template>
-  <n-p>
-    <n-collapse>
-      <n-collapse-item title="高级模式">
-        <n-p>自定义更新范围</n-p>
-        <n-p style="padding-left: 16px">
-          <n-input-group>
-            <n-input-group-label>从</n-input-group-label>
-            <n-input-number
-              v-model:value="startIndex"
-              :min="1"
-              clearable
-              style="width: 150px"
-            />
-            <n-input-group-label>到</n-input-group-label>
-            <n-input-number
-              v-model:value="endIndex"
-              :min="1"
-              clearable
-              style="width: 150px"
-            />
-          </n-input-group>
-        </n-p>
+  <section>
+    <header><n-h2 prefix="bar">翻译</n-h2></header>
 
-        <n-p>术语表[如果想编辑，请先进入编辑界面]</n-p>
-        <n-p
-          v-if="Object.keys(glossary).length === 0"
-          style="margin-left: 16px"
-        >
-          还没设置术语表
-        </n-p>
-        <table style="border-spacing: 16px 0px">
-          <tr v-for="(termZh, termJp) in glossary">
-            <td>{{ termJp }}</td>
-            <td>=></td>
-            <td>{{ termZh }}</td>
-          </tr>
-        </table>
-      </n-collapse-item>
-    </n-collapse>
-  </n-p>
+    <n-p>
+      网页端翻译需要安装插件，请查看
+      <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
+      移动端暂时无法翻译。
+    </n-p>
+    <n-p>
+      <n-collapse>
+        <n-collapse-item title="高级模式">
+          <n-p>自定义更新范围</n-p>
+          <n-p style="padding-left: 16px">
+            <n-input-group>
+              <n-input-group-label>从</n-input-group-label>
+              <n-input-number
+                v-model:value="startIndex"
+                :min="1"
+                clearable
+                style="width: 150px"
+              />
+              <n-input-group-label>到</n-input-group-label>
+              <n-input-number
+                v-model:value="endIndex"
+                :min="1"
+                clearable
+                style="width: 150px"
+              />
+            </n-input-group>
+          </n-p>
 
-  <n-table v-if="isDesktop" :bordered="false" :single-line="false">
-    <thead>
-      <tr>
-        <th>版本</th>
-        <th>链接</th>
-        <th>更新</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="row in stateToFileList()">
-        <td nowrap="nowrap">{{ row.label }}</td>
-        <td>
+          <n-p>术语表[如果想编辑，请先进入编辑界面]</n-p>
+          <n-p
+            v-if="Object.keys(glossary).length === 0"
+            style="margin-left: 16px"
+          >
+            还没设置术语表
+          </n-p>
+          <table style="border-spacing: 16px 0px">
+            <tr v-for="(termZh, termJp) in glossary">
+              <td>{{ termJp }}</td>
+              <td>=></td>
+              <td>{{ termZh }}</td>
+            </tr>
+          </table>
+        </n-collapse-item>
+      </n-collapse>
+    </n-p>
+
+    <n-table v-if="isDesktop" :bordered="false" :single-line="false">
+      <thead>
+        <tr>
+          <th>版本</th>
+          <th>链接</th>
+          <th>更新</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in stateToFileList()">
+          <td nowrap="nowrap">{{ row.label }}</td>
+          <td>
+            <n-space>
+              <n-a
+                v-for="file in row.files"
+                :href="file.url"
+                :download="file.name"
+                target="_blank"
+              >
+                {{ file.label }}
+              </n-a>
+            </n-space>
+          </td>
+          <td>
+            <n-button
+              v-if="row.translatorId"
+              tertiary
+              size="small"
+              @click="startUpdateTask(row.translatorId as any)"
+            >
+              更新
+            </n-button>
+          </td>
+        </tr>
+      </tbody>
+    </n-table>
+
+    <n-list v-else>
+      <n-list-item v-for="row in stateToFileList()">
+        <template #suffix>
+          <n-button
+            v-if="row.translatorId"
+            tertiary
+            size="small"
+            @click="startUpdateTask(row.translatorId as any)"
+          >
+            更新
+          </n-button>
+        </template>
+        <n-space vertical>
+          <span>{{ row.label }}</span>
           <n-space>
             <n-a
               v-for="file in row.files"
@@ -223,73 +270,36 @@ function stateToFileList(): NovelFiles[] {
               {{ file.label }}
             </n-a>
           </n-space>
-        </td>
-        <td>
-          <n-button
-            v-if="row.translatorId"
-            tertiary
-            size="small"
-            @click="startUpdateTask(row.translatorId as any)"
-          >
-            更新
-          </n-button>
-        </td>
-      </tr>
-    </tbody>
-  </n-table>
-
-  <n-list v-else>
-    <n-list-item v-for="row in stateToFileList()">
-      <template #suffix>
-        <n-button
-          v-if="row.translatorId"
-          tertiary
-          size="small"
-          @click="startUpdateTask(row.translatorId as any)"
-        >
-          更新
-        </n-button>
-      </template>
-      <n-space vertical>
-        <span>{{ row.label }}</span>
-        <n-space>
-          <n-a
-            v-for="file in row.files"
-            :href="file.url"
-            :download="file.name"
-            target="_blank"
-          >
-            {{ file.label }}
-          </n-a>
         </n-space>
-      </n-space>
-    </n-list-item>
-  </n-list>
+      </n-list-item>
+    </n-list>
 
-  <div v-if="progress !== undefined">
-    <n-space
-      v-if="progress !== undefined"
-      align="center"
-      justify="space-between"
-      style="width: 100%"
-    >
-      <span>{{ progress.name }}</span>
-      <div>
-        <span>成功:{{ progress.finished ?? '-' }}</span>
-        <n-divider vertical />
-        <span>失败:{{ progress.error ?? '-' }}</span>
-        <n-divider vertical />
-        <span>总共:{{ progress.total ?? '-' }}</span>
-      </div>
-    </n-space>
-    <n-progress
-      type="line"
-      :percentage="
-        Math.round(
-          (1000 * (progress.finished + progress.error)) / (progress.total ?? 1)
-        ) / 10
-      "
-      style="width: 100%"
-    />
-  </div>
+    <div v-if="progress !== undefined">
+      <n-space
+        v-if="progress !== undefined"
+        align="center"
+        justify="space-between"
+        style="width: 100%"
+      >
+        <span>{{ progress.name }}</span>
+        <div>
+          <span>成功:{{ progress.finished ?? '-' }}</span>
+          <n-divider vertical />
+          <span>失败:{{ progress.error ?? '-' }}</span>
+          <n-divider vertical />
+          <span>总共:{{ progress.total ?? '-' }}</span>
+        </div>
+      </n-space>
+      <n-progress
+        type="line"
+        :percentage="
+          Math.round(
+            (1000 * (progress.finished + progress.error)) /
+              (progress.total ?? 1)
+          ) / 10
+        "
+        style="width: 100%"
+      />
+    </div>
+  </section>
 </template>

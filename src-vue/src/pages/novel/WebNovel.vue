@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   EditNoteFilled,
@@ -27,7 +27,6 @@ const url = buildMetadataUrl(providerId, novelId);
 
 const metadata = ref<ResultState<WebNovelMetadataDto>>();
 
-onMounted(() => getMetadata());
 async function getMetadata() {
   const result = await ApiWebNovel.getMetadata(
     providerId,
@@ -39,12 +38,12 @@ async function getMetadata() {
     document.title = result.value.titleJp;
   }
 }
+getMetadata();
 
-var isFavoriteChanging = false;
+let isFavoriteChanging = false;
 
 async function addFavorite() {
   if (isFavoriteChanging) return;
-  isFavoriteChanging = true;
 
   const token = authInfoStore.token;
   if (!token) {
@@ -52,6 +51,7 @@ async function addFavorite() {
     return;
   }
 
+  isFavoriteChanging = true;
   const result = await ApiUser.putFavoritedWebNovel(providerId, novelId, token);
   if (result.ok) {
     if (metadata.value?.ok) {
@@ -65,7 +65,6 @@ async function addFavorite() {
 
 async function removeFavorite() {
   if (isFavoriteChanging) return;
-  isFavoriteChanging = true;
 
   const token = authInfoStore.token;
   if (!token) {
@@ -73,6 +72,7 @@ async function removeFavorite() {
     return;
   }
 
+  isFavoriteChanging = true;
   const result = await ApiUser.deleteFavoritedWebNovel(
     providerId,
     novelId,
@@ -183,32 +183,24 @@ function enableEditMode() {
           {{ metadata.value.introductionZh }}
         </n-p>
 
-        <div>
-          <n-space :size="[4, 4]">
-            <n-tag
-              v-for="tag of metadata.value.attentions"
-              :bordered="false"
-              size="small"
-            >
-              <b> {{ tag }} </b>
-            </n-tag>
-            <n-tag
-              v-for="tag of tryTranslateKeywords(metadata.value.keywords)"
-              :bordered="false"
-              size="small"
-            >
-              {{ tag }}
-            </n-tag>
-          </n-space>
-        </div>
+        <n-space :size="[4, 4]">
+          <n-tag
+            v-for="tag of metadata.value.attentions"
+            :bordered="false"
+            size="small"
+          >
+            <b>{{ tag }}</b>
+          </n-tag>
+          <n-tag
+            v-for="tag of tryTranslateKeywords(metadata.value.keywords)"
+            :bordered="false"
+            size="small"
+          >
+            {{ tag }}
+          </n-tag>
+        </n-space>
 
-        <n-h2 prefix="bar">翻译</n-h2>
-        <n-p>
-          网页端翻译需要安装插件，请查看
-          <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
-          移动端暂时无法翻译。
-        </n-p>
-        <WebTranslate
+        <SectionWebTranslate
           :provider-id="providerId"
           :novel-id="novelId"
           :title="metadata.value.titleZh ?? metadata.value.titleJp"
@@ -218,13 +210,12 @@ function enableEditMode() {
           v-model:youdao="metadata.value.youdao"
           :glossary="metadata.value.glossary"
         />
-
-        <TocSection
+        <SectionWebToc
           :provider-id="providerId"
           :novel-id="novelId"
           :toc="metadata.value.toc"
         />
-        <CommentList :post-id="route.path" />
+        <SectionComment :post-id="route.path" />
       </template>
     </div>
 

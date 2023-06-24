@@ -31,6 +31,6 @@ const route = useRoute();
       上回复我。
     </n-p>
 
-    <CommentList :post-id="route.path" />
+    <SectionComment :post-id="route.path" />
   </MainLayout>
 </template>

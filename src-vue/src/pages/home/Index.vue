@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, Ref, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
@@ -20,15 +20,13 @@ const isDesktop = computed(() => width.value > 600);
 const router = useRouter();
 const message = useMessage();
 
-const url: Ref<string> = ref('');
-
+const url = ref('');
 function query(url: string) {
   if (url.length === 0) {
     return;
   }
 
   const parseResult = parseUrl(url);
-
   if (parseResult === undefined) {
     message.error('无法解析网址，可能是因为格式错误或者不支持');
     return;

@@ -119,83 +119,82 @@ async function reply() {
 </script>
 
 <template>
-  <div ref="topElement" />
-  <n-space align="baseline" justify="space-between" style="width: 100">
-    <n-h2 prefix="bar">评论</n-h2>
-    <n-button @click="replyClicked()">
-      <template #icon>
-        <n-icon>
-          <CommentFilled />
-        </n-icon>
-      </template>
-      发表评论
-    </n-button>
-  </n-space>
+  <section>
+    <div ref="topElement" />
+    <SectionHeader title="评论">
+      <n-button @click="replyClicked()">
+        <template #icon>
+          <n-icon :component="CommentFilled" />
+        </template>
+        发表评论
+      </n-button>
+    </SectionHeader>
 
-  <template v-if="showInput">
-    <n-input
-      v-model:value="replyContent"
-      :placeholder="`发表回复`"
-      type="textarea"
-      style="margin-top: 10px"
-    />
-    <n-button type="primary" @click="reply()" style="margin-top: 10px">
-      发布
-    </n-button>
-    <n-divider />
-  </template>
-
-  <template v-if="commentPage?.ok">
-    <div
-      v-for="comment in commentPage.value.items"
-      :ref="(el) => (comment.topElement = el)"
-    >
-      <Comment
-        :postId="postId"
-        :comment="comment"
-        @replied="refreshSubCommentsIfNeed(comment)"
+    <template v-if="showInput">
+      <n-input
+        v-model:value="replyContent"
+        :placeholder="`发表回复`"
+        type="textarea"
+        style="margin-top: 10px"
       />
+      <n-button type="primary" @click="reply()" style="margin-top: 10px">
+        发布
+      </n-button>
+      <n-divider />
+    </template>
+
+    <template v-if="commentPage?.ok">
       <div
-        v-for="subComment in comment.items"
-        style="margin-left: 30px; margin-top: 20px"
+        v-for="comment in commentPage.value.items"
+        :ref="(el) => (comment.topElement = el)"
       >
         <Comment
           :postId="postId"
-          :comment="subComment"
-          :parent-id="comment.id"
+          :comment="comment"
           @replied="refreshSubCommentsIfNeed(comment)"
         />
+        <div
+          v-for="subComment in comment.items"
+          style="margin-left: 30px; margin-top: 20px"
+        >
+          <Comment
+            :postId="postId"
+            :comment="subComment"
+            :parent-id="comment.id"
+            @replied="refreshSubCommentsIfNeed(comment)"
+          />
+        </div>
+
+        <n-pagination
+          v-if="comment.pageNumber > 1"
+          v-model:page="comment.page"
+          :page-count="comment.pageNumber"
+          :page-slot="7"
+          style="margin-left: 30px; margin-top: 20px"
+          @update:page="loadSubPage($event, comment)"
+        />
+        <n-divider />
       </div>
 
       <n-pagination
-        v-if="comment.pageNumber > 1"
-        v-model:page="comment.page"
-        :page-count="comment.pageNumber"
+        v-if="commentPage.value.pageNumber > 1"
+        v-model:page="commentPage.value.page"
+        :page-count="commentPage.value.pageNumber"
         :page-slot="7"
-        style="margin-left: 30px; margin-top: 20px"
-        @update:page="loadSubPage($event, comment)"
+        style="margin-top: 20px"
+        @update:page="loadPage($event)"
       />
-      <n-divider />
-    </div>
 
-    <n-pagination
-      v-if="commentPage.value.pageNumber > 1"
-      v-model:page="commentPage.value.page"
-      :page-count="commentPage.value.pageNumber"
-      :page-slot="7"
-      style="margin-top: 20px"
-      @update:page="loadPage($event)"
+      <n-empty
+        v-if="commentPage.value.items.length === 0"
+        description="还没有评论"
+      />
+    </template>
+    <n-result
+      v-if="commentPage && !commentPage.ok"
+      status="error"
+      title="加载错误"
+      :description="commentPage.error.message"
     />
-
-    <n-empty
-      v-if="commentPage.value.items.length === 0"
-      description="还没有评论"
-    />
-  </template>
-  <n-result
-    v-if="commentPage && !commentPage.ok"
-    status="error"
-    title="加载错误"
-    :description="commentPage.error.message"
-  />
+  </section>
 </template>

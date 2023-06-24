@@ -281,7 +281,7 @@ function enableEditMode() {
           description="空列表"
         />
 
-        <CommentList :post-id="route.path" />
+        <SectionComment :post-id="route.path" />
       </template>
     </div>
 
