@@ -83,12 +83,12 @@ onMounted(loadLatestUpdateWenku);
     <template v-slot:full-width>
       <div
         style="
-      background: url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80')
-      width: 100%;
-      padding-top: 60px;
-      padding-bottom: 104px;
-      margin-bottom: 20px;
-    "
+          background: url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80');
+          width: 100%;
+          padding-top: 60px;
+          padding-bottom: 104px;
+          margin-bottom: 20px;
+        "
       >
         <div class="container" style="max-width: 800px">
           <n-h1
