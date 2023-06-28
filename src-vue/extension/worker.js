@@ -1,19 +1,21 @@
-const v2 = {};
-
 const domain = 'https://books.fishhawk.top';
 const domainDebug = 'http://localhost:5173';
 const domainGA = 'https://www.google-analytics.com';
 
 function shouldHandleRequest(d) {
+  const urlSrc = d.initiator ?? d.originUrl;
+  const urlDst = d.url;
   const fromMySite =
-    d.initiator !== undefined &&
-    (d.initiator.startsWith(domain) || d.initiator.startsWith(domainDebug));
+    urlSrc !== undefined &&
+    (urlSrc.startsWith(domain) || urlSrc.startsWith(domainDebug));
   const requestMySite =
-    d.url.startsWith(domain) ||
-    d.url.startsWith(domainDebug) ||
-    d.url.startsWith(domainGA);
+    urlDst.startsWith(domain) ||
+    urlDst.startsWith(domainDebug) ||
+    urlDst.startsWith(domainGA);
   return fromMySite && !requestMySite;
 }
+
+const v2 = {};
 
 v2.headersReceived = (d) => {
   if (!shouldHandleRequest(d)) {
@@ -38,28 +40,6 @@ v2.beforeSendHeaders = (d) => {
   return { requestHeaders };
 };
 v2.beforeSendHeaders.methods = [];
-
-v2.install = () => {
-  v2.prefs = {
-    'overwrite-origin': true,
-    'allow-credentials': true,
-    'fix-origin': true,
-  };
-
-  chrome.webRequest.onHeadersReceived.removeListener(v2.headersReceived);
-  chrome.webRequest.onHeadersReceived.addListener(
-    v2.headersReceived,
-    { urls: ['<all_urls>'] },
-    ['blocking', 'responseHeaders', 'extraHeaders']
-  );
-
-  chrome.webRequest.onBeforeSendHeaders.removeListener(v2.beforeSendHeaders);
-  chrome.webRequest.onBeforeSendHeaders.addListener(
-    v2.beforeSendHeaders,
-    { urls: ['<all_urls>'] },
-    ['requestHeaders', 'blocking', 'extraHeaders']
-  );
-};
 
 // Access-Control-Allow-Headers for OPTIONS
 {
@@ -93,18 +73,17 @@ v2.install = () => {
   chrome.tabs.onRemoved.addListener((tabId) => delete redirects[tabId]);
 
   v2.headersReceived.methods.push((d) => {
-    if (v2.prefs['overwrite-origin'] && d.type !== 'main_frame') {
+    if (d.type !== 'main_frame') {
       const { initiator, originUrl, responseHeaders } = d;
       let origin = '*';
 
-      if (v2.prefs['allow-credentials']) {
-        if (!redirects[d.tabId] || !redirects[d.tabId][d.requestId]) {
-          try {
-            const o = new URL(initiator || originUrl);
-            origin = o.origin;
-          } catch (e) {}
-        }
+      if (!redirects[d.tabId] || !redirects[d.tabId][d.requestId]) {
+        try {
+          const o = new URL(initiator || originUrl);
+          origin = o.origin;
+        } catch (e) {}
       }
+
       if (d.statusCode === 301 || d.statusCode === 302) {
         redirects[d.tabId] = redirects[d.tabId] || {};
         redirects[d.tabId][d.requestId] = true;
@@ -131,21 +110,19 @@ v2.install = () => {
 // Referrer and Origin
 {
   v2.beforeSendHeaders.methods.push((d) => {
-    if (v2.prefs['fix-origin']) {
-      try {
-        const o = new URL(d.url);
-        d.requestHeaders.push(
-          {
-            name: 'referer',
-            value: d.url,
-          },
-          {
-            name: 'origin',
-            value: o.origin,
-          }
-        );
-      } catch (e) {}
-    }
+    try {
+      const o = new URL(d.url);
+      d.requestHeaders.push(
+        {
+          name: 'referer',
+          value: d.url,
+        },
+        {
+          name: 'origin',
+          value: o.origin,
+        }
+      );
+    } catch (e) {}
   });
 }
 
@@ -196,8 +173,6 @@ v2.headersReceived.methods.push((d) => {
   for (const header of d.responseHeaders) {
     if (header.name === 'Set-Cookie') {
       const cookie = parseSetCookie(header.value);
-      console.log(d.url);
-      console.log(cookie);
       chrome.cookies.set({
         domain: cookie.domain,
         expirationDate: cookie.expires,
@@ -214,7 +189,22 @@ v2.headersReceived.methods.push((d) => {
 });
 
 function start() {
-  v2.install();
+  const isChrome = chrome.runtime.getURL('').startsWith('chrome-extension://');
+  const extraOptions = isChrome ? ['extraHeaders'] : [];
+
+  chrome.webRequest.onHeadersReceived.removeListener(v2.headersReceived);
+  chrome.webRequest.onHeadersReceived.addListener(
+    v2.headersReceived,
+    { urls: ['<all_urls>'] },
+    ['blocking', 'responseHeaders'].concat(extraOptions)
+  );
+
+  chrome.webRequest.onBeforeSendHeaders.removeListener(v2.beforeSendHeaders);
+  chrome.webRequest.onBeforeSendHeaders.addListener(
+    v2.beforeSendHeaders,
+    { urls: ['<all_urls>'] },
+    ['blocking', 'requestHeaders'].concat(extraOptions)
+  );
 
   const rules = {
     removeRuleIds: [1, 2],

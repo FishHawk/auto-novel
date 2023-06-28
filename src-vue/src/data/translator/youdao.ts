@@ -42,6 +42,7 @@ export class YoudaoTranslator implements Translator {
           _nver: '1.2.0',
           _ntms: Date.now().toString(),
         },
+        credentials: 'include',
       });
 
       const json: any = await ky
@@ -50,6 +51,7 @@ export class YoudaoTranslator implements Translator {
             keyid: 'webfanyi-key-getter',
             ...getBaseBody('asdjnjfenknafdfsdfsd'),
           },
+          credentials: 'include',
         })
         .json();
 
