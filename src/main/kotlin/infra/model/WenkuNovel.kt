@@ -35,6 +35,14 @@ data class WenkuNovelMetadata(
 }
 
 data class WenkuNovelVolumeList(
-    val jp: List<String>,
+    val jp: List<WenkuNovelVolumeJp>,
     val zh: List<String>,
+)
+
+@Serializable
+data class WenkuNovelVolumeJp(
+    val volumeId: String,
+    val total: Long,
+    val baidu: Long,
+    val youdao: Long,
 )

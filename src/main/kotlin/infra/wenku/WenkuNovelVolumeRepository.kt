@@ -1,8 +1,8 @@
 package infra.wenku
 
 import infra.model.NovelFileLang
-import infra.model.TranslationState
 import infra.model.TranslatorId
+import infra.model.WenkuNovelVolumeJp
 import infra.model.WenkuNovelVolumeList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,21 +19,32 @@ private fun String.escapePath() = replace('/', '.')
 class WenkuNovelVolumeRepository {
     private val root = Path("./data/files-wenku")
 
+    suspend fun listVolumesNonArchived() = list("non-archived").jp
+    suspend fun listVolumesUser(userId: String) = list(userId).jp
+
     suspend fun list(
         novelId: String,
     ): WenkuNovelVolumeList = withContext(Dispatchers.IO) {
         val path = root / novelId
         val fileExtensions = listOf("epub", "txt")
 
-        val volumesJp = mutableListOf<String>()
+        val volumesJp = mutableListOf<WenkuNovelVolumeJp>()
         val volumesZh = mutableListOf<String>()
         if (path.exists() && path.isDirectory()) {
             path.listDirectoryEntries()
+                .sortedBy { it.fileName }
                 .filter { it.isRegularFile() && it.fileName.extension in fileExtensions }
                 .forEach {
                     val volumeId = it.fileName.toString()
                     if (hasUnpacked(novelId, volumeId)) {
-                        volumesJp.add(volumeId)
+                        volumesJp.add(
+                            WenkuNovelVolumeJp(
+                                volumeId = volumeId,
+                                total = listUnpackedChapters(novelId, volumeId, "jp").size.toLong(),
+                                baidu = listUnpackedChapters(novelId, volumeId, "baidu").size.toLong(),
+                                youdao = listUnpackedChapters(novelId, volumeId, "youdao").size.toLong(),
+                            )
+                        )
                     } else {
                         volumesZh.add(volumeId)
                     }
@@ -42,20 +53,23 @@ class WenkuNovelVolumeRepository {
         return@withContext WenkuNovelVolumeList(jp = volumesJp, zh = volumesZh)
     }
 
+
     private fun hasUnpacked(novelId: String, volumeId: String): Boolean {
         val unpackPath = root / novelId / "$volumeId.unpack"
         return unpackPath.exists()
     }
 
-    suspend fun getTranslationState(
+
+    suspend fun getTranslatedNumber(
         novelId: String,
         volumeId: String,
-    ): TranslationState {
-        return TranslationState(
-            total = listUnpackedChapters(novelId, volumeId, "jp").size.toLong(),
-            baidu = listUnpackedChapters(novelId, volumeId, "baidu").size.toLong(),
-            youdao = listUnpackedChapters(novelId, volumeId, "youdao").size.toLong(),
-        )
+        translatorId: TranslatorId,
+    ): Long {
+        val type = when (translatorId) {
+            TranslatorId.Baidu -> "baidu"
+            TranslatorId.Youdao -> "youdao"
+        }
+        return listUnpackedChapters(novelId, volumeId, type).size.toLong()
     }
 
     private suspend fun listUnpackedChapters(

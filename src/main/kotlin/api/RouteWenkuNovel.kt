@@ -1,12 +1,12 @@
 package api
 
 import api.dto.PageDto
-import api.dto.VolumeJpDto
 import api.dto.WenkuNovelDto
 import api.dto.WenkuNovelOutlineDto
 import infra.UserRepository
 import infra.model.NovelFileLang
 import infra.model.TranslatorId
+import infra.model.WenkuNovelVolumeJp
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
@@ -36,7 +36,10 @@ private class WenkuNovelRes {
     )
 
     @Resource("/non-archived")
-    class NonArchived(val parent: WenkuNovelRes)
+    class VolumesNonArchived(val parent: WenkuNovelRes)
+
+    @Resource("/user")
+    class VolumesUser(val parent: WenkuNovelRes)
 
     @Resource("/{novelId}")
     class Id(val parent: WenkuNovelRes, val novelId: String) {
@@ -69,10 +72,16 @@ fun Route.routeWenkuNovel() {
         call.respondResult(result)
     }
 
-
-    get<WenkuNovelRes.NonArchived> { loc ->
-        val result = service.getNonArchived()
+    get<WenkuNovelRes.VolumesNonArchived> { loc ->
+        val result = service.getNonArchivedVolumes()
         call.respondResult(result)
+    }
+    authenticate {
+        get<WenkuNovelRes.VolumesUser> { loc ->
+            val user = call.jwtUser()
+            val result = service.getUserVolumes(user.username)
+            call.respondResult(result)
+        }
     }
 
     authenticate(optional = true) {
@@ -99,35 +108,35 @@ fun Route.routeWenkuNovel() {
             }
             call.respondResult(result)
         }
-    }
 
-    post<WenkuNovelRes.Id.VolumeZh> { loc ->
-        call.receiveMultipart().forEachPart { part ->
-            if (part is PartData.FileItem) {
-                val fileName = part.originalFileName!!
-                val inputStream = part.streamProvider()
-                val result = service.createVolume(
-                    loc.parent.novelId, fileName, inputStream
-                )
-                call.respondResult(result)
-                return@forEachPart
+        post<WenkuNovelRes.Id.VolumeZh> { loc ->
+            call.receiveMultipart().forEachPart { part ->
+                if (part is PartData.FileItem) {
+                    val fileName = part.originalFileName!!
+                    val inputStream = part.streamProvider()
+                    val result = service.createNovelVolumeZh(
+                        loc.parent.novelId, fileName, inputStream
+                    )
+                    call.respondResult(result)
+                    return@forEachPart
+                }
+                part.dispose()
             }
-            part.dispose()
         }
-    }
 
-    post<WenkuNovelRes.Id.VolumeJp> { loc ->
-        call.receiveMultipart().forEachPart { part ->
-            if (part is PartData.FileItem) {
-                val fileName = part.originalFileName!!
-                val inputStream = part.streamProvider()
-                val result = service.createVolumeAndUnpack(
-                    loc.parent.novelId, fileName, inputStream
-                )
-                call.respondResult(result)
-                return@forEachPart
+        post<WenkuNovelRes.Id.VolumeJp> { loc ->
+            call.receiveMultipart().forEachPart { part ->
+                if (part is PartData.FileItem) {
+                    val fileName = part.originalFileName!!
+                    val inputStream = part.streamProvider()
+                    val result = service.createNovelVolumeJp(
+                        loc.parent.novelId, fileName, inputStream
+                    )
+                    call.respondResult(result)
+                    return@forEachPart
+                }
+                part.dispose()
             }
-            part.dispose()
         }
     }
 
@@ -170,9 +179,7 @@ fun Route.routeWenkuNovel() {
             lang = loc.lang,
         )
         result.onSuccess {
-            val url = "../../../../../../files-wenku/${loc.parent.novelId}/" +
-                    "${loc.volumeId}.unpack".encodeURLPathPart() +
-                    "/$it"
+            val url = "../../../../../../files-wenku/$it"
             call.respondRedirect(url)
         }.onFailure {
             call.respondResult(result)
@@ -201,13 +208,22 @@ class WenkuNovelApi(
         return Result.success(dto)
     }
 
-    suspend fun getNonArchived(): Result<List<VolumeJpDto>> {
-        val novelId = "non-archived"
-        val volumes = volumeRepo.list(novelId).jp.map { volumeId ->
-            val state = volumeRepo.getTranslationState(novelId, volumeId)
-            VolumeJpDto.fromDomain(volumeId, state)
-        }
+    suspend fun getNonArchivedVolumes(): Result<List<WenkuNovelVolumeJp>> {
+        val volumes = volumeRepo.listVolumesNonArchived()
         return Result.success(volumes)
+    }
+
+    @Serializable
+    data class WenkuUserVolumeDto(
+        val list: List<WenkuNovelVolumeJp>,
+        val novelId: String,
+    )
+
+    suspend fun getUserVolumes(username: String): Result<WenkuUserVolumeDto> {
+        val userId = userRepo.getUserIdByUsername(username).toHexString()
+        val novelId = "user-${userId}"
+        val volumes = volumeRepo.listVolumesUser(novelId)
+        return Result.success(WenkuUserVolumeDto(list = volumes, novelId = novelId))
     }
 
     suspend fun getMetadata(
@@ -220,12 +236,7 @@ class WenkuNovelApi(
 
         val metadata = metadataRepo.findOneAndIncreaseVisited(novelId)
             ?: return httpNotFound("书不存在")
-
         val volumes = volumeRepo.list(novelId)
-        val volumeJp = volumes.jp.map { volumeId ->
-            val state = volumeRepo.getTranslationState(novelId, volumeId)
-            VolumeJpDto.fromDomain(volumeId, state)
-        }
 
         val metadataDto = WenkuNovelDto(
             title = metadata.title,
@@ -240,7 +251,7 @@ class WenkuNovelApi(
             visited = metadata.visited,
             favored = favored,
             volumeZh = volumes.zh,
-            volumeJp = volumeJp,
+            volumeJp = volumes.jp,
         )
         return Result.success(metadataDto)
     }
@@ -296,14 +307,11 @@ class WenkuNovelApi(
         return Result.success(Unit)
     }
 
-    suspend fun createVolume(
+    private suspend fun createVolume(
         novelId: String,
         volumeId: String,
         inputStream: InputStream,
     ): Result<Unit> {
-        if (novelId != "non-archived" && !metadataRepo.exist(novelId))
-            return httpNotFound("小说不存在")
-
         val outputStream = volumeRepo.createVolumeAndOpen(novelId, volumeId)
             .getOrElse {
                 return if (it is FileAlreadyExistsException) {
@@ -339,7 +347,7 @@ class WenkuNovelApi(
         }
     }
 
-    suspend fun createVolumeAndUnpack(
+    private suspend fun createVolumeAndUnpack(
         novelId: String,
         volumeId: String,
         inputStream: InputStream,
@@ -351,6 +359,32 @@ class WenkuNovelApi(
         }.onFailure {
             volumeRepo.deleteVolumeJpIfExist(novelId, volumeId)
         }
+    }
+
+    suspend fun createNovelVolumeZh(
+        novelId: String,
+        volumeId: String,
+        inputStream: InputStream,
+    ): Result<Unit> {
+        return if (!metadataRepo.exist(novelId)) {
+            httpNotFound("小说不存在")
+        } else {
+            createVolume(novelId, volumeId, inputStream)
+        }
+    }
+
+    private suspend fun validateNovelId(novelId: String): Boolean {
+        return if (novelId == "non-archived" || novelId.startsWith("user")) true
+        else metadataRepo.exist(novelId)
+    }
+
+    suspend fun createNovelVolumeJp(
+        novelId: String,
+        volumeId: String,
+        inputStream: InputStream,
+    ): Result<Unit> {
+        if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
+        return createVolumeAndUnpack(novelId, volumeId, inputStream)
     }
 
     // Translate
@@ -365,8 +399,7 @@ class WenkuNovelApi(
             else -> return httpBadRequest("不支持的版本")
         }
 
-        if (novelId != "non-archived" && !metadataRepo.exist(novelId))
-            return httpNotFound("小说不存在")
+        if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
 
         if (!volumeRepo.isVolumeJpExisted(novelId, volumeId))
             return httpNotFound("卷不存在")
@@ -402,6 +435,8 @@ class WenkuNovelApi(
             else -> return httpBadRequest("不支持的版本")
         }
 
+        if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
+
         val jpLines = volumeRepo.getChapter(novelId, volumeId, chapterId)
             ?: return httpNotFound("章节不存在")
 
@@ -419,11 +454,9 @@ class WenkuNovelApi(
             lines = lines,
         )
 
-        val state = volumeRepo.getTranslationState(novelId, volumeId)
-        val zhChapters = when (realTranslatorId) {
-            TranslatorId.Baidu -> state.baidu
-            TranslatorId.Youdao -> state.youdao
-        }
+        val zhChapters = volumeRepo.getTranslatedNumber(
+            novelId, volumeId, realTranslatorId
+        )
         return Result.success(zhChapters)
     }
 
@@ -444,6 +477,9 @@ class WenkuNovelApi(
             volumeId = volumeId,
             lang = lang,
         )
-        return Result.success(newFileName)
+
+        return Result.success(
+            "${novelId}/${volumeId.encodeURLPathPart()}.unpack/$newFileName"
+        )
     }
 }

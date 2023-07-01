@@ -81,7 +81,7 @@ class UserRepository(
             )
     }
 
-    private suspend fun getUserIdByUsername(username: String): ObjectId {
+    suspend fun getUserIdByUsername(username: String): ObjectId {
         return mongo
             .userCollection
             .withDocumentClass<Document>()

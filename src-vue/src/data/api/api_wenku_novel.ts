@@ -48,8 +48,17 @@ export interface VolumeJpDto {
   youdao: number;
 }
 
-async function listNonArchived(): Promise<Result<VolumeJpDto[]>> {
+async function listVolumesNonArchived(): Promise<Result<VolumeJpDto[]>> {
   return runCatching(api.get(`wenku/non-archived`).json());
+}
+async function listVolumesUser(
+  token: string
+): Promise<Result<{ list: VolumeJpDto[]; novelId: string }>> {
+  return runCatching(
+    api
+      .get(`wenku/user`, { headers: { Authorization: 'Bearer ' + token } })
+      .json()
+  );
 }
 
 async function getMetadata(
@@ -168,7 +177,8 @@ function createFileUrl(
 
 export const ApiWenkuNovel = {
   list,
-  listNonArchived,
+  listVolumesUser,
+  listVolumesNonArchived,
   getMetadata,
   postMetadata,
   patchMetadata,

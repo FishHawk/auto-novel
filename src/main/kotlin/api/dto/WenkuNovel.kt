@@ -35,27 +35,5 @@ data class WenkuNovelDto(
     val visited: Long,
     val favored: Boolean?,
     val volumeZh: List<String>,
-    val volumeJp: List<VolumeJpDto>,
+    val volumeJp: List<WenkuNovelVolumeJp>,
 )
-
-@Serializable
-data class VolumeJpDto(
-    val volumeId: String,
-    val total: Long,
-    val baidu: Long,
-    val youdao: Long,
-) {
-    companion object {
-        fun fromDomain(
-            volumeId: String,
-            state: TranslationState,
-        ) =
-            VolumeJpDto(
-                volumeId = volumeId,
-                total = state.total,
-                baidu = state.baidu,
-                youdao = state.youdao,
-            )
-    }
-}
-
