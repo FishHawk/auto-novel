@@ -21,12 +21,12 @@ const message = useMessage();
 const route = useRoute();
 const novelId = route.params.novelId as string;
 
-const novelMetadata = ref<ResultState<WenkuMetadataDto>>();
+const novelMetadataResult = ref<ResultState<WenkuMetadataDto>>();
 
 onMounted(() => getMetadata());
 async function getMetadata() {
   const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
-  novelMetadata.value = result;
+  novelMetadataResult.value = result;
   if (result.ok) {
     document.title = result.value.title;
   }
@@ -35,7 +35,7 @@ async function getMetadata() {
 async function refreshMetadata() {
   const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
   if (result.ok) {
-    novelMetadata.value = result;
+    novelMetadataResult.value = result;
   }
 }
 
@@ -80,8 +80,8 @@ async function addFavorite() {
 
   const result = await ApiUser.putFavoritedWenkuNovel(novelId, token);
   if (result.ok) {
-    if (novelMetadata.value?.ok) {
-      novelMetadata.value.value.favored = true;
+    if (novelMetadataResult.value?.ok) {
+      novelMetadataResult.value.value.favored = true;
     }
   } else {
     message.error('收藏错误：' + result.error.message);
@@ -101,8 +101,8 @@ async function removeFavorite() {
 
   const result = await ApiUser.deleteFavoritedWenkuNovel(novelId, token);
   if (result.ok) {
-    if (novelMetadata.value?.ok) {
-      novelMetadata.value.value.favored = false;
+    if (novelMetadataResult.value?.ok) {
+      novelMetadataResult.value.value.favored = false;
     }
   } else {
     message.error('取消收藏错误：' + result.error.message);
@@ -124,11 +124,11 @@ function enableEditMode() {
   <MainLayout>
     <template v-slot:full-width>
       <div
-        v-if="novelMetadata?.ok"
+        v-if="novelMetadataResult?.ok"
         :style="{
           background:
             'linear-gradient( to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.4)), ' +
-            `url(${novelMetadata.value.cover})`,
+            `url(${novelMetadataResult.value.cover})`,
         }"
         style="
           width: 100%;
@@ -145,34 +145,34 @@ function enableEditMode() {
             >
               <n-card size="small" style="width: 160px">
                 <template #cover>
-                  <img :src="novelMetadata.value.cover" alt="cover" />
+                  <img :src="novelMetadataResult.value.cover" alt="cover" />
                 </template>
               </n-card>
               <div>
                 <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
                   {{
-                    novelMetadata.value.titleZh
-                      ? novelMetadata.value.titleZh
-                      : novelMetadata.value.title
+                    novelMetadataResult.value.titleZh
+                      ? novelMetadataResult.value.titleZh
+                      : novelMetadataResult.value.title
                   }}
                 </n-h1>
 
                 <table style="border-spacing: 0px 8px">
                   <TagGroup
-                    v-if="novelMetadata.value.authors.length > 0"
+                    v-if="novelMetadataResult.value.authors.length > 0"
                     label="作者"
-                    :tags="novelMetadata.value.authors"
+                    :tags="novelMetadataResult.value.authors"
                   />
                   <TagGroup
-                    v-if="novelMetadata.value.artists.length > 0"
+                    v-if="novelMetadataResult.value.artists.length > 0"
                     label="插图"
-                    :tags="novelMetadata.value.artists"
+                    :tags="novelMetadataResult.value.artists"
                   />
                   <TagGroup
-                    v-if="novelMetadata.value.keywords.length > 0"
+                    v-if="novelMetadataResult.value.keywords.length > 0"
                     class="on-desktop"
                     label="标签"
-                    :tags="novelMetadata.value.keywords"
+                    :tags="novelMetadataResult.value.keywords"
                   />
                 </table>
               </div>
@@ -182,7 +182,7 @@ function enableEditMode() {
       </div>
     </template>
 
-    <div v-if="novelMetadata?.ok">
+    <ResultView :result="novelMetadataResult" v-slot="{ value: metadata }">
       <n-space>
         <templage v-if="atLeastMaintainer(authInfoStore.role)">
           <n-button v-if="!editMode" @click="enableEditMode()">
@@ -200,10 +200,7 @@ function enableEditMode() {
           </n-button>
         </templage>
 
-        <n-button
-          v-if="novelMetadata.value.favored === true"
-          @click="removeFavorite()"
-        >
+        <n-button v-if="metadata.favored === true" @click="removeFavorite()">
           <template #icon>
             <n-icon> <FavoriteFilled /> </n-icon>
           </template>
@@ -219,22 +216,17 @@ function enableEditMode() {
       </n-space>
 
       <template v-if="editMode">
-        <WenkuEditSection
-          :id="novelId"
-          v-model:metadata="novelMetadata.value"
-        />
+        <WenkuEditSection :id="novelId" :metadata="metadata" />
       </template>
 
       <template v-else>
-        <n-p>原名：{{ novelMetadata.value.title }}</n-p>
-        <n-p
-          v-html="novelMetadata.value.introduction.replace(/\n/g, '<br />')"
-        />
+        <n-p>原名：{{ metadata.title }}</n-p>
+        <n-p v-html="metadata.introduction.replace(/\n/g, '<br />')" />
 
         <div class="on-mobile">
           <n-space :size="[4, 4]">
             <n-tag
-              v-for="tag of novelMetadata.value.keywords"
+              v-for="tag of metadata.keywords"
               :bordered="false"
               size="small"
             >
@@ -262,7 +254,7 @@ function enableEditMode() {
 
         <n-ul>
           <n-li
-            v-for="fileName in novelMetadata.value.volumeZh.sort((a, b) =>
+            v-for="fileName in metadata.volumeZh.sort((a:string, b:string) =>
               a.localeCompare(b)
             )"
           >
@@ -275,22 +267,10 @@ function enableEditMode() {
             </n-a>
           </n-li>
         </n-ul>
-
-        <n-empty
-          v-if="novelMetadata.value.volumeZh.length === 0"
-          description="空列表"
-        />
+        <n-empty v-if="metadata.volumeZh.length === 0" description="空列表" />
 
         <SectionComment :post-id="route.path" />
       </template>
-    </div>
-
-    <div v-if="novelMetadata && !novelMetadata.ok">
-      <n-result
-        status="error"
-        title="加载错误"
-        :description="novelMetadata.error.message"
-      />
-    </div>
+    </ResultView>
   </MainLayout>
 </template>

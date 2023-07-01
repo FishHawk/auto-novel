@@ -9,15 +9,14 @@ import {
 } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 
-import { ResultState } from '@/data/api/result';
+import { Ok, ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
-import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
+import { ApiWebNovel, WebNovelMetadataDto, WebNovelTocItemDto } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { tryTranslateKeywords } from '@/data/keyword_translate';
 
 const authInfoStore = useAuthInfoStore();
-
 const message = useMessage();
 
 const route = useRoute();
@@ -25,7 +24,7 @@ const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
 const url = buildMetadataUrl(providerId, novelId);
 
-const metadata = ref<ResultState<WebNovelMetadataDto>>();
+const metadataResult = ref<ResultState<WebNovelMetadataDto>>();
 
 async function getMetadata() {
   const result = await ApiWebNovel.getMetadata(
@@ -33,7 +32,7 @@ async function getMetadata() {
     novelId,
     authInfoStore.token
   );
-  metadata.value = result;
+  metadataResult.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
   }
@@ -54,8 +53,8 @@ async function addFavorite() {
   isFavoriteChanging = true;
   const result = await ApiUser.putFavoritedWebNovel(providerId, novelId, token);
   if (result.ok) {
-    if (metadata.value?.ok) {
-      metadata.value.value.favored = true;
+    if (metadataResult.value?.ok) {
+      metadataResult.value.value.favored = true;
     }
   } else {
     message.error('收藏错误：' + result.error.message);
@@ -79,8 +78,8 @@ async function removeFavorite() {
     token
   );
   if (result.ok) {
-    if (metadata.value?.ok) {
-      metadata.value.value.favored = false;
+    if (metadataResult.value?.ok) {
+      metadataResult.value.value.favored = false;
     }
   } else {
     message.error('取消收藏错误：' + result.error.message);
@@ -101,20 +100,17 @@ function enableEditMode() {
 
 <template>
   <MainLayout>
-    <div v-if="metadata?.ok">
+    <ResultView :result="metadataResult" v-slot="{ value: metadata }">
       <n-h1 prefix="bar" style="font-size: 22px">
-        <n-a :href="url" target="_blank">{{ metadata.value.titleJp }}</n-a>
+        <n-a :href="url" target="_blank">{{ metadata.titleJp }}</n-a>
         <br />
-        <span style="color: grey">{{ metadata.value.titleZh }}</span>
+        <span style="color: grey">{{ metadata.titleZh }}</span>
       </n-h1>
 
-      <n-p v-if="metadata.value.authors.length > 0">
+      <n-p v-if="metadata.authors.length > 0">
         作者：
-        <span v-for="author in metadata.value.authors">
+        <span v-for="author in metadata.authors">
           <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
-        </span>
-        <span style="margin-left: 20px">
-          浏览次数:{{ metadata.value.visited }}
         </span>
       </n-p>
 
@@ -133,10 +129,7 @@ function enableEditMode() {
           退出编辑
         </n-button>
 
-        <n-button
-          v-if="metadata.value.favored === true"
-          @click="removeFavorite()"
-        >
+        <n-button v-if="metadata.favored === true" @click="removeFavorite()">
           <template #icon>
             <n-icon> <FavoriteFilled /> </n-icon>
           </template>
@@ -151,8 +144,8 @@ function enableEditMode() {
         </n-button>
 
         <n-a
-          v-if="metadata.value.wenkuId"
-          :href="`/wenku/${metadata.value.wenkuId}`"
+          v-if="metadata.wenkuId"
+          :href="`/wenku/${metadata.wenkuId}`"
           target="_blank"
         >
           <n-button>
@@ -164,35 +157,38 @@ function enableEditMode() {
         </n-a>
       </n-space>
 
+      <n-p>{{ metadata.type }} / 浏览次数:{{ metadata.visited }} </n-p>
+
       <template v-if="editMode">
         <WebEditSection
           :provider-id="providerId"
           :novel-id="novelId"
-          v-model:novel-metadata="metadata.value"
+          :novel-metadata="metadata"
+          @update:novel-metadata="metadataResult = Ok(metadata)"
         />
       </template>
 
       <template v-else>
         <n-p style="word-break: break-all">
-          {{ metadata.value.introductionJp }}
+          {{ metadata.introductionJp }}
         </n-p>
         <n-p
-          v-if="metadata.value.introductionZh !== undefined"
+          v-if="metadata.introductionZh !== undefined"
           style="word-break: break-all"
         >
-          {{ metadata.value.introductionZh }}
+          {{ metadata.introductionZh }}
         </n-p>
 
         <n-space :size="[4, 4]">
           <n-tag
-            v-for="tag of metadata.value.attentions"
+            v-for="tag of metadata.attentions"
             :bordered="false"
             size="small"
           >
             <b>{{ tag }}</b>
           </n-tag>
           <n-tag
-            v-for="tag of tryTranslateKeywords(metadata.value.keywords)"
+            v-for="tag of tryTranslateKeywords(metadata.keywords)"
             :bordered="false"
             size="small"
           >
@@ -203,28 +199,20 @@ function enableEditMode() {
         <SectionWebTranslate
           :provider-id="providerId"
           :novel-id="novelId"
-          :title="metadata.value.titleZh ?? metadata.value.titleJp"
-          :total="metadata.value.toc.filter((it) => it.chapterId).length"
-          v-model:jp="metadata.value.jp"
-          v-model:baidu="metadata.value.baidu"
-          v-model:youdao="metadata.value.youdao"
-          :glossary="metadata.value.glossary"
+          :title="metadata.titleZh ?? metadata.titleJp"
+          :total="metadata.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
+          v-model:jp="metadata.jp"
+          v-model:baidu="metadata.baidu"
+          v-model:youdao="metadata.youdao"
+          :glossary="metadata.glossary"
         />
         <SectionWebToc
           :provider-id="providerId"
           :novel-id="novelId"
-          :toc="metadata.value.toc"
+          :toc="metadata.toc"
         />
         <SectionComment :post-id="route.path" />
       </template>
-    </div>
-
-    <div v-if="metadata && !metadata.ok">
-      <n-result
-        status="error"
-        title="加载错误"
-        :description="metadata.error.message"
-      />
-    </div>
+    </ResultView>
   </MainLayout>
 </template>

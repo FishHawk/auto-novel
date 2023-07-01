@@ -73,9 +73,9 @@ export interface WebNovelMetadataDto {
   visited: number;
   syncAt: number;
   favored?: boolean;
-  jp?: number;
-  baidu?: number;
-  youdao?: number;
+  jp: number;
+  baidu: number;
+  youdao: number;
 }
 
 async function getMetadata(

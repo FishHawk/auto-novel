@@ -1,8 +1,12 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { useWindowSize } from '@vueuse/core';
+import { createReusableTemplate, useWindowSize } from '@vueuse/core';
 
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
+
+const [DefineOption, ReuseOption] = createReusableTemplate<{
+  label: string;
+}>();
 
 const { width } = useWindowSize();
 const isDesktop = computed(() => width.value > 600);
@@ -47,6 +51,13 @@ defineEmits<{
 </script>
 
 <template>
+  <DefineOption v-slot="{ $slots, label }">
+    <tr>
+      <td nowrap="nowrap" style="padding-right: 12px">{{ label }}</td>
+      <td style="width: 100%"><component :is="$slots.default!" /></td>
+    </tr>
+  </DefineOption>
+
   <n-modal :show="show" @update:show="$emit('update:show', $event)">
     <n-card
       style="width: min(600px, calc(100% - 16px))"
@@ -57,25 +68,28 @@ defineEmits<{
       aria-modal="true"
     >
       <n-space vertical size="large" style="width: 100%">
-        <ReaderSettingDialogSelect
-          :desktop="isDesktop"
-          label="语言"
-          v-model:value="setting.mode"
-          :options="modeOptions"
-        />
-        <ReaderSettingDialogSelect
-          :desktop="isDesktop"
-          label="翻译"
-          v-model:value="setting.translation"
-          :options="translationOptions"
-        />
-        <ReaderSettingDialogSelect
-          :desktop="isDesktop"
-          label="字体"
-          v-model:value="setting.fontSize"
-          :options="fontSizeOptions"
-        />
-        <ReaderSettingDialogSelect label="主题">
+        <ReuseOption label="语言">
+          <ReaderSettingDialogSelect
+            :desktop="isDesktop"
+            v-model:value="setting.mode"
+            :options="modeOptions"
+          />
+        </ReuseOption>
+        <ReuseOption label="翻译">
+          <ReaderSettingDialogSelect
+            :desktop="isDesktop"
+            v-model:value="setting.translation"
+            :options="translationOptions"
+          />
+        </ReuseOption>
+        <ReuseOption label="字体">
+          <ReaderSettingDialogSelect
+            :desktop="isDesktop"
+            v-model:value="setting.fontSize"
+            :options="fontSizeOptions"
+          />
+        </ReuseOption>
+        <ReuseOption label="主题">
           <n-space>
             <n-radio
               v-for="theme of themeOptions"
@@ -95,9 +109,8 @@ defineEmits<{
               </n-tag>
             </n-radio>
           </n-space>
-        </ReaderSettingDialogSelect>
-
-        <ReaderSettingDialogSelect label="日文透明度">
+        </ReuseOption>
+        <ReuseOption label="日文透明度">
           <n-slider
             v-model:value="setting.mixJpOpacity"
             :max="1"
@@ -105,7 +118,7 @@ defineEmits<{
             :step="0.05"
             :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
           />
-        </ReaderSettingDialogSelect>
+        </ReuseOption>
       </n-space>
     </n-card>
   </n-modal>

@@ -2,15 +2,13 @@
 import { ResultState } from '@/data/api/result';
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
 
-defineProps<{
-  list: ResultState<WebNovelOutlineDto[]>;
-}>();
+defineProps<{ listResult: ResultState<WebNovelOutlineDto[]> }>();
 </script>
 
 <template>
-  <div v-if="list?.ok">
+  <ResultView :result="listResult" v-slot="{ value: list }">
     <n-grid :x-gap="12" :y-gap="12" cols="1 600:4">
-      <n-grid-item v-for="item in list.value" style="padding: 8px">
+      <n-grid-item v-for="item in list" style="padding: 8px">
         <n-a
           :href="`/novel/${item.providerId}/${item.novelId}`"
           target="_blank"
@@ -23,12 +21,5 @@ defineProps<{
         </div>
       </n-grid-item>
     </n-grid>
-    <n-empty v-if="list.value.length === 0" description="空列表" />
-  </div>
-  <n-result
-    v-if="list && !list.ok"
-    status="error"
-    title="加载错误"
-    :description="list.error.message"
-  />
+  </ResultView>
 </template>

@@ -10,49 +10,43 @@ import { ref } from 'vue';
 import ApiComment, { SubCommentDto } from '@/data/api/api_comment';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
+const { postId, parentId, comment } = withDefaults(
+  defineProps<{
+    postId: string;
+    parentId: string | undefined;
+    comment: SubCommentDto;
+  }>(),
+  { parentId: undefined }
+);
+
+const emit = defineEmits<{ replied: [] }>();
+
 const authInfoStore = useAuthInfoStore();
-
-const props = defineProps<{
-  postId: string;
-  parentId: string | undefined;
-  comment: SubCommentDto;
-  showInput: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: 'replied'): void;
-}>();
-
 const message = useMessage();
 
 async function vote(isUpvote: boolean, isCancel: boolean) {
   const token = authInfoStore.token;
   if (token) {
-    const result = await ApiComment.vote(
-      props.comment.id,
-      isUpvote,
-      isCancel,
-      token
-    );
+    const result = await ApiComment.vote(comment.id, isUpvote, isCancel, token);
     if (result.ok) {
       if (isUpvote && isCancel) {
-        props.comment.upvote--;
-        props.comment.viewerVote = undefined;
+        comment.upvote--;
+        comment.viewerVote = undefined;
       } else if (isUpvote && !isCancel) {
-        if (props.comment.viewerVote === false) {
-          props.comment.upvote++;
+        if (comment.viewerVote === false) {
+          comment.upvote++;
         }
-        props.comment.upvote++;
-        props.comment.viewerVote = true;
+        comment.upvote++;
+        comment.viewerVote = true;
       } else if (!isUpvote && isCancel) {
-        props.comment.downvote--;
-        props.comment.viewerVote = undefined;
+        comment.downvote--;
+        comment.viewerVote = undefined;
       } else {
-        if (props.comment.viewerVote === true) {
-          props.comment.upvote--;
+        if (comment.viewerVote === true) {
+          comment.upvote--;
         }
-        props.comment.downvote++;
-        props.comment.viewerVote = false;
+        comment.downvote++;
+        comment.viewerVote = false;
       }
     } else {
       message.error('评论投票错误：' + result.error.message);
@@ -103,12 +97,10 @@ async function reply() {
     if (replyContent.value.length === 0) {
       message.info('回复内容不能为空');
     } else {
-      const receiver =
-        props.parentId === undefined ? undefined : props.comment.username;
-      const parentId = props.parentId ?? props.comment.id;
+      const receiver = parentId === undefined ? undefined : comment.username;
       const result = await ApiComment.reply(
-        props.postId,
-        parentId,
+        postId,
+        parentId ?? comment.id,
         receiver,
         replyContent.value,
         token

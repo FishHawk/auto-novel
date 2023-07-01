@@ -9,7 +9,7 @@ import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const [DefineVolumeList, ReuseVolumeList] = createReusableTemplate<{
-  volumes: ResultState<VolumeJpDto[]>;
+  volumesResult: ResultState<VolumeJpDto[]>;
   novelId: string;
 }>();
 
@@ -67,6 +67,36 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
 </script>
 
 <template>
+  <DefineVolumeList v-slot="{ volumesResult, novelId }">
+    <n-upload
+      multiple
+      :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
+      :action="ApiWenkuNovel.createVolumeJpUploadUrl(novelId)"
+      @finish="handleFinish"
+      @before-upload="beforeUpload"
+    >
+      <n-button>
+        <template #icon><n-icon :component="UploadFilled" /></template>
+        上传章节
+      </n-button>
+    </n-upload>
+
+    <ResultView :result="volumesResult" v-slot="{ value: volumes }">
+      <div v-for="volume in volumes">
+        <n-h3 class="title" style="margin-bottom: 4px">
+          {{ volume.volumeId }}
+        </n-h3>
+        <WenkuTranslate
+          :novel-id="novelId"
+          :volume-id="volume.volumeId"
+          :total="volume.total"
+          v-model:baidu="volume.baidu"
+          v-model:youdao="volume.youdao"
+        />
+      </div>
+    </ResultView>
+  </DefineVolumeList>
+
   <MainLayout>
     <n-h1>Epub/Txt翻译</n-h1>
     <n-p>
@@ -86,52 +116,13 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       </n-li>
     </n-ul>
 
-    <DefineVolumeList v-slot="{ volumes, novelId }">
-      <n-upload
-        multiple
-        :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
-        :action="ApiWenkuNovel.createVolumeJpUploadUrl(novelId)"
-        @finish="handleFinish"
-        @before-upload="beforeUpload"
-      >
-        <n-button>
-          <template #icon><n-icon :component="UploadFilled" /></template>
-          上传章节
-        </n-button>
-      </n-upload>
-
-      <template v-if="volumes?.ok">
-        <div v-for="volume in volumes.value" style="padding: 0px">
-          <n-h3 class="title" style="margin-bottom: 4px">
-            {{ volume.volumeId }}
-          </n-h3>
-          <WenkuTranslate
-            :novel-id="novelId"
-            :volume-id="volume.volumeId"
-            :total="volume.total"
-            v-model:baidu="volume.baidu"
-            v-model:youdao="volume.youdao"
-          />
-        </div>
-        <n-empty v-if="volumes.value.length === 0" description="空列表" />
-      </template>
-
-      <div v-if="volumes && !volumes.ok">
-        <n-result
-          status="error"
-          title="加载错误"
-          :description="volumes.error.message"
-        />
-      </div>
-    </DefineVolumeList>
-
     <SectionHeader title="私人缓存区" />
     <n-p>
       这里上传的小说是不公开的，如果你的小说因为放流时间的限制，可以上传到这里。
       <br />
       上传到这里的小说过一段时间会清理（现在还没做）。
     </n-p>
-    <ReuseVolumeList :volumes="volumesUser" :novelId="userNovelId" />
+    <ReuseVolumeList :volumesResult="volumesUser" :novelId="userNovelId" />
 
     <SectionHeader title="通用缓存区" />
     <n-p>
@@ -139,6 +130,6 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       <br />
       上传到这里的小说过一段时间会移动到对应的文库版页面里面（现在还没做）。
     </n-p>
-    <ReuseVolumeList :volumes="volumes" novelId="non-archived" />
+    <ReuseVolumeList :volumesResult="volumes" novelId="non-archived" />
   </MainLayout>
 </template>

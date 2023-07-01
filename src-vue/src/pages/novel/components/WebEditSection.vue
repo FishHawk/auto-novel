@@ -69,7 +69,7 @@ function createEditMetadata(): EditMetadata {
 const message = useMessage();
 
 const editMetadata = ref(createEditMetadata());
-const termsToAdd = ref(['', '']);
+const termsToAdd = ref<[string, string]>(['', '']);
 
 const isSubmitting = ref(false);
 

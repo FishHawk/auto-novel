@@ -61,7 +61,7 @@ async function realSendEmail() {
 <template>
   <n-button
     type="primary"
-    :disabled="verifyState"
+    :disabled="verifyState !== undefined"
     @click="realSendEmail()"
     style="width: 100px"
   >

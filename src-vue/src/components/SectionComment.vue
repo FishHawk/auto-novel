@@ -143,9 +143,9 @@ async function reply() {
       <n-divider />
     </template>
 
-    <template v-if="commentPage?.ok">
+    <Result :result="commentPage" v-slot="{ value }">
       <div
-        v-for="comment in commentPage.value.items"
+        v-for="comment in value.items"
         :ref="(el) => (comment.topElement = el)"
       >
         <Comment
@@ -160,7 +160,7 @@ async function reply() {
           <Comment
             :postId="postId"
             :comment="subComment"
-            :parent-id="comment.id"
+            :parentId="comment.id"
             @replied="refreshSubCommentsIfNeed(comment)"
           />
         </div>
@@ -177,24 +177,13 @@ async function reply() {
       </div>
 
       <n-pagination
-        v-if="commentPage.value.pageNumber > 1"
-        v-model:page="commentPage.value.page"
-        :page-count="commentPage.value.pageNumber"
+        v-if="value.pageNumber > 1"
+        v-model:page="value.page"
+        :page-count="value.pageNumber"
         :page-slot="7"
         style="margin-top: 20px"
         @update:page="loadPage($event)"
       />
-
-      <n-empty
-        v-if="commentPage.value.items.length === 0"
-        description="还没有评论"
-      />
-    </template>
-    <n-result
-      v-if="commentPage && !commentPage.ok"
-      status="error"
-      title="加载错误"
-      :description="commentPage.error.message"
-    />
+    </Result>
   </section>
 </template>

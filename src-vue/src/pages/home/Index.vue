@@ -136,26 +136,23 @@ onMounted(loadLatestUpdateWenku);
     </template>
 
     <template v-if="authInfoStore.token">
-      <n-space align="center" justify="space-between">
-        <n-h2 prefix="bar">我的收藏</n-h2>
+      <SectionHeader title="我的收藏">
         <n-a href="/favorite-list">更多</n-a>
-      </n-space>
-      <PanelWebNovel :list="favoriteList" />
+      </SectionHeader>
+      <PanelWebNovel :list-result="favoriteList" />
       <n-divider />
     </template>
 
-    <n-space align="center" justify="space-between">
-      <n-h2 prefix="bar">最新更新-网络小说</n-h2>
+    <SectionHeader title="最新更新-网络小说">
       <n-a href="/novel-list">更多</n-a>
-    </n-space>
-    <PanelWebNovel :list="latestUpdateWeb" />
+    </SectionHeader>
+    <PanelWebNovel :list-result="latestUpdateWeb" />
     <n-divider />
 
-    <n-space align="center" justify="space-between">
-      <n-h2 prefix="bar" style="margin-bottom: 30px">最新更新-文库小说</n-h2>
+    <SectionHeader title="最新更新-文库小说" style="margin-bottom: 20px">
       <n-a href="/wenku-list">更多</n-a>
-    </n-space>
-    <PanelWenkuNovel :list="latestUpdateWenku" />
+    </SectionHeader>
+    <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
   </MainLayout>
 </template>

@@ -36,7 +36,7 @@ const props = withDefaults(
 
 const currentPage = ref(parseInt(route.query.page as string) || 1);
 const pageNumber = ref(1);
-const novelPage = ref<ResultState<NovelPage>>();
+const novelPageResult = ref<ResultState<NovelPage>>();
 
 function parseFilters() {
   let query = '';
@@ -60,7 +60,7 @@ function parseFilters() {
 const filters = ref(parseFilters());
 
 async function loadPage(page: number) {
-  novelPage.value = undefined;
+  novelPageResult.value = undefined;
 
   const query: { [key: string]: any } = { page };
   if (props.search) {
@@ -77,7 +77,7 @@ async function loadPage(page: number) {
     filters.value.selected
   );
   if (currentPage.value == page) {
-    novelPage.value = result;
+    novelPageResult.value = result;
     if (result.ok) {
       pageNumber.value = result.value.page.pageNumber;
     }
@@ -105,27 +105,10 @@ watch(currentPage, (page) => loadPage(page));
     style="margin-top: 20px"
   />
   <n-divider />
-  <div v-if="novelPage?.ok">
-    <NovelListWeb
-      v-if="novelPage.value.type === 'web'"
-      :items="novelPage.value.page.items"
-    />
-    <NovelListWenku
-      v-else-if="novelPage.value.type === 'wenku'"
-      :items="novelPage.value.page.items"
-    />
-
-    <n-empty
-      v-if="novelPage.value.page.items.length === 0"
-      description="空列表"
-    />
-  </div>
-  <n-result
-    v-if="novelPage && !novelPage.ok"
-    status="error"
-    title="加载错误"
-    :description="novelPage.error.message"
-  />
+  <ResultView :result="novelPageResult" v-slot="{ value: page }">
+    <NovelListWeb v-if="page.type === 'web'" :items="page.page.items" />
+    <NovelListWenku v-else :items="page.page.items" />
+  </ResultView>
   <n-pagination
     v-if="pageNumber > 1"
     v-model:page="currentPage"

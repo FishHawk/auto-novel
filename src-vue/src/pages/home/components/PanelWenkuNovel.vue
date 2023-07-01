@@ -2,15 +2,13 @@
 import { ResultState } from '@/data/api/result';
 import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
 
-defineProps<{
-  list: ResultState<WenkuNovelOutlineDto[]>;
-}>();
+defineProps<{ listResult: ResultState<WenkuNovelOutlineDto[]> }>();
 </script>
 
 <template>
-  <div v-if="list?.ok">
+  <ResultView :result="listResult" v-slot="{ value: list }">
     <n-grid :x-gap="12" :y-gap="12" cols="3 600:6">
-      <n-grid-item v-for="item in list.value">
+      <n-grid-item v-for="item in list">
         <n-a :href="`/wenku/${item.id}`" target="_blank">
           <ImageCard
             :src="item.cover"
@@ -19,14 +17,7 @@ defineProps<{
         </n-a>
       </n-grid-item>
     </n-grid>
-    <n-empty v-if="list.value.length === 0" description="空列表" />
-  </div>
-  <n-result
-    v-if="list && !list.ok"
-    status="error"
-    title="加载错误"
-    :description="list.error.message"
-  />
+  </ResultView>
 </template>
 
 <style scoped>
