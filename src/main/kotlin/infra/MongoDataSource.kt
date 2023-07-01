@@ -102,6 +102,9 @@ class MongoDataSource(url: String) {
     val wenkuNovelFavoriteCollection
         get() = database.getCollection<WenkuNovelFavoriteModel>("wenku-favorite")
 
+    val wenkuNovelUploadHistoryCollection
+        get() = database.getCollection<WenkuNovelUploadHistory>("wenku-upload-history")
+
     // Ensure index
     init {
         runBlocking {

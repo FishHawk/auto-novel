@@ -8,6 +8,7 @@ import infra.MongoDataSource
 import infra.provider.WebNovelProviderDataSource
 import infra.web.*
 import infra.wenku.WenkuNovelMetadataRepository
+import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -105,6 +106,7 @@ fun main() {
             routeWebNovelAdmin()
 
             routeWenkuNovel()
+            routeWenkuNovelAdmin()
         }
     }.start(wait = true)
 }
@@ -129,6 +131,7 @@ val appModule = module {
 
     single { WenkuNovelMetadataRepository(get(), get()) }
     single { WenkuNovelVolumeRepository() }
+    single { WenkuNovelUploadHistoryRepository(get()) }
 
     single { CommentRepository(get()) }
     single { UserRepository(get(), get()) }
@@ -149,5 +152,6 @@ val appModule = module {
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
 
-    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelAdminApi(get()) }
 }

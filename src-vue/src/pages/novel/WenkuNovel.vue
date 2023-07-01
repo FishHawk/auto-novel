@@ -9,13 +9,12 @@ import {
   FavoriteFilled,
 } from '@vicons/material';
 
-import { ResultState } from '@/data/api/result';
+import { Ok, ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
-
 const message = useMessage();
 
 const route = useRoute();
@@ -168,12 +167,6 @@ function enableEditMode() {
                     label="插图"
                     :tags="novelMetadataResult.value.artists"
                   />
-                  <TagGroup
-                    v-if="novelMetadataResult.value.keywords.length > 0"
-                    class="on-desktop"
-                    label="标签"
-                    :tags="novelMetadataResult.value.keywords"
-                  />
                 </table>
               </div>
             </n-space>
@@ -223,51 +216,31 @@ function enableEditMode() {
         <n-p>原名：{{ metadata.title }}</n-p>
         <n-p v-html="metadata.introduction.replace(/\n/g, '<br />')" />
 
-        <div class="on-mobile">
-          <n-space :size="[4, 4]">
-            <n-tag
-              v-for="tag of metadata.keywords"
-              :bordered="false"
-              size="small"
-            >
-              {{ tag }}
-            </n-tag>
-          </n-space>
-        </div>
-
-        <n-upload
-          multiple
-          :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
-          :action="ApiWenkuNovel.createVolumeZhUploadUrl(novelId)"
-          :trigger-style="{ width: '100%' }"
-          @finish="handleFinish"
-          @before-upload="beforeUpload"
-        >
-          <n-space align="baseline" justify="space-between" style="width: 100">
-            <n-h2 prefix="bar">目录</n-h2>
-            <n-button v-if="atLeastMaintainer(authInfoStore.role)">
-              <template #icon><n-icon :component="UploadFilled" /></template>
-              上传章节
-            </n-button>
-          </n-space>
-        </n-upload>
-
-        <n-ul>
-          <n-li
-            v-for="fileName in metadata.volumeZh.sort((a:string, b:string) =>
-              a.localeCompare(b)
-            )"
+        <n-space :size="[4, 4]">
+          <n-tag
+            v-for="tag of metadata.keywords"
+            :bordered="false"
+            size="small"
           >
-            <n-a
-              :href="`/files-wenku/${novelId}/${fileName}`"
-              target="_blank"
-              :download="fileName"
-            >
-              {{ fileName }}
-            </n-a>
-          </n-li>
-        </n-ul>
-        <n-empty v-if="metadata.volumeZh.length === 0" description="空列表" />
+            {{ tag }}
+          </n-tag>
+        </n-space>
+
+        <SectionHeader title="中文章节" />
+        <ListVolumes
+          type="zh"
+          :volumesResult="Ok(metadata.volumeZh)"
+          :novelId="novelId"
+          @uploadFinished="refreshMetadata()"
+        />
+
+        <SectionHeader title="日文章节" />
+        <ListVolumes
+          type="jp"
+          :volumesResult="Ok(metadata.volumeJp)"
+          :novelId="novelId"
+          @uploadFinished="refreshMetadata()"
+        />
 
         <SectionComment :post-id="route.path" />
       </template>

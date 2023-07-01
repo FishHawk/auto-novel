@@ -1,7 +1,11 @@
 package api.dto
 
 import infra.model.*
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.types.ObjectId
 
 @Serializable
 data class WenkuNovelOutlineDto(
@@ -37,3 +41,23 @@ data class WenkuNovelDto(
     val volumeZh: List<String>,
     val volumeJp: List<WenkuNovelVolumeJp>,
 )
+
+@Serializable
+data class WenkuNovelUploadHistoryDto(
+    val id: String,
+    val novelId: String,
+    val volumeId: String,
+    val uploader: String,
+    val createAt: Long,
+) {
+    companion object {
+        fun fromDomain(domain: WenkuNovelUploadHistory) =
+            WenkuNovelUploadHistoryDto(
+                id = domain.id.toHexString(),
+                novelId = domain.novelId,
+                volumeId = domain.volumeId,
+                uploader = domain.uploader,
+                createAt = domain.createAt.epochSeconds,
+            )
+    }
+}

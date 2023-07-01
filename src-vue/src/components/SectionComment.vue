@@ -8,7 +8,6 @@ import { Ok, ResultState } from '@/data/api/result';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
-
 const message = useMessage();
 
 const props = defineProps<{
@@ -26,7 +25,7 @@ interface CommentPage extends CommentPageDto {
 }
 
 const topElement = ref();
-const commentPage = ref<ResultState<CommentPage>>(undefined);
+const commentPage = ref<ResultState<CommentPage>>();
 
 onMounted(() => loadPage(1, true));
 
@@ -143,7 +142,8 @@ async function reply() {
       <n-divider />
     </template>
 
-    <Result :result="commentPage" v-slot="{ value }">
+    <ResultView :result="commentPage" v-slot="{ value }">
+      <n-empty v-if="value.items.length === 0" description="空列表" />
       <div
         v-for="comment in value.items"
         :ref="(el) => (comment.topElement = el)"
@@ -184,6 +184,6 @@ async function reply() {
         style="margin-top: 20px"
         @update:page="loadPage($event)"
       />
-    </Result>
+    </ResultView>
   </section>
 </template>

@@ -8,6 +8,7 @@ import infra.model.NovelFileLang
 import infra.model.TranslatorId
 import infra.model.WenkuNovelVolumeJp
 import infra.wenku.WenkuNovelMetadataRepository
+import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -110,12 +111,13 @@ fun Route.routeWenkuNovel() {
         }
 
         post<WenkuNovelRes.Id.VolumeZh> { loc ->
+            val user = call.jwtUser()
             call.receiveMultipart().forEachPart { part ->
                 if (part is PartData.FileItem) {
                     val fileName = part.originalFileName!!
                     val inputStream = part.streamProvider()
                     val result = service.createNovelVolumeZh(
-                        loc.parent.novelId, fileName, inputStream
+                        loc.parent.novelId, fileName, inputStream, user.username
                     )
                     call.respondResult(result)
                     return@forEachPart
@@ -125,12 +127,13 @@ fun Route.routeWenkuNovel() {
         }
 
         post<WenkuNovelRes.Id.VolumeJp> { loc ->
+            val user = call.jwtUser()
             call.receiveMultipart().forEachPart { part ->
                 if (part is PartData.FileItem) {
                     val fileName = part.originalFileName!!
                     val inputStream = part.streamProvider()
                     val result = service.createNovelVolumeJp(
-                        loc.parent.novelId, fileName, inputStream
+                        loc.parent.novelId, fileName, inputStream, user.username
                     )
                     call.respondResult(result)
                     return@forEachPart
@@ -191,6 +194,7 @@ class WenkuNovelApi(
     private val userRepo: UserRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
     private val volumeRepo: WenkuNovelVolumeRepository,
+    private val uploadHistoryRepo: WenkuNovelUploadHistoryRepository,
 ) {
     suspend fun list(
         queryString: String?,
@@ -365,11 +369,18 @@ class WenkuNovelApi(
         novelId: String,
         volumeId: String,
         inputStream: InputStream,
+        username: String,
     ): Result<Unit> {
         return if (!metadataRepo.exist(novelId)) {
             httpNotFound("小说不存在")
         } else {
-            createVolume(novelId, volumeId, inputStream)
+            createVolume(novelId, volumeId, inputStream).onSuccess {
+                uploadHistoryRepo.insert(
+                    novelId = novelId,
+                    volumeId = volumeId,
+                    uploader = username,
+                )
+            }
         }
     }
 
@@ -382,9 +393,16 @@ class WenkuNovelApi(
         novelId: String,
         volumeId: String,
         inputStream: InputStream,
+        username: String,
     ): Result<Unit> {
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
-        return createVolumeAndUnpack(novelId, volumeId, inputStream)
+        return createVolumeAndUnpack(novelId, volumeId, inputStream).onSuccess {
+            uploadHistoryRepo.insert(
+                novelId = novelId,
+                volumeId = volumeId,
+                uploader = username,
+            )
+        }
     }
 
     // Translate

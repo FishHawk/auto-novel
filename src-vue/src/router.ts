@@ -17,7 +17,10 @@ const routes = [
 
   { path: '/feedback', component: () => import('./pages/other/Feedback.vue') },
   { path: '/donate', component: () => import('./pages/other/Donate.vue') },
-  { path: '/reset-password', component: () => import('./pages/other/ResetPassword.vue') },
+  {
+    path: '/reset-password',
+    component: () => import('./pages/other/ResetPassword.vue'),
+  },
   {
     path: '/how-to-use',
     component: () => import('./pages/other/HowToUse.vue'),
@@ -74,6 +77,10 @@ const routes = [
       {
         path: '/admin/toc-merge',
         component: () => import('./pages/admin/AdminTocMerge.vue'),
+      },
+      {
+        path: '/admin/wenku-upload-history',
+        component: () => import('./pages/admin/AdminWenkuUploadHistory.vue'),
       },
     ],
   },
