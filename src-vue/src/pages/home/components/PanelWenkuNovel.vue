@@ -8,7 +8,7 @@ defineProps<{ listResult: ResultState<WenkuNovelOutlineDto[]> }>();
 <template>
   <ResultView
     :result="listResult"
-    :showEmpty="(it) => it.length === 0"
+    :showEmpty="(it: WenkuNovelOutlineDto[]) => it.length === 0"
     v-slot="{ value: list }"
   >
     <n-grid :x-gap="12" :y-gap="12" cols="3 600:6">

@@ -73,7 +73,7 @@ function createUploadUrl(novelId: string): string {
 
   <ResultView
     :result="volumesResult"
-    :showEmpty="(it) => it.length === 0"
+    :showEmpty="(it: any) => it.length === 0"
     v-slot="{ value: volumes }"
   >
     <n-ul v-if="type === 'zh'">

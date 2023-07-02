@@ -144,7 +144,7 @@ async function reply() {
 
     <ResultView
       :result="commentPage"
-      :showEmpty="(it) => it.items.length === 0"
+      :showEmpty="(it: CommentPage) => it.items.length === 0"
       v-slot="{ value }"
     >
       <n-empty v-if="value.items.length === 0" description="空列表" />

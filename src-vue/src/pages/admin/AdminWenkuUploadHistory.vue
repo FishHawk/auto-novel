@@ -62,7 +62,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     <n-divider />
     <ResultView
       :result="historiesResult"
-      :showEmpty="(it) => it.items.length === 0"
+      :showEmpty="(it: Page<WenkuUploadHistory>) => it.items.length === 0"
       v-slot="{ value: histories }"
     >
       <div v-for="item in histories.items">
