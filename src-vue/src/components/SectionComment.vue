@@ -142,7 +142,11 @@ async function reply() {
       <n-divider />
     </template>
 
-    <ResultView :result="commentPage" v-slot="{ value }">
+    <ResultView
+      :result="commentPage"
+      :showEmpty="(it) => it.items.length === 0"
+      v-slot="{ value }"
+    >
       <n-empty v-if="value.items.length === 0" description="空列表" />
       <div
         v-for="comment in value.items"

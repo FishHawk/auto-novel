@@ -6,7 +6,11 @@ defineProps<{ listResult: ResultState<WenkuNovelOutlineDto[]> }>();
 </script>
 
 <template>
-  <ResultView :result="listResult" v-slot="{ value: list }">
+  <ResultView
+    :result="listResult"
+    :showEmpty="(it) => it.length === 0"
+    v-slot="{ value: list }"
+  >
     <n-grid :x-gap="12" :y-gap="12" cols="3 600:6">
       <n-grid-item v-for="item in list">
         <n-a :href="`/wenku/${item.id}`" target="_blank">

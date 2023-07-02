@@ -164,7 +164,11 @@ async function notifyUpdate() {
       </div>
     </template>
 
-    <ResultView :result="novelMetadataResult" v-slot="{ value: metadata }">
+    <ResultView
+      :result="novelMetadataResult"
+      :showEmpty="() => false"
+      v-slot="{ value: metadata }"
+    >
       <n-space>
         <templage v-if="atLeastMaintainer(authInfoStore.role)">
           <n-button v-if="!editMode" @click="enableEditMode()">

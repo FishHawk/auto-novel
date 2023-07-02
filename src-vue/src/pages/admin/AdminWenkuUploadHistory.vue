@@ -60,7 +60,11 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       :page-slot="7"
     />
     <n-divider />
-    <ResultView :result="historiesResult" v-slot="{ value: histories }">
+    <ResultView
+      :result="historiesResult"
+      :showEmpty="(it) => it.items.length === 0"
+      v-slot="{ value: histories }"
+    >
       <div v-for="item in histories.items">
         <n-thing>
           <template #header>

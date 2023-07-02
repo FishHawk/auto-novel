@@ -71,7 +71,11 @@ function createUploadUrl(novelId: string): string {
     </n-button>
   </n-upload>
 
-  <ResultView :result="volumesResult" v-slot="{ value: volumes }">
+  <ResultView
+    :result="volumesResult"
+    :showEmpty="(it) => it.length === 0"
+    v-slot="{ value: volumes }"
+  >
     <n-ul v-if="type === 'zh'">
       <n-li v-for="fileName in sortVolumesZh(volumes as string[])">
         <n-a

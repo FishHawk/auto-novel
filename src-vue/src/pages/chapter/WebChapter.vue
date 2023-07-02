@@ -142,7 +142,11 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
     <ReaderSettingDialog v-model:show="showModal" />
 
     <div class="content">
-      <ResultView :result="chapterResult" v-slot="{ value: chapter }">
+      <ResultView
+        :result="chapterResult"
+        :showEmpty="() => false"
+        v-slot="{ value: chapter }"
+      >
         <n-h2 style="text-align: center; width: 100%">
           <n-a :href="url" target="_blank">{{ chapter.titleJp }}</n-a>
           <br />

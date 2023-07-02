@@ -11,7 +11,11 @@ import { useMessage } from 'naive-ui';
 
 import { Ok, ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
-import { ApiWebNovel, WebNovelMetadataDto, WebNovelTocItemDto } from '@/data/api/api_web_novel';
+import {
+  ApiWebNovel,
+  WebNovelMetadataDto,
+  WebNovelTocItemDto,
+} from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { tryTranslateKeywords } from '@/data/keyword_translate';
@@ -100,7 +104,11 @@ function enableEditMode() {
 
 <template>
   <MainLayout>
-    <ResultView :result="metadataResult" v-slot="{ value: metadata }">
+    <ResultView
+      :result="metadataResult"
+      :showEmpty="() => false"
+      v-slot="{ value: metadata }"
+    >
       <n-h1 prefix="bar" style="font-size: 22px">
         <n-a :href="url" target="_blank">{{ metadata.titleJp }}</n-a>
         <br />

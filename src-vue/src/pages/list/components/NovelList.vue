@@ -105,7 +105,11 @@ watch(currentPage, (page) => loadPage(page));
     style="margin-top: 20px"
   />
   <n-divider />
-  <ResultView :result="novelPageResult" v-slot="{ value: page }">
+  <ResultView
+    :result="novelPageResult"
+    :showEmpty="(it: NovelPage) => it.page.items.length === 0"
+    v-slot="{ value: page }"
+  >
     <NovelListWeb v-if="page.type === 'web'" :items="page.page.items" />
     <NovelListWenku v-else :items="page.page.items" />
   </ResultView>

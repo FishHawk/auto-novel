@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMessage } from 'naive-ui';
 import { useWindowSize } from '@vueuse/core';
 
 import { ApiUser } from '@/data/api/api_user';
@@ -18,24 +17,18 @@ const { width } = useWindowSize();
 const isDesktop = computed(() => width.value > 600);
 
 const router = useRouter();
-const message = useMessage();
 
 const url = ref('');
 function query(url: string) {
-  if (url.length === 0) {
-    return;
-  }
-
+  if (url.length === 0) return;
   const parseResult = parseUrl(url);
-  if (parseResult === undefined) {
-    message.error('无法解析网址，可能是因为格式错误或者不支持');
-    return;
+  if (parseResult !== undefined) {
+    const providerId = parseResult.providerId;
+    const novelId = parseResult.novelId;
+    router.push({ path: `/novel/${providerId}/${novelId}` });
+  } else {
+    router.push({ path: `/novel-list`, query: { query: url } });
   }
-
-  const providerId = parseResult.providerId;
-  const novelId = parseResult.novelId;
-  const novelUrl = `/novel/${providerId}/${novelId}`;
-  router.push({ path: novelUrl });
 }
 
 const authInfoStore = useAuthInfoStore();
@@ -53,7 +46,7 @@ async function loadFavorite() {
     favoriteList.value = result;
   }
 }
-onMounted(loadFavorite);
+loadFavorite();
 
 const latestUpdateWeb = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadLatestUpdateWeb() {
@@ -64,7 +57,7 @@ async function loadLatestUpdateWeb() {
     latestUpdateWeb.value = result;
   }
 }
-onMounted(loadLatestUpdateWeb);
+loadLatestUpdateWeb();
 
 const latestUpdateWenku = ref<ResultState<WenkuNovelOutlineDto[]>>();
 async function loadLatestUpdateWenku() {
@@ -75,7 +68,7 @@ async function loadLatestUpdateWenku() {
     latestUpdateWenku.value = result;
   }
 }
-onMounted(loadLatestUpdateWenku);
+loadLatestUpdateWenku();
 </script>
 
 <template>
@@ -105,7 +98,7 @@ onMounted(loadLatestUpdateWenku);
             <n-input
               v-model:value="url"
               size="large"
-              placeholder="请输入小说链接..."
+              placeholder="请输入小说链接，或者输入标题搜索本站缓存..."
               @keyup.enter="query(url)"
             />
             <n-button size="large" type="primary" @click="query(url)">

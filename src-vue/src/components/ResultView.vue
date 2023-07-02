@@ -1,16 +1,20 @@
 <script setup lang="ts" generic="T extends any">
 import { ResultState } from '@/data/api/result';
 
-defineProps<{ result: ResultState<T> }>();
+withDefaults(
+  defineProps<{
+    result: ResultState<T>;
+    showEmpty: (value: T) => boolean;
+  }>(),
+  // TODO:Not work
+  { showEmpty: (value: T) => Array.isArray(value) && value.length === 0 }
+);
 </script>
 
 <template>
   <template v-if="result?.ok">
     <slot :value="result.value" />
-    <n-empty
-      v-if="Array.isArray(result.value) && result.value.length === 0"
-      description="空列表"
-    />
+    <n-empty v-if="showEmpty(result.value)" description="空列表" />
   </template>
 
   <n-result

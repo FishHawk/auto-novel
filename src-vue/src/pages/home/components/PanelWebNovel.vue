@@ -6,7 +6,11 @@ defineProps<{ listResult: ResultState<WebNovelOutlineDto[]> }>();
 </script>
 
 <template>
-  <ResultView :result="listResult" v-slot="{ value: list }">
+  <ResultView
+    :result="listResult"
+    :showEmpty="(it) => it.length === 0"
+    v-slot="{ value: list }"
+  >
     <n-grid :x-gap="12" :y-gap="12" cols="1 600:4">
       <n-grid-item v-for="item in list" style="padding: 8px">
         <n-a
