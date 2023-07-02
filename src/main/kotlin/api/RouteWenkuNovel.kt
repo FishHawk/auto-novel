@@ -44,6 +44,9 @@ private class WenkuNovelRes {
 
     @Resource("/{novelId}")
     class Id(val parent: WenkuNovelRes, val novelId: String) {
+        @Resource("/notify-update")
+        class NotifyUpdate(val parent: Id)
+
         @Resource("/volume-zh")
         class VolumeZh(val parent: Id)
 
@@ -106,6 +109,13 @@ fun Route.routeWenkuNovel() {
             val result = call.requireAtLeastMaintainer {
                 val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
                 service.patchMetadata(loc.novelId, body)
+            }
+            call.respondResult(result)
+        }
+
+        post<WenkuNovelRes.Id.NotifyUpdate> { loc ->
+            val result = call.requireAtLeastMaintainer {
+                service.notifyUpdate(loc.parent.novelId)
             }
             call.respondResult(result)
         }
@@ -311,6 +321,11 @@ class WenkuNovelApi(
         return Result.success(Unit)
     }
 
+    suspend fun notifyUpdate(novelId: String): Result<Unit> {
+        metadataRepo.notifyUpdateAt(novelId)
+        return Result.success(Unit)
+    }
+
     private suspend fun createVolume(
         novelId: String,
         volumeId: String,
@@ -380,6 +395,7 @@ class WenkuNovelApi(
                     volumeId = volumeId,
                     uploader = username,
                 )
+                metadataRepo.notifyUpdateAt(novelId)
             }
         }
     }
@@ -397,11 +413,14 @@ class WenkuNovelApi(
     ): Result<Unit> {
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
         return createVolumeAndUnpack(novelId, volumeId, inputStream).onSuccess {
-            uploadHistoryRepo.insert(
-                novelId = novelId,
-                volumeId = volumeId,
-                uploader = username,
-            )
+            if (!(novelId == "non-archived" || novelId.startsWith("user"))) {
+                uploadHistoryRepo.insert(
+                    novelId = novelId,
+                    volumeId = volumeId,
+                    uploader = username,
+                )
+                metadataRepo.notifyUpdateAt(novelId)
+            }
         }
     }
 

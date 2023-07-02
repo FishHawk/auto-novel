@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { UploadFileInfo, useMessage } from 'naive-ui';
+import { useMessage } from 'naive-ui';
 import {
-  UploadFilled,
+  DoorbellFilled,
   EditNoteFilled,
   FavoriteBorderFilled,
   FavoriteFilled,
@@ -22,7 +22,6 @@ const novelId = route.params.novelId as string;
 
 const novelMetadataResult = ref<ResultState<WenkuMetadataDto>>();
 
-onMounted(() => getMetadata());
 async function getMetadata() {
   const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
   novelMetadataResult.value = result;
@@ -30,39 +29,13 @@ async function getMetadata() {
     document.title = result.value.title;
   }
 }
+getMetadata();
 
 async function refreshMetadata() {
   const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
   if (result.ok) {
     novelMetadataResult.value = result;
   }
-}
-
-async function beforeUpload({ file }: { file: UploadFileInfo }) {
-  if (!authInfoStore.token) {
-    message.info('请先登录');
-    return false;
-  }
-  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error('文件大小不能超过40MB');
-    return false;
-  }
-  if (file.type === 'application/epub+zip' || file.type === 'text/plain') {
-    return true;
-  } else {
-    message.error('只能上传epub或txt格式的文件');
-    return false;
-  }
-}
-function handleFinish({
-  file,
-  event,
-}: {
-  file: UploadFileInfo;
-  event?: ProgressEvent;
-}) {
-  refreshMetadata();
-  return undefined;
 }
 
 var isFavoriteChanging = false;
@@ -116,6 +89,22 @@ function enableEditMode() {
     return;
   }
   editMode.value = true;
+}
+
+async function notifyUpdate() {
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+
+  const result = await ApiWenkuNovel.notifyUpdate(novelId, token);
+  if (result.ok) {
+    message.info('提醒更新成功');
+  } else {
+    message.error('提醒更新错误：' + result.error.message);
+  }
+  isFavoriteChanging = false;
 }
 </script>
 
@@ -205,6 +194,16 @@ function enableEditMode() {
             <n-icon> <FavoriteBorderFilled /> </n-icon>
           </template>
           收藏
+        </n-button>
+
+        <n-button
+          v-if="atLeastMaintainer(authInfoStore.role)"
+          @click="notifyUpdate()"
+        >
+          <template #icon>
+            <n-icon> <DoorbellFilled /> </n-icon>
+          </template>
+          提醒更新
         </n-button>
       </n-space>
 

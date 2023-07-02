@@ -11,10 +11,11 @@ import com.mongodb.client.model.ReturnDocument
 import infra.ElasticSearchDataSource
 import infra.MongoDataSource
 import infra.WenkuNovelMetadataEsModel
-import infra.model.Page
-import infra.model.WenkuNovelMetadata
-import infra.model.WenkuNovelMetadataOutline
+import infra.model.*
 import kotlinx.datetime.Clock
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.bson.types.ObjectId
 import org.litote.kmongo.combine
 import org.litote.kmongo.inc
@@ -205,6 +206,19 @@ class WenkuNovelMetadataRepository(
                 keywords = keywords,
                 updateAt = Clock.System.now().epochSeconds,
             ),
+            refresh = Refresh.WaitFor,
+        )
+    }
+
+    suspend fun notifyUpdateAt(novelId: String) {
+        @Serializable
+        data class EsUpdate(
+            val updateAt: Long = Clock.System.now().epochSeconds
+        )
+        es.client.updateDocument(
+            id = novelId,
+            target = ElasticSearchDataSource.wenkuNovelIndexName,
+            doc = EsUpdate(),
             refresh = Refresh.WaitFor,
         )
     }

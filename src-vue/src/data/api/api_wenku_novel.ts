@@ -113,6 +113,19 @@ async function patchMetadata(
   );
 }
 
+async function notifyUpdate(
+  id: string,
+  token: string
+): Promise<Result<String>> {
+  return runCatching(
+    api
+      .post(`wenku/${id}/notify-update`, {
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .text()
+  );
+}
+
 interface BangumiSection {
   name: string;
   name_cn: string;
@@ -182,6 +195,7 @@ export const ApiWenkuNovel = {
   getMetadata,
   postMetadata,
   patchMetadata,
+  notifyUpdate,
   getMetadataFromBangumi,
   createVolumeZhUploadUrl,
   createVolumeJpUploadUrl,
