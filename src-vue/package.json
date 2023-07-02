@@ -19,7 +19,7 @@
     "crypto-js": "^4.1.1",
     "diff": "^5.1.0",
     "ky": "^0.32.2",
-    "naive-ui": "^2.34.2",
+    "naive-ui": "^2.34.4",
     "nanoid": "^4.0.1",
     "pinia": "^2.0.33",
     "pinia-plugin-persistedstate": "^3.1.0",

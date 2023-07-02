@@ -124,7 +124,7 @@ function stateToFileList(): NovelFiles[] {
 
 <template>
   <div v-for="row in stateToFileList()">
-    <n-space style="padding: 8px">
+    <n-space style="padding: 4px">
       <span>{{ row.label }}</span>
       <n-space>
         <n-a
@@ -137,8 +137,7 @@ function stateToFileList(): NovelFiles[] {
         </n-a>
       </n-space>
       <n-button
-        tertiary
-        size="small"
+        size="tiny"
         @click="startUpdateTask(row.translatorId)"
         style="margin-left: 24px"
       >

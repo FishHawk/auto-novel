@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
 import { UploadFileInfo, useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
@@ -88,19 +87,37 @@ function createUploadUrl(novelId: string): string {
       </n-li>
     </n-ul>
 
-    <template v-else>
-      <div v-for="volume in sortVolumesJp(volumes as VolumeJpDto[])">
-        <n-h3 style="margin-bottom: 4px">
-          {{ volume.volumeId }}
-        </n-h3>
+    <n-collapse
+      v-else
+      display-directive="show"
+      :theme-overrides="{
+        itemMargin: '0px',
+        titlePadding: '0px',
+      }"
+      style="margin-top: 16px"
+    >
+      <n-collapse-item
+        v-for="volume in sortVolumesJp(volumes as VolumeJpDto[])"
+        :title="volume.volumeId"
+        style="padding: 4px"
+      >
         <WenkuTranslate
           :novel-id="novelId"
           :volume-id="volume.volumeId"
           :total="volume.total"
           v-model:baidu="volume.baidu"
           v-model:youdao="volume.youdao"
+          style="padding-top: -8px"
         />
-      </div>
-    </template>
+      </n-collapse-item>
+    </n-collapse>
   </ResultView>
 </template>
+<style>
+.n-collapse
+  .n-collapse-item
+  .n-collapse-item__content-wrapper
+  .n-collapse-item__content-inner {
+  padding-top: 0px;
+}
+</style>
