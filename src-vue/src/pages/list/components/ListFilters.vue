@@ -1,13 +1,21 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
 import { SearchFilled } from '@vicons/material';
+
+type Filter = { query: string; selected: number[] };
 
 const props = defineProps<{
   search: boolean;
   options: { label: string; tags: string[] }[];
-  filters: { query: string; selected: number[] };
+  filters: Filter;
 }>();
-const query = ref(props.filters.query);
+const emits = defineEmits<{
+  userInput: [];
+}>();
+
+function select(optionIndex: number, index: number) {
+  props.filters.selected[optionIndex] = index;
+  emits('userInput');
+}
 </script>
 
 <template>
@@ -21,10 +29,10 @@ const query = ref(props.filters.query);
       </td>
       <td>
         <n-input
-          v-model:value="query"
+          v-model:value="filters.query"
           :placeholder="`中/日文标题或作者`"
           style="max-width: 400px"
-          @keyup.enter="filters.query = query"
+          @keyup.enter="emits('userInput')"
         >
           <template #suffix>
             <n-icon :component="SearchFilled" />
@@ -47,7 +55,7 @@ const query = ref(props.filters.query);
             :type="
               index === filters.selected[optionIndex] ? 'primary' : 'default'
             "
-            @click="filters.selected[optionIndex] = index"
+            @click="select(optionIndex, index)"
           >
             {{ tag }}
           </n-button>

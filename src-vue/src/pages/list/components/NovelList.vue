@@ -34,68 +34,90 @@ const props = withDefaults(
   }
 );
 
-const currentPage = ref(parseInt(route.query.page as string) || 1);
+const filters = ref(parseFilters(route.query));
+const currentPage = ref(parsePage(route.query));
 const pageNumber = ref(1);
 const novelPageResult = ref<ResultState<NovelPage>>();
 
-function parseFilters() {
+function parsePage(q: typeof route.query) {
+  return parseInt(route.query.page as string) || 1;
+}
+function parseFilters(q: typeof route.query) {
   let query = '';
-  if (typeof route.query.query === 'string') {
-    query = route.query.query;
+  if (typeof q.query === 'string') {
+    query = q.query;
   }
-  let selected = Array(props.options.length).fill(0);
-  if (typeof route.query.selected === 'string') {
-    selected[0] = parseInt(route.query.selected) || 0;
-  } else if (route.query.selected) {
-    route.query.selected.forEach((it, index) => {
+  let selected: number[] = Array(props.options.length).fill(0);
+  if (typeof q.selected === 'string') {
+    selected[0] = parseInt(q.selected) || 0;
+  } else if (q.selected) {
+    q.selected.forEach((it, index) => {
       selected[index] = parseInt(it ?? '') || 0;
     });
   }
-  return {
-    query,
-    selected: selected,
-  };
+  return { query, selected };
 }
 
-const filters = ref(parseFilters());
+watch(
+  route,
+  async (route) => {
+    const compare = (a1: number[], a2: number[]) =>
+      a1.length == a2.length &&
+      a1.every((element, index) => element === a2[index]);
 
-async function loadPage(page: number) {
-  novelPageResult.value = undefined;
+    const newFilters = parseFilters(route.query);
+    if (newFilters.query !== filters.value.query) {
+      filters.value.query = newFilters.query;
+    }
+    if (!compare(newFilters.selected, filters.value.selected)) {
+      filters.value.selected = newFilters.selected;
+    }
+    const newPage = parsePage(route.query);
+    if (newPage !== currentPage.value) {
+      currentPage.value = newPage;
+    }
 
-  const query: { [key: string]: any } = { page };
+    novelPageResult.value = undefined;
+    const result = await props.loader(
+      currentPage.value,
+      filters.value.query,
+      filters.value.selected
+    );
+    if (currentPage.value === newPage) {
+      novelPageResult.value = result;
+      if (result.ok) {
+        pageNumber.value = result.value.page.pageNumber;
+      }
+    }
+  },
+  { immediate: true }
+);
+
+function pushPath() {
+  const query: { [key: string]: any } = { page: currentPage.value };
   if (props.search) {
     query.query = filters.value.query;
   }
   if (props.options.length > 0) {
     query.selected = filters.value.selected;
   }
-  router.replace({ path: route.path, query });
-
-  const result = await props.loader(
-    page,
-    filters.value.query,
-    filters.value.selected
-  );
-  if (currentPage.value == page) {
-    novelPageResult.value = result;
-    if (result.ok) {
-      pageNumber.value = result.value.page.pageNumber;
-    }
-  }
+  router.push({ path: route.path, query });
 }
 
-async function refresh() {
+watch(currentPage, (_) => pushPath());
+function detectUserInput() {
   currentPage.value = 1;
-  await loadPage(1);
+  pushPath();
 }
-
-loadPage(currentPage.value);
-watch(filters, (_) => refresh(), { deep: true });
-watch(currentPage, (page) => loadPage(page));
 </script>
 
 <template>
-  <ListFilters :search="search" :options="options" v-model:filters="filters" />
+  <ListFilters
+    :search="search"
+    :options="options"
+    :filters="filters"
+    @user-input="detectUserInput"
+  />
 
   <n-pagination
     v-if="pageNumber > 1"
