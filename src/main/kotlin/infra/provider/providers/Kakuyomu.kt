@@ -43,11 +43,32 @@ class Kakuyomu : WebNovelProvider {
             val a = workCard.selectFirst("a.bookWalker-work-title")!!
             val novelId = a.attr("href").removePrefix("/works/")
             val title = a.text()
-            val meta1 = workCard.selectFirst("p.widget-workCard-meta")!!.children()
-                .joinToString("/") { it.text() }
-            val meta2 = workCard.select("p.widget-workCard-summary > span")
-                .joinToString("/") { it.text() }
-            RemoteNovelListItem(novelId = novelId, title = title, meta = "$meta1\n$meta2")
+
+            val attentions = workCard
+                .select("b.widget-workCard-flags > span")
+                .mapNotNull {
+                    when (it.text()) {
+                        "残酷描写有り" -> WebNovelAttention.残酷描写
+                        "暴力描写有り" -> WebNovelAttention.暴力描写
+                        "性描写有り" -> WebNovelAttention.性描写
+                        else -> null
+                    }
+                }
+
+            val keywords = workCard
+                .select("span.widget-workCard-tags > a")
+                .map { it.text() }
+
+            val extra = workCard.selectFirst("p.widget-workCard-meta")!!.children()
+                .joinToString(" / ") { it.text() }
+
+            RemoteNovelListItem(
+                novelId = novelId,
+                title = title,
+                attentions = attentions,
+                keywords = keywords,
+                extra = extra,
+            )
         }
     }
 

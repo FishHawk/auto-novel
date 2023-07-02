@@ -23,22 +23,18 @@ defineProps<{
       {{ item.providerId + '.' + item.novelId }}
     </n-a>
 
-    <template v-if="item.extra">
-      <div v-for="extraLine in item.extra.split('\n')" style="color: #666">
-        {{ extraLine }}
-      </div>
-    </template>
+    <div v-if="item.extra" style="color: #666">
+      {{ item.extra }}
+    </div>
 
-    <template v-else>
-      <div style="color: #666">
-        <template v-for="attention in item.attentions.sort()">
-          <b>{{ attention }}</b> /
-        </template>
-        <template v-for="keyword in tryTranslateKeywords(item.keywords)">
-          {{ keyword }} /
-        </template>
-      </div>
-    </template>
+    <div style="color: #666">
+      <template v-for="attention in item.attentions.sort()">
+        <b>{{ attention }}</b> /
+      </template>
+      <template v-for="keyword in tryTranslateKeywords(item.keywords)">
+        {{ keyword }} /
+      </template>
+    </div>
 
     <template v-if="item.total">
       <div style="color: #666">

@@ -401,13 +401,13 @@ private fun RemoteNovelListItem.toOutline(
         titleJp = title,
         titleZh = novel?.titleZh,
         type = null,
-        attentions = emptyList(),
-        keywords = emptyList(),
+        attentions = attentions,
+        keywords = keywords,
         total = novel?.toc?.count { it.chapterId != null }?.toLong() ?: 0,
         jp = novel?.jp ?: 0,
         baidu = novel?.baidu ?: 0,
         youdao = novel?.youdao ?: 0,
-        extra = meta,
+        extra = extra,
     )
 
 fun WebNovelMetadata.toOutline() =

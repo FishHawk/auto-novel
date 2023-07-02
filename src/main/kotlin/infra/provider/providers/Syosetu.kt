@@ -12,7 +12,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinInstant
-import org.jsoup.nodes.Element
 import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -72,23 +71,23 @@ class Syosetu : WebNovelProvider {
     }
 
     override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
-        val genre = options["genre"] ?: return emptyList()
-        val range = options["range"] ?: return emptyList()
+        val genreFilter = options["genre"] ?: return emptyList()
+        val rangeFilter = options["range"] ?: return emptyList()
 
-        val rangeId = rangeIds[range] ?: return emptyList()
+        val rangeId = rangeIds[rangeFilter] ?: return emptyList()
         val path = when (options["type"]) {
             "流派" -> {
-                val genreId = genreIdsV1[genre] ?: return emptyList()
+                val genreId = genreIdsV1[genreFilter] ?: return emptyList()
                 "genrelist/type/${rangeId}_${genreId}"
             }
 
             "综合" -> {
-                val genreId = genreIdsV2[genre] ?: return emptyList()
+                val genreId = genreIdsV2[genreFilter] ?: return emptyList()
                 "list/type/${rangeId}_${genreId}"
             }
 
             "异世界转生/转移" -> {
-                val genreId = genreIdsV3[genre] ?: return emptyList()
+                val genreId = genreIdsV3[genreFilter] ?: return emptyList()
                 "isekailist/type/${rangeId}_${genreId}"
             }
 
@@ -96,28 +95,44 @@ class Syosetu : WebNovelProvider {
         }
 
         val doc = client.get("https://yomou.syosetu.com/rank/$path").document()
-        return doc.select("div.ranking_inbox > div.ranking_list").map { parseListItem(it) }
-    }
+        return doc.select("div.ranking_inbox > div.ranking_list").map { item->
+            val novelId = item.selectFirst("a.tl")!!
+                .attr("href")
+                .removeSuffix("/")
+                .substringAfterLast("/")
 
-    private fun parseListItem(item: Element): RemoteNovelListItem {
-        val novelId = item.selectFirst("a.tl")!!
-            .attr("href")
-            .removeSuffix("/")
-            .substringAfterLast("/")
+            val title = item.selectFirst("a.tl")!!.text()
 
-        val title = item.selectFirst("a.tl")!!.text()
+            val tbody = item.selectFirst("tbody")!!
 
-        val meta = item.selectFirst("tbody")!!.let {
-            val left = it.selectFirst("td.left")!!.text()
-            val genre = it.child(2).text()
-            val keywords = it.select("td.keyword > a").map { it.text() }
-            listOf(
-                (left.split(" ", limit = 2) + listOf(genre)).joinToString("/"),
-                keywords.joinToString("/"),
-            ).joinToString("\n")
+            val attentions = mutableListOf<WebNovelAttention>()
+            val keywords = mutableListOf<String>()
+            tbody
+                .select("td.keyword > a")
+                .map { it.text() }
+                .forEach {
+                    when (it) {
+                        "R15" -> attentions.add(WebNovelAttention.R15)
+                        "残酷な描写あり" -> attentions.add(WebNovelAttention.残酷描写)
+                        else -> keywords.add(it)
+                    }
+                }
+
+            val left = tbody
+                .selectFirst("td.left")!!
+                .text()
+                .split(" ", limit = 2)
+            val genre = tbody.child(2).text()
+            val extra = (left + listOf(genre)).joinToString(" / ")
+
+            RemoteNovelListItem(
+                novelId = novelId,
+                title = title,
+                attentions = attentions,
+                keywords = keywords,
+                extra = extra,
+            )
         }
-
-        return RemoteNovelListItem(novelId = novelId, title = title, meta = meta)
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {

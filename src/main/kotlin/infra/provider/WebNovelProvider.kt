@@ -40,7 +40,9 @@ data class RemoteChapter(
 data class RemoteNovelListItem(
     val novelId: String,
     val title: String,
-    val meta: String,
+    val attentions: List<WebNovelAttention>,
+    val keywords: List<String>,
+    val extra: String,
 )
 
 interface WebNovelProvider {
