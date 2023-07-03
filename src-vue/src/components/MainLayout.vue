@@ -23,7 +23,7 @@ const topMenuOptions = computed(() => {
     menuOption('反馈', '/feedback'),
     menuOption('文件翻译', '/wenku/non-archived'),
     menuOption('赞助', '/donate'),
-    menuOption('控制台', '/admin/patch', atLeastMaintainer(authInfoStore.role)),
+    menuOption('控制台', '/admin/web-patch-history', atLeastMaintainer(authInfoStore.role)),
   ];
   return menus;
 });
@@ -54,8 +54,9 @@ const collapsedMenuOptions = computed(() => {
       key: '/admin',
       show: atLeastMaintainer(authInfoStore.role),
       children: [
-        menuOption('编辑历史', '/admin/patch'),
-        menuOption('目录合并历史', '/admin/toc-merge'),
+        menuOption('网页编辑历史', '/admin/web-patch-history'),
+        menuOption('网页目录合并历史', '/admin/web-toc-merge-history'),
+        menuOption('文库上传历史', '/admin/wenku-upload-history'),
       ],
     },
   ];
@@ -64,7 +65,7 @@ const collapsedMenuOptions = computed(() => {
 const path = useRoute().path;
 function getTopMenuOptionKey() {
   if (path.startsWith('/admin')) {
-    return '/admin/patch';
+    return '/admin/web-patch-history';
   } else if (path === '/feedback') {
     return '/feedback';
   } else if (path === '/') {

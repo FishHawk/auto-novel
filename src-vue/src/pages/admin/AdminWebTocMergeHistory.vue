@@ -87,7 +87,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 
 <template>
   <AdminLayout>
-    <n-h1>目录合并历史</n-h1>
+    <n-h1>网页目录合并历史</n-h1>
     <n-pagination
       v-if="pageNumber > 1"
       v-model:page="currentPage"

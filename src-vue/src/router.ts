@@ -71,12 +71,12 @@ const routes = [
     beforeEnter: requireAtLeastMaintainer,
     children: [
       {
-        path: '/admin/patch',
-        component: () => import('./pages/admin/AdminPatch.vue'),
+        path: '/admin/web-patch-history',
+        component: () => import('./pages/admin/AdminWebPatchHistory.vue'),
       },
       {
-        path: '/admin/toc-merge',
-        component: () => import('./pages/admin/AdminTocMerge.vue'),
+        path: '/admin/web-toc-merge-history',
+        component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
       },
       {
         path: '/admin/wenku-upload-history',

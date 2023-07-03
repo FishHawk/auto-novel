@@ -78,7 +78,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 
 <template>
   <AdminLayout>
-    <n-h1>编辑历史</n-h1>
+    <n-h1>网页编辑历史</n-h1>
     <n-pagination
       v-if="pageNumber > 1"
       v-model:page="currentPage"
