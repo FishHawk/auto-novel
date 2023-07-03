@@ -18,6 +18,7 @@ data class WebNovelOutlineDto(
     val jp: Long,
     val baidu: Long,
     val youdao: Long,
+    val gpt: Long,
 ) {
     companion object {
         fun fromDomain(domain: WebNovelMetadataOutline) =
@@ -34,6 +35,7 @@ data class WebNovelOutlineDto(
                 jp = domain.jp,
                 baidu = domain.baidu,
                 youdao = domain.youdao,
+                gpt = domain.gpt,
             )
     }
 }
@@ -57,6 +59,7 @@ data class WebNovelDto(
     val jp: Long,
     val baidu: Long,
     val youdao: Long,
+    val gpt: Long,
 ) {
     companion object {
         fun fromDomain(
@@ -80,6 +83,7 @@ data class WebNovelDto(
             jp = novel.jp,
             baidu = novel.baidu,
             youdao = novel.youdao,
+            gpt = novel.gpt,
         )
     }
 }

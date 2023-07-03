@@ -39,7 +39,8 @@ defineProps<{
     <template v-if="item.total">
       <div style="color: #666">
         {{ item.type ? item.type + ' / ' : '' }}
-        总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }}
+        总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }} /
+        GPT3 {{ item.gpt }}
       </div>
     </template>
     <n-divider />

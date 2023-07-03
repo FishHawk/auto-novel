@@ -212,6 +212,7 @@ function enableEditMode() {
           v-model:jp="metadata.jp"
           v-model:baidu="metadata.baidu"
           v-model:youdao="metadata.youdao"
+          :gpt="metadata.gpt"
           :glossary="metadata.glossary"
         />
         <SectionWebToc

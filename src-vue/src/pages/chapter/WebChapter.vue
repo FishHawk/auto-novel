@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref, shallowRef } from 'vue';
+import { ref, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 import { createReusableTemplate } from '@vueuse/core';
@@ -93,6 +93,14 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
         if (!chapter.baiduParagraphs) {
           merged.push({ text: '百度翻译不存在', secondary: false });
         }
+        return merged;
+      }
+    } else if (setting.translation === 'gpt') {
+      // GPT3
+      if (chapter.gptParagraphs) {
+        styles.push({ paragraphs: chapter.gptParagraphs, secondary: false });
+      } else {
+        merged.push({ text: '无GPT3翻译', secondary: false });
         return merged;
       }
     }

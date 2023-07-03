@@ -19,6 +19,7 @@ const props = defineProps<{
   jp: number;
   baidu: number;
   youdao: number;
+  gpt: number;
   glossary: { [key: string]: string };
 }>();
 
@@ -154,6 +155,10 @@ function stateToFileList(): NovelFiles[] {
         createFile('TXT', 'mix-all', 'txt'),
         createFile('EPUB', 'mix-all', 'epub'),
       ],
+    },
+    {
+      label: `GPT3(${props.gpt}/${props.total})`,
+      files: [],
     },
   ];
 }

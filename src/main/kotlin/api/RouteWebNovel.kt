@@ -416,6 +416,7 @@ class WebNovelApi(
         val paragraphs: List<String>,
         val baiduParagraphs: List<String>? = null,
         val youdaoParagraphs: List<String>? = null,
+        val gptParagraphs: List<String>? = null,
     )
 
     suspend fun getChapter(
@@ -442,6 +443,7 @@ class WebNovelApi(
                 paragraphs = chapter.paragraphs,
                 baiduParagraphs = chapter.baiduParagraphs,
                 youdaoParagraphs = chapter.youdaoParagraphs,
+                gptParagraphs = chapter.gptParagraphs,
             )
         )
     }

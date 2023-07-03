@@ -21,6 +21,7 @@ const translationOptions = [
   { value: 'youdao', label: '有道优先' },
   { value: 'baidu', label: '百度优先' },
   { value: 'youdao/baidu', label: '有道/百度' },
+  { value: 'gpt', label: 'GPT3' },
 ];
 const fontSizeOptions = [
   { value: '14px', label: '14px' },

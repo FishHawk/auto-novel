@@ -14,10 +14,11 @@ export interface WebNovelOutlineDto {
   attentions: string[];
   keywords: string[];
   extra?: string;
-  total?: number;
-  jp?: number;
-  baidu?: number;
-  youdao?: number;
+  total: number;
+  jp: number;
+  baidu: number;
+  youdao: number;
+  gpt: number;
 }
 
 async function list(
@@ -76,6 +77,7 @@ export interface WebNovelMetadataDto {
   jp: number;
   baidu: number;
   youdao: number;
+  gpt: number;
 }
 
 async function getMetadata(
@@ -151,6 +153,7 @@ export interface WebNovelChapterDto {
   paragraphs: string[];
   baiduParagraphs: string[] | undefined;
   youdaoParagraphs: string[] | undefined;
+  gptParagraphs: string[] | undefined;
 }
 
 async function getChapter(

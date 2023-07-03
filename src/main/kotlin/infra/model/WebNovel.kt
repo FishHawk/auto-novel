@@ -54,6 +54,7 @@ data class WebNovelMetadataOutline(
     val jp: Long = 0,
     val baidu: Long = 0,
     val youdao: Long = 0,
+    val gpt: Long = 0,
     val extra: String? = null,
 )
 
@@ -79,6 +80,7 @@ class WebNovelMetadata(
     val jp: Long = 0,
     val baidu: Long = 0,
     val youdao: Long = 0,
+    val gpt: Long = 0,
     // Misc
     val visited: Long = 0,
     val pauseUpdate: Boolean = false,
@@ -129,6 +131,8 @@ data class WebNovelChapter(
     val youdaoGlossaryUuid: String? = null,
     val youdaoGlossary: Map<String, String> = emptyMap(),
     val youdaoParagraphs: List<String>? = null,
+
+    val gptParagraphs: List<String>? = null,
 ) {
     companion object {
         fun byId(providerId: String, novelId: String, chapterId: String): Bson {
