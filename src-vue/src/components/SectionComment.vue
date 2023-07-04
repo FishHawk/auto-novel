@@ -147,7 +147,6 @@ async function reply() {
       :showEmpty="(it: CommentPage) => it.items.length === 0"
       v-slot="{ value }"
     >
-      <n-empty v-if="value.items.length === 0" description="空列表" />
       <div
         v-for="comment in value.items"
         :ref="(el) => (comment.topElement = el)"
