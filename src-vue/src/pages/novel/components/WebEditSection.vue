@@ -5,6 +5,7 @@ import { UploadFilled } from '@vicons/material';
 
 import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
 import { atLeastMaintainer, useAuthInfoStore } from '@/data/stores/authInfo';
+import { useIsDesktop } from '@/data/util';
 
 const props = defineProps<{
   providerId: string;
@@ -16,6 +17,7 @@ const emit = defineEmits<{
   (e: 'update:novelMetadata', novelMetadata: WebNovelMetadataDto): void;
 }>();
 
+const isDesktop = useIsDesktop(850);
 const authInfoStore = useAuthInfoStore();
 
 interface EditField {
@@ -255,17 +257,17 @@ async function deleteWenkuId() {
           {{ token.jp }}
           <br />
           <n-input
-            class="on-mobile"
+            v-if="!isDesktop"
             v-model:value="token.edit"
             :placeholder="token.jp"
           />
         </td>
-        <td class="on-desktop" style="padding: 4px">
+        <td v-if="isDesktop" style="padding: 4px">
           <n-input v-model:value="token.edit" :placeholder="token.jp" />
         </td>
       </tr>
-      <n-divider class="on-desktop" style="width: 200%; margin: 0px" />
-      <n-divider class="on-mobile" style="width: 100%; margin: 0px" />
+      <n-divider v-if="isDesktop" style="width: 200%; margin: 0px" />
+      <n-divider v-if="!isDesktop" style="width: 100%; margin: 0px" />
     </template>
   </table>
 

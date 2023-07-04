@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useWindowSize } from '@vueuse/core';
 
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
@@ -12,10 +11,9 @@ import {
 import { parseUrl } from '@/data/provider';
 import { Ok, ResultState } from '@/data/api/result';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useIsDesktop } from '@/data/util';
 
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
-
+const isDesktop = useIsDesktop(900);
 const router = useRouter();
 
 const url = ref('');

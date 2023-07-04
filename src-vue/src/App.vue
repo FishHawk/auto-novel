@@ -27,16 +27,4 @@ a {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
-@media only screen and (max-width: 600px) {
-  .on-desktop {
-    display: none;
-  }
-}
-
-@media only screen and (min-width: 600px) {
-  .on-mobile {
-    display: none;
-  }
-}
 </style>

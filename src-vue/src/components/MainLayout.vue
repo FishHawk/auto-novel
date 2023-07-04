@@ -9,7 +9,9 @@ import {
   AuthInfo,
   useAuthInfoStore,
 } from '@/data/stores/authInfo';
+import { useIsDesktop } from '@/data/util';
 
+const isDesktop = useIsDesktop(850);
 const authInfoStore = useAuthInfoStore();
 
 function menuOption(text: string, href: string, show?: boolean): MenuOption {
@@ -23,7 +25,11 @@ const topMenuOptions = computed(() => {
     menuOption('反馈', '/feedback'),
     menuOption('文件翻译', '/wenku/non-archived'),
     menuOption('赞助', '/donate'),
-    menuOption('控制台', '/admin/web-patch-history', atLeastMaintainer(authInfoStore.role)),
+    menuOption(
+      '控制台',
+      '/admin/web-patch-history',
+      atLeastMaintainer(authInfoStore.role)
+    ),
   ];
   return menus;
 });
@@ -109,15 +115,9 @@ function handleUserDropdownSelect(key: string | number) {
   <n-layout style="overflow-x: overlay">
     <n-layout-header bordered>
       <div class="header">
-        <n-popover trigger="click" :width="280" style="padding: 0">
+        <n-popover v-if="!isDesktop" trigger="click" :width="280">
           <template #trigger>
-            <n-icon
-              size="24"
-              class="on-mobile"
-              style="padding-inline-start: 16px"
-            >
-              <MenuFilled />
-            </n-icon>
+            <n-icon size="24"> <MenuFilled /> </n-icon>
           </template>
           <n-menu
             :value="path"
@@ -125,7 +125,7 @@ function handleUserDropdownSelect(key: string | number) {
             :default-expanded-keys="['/list', '/admin']"
           />
         </n-popover>
-        <n-a class="on-desktop" href="/" target="_blank">
+        <n-a v-if="isDesktop" href="/" target="_blank">
           <n-icon size="30" style="margin-right: 8px; margin-bottom: 8px">
             <img
               src="/robot.svg"
@@ -134,7 +134,7 @@ function handleUserDropdownSelect(key: string | number) {
             />
           </n-icon>
         </n-a>
-        <div class="on-desktop">
+        <div v-if="isDesktop">
           <n-menu
             :value="getTopMenuOptionKey()"
             mode="horizontal"
@@ -145,10 +145,10 @@ function handleUserDropdownSelect(key: string | number) {
         <div style="flex: 1"></div>
 
         <n-space v-if="authInfoStore.username">
-          <n-a class="on-desktop" href="/read-history">
+          <n-a v-if="isDesktop" href="/read-history">
             <n-button quaternary>历史</n-button>
           </n-a>
-          <n-a class="on-desktop" href="/favorite-list">
+          <n-a v-if="isDesktop" href="/favorite-list">
             <n-button quaternary>收藏</n-button>
           </n-a>
           <n-dropdown
@@ -156,9 +156,7 @@ function handleUserDropdownSelect(key: string | number) {
             :options="userDropdownOptions"
             @select="handleUserDropdownSelect"
           >
-            <n-button quaternary style="margin-right: 4px">
-              @{{ authInfoStore.username }}
-            </n-button>
+            <n-button quaternary> @{{ authInfoStore.username }} </n-button>
           </n-dropdown>
         </n-space>
 
@@ -212,29 +210,22 @@ div.n-scrollbar-rail {
   z-index: 10000;
 }
 .header {
-  margin: auto;
   display: flex;
   align-items: center;
   height: 50px;
 }
-@media only screen and (min-width: 600px) {
-  .header,
-  .container {
-    width: 1000px;
-    padding-left: 30px;
-    padding-right: 30px;
-  }
-  .container {
-    margin: 0 auto;
-  }
+.header,
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding-left: 30px;
+  padding-right: 30px;
 }
 @media only screen and (max-width: 600px) {
   .header,
   .container {
-    width: auto;
-  }
-  .container {
-    margin: 0 12px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 </style>

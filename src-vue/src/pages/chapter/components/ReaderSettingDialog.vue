@@ -1,15 +1,14 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { createReusableTemplate, useWindowSize } from '@vueuse/core';
+import { createReusableTemplate } from '@vueuse/core';
 
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
+import { useIsDesktop } from '@/data/util';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
   label: string;
 }>();
 
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
+const isDesktop = useIsDesktop(600);
 
 const modeOptions = [
   { value: 'jp', label: '日文' },

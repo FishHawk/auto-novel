@@ -1,13 +1,12 @@
 <script lang="ts" setup>
-import { computed, Ref, ref } from 'vue';
+import { Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
-import { useWindowSize } from '@vueuse/core';
 
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
+import { useIsDesktop } from '@/data/util';
 
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
+const isDesktop = useIsDesktop(600);
 
 const message = useMessage();
 

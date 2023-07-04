@@ -11,7 +11,7 @@ defineProps<{ listResult: ResultState<WebNovelOutlineDto[]> }>();
     :showEmpty="(it: WebNovelOutlineDto[]) => it.length === 0"
     v-slot="{ value: list }"
   >
-    <n-grid :x-gap="12" :y-gap="12" cols="1 600:4">
+    <n-grid :x-gap="12" :y-gap="12" cols="1 850:4">
       <n-grid-item v-for="item in list" style="padding: 8px">
         <n-a
           :href="`/novel/${item.providerId}/${item.novelId}`"

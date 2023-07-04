@@ -1,14 +1,16 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { useWindowSize } from '@vueuse/core';
-
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
+import { useIsDesktop } from '@/data/util';
+const isDesktop = useIsDesktop(850);
 </script>
 
 <template>
   <MainLayout>
-    <n-space align="center" justify="space-evenly" style="margin-top: 30px">
+    <n-space
+      align="center"
+      justify="space-evenly"
+      style="margin-top: 30px"
+      :wrap="!isDesktop"
+    >
       <n-avatar round :size="220" src="avater.jpg" />
       <n-divider v-if="isDesktop" vertical style="height: 220px" />
       <div style="max-width: 600px">

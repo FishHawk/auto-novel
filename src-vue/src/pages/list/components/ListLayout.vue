@@ -4,7 +4,9 @@ import { MenuOption } from 'naive-ui';
 import { useRoute } from 'vue-router';
 
 import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useIsDesktop } from '@/data/util';
 
+const isDesktop = useIsDesktop(850);
 const authInfoStore = useAuthInfoStore();
 
 const path = useRoute().path;
@@ -31,20 +33,12 @@ const menuOptions = computed(() => {
 <template>
   <MainLayout>
     <n-layout has-sider>
-      <n-layout-content id="list-container">
+      <n-layout-content>
         <slot />
       </n-layout-content>
-      <n-layout-sider class="on-desktop">
+      <n-layout-sider v-if="isDesktop" style="margin-left: 12px">
         <n-menu :value="path" :options="menuOptions" />
       </n-layout-sider>
     </n-layout>
   </MainLayout>
 </template>
-
-<style scoped>
-@media only screen and (min-width: 600px) {
-  #list-container {
-    margin-right: 12px;
-  }
-}
-</style>

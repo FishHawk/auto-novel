@@ -223,7 +223,7 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
   opacity: v-bind('setting.mixJpOpacity');
 }
 .content {
-  width: 800px;
+  max-width: 800px;
   margin: 0 auto;
   padding-left: 24px;
   padding-right: 24px;
@@ -231,10 +231,8 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
 }
 @media only screen and (max-width: 600px) {
   .content {
-    width: auto;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-bottom: 48px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 </style>

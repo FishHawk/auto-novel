@@ -1,9 +1,6 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { useWindowSize } from '@vueuse/core';
-
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
+import { useIsDesktop } from '@/data/util';
+const isDesktop = useIsDesktop(600);
 </script>
 
 <template>
@@ -15,11 +12,10 @@ const isDesktop = computed(() => width.value > 600);
         新建了个交流群：819513328，无论你是想上传自己收集的资源，还是单纯想讨论轻小说，都欢迎加群。加群验证的答案是“绿色”。
       </n-li>
       <n-li>
-        <b>文库页面现在开放上传了</b>，想翻译小说文档的朋友请尽量在小说页面上传。
+        <b>文库页面现在开放上传了</b
+        >，想翻译小说文档的朋友请尽量在小说页面上传。
       </n-li>
-      <n-li>
-        GPT3还在后台测试中，所以很多功能不全。
-      </n-li>
+      <n-li> GPT3还在后台测试中，所以很多功能不全。 </n-li>
       <n-li>
         如何使用翻译插件请参考
         <n-a href="/how-to-use" target="_blank">使用说明</n-a>。

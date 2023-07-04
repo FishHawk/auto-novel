@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { SortFilled } from '@vicons/material';
 import { computed } from 'vue';
-import { useWindowSize, createReusableTemplate } from '@vueuse/core';
+import { createReusableTemplate } from '@vueuse/core';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
+import { useIsDesktop } from '@/data/util';
 
 const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   item: {
@@ -15,8 +16,7 @@ const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   };
 }>();
 
-const { width } = useWindowSize();
-const isDesktop = computed(() => width.value > 600);
+const isDesktop = useIsDesktop(600);
 
 const props = defineProps<{
   providerId: string;
