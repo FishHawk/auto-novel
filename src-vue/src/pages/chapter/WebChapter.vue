@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref, shallowRef } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
-import { createReusableTemplate } from '@vueuse/core';
+import { onKeyStroke, createReusableTemplate } from '@vueuse/core';
 
 import { ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
@@ -19,6 +19,7 @@ const authInfoStore = useAuthInfoStore();
 const setting = useReaderSettingStore();
 
 const route = useRoute();
+const router = useRouter();
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
 const chapterId = route.params.chapterId as string;
@@ -43,6 +44,23 @@ async function getChapter() {
   }
 }
 getChapter();
+
+onKeyStroke(['ArrowLeft'], (e) => {
+  if (chapterResult.value?.ok) {
+    const prevId = chapterResult.value.value.prevId;
+    const prevUrl = `/novel/${providerId}/${novelId}/${prevId}`;
+    router.push(prevUrl);
+    e.preventDefault();
+  }
+});
+onKeyStroke(['ArrowRight'], (e) => {
+  if (chapterResult.value?.ok) {
+    const nextId = chapterResult.value.value.nextId;
+    const nextUrl = `/novel/${providerId}/${novelId}/${nextId}`;
+    router.push(nextUrl);
+    e.preventDefault();
+  }
+});
 
 type Paragraph =
   | { text: string; secondary: boolean }
