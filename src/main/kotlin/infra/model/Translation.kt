@@ -1,3 +1,13 @@
 package infra.model
 
-enum class TranslatorId { Baidu, Youdao }
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+enum class TranslatorId {
+    @SerialName("baidu")
+    Baidu,
+
+    @SerialName("youdao")
+    Youdao
+}
