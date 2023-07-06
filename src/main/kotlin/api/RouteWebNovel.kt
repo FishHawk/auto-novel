@@ -52,6 +52,9 @@ private class WebNovelRes {
         @Resource("/chapter/{chapterId}")
         data class Chapter(val parent: Id, val chapterId: String)
 
+        @Resource("/translate/gpt/chapter/{chapterId}")
+        data class TranslateGpt(val parent: Id, val chapterId: String)
+
         @Resource("/translate/{translatorId}")
         class Translate(val parent: Id, val translatorId: TranslatorId) {
             @Resource("/metadata")
@@ -143,7 +146,19 @@ fun Route.routeWebNovel() {
         call.respondResult(result)
     }
 
-    // Translator
+    // Translate Gpt
+    post<WebNovelRes.Id.TranslateGpt> { loc ->
+        val body = call.receive<WebNovelApi.TranslateGptChapterUpdateBody>()
+        val result = service.updateChapterTranslationGpt(
+            providerId = loc.parent.providerId,
+            novelId = loc.parent.novelId,
+            chapterId = loc.chapterId,
+            body = body,
+        )
+        call.respondResult(result)
+    }
+
+    // Translate
     get<WebNovelRes.Id.Translate.Metadata> { loc ->
         syosetuNovelIdMustBeLowercase(
             providerId = loc.parent.parent.providerId,
@@ -448,7 +463,38 @@ class WebNovelApi(
         )
     }
 
-    // Translator
+    // Translate Gpt
+    @Serializable
+    data class TranslateGptChapterUpdateBody(
+        val force: Boolean,
+        val paragraphsZh: List<String>,
+    )
+
+    suspend fun updateChapterTranslationGpt(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        body: TranslateGptChapterUpdateBody,
+    ): Result<Unit> {
+        val chapter = chapterRepo.get(providerId, novelId, chapterId)
+            ?: return httpNotFound("章节不存在")
+        if (chapter.paragraphs.size != body.paragraphsZh.size) {
+            return httpBadRequest("翻译文本长度不匹配")
+        }
+        if (!body.force && chapter.gptParagraphs != null) {
+            return httpConflict("翻译已经存在")
+        }
+        chapterRepo.updateTranslationGpt(
+            providerId = providerId,
+            novelId = novelId,
+            chapterId = chapterId,
+            paragraphsZh = body.paragraphsZh,
+        )
+        novelRepo.updateTranslateGptStateZh(providerId, novelId)
+        return Result.success(Unit)
+    }
+
+    // Translate
     @Serializable
     data class TranslateMetadataDto(
         val title: String? = null,

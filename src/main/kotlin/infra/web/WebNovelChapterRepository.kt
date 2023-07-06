@@ -43,6 +43,20 @@ class WebNovelChapterRepository(
         return Result.success(model)
     }
 
+    suspend fun updateTranslationGpt(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        paragraphsZh: List<String>,
+    ) {
+        mongo
+            .webNovelChapterCollection
+            .updateOne(
+                WebNovelChapter.byId(providerId, novelId, chapterId),
+                setValue(WebNovelChapter::gptParagraphs, paragraphsZh),
+            )
+    }
+
     suspend fun updateTranslation(
         providerId: String,
         novelId: String,
