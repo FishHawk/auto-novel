@@ -116,5 +116,39 @@ async function testYoudao() {
     <n-h2 prefix="bar">移动端</n-h2>
     <n-p>有一些手机浏览器可以安装插件，比如Yandex、Kiwi。</n-p>
     <n-p>想要APP？在做了在做了（指新建文件夹）</n-p>
+
+    <n-h2 prefix="bar">GPT翻译器</n-h2>
+    <n-p>
+      GPT翻译插件的工作量太大，就目前来说是不现实的。
+      所以我做了个GPT翻译器的程序，你可以本地运行，来生成GPT翻译。
+      我也知道有GPT帐号的人很少，但我也没想好有什么好的运营方法。
+      帐号本身成本1元1个，不过过程没法自动化。
+      目前我会先把我自己看的几本翻了。
+      如果你有什么主意欢迎分享。
+    </n-p>
+    <n-ul>
+      <n-li>因为还在测试中，功能还不完全，暂时只支持翻译网络小说。</n-li>
+      <n-li>GPT翻译器使用的是ChatGPT3，请使用OpenAI的帐号。</n-li>
+      <n-li>
+        GPT的反爬机制一直在更新，如果使用不了，首先下载最新的版本，还是不行再向我反馈。
+      </n-li>
+    </n-ul>
+    <n-p> 如果你想先看看GPT翻译效果，可以试试这两本： </n-p>
+    <n-ul>
+      <n-li>
+        <n-a href="/novel/novelup/206612087" target="_blank">黑之战记</n-a>
+      </n-li>
+      <n-li>
+        <n-a href="/novel/hameln/232822" target="_blank">
+          和风幻想的忧郁工口游戏
+        </n-a>
+        这一本用的是旧版本，输出语言还不稳定
+      </n-li>
+    </n-ul>
+    <n-p>
+      <n-a href="/files-extra/GPT-v0.0.1.exe" target="_blank">
+        GPT翻译器(点此下载)
+      </n-a>
+    </n-p>
   </MainLayout>
 </template>

@@ -20,4 +20,9 @@
     root * /data/files-wenku
     file_server
   }
+
+  handle_path /files-extra* {
+    root * /data/files-extra
+    file_server
+  }
 }

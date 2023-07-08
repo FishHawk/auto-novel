@@ -6,6 +6,7 @@ services:
     volumes:
       - ${DATA_PATH}/files-web:/data/files-web
       - ${DATA_PATH}/files-wenku:/data/files-wenku
+      - ${DATA_PATH}/files-extra:/data/files-extra
     restart: always
 
   server:
@@ -24,6 +25,7 @@ services:
     volumes:
       - ${DATA_PATH}/files-web:/data/files-web
       - ${DATA_PATH}/files-wenku:/data/files-wenku
+      - ${DATA_PATH}/files-extra:/data/files-extra
     restart: always
 
   mongo:

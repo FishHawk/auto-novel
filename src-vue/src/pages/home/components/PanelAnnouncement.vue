@@ -15,7 +15,10 @@ const isDesktop = useIsDesktop(600);
         <b>文库页面现在开放上传了</b
         >，想翻译小说文档的朋友请尽量在小说页面上传。
       </n-li>
-      <n-li> GPT3还在后台测试中，所以很多功能不全。 </n-li>
+      <n-li>
+        GPT翻译器现在可以用了，参考
+        <n-a href="/how-to-use" target="_blank">使用说明</n-a>里的GPT章节。
+      </n-li>
       <n-li>
         如何使用翻译插件请参考
         <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
