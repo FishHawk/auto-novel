@@ -146,8 +146,11 @@ async function testYoudao() {
       </n-li>
     </n-ul>
     <n-p>
+      <n-a href="/files-extra/GPT-v0.0.2.exe" target="_blank">
+        GPT翻译器-v0.0.2(点此下载)
+      </n-a>
       <n-a href="/files-extra/GPT-v0.0.1.exe" target="_blank">
-        GPT翻译器(点此下载)
+        GPT翻译器-v0.0.1(点此下载)
       </n-a>
     </n-p>
   </MainLayout>
