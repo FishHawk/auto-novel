@@ -78,48 +78,41 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
       styles.push({ paragraphs: chapter.paragraphs, secondary: true });
     }
 
-    if (setting.translation === 'youdao') {
-      // 有道优先
-      if (chapter.youdaoParagraphs) {
-        styles.push({ paragraphs: chapter.youdaoParagraphs, secondary: false });
-      } else if (chapter.baiduParagraphs) {
-        merged.push({ text: '有道翻译不存在，使用百度翻译', secondary: true });
-        styles.push({ paragraphs: chapter.baiduParagraphs, secondary: false });
+    function paragraphsWithLabel(
+      t: 'baidu' | 'youdao' | 'gpt'
+    ): [string, string[] | undefined] {
+      if (t === 'youdao') {
+        return ['有道', chapter.youdaoParagraphs];
+      } else if (t === 'baidu') {
+        return ['百度', chapter.baiduParagraphs];
       } else {
-        merged.push({ text: '无中文翻译', secondary: false });
-        return merged;
+        return ['GPT', chapter.gptParagraphs];
       }
-    } else if (setting.translation === 'baidu') {
-      // 百度优先
-      if (chapter.baiduParagraphs) {
-        styles.push({ paragraphs: chapter.baiduParagraphs, secondary: false });
-      } else if (chapter.youdaoParagraphs) {
-        merged.push({ text: '百度翻译不存在，使用有道翻译', secondary: true });
-        styles.push({ paragraphs: chapter.youdaoParagraphs, secondary: false });
-      } else {
-        merged.push({ text: '无中文翻译', secondary: false });
-        return merged;
-      }
-    } else if (setting.translation === 'youdao/baidu') {
-      if (chapter.youdaoParagraphs && chapter.baiduParagraphs) {
-        styles.push({ paragraphs: chapter.youdaoParagraphs, secondary: false });
-        styles.push({ paragraphs: chapter.baiduParagraphs, secondary: false });
-      } else {
-        if (!chapter.youdaoParagraphs) {
-          merged.push({ text: '有道翻译不存在', secondary: false });
+    }
+    if (setting.translationsMode === 'priority') {
+      let hasAnyTranslation = false;
+      for (const t of setting.translations) {
+        const [label, paragraphs] = paragraphsWithLabel(t);
+        if (paragraphs) {
+          hasAnyTranslation = true;
+          styles.push({ paragraphs, secondary: false });
+          break;
+        } else {
+          merged.push({ text: label + '翻译不存在', secondary: true });
         }
-        if (!chapter.baiduParagraphs) {
-          merged.push({ text: '百度翻译不存在', secondary: false });
+        if (!hasAnyTranslation) {
+          return merged;
         }
-        return merged;
       }
-    } else if (setting.translation === 'gpt') {
-      // GPT3
-      if (chapter.gptParagraphs) {
-        styles.push({ paragraphs: chapter.gptParagraphs, secondary: false });
-      } else {
-        merged.push({ text: '无GPT3翻译', secondary: false });
-        return merged;
+    } else {
+      for (const t of setting.translations) {
+        const [label, paragraphs] = paragraphsWithLabel(t);
+        if (paragraphs) {
+          styles.push({ paragraphs, secondary: false });
+        } else {
+          merged.push({ text: label + '翻译不存在', secondary: true });
+          return merged;
+        }
       }
     }
 

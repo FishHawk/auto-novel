@@ -16,11 +16,14 @@ const modeOptions = [
   { value: 'mix', label: '中文/日文' },
   { value: 'mix-reverse', label: '日文/中文' },
 ];
+const translationModeOptions = [
+  { label: '优先', value: 'priority' },
+  { label: '并列', value: 'parallel' },
+];
 const translationOptions = [
-  { value: 'youdao', label: '有道优先' },
-  { value: 'baidu', label: '百度优先' },
-  { value: 'youdao/baidu', label: '有道/百度' },
-  { value: 'gpt', label: 'GPT3' },
+  { label: 'GPT3', value: 'gpt' },
+  { label: '有道', value: 'youdao' },
+  { label: '百度', value: 'baidu' },
 ];
 const fontSizeOptions = [
   { value: '14px', label: '14px' },
@@ -75,11 +78,18 @@ defineEmits<{
             :options="modeOptions"
           />
         </ReuseOption>
-        <ReuseOption label="翻译">
+        <ReuseOption label="翻译模式">
           <ReaderSettingDialogSelect
             :desktop="isDesktop"
-            v-model:value="setting.translation"
+            v-model:value="setting.translationsMode"
+            :options="translationModeOptions"
+          />
+        </ReuseOption>
+        <ReuseOption label="翻译">
+          <n-transfer
+            v-model:value="setting.translations"
             :options="translationOptions"
+            style="height: 160px"
           />
         </ReuseOption>
         <ReuseOption label="字体">
@@ -119,6 +129,9 @@ defineEmits<{
             :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
           />
         </ReuseOption>
+        <n-text depth="3" style="font-size: 12px">
+          # 左/右方向键可以跳转上/下一章
+        </n-text>
       </n-space>
     </n-card>
   </n-modal>
@@ -128,5 +141,10 @@ defineEmits<{
 .label {
   margin-right: 24px;
   white-space: nowrap;
+}
+</style>
+<style>
+.n-transfer-list-header__extra {
+  display: none;
 }
 </style>

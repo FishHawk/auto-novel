@@ -1,7 +1,13 @@
+<script lang="ts" setup>
+import { zhCN, dateZhCN } from 'naive-ui';
+</script>
+
 <template>
-  <n-message-provider>
-    <router-view :key="$route.path" />
-  </n-message-provider>
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
+    <n-message-provider>
+      <router-view :key="$route.path" />
+    </n-message-provider>
+  </n-config-provider>
 </template>
 
 <style>
