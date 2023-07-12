@@ -122,8 +122,7 @@ async function testYoudao() {
       GPT翻译插件的工作量太大，就目前来说是不现实的。
       所以我做了个GPT翻译器的程序，你可以本地运行，来生成GPT翻译。
       我也知道有GPT帐号的人很少，但我也没想好有什么好的运营方法。
-      帐号本身成本1元1个，不过过程没法自动化。
-      目前我会先把我自己看的几本翻了。
+      帐号本身成本1元1个，不过过程没法自动化。 目前我会先把我自己看的几本翻了。
       如果你有什么主意欢迎分享。
     </n-p>
     <n-ul>
@@ -145,13 +144,17 @@ async function testYoudao() {
         这一本用的是旧版本，输出语言还不稳定
       </n-li>
     </n-ul>
-    <n-p>
-      <n-a href="/files-extra/GPT-v0.0.2.exe" target="_blank">
-        GPT翻译器-v0.0.2(点此下载)
-      </n-a>
-      <n-a href="/files-extra/GPT-v0.0.1.exe" target="_blank">
-        GPT翻译器-v0.0.1(点此下载)
-      </n-a>
-    </n-p>
+    <n-ul>
+      <n-li>
+        <n-a href="/files-extra/GPT-v0.0.2.exe" target="_blank">
+          GPT翻译器-v0.0.2(点此下载)
+        </n-a>
+      </n-li>
+      <n-li>
+        <n-a href="/files-extra/GPT-v0.0.1.exe" target="_blank">
+          GPT翻译器-v0.0.1(点此下载)
+        </n-a>
+      </n-li>
+    </n-ul>
   </MainLayout>
 </template>
