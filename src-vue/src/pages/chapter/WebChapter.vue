@@ -100,9 +100,9 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
         } else {
           merged.push({ text: label + '翻译不存在', secondary: true });
         }
-        if (!hasAnyTranslation) {
-          return merged;
-        }
+      }
+      if (!hasAnyTranslation) {
+        return merged;
       }
     } else {
       for (const t of setting.translations) {
@@ -111,7 +111,6 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
           styles.push({ paragraphs, secondary: false });
         } else {
           merged.push({ text: label + '翻译不存在', secondary: true });
-          return merged;
         }
       }
     }
