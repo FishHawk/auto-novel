@@ -1,13 +1,19 @@
+const notify = (e) => alert(e.message || e);
+
 const domain = 'https://books.fishhawk.top';
 const domainDebug = 'http://localhost:5173';
 const domainGA = 'https://www.google-analytics.com';
 
+function isUrlFromMySite(url) {
+  return (
+    url !== undefined && (url.startsWith(domain) || url.startsWith(domainDebug))
+  );
+}
+
 function shouldHandleRequest(d) {
   const urlSrc = d.initiator ?? d.originUrl;
   const urlDst = d.url;
-  const fromMySite =
-    urlSrc !== undefined &&
-    (urlSrc.startsWith(domain) || urlSrc.startsWith(domainDebug));
+  const fromMySite = isUrlFromMySite(urlSrc);
   const requestMySite =
     urlDst.startsWith(domain) ||
     urlDst.startsWith(domainDebug) ||
@@ -248,3 +254,65 @@ function start() {
 
 chrome.runtime.onStartup.addListener(start);
 chrome.runtime.onInstalled.addListener(start);
+
+{
+  const once = chrome.contextMenus.create({
+    title: '启动调试器以支持GPT',
+    contexts: ['browser_action'],
+    id: 'status-code-enable',
+  });
+  chrome.runtime.onStartup.addListener(once);
+  chrome.runtime.onInstalled.addListener(once);
+}
+
+const debug = async (source, method, params) => {
+  if (method === 'Fetch.requestPaused') {
+    const opts = {
+      requestId: params.requestId,
+    };
+    const status = params.responseStatusCode;
+    if (status && status >= 400 && status < 500) {
+      const methods = [
+        'GET',
+        'POST',
+        'PUT',
+        'OPTIONS',
+        'PATCH',
+        'PROPFIND',
+        'PROPPATCH',
+      ];
+      const method = params.request?.method;
+      if (method && methods.includes(method)) {
+        opts.responseCode = 200;
+        opts.responseHeaders = params.responseHeaders || [];
+      }
+    }
+
+    chrome.debugger.sendCommand(
+      { tabId: source.tabId },
+      'Fetch.continueResponse',
+      opts
+    );
+  }
+};
+
+chrome.contextMenus.onClicked.addListener(({ menuItemId, checked }, tab) => {
+  if (menuItemId === 'status-code-enable') {
+    chrome.debugger.onEvent.removeListener(debug);
+    chrome.debugger.onEvent.addListener(debug);
+
+    const target = { tabId: tab.id };
+
+    chrome.debugger.attach(target, '1.2', () => {
+      const { lastError } = chrome.runtime;
+      if (lastError) {
+        console.warn(lastError);
+        notify(lastError.message);
+      } else {
+        chrome.debugger.sendCommand(target, 'Fetch.enable', {
+          patterns: [{ requestStage: 'Response' }],
+        });
+      }
+    });
+  }
+});
