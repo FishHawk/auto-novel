@@ -54,7 +54,7 @@ private class WenkuNovelRes {
         class VolumeJp(val parent: Id)
 
         @Resource("/translate/{translatorId}/{volumeId}")
-        class Translate(val parent: Id, val translatorId: String, val volumeId: String) {
+        class Translate(val parent: Id, val translatorId: TranslatorId, val volumeId: String) {
             @Resource("/{chapterId}")
             class Chapter(val parent: Translate, val chapterId: String)
         }
@@ -427,15 +427,9 @@ class WenkuNovelApi(
     // Translate
     suspend fun listUntranslatedChapter(
         novelId: String,
-        translatorId: String,
+        translatorId: TranslatorId,
         volumeId: String,
     ): Result<List<String>> {
-        val realTranslatorId = when (translatorId) {
-            "baidu" -> TranslatorId.Baidu
-            "youdao" -> TranslatorId.Youdao
-            else -> return httpBadRequest("不支持的版本")
-        }
-
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
 
         if (!volumeRepo.isVolumeJpExisted(novelId, volumeId))
@@ -444,7 +438,7 @@ class WenkuNovelApi(
         val untranslatedChapters = volumeRepo.listUntranslatedChapter(
             novelId = novelId,
             volumeId = volumeId,
-            translatorId = realTranslatorId,
+            translatorId = translatorId,
         )
         return Result.success(untranslatedChapters)
     }
@@ -461,23 +455,17 @@ class WenkuNovelApi(
 
     suspend fun updateChapterTranslation(
         novelId: String,
-        translatorId: String,
+        translatorId: TranslatorId,
         volumeId: String,
         chapterId: String,
         lines: List<String>,
     ): Result<Long> {
-        val realTranslatorId = when (translatorId) {
-            "baidu" -> TranslatorId.Baidu
-            "youdao" -> TranslatorId.Youdao
-            else -> return httpBadRequest("不支持的版本")
-        }
-
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
 
         val jpLines = volumeRepo.getChapter(novelId, volumeId, chapterId)
             ?: return httpNotFound("章节不存在")
 
-        if (volumeRepo.isTranslationExist(novelId, volumeId, realTranslatorId, chapterId))
+        if (volumeRepo.isTranslationExist(novelId, volumeId, translatorId, chapterId))
             return httpConflict("章节翻译已经存在")
 
         if (jpLines.size != lines.size)
@@ -486,13 +474,13 @@ class WenkuNovelApi(
         volumeRepo.updateTranslation(
             novelId = novelId,
             volumeId = volumeId,
-            translatorId = realTranslatorId,
+            translatorId = translatorId,
             chapterId = chapterId,
             lines = lines,
         )
 
         val zhChapters = volumeRepo.getTranslatedNumber(
-            novelId, volumeId, realTranslatorId
+            novelId, volumeId, translatorId
         )
         return Result.success(zhChapters)
     }

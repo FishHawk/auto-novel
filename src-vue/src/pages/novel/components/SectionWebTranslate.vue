@@ -35,6 +35,7 @@ interface UpdateProgress {
   error: number;
 }
 
+const gptAccessToken = ref('');
 const startIndex = ref<number | null>(1);
 const endIndex = ref<number | null>(65536);
 const progress: Ref<UpdateProgress | undefined> = ref();
@@ -56,6 +57,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
     props.providerId,
     props.novelId,
     translatorId,
+    gptAccessToken.value,
     (startIndex.value ?? 1) - 1,
     (endIndex.value ?? 65536) - 1,
     {
@@ -94,7 +96,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
 
 interface NovelFiles {
   label: string;
-  translatorId?: 'baidu' | 'youdao';
+  translatorId?: TranslatorId;
   files: { label: string; url: string; name: string }[];
 }
 
@@ -106,8 +108,10 @@ function stateToFileList(): NovelFiles[] {
       | 'jp'
       | 'zh-baidu'
       | 'zh-youdao'
+      | 'zh-gpt'
       | 'mix-baidu'
       | 'mix-youdao'
+      | 'mix-gpt'
       | 'mix-all',
     type: 'epub' | 'txt'
   ) {
@@ -149,15 +153,21 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
+      label: `GPT3(${props.gpt}/${props.total})`,
+      translatorId: 'gpt',
+      files: [
+        createFile('TXT', 'zh-gpt', 'txt'),
+        createFile('中日对比TXT', 'mix-gpt', 'txt'),
+        createFile('EPUB', 'zh-gpt', 'epub'),
+        createFile('中日对比EPUB', 'mix-gpt', 'epub'),
+      ],
+    },
+    {
       label: `有道/百度`,
       files: [
         createFile('TXT', 'mix-all', 'txt'),
         createFile('EPUB', 'mix-all', 'epub'),
       ],
-    },
-    {
-      label: `GPT3(${props.gpt}/${props.total})`,
-      files: [],
     },
   ];
 }
@@ -213,6 +223,11 @@ function stateToFileList(): NovelFiles[] {
       </n-collapse>
     </n-p>
 
+    <n-input
+      v-model:value="gptAccessToken"
+      type="textarea"
+      placeholder="请输入GPT的Access Token"
+    />
     <n-table v-if="isDesktop" :bordered="false" :single-line="false">
       <thead>
         <tr>

@@ -62,13 +62,21 @@ export async function translate(
   novelId: string,
   translatorId: TranslatorId,
   volumeId: string,
+  accessToken: string | undefined,
   callback: UpdateCallback
 ): Promise<Result<undefined, any>> {
   const token = useAuthInfoStore().token;
 
   let translator: TranslatorAdapter;
   try {
-    translator = await createTranslator(translatorId, {});
+    if (translatorId === 'gpt') {
+      if (!accessToken) {
+        throw Error('GPT翻译需要输入Token');
+      }
+      translator = await createTranslator(translatorId, { accessToken });
+    } else {
+      translator = await createTranslator(translatorId, {});
+    }
   } catch (e: any) {
     return Err(e);
   }

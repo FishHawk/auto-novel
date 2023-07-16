@@ -280,6 +280,7 @@ class WebNovelMetadataRepository(
         val zhProperty1 = when (translatorId) {
             TranslatorId.Baidu -> WebNovelChapter::baiduParagraphs
             TranslatorId.Youdao -> WebNovelChapter::youdaoParagraphs
+            TranslatorId.Gpt -> WebNovelChapter::gptParagraphs
         }
         val zh = mongo.webNovelChapterCollection
             .countDocuments(
@@ -292,6 +293,7 @@ class WebNovelMetadataRepository(
         val zhProperty = when (translatorId) {
             TranslatorId.Baidu -> WebNovelMetadata::baidu
             TranslatorId.Youdao -> WebNovelMetadata::youdao
+            TranslatorId.Gpt -> WebNovelMetadata::gpt
         }
         mongo
             .webNovelMetadataCollection

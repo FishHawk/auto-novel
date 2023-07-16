@@ -107,6 +107,7 @@ function createUploadUrl(novelId: string): string {
           :total="volume.total"
           v-model:baidu="volume.baidu"
           v-model:youdao="volume.youdao"
+          v-model:gpt="volume.gpt"
           style="padding-top: -8px"
         />
       </n-collapse-item>

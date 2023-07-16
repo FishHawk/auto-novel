@@ -11,6 +11,7 @@ const props = defineProps<{
   total: number;
   baidu: number;
   youdao: number;
+  gpt: number;
 }>();
 
 const emits = defineEmits<{
@@ -27,6 +28,7 @@ interface UpdateProgress {
 
 const message = useMessage();
 
+const gptAccessToken = ref('');
 const progress: Ref<UpdateProgress | undefined> = ref();
 
 async function startUpdateTask(translatorId: TranslatorId) {
@@ -46,6 +48,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
     props.novelId,
     translatorId,
     props.volumeId,
+    gptAccessToken.value,
     {
       onStart: (total: number) => {
         progress.value!.total = total;
@@ -79,7 +82,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
 
 interface NovelFiles {
   label: string;
-  translatorId: 'baidu' | 'youdao';
+  translatorId: TranslatorId;
   files: { label: string; url: string; name: string }[];
 }
 
@@ -92,7 +95,13 @@ function stateToFileList(): NovelFiles[] {
   }
   function createFile(
     label: string,
-    lang: 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao'
+    lang:
+      | 'zh-baidu'
+      | 'zh-youdao'
+      | 'zh-gpt'
+      | 'mix-baidu'
+      | 'mix-youdao'
+      | 'mix-gpt'
   ) {
     return {
       label,
@@ -118,11 +127,24 @@ function stateToFileList(): NovelFiles[] {
         createFile(`中日对比${extUpper}`, 'mix-youdao'),
       ],
     },
+    {
+      label: `GPT3(${props.gpt}/${props.total})`,
+      translatorId: 'gpt',
+      files: [
+        createFile(extUpper, 'zh-gpt'),
+        createFile(`中日对比${extUpper}`, 'mix-gpt'),
+      ],
+    },
   ];
 }
 </script>
 
 <template>
+  <n-input
+    v-model:value="gptAccessToken"
+    type="textarea"
+    placeholder="请输入GPT的Access Token"
+  />
   <div v-for="row in stateToFileList()">
     <n-space style="padding: 4px">
       <span>{{ row.label }}</span>

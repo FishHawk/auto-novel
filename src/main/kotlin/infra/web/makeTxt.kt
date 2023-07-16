@@ -128,8 +128,10 @@ private class TxtWriter(
             NovelFileLang.JP -> writeOneParagraph(chapter.paragraphs)
             NovelFileLang.ZH_BAIDU -> writeOneParagraph(chapter.baiduParagraphs)
             NovelFileLang.ZH_YOUDAO -> writeOneParagraph(chapter.youdaoParagraphs)
+            NovelFileLang.ZH_GPT -> writeOneParagraph(chapter.gptParagraphs)
             NovelFileLang.MIX_BAIDU -> writeTwoParagraph(chapter.paragraphs, chapter.baiduParagraphs)
             NovelFileLang.MIX_YOUDAO -> writeTwoParagraph(chapter.paragraphs, chapter.youdaoParagraphs)
+            NovelFileLang.MIX_GPT -> writeTwoParagraph(chapter.paragraphs, chapter.gptParagraphs)
             NovelFileLang.MIX_ALL -> writeThreeParagraph(
                 chapter.paragraphs,
                 chapter.youdaoParagraphs,

@@ -141,7 +141,6 @@ const loader: Loader = (_page: number, _query: string, selected: number[]) => {
     const range = optionNth(1);
     options = { genre, range };
   }
-  console.log(options);
   return ApiWebNovel.listRank(providerId, options).then((result) =>
     mapOk(result, (page) => ({ type: 'web', page }))
   );

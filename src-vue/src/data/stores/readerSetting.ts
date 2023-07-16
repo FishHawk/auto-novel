@@ -1,11 +1,10 @@
 import { defineStore } from 'pinia';
-
-type Translation = 'youdao' | 'baidu' | 'gpt';
+import { TranslatorId } from '../translator/translator';
 
 export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'mix' | 'mix-reverse';
   translationsMode: 'parallel' | 'priority';
-  translations: Translation[];
+  translations: TranslatorId[];
   fontSize: '14px' | '16px' | '18px' | '20px';
   theme: { isDark: boolean; bodyColor: string };
   mixJpOpacity: number;

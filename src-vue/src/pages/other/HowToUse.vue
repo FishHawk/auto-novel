@@ -5,6 +5,7 @@ import { createReusableTemplate } from '@vueuse/core';
 
 import { YoudaoTranslator } from '@/data/translator/youdao';
 import { BaiduTranslator } from '@/data/translator/baidu';
+import { OpenAiTranslator } from '@/data/translator/openai';
 
 const [DefineExtensionTutorial, ReuseExtensionTutorial] =
   createReusableTemplate<{ browser: string }>();
@@ -14,6 +15,8 @@ const message = useMessage();
 const textJp = 'あたしの悪徳領主様!!　～俺は星間国家の悪徳領主！　外伝～';
 const textBaidu = ref();
 const textYoudao = ref();
+const textGpt = ref('');
+const gptAccessToken = ref();
 
 async function testBaidu() {
   try {
@@ -34,6 +37,16 @@ async function testYoudao() {
     message.error(e.message);
   }
 }
+
+async function testGpt() {
+  try {
+    const t = await OpenAiTranslator.create(gptAccessToken.value);
+    const r = await t.translate([textJp]);
+    textGpt.value = r[0];
+  } catch (e: any) {
+    message.error(e.message);
+  }
+}
 </script>
 
 <template>
@@ -44,23 +57,64 @@ async function testYoudao() {
 
     <n-p>
       网页端中文翻译需要从你的浏览器访问翻译网站，因此需要安装扩展解决跨域的问题。
+      支持 Chrome / Edge / Firefox 浏览器。
+      国产浏览器绝大多数使用的是Chrome内核，可以参考Chrome的安装方式。
+      但是有些浏览器（比如搜狗）不提供从本地文件安装插件，这种只能换浏览器了。
     </n-p>
 
+    <n-p>有道/百度说明：</n-p>
     <n-ul>
+      <n-li>插件安装了就好了，直接在小说页面点更新按钮就能开始翻译。</n-li>
       <n-li>
-        支持 Chrome / Edge / Firefox 浏览器。
-        国产浏览器绝大多数使用的是Chrome内核，可以参考Chrome的安装方式。
-        但是有些浏览器（比如搜狗）不提供从本地文件安装插件，这种只能换浏览器了。
-      </n-li>
-      <n-li>
-        连续翻译太多的话，会被翻译站禁一段时间。你可以等几个小时再试试，或者换台机器。
+        百度/有道连续翻译太多的话，会被翻译站禁一段时间。你可以等几个小时再试试，或者换台机器。
       </n-li>
       <n-li>
         在一部分机器上，Chrome/Edge即使安装了也无法使用有道翻译。由于我手边没有这样的机子，暂时无法解决。
       </n-li>
     </n-ul>
+    <n-p>GPT说明:</n-p>
+    <n-ul>
+      <n-li>在启动GPT翻译之前，你得先做一些准备操作：</n-li>
+      <n-ul>
+        <n-li>
+          右键插件，点击“启动调试器以支持GPT”。此时浏览器会提示调试器打开。
+        </n-li>
+        <n-li>
+          在更新按钮上面的文本框里输入你帐号的GPT access token。具体如下：
+        </n-li>
+        <n-ul>
+          <n-li>
+            首先登录到
+            <n-a href="https://chat.openai.com/" target="_blank">OpenAi</n-a>。
+          </n-li>
+          <n-li>
+            然后打开
+            <n-a href="https://chat.openai.com/api/auth/session" target="_blank"
+              >Token</n-a
+            >
+            ，将这一页的内容全部复制进去，可以自动识别token。
+          </n-li>
+        </n-ul>
+      </n-ul>
+      <n-li>
+        GPT翻译非常慢，建议多注册几个号，注册方法参考
+        <n-a
+          href="https://github.com/xiaoming2028/FreePAC/wiki/ChatGPT%E6%B3%A8%E5%86%8C%E6%95%99%E7%A8%8B%EF%BC%88%E5%AE%8C%E6%95%B4%E6%8C%87%E5%8D%97%EF%BC%89"
+          target="_blank"
+        >
+          ChatGPT注册教程
+        </n-a>
+        成本为1元1个，但是最少要充2美元。 记得活用高级功能控制翻译范围。
+      </n-li>
+      <n-li>
+        如果你想看翻译过程，可以打开浏览器调试页面，在Console标签页可以看到翻译细节。
+      </n-li>
+      <n-li>一个GPT帐号不要同时启动多个翻译任务。</n-li>
+      <n-li>GPT有额度限制，到达额度限制后请不要反复尝试。</n-li>
+      <n-li><b>火狐暂不支持，请等待更新</b></n-li>
+    </n-ul>
 
-    <n-p>当前版本：v1.0.3 (2023-06-28)，安装步骤如下：</n-p>
+    <n-p>当前版本：v1.0.4 (2023-07-17)，安装步骤如下：</n-p>
     <DefineExtensionTutorial v-slot="{ browser }">
       <n-p>
         首先点击下面链接下载插件压缩包，解压下载的zip压缩包到文件夹，会有一个叫做extension的文件夹。
@@ -105,25 +159,28 @@ async function testYoudao() {
 
     <n-divider />
     <n-p>安装好扩展后可以用下面的按钮来测试能否翻译。</n-p>
+    <n-input
+      v-model:value="gptAccessToken"
+      type="textarea"
+      placeholder="请输入GPT的Access Token"
+    />
     <n-p>日文：{{ textJp }}</n-p>
     <n-p>百度：{{ textBaidu }}</n-p>
     <n-p>有道：{{ textYoudao }}</n-p>
+    <n-p>GPT：{{ textGpt }}</n-p>
     <n-space>
       <n-button @click="testBaidu()">测试百度</n-button>
       <n-button @click="testYoudao()">测试有道</n-button>
+      <n-button @click="testGpt()">测试GPT</n-button>
     </n-space>
 
     <n-h2 prefix="bar">移动端</n-h2>
     <n-p>有一些手机浏览器可以安装插件，比如Yandex、Kiwi。</n-p>
     <n-p>想要APP？在做了在做了（指新建文件夹）</n-p>
 
-    <n-h2 prefix="bar">GPT翻译器</n-h2>
+    <n-h2 prefix="bar">GPT翻译器（弃用，用新版插件吧）</n-h2>
     <n-p>
-      GPT翻译插件的工作量太大，就目前来说是不现实的。
-      所以我做了个GPT翻译器的程序，你可以本地运行，来生成GPT翻译。
-      我也知道有GPT帐号的人很少，但我也没想好有什么好的运营方法。
-      帐号本身成本1元1个，不过过程没法自动化。 目前我会先把我自己看的几本翻了。
-      如果你有什么主意欢迎分享。
+      <del>GPT翻译插件的工作量太大，就目前来说是不现实的。</del>（现在现实了）
     </n-p>
     <n-ul>
       <n-li>因为还在测试中，功能还不完全，暂时只支持翻译网络小说。</n-li>

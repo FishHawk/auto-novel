@@ -1,5 +1,5 @@
-import { assert } from '@vueuse/shared';
 import { customAlphabet } from 'nanoid';
+import { Segmenter } from './util';
 
 export type Glossary = { [key: string]: string };
 
@@ -46,59 +46,23 @@ class GlossaryTransformer {
   }
 }
 
-export class InputSegmenter {
-  input: string[];
-  segSizeLimit: number;
+export abstract class Translator {
+  abstract createSegmenter(input: string[]): Segmenter;
+  abstract translateSegment(input: string[]): Promise<string[]>;
 
-  constructor(input: string[], size: number) {
-    this.input = input;
-    this.segSizeLimit = size;
-  }
-
-  *segment(): Generator<string[]> {
-    const seg: string[] = [];
-    let segSize = 0;
-
-    for (const line of this.input) {
-      const realLine = line.replace(/\r?\n|\r/g, '');
-      if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
-        continue;
-      }
-
-      const lineSize = realLine.length;
-      if (lineSize + segSize > this.segSizeLimit && seg.length >= 0) {
-        yield seg;
-        seg.length = 0;
-        segSize = 0;
-      }
-
-      seg.push(realLine);
-      segSize += lineSize;
+  async translate(input: string[]): Promise<string[]> {
+    const segmenter = this.createSegmenter(input);
+    let output: string[] = [];
+    for (const seg of segmenter.segment()) {
+      const segOutput = await this.translateSegment(seg);
+      output = output.concat(segOutput);
     }
-    if (seg.length >= 0) {
-      yield seg;
-    }
-  }
-
-  recover(output: string[]) {
-    const recoveredOutput: string[] = [];
-    for (const line of this.input) {
-      const realLine = line.replace(/\r?\n|\r/g, '');
-      if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
-        recoveredOutput.push(line);
-      } else {
-        const outputLine = output.shift();
-        assert(outputLine !== undefined);
-        recoveredOutput.push(outputLine!);
-      }
+    const recoveredOutput = segmenter.recover(output);
+    if (recoveredOutput.length != input.length) {
+      throw Error('翻译长度不匹配');
     }
     return recoveredOutput;
   }
-}
-
-export interface Translator {
-  size: number;
-  translate: (input: string[]) => Promise<string[]>;
 }
 
 export class TranslatorAdapter {
@@ -110,25 +74,10 @@ export class TranslatorAdapter {
     this.glossaryTransformer = new GlossaryTransformer(glossary);
   }
 
-  private async translateInner(input: string[]): Promise<string[]> {
-    const segmenter = new InputSegmenter(input, this.translator.size);
-
-    let output: string[] = [];
-    for (const seg of segmenter.segment()) {
-      const segOutput = await this.translator.translate(seg);
-      output = output.concat(segOutput);
-    }
-    const recoveredOutput = segmenter.recover(output);
-    if (recoveredOutput.length != input.length) {
-      throw Error('翻译长度不匹配');
-    }
-    return recoveredOutput;
-  }
-
   async translate(input: string[]): Promise<string[]> {
     if (input.length === 0) return [];
     const encodedInput = this.glossaryTransformer.encode(input);
-    const output = await this.translateInner(encodedInput);
+    const output = await this.translator.translate(encodedInput);
     const decodedOutput = this.glossaryTransformer.decode(output);
     return decodedOutput;
   }

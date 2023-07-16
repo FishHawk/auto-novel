@@ -1,5 +1,7 @@
 import ky from 'ky';
+
 import { Translator } from './adapter';
+import { LengthSegmenter, Segmenter } from './util';
 
 function a(r: any, o: any) {
   for (var t = 0; t < o.length - 2; t += 3) {
@@ -57,9 +59,7 @@ var token = function (r: any, _gtk: any) {
   );
 };
 
-export class BaiduTranslator implements Translator {
-  static label = '百度';
-  size = 2000;
+export class BaiduTranslator extends Translator {
   private token = '';
   private gtk = '';
 
@@ -78,7 +78,11 @@ export class BaiduTranslator implements Translator {
     this.gtk = html.match(/window.gtk = "(.*?)";/)!![1];
   }
 
-  async translate(input: string[]): Promise<string[]> {
+  createSegmenter(input: string[]): Segmenter {
+    return new LengthSegmenter(input, 2000);
+  }
+
+  async translateSegment(input: string[]): Promise<string[]> {
     // 开头的空格似乎会导致998错误
     const newInput = input.slice();
     newInput[0] = newInput[0].trimStart();

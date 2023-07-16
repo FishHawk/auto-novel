@@ -63,7 +63,6 @@ function diffToc(detail: TocMergeHistoryDto): DiffTocItem[] {
   const maxLength = Math.max(detail.tocOld.length, detail.tocNew.length);
   const diffItems: DiffTocItem[] = [];
   let firstDiff = false;
-  console.log(detail);
   for (let i = 0; i < maxLength; i++) {
     const oldV = detail.tocOld[i];
     const newV = detail.tocNew[i];

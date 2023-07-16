@@ -20,6 +20,12 @@ enum class NovelFileLang(val value: String) {
     @SerialName("mix-youdao")
     MIX_YOUDAO("mix-youdao"),
 
+    @SerialName("zh-gpt")
+    ZH_GPT("zh-gpt"),
+
+    @SerialName("mix-gpt")
+    MIX_GPT("mix-gpt"),
+
     @SerialName("mix-all")
     MIX_ALL("mix-all")
 }

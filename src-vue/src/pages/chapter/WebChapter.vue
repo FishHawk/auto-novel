@@ -86,7 +86,7 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
       } else if (t === 'baidu') {
         return ['百度', chapter.baiduParagraphs];
       } else {
-        return ['GPT', chapter.gptParagraphs];
+        return ['GPT3', chapter.gptParagraphs];
       }
     }
     if (setting.translationsMode === 'priority') {

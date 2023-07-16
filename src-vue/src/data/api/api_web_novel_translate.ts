@@ -21,7 +21,7 @@ async function getMetadata(
   startIndex: number,
   endIndex: number
 ): Promise<MetadataDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/metadata`;
+  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/metadata`;
   return api.get(url, { searchParams: { startIndex, endIndex } }).json();
 }
 
@@ -37,7 +37,7 @@ async function postMetadata(
   translatorId: TranslatorId,
   body: MetadataUpdateBody
 ): Promise<string> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/metadata`;
+  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/metadata`;
   return api.post(url, { json: body }).text();
 }
 
@@ -57,7 +57,7 @@ async function getChapter(
   translatorId: TranslatorId,
   chapterId: string
 ): Promise<ChapterToTranslateDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
+  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/chapter/${chapterId}`;
   return api.get(url).json();
 }
 
@@ -73,7 +73,7 @@ async function postChapter(
   chapterId: string,
   body: ChapterUpdateBody
 ): Promise<TranslateStateDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
+  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/chapter/${chapterId}`;
   return api.post(url, { json: body }).json();
 }
 
@@ -89,7 +89,7 @@ async function putChapter(
   chapterId: string,
   body: ChapterUpdatePartlyBody
 ): Promise<TranslateStateDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
+  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/chapter/${chapterId}`;
   return api.put(url, { json: body }).json();
 }
 
@@ -157,6 +157,7 @@ export async function translate(
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
+  accessToken: string | undefined,
   startIndex: number,
   endIndex: number,
   callback: UpdateCallback
@@ -174,19 +175,40 @@ export async function translate(
     );
 
     try {
-      translator = await createTranslator(translatorId, metadata.glossary);
+      if (translatorId === 'gpt') {
+        if (!accessToken) {
+          throw Error('GPT翻译需要输入Token');
+        }
+        translator = await createTranslator(translatorId, { accessToken });
+      } else {
+        translator = await createTranslator(translatorId, {
+          glossary: metadata.glossary,
+        });
+      }
     } catch (e: any) {
       return Err(e);
     }
 
     const textsSrc = encodeMetadataToTranslate(metadata);
     if (textsSrc.length > 0) {
-      console.log(`翻译元数据 ${providerId}/${novelId}`);
-      const textsDst = await translator.translate(textsSrc);
+      if (translatorId === 'gpt') {
+        console.log('目前GPT翻译目录超级不稳定，跳过');
+      } else {
+        console.log(`翻译元数据 ${providerId}/${novelId}`);
+        const textsDst = await translator.translate(textsSrc);
 
-      console.log(`上传元数据 ${providerId}/${novelId}`);
-      const metadataTranslated = decodeAsMetadataTranslated(metadata, textsDst);
-      await postMetadata(providerId, novelId, translatorId, metadataTranslated);
+        console.log(`上传元数据 ${providerId}/${novelId}`);
+        const metadataTranslated = decodeAsMetadataTranslated(
+          metadata,
+          textsDst
+        );
+        await postMetadata(
+          providerId,
+          novelId,
+          translatorId,
+          metadataTranslated
+        );
+      }
     }
   } catch (e: any) {
     console.log(e);

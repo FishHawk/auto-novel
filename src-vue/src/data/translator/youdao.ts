@@ -1,6 +1,8 @@
 import ky from 'ky';
 import CryptoJS from 'crypto-js';
+
 import { Translator } from './adapter';
+import { LengthSegmenter, Segmenter } from './util';
 
 function getBaseBody(key: string) {
   const c = 'fanyideskweb';
@@ -22,10 +24,8 @@ function getBaseBody(key: string) {
   };
 }
 
-export class YoudaoTranslator implements Translator {
-  static label = '有道';
-  size = 2000;
-  key = 'fsdsogkndfokasodnaso';
+export class YoudaoTranslator extends Translator {
+  private key = 'fsdsogkndfokasodnaso';
 
   static async create() {
     return await new this().init();
@@ -62,7 +62,11 @@ export class YoudaoTranslator implements Translator {
     return this;
   }
 
-  async translate(textsSrc: string[]): Promise<string[]> {
+  createSegmenter(input: string[]): Segmenter {
+    return new LengthSegmenter(input, 2000);
+  }
+
+  async translateSegment(textsSrc: string[]): Promise<string[]> {
     const form = {
       i: textsSrc.join('\n'),
       from: 'ja',

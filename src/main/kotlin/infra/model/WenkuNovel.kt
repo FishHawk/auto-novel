@@ -45,4 +45,5 @@ data class WenkuNovelVolumeJp(
     val total: Long,
     val baidu: Long,
     val youdao: Long,
+    val gpt: Long,
 )

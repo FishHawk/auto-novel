@@ -55,7 +55,7 @@ private class WebNovelRes {
         @Resource("/translate/gpt/chapter/{chapterId}")
         data class TranslateGpt(val parent: Id, val chapterId: String)
 
-        @Resource("/translate/{translatorId}")
+        @Resource("/translate-alt/{translatorId}")
         class Translate(val parent: Id, val translatorId: TranslatorId) {
             @Resource("/metadata")
             data class Metadata(val parent: Translate, val startIndex: Int = 0, val endIndex: Int = 65536)
@@ -470,6 +470,7 @@ class WebNovelApi(
         val paragraphsZh: List<String>,
     )
 
+    @Deprecated("等到网页端接口稳定后，删除")
     suspend fun updateChapterTranslationGpt(
         providerId: String,
         novelId: String,
@@ -530,20 +531,20 @@ class WebNovelApi(
         chapterIds.forEach { chapterId ->
             val chapter = chapterRepo.get(providerId, novelId, chapterId)
             when (translatorId) {
-                TranslatorId.Baidu -> {
-                    if (chapter?.baiduParagraphs == null) {
-                        untranslatedChapterIds.add(chapterId)
-                    } else if (chapter.baiduGlossaryUuid != novel.glossaryUuid) {
-                        expiredChapterIds.add(chapterId)
-                    }
+                TranslatorId.Baidu -> if (chapter?.baiduParagraphs == null) {
+                    untranslatedChapterIds.add(chapterId)
+                } else if (chapter.baiduGlossaryUuid != novel.glossaryUuid) {
+                    expiredChapterIds.add(chapterId)
                 }
 
-                TranslatorId.Youdao -> {
-                    if (chapter?.youdaoParagraphs == null) {
-                        untranslatedChapterIds.add(chapterId)
-                    } else if (chapter.youdaoGlossaryUuid != novel.glossaryUuid) {
-                        expiredChapterIds.add(chapterId)
-                    }
+                TranslatorId.Youdao -> if (chapter?.youdaoParagraphs == null) {
+                    untranslatedChapterIds.add(chapterId)
+                } else if (chapter.youdaoGlossaryUuid != novel.glossaryUuid) {
+                    expiredChapterIds.add(chapterId)
+                }
+
+                TranslatorId.Gpt -> if (chapter?.gptParagraphs == null) {
+                    untranslatedChapterIds.add(chapterId)
                 }
             }
         }
@@ -631,6 +632,7 @@ class WebNovelApi(
                 glossary = when (translatorId) {
                     TranslatorId.Baidu -> chapter.baiduGlossary
                     TranslatorId.Youdao -> chapter.youdaoGlossary
+                    TranslatorId.Gpt -> emptyMap()
                 },
                 paragraphsJp = chapter.paragraphs,
             )
@@ -652,7 +654,10 @@ class WebNovelApi(
     ): Result<TranslateStateDto> {
         val novel = novelRepo.get(providerId, novelId)
             ?: return httpNotFound("元数据不存在")
-        if (body.glossaryUuid != novel.glossaryUuid) {
+        if (
+            translatorId.supportGlossary() &&
+            body.glossaryUuid != novel.glossaryUuid
+        ) {
             return httpBadRequest("术语表uuid失效")
         }
 
@@ -662,23 +667,33 @@ class WebNovelApi(
             return httpBadRequest("翻译文本长度不匹配")
         }
 
-        val zhParagraphs = when (translatorId) {
+        when (translatorId) {
             TranslatorId.Baidu -> chapter.baiduParagraphs
             TranslatorId.Youdao -> chapter.youdaoParagraphs
-        }
-        if (zhParagraphs != null) {
+            TranslatorId.Gpt -> chapter.gptParagraphs
+        }?.let {
             return httpConflict("翻译已经存在")
         }
 
-        chapterRepo.updateTranslation(
-            providerId = providerId,
-            novelId = novelId,
-            chapterId = chapterId,
-            translatorId = translatorId,
-            glossaryUuid = novel.glossaryUuid,
-            glossary = novel.glossary,
-            paragraphsZh = body.paragraphsZh,
-        )
+        if (translatorId.supportGlossary()) {
+            chapterRepo.updateTranslationWithGlossary(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                translatorId = translatorId,
+                glossaryUuid = novel.glossaryUuid,
+                glossary = novel.glossary,
+                paragraphsZh = body.paragraphsZh,
+            )
+        } else {
+            chapterRepo.updateTranslation(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                translatorId = translatorId,
+                paragraphsZh = body.paragraphsZh,
+            )
+        }
         val zh = novelRepo.updateTranslateStateZh(providerId, novelId, translatorId)
         return Result.success(TranslateStateDto(jp = novel.jp, zh = zh))
     }
@@ -696,6 +711,9 @@ class WebNovelApi(
         translatorId: TranslatorId,
         body: TranslateChapterUpdatePartlyBody,
     ): Result<TranslateStateDto> {
+        if (!translatorId.supportGlossary()) {
+            return httpBadRequest("翻译器不支持术语表")
+        }
         val novel = novelRepo.get(providerId, novelId)
             ?: return httpNotFound("元数据不存在")
         if (body.glossaryUuid != novel.glossaryUuid) {
@@ -708,9 +726,10 @@ class WebNovelApi(
         when (translatorId) {
             TranslatorId.Baidu -> chapter.baiduParagraphs
             TranslatorId.Youdao -> chapter.youdaoParagraphs
+            else -> Unit
         } ?: return httpConflict("翻译不存在")
 
-        chapterRepo.updateTranslation(
+        chapterRepo.updateTranslationWithGlossary(
             providerId = providerId,
             novelId = novelId,
             chapterId = chapterId,

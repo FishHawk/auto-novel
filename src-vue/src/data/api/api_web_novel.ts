@@ -173,8 +173,10 @@ function createFileUrl(
     | 'jp'
     | 'zh-baidu'
     | 'zh-youdao'
+    | 'zh-gpt'
     | 'mix-baidu'
     | 'mix-youdao'
+    | 'mix-gpt'
     | 'mix-all',
   type: 'epub' | 'txt'
 ) {

@@ -1,21 +1,45 @@
 import { Glossary, TranslatorAdapter } from './adapter';
 import { BaiduTranslator } from './baidu';
 import { YoudaoTranslator } from './youdao';
+import { OpenAiTranslator } from './openai';
 
-export type TranslatorId = 'baidu' | 'youdao';
+export type TranslatorId = 'baidu' | 'youdao' | 'gpt';
 
-function selectTranslator(id: TranslatorId) {
+export interface TranslatorConfig {
+  glossary?: Glossary;
+  accessToken?: string;
+}
+
+export async function createTranslator(
+  id: TranslatorId,
+  config: TranslatorConfig
+) {
   if (id === 'baidu') {
-    return BaiduTranslator;
+    return new TranslatorAdapter(
+      await BaiduTranslator.create(),
+      config.glossary || {}
+    );
+  } else if (id === 'youdao') {
+    return new TranslatorAdapter(
+      await YoudaoTranslator.create(),
+      config.glossary || {}
+    );
   } else {
-    return YoudaoTranslator;
+    if (!config.accessToken) {
+      throw new Error('Gpt翻译器需要Token');
+    }
+    return new TranslatorAdapter(
+      await OpenAiTranslator.create(config.accessToken),
+      {}
+    );
   }
 }
 
-export async function createTranslator(id: TranslatorId, glossary: Glossary) {
-  return new TranslatorAdapter(await selectTranslator(id).create(), glossary);
-}
-
 export function getTranslatorLabel(id: TranslatorId) {
-  return selectTranslator(id).label;
+  const idToLaber = {
+    baidu: '百度',
+    youdao: '有道',
+    gpt: 'GPT3',
+  };
+  return idToLaber[id];
 }

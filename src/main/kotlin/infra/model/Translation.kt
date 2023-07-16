@@ -9,5 +9,10 @@ enum class TranslatorId {
     Baidu,
 
     @SerialName("youdao")
-    Youdao
+    Youdao,
+
+    @SerialName("gpt")
+    Gpt,
 }
+
+fun TranslatorId.supportGlossary() = this != TranslatorId.Gpt

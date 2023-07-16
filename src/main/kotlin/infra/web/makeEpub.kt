@@ -72,17 +72,18 @@ suspend fun makeEpubFile(
                 }
             }
 
-            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO -> createEpubXhtml(
+            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO, NovelFileLang.ZH_GPT -> createEpubXhtml(
                 path,
                 id,
                 "zh",
                 token.titleZh ?: token.titleJp
             ) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
-                val paragraphs = if (lang == NovelFileLang.ZH_BAIDU) {
-                    chapter?.baiduParagraphs
-                } else {
-                    chapter?.youdaoParagraphs
+                val paragraphs = when (lang) {
+                    NovelFileLang.ZH_BAIDU -> chapter?.baiduParagraphs
+                    NovelFileLang.ZH_YOUDAO -> chapter?.youdaoParagraphs
+                    NovelFileLang.ZH_GPT -> chapter?.gptParagraphs
+                    else -> throw RuntimeException("Never reachable")
                 }
                 if (paragraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)
@@ -93,7 +94,7 @@ suspend fun makeEpubFile(
                 }
             }
 
-            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO -> createEpubXhtml(
+            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO, NovelFileLang.MIX_GPT -> createEpubXhtml(
                 path,
                 id,
                 "zh",
@@ -106,10 +107,11 @@ suspend fun makeEpubFile(
                     it.appendElement("p").appendText(token.titleJp)
                         .attr("style", "opacity:0.4;")
                 }
-                val paragraphs = if (lang == NovelFileLang.MIX_BAIDU) {
-                    chapter?.baiduParagraphs
-                } else {
-                    chapter?.youdaoParagraphs
+                val paragraphs = when (lang) {
+                    NovelFileLang.MIX_BAIDU -> chapter?.baiduParagraphs
+                    NovelFileLang.MIX_YOUDAO -> chapter?.youdaoParagraphs
+                    NovelFileLang.MIX_GPT -> chapter?.gptParagraphs
+                    else -> throw RuntimeException("Never reachable")
                 }
                 if (chapter == null || paragraphs == null) {
                     it.appendElement("p").appendText(MISSING_EPISODE_HINT)

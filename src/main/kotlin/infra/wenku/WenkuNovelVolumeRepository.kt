@@ -43,6 +43,7 @@ class WenkuNovelVolumeRepository {
                                 total = listUnpackedChapters(novelId, volumeId, "jp").size.toLong(),
                                 baidu = listUnpackedChapters(novelId, volumeId, "baidu").size.toLong(),
                                 youdao = listUnpackedChapters(novelId, volumeId, "youdao").size.toLong(),
+                                gpt = listUnpackedChapters(novelId, volumeId, "gpt").size.toLong()
                             )
                         )
                     } else {
@@ -68,6 +69,7 @@ class WenkuNovelVolumeRepository {
         val type = when (translatorId) {
             TranslatorId.Baidu -> "baidu"
             TranslatorId.Youdao -> "youdao"
+            TranslatorId.Gpt -> "gpt"
         }
         return listUnpackedChapters(novelId, volumeId, type).size.toLong()
     }
@@ -174,12 +176,13 @@ class WenkuNovelVolumeRepository {
         volumeId: String,
         translatorId: TranslatorId,
     ): List<String> {
+        val type = when (translatorId) {
+            TranslatorId.Baidu -> "baidu"
+            TranslatorId.Youdao -> "youdao"
+            TranslatorId.Gpt -> "gpt"
+        }
         val jpChapters = listUnpackedChapters(novelId, volumeId, "jp")
-        val zhChapters =
-            when (translatorId) {
-                TranslatorId.Baidu -> listUnpackedChapters(novelId, volumeId, "baidu")
-                TranslatorId.Youdao -> listUnpackedChapters(novelId, volumeId, "youdao")
-            }
+        val zhChapters = listUnpackedChapters(novelId, volumeId, type)
         return jpChapters.filter { it !in zhChapters }
     }
 
@@ -209,6 +212,7 @@ class WenkuNovelVolumeRepository {
         val type = when (translatorId) {
             TranslatorId.Baidu -> "baidu"
             TranslatorId.Youdao -> "youdao"
+            TranslatorId.Gpt -> "gpt"
         }
         val path = root / novelId / "$volumeId.unpack" / type / chapterId
         return@withContext path.exists()
@@ -224,6 +228,7 @@ class WenkuNovelVolumeRepository {
         val type = when (translatorId) {
             TranslatorId.Baidu -> "baidu"
             TranslatorId.Youdao -> "youdao"
+            TranslatorId.Gpt -> "gpt"
         }
         val path = root / novelId / "$volumeId.unpack" / type / chapterId
         if (path.parent.notExists()) {

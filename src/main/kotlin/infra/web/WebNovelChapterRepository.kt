@@ -8,6 +8,7 @@ import infra.provider.WebNovelProviderDataSource
 import org.litote.kmongo.combine
 import org.litote.kmongo.pos
 import org.litote.kmongo.setValue
+import java.lang.RuntimeException
 
 class WebNovelChapterRepository(
     private val provider: WebNovelProviderDataSource,
@@ -57,7 +58,7 @@ class WebNovelChapterRepository(
             )
     }
 
-    suspend fun updateTranslation(
+    suspend fun updateTranslationWithGlossary(
         providerId: String,
         novelId: String,
         chapterId: String,
@@ -78,6 +79,8 @@ class WebNovelChapterRepository(
                 setValue(WebNovelChapter::youdaoGlossary, glossary),
                 setValue(WebNovelChapter::youdaoParagraphs, paragraphsZh)
             )
+
+            else -> throw RuntimeException("翻译器不支持术语表")
         }
         mongo
             .webNovelChapterCollection
@@ -85,6 +88,24 @@ class WebNovelChapterRepository(
     }
 
     suspend fun updateTranslation(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        translatorId: TranslatorId,
+        paragraphsZh: List<String>,
+    ) {
+        val updateBson = when (translatorId) {
+            TranslatorId.Gpt ->
+                setValue(WebNovelChapter::gptParagraphs, paragraphsZh)
+
+            else -> throw RuntimeException("翻译器需要术语表")
+        }
+        mongo
+            .webNovelChapterCollection
+            .updateOne(WebNovelChapter.byId(providerId, novelId, chapterId), updateBson)
+    }
+
+    suspend fun updateTranslationWithGlossary(
         providerId: String,
         novelId: String,
         chapterId: String,
@@ -112,6 +133,8 @@ class WebNovelChapterRepository(
                     setValue(WebNovelChapter::youdaoParagraphs.pos(index), textZh)
                 }
             )
+
+            else -> throw RuntimeException("翻译器不支持术语表")
         }
         mongo
             .webNovelChapterCollection

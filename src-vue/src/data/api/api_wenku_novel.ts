@@ -46,6 +46,7 @@ export interface VolumeJpDto {
   total: number;
   baidu: number;
   youdao: number;
+  gpt: number;
 }
 
 async function listVolumesNonArchived(): Promise<Result<VolumeJpDto[]>> {
@@ -183,7 +184,13 @@ function createVolumeJpUploadUrl(novelId: string) {
 function createFileUrl(
   novelId: string,
   volumeId: string,
-  lang: 'zh-baidu' | 'zh-youdao' | 'mix-baidu' | 'mix-youdao'
+  lang:
+    | 'zh-baidu'
+    | 'zh-youdao'
+    | 'zh-gpt'
+    | 'mix-baidu'
+    | 'mix-youdao'
+    | 'mix-gpt'
 ) {
   return `/api/wenku/${novelId}/file/${volumeId}/${lang}`;
 }
