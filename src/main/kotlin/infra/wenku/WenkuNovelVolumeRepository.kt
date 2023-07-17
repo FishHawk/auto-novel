@@ -247,12 +247,13 @@ class WenkuNovelVolumeRepository {
         val type = when (lang) {
             NovelFileLang.ZH_BAIDU, NovelFileLang.MIX_BAIDU -> "baidu"
             NovelFileLang.ZH_YOUDAO, NovelFileLang.MIX_YOUDAO -> "youdao"
-            else -> throw RuntimeException()
+            NovelFileLang.ZH_GPT, NovelFileLang.MIX_GPT -> "gpt"
+            NovelFileLang.MIX_ALL, NovelFileLang.JP -> throw RuntimeException()
         }
         val mix = when (lang) {
-            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO -> false
-            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO -> true
-            else -> throw RuntimeException()
+            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO, NovelFileLang.ZH_GPT -> false
+            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO, NovelFileLang.MIX_GPT -> true
+            NovelFileLang.MIX_ALL, NovelFileLang.JP -> throw RuntimeException()
         }
 
         if (isTxt(volumeId)) {
