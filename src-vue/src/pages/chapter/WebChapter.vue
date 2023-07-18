@@ -190,7 +190,7 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
               v-else
               :src="p.imageUrl"
               :alt="p.imageUrl"
-              style="width: 100%"
+              style="max-width: 100%; object-fit: scale-down"
             />
           </template>
         </div>
