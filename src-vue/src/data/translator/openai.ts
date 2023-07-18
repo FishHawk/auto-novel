@@ -138,6 +138,7 @@ export class OpenAiTranslator extends Translator {
         }
         console.log(outputRaw);
         console.log(`重试${retry}:输出语言中文占比小于0.75`);
+        console.log(`原始输出：${outputRaw}`);
       } else {
         return output;
       }
