@@ -12,6 +12,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinInstant
+import kotlinx.serialization.json.jsonPrimitive
 import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -95,7 +96,7 @@ class Syosetu : WebNovelProvider {
         }
 
         val doc = client.get("https://yomou.syosetu.com/rank/$path").document()
-        return doc.select("div.ranking_inbox > div.ranking_list").map { item->
+        return doc.select("div.ranking_inbox > div.ranking_list").map { item ->
             val novelId = item.selectFirst("a.tl")!!
                 .attr("href")
                 .removeSuffix("/")
@@ -244,6 +245,14 @@ class Syosetu : WebNovelProvider {
         val doc = client.get(url).document()
         doc.select("rp").remove()
         doc.select("rt").remove()
-        return RemoteChapter(paragraphs = doc.select("div#novel_honbun > p").map { it.text() })
+        val paragraphs = doc.select("div#novel_honbun > p").map { p ->
+            p
+                .firstElementChild()
+                ?.firstElementChild()
+                ?.takeIf { it.tagName() == "img" }
+                ?.let { "<图片>https:${it.attr("src")}" }
+                ?: p.text()
+        }
+        return RemoteChapter(paragraphs = paragraphs)
     }
 }

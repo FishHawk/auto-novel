@@ -75,5 +75,10 @@ class SyosetuTest : DescribeSpec({
             episode.paragraphs[17].shouldEndWith("皮肉にも人の理の外にあるものだったのか」")
             episode.paragraphs[29].shouldBe("「私が思うのと同程度に、彼女があなたにとって大事な存在になっただって？　―――あり得ない話だ」")
         }
+        it("插图") {
+            // https://ncode.syosetu.com/n9025bp/55
+            val episode = provider.getChapter("n9025bp", "55")
+            episode.paragraphs[0].shouldStartWith("<图片>")
+        }
     }
 })
