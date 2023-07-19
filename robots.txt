@@ -1,4 +1,7 @@
 User-agent: *
-Disallow: /novel/*/*/*
-Disallow: /patch
-Disallow: /feedback
+Allow: /$
+Allow: /how-to-use/
+Allow: /novel/
+Allow: /wenku/
+Disallow: /
+Sitemap: https://books.fishhawk.top/files-extra/sitemap.txt

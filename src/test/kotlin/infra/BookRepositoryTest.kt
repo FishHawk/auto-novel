@@ -3,10 +3,7 @@ package infra
 import appModule
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
-import infra.model.WebNovelAttention
-import infra.model.WebNovelAuthor
-import infra.model.WebNovelMetadata
-import infra.model.WebNovelType
+import infra.model.*
 import infra.provider.WebNovelProviderDataSource
 import infra.provider.providers.*
 import infra.web.WebNovelChapterRepository
@@ -21,9 +18,11 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.bson.Document
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.*
+import org.litote.kmongo.coroutine.projection
 import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -99,15 +98,31 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 //            println(Updates.set("paragraphsZh.0", "test").toBsonDocument())
         }
 
-        describe("script") {
-            it("sitemap") {
-                val col = mongo.webNovelMetadataCollection
-                val list = col.find().toList()
-                File("sitemap.txt").printWriter().use { out ->
-                    list.forEach {
-                        out.println("https://books.fishhawk.top/novel/${it.providerId}/${it.novelId}")
+        describe("generate sitemap") {
+            File("sitemap.txt").printWriter().use { out ->
+                mongo
+                    .webNovelMetadataCollection
+                    .withDocumentClass<Document>()
+                    .find()
+                    .projection(
+                        WebNovelMetadata::providerId,
+                        WebNovelMetadata::novelId,
+                    )
+                    .toList()
+                    .forEach {
+                        val pid = it.getString("providerId")
+                        val nid = it.getString("bookId")
+                        out.println("https://books.fishhawk.top/novel/${pid}/${nid}")
                     }
-                }
+
+                mongo
+                    .wenkuNovelMetadataCollection
+                    .projection(WenkuNovelMetadata::id)
+                    .toList()
+                    .forEach {
+                        val nid = it.toHexString()
+                        out.println("https://books.fishhawk.top/wenku/${nid}")
+                    }
             }
         }
     }
