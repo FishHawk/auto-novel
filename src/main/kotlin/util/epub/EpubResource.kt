@@ -134,7 +134,7 @@ fun createEpubNcx(
                 .appendElement("text")
                 .appendText(it.text)
             navPoint.appendElement("content")
-                .attr("src", it.href)
+                .attr("src", "Text/${it.href}")
         }
     }
 
