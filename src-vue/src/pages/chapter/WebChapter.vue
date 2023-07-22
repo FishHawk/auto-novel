@@ -46,7 +46,7 @@ async function getChapter() {
 getChapter();
 
 onKeyStroke(['ArrowLeft'], (e) => {
-  if (chapterResult.value?.ok) {
+  if (chapterResult.value?.ok && chapterResult.value.value.prevId) {
     const prevId = chapterResult.value.value.prevId;
     const prevUrl = `/novel/${providerId}/${novelId}/${prevId}`;
     router.push(prevUrl);
@@ -54,7 +54,7 @@ onKeyStroke(['ArrowLeft'], (e) => {
   }
 });
 onKeyStroke(['ArrowRight'], (e) => {
-  if (chapterResult.value?.ok) {
+  if (chapterResult.value?.ok && chapterResult.value.value.nextId) {
     const nextId = chapterResult.value.value.nextId;
     const nextUrl = `/novel/${providerId}/${novelId}/${nextId}`;
     router.push(nextUrl);
