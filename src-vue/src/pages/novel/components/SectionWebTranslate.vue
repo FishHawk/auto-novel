@@ -28,29 +28,33 @@ const emits = defineEmits<{
   (e: 'update:youdao', v: number): void;
 }>();
 
-interface UpdateProgress {
-  name: string;
-  total?: number;
-  finished: number;
-  error: number;
+interface TaskDetail {
+  label: string;
+  running: boolean;
+  chapterTotal?: number;
+  chapterFinished: number;
+  chapterError: number;
+  logs: string[];
 }
 
 const gptAccessToken = ref('');
 const startIndex = ref<number | null>(1);
 const endIndex = ref<number | null>(65536);
-const progress: Ref<UpdateProgress | undefined> = ref();
+const taskDetail: Ref<TaskDetail | undefined> = ref();
 
 async function startUpdateTask(translatorId: TranslatorId) {
-  if (progress.value !== undefined) {
+  if (taskDetail.value?.running) {
     message.info('已有任务在运行。');
     return;
   }
 
-  const name = `${getTranslatorLabel(translatorId)}翻译`;
-  progress.value = {
-    name,
-    finished: 0,
-    error: 0,
+  const label = `${getTranslatorLabel(translatorId)}翻译`;
+  taskDetail.value = {
+    label: label,
+    running: true,
+    chapterFinished: 0,
+    chapterError: 0,
+    logs: [],
   };
 
   const result = await ApiWebNovel.translate(
@@ -62,7 +66,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
     (endIndex.value ?? 65536) - 1,
     {
       onStart: (total: number) => {
-        progress.value!.total = total;
+        taskDetail.value!.chapterTotal = total;
       },
       onChapterTranslateSuccess: (state) => {
         emits('update:jp', state.jp);
@@ -71,27 +75,31 @@ async function startUpdateTask(translatorId: TranslatorId) {
         } else {
           emits('update:youdao', state.zh);
         }
-        progress.value!.finished += 1;
+        taskDetail.value!.chapterFinished += 1;
       },
       onChapterTranslateFailure: () => {
-        progress.value!.error += 1;
+        taskDetail.value!.chapterError += 1;
+      },
+      log: (message: any) => {
+        taskDetail.value!.logs.push(`${message}`);
       },
     }
   );
+  taskDetail.value!.logs.push('结束');
 
   if (result.ok) {
-    const total = progress.value.total;
+    const total = taskDetail.value.chapterTotal;
     if (total && total > 0) {
-      const progressHint = `${progress.value?.finished}/${progress.value?.total}`;
-      message.success(`${name}任务完成:[${progressHint}]`);
+      const progressHint = `${taskDetail.value?.chapterFinished}/${taskDetail.value?.chapterTotal}`;
+      message.success(`${label}任务完成:[${progressHint}]`);
     } else {
-      message.success(`${name}任务完成:没有需要更新的章节`);
+      message.success(`${label}任务完成:没有需要更新的章节`);
     }
   } else {
     console.log(result.error);
-    message.error(`${name}任务失败:${result.error.message}`);
+    message.error(`${label}任务失败:${result.error.message}`);
   }
-  progress.value = undefined;
+  taskDetail.value!.running = false;
 }
 
 interface NovelFiles {
@@ -293,32 +301,15 @@ function stateToFileList(): NovelFiles[] {
       </n-list-item>
     </n-list>
 
-    <div v-if="progress !== undefined">
-      <n-space
-        v-if="progress !== undefined"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-      >
-        <span>{{ progress.name }}</span>
-        <div>
-          <span>成功:{{ progress.finished ?? '-' }}</span>
-          <n-divider vertical />
-          <span>失败:{{ progress.error ?? '-' }}</span>
-          <n-divider vertical />
-          <span>总共:{{ progress.total ?? '-' }}</span>
-        </div>
-      </n-space>
-      <n-progress
-        type="line"
-        :percentage="
-          Math.round(
-            (1000 * (progress.finished + progress.error)) /
-              (progress.total ?? 1)
-          ) / 10
-        "
-        style="width: 100%"
-      />
-    </div>
+    <TranslateTaskDetail
+      v-if="taskDetail"
+      :label="taskDetail.label"
+      :running="taskDetail.running"
+      :chapter-total="taskDetail.chapterTotal"
+      :chapter-finished="taskDetail.chapterFinished"
+      :chapter-error="taskDetail.chapterError"
+      :logs="taskDetail.logs"
+      style="margin-top: 20px"
+    />
   </section>
 </template>

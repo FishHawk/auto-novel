@@ -1,0 +1,52 @@
+<script lang="ts" setup>
+import { computed, ref } from 'vue';
+const props = defineProps<{
+  label: string;
+  running: boolean;
+  chapterTotal?: number;
+  chapterFinished: number;
+  chapterError: number;
+  logs: string[];
+}>();
+
+const expandLog = ref(false);
+const percentage = computed(() => {
+  const processed = props.chapterFinished + props.chapterError;
+  const total = props.chapterTotal ?? 1;
+  if (total == 0) return 100;
+  else return Math.round((1000 * processed) / total) / 10;
+});
+</script>
+
+<template>
+  <n-card
+    :title="`${label} [${running ? '运行中' : '已结束'}]`"
+    embedded
+    :bordered="false"
+  >
+    <template #header-extra>
+      <n-button size="small" @click="expandLog = !expandLog">
+        {{ expandLog ? '收起日志' : '展开日志' }}
+      </n-button>
+    </template>
+    <div style="display: flex">
+      <n-log
+        :rows="expandLog ? 30 : 10"
+        :lines="logs"
+        style="flex: auto; margin-right: 20px"
+      />
+      <n-space align="center" vertical size="large" style="flex: none">
+        <n-progress type="circle" :percentage="percentage" />
+        <div>
+          <span>
+            成功 {{ chapterFinished ?? '-' }}/{{ chapterTotal ?? '-' }}
+          </span>
+          <br />
+          <span>
+            失败 {{ chapterError ?? '-' }}/{{ chapterTotal ?? '-' }}
+          </span>
+        </div>
+      </n-space>
+    </div>
+  </n-card>
+</template>

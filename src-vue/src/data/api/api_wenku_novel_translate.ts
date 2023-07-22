@@ -2,7 +2,11 @@ import { Options } from 'ky';
 import api from './api';
 import { Err, Ok, Result } from './result';
 import { TranslatorAdapter } from '../translator/adapter';
-import { TranslatorId, createTranslator } from '../translator/translator';
+import {
+  TranslatorConfig,
+  TranslatorId,
+  createTranslator,
+} from '../translator/translator';
 import { useAuthInfoStore } from '../stores/authInfo';
 
 function getUntranslatedChapter(
@@ -56,6 +60,7 @@ interface UpdateCallback {
   onStart: (total: number) => void;
   onChapterTranslateSuccess: (state: number) => void;
   onChapterTranslateFailure: () => void;
+  log: (message: any) => void;
 }
 
 export async function translate(
@@ -69,21 +74,25 @@ export async function translate(
 
   let translator: TranslatorAdapter;
   try {
+    const config: TranslatorConfig = {
+      log: (message) => callback.log('　　' + message),
+    };
     if (translatorId === 'gpt') {
       if (!accessToken) {
         throw Error('GPT翻译需要输入Token');
+      } else {
+        config.accessToken = accessToken;
       }
-      translator = await createTranslator(translatorId, { accessToken });
-    } else {
-      translator = await createTranslator(translatorId, {});
     }
+    translator = await createTranslator(translatorId, config);
   } catch (e: any) {
+    callback.log(`发生错误，无法创建翻译器：${e}`);
     return Err(e);
   }
 
   let chapterIds: string[];
   try {
-    console.log(`获取未翻译章节 ${volumeId}`);
+    callback.log(`获取未翻译章节 ${volumeId}`);
     chapterIds = await getUntranslatedChapter(
       novelId,
       translatorId,
@@ -91,7 +100,7 @@ export async function translate(
       token
     );
   } catch (e: any) {
-    console.log(e);
+    callback.log(`发生错误，结束翻译任务：${e}`);
     return Err(e);
   }
 
@@ -99,7 +108,7 @@ export async function translate(
 
   for (const chapterId of chapterIds) {
     try {
-      console.log(`获取章节 ${volumeId}/${chapterId}`);
+      callback.log(`\n获取章节 ${volumeId}/${chapterId}`);
       const textsSrc = await getChapterToTranslate(
         novelId,
         translatorId,
@@ -107,9 +116,9 @@ export async function translate(
         chapterId,
         token
       );
-      console.log(`翻译章节 ${volumeId}/${chapterId}`);
+      callback.log(`翻译章节 ${volumeId}/${chapterId}`);
       const textsDst = await translator.translate(textsSrc);
-      console.log(`上传章节 ${volumeId}/${chapterId}`);
+      callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await postTranslateChapter(
         novelId,
         translatorId,
@@ -120,7 +129,7 @@ export async function translate(
       );
       callback.onChapterTranslateSuccess(state);
     } catch (e) {
-      console.log(e);
+      callback.log(`发生错误，跳过这个章节：${e}`);
       callback.onChapterTranslateFailure();
     }
   }

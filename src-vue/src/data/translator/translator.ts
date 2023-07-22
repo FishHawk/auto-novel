@@ -8,6 +8,7 @@ export type TranslatorId = 'baidu' | 'youdao' | 'gpt';
 export interface TranslatorConfig {
   glossary?: Glossary;
   accessToken?: string;
+  log?: (message: string) => void;
 }
 
 export async function createTranslator(
@@ -29,7 +30,7 @@ export async function createTranslator(
       throw new Error('Gpt翻译器需要Token');
     }
     return new TranslatorAdapter(
-      await OpenAiTranslator.create(config.accessToken),
+      await OpenAiTranslator.create(config.accessToken, config.log),
       {}
     );
   }

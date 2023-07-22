@@ -1,4 +1,8 @@
-import { TranslatorId, createTranslator } from '@/data/translator/translator';
+import {
+  TranslatorConfig,
+  TranslatorId,
+  createTranslator,
+} from '@/data/translator/translator';
 import { TranslatorAdapter } from '@/data/translator/adapter';
 
 import api from './api';
@@ -151,6 +155,7 @@ interface UpdateCallback {
   onStart: (total: number) => void;
   onChapterTranslateSuccess: (state: TranslateStateDto) => void;
   onChapterTranslateFailure: () => void;
+  log: (message: any) => void;
 }
 
 export async function translate(
@@ -165,7 +170,7 @@ export async function translate(
   let metadata: MetadataDto;
   let translator: TranslatorAdapter | undefined = undefined;
   try {
-    console.log(`获取元数据 ${providerId}/${novelId}`);
+    callback.log('获取元数据');
     metadata = await getMetadata(
       providerId,
       novelId,
@@ -175,29 +180,33 @@ export async function translate(
     );
 
     try {
+      const config: TranslatorConfig = {
+        log: (message) => callback.log('　　' + message),
+      };
       if (translatorId === 'gpt') {
         if (!accessToken) {
           throw Error('GPT翻译需要输入Token');
+        } else {
+          config.accessToken = accessToken;
         }
-        translator = await createTranslator(translatorId, { accessToken });
       } else {
-        translator = await createTranslator(translatorId, {
-          glossary: metadata.glossary,
-        });
+        config.glossary = metadata.glossary;
       }
+      translator = await createTranslator(translatorId, config);
     } catch (e: any) {
+      callback.log(`发生错误，无法创建翻译器：${e}`);
       return Err(e);
     }
 
     const textsSrc = encodeMetadataToTranslate(metadata);
     if (textsSrc.length > 0) {
       if (translatorId === 'gpt') {
-        console.log('目前GPT翻译目录超级不稳定，跳过');
+        callback.log('目前GPT翻译目录超级不稳定，跳过');
       } else {
-        console.log(`翻译元数据 ${providerId}/${novelId}`);
+        callback.log('翻译元数据');
         const textsDst = await translator.translate(textsSrc);
 
-        console.log(`上传元数据 ${providerId}/${novelId}`);
+        callback.log(`上传元数据`);
         const metadataTranslated = decodeAsMetadataTranslated(
           metadata,
           textsDst
@@ -211,7 +220,7 @@ export async function translate(
       }
     }
   } catch (e: any) {
-    console.log(e);
+    callback.log(`发生错误，结束翻译任务：${e}`);
     return Err(e);
   }
 
@@ -221,7 +230,7 @@ export async function translate(
 
   for (const chapterId of metadata.untranslatedChapterIds) {
     try {
-      console.log(`获取章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`\n获取章节 ${providerId}/${novelId}/${chapterId}`);
       const chapter = await getChapter(
         providerId,
         novelId,
@@ -230,10 +239,10 @@ export async function translate(
       );
 
       const textsSrc = chapter.paragraphsJp;
-      console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
       const textsDst = await translator.translate(textsSrc);
 
-      console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
       const state = await postChapter(
         providerId,
         novelId,
@@ -246,14 +255,14 @@ export async function translate(
       );
       callback.onChapterTranslateSuccess(state);
     } catch (e) {
-      console.log(e);
+      callback.log(`发生错误，跳过这个章节：${e}`);
       callback.onChapterTranslateFailure();
     }
   }
 
   for (const chapterId of metadata.expiredChapterIds) {
     try {
-      console.log(`获取章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`\n获取章节 ${providerId}/${novelId}/${chapterId}`);
       const chapter = await getChapter(
         providerId,
         novelId,
@@ -268,13 +277,13 @@ export async function translate(
       const textsSrc = expiredParagraphs.map((it) => it.text);
       const paragraphsZh: { [key: number]: string } = {};
 
-      console.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
       const textsDst = await translator.translate(textsSrc);
       expiredParagraphs.forEach((it, index) => {
         paragraphsZh[it.index] = textsDst[index];
       });
 
-      console.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
       const state = await putChapter(
         providerId,
         novelId,
@@ -287,7 +296,7 @@ export async function translate(
       );
       callback.onChapterTranslateSuccess(state);
     } catch (e) {
-      console.log(e);
+      callback.log(`发生错误，跳过这个章节：${e}`);
       callback.onChapterTranslateFailure();
     }
   }

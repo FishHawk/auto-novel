@@ -59,7 +59,7 @@ export abstract class Translator {
     }
     const recoveredOutput = segmenter.recover(output);
     if (recoveredOutput.length != input.length) {
-      throw Error('翻译长度不匹配');
+      throw Error('重建翻译长度不匹配，不应当出现');
     }
     return recoveredOutput;
   }

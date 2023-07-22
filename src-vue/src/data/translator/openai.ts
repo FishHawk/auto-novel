@@ -53,8 +53,7 @@ async function ask(accessToken: string, prompt: string) {
   let answer = '';
   for (let line of response.split('\n')) {
     if (line.toLowerCase() === 'internal server error') {
-      console.log(`Internal Server Error: ${line}`);
-      throw Error('Internal Server Error');
+      throw Error(`Internal Server Error: ${line}`);
     } else if (!line) {
       continue;
     } else if (line.startsWith('data: ')) {
@@ -77,23 +76,29 @@ async function ask(accessToken: string, prompt: string) {
 }
 
 export class OpenAiTranslator extends Translator {
+  private log: (message: string) => void;
   private accessToken: string;
   private promptTemplate =
     '请你作为一个轻小说翻译者，将下面的日文轻小说片段翻译成简体中文。要求翻译准确，译文流畅。要求人名和专有名词也要翻译成中文。既不要漏掉任何一句，也不要增加额外的说明。注意保持换行格式，译文的行数必须要和原文相等。';
 
-  static async create(accessToken: string) {
+  static async create(accessToken: string, log?: (message: string) => void) {
     accessToken = accessToken.trim();
     try {
       const obj = JSON.parse(accessToken);
       accessToken = obj.accessToken;
     } catch {}
-    const translator = new this(accessToken);
+    const translator = new this(accessToken, log);
     return translator;
   }
 
-  constructor(accessToken: string) {
+  constructor(accessToken: string, log?: (message: string) => void) {
     super();
     this.accessToken = accessToken;
+    if (log) {
+      this.log = log;
+    } else {
+      this.log = console.log;
+    }
   }
 
   createSegmenter(input: string[]): Segmenter {
@@ -115,13 +120,14 @@ export class OpenAiTranslator extends Translator {
         .map((s, i) => s.replace(`#${i}:`, '').replace(`#${i}：`, ''));
       const outputChinesePercentage = detectChinese(outputRaw);
       const encoder = get_encoding('p50k_base');
-      console.log(
+      this.log(
         [
-          `中文占比:${outputChinesePercentage}`,
+          `分段`,
+          `中文占比:${outputChinesePercentage.toFixed(2)}`,
           `长度:${encoder.encode(prompt).length}`,
           `原文行数:${input.length}`,
           `翻译行数:${output.length}`,
-        ].join('  ')
+        ].join('　')
       );
       encoder.free();
 
@@ -130,15 +136,17 @@ export class OpenAiTranslator extends Translator {
         if (retry >= 3) {
           throw Error('重试次数太多');
         }
-        console.log(`重试${retry}:输出行数不匹配`);
+        this.log(`重试${retry}：输出行数不匹配`);
+        this.log(`\nGPT输入：${prompt}`);
+        this.log(`\nGPT输出：${outputRaw}`);
       } else if (outputChinesePercentage < 0.75) {
         retry += 1;
         if (retry >= 3) {
           throw Error('重试次数太多');
         }
-        console.log(outputRaw);
-        console.log(`重试${retry}:输出语言中文占比小于0.75`);
-        console.log(`原始输出：${outputRaw}`);
+        this.log(`重试${retry}：输出语言中文占比小于0.75`);
+        this.log(`\nGPT输入：${prompt}`);
+        this.log(`\nGPT输出：${outputRaw}`);
       } else {
         return output;
       }
