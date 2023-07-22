@@ -264,9 +264,9 @@ function stateToFileList(): NovelFiles[] {
               v-if="row.translatorId"
               tertiary
               size="small"
-              @click="startUpdateTask(row.translatorId as any)"
+              @click="startUpdateTask(row.translatorId)"
             >
-              更新
+              更新{{ getTranslatorLabel(row.translatorId) }}
             </n-button>
           </td>
         </tr>
@@ -280,9 +280,9 @@ function stateToFileList(): NovelFiles[] {
             v-if="row.translatorId"
             tertiary
             size="small"
-            @click="startUpdateTask(row.translatorId as any)"
+            @click="startUpdateTask(row.translatorId)"
           >
-            更新
+            更新{{ getTranslatorLabel(row.translatorId) }}
           </n-button>
         </template>
         <n-space vertical>
