@@ -57,7 +57,12 @@ async function startUpdateTask(translatorId: TranslatorId) {
     logs: [],
   };
 
-  const accessToken = gptAccessToken.value.trim();
+  let accessToken = gptAccessToken.value.trim();
+  try {
+    const obj = JSON.parse(accessToken);
+    accessToken = obj.accessToken;
+  } catch {}
+
   const result = await ApiWenkuNovel.translate(
     props.novelId,
     translatorId,
