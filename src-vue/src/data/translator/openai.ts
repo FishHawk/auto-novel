@@ -50,6 +50,7 @@ async function ask(accessToken: string, prompt: string) {
     })
     .text();
 
+  let block = false;
   let answer = '';
   for (let line of response.split('\n')) {
     if (line.toLowerCase() === 'internal server error') {
@@ -64,6 +65,11 @@ async function ask(accessToken: string, prompt: string) {
     }
     try {
       const obj = JSON.parse(line);
+      if (obj.moderation_response) {
+        // 触发警告
+        block = true;
+        continue;
+      }
       if (obj.message.author.role !== 'assistant') {
         continue;
       }
@@ -71,6 +77,9 @@ async function ask(accessToken: string, prompt: string) {
     } catch {
       continue;
     }
+  }
+  if (!answer && block) {
+    throw Error('ChatGPT觉得这段话违规了，所以不打算回复你。');
   }
   return answer;
 }
