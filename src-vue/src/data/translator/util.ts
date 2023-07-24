@@ -29,7 +29,7 @@ export class TokenSegmenter implements Segmenter {
       }
 
       const lineSize = encoder.encode(line).length;
-      if (totalSize + lineSize > this.tokenLimit || seg.length >= 40) {
+      if (totalSize + lineSize > this.tokenLimit || seg.length >= this.lineLimit) {
         yield seg;
         seg = [line];
         totalSize = lineSize;

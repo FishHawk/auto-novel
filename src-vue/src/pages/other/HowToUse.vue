@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { YoudaoTranslator } from '@/data/translator/youdao';
 import { BaiduTranslator } from '@/data/translator/baidu';
 import { OpenAiTranslator } from '@/data/translator/openai';
+import { useSettingStore } from '@/data/stores/setting';
 
 const [DefineExtensionTutorial, ReuseExtensionTutorial] =
   createReusableTemplate<{ browser: string }>();
@@ -16,7 +17,14 @@ const textJp = 'あたしの悪徳領主様!!　～俺は星間国家の悪徳�
 const textBaidu = ref();
 const textYoudao = ref();
 const textGpt = ref('');
+
+const setting = useSettingStore();
 const gptAccessToken = ref();
+const gptAccessTokenOptions = computed(() => {
+  return setting.openAiAccessTokens.map((t) => {
+    return { label: t, value: t };
+  });
+});
 
 async function testBaidu() {
   try {
@@ -158,10 +166,12 @@ async function testGpt() {
 
     <n-divider />
     <n-p>安装好扩展后可以用下面的按钮来测试能否翻译。</n-p>
-    <n-input
+
+    <n-auto-complete
       v-model:value="gptAccessToken"
-      type="textarea"
+      :options="gptAccessTokenOptions"
       placeholder="请输入GPT的Access Token"
+      :get-show="() => true"
     />
     <n-p>日文：{{ textJp }}</n-p>
     <n-p>百度：{{ textBaidu }}</n-p>
