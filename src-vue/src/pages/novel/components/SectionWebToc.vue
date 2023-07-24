@@ -9,6 +9,7 @@ import { useIsDesktop } from '@/data/util';
 
 const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   item: {
+    index: number;
     titleJp: string;
     titleZh?: string;
     chapterId?: string;
@@ -35,8 +36,9 @@ function readableDate(createAt: number) {
 }
 
 const setting = useSettingStore();
-const readableToc = props.toc.map((it) => {
+const readableToc = props.toc.map((it, index) => {
   return {
+    index,
     titleJp: it.titleJp,
     titleZh: it.titleZh,
     chapterId: it.chapterId,
@@ -52,7 +54,11 @@ const reverseToc = computed(() => readableToc.slice().reverse());
       <div v-if="isDesktop" style="width: 100; display: flex; padding: 6px">
         <span style="flex: 1 1 0">{{ item.titleJp }}</span>
         <span style="color: grey; flex: 1 1 0">{{ item.titleZh }}</span>
-        <span style="color: grey; width: 110px">{{ item.createAt }}</span>
+        <span style="color: grey; width: 155px; text-align: right">
+          <template v-if="item.chapterId">
+            {{ item.createAt }} [{{ item.index }}]
+          </template>
+        </span>
       </div>
 
       <div v-else style="width: 100; padding: 6px">
@@ -60,7 +66,9 @@ const reverseToc = computed(() => readableToc.slice().reverse());
         <br />
         <span style="color: grey">{{ item.titleZh }}</span>
         <br />
-        <span style="color: grey">{{ item.createAt }}</span>
+        <span v-if="item.chapterId" style="color: grey">
+          {{ item.createAt }} [{{ item.index }}]
+        </span>
       </div>
     </DefineTocItem>
 
