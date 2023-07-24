@@ -91,11 +91,6 @@ export class OpenAiTranslator extends Translator {
     '请你作为一个轻小说翻译者，将下面的日文轻小说片段翻译成简体中文。要求翻译准确，译文流畅。要求人名和专有名词也要翻译成中文。既不要漏掉任何一句，也不要增加额外的说明。注意保持换行格式，译文的行数必须要和原文相等。';
 
   static async create(accessToken: string, log?: (message: string) => void) {
-    accessToken = accessToken.trim();
-    try {
-      const obj = JSON.parse(accessToken);
-      accessToken = obj.accessToken;
-    } catch {}
     const translator = new this(accessToken, log);
     return translator;
   }

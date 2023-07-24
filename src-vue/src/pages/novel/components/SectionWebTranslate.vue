@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { Ref, ref } from 'vue';
+import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
 import { useIsDesktop } from '@/data/util';
+import { useSettingStore } from '@/data/stores/setting';
 
 const isDesktop = useIsDesktop(600);
 
@@ -26,7 +27,16 @@ const emits = defineEmits<{
   (e: 'update:jp', v: number): void;
   (e: 'update:baidu', v: number): void;
   (e: 'update:youdao', v: number): void;
+  (e: 'update:gpt', v: number): void;
 }>();
+
+const setting = useSettingStore();
+const gptAccessToken = ref('');
+const gptAccessTokenOptions = computed(() => {
+  return setting.openAiAccessTokens.map((t) => {
+    return { label: t, value: t };
+  });
+});
 
 interface TaskDetail {
   label: string;
@@ -37,7 +47,6 @@ interface TaskDetail {
   logs: string[];
 }
 
-const gptAccessToken = ref('');
 const startIndex = ref<number | null>(1);
 const endIndex = ref<number | null>(65536);
 const taskDetail: Ref<TaskDetail | undefined> = ref();
@@ -57,11 +66,12 @@ async function startUpdateTask(translatorId: TranslatorId) {
     logs: [],
   };
 
+  const accessToken = gptAccessToken.value.trim();
   const result = await ApiWebNovel.translate(
     props.providerId,
     props.novelId,
     translatorId,
-    gptAccessToken.value,
+    accessToken,
     (startIndex.value ?? 1) - 1,
     (endIndex.value ?? 65536) - 1,
     {
@@ -72,8 +82,11 @@ async function startUpdateTask(translatorId: TranslatorId) {
         emits('update:jp', state.jp);
         if (translatorId === 'baidu') {
           emits('update:baidu', state.zh);
-        } else {
+        } else if (translatorId === 'youdao') {
           emits('update:youdao', state.zh);
+        } else if (translatorId === 'gpt') {
+          setting.addToken(gptAccessToken.value);
+          emits('update:gpt', state.zh);
         }
         taskDetail.value!.chapterFinished += 1;
       },
@@ -231,10 +244,11 @@ function stateToFileList(): NovelFiles[] {
       </n-collapse>
     </n-p>
 
-    <n-input
+    <n-auto-complete
       v-model:value="gptAccessToken"
-      type="textarea"
+      :options="gptAccessTokenOptions"
       placeholder="请输入GPT的Access Token"
+      :get-show="() => true"
     />
     <n-table v-if="isDesktop" :bordered="false" :single-line="false">
       <thead>

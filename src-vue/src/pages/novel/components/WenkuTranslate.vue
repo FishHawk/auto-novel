@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { Ref, ref } from 'vue';
+import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
+import { useSettingStore } from '@/data/stores/setting';
 
 const props = defineProps<{
   novelId: string;
@@ -17,7 +18,16 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: 'update:baidu', v: number): void;
   (e: 'update:youdao', v: number): void;
+  (e: 'update:gpt', v: number): void;
 }>();
+
+const setting = useSettingStore();
+const gptAccessToken = ref('');
+const gptAccessTokenOptions = computed(() => {
+  return setting.openAiAccessTokens.map((t) => {
+    return { label: t, value: t };
+  });
+});
 
 interface TaskDetail {
   label: string;
@@ -30,7 +40,6 @@ interface TaskDetail {
 
 const message = useMessage();
 
-const gptAccessToken = ref('');
 const taskDetail: Ref<TaskDetail | undefined> = ref();
 
 async function startUpdateTask(translatorId: TranslatorId) {
@@ -48,11 +57,12 @@ async function startUpdateTask(translatorId: TranslatorId) {
     logs: [],
   };
 
+  const accessToken = gptAccessToken.value.trim();
   const result = await ApiWenkuNovel.translate(
     props.novelId,
     translatorId,
     props.volumeId,
-    gptAccessToken.value,
+    accessToken,
     {
       onStart: (total: number) => {
         taskDetail.value!.chapterTotal = total;
@@ -60,8 +70,11 @@ async function startUpdateTask(translatorId: TranslatorId) {
       onChapterTranslateSuccess: (state) => {
         if (translatorId === 'baidu') {
           emits('update:baidu', state);
-        } else {
+        } else if (translatorId === 'youdao') {
           emits('update:youdao', state);
+        } else if (translatorId === 'gpt') {
+          setting.addToken(gptAccessToken.value);
+          emits('update:gpt', state);
         }
         taskDetail.value!.chapterFinished += 1;
       },
@@ -147,10 +160,11 @@ function stateToFileList(): NovelFiles[] {
 </script>
 
 <template>
-  <n-input
+  <n-auto-complete
     v-model:value="gptAccessToken"
-    type="textarea"
+    :options="gptAccessTokenOptions"
     placeholder="请输入GPT的Access Token"
+    :get-show="() => true"
   />
   <div v-for="row in stateToFileList()">
     <n-space style="padding: 4px">
