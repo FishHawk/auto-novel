@@ -1,7 +1,6 @@
 import ky from 'ky';
 
-import { Translator } from './adapter';
-import { LengthSegmenter, Segmenter } from './util';
+import { Translator, lengthSegmenter } from './base';
 
 function a(r: any, o: any) {
   for (var t = 0; t < o.length - 2; t += 3) {
@@ -60,14 +59,14 @@ var token = function (r: any, _gtk: any) {
 };
 
 export class BaiduTranslator extends Translator {
+  segmenter = lengthSegmenter(2000);
   private token = '';
   private gtk = '';
 
-  static async create() {
-    const translator = new this();
-    await translator.loadMainPage();
-    await translator.loadMainPage();
-    return translator;
+  async init() {
+    await this.loadMainPage();
+    await this.loadMainPage();
+    return this;
   }
 
   private async loadMainPage() {
@@ -76,10 +75,6 @@ export class BaiduTranslator extends Translator {
       .text();
     this.token = html.match(/token: '(.*?)',/)!![1];
     this.gtk = html.match(/window.gtk = "(.*?)";/)!![1];
-  }
-
-  createSegmenter(input: string[]): Segmenter {
-    return new LengthSegmenter(input, 2000);
   }
 
   async translateSegment(input: string[]): Promise<string[]> {

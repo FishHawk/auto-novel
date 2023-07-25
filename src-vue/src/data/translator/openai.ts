@@ -1,36 +1,23 @@
 import ky from 'ky';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Translator } from './adapter';
-import { Segmenter, TokenSegmenter } from './util';
+import { Translator, tokenSegmenter } from './base';
 
 export class OpenAiTranslator extends Translator {
-  private log: (message: string) => void;
+  segmenter = tokenSegmenter(1500, 30);
   private accessToken: string;
 
-  static async create(accessToken: string, log?: (message: string) => void) {
-    const translator = new this(accessToken, log);
-    return translator;
-  }
-
   constructor(accessToken: string, log?: (message: string) => void) {
-    super();
+    super({}, log);
     this.accessToken = accessToken;
-    if (log) {
-      this.log = log;
-    } else {
-      this.log = console.log;
-    }
   }
 
-  createSegmenter(input: string[]): Segmenter {
-    return new TokenSegmenter(input, 1500, 30);
-  }
-
-  async translateSegment(input: string[]): Promise<string[]> {
+  async translateSegment(
+    seg: string[],
+    segInfo: { index: number; size: number }
+  ): Promise<string[]> {
     let enableBypass = false;
-    const prompt =
-      promptTemplate + input.map((s, i) => `#${i}:${s}`).join('\n');
+    const prompt = promptTemplate + seg.map((s, i) => `#${i}:${s}`).join('\n');
 
     function buildMessages() {
       const message: MessageInterface = {
@@ -71,9 +58,10 @@ export class OpenAiTranslator extends Translator {
       const outputChinesePercentage = detectChinese(output.join(' '));
       this.log(
         [
-          retry === 0 ? '新分段' : `重试${retry}`,
+          `分段${segInfo.index + 1}/${segInfo.size}`,
+          `第${retry + 1}次`,
           `中文占比:${outputChinesePercentage.toFixed(2)}`,
-          `原文行数:${input.length}`,
+          `原文行数:${seg.length}`,
           `翻译行数:${output.length}`,
         ].join('　')
       );
@@ -84,7 +72,7 @@ export class OpenAiTranslator extends Translator {
           enableBypass = true;
           this.log('启用咒语来尝试绕过审查');
         }
-      } else if (input.length !== output.length) {
+      } else if (seg.length !== output.length) {
         this.log(`输出错误：输出行数不匹配`);
       } else if (outputChinesePercentage < 0.75) {
         this.log(`输出错误：输出语言中文占比小于0.75`);

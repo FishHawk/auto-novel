@@ -3,10 +3,8 @@ import { computed, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { createReusableTemplate } from '@vueuse/core';
 
-import { YoudaoTranslator } from '@/data/translator/youdao';
-import { BaiduTranslator } from '@/data/translator/baidu';
-import { OpenAiTranslator } from '@/data/translator/openai';
 import { useSettingStore } from '@/data/stores/setting';
+import { createTranslator } from '@/data/translator/translator';
 
 const [DefineExtensionTutorial, ReuseExtensionTutorial] =
   createReusableTemplate<{ browser: string }>();
@@ -28,7 +26,7 @@ const gptAccessTokenOptions = computed(() => {
 
 async function testBaidu() {
   try {
-    const t = await BaiduTranslator.create();
+    const t = await createTranslator('baidu', {});
     const r = await t.translate([textJp]);
     textBaidu.value = r[0];
   } catch (e: any) {
@@ -38,7 +36,7 @@ async function testBaidu() {
 
 async function testYoudao() {
   try {
-    const t = await YoudaoTranslator.create();
+    const t = await createTranslator('youdao', {});
     const r = await t.translate([textJp]);
     textYoudao.value = r[0];
   } catch (e: any) {
@@ -48,7 +46,9 @@ async function testYoudao() {
 
 async function testGpt() {
   try {
-    const t = await OpenAiTranslator.create(gptAccessToken.value);
+    const t = await createTranslator('gpt', {
+      accessToken: gptAccessToken.value,
+    });
     const r = await t.translate([textJp]);
     textGpt.value = r[0];
   } catch (e: any) {
@@ -187,7 +187,7 @@ async function testGpt() {
     <n-p>有一些手机浏览器可以安装插件，比如Yandex、Kiwi。</n-p>
     <n-p>想要APP？在做了在做了（指新建文件夹）</n-p>
 
-    <n-h2 prefix="bar">GPT翻译器（弃用，用新版插件吧）</n-h2>
+    <n-h2 prefix="bar"><del>GPT翻译器</del>（弃用，用新版插件吧）</n-h2>
     <n-p>
       <del>GPT翻译插件的工作量太大，就目前来说是不现实的。</del>（现在现实了）
     </n-p>

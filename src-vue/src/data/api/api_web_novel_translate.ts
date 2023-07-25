@@ -3,7 +3,7 @@ import {
   TranslatorId,
   createTranslator,
 } from '@/data/translator/translator';
-import { TranslatorAdapter } from '@/data/translator/adapter';
+import { Translator } from '@/data/translator/base';
 
 import api from './api';
 import { Result, Ok, Err } from './result';
@@ -168,7 +168,7 @@ export async function translate(
   callback: UpdateCallback
 ): Promise<Result<undefined, any>> {
   let metadata: MetadataDto;
-  let translator: TranslatorAdapter | undefined = undefined;
+  let translator: Translator | undefined = undefined;
   try {
     callback.log('获取元数据');
     metadata = await getMetadata(

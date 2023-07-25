@@ -1,8 +1,7 @@
 import ky from 'ky';
 import CryptoJS from 'crypto-js';
 
-import { Translator } from './adapter';
-import { LengthSegmenter, Segmenter } from './util';
+import { Translator, lengthSegmenter } from './base';
 
 function getBaseBody(key: string) {
   const c = 'fanyideskweb';
@@ -25,13 +24,10 @@ function getBaseBody(key: string) {
 }
 
 export class YoudaoTranslator extends Translator {
+  segmenter = lengthSegmenter(2000);
   private key = 'fsdsogkndfokasodnaso';
 
-  static async create() {
-    return await new this().init();
-  }
-
-  private async init() {
+  async init() {
     try {
       await ky.get('https://rlogs.youdao.com/rlog.php', {
         searchParams: {
@@ -60,10 +56,6 @@ export class YoudaoTranslator extends Translator {
       console.log('无法获得Key，使用默认值');
     }
     return this;
-  }
-
-  createSegmenter(input: string[]): Segmenter {
-    return new LengthSegmenter(input, 2000);
   }
 
   async translateSegment(textsSrc: string[]): Promise<string[]> {

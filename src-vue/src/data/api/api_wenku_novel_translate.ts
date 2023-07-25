@@ -1,7 +1,7 @@
 import { Options } from 'ky';
 import api from './api';
 import { Err, Ok, Result } from './result';
-import { TranslatorAdapter } from '../translator/adapter';
+import { Translator } from '../translator/base';
 import {
   TranslatorConfig,
   TranslatorId,
@@ -72,7 +72,7 @@ export async function translate(
 ): Promise<Result<undefined, any>> {
   const token = useAuthInfoStore().token;
 
-  let translator: TranslatorAdapter;
+  let translator: Translator;
   try {
     const config: TranslatorConfig = {
       log: (message) => callback.log('　　' + message),
