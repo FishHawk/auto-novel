@@ -5,14 +5,7 @@ const isDesktop = useIsDesktop(850);
 
 <template>
   <MainLayout>
-    <n-space
-      align="center"
-      justify="space-evenly"
-      style="margin-top: 30px"
-      :wrap="!isDesktop"
-    >
-      <n-avatar round :size="220" src="avater.jpg" />
-      <n-divider v-if="isDesktop" vertical style="height: 220px" />
+    <n-space align="center" justify="space-evenly" :wrap="!isDesktop">
       <div style="max-width: 600px">
         <n-h1>赞助</n-h1>
         <n-p>
@@ -21,12 +14,11 @@ const isDesktop = useIsDesktop(850);
           预计这种0成本的状态会在2024年5月结束。
         </n-p>
         <n-p>
-          本站永远免费供所有人使用，但如果你想表示感谢或为（未来的）服务器费用做出贡献，你可以通过爱发电/Patreon支持我。
-          感谢你的捐款！
+          本站永远免费供所有人使用，但如果你想表示感谢或为（未来的）服务器费用做出贡献，你可以通过支付宝/微信支持我。
+          感谢你的赞助！
         </n-p>
 
-        <n-p style="margin-top: 40px" />
-
+        <!--
         <n-space>
           <a href="https://afdian.net/a/fishhawk" target="_blank">
             <n-button size="large" color="#946ce6">
@@ -45,8 +37,18 @@ const isDesktop = useIsDesktop(850);
               在Patreon支持我
             </n-button>
           </a>
-        </n-space>
+        </n-space> -->
       </div>
+
+      <n-divider
+        v-if="isDesktop"
+        vertical
+        style="height: 220px; margin-left: 48px; margin-right: 48px"
+      />
+      <img
+        src="https://books.fishhawk.top/files-extra/pay.jpg"
+        style="max-width: 500px; width: 100%; margin-top: 30px"
+      />
     </n-space>
   </MainLayout>
 </template>
