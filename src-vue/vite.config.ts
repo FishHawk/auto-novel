@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
+import legacy from '@vitejs/plugin-legacy';
 import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
@@ -19,6 +20,10 @@ export default defineConfig({
   },
   plugins: [
     vue(),
+    legacy({
+      targets: ['defaults, chrome > 62', 'not IE 11'],
+      renderModernChunks: false,
+    }),
     wasm(),
     topLevelAwait(),
     tsconfigPaths({ loose: true }),
