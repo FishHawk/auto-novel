@@ -204,9 +204,8 @@ function stateToFileList(): NovelFiles[] {
     <header><n-h2 prefix="bar">翻译</n-h2></header>
 
     <n-p>
-      网页端翻译需要安装插件，请查看
+      翻译功能需要需要安装浏览器插件，请查看
       <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
-      移动端暂时无法翻译。
     </n-p>
     <n-p>
       <n-collapse>
