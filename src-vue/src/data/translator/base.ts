@@ -77,7 +77,10 @@ export function tokenSegmenter(maxToken: number, maxLine: number): Segmenter {
     const encoder = get_encoding('p50k_base');
     for (const line of input) {
       const lineSize = encoder.encode(line).length;
-      if (segSize + lineSize > maxToken || seg.length >= maxLine) {
+      if (
+        (segSize + lineSize > maxToken || seg.length >= maxLine) &&
+        seg.length > 0
+      ) {
         segs.push(seg);
         seg = [line];
         segSize = lineSize;
@@ -118,7 +121,7 @@ export function lengthSegmenter(maxLength: number): Segmenter {
 
     for (const line of input) {
       const lineSize = line.length;
-      if (lineSize + segSize > maxLength && seg.length >= 0) {
+      if (lineSize + segSize > maxLength && seg.length > 0) {
         segs.push(seg);
         seg = [line];
         segSize = lineSize;
