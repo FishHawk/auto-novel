@@ -61,5 +61,10 @@ class KakuyomuTest : DescribeSpec({
             episode.paragraphs.first().shouldBe("「あ～あ、女の子と甘酸っぱい青春を送りたいなぁ！」")
             episode.paragraphs.last().shouldBe("　俺はしばらく、その痕を見つめて本来の目的を忘れてしまうのだった。")
         }
+        it("ruby") {
+            // https://books.fishhawk.top/novel/kakuyomu/16816700429176867477/16816700429181729028
+            val episode = provider.getChapter("16816700429176867477", "16816700429181729028")
+            episode.paragraphs[22].shouldBe("　花咲くような無邪気な笑みを浮かべ、一生懸命に兄を呼ぶ姿。これを見て、心を打たれないものはいるだろうか。いや、いない！")
+        }
     }
 })

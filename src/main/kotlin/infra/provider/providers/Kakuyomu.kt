@@ -148,6 +148,8 @@ class Kakuyomu : WebNovelProvider {
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
         val url = "https://kakuyomu.jp/works/$novelId/episodes/$chapterId"
         val doc = client.get(url).document()
+        doc.select("rp").remove()
+        doc.select("rt").remove()
         return RemoteChapter(paragraphs = doc.select("div.widget-episodeBody > p").map { it.text() })
     }
 }
