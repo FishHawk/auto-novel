@@ -12,10 +12,13 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class RemoteNovelMetadata(
     val title: String,
@@ -49,6 +52,14 @@ interface WebNovelProvider {
     suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem>
     suspend fun getMetadata(novelId: String): RemoteNovelMetadata
     suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
+}
+
+fun parseJapanDateString(pattern:String, dateString: String): Instant {
+    return SimpleDateFormat(pattern)
+        .apply { timeZone = TimeZone.getTimeZone("Asia/Tokyo") }
+        .parse(dateString)
+        .toInstant()
+        .toKotlinInstant()
 }
 
 val cookies = AcceptAllCookiesStorage()

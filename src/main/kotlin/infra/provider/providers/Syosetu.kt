@@ -11,11 +11,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinInstant
-import kotlinx.serialization.json.jsonPrimitive
-import java.lang.RuntimeException
-import java.text.SimpleDateFormat
-import java.util.*
 
 class Syosetu : WebNovelProvider {
     companion object {
@@ -218,9 +213,10 @@ class Syosetu : WebNovelProvider {
                             chapterId = a.attr("href")
                                 .removeSuffix("/")
                                 .substringAfterLast("/"),
-                            createAt = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.JAPAN).parse(
+                            createAt = parseJapanDateString(
+                                "yyyy/MM/dd HH:mm",
                                 child.selectFirst("dt")!!.firstChild().toString().trim()
-                            ).toInstant().toKotlinInstant(),
+                            )
                         )
                     } ?: RemoteNovelMetadata.TocItem(
                         title = child.text(),

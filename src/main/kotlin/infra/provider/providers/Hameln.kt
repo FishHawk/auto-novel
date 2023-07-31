@@ -11,11 +11,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinInstant
 import org.jsoup.nodes.Element
-import java.lang.RuntimeException
-import java.text.SimpleDateFormat
-import java.util.*
 
 class Hameln : WebNovelProvider {
     companion object {
@@ -103,12 +99,12 @@ class Hameln : WebNovelProvider {
                     RemoteNovelMetadata.TocItem(
                         title = it.text(),
                         chapterId = chapterId,
-                        createAt = SimpleDateFormat("yyyy年MM月dd日 HH:mm", Locale.JAPAN).parse(
+                        createAt = parseJapanDateString(
+                            "yyyy年MM月dd日 HH:mm",
                             trTag.selectFirst("nobr")!!.childNode(0)
                                 .let { if (it is Element) it.text() else it.toString() }
                                 .replace("\\(.*?\\)".toRegex(), "")
-
-                        ).toInstant().toKotlinInstant(),
+                        ),
                     )
                 } ?: RemoteNovelMetadata.TocItem(
                     title = trTag.text(),
