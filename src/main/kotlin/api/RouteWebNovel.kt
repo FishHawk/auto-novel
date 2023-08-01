@@ -52,6 +52,15 @@ private class WebNovelRes {
         @Resource("/chapter/{chapterId}")
         data class Chapter(val parent: Id, val chapterId: String)
 
+        @Resource("/check-update")
+        data class CheckUpdate(val parent: Id) {
+            @Resource("")
+            data class Task(val parent: CheckUpdate, val startIndex: Int = 0, val endIndex: Int = 65536)
+
+            @Resource("/{chapterId}")
+            class Chapter(val parent: CheckUpdate, val chapterId: String)
+        }
+
         @Resource("/translate/gpt/chapter/{chapterId}")
         data class TranslateGpt(val parent: Id, val chapterId: String)
 
@@ -143,6 +152,26 @@ fun Route.routeWebNovel() {
     get<WebNovelRes.Id.Chapter> { loc ->
         syosetuNovelIdMustBeLowercase(loc.parent.providerId, loc.parent.novelId)
         val result = service.getChapter(loc.parent.providerId, loc.parent.novelId, loc.chapterId)
+        call.respondResult(result)
+    }
+
+    // Check update
+    get<WebNovelRes.Id.CheckUpdate.Task> { loc ->
+        val result = service.getCheckUpdateTask(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+            startIndex = loc.startIndex,
+            endIndex = loc.endIndex,
+        )
+        call.respondResult(result)
+    }
+
+    post<WebNovelRes.Id.CheckUpdate.Chapter> { loc ->
+        val result = service.checkChapterUpdate(
+            providerId = loc.parent.parent.providerId,
+            novelId = loc.parent.parent.novelId,
+            chapterId = loc.chapterId,
+        )
         call.respondResult(result)
     }
 
@@ -461,6 +490,58 @@ class WebNovelApi(
                 gptParagraphs = chapter.gptParagraphs,
             )
         )
+    }
+
+    @Serializable
+    data class CheckUpdateTaskDto(
+        val chapters: Map<Int, String>,
+    )
+
+    suspend fun getCheckUpdateTask(
+        providerId: String,
+        novelId: String,
+        startIndex: Int,
+        endIndex: Int,
+    ): Result<CheckUpdateTaskDto> {
+        val novel = novelService.getNovelAndSave(providerId, novelId, 10)
+            .getOrElse { return httpNotFound("元数据获取失败") }
+        val chapters = novel.toc
+            .mapIndexedNotNull { index, tocItem -> tocItem.chapterId?.let { index to it } }
+            .safeSubList(startIndex, endIndex)
+            .filter { (_, id) ->
+                val outline = chapterRepo.getOutline(providerId, novelId, id)
+                outline != null && !outline.gptExist
+            }
+            .toMap()
+        return Result.success(CheckUpdateTaskDto(chapters))
+    }
+
+    suspend fun checkChapterUpdate(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+    ): Result<String> {
+        val local = chapterRepo.get(providerId, novelId, chapterId)
+            ?: return httpNotFound("章节不存在")
+        if (local.gptParagraphs != null) {
+            return httpBadRequest("跳过检查，因为章节存在GPT翻译")
+        } else {
+            val remote = chapterRepo
+                .getRemote(providerId, novelId, chapterId)
+                .getOrElse { return Result.failure(it) }
+            return if (remote.paragraphs == local.paragraphs) {
+                Result.success("章节已是最新")
+            } else {
+                chapterRepo.replace(providerId, novelId, chapterId, remote.paragraphs)
+                if (local.baiduParagraphs != null) {
+                    novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Baidu)
+                }
+                if (local.youdaoParagraphs != null) {
+                    novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Youdao)
+                }
+                Result.success("章节已经过期，删除翻译并更新")
+            }
+        }
     }
 
     // Translate Gpt

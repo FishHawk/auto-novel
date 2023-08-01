@@ -112,6 +112,16 @@ data class WebNovelTocItem(
 )
 
 @Serializable
+data class WebNovelChapterOutline(
+    @SerialName("glossaryUuid")
+    val baiduGlossaryUuid: String? = null,
+    val baiduExist: Boolean,
+    val youdaoGlossaryUuid: String? = null,
+    val youdaoExist: Boolean,
+    val gptExist: Boolean,
+)
+
+@Serializable
 data class WebNovelChapter(
     val providerId: String,
     @SerialName("bookId")

@@ -4,16 +4,38 @@ import com.mongodb.client.model.Updates
 import infra.MongoDataSource
 import infra.model.TranslatorId
 import infra.model.WebNovelChapter
+import infra.model.WebNovelChapterOutline
+import infra.provider.RemoteChapter
 import infra.provider.WebNovelProviderDataSource
-import org.litote.kmongo.combine
-import org.litote.kmongo.pos
-import org.litote.kmongo.setValue
+import org.litote.kmongo.*
+import org.litote.kmongo.coroutine.aggregate
 import java.lang.RuntimeException
 
 class WebNovelChapterRepository(
     private val provider: WebNovelProviderDataSource,
     private val mongo: MongoDataSource,
 ) {
+    suspend fun getOutline(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+    ): WebNovelChapterOutline? {
+        return mongo
+            .webNovelChapterCollection
+            .aggregate<WebNovelChapterOutline>(
+                match(WebNovelChapter.byId(providerId, novelId, chapterId)),
+                limit(1),
+                project(
+                    WebNovelChapterOutline::baiduGlossaryUuid from WebNovelChapter::baiduGlossaryUuid,
+                    WebNovelChapterOutline::youdaoGlossaryUuid from WebNovelChapter::youdaoGlossaryUuid,
+                    WebNovelChapterOutline::baiduExist from cond(WebNovelChapter::baiduParagraphs, true, false),
+                    WebNovelChapterOutline::youdaoExist from cond(WebNovelChapter::youdaoParagraphs, true, false),
+                    WebNovelChapterOutline::gptExist from cond(WebNovelChapter::gptParagraphs, true, false),
+                ),
+            )
+            .first()
+    }
+
     suspend fun get(
         providerId: String,
         novelId: String,
@@ -24,6 +46,61 @@ class WebNovelChapterRepository(
             .findOne(WebNovelChapter.byId(providerId, novelId, chapterId))
     }
 
+    suspend fun create(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        paragraphs: List<String>,
+    ): WebNovelChapter {
+        val model = WebNovelChapter(
+            providerId = providerId,
+            novelId = novelId,
+            chapterId = chapterId,
+            paragraphs = paragraphs,
+        )
+        mongo
+            .webNovelChapterCollection
+            .insertOne(model)
+        return model
+    }
+
+    suspend fun replace(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        paragraphs: List<String>,
+    ): WebNovelChapter {
+        val model = WebNovelChapter(
+            providerId = providerId,
+            novelId = novelId,
+            chapterId = chapterId,
+            paragraphs = paragraphs,
+        )
+        mongo
+            .webNovelChapterCollection
+            .replaceOne(WebNovelChapter.byId(providerId, novelId, chapterId), model)
+        return model
+    }
+
+    suspend fun delete(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+    ) {
+        mongo
+            .webNovelChapterCollection
+            .deleteOne(WebNovelChapter.byId(providerId, novelId, chapterId))
+    }
+
+    // Update
+    suspend fun getRemote(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+    ): Result<RemoteChapter> {
+        return provider.getChapter(providerId, novelId, chapterId)
+    }
+
     suspend fun getRemoteAndSave(
         providerId: String,
         novelId: String,
@@ -32,18 +109,16 @@ class WebNovelChapterRepository(
         val remote = provider
             .getChapter(providerId, novelId, chapterId)
             .getOrElse { return Result.failure(it) }
-        val model = WebNovelChapter(
-            providerId = providerId,
-            novelId = novelId,
-            chapterId = chapterId,
-            paragraphs = remote.paragraphs,
+        val model = create(
+            providerId,
+            novelId,
+            chapterId,
+            remote.paragraphs,
         )
-        mongo
-            .webNovelChapterCollection
-            .insertOne(model)
         return Result.success(model)
     }
 
+    // Translation
     suspend fun updateTranslationGpt(
         providerId: String,
         novelId: String,

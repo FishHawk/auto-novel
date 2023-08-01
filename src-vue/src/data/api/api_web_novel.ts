@@ -2,7 +2,7 @@ import { Options } from 'ky';
 
 import api from './api';
 import { Result, runCatching } from './result';
-import { translate } from './api_web_novel_translate';
+import { checkUpdate, translate } from './api_web_novel_translate';
 import { Page } from './page';
 
 export interface WebNovelOutlineDto {
@@ -192,5 +192,6 @@ export const ApiWebNovel = {
   deleteWenkuId,
   getChapter,
   translate,
+  checkUpdate,
   createFileUrl,
 };

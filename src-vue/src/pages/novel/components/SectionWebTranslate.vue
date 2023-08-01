@@ -3,6 +3,7 @@ import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { ApiWebNovel } from '@/data/api/api_web_novel';
+import { TaskCallback } from '@/data/api/api_web_novel_translate';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
 import { useIsDesktop } from '@/data/util';
 import { useSettingStore } from '@/data/stores/setting';
@@ -51,71 +52,86 @@ const startIndex = ref<number | null>(1);
 const endIndex = ref<number | null>(65536);
 const taskDetail: Ref<TaskDetail | undefined> = ref();
 
-async function startUpdateTask(translatorId: TranslatorId) {
+async function startTask(translatorId: TranslatorId | 'check-update') {
   if (taskDetail.value?.running) {
     message.info('已有任务在运行。');
     return;
   }
-
-  const label = `${getTranslatorLabel(translatorId)}翻译`;
   taskDetail.value = {
-    label: label,
+    label: '',
     running: true,
     chapterFinished: 0,
     chapterError: 0,
     logs: [],
   };
 
-  let accessToken = gptAccessToken.value.trim();
-  try {
-    const obj = JSON.parse(accessToken);
-    accessToken = obj.accessToken;
-  } catch {}
+  const callback: TaskCallback = {
+    onStart: (total) => {
+      taskDetail.value!.chapterTotal = total;
+    },
+    onChapterSuccess: (state) => {
+      if (state.jp) emits('update:jp', state.jp);
+      if (state.baidu) emits('update:baidu', state.baidu);
+      if (state.youdao) emits('update:youdao', state.youdao);
+      if (state.gpt) {
+        setting.addToken(gptAccessToken.value);
+        emits('update:gpt', state.gpt);
+      }
+      taskDetail.value!.chapterFinished += 1;
+    },
+    onChapterFailure: () => {
+      taskDetail.value!.chapterError += 1;
+    },
+    log: (message: any) => {
+      taskDetail.value!.logs.push(`${message}`);
+    },
+  };
 
-  const result = await ApiWebNovel.translate(
-    props.providerId,
-    props.novelId,
-    translatorId,
-    accessToken,
-    (startIndex.value ?? 1) - 1,
-    (endIndex.value ?? 65536) - 1,
-    {
-      onStart: (total: number) => {
-        taskDetail.value!.chapterTotal = total;
-      },
-      onChapterTranslateSuccess: (state) => {
-        emits('update:jp', state.jp);
-        if (translatorId === 'baidu') {
-          emits('update:baidu', state.zh);
-        } else if (translatorId === 'youdao') {
-          emits('update:youdao', state.zh);
-        } else if (translatorId === 'gpt') {
-          setting.addToken(gptAccessToken.value);
-          emits('update:gpt', state.zh);
-        }
-        taskDetail.value!.chapterFinished += 1;
-      },
-      onChapterTranslateFailure: () => {
-        taskDetail.value!.chapterError += 1;
-      },
-      log: (message: any) => {
-        taskDetail.value!.logs.push(`${message}`);
-      },
-    }
-  );
+  let result;
+  if (translatorId === 'check-update') {
+    taskDetail.value.label = '检查更新';
+
+    result = await ApiWebNovel.checkUpdate(
+      props.providerId,
+      props.novelId,
+      (startIndex.value ?? 1) - 1,
+      (endIndex.value ?? 65536) - 1,
+      callback
+    );
+  } else {
+    taskDetail.value.label = `${getTranslatorLabel(translatorId)}翻译`;
+
+    let accessToken = gptAccessToken.value.trim();
+    try {
+      const obj = JSON.parse(accessToken);
+      accessToken = obj.accessToken;
+    } catch {}
+
+    result = await ApiWebNovel.translate(
+      props.providerId,
+      props.novelId,
+      translatorId,
+      accessToken,
+      (startIndex.value ?? 1) - 1,
+      (endIndex.value ?? 65536) - 1,
+      callback
+    );
+  }
+
+  taskDetail.value!.logs.push('');
   taskDetail.value!.logs.push('结束');
 
   if (result.ok) {
     const total = taskDetail.value.chapterTotal;
     if (total && total > 0) {
       const progressHint = `${taskDetail.value?.chapterFinished}/${taskDetail.value?.chapterTotal}`;
-      message.success(`${label}任务完成:[${progressHint}]`);
+      message.success(`${taskDetail.value!.label}任务完成:[${progressHint}]`);
     } else {
-      message.success(`${label}任务完成:没有需要更新的章节`);
+      message.success(`${taskDetail.value!.label}任务完成:没有需要更新的章节`);
     }
   } else {
     console.log(result.error);
-    message.error(`${label}任务失败:${result.error.message}`);
+    message.error(`${taskDetail.value!.label}任务失败:${result.error.message}`);
   }
   taskDetail.value!.running = false;
 }
@@ -210,40 +226,69 @@ function stateToFileList(): NovelFiles[] {
     <n-p>
       <n-collapse>
         <n-collapse-item title="高级模式">
-          <n-p>自定义更新范围</n-p>
-          <n-p style="padding-left: 16px">
-            <n-input-group>
-              <n-input-group-label>从</n-input-group-label>
-              <n-input-number
-                v-model:value="startIndex"
-                :min="1"
-                clearable
-                style="width: 150px"
+          <n-list bordered>
+            <n-list-item>
+              <template #suffix>
+                <n-input-group>
+                  <n-input-group-label>从</n-input-group-label>
+                  <n-input-number
+                    v-model:value="startIndex"
+                    :min="1"
+                    clearable
+                    style="width: 120px"
+                  />
+                  <n-input-group-label>到</n-input-group-label>
+                  <n-input-number
+                    v-model:value="endIndex"
+                    :min="1"
+                    clearable
+                    style="width: 120px"
+                  />
+                </n-input-group>
+              </template>
+              <n-thing
+                title="自定义更新范围"
+                description="控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。"
               />
-              <n-input-group-label>到</n-input-group-label>
-              <n-input-number
-                v-model:value="endIndex"
-                :min="1"
-                clearable
-                style="width: 150px"
-              />
-            </n-input-group>
-          </n-p>
+            </n-list-item>
 
-          <n-p>术语表[如果想编辑，请先进入编辑界面]</n-p>
-          <n-p
-            v-if="Object.keys(glossary).length === 0"
-            style="margin-left: 16px"
-          >
-            还没设置术语表
-          </n-p>
-          <table style="border-spacing: 16px 0px">
-            <tr v-for="(termZh, termJp) in glossary">
-              <td>{{ termJp }}</td>
-              <td>=></td>
-              <td>{{ termZh }}</td>
-            </tr>
-          </table>
+            <n-list-item>
+              <template #suffix>
+                <n-button
+                  tertiary
+                  size="small"
+                  @click="startTask('check-update')"
+                >
+                  检查更新
+                </n-button>
+              </template>
+              <n-thing
+                title="检查章节更新"
+                description="如果缓存的章节和源网站不匹配，则删除章节。由于GPT翻译相当珍贵，所以不会检查有GPT翻译的章节。同样可以自定义范围。"
+              />
+            </n-list-item>
+
+            <n-list-item>
+              <n-thing
+                title="术语表"
+                description="如果想编辑术语表，请先进入编辑界面。"
+              >
+                <n-p
+                  v-if="Object.keys(glossary).length === 0"
+                  style="margin-left: 16px"
+                >
+                  还没设置术语表
+                </n-p>
+                <table style="border-spacing: 16px 0px">
+                  <tr v-for="(termZh, termJp) in glossary">
+                    <td>{{ termJp }}</td>
+                    <td>=></td>
+                    <td>{{ termZh }}</td>
+                  </tr>
+                </table>
+              </n-thing>
+            </n-list-item>
+          </n-list>
         </n-collapse-item>
       </n-collapse>
     </n-p>
@@ -254,56 +299,20 @@ function stateToFileList(): NovelFiles[] {
       placeholder="请输入GPT的Access Token"
       :get-show="() => true"
     />
-    <n-table v-if="isDesktop" :bordered="false" :single-line="false">
-      <thead>
-        <tr>
-          <th>版本</th>
-          <th>链接</th>
-          <th>更新</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in stateToFileList()">
-          <td nowrap="nowrap">{{ row.label }}</td>
-          <td>
-            <n-space>
-              <n-a
-                v-for="file in row.files"
-                :href="file.url"
-                :download="file.name"
-                target="_blank"
-              >
-                {{ file.label }}
-              </n-a>
-            </n-space>
-          </td>
-          <td>
-            <n-button
-              v-if="row.translatorId"
-              tertiary
-              size="small"
-              @click="startUpdateTask(row.translatorId)"
-            >
-              更新{{ getTranslatorLabel(row.translatorId) }}
-            </n-button>
-          </td>
-        </tr>
-      </tbody>
-    </n-table>
 
-    <n-list v-else>
+    <n-list>
       <n-list-item v-for="row in stateToFileList()">
         <template #suffix>
           <n-button
             v-if="row.translatorId"
             tertiary
             size="small"
-            @click="startUpdateTask(row.translatorId)"
+            @click="startTask(row.translatorId)"
           >
-            更新{{ getTranslatorLabel(row.translatorId) }}
+            {{ getTranslatorLabel(row.translatorId) }}翻译
           </n-button>
         </template>
-        <n-space vertical>
+        <n-space :vertical="!isDesktop">
           <span>{{ row.label }}</span>
           <n-space>
             <n-a

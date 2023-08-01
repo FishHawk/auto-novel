@@ -151,10 +151,12 @@ function getExpiredParagraphs(
     });
 }
 
-interface UpdateCallback {
+export interface TaskCallback {
   onStart: (total: number) => void;
-  onChapterTranslateSuccess: (state: TranslateStateDto) => void;
-  onChapterTranslateFailure: () => void;
+  onChapterSuccess: (
+    state: { [key in TranslatorId]?: number } & { jp?: number }
+  ) => void;
+  onChapterFailure: () => void;
   log: (message: any) => void;
 }
 
@@ -165,7 +167,7 @@ export async function translate(
   accessToken: string | undefined,
   startIndex: number,
   endIndex: number,
-  callback: UpdateCallback
+  callback: TaskCallback
 ): Promise<Result<undefined, any>> {
   let metadata: MetadataDto;
   let translator: Translator | undefined = undefined;
@@ -253,10 +255,10 @@ export async function translate(
           paragraphsZh: textsDst,
         }
       );
-      callback.onChapterTranslateSuccess(state);
+      callback.onChapterSuccess({ jp: state.jp, [translatorId]: state.zh });
     } catch (e) {
       callback.log(`发生错误，跳过这个章节：${e}`);
-      callback.onChapterTranslateFailure();
+      callback.onChapterFailure();
     }
   }
 
@@ -294,10 +296,68 @@ export async function translate(
           paragraphsZh,
         }
       );
-      callback.onChapterTranslateSuccess(state);
+      callback.onChapterSuccess({ jp: state.jp, [translatorId]: state.zh });
     } catch (e) {
       callback.log(`发生错误，跳过这个章节：${e}`);
-      callback.onChapterTranslateFailure();
+      callback.onChapterFailure();
+    }
+  }
+
+  return Ok(undefined);
+}
+
+interface CheckUpdateTask {
+  chapters: { [key: number]: string };
+}
+
+async function getCheckUpdateTask(
+  providerId: string,
+  novelId: string,
+  startIndex: number,
+  endIndex: number
+): Promise<CheckUpdateTask> {
+  const url = `novel/${providerId}/${novelId}/check-update`;
+  return api.get(url, { searchParams: { startIndex, endIndex } }).json();
+}
+
+async function checkChapterUpdate(
+  providerId: string,
+  novelId: string,
+  chapterId: string
+): Promise<string> {
+  const url = `novel/${providerId}/${novelId}/check-update/${chapterId}`;
+  return api.post(url).text();
+}
+
+export async function checkUpdate(
+  providerId: string,
+  novelId: string,
+  startIndex: number,
+  endIndex: number,
+  callback: TaskCallback
+): Promise<Result<undefined, any>> {
+  let task: CheckUpdateTask;
+  try {
+    callback.log('开始检查章节更新');
+    task = await getCheckUpdateTask(providerId, novelId, startIndex, endIndex);
+  } catch (e: any) {
+    callback.log(`发生错误，结束翻译任务：${e}`);
+    return Err(e);
+  }
+
+  const chapters = Object.entries(task.chapters);
+  callback.onStart(chapters.length);
+
+  for (const [index, chapterId] of chapters) {
+    try {
+      callback.log('');
+      callback.log(`检查章节[${index}] ${providerId}/${novelId}/${chapterId}`);
+      const message = await checkChapterUpdate(providerId, novelId, chapterId);
+      callback.log(message);
+      callback.onChapterSuccess({});
+    } catch (e) {
+      callback.log(`发生错误，跳过这个章节：${e}`);
+      callback.onChapterFailure();
     }
   }
 
