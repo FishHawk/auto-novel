@@ -610,21 +610,21 @@ class WebNovelApi(
         val untranslatedChapterIds = mutableListOf<String>()
         val expiredChapterIds = mutableListOf<String>()
         chapterIds.forEach { chapterId ->
-            val chapter = chapterRepo.get(providerId, novelId, chapterId)
+            val outline = chapterRepo.getOutline(providerId, novelId, chapterId)
             when (translatorId) {
-                TranslatorId.Baidu -> if (chapter?.baiduParagraphs == null) {
+                TranslatorId.Baidu -> if (outline == null || !outline.baiduExist) {
                     untranslatedChapterIds.add(chapterId)
-                } else if (chapter.baiduGlossaryUuid != novel.glossaryUuid) {
+                } else if (outline.baiduGlossaryUuid != novel.glossaryUuid) {
                     expiredChapterIds.add(chapterId)
                 }
 
-                TranslatorId.Youdao -> if (chapter?.youdaoParagraphs == null) {
+                TranslatorId.Youdao -> if (outline == null || !outline.youdaoExist) {
                     untranslatedChapterIds.add(chapterId)
-                } else if (chapter.youdaoGlossaryUuid != novel.glossaryUuid) {
+                } else if (outline.youdaoGlossaryUuid != novel.glossaryUuid) {
                     expiredChapterIds.add(chapterId)
                 }
 
-                TranslatorId.Gpt -> if (chapter?.gptParagraphs == null) {
+                TranslatorId.Gpt -> if (outline == null || !outline.gptExist) {
                     untranslatedChapterIds.add(chapterId)
                 }
             }
