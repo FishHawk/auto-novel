@@ -9,7 +9,7 @@ import { useIsDesktop } from '@/data/util';
 
 const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   item: {
-    index: number;
+    index?: number;
     titleJp: string;
     titleZh?: string;
     chapterId?: string;
@@ -36,16 +36,24 @@ function readableDate(createAt: number) {
 }
 
 const setting = useSettingStore();
-const readableToc = props.toc.map((it, index) => {
-  return {
-    index,
-    titleJp: it.titleJp,
-    titleZh: it.titleZh,
-    chapterId: it.chapterId,
-    createAt: it.createAt ? readableDate(it.createAt) : undefined,
-  };
+const readableToc = computed(() => {
+  const newToc = [];
+  let index = 0;
+  for (const it of props.toc) {
+    newToc.push({
+      index: it.chapterId ? index : undefined,
+      titleJp: it.titleJp,
+      titleZh: it.titleZh,
+      chapterId: it.chapterId,
+      createAt: it.createAt ? readableDate(it.createAt) : undefined,
+    });
+    if (it.chapterId) {
+      index += 1;
+    }
+  }
+  return newToc;
 });
-const reverseToc = computed(() => readableToc.slice().reverse());
+const reverseToc = computed(() => readableToc.value.slice().reverse());
 </script>
 
 <template>
