@@ -8,24 +8,24 @@ import { Translator } from '@/data/translator/base';
 import api from './api';
 import { Result, Ok, Err } from './result';
 
-interface MetadataDto {
+interface TranslateTaskDto {
   title?: string;
   introduction?: string;
   toc: string[];
   glossaryUuid?: string;
   glossary: { [key: string]: string };
-  untranslatedChapterIds: string[];
-  expiredChapterIds: string[];
+  untranslatedChapters: { [key: number]: string };
+  expiredChapters: { [key: number]: string };
 }
 
-async function getMetadata(
+async function getTranslateTask(
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
   startIndex: number,
   endIndex: number
-): Promise<MetadataDto> {
-  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/metadata`;
+): Promise<TranslateTaskDto> {
+  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}`;
   return api.get(url, { searchParams: { startIndex, endIndex } }).json();
 }
 
@@ -97,7 +97,7 @@ async function putChapter(
   return api.put(url, { json: body }).json();
 }
 
-function encodeMetadataToTranslate(metadata: MetadataDto): string[] {
+function encodeMetadataToTranslate(metadata: TranslateTaskDto): string[] {
   const query = [];
   if (metadata.title) {
     query.push(metadata.title);
@@ -110,7 +110,7 @@ function encodeMetadataToTranslate(metadata: MetadataDto): string[] {
 }
 
 function decodeAsMetadataTranslated(
-  metadata: MetadataDto,
+  metadata: TranslateTaskDto,
   translated: string[]
 ): MetadataUpdateBody {
   const obj: MetadataUpdateBody = { toc: {} };
@@ -169,11 +169,11 @@ export async function translate(
   endIndex: number,
   callback: TaskCallback
 ): Promise<Result<undefined, any>> {
-  let metadata: MetadataDto;
+  let task: TranslateTaskDto;
   let translator: Translator | undefined = undefined;
   try {
     callback.log('获取元数据');
-    metadata = await getMetadata(
+    task = await getTranslateTask(
       providerId,
       novelId,
       translatorId,
@@ -192,7 +192,7 @@ export async function translate(
           config.accessToken = accessToken;
         }
       } else {
-        config.glossary = metadata.glossary;
+        config.glossary = task.glossary;
       }
       translator = await createTranslator(translatorId, config);
     } catch (e: any) {
@@ -200,7 +200,7 @@ export async function translate(
       return Err(e);
     }
 
-    const textsSrc = encodeMetadataToTranslate(metadata);
+    const textsSrc = encodeMetadataToTranslate(task);
     if (textsSrc.length > 0) {
       if (translatorId === 'gpt') {
         callback.log('目前GPT翻译目录超级不稳定，跳过');
@@ -209,10 +209,7 @@ export async function translate(
         const textsDst = await translator.translate(textsSrc);
 
         callback.log(`上传元数据`);
-        const metadataTranslated = decodeAsMetadataTranslated(
-          metadata,
-          textsDst
-        );
+        const metadataTranslated = decodeAsMetadataTranslated(task, textsDst);
         await postMetadata(
           providerId,
           novelId,
@@ -226,13 +223,15 @@ export async function translate(
     return Err(e);
   }
 
-  callback.onStart(
-    metadata.untranslatedChapterIds.length + metadata.expiredChapterIds.length
-  );
+  const untranslatedChapters = Object.entries(task.untranslatedChapters);
+  const expiredChapters = Object.entries(task.expiredChapters);
+  callback.onStart(untranslatedChapters.length + expiredChapters.length);
 
-  for (const chapterId of metadata.untranslatedChapterIds) {
+  for (const [index, chapterId] of untranslatedChapters) {
     try {
-      callback.log(`\n获取章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(
+        `\n获取章节[${index}] ${providerId}/${novelId}/${chapterId}`
+      );
       const chapter = await getChapter(
         providerId,
         novelId,
@@ -241,17 +240,17 @@ export async function translate(
       );
 
       const textsSrc = chapter.paragraphsJp;
-      callback.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`翻译章节[${index}] ${providerId}/${novelId}/${chapterId}`);
       const textsDst = await translator.translate(textsSrc);
 
-      callback.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`上传章节[${index}] ${providerId}/${novelId}/${chapterId}`);
       const state = await postChapter(
         providerId,
         novelId,
         translatorId,
         chapterId,
         {
-          glossaryUuid: metadata.glossaryUuid,
+          glossaryUuid: task.glossaryUuid,
           paragraphsZh: textsDst,
         }
       );
@@ -262,37 +261,36 @@ export async function translate(
     }
   }
 
-  for (const chapterId of metadata.expiredChapterIds) {
+  for (const [index, chapterId] of expiredChapters) {
     try {
-      callback.log(`\n获取章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(
+        `\n获取章节[${index}] ${providerId}/${novelId}/${chapterId}`
+      );
       const chapter = await getChapter(
         providerId,
         novelId,
         translatorId,
         chapterId
       );
-      const expiredParagraphs = getExpiredParagraphs(
-        chapter,
-        metadata.glossary
-      );
+      const expiredParagraphs = getExpiredParagraphs(chapter, task.glossary);
 
       const textsSrc = expiredParagraphs.map((it) => it.text);
       const paragraphsZh: { [key: number]: string } = {};
 
-      callback.log(`翻译章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`翻译章节[${index}] ${providerId}/${novelId}/${chapterId}`);
       const textsDst = await translator.translate(textsSrc);
       expiredParagraphs.forEach((it, index) => {
         paragraphsZh[it.index] = textsDst[index];
       });
 
-      callback.log(`上传章节 ${providerId}/${novelId}/${chapterId}`);
+      callback.log(`上传章节[${index}] ${providerId}/${novelId}/${chapterId}`);
       const state = await putChapter(
         providerId,
         novelId,
         translatorId,
         chapterId,
         {
-          glossaryUuid: metadata.glossaryUuid,
+          glossaryUuid: task.glossaryUuid,
           paragraphsZh,
         }
       );
@@ -350,8 +348,9 @@ export async function checkUpdate(
 
   for (const [index, chapterId] of chapters) {
     try {
-      callback.log('');
-      callback.log(`检查章节[${index}] ${providerId}/${novelId}/${chapterId}`);
+      callback.log(
+        `\n检查章节[${index}] ${providerId}/${novelId}/${chapterId}`
+      );
       const message = await checkChapterUpdate(providerId, novelId, chapterId);
       callback.log(message);
       callback.onChapterSuccess({});

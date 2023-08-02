@@ -66,8 +66,11 @@ private class WebNovelRes {
 
         @Resource("/translate-alt/{translatorId}")
         class Translate(val parent: Id, val translatorId: TranslatorId) {
+            @Resource("")
+            data class Task(val parent: Translate, val startIndex: Int = 0, val endIndex: Int = 65536)
+
             @Resource("/metadata")
-            data class Metadata(val parent: Translate, val startIndex: Int = 0, val endIndex: Int = 65536)
+            data class Metadata(val parent: Translate)
 
             @Resource("/chapter/{chapterId}")
             class Chapter(val parent: Translate, val chapterId: String)
@@ -188,12 +191,12 @@ fun Route.routeWebNovel() {
     }
 
     // Translate
-    get<WebNovelRes.Id.Translate.Metadata> { loc ->
+    get<WebNovelRes.Id.Translate.Task> { loc ->
         syosetuNovelIdMustBeLowercase(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
         )
-        val result = service.getMetadataToTranslate(
+        val result = service.getTranslateTask(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
             translatorId = loc.parent.translatorId,
@@ -578,23 +581,23 @@ class WebNovelApi(
 
     // Translate
     @Serializable
-    data class TranslateMetadataDto(
+    data class TranslateTaskDto(
         val title: String? = null,
         val introduction: String? = null,
         val toc: List<String>,
         val glossaryUuid: String?,
         val glossary: Map<String, String>,
-        val untranslatedChapterIds: List<String>,
-        val expiredChapterIds: List<String>,
+        val untranslatedChapters: Map<Int, String>,
+        val expiredChapters: Map<Int, String>,
     )
 
-    suspend fun getMetadataToTranslate(
+    suspend fun getTranslateTask(
         providerId: String,
         novelId: String,
         translatorId: TranslatorId,
         startIndex: Int,
         endIndex: Int,
-    ): Result<TranslateMetadataDto> {
+    ): Result<TranslateTaskDto> {
         val novel = novelService.getNovelAndSave(providerId, novelId, 10)
             .getOrElse { return httpNotFound("元数据获取失败") }
 
@@ -604,41 +607,43 @@ class WebNovelApi(
             .mapNotNull { tocItem -> tocItem.titleJp.takeIf { tocItem.titleZh == null } }
             .distinct()
 
-        val chapterIds = novel.toc
-            .mapNotNull { it.chapterId }
+
+        val untranslatedChapterIds = mutableMapOf<Int, String>()
+        val expiredChapterIds = mutableMapOf<Int, String>()
+
+        novel.toc
+            .mapIndexedNotNull { index, tocItem -> tocItem.chapterId?.let { index to it } }
             .safeSubList(startIndex, endIndex)
-        val untranslatedChapterIds = mutableListOf<String>()
-        val expiredChapterIds = mutableListOf<String>()
-        chapterIds.forEach { chapterId ->
-            val outline = chapterRepo.getOutline(providerId, novelId, chapterId)
-            when (translatorId) {
-                TranslatorId.Baidu -> if (outline == null || !outline.baiduExist) {
-                    untranslatedChapterIds.add(chapterId)
-                } else if (outline.baiduGlossaryUuid != novel.glossaryUuid) {
-                    expiredChapterIds.add(chapterId)
-                }
+            .forEach { (index, chapterId) ->
+                val outline = chapterRepo.getOutline(providerId, novelId, chapterId)
+                when (translatorId) {
+                    TranslatorId.Baidu -> if (outline == null || !outline.baiduExist) {
+                        untranslatedChapterIds[index] = chapterId
+                    } else if (outline.baiduGlossaryUuid != novel.glossaryUuid) {
+                        expiredChapterIds[index] = chapterId
+                    }
 
-                TranslatorId.Youdao -> if (outline == null || !outline.youdaoExist) {
-                    untranslatedChapterIds.add(chapterId)
-                } else if (outline.youdaoGlossaryUuid != novel.glossaryUuid) {
-                    expiredChapterIds.add(chapterId)
-                }
+                    TranslatorId.Youdao -> if (outline == null || !outline.youdaoExist) {
+                        untranslatedChapterIds[index] = chapterId
+                    } else if (outline.youdaoGlossaryUuid != novel.glossaryUuid) {
+                        expiredChapterIds[index] = chapterId
+                    }
 
-                TranslatorId.Gpt -> if (outline == null || !outline.gptExist) {
-                    untranslatedChapterIds.add(chapterId)
+                    TranslatorId.Gpt -> if (outline == null || !outline.gptExist) {
+                        untranslatedChapterIds[index] = chapterId
+                    }
                 }
             }
-        }
 
         return Result.success(
-            TranslateMetadataDto(
+            TranslateTaskDto(
                 title = title,
                 introduction = introduction,
                 toc = toc,
                 glossaryUuid = novel.glossaryUuid,
                 glossary = novel.glossary,
-                untranslatedChapterIds = untranslatedChapterIds,
-                expiredChapterIds = expiredChapterIds,
+                untranslatedChapters = untranslatedChapterIds,
+                expiredChapters = expiredChapterIds,
             )
         )
     }
