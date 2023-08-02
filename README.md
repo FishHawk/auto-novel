@@ -7,7 +7,6 @@
 这个仓库包含网站前后端的代码。
 
 - 网站：https://github.com/FishHawk/auto-novel （你在这）
-- GPT翻译器：https://github.com/FishHawk/auto-novel-gpt
 
 
 

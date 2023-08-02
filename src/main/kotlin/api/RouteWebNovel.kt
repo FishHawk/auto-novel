@@ -61,9 +61,6 @@ private class WebNovelRes {
             class Chapter(val parent: CheckUpdate, val chapterId: String)
         }
 
-        @Resource("/translate/gpt/chapter/{chapterId}")
-        data class TranslateGpt(val parent: Id, val chapterId: String)
-
         @Resource("/translate-alt/{translatorId}")
         class Translate(val parent: Id, val translatorId: TranslatorId) {
             @Resource("")
@@ -174,18 +171,6 @@ fun Route.routeWebNovel() {
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
             chapterId = loc.chapterId,
-        )
-        call.respondResult(result)
-    }
-
-    // Translate Gpt
-    post<WebNovelRes.Id.TranslateGpt> { loc ->
-        val body = call.receive<WebNovelApi.TranslateGptChapterUpdateBody>()
-        val result = service.updateChapterTranslationGpt(
-            providerId = loc.parent.providerId,
-            novelId = loc.parent.novelId,
-            chapterId = loc.chapterId,
-            body = body,
         )
         call.respondResult(result)
     }
@@ -545,38 +530,6 @@ class WebNovelApi(
                 Result.success("章节已经过期，删除翻译并更新")
             }
         }
-    }
-
-    // Translate Gpt
-    @Serializable
-    data class TranslateGptChapterUpdateBody(
-        val force: Boolean,
-        val paragraphsZh: List<String>,
-    )
-
-    @Deprecated("等到网页端接口稳定后，删除")
-    suspend fun updateChapterTranslationGpt(
-        providerId: String,
-        novelId: String,
-        chapterId: String,
-        body: TranslateGptChapterUpdateBody,
-    ): Result<Unit> {
-        val chapter = chapterRepo.get(providerId, novelId, chapterId)
-            ?: return httpNotFound("章节不存在")
-        if (chapter.paragraphs.size != body.paragraphsZh.size) {
-            return httpBadRequest("翻译文本长度不匹配")
-        }
-        if (!body.force && chapter.gptParagraphs != null) {
-            return httpConflict("翻译已经存在")
-        }
-        chapterRepo.updateTranslationGpt(
-            providerId = providerId,
-            novelId = novelId,
-            chapterId = chapterId,
-            paragraphsZh = body.paragraphsZh,
-        )
-        novelRepo.updateTranslateGptStateZh(providerId, novelId)
-        return Result.success(Unit)
     }
 
     // Translate
