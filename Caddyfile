@@ -3,8 +3,11 @@
 
   handle {
     root * /dist
-    try_files {path} /
     file_server
+    route {
+      try_files {path} /
+      header / Cache-Control "no-cache,no-store,max-age=0,must-revalidate"
+    }
   }
 
   handle_path /api* {
