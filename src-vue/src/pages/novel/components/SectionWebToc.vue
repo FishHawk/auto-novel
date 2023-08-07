@@ -2,6 +2,7 @@
 import { SortFilled } from '@vicons/material';
 import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
+import { NA } from 'naive-ui';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
@@ -23,6 +24,7 @@ const props = defineProps<{
   providerId: string;
   novelId: string;
   toc: WebNovelTocItemDto[];
+  lastReadChapterId?: string;
 }>();
 
 function readableDate(createAt: number) {
@@ -54,30 +56,44 @@ const readableToc = computed(() => {
   return newToc;
 });
 const reverseToc = computed(() => readableToc.value.slice().reverse());
+const lastReadTocItem = computed(() => {
+  if (props.lastReadChapterId) {
+    return readableToc.value.find(
+      (it) => it.chapterId === props.lastReadChapterId
+    );
+  } else {
+    return undefined;
+  }
+});
 </script>
 
 <template>
   <section>
     <DefineTocItem v-slot="{ item }">
-      <div v-if="isDesktop" style="width: 100; display: flex; padding: 6px">
-        <span style="flex: 1 1 0">{{ item.titleJp }}</span>
-        <span style="color: grey; flex: 1 1 0">{{ item.titleZh }}</span>
-        <span style="color: grey; width: 155px; text-align: right">
-          <template v-if="item.chapterId">
-            {{ item.createAt }} [{{ item.index }}]
-          </template>
-        </span>
-      </div>
+      <component
+        :is="item.chapterId ? NA : 'div'"
+        :href="`/novel/${providerId}/${novelId}/${item.chapterId}`"
+      >
+        <div v-if="isDesktop" style="width: 100; display: flex; padding: 6px">
+          <span style="flex: 1 1 0">{{ item.titleJp }}</span>
+          <span style="color: grey; flex: 1 1 0">{{ item.titleZh }}</span>
+          <span style="color: grey; width: 155px; text-align: right">
+            <template v-if="item.chapterId">
+              {{ item.createAt }} [{{ item.index }}]
+            </template>
+          </span>
+        </div>
 
-      <div v-else style="width: 100; padding: 6px">
-        {{ item.titleJp }}
-        <br />
-        <span style="color: grey">{{ item.titleZh }}</span>
-        <br />
-        <span v-if="item.chapterId" style="color: grey">
-          {{ item.createAt }} [{{ item.index }}]
-        </span>
-      </div>
+        <div v-else style="width: 100; padding: 6px">
+          {{ item.titleJp }}
+          <br />
+          <span style="color: grey">{{ item.titleZh }}</span>
+          <br />
+          <span v-if="item.chapterId" style="color: grey">
+            {{ item.createAt }} [{{ item.index }}]
+          </span>
+        </div>
+      </component>
     </DefineTocItem>
 
     <SectionHeader title="目录">
@@ -91,16 +107,21 @@ const reverseToc = computed(() => readableToc.value.slice().reverse());
 
     <n-list>
       <n-list-item
+        v-if="lastReadTocItem"
+        style="
+          background-color: rgb(244, 244, 248);
+          padding: 6px 0px 0px;
+          margin-bottom: 16px;
+        "
+      >
+        <b style="padding-left: 6px">上次读到:</b>
+        <ReuseTocItem :item="lastReadTocItem" />
+      </n-list-item>
+      <n-list-item
         v-for="tocItem in setting.tocSortReverse ? reverseToc : readableToc"
         style="padding: 0px"
       >
-        <n-a
-          v-if="tocItem.chapterId"
-          :href="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
-        >
-          <ReuseTocItem :item="tocItem" />
-        </n-a>
-        <ReuseTocItem v-else :item="tocItem" />
+        <ReuseTocItem :item="tocItem" />
       </n-list-item>
     </n-list>
   </section>

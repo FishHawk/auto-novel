@@ -56,6 +56,7 @@ data class WebNovelDto(
     val visited: Long,
     val syncAt: Long,
     val favored: Boolean?,
+    val lastReadChapterId: String?,
     val jp: Long,
     val baidu: Long,
     val youdao: Long,
@@ -65,6 +66,7 @@ data class WebNovelDto(
         fun fromDomain(
             novel: WebNovelMetadata,
             favored: Boolean?,
+            lastReadChapterId: String?,
         ) = WebNovelDto(
             wenkuId = novel.wenkuId,
             titleJp = novel.titleJp,
@@ -80,6 +82,7 @@ data class WebNovelDto(
             visited = novel.visited,
             syncAt = novel.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
             favored = favored,
+            lastReadChapterId = lastReadChapterId,
             jp = novel.jp,
             baidu = novel.baidu,
             youdao = novel.youdao,

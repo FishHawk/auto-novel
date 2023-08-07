@@ -74,6 +74,7 @@ export interface WebNovelMetadataDto {
   visited: number;
   syncAt: number;
   favored?: boolean;
+  lastReadChapterId?: string;
   jp: number;
   baidu: number;
   youdao: number;

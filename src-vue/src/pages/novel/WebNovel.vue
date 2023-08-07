@@ -219,6 +219,7 @@ function enableEditMode() {
           :provider-id="providerId"
           :novel-id="novelId"
           :toc="metadata.toc"
+          :last-read-chapter-id="metadata.lastReadChapterId"
         />
         <SectionComment :post-id="route.path" />
       </template>

@@ -91,6 +91,20 @@ class UserRepository(
             .findValue(User::id)!!
     }
 
+    suspend fun getReaderHistory(
+        username: String,
+        novelId: String,
+    ): WebNovelReadHistoryModel? {
+        return mongo
+            .webNovelReadHistoryCollection
+            .findOne(
+                and(
+                    WebNovelReadHistoryModel::userId eq getUserIdByUsername(username).toId(),
+                    WebNovelReadHistoryModel::novelId eq ObjectId(novelId).toId(),
+                ),
+            )
+    }
+
     suspend fun listReaderHistoryWebNovel(
         username: String,
         page: Int,

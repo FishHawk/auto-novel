@@ -300,8 +300,12 @@ class WebNovelApi(
     }
 
     private suspend fun buildNovelDto(novel: WebNovelMetadata, username: String?): WebNovelDto {
-        val favored = username?.let { userRepo.isUserFavoriteWebNovel(it, novel.id.toHexString()) }
-        return WebNovelDto.fromDomain(novel, favored)
+        username?.let {
+            val novelId = novel.id.toHexString()
+            val favored = userRepo.isUserFavoriteWebNovel(it, novelId)
+            val history = userRepo.getReaderHistory(it, novelId)
+            return WebNovelDto.fromDomain(novel, favored, history?.chapterId)
+        } ?: return WebNovelDto.fromDomain(novel, null, null)
     }
 
     suspend fun getMetadata(
