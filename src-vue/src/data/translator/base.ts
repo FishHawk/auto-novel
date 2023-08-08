@@ -182,7 +182,7 @@ export function* parseEventStream<T>(text: string) {
   for (const line of text.split('\n')) {
     if (line == '[DONE]') {
       return;
-    } else if (!line.startsWith('data:')) {
+    } else if (!line.trim()) {
       continue;
     } else {
       try {
@@ -206,3 +206,6 @@ export function detectChinese(text: string) {
   }
   return count / text.length;
 }
+
+export const delay = (s: number) =>
+  new Promise((res) => setTimeout(res, 1000 * s));

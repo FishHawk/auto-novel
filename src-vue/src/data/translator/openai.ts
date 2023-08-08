@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   Translator,
+  delay,
   detectChinese,
   parseEventStream,
   tokenSegmenter,
@@ -27,36 +28,56 @@ export class OpenAiTranslator extends Translator {
 
     let retry = 0;
     while (true) {
-      const { answer, block } = await this.ask(
-        buildMessages(enableBypass, prompt)
-      );
-      const translatedSeg = answer
-        .split('\n')
-        .filter((s) => s.trim())
-        .map((s, i) => s.replace(`#${i}:`, '').replace(`#${i}：`, '').trim());
-      const chinesePer = detectChinese(translatedSeg.join(' '));
-      this.log(
-        [
-          `分段${segInfo.index + 1}/${segInfo.size}`,
-          `第${retry + 1}次`,
-          `中文占比:${chinesePer.toFixed(2)}`,
-          `原文行数:${seg.length}`,
-          `翻译行数:${translatedSeg.length}`,
-        ].join('　')
-      );
+      const result = await this.ask(buildMessages(enableBypass, prompt));
+      const logPrefix = `分段${segInfo.index + 1}/${segInfo.size}　第${
+        retry + 1
+      }次`;
 
-      if (block && !answer) {
-        this.log(`输出错误：ChatGPT觉得这段话违规了，所以不打算回复你`);
+      if (result.type === 'answer') {
+        const translatedSeg = result.answer
+          .split('\n')
+          .filter((s) => s.trim())
+          .map((s, i) => s.replace(`#${i}:`, '').replace(`#${i}：`, '').trim());
+        const chinesePer = detectChinese(translatedSeg.join(' '));
+        let logMessage =
+          logPrefix +
+          `　中文占比:${chinesePer.toFixed(2)}` +
+          `　行数(原文/翻译):${seg.length}/${translatedSeg.length}`;
+        if (result.fromHistory) {
+          logMessage += '　违规，但是成功恢复';
+        }
+        this.log(logMessage);
+
+        if (seg.length !== translatedSeg.length) {
+          this.log(`　输出错误：输出行数不匹配`);
+        } else if (chinesePer < 0.75) {
+          this.log(`　输出错误：输出语言中文占比小于0.75`);
+        } else {
+          return translatedSeg;
+        }
+      } else if (result.type === 'censored') {
+        this.log(logPrefix);
         if (!enableBypass) {
           enableBypass = true;
-          this.log('启用咒语来尝试绕过审查');
+          this.log('　违规，而且恢复失败，启用咒语来尝试绕过审查');
+        } else {
+          this.log('　违规，而且恢复失败');
         }
-      } else if (seg.length !== translatedSeg.length) {
-        this.log(`输出错误：输出行数不匹配`);
-      } else if (chinesePer < 0.75) {
-        this.log(`输出错误：输出语言中文占比小于0.75`);
       } else {
-        return translatedSeg;
+        this.log(logPrefix);
+        if (result.code === 'token_expired') {
+          this.log('　发生错误：Access token已经过期');
+        } else if (result.code === 'reach_per_hour_limit') {
+          this.log('　发生错误：触发每小时限制，暂停20分钟');
+          await delay(60 * 20);
+        } else if (result.code === 'proxy_rate_limit') {
+          this.log('　发生错误：触发GPT代理速率限制，暂停10秒');
+          await delay(10);
+        } else {
+          this.log(
+            `　未知错误，请反馈给站长：[${result.code}]:${result.message}`
+          );
+        }
       }
 
       retry += 1;
@@ -66,34 +87,76 @@ export class OpenAiTranslator extends Translator {
     }
   }
 
-  async ask(messages: OpenAiMessage[]) {
+  async ask(
+    messages: OpenAiMessage[]
+  ): Promise<
+    | { type: 'answer'; answer: string; fromHistory: boolean }
+    | { type: 'censored' }
+    | { type: 'error'; code: string; message: string }
+  > {
     let conversationId = '';
-    let block = false;
+    let censored = false;
     let answer = '';
     for (const chunk of await this.openAi.ask(messages)) {
-      conversationId = chunk.conversation_id;
-      if ('moderation_response' in chunk) {
-        block = true;
-        continue;
-      } else {
-        if (chunk.message.author.role !== 'assistant') {
-          continue;
+      if ('detail' in chunk) {
+        if (typeof chunk.detail === 'string') {
+          if (
+            chunk.detail ===
+            "You've reached our limit of messages per hour. Please try again later."
+          ) {
+            return {
+              type: 'error',
+              code: 'reach_per_hour_limit',
+              message: chunk.detail,
+            };
+          } else {
+            return {
+              type: 'error',
+              code: 'unknown',
+              message: chunk.detail,
+            };
+          }
+        } else {
+          return {
+            type: 'error',
+            code: chunk.detail.code,
+            message: chunk.detail.message,
+          };
         }
-        answer = chunk.message.content.parts[0] ?? '';
+      } else if ('moderation_response' in chunk) {
+        conversationId = chunk.conversation_id;
+        censored = true;
+      } else if ('message' in chunk) {
+        conversationId = chunk.conversation_id;
+        if (chunk.message.author.role === 'assistant') {
+          answer = chunk.message.content.parts[0] ?? '';
+        }
+      } else {
+        const message = chunk.error;
+        let code = 'proxy_unknown';
+        if (chunk.error === 'Rate limited by proxy') {
+          code = 'proxy_rate_limit';
+        }
+        return { type: 'error', code, message };
       }
     }
 
-    if (block && !answer && conversationId) {
-      const conversation = await this.openAi.getConversation(conversationId);
-      try {
-        const mapping = Object.values(conversation.mapping);
-        const obj: any = mapping[mapping.length - 1];
-        if (obj.message.author.role === 'assistant') {
-          answer = obj.message.content.parts[0];
-        }
-      } catch {}
+    if (answer || !censored) {
+      return { type: 'answer', answer, fromHistory: false };
+    } else {
+      if (conversationId) {
+        const conversation = await this.openAi.getConversation(conversationId);
+        try {
+          const mapping = Object.values(conversation.mapping);
+          const obj: any = mapping[mapping.length - 1];
+          if (obj.message.author.role === 'assistant') {
+            answer = obj.message.content.parts[0];
+            return { type: 'answer', answer, fromHistory: true };
+          }
+        } catch {}
+      }
+      return { type: 'censored' };
     }
-    return { answer, block };
   }
 }
 
@@ -191,8 +254,27 @@ interface OpenAiStreamChunkModeration {
     moderation_id: string;
   };
 }
+interface OpenAiStreamChunkError {
+  detail:
+    | {
+        message: string;
+        type: 'invalid_request_error' | string;
+        param: null;
+        code: 'token_expired' | string;
+      }
+    | "You've reached our limit of messages per hour. Please try again later."
+    | string;
+}
 
-type OpenAiStreamChunk = OpenAiStreamChunkModeration | OpenAiStreamChunkMessage;
+type OpenAiStremChunkProxyError = {
+  error: 'Rate limited by proxy' | string;
+};
+
+type OpenAiStreamChunk =
+  | OpenAiStreamChunkModeration
+  | OpenAiStreamChunkMessage
+  | OpenAiStreamChunkError
+  | OpenAiStremChunkProxyError;
 
 class OpenAi {
   private model: OpenAiModel = 'text-davinci-002-render-sha';
