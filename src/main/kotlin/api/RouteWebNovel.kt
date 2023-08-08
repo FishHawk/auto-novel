@@ -498,7 +498,8 @@ class WebNovelApi(
         val novel = novelService.getNovelAndSave(providerId, novelId, 10)
             .getOrElse { return httpNotFound("元数据获取失败") }
         val chapters = novel.toc
-            .mapIndexedNotNull { index, tocItem -> tocItem.chapterId?.let { index to it } }
+            .mapNotNull { it.chapterId  }
+            .mapIndexed { index, it ->  index to it  }
             .safeSubList(startIndex, endIndex)
             .filter { (_, id) ->
                 val outline = chapterRepo.getOutline(providerId, novelId, id)
@@ -569,7 +570,8 @@ class WebNovelApi(
         val expiredChapterIds = mutableMapOf<Int, String>()
 
         novel.toc
-            .mapIndexedNotNull { index, tocItem -> tocItem.chapterId?.let { index to it } }
+            .mapNotNull { it.chapterId  }
+            .mapIndexed { index, it ->  index to it  }
             .safeSubList(startIndex, endIndex)
             .forEach { (index, chapterId) ->
                 val outline = chapterRepo.getOutline(providerId, novelId, chapterId)
