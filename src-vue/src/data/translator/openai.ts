@@ -38,11 +38,9 @@ export class OpenAiTranslator extends Translator {
           .split('\n')
           .filter((s) => s.trim())
           .map((s, i) => s.replace(`#${i}:`, '').replace(`#${i}：`, '').trim());
-        const chinesePer = detectChinese(translatedSeg.join(' '));
+        const isChinese = detectChinese(translatedSeg.join(' '));
         let logMessage =
-          logPrefix +
-          `　中文占比:${chinesePer.toFixed(2)}` +
-          `　行数(原文/翻译):${seg.length}/${translatedSeg.length}`;
+          logPrefix + `　行数(原文/翻译):${seg.length}/${translatedSeg.length}`;
         if (result.fromHistory) {
           logMessage += '　违规，但是成功恢复';
         }
@@ -50,8 +48,8 @@ export class OpenAiTranslator extends Translator {
 
         if (seg.length !== translatedSeg.length) {
           this.log(`　输出错误：输出行数不匹配`);
-        } else if (chinesePer < 0.75) {
-          this.log(`　输出错误：输出语言中文占比小于0.75`);
+        } else if (!isChinese) {
+          this.log(`　输出错误：输出语言不是中文`);
         } else {
           return translatedSeg;
         }
@@ -66,10 +64,14 @@ export class OpenAiTranslator extends Translator {
       } else {
         this.log(logPrefix);
         if (result.code === 'token_expired') {
-          this.log('　发生错误：Access token已经过期');
+          this.log('　发生错误：Access token已经过期，退出');
+          throw 'quit';
         } else if (result.code === 'reach_per_hour_limit') {
           this.log('　发生错误：触发每小时限制，暂停20分钟');
           await delay(60 * 20);
+        } else if (result.code === 'reach_24_hours_limit') {
+          this.log('　发生错误：触发24小时限制，退出');
+          throw 'quit';
         } else if (result.code === 'proxy_rate_limit') {
           this.log('　发生错误：触发GPT代理速率限制，暂停10秒');
           await delay(10);
@@ -107,6 +109,15 @@ export class OpenAiTranslator extends Translator {
             return {
               type: 'error',
               code: 'reach_per_hour_limit',
+              message: chunk.detail,
+            };
+          } else if (
+            chunk.detail ===
+            "You've reached our limit of messages per 24 hours. Please try again later."
+          ) {
+            return {
+              type: 'error',
+              code: 'reach_24_hours_limit',
               message: chunk.detail,
             };
           } else {

@@ -58,8 +58,8 @@ function postTranslateChapter(
 
 interface UpdateCallback {
   onStart: (total: number) => void;
-  onChapterTranslateSuccess: (state: number) => void;
-  onChapterTranslateFailure: () => void;
+  onChapterSuccess: (state: number) => void;
+  onChapterFailure: () => void;
   log: (message: any) => void;
 }
 
@@ -69,7 +69,7 @@ export async function translate(
   volumeId: string,
   accessToken: string | undefined,
   callback: UpdateCallback
-): Promise<Result<undefined, any>> {
+) {
   const token = useAuthInfoStore().token;
 
   let translator: Translator;
@@ -87,7 +87,7 @@ export async function translate(
     translator = await createTranslator(translatorId, config);
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
-    return Err(e);
+    return;
   }
 
   let chapterIds: string[];
@@ -101,10 +101,13 @@ export async function translate(
     );
   } catch (e: any) {
     callback.log(`发生错误，结束翻译任务：${e}`);
-    return Err(e);
+    return;
   }
 
   callback.onStart(chapterIds.length);
+  if (chapterIds.length === 0) {
+    callback.log(`没有需要更新的章节`);
+  }
 
   for (const chapterId of chapterIds) {
     try {
@@ -127,10 +130,15 @@ export async function translate(
         textsDst,
         token
       );
-      callback.onChapterTranslateSuccess(state);
+      callback.onChapterSuccess(state);
     } catch (e) {
-      callback.log(`发生错误，跳过这个章节：${e}`);
-      callback.onChapterTranslateFailure();
+      if (e === 'quit') {
+        callback.log(`发生错误，结束翻译任务`);
+        return;
+      } else {
+        callback.log(`发生错误，跳过这个章节：${e}`);
+        callback.onChapterFailure();
+      }
     }
   }
 

@@ -87,11 +87,10 @@ async function startTask(translatorId: TranslatorId | 'check-update') {
     },
   };
 
-  let result;
   if (translatorId === 'check-update') {
     taskDetail.value.label = '检查更新';
 
-    result = await ApiWebNovel.checkUpdate(
+    await ApiWebNovel.checkUpdate(
       props.providerId,
       props.novelId,
       (startIndex.value ?? 1) - 1,
@@ -107,7 +106,7 @@ async function startTask(translatorId: TranslatorId | 'check-update') {
       accessToken = obj.accessToken;
     } catch {}
 
-    result = await ApiWebNovel.translate(
+    await ApiWebNovel.translate(
       props.providerId,
       props.novelId,
       translatorId,
@@ -118,21 +117,7 @@ async function startTask(translatorId: TranslatorId | 'check-update') {
     );
   }
 
-  taskDetail.value!.logs.push('');
-  taskDetail.value!.logs.push('结束');
-
-  if (result.ok) {
-    const total = taskDetail.value.chapterTotal;
-    if (total && total > 0) {
-      const progressHint = `${taskDetail.value?.chapterFinished}/${taskDetail.value?.chapterTotal}`;
-      message.success(`${taskDetail.value!.label}任务完成:[${progressHint}]`);
-    } else {
-      message.success(`${taskDetail.value!.label}任务完成:没有需要更新的章节`);
-    }
-  } else {
-    console.log(result.error);
-    message.error(`${taskDetail.value!.label}任务失败:${result.error.message}`);
-  }
+  taskDetail.value!.logs.push('\n结束');
   taskDetail.value!.running = false;
 }
 

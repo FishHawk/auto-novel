@@ -63,7 +63,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
     accessToken = obj.accessToken;
   } catch {}
 
-  const result = await ApiWenkuNovel.translate(
+  await ApiWenkuNovel.translate(
     props.novelId,
     translatorId,
     props.volumeId,
@@ -72,7 +72,7 @@ async function startUpdateTask(translatorId: TranslatorId) {
       onStart: (total: number) => {
         taskDetail.value!.chapterTotal = total;
       },
-      onChapterTranslateSuccess: (state) => {
+      onChapterSuccess: (state) => {
         if (translatorId === 'baidu') {
           emits('update:baidu', state);
         } else if (translatorId === 'youdao') {
@@ -83,26 +83,15 @@ async function startUpdateTask(translatorId: TranslatorId) {
         }
         taskDetail.value!.chapterFinished += 1;
       },
-      onChapterTranslateFailure: () => (taskDetail.value!.chapterError += 1),
+      onChapterFailure: () => (taskDetail.value!.chapterError += 1),
       log: (message: any) => {
         taskDetail.value!.logs.push(`${message}`);
       },
     }
   );
 
-  if (result.ok) {
-    const total = taskDetail.value.chapterTotal;
-    if (total && total > 0) {
-      const progressHint = `${taskDetail.value?.chapterFinished}/${taskDetail.value?.chapterTotal}`;
-      message.success(`${label}任务完成:[${progressHint}]`);
-    } else {
-      message.success(`${label}任务完成:没有需要更新的章节`);
-    }
-  } else {
-    console.log(result.error);
-    message.error(`${label}任务失败:${result.error.message}`);
-  }
-  taskDetail.value = undefined;
+  taskDetail.value!.logs.push('\n结束');
+  taskDetail.value!.running = false;
 }
 
 interface NovelFiles {

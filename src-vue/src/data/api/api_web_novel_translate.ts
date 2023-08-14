@@ -6,7 +6,6 @@ import {
 import { Translator } from '@/data/translator/base';
 
 import api from './api';
-import { Result, Ok, Err } from './result';
 
 interface TranslateTaskDto {
   title?: string;
@@ -168,7 +167,7 @@ export async function translate(
   startIndex: number,
   endIndex: number,
   callback: TaskCallback
-): Promise<Result<undefined, any>> {
+) {
   let task: TranslateTaskDto;
   let translator: Translator | undefined = undefined;
   try {
@@ -197,7 +196,7 @@ export async function translate(
       translator = await createTranslator(translatorId, config);
     } catch (e: any) {
       callback.log(`发生错误，无法创建翻译器：${e}`);
-      return Err(e);
+      return;
     }
 
     const textsSrc = encodeMetadataToTranslate(task);
@@ -220,12 +219,16 @@ export async function translate(
     }
   } catch (e: any) {
     callback.log(`发生错误，结束翻译任务：${e}`);
-    return Err(e);
+    return;
   }
 
   const untranslatedChapters = Object.entries(task.untranslatedChapters);
   const expiredChapters = Object.entries(task.expiredChapters);
   callback.onStart(untranslatedChapters.length + expiredChapters.length);
+
+  if (untranslatedChapters.length + expiredChapters.length === 0) {
+    callback.log(`没有需要更新的章节`);
+  }
 
   for (const [index, chapterId] of untranslatedChapters) {
     try {
@@ -256,8 +259,13 @@ export async function translate(
       );
       callback.onChapterSuccess({ jp: state.jp, [translatorId]: state.zh });
     } catch (e) {
-      callback.log(`发生错误，跳过这个章节：${e}`);
-      callback.onChapterFailure();
+      if (e === 'quit') {
+        callback.log(`发生错误，结束翻译任务`);
+        return;
+      } else {
+        callback.log(`发生错误，跳过这个章节：${e}`);
+        callback.onChapterFailure();
+      }
     }
   }
 
@@ -296,12 +304,15 @@ export async function translate(
       );
       callback.onChapterSuccess({ jp: state.jp, [translatorId]: state.zh });
     } catch (e) {
-      callback.log(`发生错误，跳过这个章节：${e}`);
-      callback.onChapterFailure();
+      if (e === 'quit') {
+        callback.log(`发生错误，结束翻译任务`);
+        return;
+      } else {
+        callback.log(`发生错误，跳过这个章节：${e}`);
+        callback.onChapterFailure();
+      }
     }
   }
-
-  return Ok(undefined);
 }
 
 interface CheckUpdateTask {
@@ -333,18 +344,22 @@ export async function checkUpdate(
   startIndex: number,
   endIndex: number,
   callback: TaskCallback
-): Promise<Result<undefined, any>> {
+) {
   let task: CheckUpdateTask;
   try {
     callback.log('开始检查章节更新');
     task = await getCheckUpdateTask(providerId, novelId, startIndex, endIndex);
   } catch (e: any) {
     callback.log(`发生错误，结束翻译任务：${e}`);
-    return Err(e);
+    return;
   }
 
   const chapters = Object.entries(task.chapters);
   callback.onStart(chapters.length);
+
+  if (chapters.length === 0) {
+    callback.log(`没有需要更新的章节`);
+  }
 
   for (const [index, chapterId] of chapters) {
     try {
@@ -360,5 +375,5 @@ export async function checkUpdate(
     }
   }
 
-  return Ok(undefined);
+  return;
 }

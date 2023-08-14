@@ -196,15 +196,26 @@ export function* parseEventStream<T>(text: string) {
 }
 
 export function detectChinese(text: string) {
-  const re =
+  const reChinese =
     /[:|#| |0-9|\u4e00-\u9fa5|\u3002|\uff1f|\uff01|\uff0c|\u3001|\uff1b|\uff1a|\u201c|\u201d|\u2018|\u2019|\uff08|\uff09|\u300a|\u300b|\u3008|\u3009|\u3010|\u3011|\u300e|\u300f|\u300c|\u300d|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|\uffe5]/;
-  let count = 0;
+  const reJapanese = /[\u3041-\u3096|\u30a0-\u30ff]/;
+  const reEnglish = /[a-z|A-Z]/;
+  let zh = 0,
+    jp = 0,
+    en = 0;
   for (const c of text) {
-    if (re.test(c)) {
-      count++;
+    if (reChinese.test(c)) {
+      zh++;
+    } else if (reJapanese.test(c)) {
+      jp++;
+    } else if (reEnglish.test(c)) {
+      en++;
     }
   }
-  return count / text.length;
+  const pZh = zh / text.length,
+    pJp = jp / text.length,
+    pEn = en / text.length;
+  return pZh > 0.75 || (pZh > pJp && pZh > pEn && pEn < 0.1 && pJp < 0.1);
 }
 
 export const delay = (s: number) =>
