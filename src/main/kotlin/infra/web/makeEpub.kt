@@ -79,18 +79,28 @@ suspend fun makeEpubFile(
                 token.titleZh ?: token.titleJp
             ) {
                 it.appendElement("h1").appendText(token.titleZh ?: token.titleJp)
-                val paragraphs = when (lang) {
+                val primaryParagraphs = when (lang) {
                     NovelFileLang.ZH_BAIDU -> chapter?.baiduParagraphs
                     NovelFileLang.ZH_YOUDAO -> chapter?.youdaoParagraphs
                     NovelFileLang.ZH_GPT -> chapter?.gptParagraphs
                     else -> throw RuntimeException("Never reachable")
                 }
-                if (paragraphs == null) {
-                    it.appendElement("p").appendText(MISSING_EPISODE_HINT)
-                } else {
+                val fallbackParagraphs = chapter?.run {
+                    gptParagraphs ?: youdaoParagraphs ?: baiduParagraphs
+                }
+                val isFallback = primaryParagraphs == null
+                val paragraphs = primaryParagraphs ?: fallbackParagraphs
+
+                if (paragraphs != null) {
+                    if (isFallback) {
+                        it.appendElement("p").appendText("选择的翻译不存在，使用备用翻译")
+                            .attr("style", "opacity:0.4;")
+                    }
                     paragraphs.forEach { text ->
                         it.appendElement("p").appendText(text)
                     }
+                } else {
+                    it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 }
             }
 
@@ -107,16 +117,24 @@ suspend fun makeEpubFile(
                     it.appendElement("p").appendText(token.titleJp)
                         .attr("style", "opacity:0.4;")
                 }
-                val paragraphs = when (lang) {
+                val primaryParagraphs = when (lang) {
                     NovelFileLang.MIX_BAIDU -> chapter?.baiduParagraphs
                     NovelFileLang.MIX_YOUDAO -> chapter?.youdaoParagraphs
                     NovelFileLang.MIX_GPT -> chapter?.gptParagraphs
                     else -> throw RuntimeException("Never reachable")
                 }
-                if (chapter == null || paragraphs == null) {
-                    it.appendElement("p").appendText(MISSING_EPISODE_HINT)
-                } else {
-                    paragraphs.zip(chapter.paragraphs).forEach { (textZh, textJp) ->
+                val fallbackParagraphs = chapter?.run {
+                    gptParagraphs ?: youdaoParagraphs ?: baiduParagraphs
+                }
+                val isFallback = primaryParagraphs == null
+                val paragraphs = primaryParagraphs ?: fallbackParagraphs
+
+                if (paragraphs != null) {
+                    if (isFallback) {
+                        it.appendElement("p").appendText("选择的翻译不存在，使用备用翻译")
+                            .attr("style", "opacity:0.4;")
+                    }
+                    paragraphs.zip(chapter!!.paragraphs).forEach { (textZh, textJp) ->
                         if (textJp.isBlank()) {
                             it.appendElement("p").appendText(textJp)
                         } else {
@@ -125,6 +143,8 @@ suspend fun makeEpubFile(
                                 .attr("style", "opacity:0.4;")
                         }
                     }
+                } else {
+                    it.appendElement("p").appendText(MISSING_EPISODE_HINT)
                 }
             }
 

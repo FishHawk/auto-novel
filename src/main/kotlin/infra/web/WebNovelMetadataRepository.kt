@@ -307,26 +307,6 @@ class WebNovelMetadataRepository(
         return zh
     }
 
-    suspend fun updateTranslateGptStateZh(
-        providerId: String,
-        novelId: String,
-    ) {
-        val zh = mongo.webNovelChapterCollection
-            .countDocuments(
-                and(
-                    WebNovelChapter::providerId eq providerId,
-                    WebNovelChapter::novelId eq novelId,
-                    WebNovelChapter::gptParagraphs ne null,
-                )
-            )
-        mongo
-            .webNovelMetadataCollection
-            .updateOne(
-                WebNovelMetadata.byId(providerId, novelId),
-                setValue(WebNovelMetadata::gpt, zh),
-            )
-    }
-
     suspend fun updateZh(
         providerId: String,
         novelId: String,

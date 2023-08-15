@@ -33,10 +33,6 @@ private class TxtWriter(
     private val jp = lang != NovelFileLang.ZH_BAIDU && lang != NovelFileLang.ZH_YOUDAO
     private val zh = lang != NovelFileLang.JP
 
-    companion object {
-        private const val MISSING_EPISODE_HINT = "该章节缺失。\n\n"
-    }
-
     private fun BufferedWriter.writeTitle(novel: WebNovelMetadata) {
         if (jp) write(novel.titleJp + "\n")
         if (zh) write(novel.titleZh + "\n")
@@ -68,28 +64,56 @@ private class TxtWriter(
         if (zh) write("# ${item.titleZh ?: item.titleJp}\n")
     }
 
-    private fun BufferedWriter.writeMissingEpisode() {
-        write(MISSING_EPISODE_HINT)
+    private fun BufferedWriter.writeMissingChapter() {
+        write("该章节缺失。\n\n")
     }
 
-    private fun BufferedWriter.writeOneParagraph(
-        p: List<String>?,
+    private fun BufferedWriter.writeFallbackTranslate() {
+        write("选择的翻译不存在，使用备用翻译。\n\n")
+    }
+
+    private fun BufferedWriter.writeJpParagraphs(
+        jpParagraphs: List<String>?,
     ) {
-        if (p == null) {
-            writeMissingEpisode()
+        if (jpParagraphs == null) {
+            writeMissingChapter()
         } else {
-            p.forEach { write(it + "\n") }
+            jpParagraphs.forEach { write(it + "\n") }
         }
     }
 
-    private fun BufferedWriter.writeTwoParagraph(
-        pJp: List<String>,
-        pZh: List<String>?,
+    private fun BufferedWriter.writeZhParagraphs(
+        primaryParagraphs: List<String>?,
+        fallbackParagraphs: List<String>?
     ) {
-        if (pZh == null) {
-            writeMissingEpisode()
+        val isFallback = primaryParagraphs == null
+        val paragraphs = primaryParagraphs ?: fallbackParagraphs
+
+        if (paragraphs == null) {
+            writeMissingChapter()
         } else {
-            pJp.zip(pZh).forEach { (tZh, tJp) ->
+            if (isFallback) {
+                writeFallbackTranslate()
+            }
+            paragraphs.forEach { write(it + "\n") }
+        }
+    }
+
+    private fun BufferedWriter.writeMixParagraphs(
+        jpParagraphs: List<String>,
+        primaryParagraphs: List<String>?,
+        fallbackParagraphs: List<String>?
+    ) {
+        val isFallback = primaryParagraphs == null
+        val paragraphs = primaryParagraphs ?: fallbackParagraphs
+
+        if (paragraphs == null) {
+            writeMissingChapter()
+        } else {
+            if (isFallback) {
+                writeFallbackTranslate()
+            }
+            jpParagraphs.zip(paragraphs).forEach { (tZh, tJp) ->
                 if (tZh.isNotBlank()) {
                     write(tJp + "\n")
                     write(tZh + "\n")
@@ -106,7 +130,7 @@ private class TxtWriter(
         pZh2: List<String>?,
     ) {
         if (pZh1 == null || pZh2 == null) {
-            writeMissingEpisode()
+            writeMissingChapter()
         } else {
             for (i in pJp.indices) {
                 val tJp = pJp[i]
@@ -124,18 +148,39 @@ private class TxtWriter(
     private fun BufferedWriter.writeChapter(
         chapter: WebNovelChapter,
     ) {
+        val fallbackParagraphs =
+            chapter.gptParagraphs
+                ?: chapter.youdaoParagraphs
+                ?: chapter.baiduParagraphs
         when (lang) {
-            NovelFileLang.JP -> writeOneParagraph(chapter.paragraphs)
-            NovelFileLang.ZH_BAIDU -> writeOneParagraph(chapter.baiduParagraphs)
-            NovelFileLang.ZH_YOUDAO -> writeOneParagraph(chapter.youdaoParagraphs)
-            NovelFileLang.ZH_GPT -> writeOneParagraph(chapter.gptParagraphs)
-            NovelFileLang.MIX_BAIDU -> writeTwoParagraph(chapter.paragraphs, chapter.baiduParagraphs)
-            NovelFileLang.MIX_YOUDAO -> writeTwoParagraph(chapter.paragraphs, chapter.youdaoParagraphs)
-            NovelFileLang.MIX_GPT -> writeTwoParagraph(chapter.paragraphs, chapter.gptParagraphs)
+            NovelFileLang.JP -> writeJpParagraphs(chapter.paragraphs)
+
+            NovelFileLang.ZH_BAIDU -> writeZhParagraphs(chapter.baiduParagraphs, fallbackParagraphs)
+            NovelFileLang.ZH_YOUDAO -> writeZhParagraphs(chapter.youdaoParagraphs, fallbackParagraphs)
+            NovelFileLang.ZH_GPT -> writeZhParagraphs(chapter.gptParagraphs, fallbackParagraphs)
+
+            NovelFileLang.MIX_BAIDU -> writeMixParagraphs(
+                chapter.paragraphs,
+                chapter.baiduParagraphs,
+                fallbackParagraphs,
+            )
+
+            NovelFileLang.MIX_YOUDAO -> writeMixParagraphs(
+                chapter.paragraphs,
+                chapter.youdaoParagraphs,
+                fallbackParagraphs,
+            )
+
+            NovelFileLang.MIX_GPT -> writeMixParagraphs(
+                chapter.paragraphs,
+                chapter.gptParagraphs,
+                fallbackParagraphs,
+            )
+
             NovelFileLang.MIX_ALL -> writeThreeParagraph(
                 chapter.paragraphs,
                 chapter.youdaoParagraphs,
-                chapter.baiduParagraphs
+                chapter.baiduParagraphs,
             )
         }
     }
@@ -159,7 +204,7 @@ private class TxtWriter(
             if (item.chapterId != null) {
                 val chapter = chapters[item.chapterId]
                 if (chapter == null) {
-                    writeMissingEpisode()
+                    writeMissingChapter()
                 } else {
                     writeChapter(chapter)
                 }
