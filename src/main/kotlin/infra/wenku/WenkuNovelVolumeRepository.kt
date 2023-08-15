@@ -256,6 +256,14 @@ class WenkuNovelVolumeRepository {
             NovelFileLang.MIX_ALL, NovelFileLang.JP -> throw RuntimeException()
         }
 
+        suspend fun getChapterOrFallback(chapterId: String): Pair<List<String>?, Boolean> {
+            val primary = getChapter(novelId, volumeId, type, chapterId)
+            val fallback = listOf("gpt", "youdao", "baidu")
+                .filter { it != type }
+                .firstNotNullOfOrNull { getChapter(novelId, volumeId, it, chapterId) }
+            return Pair(primary ?: fallback, primary == null)
+        }
+
         if (isTxt(volumeId)) {
             val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.txt"
 
@@ -266,10 +274,13 @@ class WenkuNovelVolumeRepository {
             zhPath.bufferedWriter().use {
                 listUnpackedChapters(novelId, volumeId, "jp").sorted().forEach { chapterId ->
                     val jpLines = getChapter(novelId, volumeId, chapterId)!!
-                    val zhLines = getChapter(novelId, volumeId, type, chapterId)
+                    val (zhLines, isFallback) = getChapterOrFallback(chapterId)
                     if (zhLines == null) {
-                        it.appendLine("分段缺失")
+                        it.appendLine("//该分段缺失。")
                     } else if (mix) {
+                        if (isFallback) {
+                            it.appendLine("//该分段翻译不存在，使用备用翻译。")
+                        }
                         jpLines.forEachIndexed { index, jpLine ->
                             it.appendLine(jpLine)
                             if (jpLine.isNotBlank()) it.appendLine(zhLines[index])
@@ -281,7 +292,7 @@ class WenkuNovelVolumeRepository {
             }
             return@withContext "${lang.value}.txt"
         } else {
-            val unpackChapters = listUnpackedChapters(novelId, volumeId, type)
+            val unpackChapters = listUnpackedChapters(novelId, volumeId, "jp")
             val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.epub"
             val jpPath = root / novelId / volumeId
 
@@ -298,7 +309,7 @@ class WenkuNovelVolumeRepository {
                         val escapedPath = path.escapePath()
                         if (escapedPath in unpackChapters) {
                             // XHtml文件，尝试生成翻译版
-                            val zhLines = getChapter(novelId, volumeId, type, escapedPath)
+                            val (zhLines, _) = getChapterOrFallback(escapedPath)
                             if (zhLines == null) {
                                 reader.copyTo(writer, path)
                             } else {
