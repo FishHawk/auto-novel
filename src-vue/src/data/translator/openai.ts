@@ -75,6 +75,12 @@ export class OpenAiTranslator extends Translator {
         } else if (result.code === 'proxy_rate_limit') {
           this.log('　发生错误：触发GPT代理速率限制，暂停10秒');
           await delay(10);
+        } else if (result.code === 'account_deactivated') {
+          this.log('　发生错误：帐号已经被封，退出');
+          throw 'quit';
+        } else if (result.code === 'only_one_message') {
+          this.log('　发生错误：帐号被占用或是未正常退出，暂停2分钟');
+          await delay(60 * 2);
         } else {
           this.log(
             `　未知错误，请反馈给站长：[${result.code}]:${result.message}`
@@ -101,39 +107,35 @@ export class OpenAiTranslator extends Translator {
     let answer = '';
     for (const chunk of await this.openAi.ask(messages)) {
       if ('detail' in chunk) {
+        let code = 'unknown';
+        let message = '';
         if (typeof chunk.detail === 'string') {
-          if (
-            chunk.detail ===
-            "You've reached our limit of messages per hour. Please try again later."
-          ) {
-            return {
-              type: 'error',
-              code: 'reach_per_hour_limit',
-              message: chunk.detail,
-            };
-          } else if (
-            chunk.detail ===
-            "You've reached our limit of messages per 24 hours. Please try again later."
-          ) {
-            return {
-              type: 'error',
-              code: 'reach_24_hours_limit',
-              message: chunk.detail,
-            };
-          } else {
-            return {
-              type: 'error',
-              code: 'unknown',
-              message: chunk.detail,
-            };
+          let prefixAndCodes: [string, string][] = [
+            [
+              "You've reached our limit of messages per hour",
+              'reach_per_hour_limit',
+            ],
+            [
+              "You've reached our limit of messages per 24 hours",
+              'reach_24_hours_limit',
+            ],
+            ['Only one message at a time.', 'only_one_message'],
+          ];
+          for (const [prefix, codeN] of prefixAndCodes) {
+            if (chunk.detail.startsWith(prefix)) {
+              code = codeN;
+            }
           }
+          message = chunk.detail;
         } else {
-          return {
-            type: 'error',
-            code: chunk.detail.code,
-            message: chunk.detail.message,
-          };
+          code = chunk.detail.code;
+          message = chunk.detail.message;
         }
+        return {
+          type: 'error',
+          code,
+          message,
+        };
       } else if ('moderation_response' in chunk) {
         conversationId = chunk.conversation_id;
         censored = true;
