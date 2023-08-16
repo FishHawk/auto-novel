@@ -182,8 +182,12 @@ export class OpenAiTranslator extends Translator {
   }
 
   private async translateLines(lines: string[], enableBypass: boolean) {
-    const prompt =
+    let prompt =
       promptTemplate + lines.map((s, i) => `#${i + 1}:${s}`).join('\n');
+    if (lines.length == 1) {
+      // 防止乱编
+      prompt += '\n原文到此为止';
+    }
     const result = await this.askAndTryFetchFromHistory(
       buildMessages(enableBypass, prompt)
     );
