@@ -6,11 +6,10 @@ import infra.model.WenkuNovelVolumeJp
 import infra.model.WenkuNovelVolumeList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import util.epub.EpubReader
-import util.epub.EpubWriter
-import util.epub.copyTo
+import org.jsoup.Jsoup
+import org.jsoup.parser.Parser
+import util.epub.Epub
 import java.io.OutputStream
-import java.lang.RuntimeException
 import java.nio.charset.Charset
 import kotlin.io.path.*
 
@@ -156,16 +155,13 @@ class WenkuNovelVolumeRepository {
                 chapterPath.writeLines(lines)
             }
         } else {
-            EpubReader(filePath).use { reader ->
-                reader.listXhtmlFiles().forEach { xhtmlPath ->
-                    val doc = reader.readFileAsXHtml(xhtmlPath)
-                    doc.select("rt").remove()
-                    val lines = doc.body().select("p")
-                        .mapNotNull { it.text().ifBlank { null } }
-                    if (lines.isNotEmpty()) {
-                        val chapterPath = unpackPath / xhtmlPath.escapePath()
-                        chapterPath.writeLines(lines)
-                    }
+            Epub.forEachXHtmlFile(filePath) { xhtmlPath, doc ->
+                doc.select("rt").remove()
+                val lines = doc.body().select("p")
+                    .mapNotNull { it.text().ifBlank { null } }
+                if (lines.isNotEmpty()) {
+                    val chapterPath = unpackPath / xhtmlPath.escapePath()
+                    chapterPath.writeLines(lines)
                 }
             }
         }
@@ -295,43 +291,32 @@ class WenkuNovelVolumeRepository {
             val unpackChapters = listUnpackedChapters(novelId, volumeId, "jp")
             val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.epub"
             val jpPath = root / novelId / volumeId
-
-            EpubReader(jpPath).use { reader ->
-                EpubWriter(zhPath, reader.getOpfPath()).use { writer ->
-                    writer.writeOpfFile(reader.readFileAsText(reader.getOpfPath()))
-                    reader.listFiles().forEach { path ->
-                        // Css文件，删除
-                        if (path.endsWith("css")) {
-                            writer.writeTextFile(path, "")
-                            return@forEach
-                        }
-
-                        val escapedPath = path.escapePath()
-                        if (escapedPath in unpackChapters) {
-                            // XHtml文件，尝试生成翻译版
-                            val (zhLines, _) = getChapterOrFallback(escapedPath)
-                            if (zhLines == null) {
-                                reader.copyTo(writer, path)
-                            } else {
-                                val doc = reader.readFileAsXHtml(path)
-                                doc.select("p")
-                                    .filter { el -> el.text().isNotBlank() }
-                                    .forEachIndexed { index, el ->
-                                        if (mix) {
-                                            el.before("<p>${zhLines[index]}<p>")
-                                            el.attr("style", "opacity:0.4;")
-                                        } else {
-                                            el.text(zhLines[index])
-                                        }
-                                    }
-                                doc.outputSettings().prettyPrint(true)
-                                writer.writeTextFile(path, doc.html())
+            Epub.modify(srcPath = jpPath, dstPath = zhPath) { entry, bytesIn ->
+                val escapedPath = "/${entry.name}".escapePath()
+                if (escapedPath in unpackChapters) {
+                    // XHtml文件，尝试生成翻译版
+                    val (zhLines, _) = getChapterOrFallback(escapedPath)
+                    if (zhLines == null) {
+                        bytesIn
+                    } else {
+                        val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
+                        doc.select("p")
+                            .filter { el -> el.text().isNotBlank() }
+                            .forEachIndexed { index, el ->
+                                if (mix) {
+                                    el.before("<p>${zhLines[index]}<p>")
+                                    el.attr("style", "opacity:0.4;")
+                                } else {
+                                    el.text(zhLines[index])
+                                }
                             }
-                        } else {
-                            // 其他文件
-                            reader.copyTo(writer, path)
-                        }
+                        doc.outputSettings().prettyPrint(true)
+                        doc.html().toByteArray()
                     }
+                } else if (entry.name.endsWith("css")) {
+                    "".toByteArray()
+                } else {
+                    bytesIn
                 }
             }
             return@withContext "${lang.value}.epub"
