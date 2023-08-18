@@ -37,10 +37,10 @@ export class OpenAiTranslator extends Translator {
       suffix?: string;
     }) => {
       let message = `分段${segInfo.index + 1}/${segInfo.size}`;
-      if (retry) {
+      if (retry !== undefined) {
         message += `　第${retry + 1}次`;
       }
-      if (binaryRange) {
+      if (binaryRange !== undefined) {
         const [left, right] = binaryRange;
         if (right - left === 1) {
           message += `　翻译第${left + 1}行`;
@@ -48,11 +48,11 @@ export class OpenAiTranslator extends Translator {
           message += `　翻译${left + 1}到${right}行`;
         }
       }
-      if (lineNumber) {
+      if (lineNumber !== undefined) {
         const [input, output] = lineNumber;
         message += `　原文/输出：${input}/${output}行`;
       }
-      if (suffix) {
+      if (suffix !== undefined) {
         message += `　${suffix}`;
       }
       this.log(message);
