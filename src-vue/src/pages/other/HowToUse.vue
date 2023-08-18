@@ -80,7 +80,7 @@ async function testGpt() {
         在一部分机器上，Chrome/Edge即使安装了也无法使用有道翻译。由于我手边没有这样的机子，暂时无法解决。
       </n-li>
     </n-ul>
-    <n-p>GPT说明:</n-p>
+    <n-p>GPT说明：</n-p>
     <n-ul>
       <n-li>在启动GPT翻译之前，你得先做一些准备操作：</n-li>
       <n-ul>
@@ -112,22 +112,15 @@ async function testGpt() {
         一个GPT帐号不要同时启动多个翻译任务。
         想提速的话，建议多注册几个号一起翻译，并活用高级功能控制翻译范围。
         注册方法参考
-        <n-a
-          href="https://github.com/xiaoming2028/FreePAC/wiki/ChatGPT%E6%B3%A8%E5%86%8C%E6%95%99%E7%A8%8B%EF%BC%88%E5%AE%8C%E6%95%B4%E6%8C%87%E5%8D%97%EF%BC%89"
-          target="_blank"
-        >
+        <n-a href="https://github.com/eujc/ChatGPT" target="_blank">
           ChatGPT注册教程
         </n-a>
         成本为1元1个，但是最少要充2美元。
       </n-li>
       <n-li>
-        可以翻译R18内容，但是失败率会相对较高，需要多次尝试。此外，翻译R18内容有封号风险，虽然概率不大。
-      </n-li>
-      <n-li>GPT有额度限制，到达额度限制后请不要反复尝试。</n-li>
-      <n-li>
         根据群友测试，在使用GPT翻译的同时，打开ChatGPT主页有助于提高成功率，注意要挂在前台。
       </n-li>
-      <n-li><b>火狐暂不支持，请等待更新</b></n-li>
+      <n-li><b>火狐暂不支持</b></n-li>
     </n-ul>
 
     <n-p>安装步骤如下：</n-p>
