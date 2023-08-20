@@ -219,7 +219,7 @@ export function detectChinese(text: string) {
   const pZh = zh / text.length,
     pJp = jp / text.length,
     pEn = en / text.length;
-  return pZh > 0.75 || (pZh > pJp && pZh > pEn && pEn < 0.1 && pJp < 0.1);
+  return pZh > 0.75 || (pZh > pJp && pZh > pEn * 2 && pJp < 0.1);
 }
 
 export const delay = (s: number) =>
