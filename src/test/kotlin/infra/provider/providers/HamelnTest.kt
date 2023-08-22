@@ -53,18 +53,17 @@ class HamelnTest : DescribeSpec({
         }
     }
 
-    describe("getEpisode") {
+    describe("getChapter") {
         it("常规") {
-            // https://syosetu.org/novel/232822/1.html
-            val episode = provider.getChapter("232822", "1")
-            episode.paragraphs.size.shouldBe(671)
-            episode.paragraphs.first().shouldBe("伴部(ともべ)")
+            // https://syosetu.org/novel/321515/1.html
+            val chapter = provider.getChapter("321515", "1")
+            chapter.paragraphs[6].shouldBe("　『お父様』と呼ばれた男性は、十代後半から二十代前半程度の若い青年。『かぐや』と呼ばれた女性は、五歳程度の幼子であった。")
         }
         it("短篇") {
             // https://syosetu.org/novel/303596
-            val episode = provider.getChapter("303596", "default")
-            episode.paragraphs.size.shouldBe(141)
-            episode.paragraphs.first().shouldStartWith("　特級呪霊花御による、呪術高専東京校への襲撃")
+            val chapter = provider.getChapter("303596", "default")
+            chapter.paragraphs.size.shouldBe(141)
+            chapter.paragraphs.first().shouldStartWith("　特級呪霊花御による、呪術高専東京校への襲撃")
         }
     }
 })

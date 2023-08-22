@@ -118,7 +118,14 @@ class Novelup : WebNovelProvider {
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
         val url = "https://novelup.plus/story/$novelId/$chapterId"
-        val doc = client.get(url).document()
-        return RemoteChapter(paragraphs = doc.selectFirst("p#episode_content")!!.wholeText().lines())
+        val paragraphs = client.get(url).document()
+            .selectFirst("p#episode_content")!!
+            .apply {
+                select("rp").remove()
+                select("rt").remove()
+            }
+            .wholeText()
+            .lines()
+        return RemoteChapter(paragraphs = paragraphs)
     }
 }

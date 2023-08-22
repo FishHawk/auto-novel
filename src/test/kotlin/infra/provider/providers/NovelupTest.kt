@@ -39,12 +39,11 @@ class NovelupTest : DescribeSpec({
         }
     }
 
-    describe("getEpisode") {
+    describe("getChapter") {
         it("常规，有罗马音") {
             // https://novelup.plus/story/206612087/614254159
-            val episode = provider.getChapter("206612087", "614254159")
-            episode.paragraphs.first().shouldBe("※")
-            episode.paragraphs.last().shouldBe("　空を見上げ、クロノは小さく呟いた。")
+            val chapter = provider.getChapter("206612087", "614254159")
+            chapter.paragraphs[6].shouldBe("　ケフェウス帝国と神聖アルゴ王国の国境に広がる原生林は昏き森と呼ばれている。")
         }
     }
 })

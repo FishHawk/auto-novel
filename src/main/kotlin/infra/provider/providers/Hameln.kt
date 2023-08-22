@@ -134,7 +134,13 @@ class Hameln : WebNovelProvider {
         val url =
             if (chapterId == "default") "https://syosetu.org/novel/$novelId"
             else "https://syosetu.org/novel/$novelId/$chapterId.html"
-        val doc = client.get(url).document()
-        return RemoteChapter(paragraphs = doc.select("div#honbun > p").map { it.text() })
+        val paragraphs = client.get(url).document()
+            .select("div#honbun > p")
+            .apply {
+                select("rp").remove()
+                select("rt").remove()
+            }
+            .map { it.text() }
+        return RemoteChapter(paragraphs = paragraphs)
     }
 }
