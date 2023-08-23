@@ -38,6 +38,7 @@ private class WebNovelRes {
         val provider: String = "",
         val type: Int = 0,
         val level: Int = 0,
+        val translate: Int = 0,
         val query: String? = null,
     )
 
@@ -101,6 +102,10 @@ fun Route.routeWebNovel() {
                 1 -> WebNovelFilter.Level.一般向
                 2 -> WebNovelFilter.Level.R18
                 else -> WebNovelFilter.Level.全部
+            },
+            filterTranslate = when (loc.translate) {
+                1 -> WebNovelFilter.Translate.AI
+                else -> WebNovelFilter.Translate.全部
             },
             page = loc.page.coerceAtLeast(0),
             pageSize = loc.pageSize.coerceAtMost(20),
@@ -267,6 +272,7 @@ class WebNovelApi(
         filterProvider: String?,
         filterType: WebNovelFilter.Type,
         filterLevel: WebNovelFilter.Level,
+        filterTranslate: WebNovelFilter.Translate,
         page: Int,
         pageSize: Int,
     ): Result<PageDto<WebNovelOutlineDto>> {
@@ -275,6 +281,7 @@ class WebNovelApi(
             filterProvider = filterProvider,
             filterType = filterType,
             filterLevel = filterLevel,
+            filterTranslate = filterTranslate,
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )
@@ -498,8 +505,8 @@ class WebNovelApi(
         val novel = novelService.getNovelAndSave(providerId, novelId, 10)
             .getOrElse { return httpNotFound("元数据获取失败") }
         val chapters = novel.toc
-            .mapNotNull { it.chapterId  }
-            .mapIndexed { index, it ->  index to it  }
+            .mapNotNull { it.chapterId }
+            .mapIndexed { index, it -> index to it }
             .safeSubList(startIndex, endIndex)
             .filter { (_, id) ->
                 val outline = chapterRepo.getOutline(providerId, novelId, id)
@@ -570,8 +577,8 @@ class WebNovelApi(
         val expiredChapterIds = mutableMapOf<Int, String>()
 
         novel.toc
-            .mapNotNull { it.chapterId  }
-            .mapIndexed { index, it ->  index to it  }
+            .mapNotNull { it.chapterId }
+            .mapIndexed { index, it -> index to it }
             .safeSubList(startIndex, endIndex)
             .forEach { (index, chapterId) ->
                 val outline = chapterRepo.getOutline(providerId, novelId, chapterId)

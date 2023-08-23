@@ -1,8 +1,8 @@
 package infra.web
 
+import com.jillesvangurp.jsondsl.JsonDsl
 import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
-import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import infra.ElasticSearchDataSource
@@ -14,9 +14,6 @@ import infra.provider.RemoteNovelListItem
 import infra.provider.WebNovelProviderDataSource
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
@@ -28,6 +25,7 @@ import java.util.*
 object WebNovelFilter {
     enum class Type { 全部, 连载中, 已完结, 短篇 }
     enum class Level { 全部, 一般向, R18 }
+    enum class Translate { 全部, AI }
 }
 
 private fun Enum<*>.serialName(): String =
@@ -58,6 +56,7 @@ class WebNovelMetadataRepository(
         filterProvider: String?,
         filterType: WebNovelFilter.Type,
         filterLevel: WebNovelFilter.Level,
+        filterTranslate: WebNovelFilter.Translate,
         page: Int,
         pageSize: Int,
     ): Page<WebNovelMetadataOutline> {
@@ -67,28 +66,30 @@ class WebNovelMetadataRepository(
             size = pageSize
         ) {
             query = bool {
-                filter(buildList {
-                    if (filterProvider != null) {
-                        add(term(WebNovelMetadataEsModel::providerId, filterProvider))
-                    }
-                    when (filterType) {
-                        WebNovelFilter.Type.连载中 -> WebNovelType.连载中
-                        WebNovelFilter.Type.已完结 -> WebNovelType.已完结
-                        WebNovelFilter.Type.短篇 -> WebNovelType.短篇
-                        else -> null
-                    }?.let {
-                        add(term(WebNovelMetadataEsModel::type, it.serialName()))
-                    }
-                    if (filterLevel == WebNovelFilter.Level.R18) add(
-                        terms(
-                            WebNovelMetadataEsModel::attentions,
-                            WebNovelAttention.R18.serialName(),
-                            WebNovelAttention.性描写.serialName(),
-                        )
-                    )
-                })
+                val mustQueries = mutableListOf<ESQuery>()
+                val mustNotQueries = mutableListOf<ESQuery>()
 
-                if (filterLevel == WebNovelFilter.Level.一般向) mustNot(
+                // Filter provider
+                if (filterProvider != null) {
+                    mustQueries.add(term(WebNovelMetadataEsModel::providerId, filterProvider))
+                }
+
+                // Filter type
+                when (filterType) {
+                    WebNovelFilter.Type.连载中 -> WebNovelType.连载中
+                    WebNovelFilter.Type.已完结 -> WebNovelType.已完结
+                    WebNovelFilter.Type.短篇 -> WebNovelType.短篇
+                    else -> null
+                }?.let {
+                    mustQueries.add(term(WebNovelMetadataEsModel::type, it.serialName()))
+                }
+
+                // Filter level
+                when (filterLevel) {
+                    WebNovelFilter.Level.一般向 -> mustNotQueries
+                    WebNovelFilter.Level.R18 -> mustQueries
+                    else -> null
+                }?.add(
                     terms(
                         WebNovelMetadataEsModel::attentions,
                         WebNovelAttention.R18.serialName(),
@@ -96,19 +97,50 @@ class WebNovelMetadataRepository(
                     )
                 )
 
-                if (queryString != null) {
+                // Filter translate
+                if (filterTranslate == WebNovelFilter.Translate.AI) {
+                    mustQueries.add(ESQuery("term", JsonDsl().apply { put("hasGpt", true) }))
+                }
+
+                // Parse query
+                val allAttentions = WebNovelAttention.entries.map { it.serialName() }
+                val fuzzy = mutableListOf<String>()
+                queryString
+                    ?.split(" ")
+                    ?.forEach {
+                        if (it.endsWith("$")) {
+                            val rawToken = it.removePrefix("-").removeSuffix("$")
+                            val queries =
+                                if (it.startsWith("-")) mustNotQueries
+                                else mustQueries
+                            val field =
+                                if (allAttentions.contains(rawToken)) WebNovelMetadataEsModel::attentions
+                                else WebNovelMetadataEsModel::keywords
+                            queries.add(term(field, rawToken))
+                        } else {
+                            fuzzy.add(it)
+                        }
+                    }
+
+                must(mustQueries)
+                mustNot(mustNotQueries)
+
+                if (fuzzy.isNotEmpty()) {
+                    val fuzzyString = fuzzy.joinToString("")
                     must(
                         disMax {
                             queries(
-                                match(WebNovelMetadataEsModel::titleJp, queryString),
-                                match(WebNovelMetadataEsModel::titleZh, queryString),
-                                match(WebNovelMetadataEsModel::authors, queryString),
+                                match(WebNovelMetadataEsModel::titleJp, fuzzyString),
+                                match(WebNovelMetadataEsModel::titleZh, fuzzyString),
+                                match(WebNovelMetadataEsModel::authors, fuzzyString),
+                                match(WebNovelMetadataEsModel::attentions, fuzzyString),
+                                match(WebNovelMetadataEsModel::keywords, fuzzyString),
                             )
                         }
                     )
                 } else {
                     sort {
-                        add(WebNovelMetadataEsModel::changeAt)
+                        add(WebNovelMetadataEsModel::updateAt)
                     }
                 }
             }
@@ -178,17 +210,8 @@ class WebNovelMetadataRepository(
         mongo
             .webNovelMetadataCollection
             .insertOne(model)
-        syncEs(model, true)
+        syncEs(model)
         return Result.success(get(providerId, novelId)!!)
-    }
-
-    suspend fun exist(providerId: String, novelId: String): Boolean {
-        return mongo
-            .webNovelMetadataCollection
-            .countDocuments(
-                WebNovelMetadata.byId(providerId, novelId),
-                CountOptions().limit(1),
-            ) != 0L
     }
 
     suspend fun increaseVisited(providerId: String, novelId: String) {
@@ -235,7 +258,13 @@ class WebNovelMetadataRepository(
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )
         if (novel != null) {
-            syncEs(novel, hasChanged)
+            syncEs(novel)
+            if (hasChanged) {
+                mongo.webNovelFavoriteCollection.updateMany(
+                    WebNovelFavoriteModel::novelId eq novel.id.toId(),
+                    setValue(WebNovelFavoriteModel::updateAt, novel.updateAt)
+                )
+            }
         }
         return novel
     }
@@ -339,57 +368,29 @@ class WebNovelMetadataRepository(
                 combine(list),
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )
-            ?.also { syncEs(it, false) }
+            ?.also { syncEs(it) }
     }
 
     private suspend fun syncEs(
         novel: WebNovelMetadata,
-        hasUpdate: Boolean,
     ) {
-        if (hasUpdate) {
-            es.client.indexDocument(
-                id = "${novel.providerId}.${novel.novelId}",
-                target = ElasticSearchDataSource.webNovelIndexName,
-                document = WebNovelMetadataEsModel(
-                    providerId = novel.providerId,
-                    novelId = novel.novelId,
-                    titleJp = novel.titleJp,
-                    titleZh = novel.titleZh,
-                    authors = novel.authors.map { it.name },
-                    type = novel.type,
-                    attentions = novel.attentions,
-                    changeAt = novel.updateAt.epochSeconds,
-                ),
-                refresh = Refresh.WaitFor,
-            )
-            mongo.webNovelFavoriteCollection.updateMany(
-                WebNovelFavoriteModel::novelId eq novel.id.toId(),
-                setValue(WebNovelFavoriteModel::updateAt, novel.updateAt)
-            )
-        } else {
-            @Serializable
-            data class EsNovelUpdate(
-                val titleJp: String,
-                val titleZh: String?,
-                val authors: List<String>,
-                val type: WebNovelType,
-                val attentions: List<WebNovelAttention>,
-            )
-
-            val update = EsNovelUpdate(
+        es.client.indexDocument(
+            id = "${novel.providerId}.${novel.novelId}",
+            target = ElasticSearchDataSource.webNovelIndexName,
+            document = WebNovelMetadataEsModel(
+                providerId = novel.providerId,
+                novelId = novel.novelId,
                 titleJp = novel.titleJp,
                 titleZh = novel.titleZh,
                 authors = novel.authors.map { it.name },
                 type = novel.type,
+                keywords = novel.keywords,
                 attentions = novel.attentions,
-            )
-            es.client.updateDocument(
-                id = "${novel.providerId}.${novel.novelId}",
-                target = ElasticSearchDataSource.webNovelIndexName,
-                docJson = Json.encodeToString(update),
-                refresh = Refresh.WaitFor,
-            )
-        }
+                hasGpt = novel.gpt > 0,
+                updateAt = novel.updateAt.epochSeconds,
+            ),
+            refresh = Refresh.WaitFor,
+        )
     }
 }
 

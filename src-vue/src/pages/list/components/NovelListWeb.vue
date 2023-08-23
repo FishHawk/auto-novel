@@ -1,7 +1,14 @@
 <script lang="ts" setup>
+import { createReusableTemplate } from '@vueuse/core';
+
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { tryTranslateKeywords } from '@/data/keyword_translate';
+import { tryTranslateKeyword } from '@/data/keyword_translate';
 import { buildMetadataUrl } from '@/data/provider';
+
+const [DefineTag, ReuseTag] = createReusableTemplate<{
+  tag: string;
+  isAttention: boolean;
+}>();
 
 defineProps<{
   items: WebNovelOutlineDto[];
@@ -9,6 +16,15 @@ defineProps<{
 </script>
 
 <template>
+  <DefineTag v-slot="{ tag, isAttention }">
+    <n-a :href="`/novel-list?query=${tag}\$`" style="color: #666">
+      <component :is="isAttention ? 'b' : 'span'">
+        {{ isAttention ? tag : tryTranslateKeyword(tag) }}
+      </component>
+    </n-a>
+    /
+  </DefineTag>
+
   <div v-for="item in items">
     <n-h3 class="title" style="margin-bottom: 4px">
       <n-a :href="`/novel/${item.providerId}/${item.novelId}`" target="_blank">
@@ -28,12 +44,16 @@ defineProps<{
     </div>
 
     <div style="color: #666">
-      <template v-for="attention in item.attentions.sort()">
-        <b>{{ attention }}</b> /
-      </template>
-      <template v-for="keyword in tryTranslateKeywords(item.keywords)">
-        {{ keyword }} /
-      </template>
+      <ReuseTag
+        v-for="attention in item.attentions.sort()"
+        :tag="attention"
+        :isAttention="true"
+      />
+      <ReuseTag
+        v-for="keyword in item.keywords"
+        :tag="keyword"
+        :isAttention="false"
+      />
     </div>
 
     <template v-if="item.total">

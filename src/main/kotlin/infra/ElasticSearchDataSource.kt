@@ -17,7 +17,9 @@ data class WebNovelMetadataEsModel(
     val authors: List<String>,
     val type: WebNovelType = WebNovelType.连载中,
     val attentions: List<WebNovelAttention> = emptyList(),
-    val changeAt: Long,
+    val keywords: List<String>,
+    val hasGpt: Boolean,
+    val updateAt: Long,
 )
 
 @Serializable
@@ -41,7 +43,8 @@ class ElasticSearchDataSource(url: String) {
     )
 
     companion object {
-        const val webNovelIndexName = "metadata"
+        // const val webNovelIndexName = "metadata"
+        const val webNovelIndexName = "web-index"
         const val wenkuNovelIndexName = "wenku-index"
     }
 
@@ -56,7 +59,9 @@ class ElasticSearchDataSource(url: String) {
                         keyword(WebNovelMetadataEsModel::authors)
                         keyword(WebNovelMetadataEsModel::type)
                         keyword(WebNovelMetadataEsModel::attentions)
-                        date(WebNovelMetadataEsModel::changeAt)
+                        keyword(WebNovelMetadataEsModel::keywords)
+                        bool(WebNovelMetadataEsModel::hasGpt)
+                        date(WebNovelMetadataEsModel::updateAt)
                     }
                 }
             }

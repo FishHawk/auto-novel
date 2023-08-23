@@ -27,12 +27,21 @@ async function list(
   query: string,
   provider: string,
   type: number,
-  level: number
+  level: number,
+  translate: number
 ): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`novel/list`, {
-        searchParams: { page, pageSize, query, provider, type, level },
+        searchParams: {
+          page,
+          pageSize,
+          query,
+          provider,
+          type,
+          level,
+          translate,
+        },
       })
       .json()
   );

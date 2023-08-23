@@ -5,13 +5,11 @@ import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
 import infra.model.*
 import infra.provider.WebNovelProviderDataSource
-import infra.web.WebNovelChapterRepository
-import infra.web.WebNovelMetadataRepository
-import infra.web.WebNovelTocMergeHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.Document
@@ -19,8 +17,6 @@ import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
 import java.io.File
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
@@ -29,14 +25,10 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val es by inject<ElasticSearchDataSource>(ElasticSearchDataSource::class.java)
     private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
 
-    private val repoWNC by inject<WebNovelChapterRepository>(WebNovelChapterRepository::class.java)
-    private val repoWNM by inject<WebNovelMetadataRepository>(WebNovelMetadataRepository::class.java)
-    private val repoTMH by inject<WebNovelTocMergeHistoryRepository>(WebNovelTocMergeHistoryRepository::class.java)
-
     private val wenkuVR by inject<WenkuNovelVolumeRepository>(WenkuNovelVolumeRepository::class.java)
 
     init {
-        describe("test") {
+        describe("build es index") {
             @Serializable
             data class WNMP(
                 val providerId: String,
@@ -46,45 +38,67 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                 val authors: List<WebNovelAuthor>,
                 val type: WebNovelType = WebNovelType.连载中,
                 val attentions: List<WebNovelAttention> = emptyList(),
-                @Contextual val changeAt: LocalDateTime = LocalDateTime.now(),
+                val keywords: List<String> = emptyList(),
+                val gpt: Long = 0,
+                @Contextual val updateAt: Instant,
             )
 
-            val list = mongo
-                .webNovelMetadataCollection
-                .withDocumentClass<WNMP>()
-                .find()
-                .projection(
-                    WebNovelMetadata::providerId,
-                    WebNovelMetadata::novelId,
-                    WebNovelMetadata::titleJp,
-                    WebNovelMetadata::titleZh,
-                    WebNovelMetadata::authors,
-                    WebNovelMetadata::type,
-                    WebNovelMetadata::attentions,
-                    WebNovelMetadata::changeAt,
-                )
-                .skip(10 * 1000)
-                .limit(1100)
-                .toList()
-            es.client.bulk(target = ElasticSearchDataSource.webNovelIndexName) {
-                @Serializable
-                data class ESU(val type: WebNovelType, val attentions: List<WebNovelAttention>)
-
-                list.forEachIndexed { i, it ->
-                    println("$i/${list.size} ${it.providerId}/${it.bookId}")
-                    index(
-                        doc = WebNovelMetadataEsModel(
-                            providerId = it.providerId,
-                            novelId = it.bookId,
-                            authors = it.authors.map { it.name },
-                            titleJp = it.titleJp,
-                            titleZh = it.titleZh,
-                            type = it.type,
-                            attentions = it.attentions,
-                            changeAt = it.changeAt.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
-                        ),
-                        id = "${it.providerId}.${it.bookId}",
+            suspend fun buildIndex(skip: Int, limit: Int): Int {
+                val list = mongo
+                    .webNovelMetadataCollection
+                    .withDocumentClass<WNMP>()
+                    .find()
+                    .projection(
+                        WebNovelMetadata::providerId,
+                        WebNovelMetadata::novelId,
+                        WebNovelMetadata::titleJp,
+                        WebNovelMetadata::titleZh,
+                        WebNovelMetadata::authors,
+                        WebNovelMetadata::type,
+                        WebNovelMetadata::attentions,
+                        WebNovelMetadata::keywords,
+                        WebNovelMetadata::gpt,
+                        WebNovelMetadata::updateAt,
                     )
+                    .skip(skip)
+                    .limit(limit)
+                    .toList()
+                es.client.bulk(target = ElasticSearchDataSource.webNovelIndexName) {
+                    list.forEach { it ->
+                        index(
+                            doc = WebNovelMetadataEsModel(
+                                providerId = it.providerId,
+                                novelId = it.bookId,
+                                authors = it.authors.map { it.name },
+                                titleJp = it.titleJp,
+                                titleZh = it.titleZh,
+                                type = it.type,
+                                attentions = it.attentions,
+                                keywords = it.keywords,
+                                hasGpt = it.gpt > 0,
+                                updateAt = it.updateAt.epochSeconds,
+                            ),
+                            id = "${it.providerId}.${it.bookId}",
+                        )
+                    }
+                }
+                return list.size
+            }
+
+            var batch = 0
+            val batchSize = 1000
+            while (true) {
+                println("batch${batch} start")
+                val actualBatchSize = buildIndex(
+                    batch * batchSize,
+                    batchSize + 100,
+                )
+                println("batch${batch} finish ${actualBatchSize}")
+
+                if (actualBatchSize == batchSize + 100) {
+                    batch += 1
+                } else {
+                    break
                 }
             }
         }

@@ -8,6 +8,7 @@ import {
   BookFilled,
 } from '@vicons/material';
 import { useMessage } from 'naive-ui';
+import { createReusableTemplate } from '@vueuse/core';
 
 import { Ok, ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
@@ -18,7 +19,12 @@ import {
 } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
-import { tryTranslateKeywords } from '@/data/keyword_translate';
+import { tryTranslateKeyword } from '@/data/keyword_translate';
+
+const [DefineTag, ReuseTag] = createReusableTemplate<{
+  tag: string;
+  isAttention: boolean;
+}>();
 
 const authInfoStore = useAuthInfoStore();
 const message = useMessage();
@@ -103,6 +109,20 @@ function enableEditMode() {
 </script>
 
 <template>
+  <DefineTag v-slot="{ tag, isAttention }">
+    <n-a
+      :href="`/novel-list?query=${tag}\$`"
+      target="_blank"
+      style="color: rgb(51, 54, 57)"
+    >
+      <n-tag :bordered="false" size="small">
+        <component :is="isAttention ? 'b' : 'span'">
+          {{ isAttention ? tag : tryTranslateKeyword(tag) }}
+        </component>
+      </n-tag>
+    </n-a>
+  </DefineTag>
+
   <MainLayout>
     <ResultView
       :result="metadataResult"
@@ -188,20 +208,16 @@ function enableEditMode() {
         </n-p>
 
         <n-space :size="[4, 4]">
-          <n-tag
-            v-for="tag of metadata.attentions"
-            :bordered="false"
-            size="small"
-          >
-            <b>{{ tag }}</b>
-          </n-tag>
-          <n-tag
-            v-for="tag of tryTranslateKeywords(metadata.keywords)"
-            :bordered="false"
-            size="small"
-          >
-            {{ tag }}
-          </n-tag>
+          <ReuseTag
+            v-for="attention of metadata.attentions.sort()"
+            :tag="attention"
+            :isAttention="true"
+          />
+          <ReuseTag
+            v-for="keyword of metadata.keywords"
+            :tag="keyword"
+            :isAttention="false"
+          />
         </n-space>
 
         <SectionWebTranslate

@@ -42,11 +42,9 @@ const mapper = [
   ['カクヨムオンリー', 'Kakuyomu原创'],
 ];
 
-export function tryTranslateKeywords(keywords: string[]) {
-  return keywords.map((keyword) => {
-    mapper.forEach(([jp, zh]) => {
-      keyword = keyword.replace(jp, zh);
-    });
-    return keyword;
+export function tryTranslateKeyword(keyword: string) {
+  mapper.forEach(([jp, zh]) => {
+    keyword = keyword.replace(jp, zh);
   });
+  return keyword;
 }

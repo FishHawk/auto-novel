@@ -255,7 +255,7 @@ class UserRepository(
                     userId = getUserIdByUsername(username).toId(),
                     novelId = ObjectId(novelId).toId(),
                     createAt = Clock.System.now(),
-                    updateAt = Instant.fromEpochSeconds(esnovel.changeAt),
+                    updateAt = Instant.fromEpochSeconds(esnovel.updateAt),
                 )
             )
     }

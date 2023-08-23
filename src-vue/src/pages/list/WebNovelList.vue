@@ -26,6 +26,10 @@ const options = [
     label: '分级',
     tags: ['全部', '一般向', 'R18'],
   },
+  {
+    label: '翻译',
+    tags: ['全部', 'AI'],
+  },
 ];
 
 const loader: Loader = (page: number, query: string, selected: number[]) => {
@@ -48,7 +52,8 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
     query,
     providerMap[optionNth(0)],
     selected[1],
-    selected[2]
+    selected[2],
+    selected[3]
   ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
 };
 </script>
@@ -56,6 +61,9 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
 <template>
   <ListLayout>
     <n-h1>网络小说</n-h1>
+    <n-text depth="3" style="font-size: 12px">
+      # 搜索结尾加$会严格匹配标签，开头再加-会排除匹配标签的小说
+    </n-text>
     <NovelList search :options="options" :loader="loader" />
   </ListLayout>
 </template>
