@@ -8,6 +8,7 @@ import infra.provider.WebNovelProviderDataSource
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelMetadataRepository
 import infra.web.WebNovelTocMergeHistoryRepository
+import infra.wenku.WenkuNovelVolumeRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
@@ -31,6 +32,8 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val repoWNC by inject<WebNovelChapterRepository>(WebNovelChapterRepository::class.java)
     private val repoWNM by inject<WebNovelMetadataRepository>(WebNovelMetadataRepository::class.java)
     private val repoTMH by inject<WebNovelTocMergeHistoryRepository>(WebNovelTocMergeHistoryRepository::class.java)
+
+    private val wenkuVR by inject<WenkuNovelVolumeRepository>(WenkuNovelVolumeRepository::class.java)
 
     init {
         describe("test") {

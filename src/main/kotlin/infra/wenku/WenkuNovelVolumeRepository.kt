@@ -292,10 +292,18 @@ class WenkuNovelVolumeRepository {
             val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.epub"
             val jpPath = root / novelId / volumeId
             Epub.modify(srcPath = jpPath, dstPath = zhPath) { entry, bytesIn ->
-                val escapedPath = "/${entry.name}".escapePath()
-                if (escapedPath in unpackChapters) {
+                // 为了兼容ChapterId以斜杠开头的旧格式
+                val chapterId = if ("/${entry.name}".escapePath() in unpackChapters) {
+                    "/${entry.name}".escapePath()
+                } else if (entry.name.escapePath() in unpackChapters) {
+                    entry.name.escapePath()
+                } else {
+                    null
+                }
+
+                if (chapterId != null) {
                     // XHtml文件，尝试生成翻译版
-                    val (zhLines, _) = getChapterOrFallback(escapedPath)
+                    val (zhLines, _) = getChapterOrFallback(chapterId)
                     if (zhLines == null) {
                         bytesIn
                     } else {
