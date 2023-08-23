@@ -1,5 +1,6 @@
 package infra
 
+import com.jillesvangurp.ktsearch.document
 import com.jillesvangurp.ktsearch.getDocument
 import com.mongodb.client.model.Aggregates.count
 import com.mongodb.client.model.CountOptions

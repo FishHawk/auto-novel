@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     application
-    kotlin("jvm") version "1.7.20"
-    kotlin("plugin.serialization") version "1.7.20"
+    kotlin("jvm") version "1.9.0"
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 group = "me.fishhawk"
@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.1"
+    val ktorVersion = "2.3.3"
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -54,7 +54,7 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.15.3")
 
-    implementation("com.jillesvangurp:search-client:2.0.0-RC-13")
+    implementation("com.jillesvangurp:search-client:2.1.1")
 
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.9.0")
 
