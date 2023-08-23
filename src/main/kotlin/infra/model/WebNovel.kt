@@ -1,5 +1,6 @@
 package infra.model
 
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -86,6 +87,7 @@ class WebNovelMetadata(
     val pauseUpdate: Boolean = false,
     @Contextual val syncAt: LocalDateTime = LocalDateTime.now(),
     @Contextual val changeAt: LocalDateTime = LocalDateTime.now(),
+    @Contextual val updateAt: Instant = Clock.System.now(),
 ) {
     companion object {
         fun byId(providerId: String, novelId: String): Bson =

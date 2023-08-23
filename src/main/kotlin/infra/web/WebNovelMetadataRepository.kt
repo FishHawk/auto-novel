@@ -224,6 +224,7 @@ class WebNovelMetadataRepository(
         }
         if (hasChanged) {
             list.add(setValue(WebNovelMetadata::changeAt, LocalDateTime.now()))
+            list.add(setValue(WebNovelMetadata::updateAt, Clock.System.now()))
         }
 
         val novel = mongo
@@ -343,10 +344,9 @@ class WebNovelMetadataRepository(
 
     private suspend fun syncEs(
         novel: WebNovelMetadata,
-        hasChange: Boolean,
+        hasUpdate: Boolean,
     ) {
-        if (hasChange) {
-            val updateAt = Clock.System.now()
+        if (hasUpdate) {
             es.client.indexDocument(
                 id = "${novel.providerId}.${novel.novelId}",
                 target = ElasticSearchDataSource.webNovelIndexName,
@@ -358,13 +358,13 @@ class WebNovelMetadataRepository(
                     authors = novel.authors.map { it.name },
                     type = novel.type,
                     attentions = novel.attentions,
-                    changeAt = updateAt.epochSeconds,
+                    changeAt = novel.updateAt.epochSeconds,
                 ),
                 refresh = Refresh.WaitFor,
             )
             mongo.webNovelFavoriteCollection.updateMany(
                 WebNovelFavoriteModel::novelId eq novel.id.toId(),
-                setValue(WebNovelFavoriteModel::updateAt, updateAt)
+                setValue(WebNovelFavoriteModel::updateAt, novel.updateAt)
             )
         } else {
             @Serializable
