@@ -17,7 +17,9 @@ class GlossaryTransformer {
       }
     }
 
-    for (const wordJp in glossary) {
+    for (const wordJp of Object.keys(glossary).sort(
+      (a, b) => b.length - a.length
+    )) {
       const wordZh = glossary[wordJp];
       const uuid = generateUuid();
       this.glossaryJpToUuid[wordJp] = uuid;
