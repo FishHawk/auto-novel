@@ -510,7 +510,7 @@ class WebNovelApi(
             .safeSubList(startIndex, endIndex)
             .filter { (_, id) ->
                 val outline = chapterRepo.getOutline(providerId, novelId, id)
-                outline != null && !outline.gptExist
+                outline != null
             }
             .toMap()
         return Result.success(CheckUpdateTaskDto(chapters))
@@ -523,24 +523,20 @@ class WebNovelApi(
     ): Result<String> {
         val local = chapterRepo.get(providerId, novelId, chapterId)
             ?: return httpNotFound("章节不存在")
-        if (local.gptParagraphs != null) {
-            return httpBadRequest("跳过检查，因为章节存在GPT翻译")
+        val remote = chapterRepo
+            .getRemote(providerId, novelId, chapterId)
+            .getOrElse { return Result.failure(it) }
+        return if (remote.paragraphs == local.paragraphs) {
+            Result.success("章节已是最新")
         } else {
-            val remote = chapterRepo
-                .getRemote(providerId, novelId, chapterId)
-                .getOrElse { return Result.failure(it) }
-            return if (remote.paragraphs == local.paragraphs) {
-                Result.success("章节已是最新")
-            } else {
-                chapterRepo.replace(providerId, novelId, chapterId, remote.paragraphs)
-                if (local.baiduParagraphs != null) {
-                    novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Baidu)
-                }
-                if (local.youdaoParagraphs != null) {
-                    novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Youdao)
-                }
-                Result.success("章节已经过期，删除翻译并更新")
+            chapterRepo.replace(providerId, novelId, chapterId, remote.paragraphs)
+            if (local.baiduParagraphs != null) {
+                novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Baidu)
             }
+            if (local.youdaoParagraphs != null) {
+                novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Youdao)
+            }
+            Result.success("章节已经过期，删除翻译并更新")
         }
     }
 
