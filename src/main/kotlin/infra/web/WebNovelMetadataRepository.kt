@@ -52,7 +52,7 @@ class WebNovelMetadataRepository(
     }
 
     suspend fun search(
-        queryString: String?,
+        userQuery: String?,
         filterProvider: String?,
         filterType: WebNovelFilter.Type,
         filterLevel: WebNovelFilter.Level,
@@ -104,8 +104,8 @@ class WebNovelMetadataRepository(
 
                 // Parse query
                 val allAttentions = WebNovelAttention.entries.map { it.serialName() }
-                val fuzzy = mutableListOf<String>()
-                queryString
+                val queryWords = mutableListOf<String>()
+                userQuery
                     ?.split(" ")
                     ?.forEach {
                         if (it.endsWith("$")) {
@@ -118,24 +118,24 @@ class WebNovelMetadataRepository(
                                 else WebNovelMetadataEsModel::keywords
                             queries.add(term(field, rawToken))
                         } else {
-                            fuzzy.add(it)
+                            queryWords.add(it)
                         }
                     }
 
-                must(mustQueries)
+                filter(mustQueries)
                 mustNot(mustNotQueries)
 
-                if (fuzzy.isNotEmpty()) {
-                    val fuzzyString = fuzzy.joinToString("")
+                if (queryWords.isNotEmpty()) {
                     must(
-                        disMax {
-                            queries(
-                                match(WebNovelMetadataEsModel::titleJp, fuzzyString),
-                                match(WebNovelMetadataEsModel::titleZh, fuzzyString),
-                                match(WebNovelMetadataEsModel::authors, fuzzyString),
-                                match(WebNovelMetadataEsModel::attentions, fuzzyString),
-                                match(WebNovelMetadataEsModel::keywords, fuzzyString),
-                            )
+                        simpleQueryString(
+                            queryWords.joinToString(" "),
+                            WebNovelMetadataEsModel::titleJp,
+                            WebNovelMetadataEsModel::titleZh,
+                            WebNovelMetadataEsModel::authors,
+                            WebNovelMetadataEsModel::attentions,
+                            WebNovelMetadataEsModel::keywords,
+                        ) {
+                            defaultOperator = MatchOperator.AND
                         }
                     )
                 } else {

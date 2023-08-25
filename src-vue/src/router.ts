@@ -21,10 +21,6 @@ const routes = [
     path: '/reset-password',
     component: () => import('./pages/other/ResetPassword.vue'),
   },
-  {
-    path: '/how-to-use',
-    component: () => import('./pages/other/HowToUse.vue'),
-  },
 
   {
     path: '/favorite-list',
@@ -63,6 +59,21 @@ const routes = [
   {
     path: '/novel/:providerId/:novelId/:chapterId',
     component: () => import('./pages/chapter/WebChapter.vue'),
+  },
+
+  {
+    path: '/wiki',
+    redirect: '/wiki/extension',
+    children: [
+      {
+        path: '/wiki/extension',
+        component: () => import('./pages/wiki/Extension.vue'),
+      },
+      {
+        path: '/wiki/search',
+        component: () => import('./pages/wiki/Search.vue'),
+      },
+    ],
   },
 
   {

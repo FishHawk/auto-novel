@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    A: typeof import('./src/components/A.vue')['default']
     AdminLayout: typeof import('./src/pages/admin/components/AdminLayout.vue')['default']
     Comment: typeof import('./src/components/Comment.vue')['default']
     EmailButton: typeof import('./src/components/EmailButton.vue')['default']
@@ -19,6 +20,7 @@ declare module 'vue' {
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
     NA: typeof import('naive-ui')['NA']
     NAutoComplete: typeof import('naive-ui')['NAutoComplete']
+    Nav: typeof import('./src/components/Nav.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NCollapse: typeof import('naive-ui')['NCollapse']
@@ -65,6 +67,7 @@ declare module 'vue' {
     NSelect: typeof import('naive-ui')['NSelect']
     NSlider: typeof import('naive-ui')['NSlider']
     NSpace: typeof import('naive-ui')['NSpace']
+    NTable: typeof import('naive-ui')['NTable']
     NTabPane: typeof import('naive-ui')['NTabPane']
     NTabs: typeof import('naive-ui')['NTabs']
     NTag: typeof import('naive-ui')['NTag']
@@ -77,6 +80,7 @@ declare module 'vue' {
     PanelLinkExample: typeof import('./src/pages/home/components/PanelLinkExample.vue')['default']
     PanelWebNovel: typeof import('./src/pages/home/components/PanelWebNovel.vue')['default']
     PanelWenkuNovel: typeof import('./src/pages/home/components/PanelWenkuNovel.vue')['default']
+    RA: typeof import('./src/components/RA.vue')['default']
     ReaderSettingDialog: typeof import('./src/pages/chapter/components/ReaderSettingDialog.vue')['default']
     ReaderSettingDialogSelect: typeof import('./src/pages/chapter/components/ReaderSettingDialogSelect.vue')['default']
     ResultView: typeof import('./src/components/ResultView.vue')['default']
@@ -95,5 +99,6 @@ declare module 'vue' {
     WebEditSection: typeof import('./src/pages/novel/components/WebEditSection.vue')['default']
     WenkuEditSection: typeof import('./src/pages/novel/components/WenkuEditSection.vue')['default']
     WenkuTranslate: typeof import('./src/pages/novel/components/WenkuTranslate.vue')['default']
+    WikiLayout: typeof import('./src/pages/wiki/components/WikiLayout.vue')['default']
   }
 }

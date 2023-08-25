@@ -39,7 +39,7 @@ getVolumesUser();
     <n-h1>Epub/Txt翻译</n-h1>
     <n-p>
       上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。如何使用翻译插件请参考
-      <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
+      <n-a href="/wiki/extension" target="_blank">使用说明</n-a>。
     </n-p>
     <n-p> 本功能还在测试中，请注意： </n-p>
     <n-ul>

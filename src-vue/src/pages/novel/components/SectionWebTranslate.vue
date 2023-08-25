@@ -204,10 +204,10 @@ function stateToFileList(): NovelFiles[] {
   <section>
     <header><n-h2 prefix="bar">翻译</n-h2></header>
 
-    <n-p>
-      翻译功能需要需要安装浏览器插件，请查看
-      <n-a href="/how-to-use" target="_blank">使用说明</n-a>。
-    </n-p>
+    <n-text depth="3" style="font-size: 12px">
+      # 翻译功能需要需要安装浏览器插件，参见
+      <n-a href="/wiki/extension" target="_blank">插件使用说明</n-a>
+    </n-text>
     <n-p>
       <n-collapse>
         <n-collapse-item title="高级模式">

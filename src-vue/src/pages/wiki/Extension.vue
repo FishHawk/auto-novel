@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { createReusableTemplate } from '@vueuse/core';
 
-import { useSettingStore } from '@/data/stores/setting';
 import { createTranslator } from '@/data/translator/translator';
 
 const [DefineExtensionTutorial, ReuseExtensionTutorial] =
@@ -14,15 +13,6 @@ const message = useMessage();
 const textJp = 'あたしの悪徳領主様!!　～俺は星間国家の悪徳領主！　外伝～';
 const textBaidu = ref();
 const textYoudao = ref();
-const textGpt = ref('');
-
-const setting = useSettingStore();
-const gptAccessToken = ref();
-const gptAccessTokenOptions = computed(() => {
-  return setting.openAiAccessTokens.map((t) => {
-    return { label: t, value: t };
-  });
-});
 
 async function testBaidu() {
   try {
@@ -43,23 +33,11 @@ async function testYoudao() {
     message.error(e.message);
   }
 }
-
-async function testGpt() {
-  try {
-    const t = await createTranslator('gpt', {
-      accessToken: gptAccessToken.value,
-    });
-    const r = await t.translate([textJp]);
-    textGpt.value = r[0];
-  } catch (e: any) {
-    message.error(e.message);
-  }
-}
 </script>
 
 <template>
-  <MainLayout>
-    <n-h1>使用说明</n-h1>
+  <WikiLayout>
+    <n-h1>如何使用插件翻译</n-h1>
 
     <n-h2 prefix="bar">网页端</n-h2>
 
@@ -170,26 +148,18 @@ async function testGpt() {
     </n-tabs>
 
     <n-divider />
-    <n-p>安装好扩展后可以用下面的按钮来测试能否翻译。</n-p>
+    <n-p>安装好扩展后可以用下面的按钮来测试能否翻译(GPT测不了)。</n-p>
 
-    <n-auto-complete
-      v-model:value="gptAccessToken"
-      :options="gptAccessTokenOptions"
-      placeholder="请输入GPT的Access Token"
-      :get-show="() => true"
-    />
     <n-p>日文：{{ textJp }}</n-p>
     <n-p>百度：{{ textBaidu }}</n-p>
     <n-p>有道：{{ textYoudao }}</n-p>
-    <n-p>GPT：{{ textGpt }}</n-p>
     <n-space>
       <n-button @click="testBaidu()">测试百度</n-button>
       <n-button @click="testYoudao()">测试有道</n-button>
-      <n-button @click="testGpt()">测试GPT</n-button>
     </n-space>
 
     <n-h2 prefix="bar">移动端</n-h2>
     <n-p>有一些手机浏览器可以安装插件，比如Yandex、Kiwi。</n-p>
     <n-p>想要APP？在做了在做了（指新建文件夹）</n-p>
-  </MainLayout>
+  </WikiLayout>
 </template>

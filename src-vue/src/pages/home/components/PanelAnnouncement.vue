@@ -15,7 +15,7 @@ const isDesktop = useIsDesktop(600);
       <n-li>
         <b>
           如何使用翻译插件请参考
-          <n-a href="/how-to-use" target="_blank">使用说明</n-a>
+          <n-a href="/wiki/extension" target="_blank">插件使用说明</n-a>
           。
         </b>
         Alphapolis和Pixiv是我用自己的帐号垫进去的，如果加载不了请提醒我更新。

@@ -277,7 +277,7 @@ class WebNovelApi(
         pageSize: Int,
     ): Result<PageDto<WebNovelOutlineDto>> {
         val novelPage = novelRepo.search(
-            queryString = queryString,
+            userQuery = queryString,
             filterProvider = filterProvider,
             filterType = filterType,
             filterLevel = filterLevel,
