@@ -54,7 +54,7 @@ interface WebNovelProvider {
     suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
 }
 
-fun parseJapanDateString(pattern:String, dateString: String): Instant {
+fun parseJapanDateString(pattern: String, dateString: String): Instant {
     return SimpleDateFormat(pattern)
         .apply { timeZone = TimeZone.getTimeZone("Asia/Tokyo") }
         .parse(dateString)
@@ -70,10 +70,10 @@ val client = HttpClient(Java) {
         json(Json { isLenient = true })
     }
     expectSuccess = true
-    engine {
-        proxy = ProxyBuilder.http(
-            System.getenv("HTTPS_PROXY") ?: "http://127.0.0.1:7890"
-        )
+    System.getenv("HTTPS_PROXY")?.let {
+        engine {
+            proxy = ProxyBuilder.http(it)
+        }
     }
 }
 
@@ -82,10 +82,10 @@ val client = HttpClient(Java) {
 val clientText = HttpClient(Java) {
     install(HttpCookies) { storage = cookies }
     expectSuccess = true
-    engine {
-        proxy = ProxyBuilder.http(
-            System.getenv("HTTPS_PROXY") ?: "http://127.0.0.1:7890"
-        )
+    System.getenv("HTTPS_PROXY")?.let {
+        engine {
+            proxy = ProxyBuilder.http(it)
+        }
     }
 }
 
