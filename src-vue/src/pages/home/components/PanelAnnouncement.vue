@@ -8,7 +8,7 @@ const isDesktop = useIsDesktop(600);
   <n-space :wrap="false">
     <img v-if="isDesktop" src="/qq.png" width="130" />
     <n-ul>
-      <n-li> 修好了生成的文库小说的格式，现在打开不会报错了。 </n-li>
+      <n-li>有朋友整不明白术语表在哪改，现在术语表编辑功能也放在高级选项里面了。</n-li>
       <n-li>
         新建了个交流群：819513328，无论你是想上传自己收集的资源，还是单纯想讨论轻小说，都欢迎加群。加群验证的答案是“绿色”。
       </n-li>

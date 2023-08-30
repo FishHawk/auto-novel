@@ -188,7 +188,7 @@ function enableEditMode() {
       <n-p>{{ metadata.type }} / 浏览次数:{{ metadata.visited }} </n-p>
 
       <template v-if="editMode">
-        <WebEditSection
+        <WebEdit
           :provider-id="providerId"
           :novel-id="novelId"
           :novel-metadata="metadata"
@@ -220,7 +220,7 @@ function enableEditMode() {
           />
         </n-space>
 
-        <SectionWebTranslate
+        <WebTranslate
           :provider-id="providerId"
           :novel-id="novelId"
           :title="metadata.titleZh ?? metadata.titleJp"

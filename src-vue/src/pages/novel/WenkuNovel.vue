@@ -212,7 +212,7 @@ async function notifyUpdate() {
       </n-space>
 
       <template v-if="editMode">
-        <WenkuEditSection :id="novelId" :metadata="metadata" />
+        <WenkuEdit :id="novelId" :metadata="metadata" />
       </template>
 
       <template v-else>
