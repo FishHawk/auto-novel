@@ -40,16 +40,10 @@ getVolumesUser();
     <n-p>
       上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。如何使用翻译插件请参考
       <n-a href="/wiki/extension" target="_blank">使用说明</n-a>。
+      <br />
+      Epub的格式千奇百怪，如果生成的中文版有问题，请向我
+      <n-a href="/wiki/feedback" target="_blank">反馈</n-a>。
     </n-p>
-    <n-p> 本功能还在测试中，请注意： </n-p>
-    <n-ul>
-      <n-li>是Epub还是Txt是用后缀名区分的。</n-li>
-      <n-li>不要上传Epub和Txt以外格式的小说，尤其是Pdf。</n-li>
-      <n-li>
-        Epub的格式千奇百怪，如果生成的中文版有问题，请向我
-        <n-a href="/feedback" target="_blank">反馈</n-a>。
-      </n-li>
-    </n-ul>
 
     <SectionHeader title="私人缓存区" />
     <n-p>

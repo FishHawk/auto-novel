@@ -4,7 +4,7 @@ const isDesktop = useIsDesktop(850);
 </script>
 
 <template>
-  <MainLayout>
+  <WikiLayout>
     <n-space align="center" justify="space-evenly" :wrap="!isDesktop">
       <div style="max-width: 600px">
         <n-h1>赞助</n-h1>
@@ -17,27 +17,6 @@ const isDesktop = useIsDesktop(850);
           本站永远免费供所有人使用，但如果你想表示感谢或为（未来的）服务器费用做出贡献，你可以通过支付宝/微信支持我。
           感谢你的赞助！
         </n-p>
-
-        <!--
-        <n-space>
-          <a href="https://afdian.net/a/fishhawk" target="_blank">
-            <n-button size="large" color="#946ce6">
-              <template #icon>
-                <n-icon :size="24"> <IconAfdian /> </n-icon>
-              </template>
-              在爱发电支持我
-            </n-button>
-          </a>
-
-          <a href="https://www.patreon.com/bePatron?u=94638526" target="_blank">
-            <n-button size="large" color="#f96854">
-              <template #icon>
-                <n-icon> <IconPatreon /> </n-icon>
-              </template>
-              在Patreon支持我
-            </n-button>
-          </a>
-        </n-space> -->
       </div>
 
       <n-divider
@@ -50,5 +29,5 @@ const isDesktop = useIsDesktop(850);
         style="max-width: 500px; width: 100%; margin-top: 30px"
       />
     </n-space>
-  </MainLayout>
+  </WikiLayout>
 </template>

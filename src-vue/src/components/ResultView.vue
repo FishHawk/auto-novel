@@ -1,14 +1,10 @@
 <script setup lang="ts" generic="T extends any">
 import { ResultState } from '@/data/api/result';
 
-withDefaults(
-  defineProps<{
-    result: ResultState<T>;
-    showEmpty: (value: T) => boolean;
-  }>(),
-  // TODO:Not work
-  { showEmpty: (value: T) => Array.isArray(value) && value.length === 0 }
-);
+defineProps<{
+  result: ResultState<T>;
+  showEmpty: (value: T) => boolean;
+}>();
 </script>
 
 <template>

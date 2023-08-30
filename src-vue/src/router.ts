@@ -15,8 +15,6 @@ function requireAtLeastMaintainer(from: any, to: any, next: any) {
 const routes = [
   { path: '/', component: () => import('./pages/home/Index.vue') },
 
-  { path: '/feedback', component: () => import('./pages/other/Feedback.vue') },
-  { path: '/donate', component: () => import('./pages/other/Donate.vue') },
   {
     path: '/reset-password',
     component: () => import('./pages/other/ResetPassword.vue'),
@@ -63,7 +61,7 @@ const routes = [
 
   {
     path: '/wiki',
-    redirect: '/wiki/extension',
+    redirect: '/wiki/feedback',
     children: [
       {
         path: '/wiki/extension',
@@ -73,12 +71,21 @@ const routes = [
         path: '/wiki/search',
         component: () => import('./pages/wiki/Search.vue'),
       },
+
+      {
+        path: '/wiki/feedback',
+        component: () => import('./pages/wiki/Feedback.vue'),
+      },
+      {
+        path: '/wiki/donate',
+        component: () => import('./pages/wiki/Donate.vue'),
+      },
     ],
   },
 
   {
     path: '/admin',
-    redirect: '/admin/patch',
+    redirect: '/admin/web-patch-history',
     beforeEnter: requireAtLeastMaintainer,
     children: [
       {
