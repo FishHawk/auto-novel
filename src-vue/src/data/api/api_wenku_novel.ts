@@ -35,6 +35,7 @@ export interface WenkuMetadataDto {
   artists: string[];
   keywords: string[];
   introduction: string;
+  glossary: { [key: string]: string };
   visited: number;
   favored?: boolean;
   volumeZh: string[];
@@ -107,6 +108,21 @@ async function patchMetadata(
   return runCatching(
     api
       .patch(`wenku/${id}`, {
+        json: body,
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .text()
+  );
+}
+
+async function updateGlossary(
+  id: string,
+  body: { [key: string]: string },
+  token: string
+): Promise<Result<String>> {
+  return runCatching(
+    api
+      .put(`wenku/${id}/glossary`, {
         json: body,
         headers: { Authorization: 'Bearer ' + token },
       })
@@ -202,6 +218,7 @@ export const ApiWenkuNovel = {
   getMetadata,
   postMetadata,
   patchMetadata,
+  updateGlossary,
   notifyUpdate,
   getMetadataFromBangumi,
   createVolumeZhUploadUrl,

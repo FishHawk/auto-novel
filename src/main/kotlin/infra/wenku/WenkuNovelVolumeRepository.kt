@@ -6,12 +6,21 @@ import infra.model.WenkuNovelVolumeJp
 import infra.model.WenkuNovelVolumeList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 import util.epub.Epub
 import java.io.OutputStream
 import java.nio.charset.Charset
 import kotlin.io.path.*
+
+@Serializable
+data class ChapterGlossary(
+    val uuid: String,
+    val glossary: Map<String, String>,
+)
 
 private fun String.escapePath() = replace('/', '.')
 
@@ -73,7 +82,7 @@ class WenkuNovelVolumeRepository {
         return listUnpackedChapters(novelId, volumeId, type).size.toLong()
     }
 
-    private suspend fun listUnpackedChapters(
+    suspend fun listUnpackedChapters(
         novelId: String,
         volumeId: String,
         type: String,
@@ -167,20 +176,20 @@ class WenkuNovelVolumeRepository {
         }
     }
 
-    suspend fun listUntranslatedChapter(
-        novelId: String,
-        volumeId: String,
-        translatorId: TranslatorId,
-    ): List<String> {
-        val type = when (translatorId) {
-            TranslatorId.Baidu -> "baidu"
-            TranslatorId.Youdao -> "youdao"
-            TranslatorId.Gpt -> "gpt"
-        }
-        val jpChapters = listUnpackedChapters(novelId, volumeId, "jp")
-        val zhChapters = listUnpackedChapters(novelId, volumeId, type)
-        return jpChapters.filter { it !in zhChapters }
-    }
+//    suspend fun listUntranslatedChapter(
+//        novelId: String,
+//        volumeId: String,
+//        translatorId: TranslatorId,
+//    ): List<String> {
+//        val type = when (translatorId) {
+//            TranslatorId.Baidu -> "baidu"
+//            TranslatorId.Youdao -> "youdao"
+//            TranslatorId.Gpt -> "gpt"
+//        }
+//        val jpChapters = listUnpackedChapters(novelId, volumeId, "jp")
+//        val zhChapters = listUnpackedChapters(novelId, volumeId, type)
+//        return jpChapters.filter { it !in zhChapters }
+//    }
 
     private suspend fun getChapter(
         novelId: String,
@@ -198,6 +207,26 @@ class WenkuNovelVolumeRepository {
         volumeId: String,
         chapterId: String,
     ) = getChapter(novelId, volumeId, "jp", chapterId)
+
+    suspend fun getChapterGlossary(
+        novelId: String,
+        volumeId: String,
+        translatorId: TranslatorId,
+        chapterId: String,
+    ) = withContext(Dispatchers.IO) {
+        val type = when (translatorId) {
+            TranslatorId.Baidu -> "baidu.g"
+            TranslatorId.Youdao -> "youdao.g"
+            TranslatorId.Gpt -> "gpt.g"
+        }
+        val path = root / novelId / "$volumeId.unpack" / type / chapterId
+        return@withContext if (path.notExists()) null
+        else try {
+            Json.decodeFromString<ChapterGlossary>(path.readText())
+        } catch (e: Throwable) {
+            null
+        }
+    }
 
     suspend fun isTranslationExist(
         novelId: String,
@@ -220,6 +249,8 @@ class WenkuNovelVolumeRepository {
         translatorId: TranslatorId,
         chapterId: String,
         lines: List<String>,
+        glossaryUuid: String?,
+        glossary: Map<String, String>,
     ) = withContext(Dispatchers.IO) {
         val type = when (translatorId) {
             TranslatorId.Baidu -> "baidu"
@@ -232,6 +263,59 @@ class WenkuNovelVolumeRepository {
         }
         if (path.notExists()) {
             path.writeLines(lines)
+        }
+
+        if (glossaryUuid != null) {
+            val gType = when (translatorId) {
+                TranslatorId.Baidu -> "baidu.g"
+                TranslatorId.Youdao -> "youdao.g"
+                TranslatorId.Gpt -> "gpt.g"
+            }
+            val gPath = root / novelId / "$volumeId.unpack" / gType / chapterId
+            if (gPath.parent.notExists()) {
+                gPath.parent.createDirectories()
+            }
+            if (gPath.notExists()) {
+                gPath.writeText(
+                    Json.encodeToString(ChapterGlossary(glossaryUuid, glossary))
+                )
+            }
+        }
+    }
+
+    suspend fun updateTranslation(
+        novelId: String,
+        volumeId: String,
+        translatorId: TranslatorId,
+        chapterId: String,
+        paragraphsZh: Map<Int, String>,
+        glossaryUuid: String,
+        glossary: Map<String, String>,
+    ) = withContext(Dispatchers.IO) {
+        val type = when (translatorId) {
+            TranslatorId.Baidu -> "baidu"
+            TranslatorId.Youdao -> "youdao"
+            TranslatorId.Gpt -> "gpt"
+        }
+        val oldChapter = getChapter(novelId, volumeId, type, chapterId)!!
+        val newChapter = oldChapter.mapIndexed { index, it -> paragraphsZh[index] ?: it }
+
+        val path = root / novelId / "$volumeId.unpack" / type / chapterId
+        path.writeLines(newChapter)
+
+        val gType = when (translatorId) {
+            TranslatorId.Baidu -> "baidu.g"
+            TranslatorId.Youdao -> "youdao.g"
+            TranslatorId.Gpt -> "gpt.g"
+        }
+        val gPath = root / novelId / "$volumeId.unpack" / gType / chapterId
+        if (gPath.parent.notExists()) {
+            gPath.parent.createDirectories()
+        }
+        if (gPath.notExists()) {
+            gPath.writeText(
+                Json.encodeToString(ChapterGlossary(glossaryUuid, glossary))
+            )
         }
     }
 

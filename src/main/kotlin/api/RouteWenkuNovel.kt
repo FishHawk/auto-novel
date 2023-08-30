@@ -7,6 +7,7 @@ import infra.UserRepository
 import infra.model.NovelFileLang
 import infra.model.TranslatorId
 import infra.model.WenkuNovelVolumeJp
+import infra.model.supportGlossary
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -17,8 +18,9 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
-import io.ktor.server.resources.post
 import io.ktor.server.resources.patch
+import io.ktor.server.resources.post
+import io.ktor.server.resources.put
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +46,9 @@ private class WenkuNovelRes {
 
     @Resource("/{novelId}")
     class Id(val parent: WenkuNovelRes, val novelId: String) {
+        @Resource("/glossary")
+        data class Glossary(val parent: Id)
+
         @Resource("/notify-update")
         class NotifyUpdate(val parent: Id)
 
@@ -106,10 +111,14 @@ fun Route.routeWenkuNovel() {
         }
 
         patch<WenkuNovelRes.Id> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
-                service.patchMetadata(loc.novelId, body)
-            }
+            val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
+            val result = service.patchMetadata(loc.novelId, body)
+            call.respondResult(result)
+        }
+
+        put<WenkuNovelRes.Id.Glossary> { loc ->
+            val body = call.receive<Map<String, String>>()
+            val result = service.updateGlossary(loc.parent.novelId, body)
             call.respondResult(result)
         }
 
@@ -155,7 +164,7 @@ fun Route.routeWenkuNovel() {
 
     // Translate
     get<WenkuNovelRes.Id.Translate> { loc ->
-        val result = service.listUntranslatedChapter(
+        val result = service.getTranslateTask(
             novelId = loc.parent.novelId,
             translatorId = loc.translatorId,
             volumeId = loc.volumeId,
@@ -167,19 +176,32 @@ fun Route.routeWenkuNovel() {
         val result = service.getChapterToTranslate(
             novelId = loc.parent.parent.novelId,
             volumeId = loc.parent.volumeId,
+            translatorId = loc.parent.translatorId,
             chapterId = loc.chapterId,
         )
         call.respondResult(result)
     }
 
     post<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-        val body = call.receive<List<String>>()
+        val body = call.receive<WenkuNovelApi.TranslateChapterUpdateBody>()
         val result = service.updateChapterTranslation(
             novelId = loc.parent.parent.novelId,
             translatorId = loc.parent.translatorId,
             volumeId = loc.parent.volumeId,
             chapterId = loc.chapterId,
-            lines = body,
+            body = body,
+        )
+        call.respondResult(result)
+    }
+
+    put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
+        val body = call.receive<WenkuNovelApi.TranslateChapterUpdatePartlyBody>()
+        val result = service.updateChapterTranslationPartly(
+            novelId = loc.parent.parent.novelId,
+            translatorId = loc.parent.translatorId,
+            volumeId = loc.parent.volumeId,
+            chapterId = loc.chapterId,
+            body = body,
         )
         call.respondResult(result)
     }
@@ -262,6 +284,7 @@ class WenkuNovelApi(
             artists = metadata.artists,
             keywords = metadata.keywords,
             introduction = metadata.introduction,
+            glossary = metadata.glossary,
             visited = metadata.visited,
             favored = favored,
             volumeZh = volumes.zh,
@@ -317,6 +340,21 @@ class WenkuNovelApi(
             artists = body.artists,
             keywords = body.keywords,
             introduction = body.introduction,
+        )
+        return Result.success(Unit)
+    }
+
+    suspend fun updateGlossary(
+        novelId: String,
+        glossary: Map<String, String>,
+    ): Result<Unit> {
+        val metadata = metadataRepo.findOne(novelId)
+            ?: return httpNotFound("小说不存在")
+        if (glossary == metadata.glossary)
+            return httpBadRequest("术语表没有改变")
+        metadataRepo.updateGlossary(
+            novelId = novelId,
+            glossary = glossary,
         )
         return Result.success(Unit)
     }
@@ -425,42 +463,98 @@ class WenkuNovelApi(
     }
 
     // Translate
-    suspend fun listUntranslatedChapter(
+    @Serializable
+    data class TranslateTaskDto(
+        val glossaryUuid: String?,
+        val glossary: Map<String, String>,
+        val untranslatedChapters: List<String>,
+        val expiredChapters: List<String>,
+    )
+
+    suspend fun getTranslateTask(
         novelId: String,
         translatorId: TranslatorId,
         volumeId: String,
-    ): Result<List<String>> {
+    ): Result<TranslateTaskDto> {
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
+
+        val novel =
+            if (novelId == "non-archived" || novelId.startsWith("user")) null
+            else metadataRepo.findOne(novelId)
 
         if (!volumeRepo.isVolumeJpExisted(novelId, volumeId))
             return httpNotFound("卷不存在")
 
-        val untranslatedChapters = volumeRepo.listUntranslatedChapter(
-            novelId = novelId,
-            volumeId = volumeId,
-            translatorId = translatorId,
+        val untranslatedChapterIds = mutableListOf<String>()
+        val expiredChapterIds = mutableListOf<String>()
+
+        volumeRepo.listUnpackedChapters(novelId, volumeId, "jp").forEach {
+            if (!volumeRepo.isTranslationExist(novelId, volumeId, translatorId, it)) {
+                untranslatedChapterIds.add(it)
+            } else if (
+                volumeRepo.getChapterGlossary(novelId, volumeId, translatorId, it)?.uuid != novel?.glossaryUuid
+            ) {
+                expiredChapterIds.add(it)
+            }
+        }
+        return Result.success(
+            TranslateTaskDto(
+                glossaryUuid = novel?.glossaryUuid,
+                glossary = novel?.glossary ?: emptyMap(),
+                untranslatedChapters = untranslatedChapterIds,
+                expiredChapters = expiredChapterIds,
+            )
         )
-        return Result.success(untranslatedChapters)
     }
+
+    @Serializable
+    data class TranslateChapterDto(
+        val glossary: Map<String, String>,
+        val paragraphsJp: List<String>,
+    )
 
     suspend fun getChapterToTranslate(
         novelId: String,
         volumeId: String,
+        translatorId: TranslatorId,
         chapterId: String,
-    ): Result<List<String>> {
+    ): Result<TranslateChapterDto> {
         val lines = volumeRepo.getChapter(novelId, volumeId, chapterId)
             ?: return httpNotFound("章节不存在")
-        return Result.success(lines)
+        val glossary = volumeRepo.getChapterGlossary(novelId, volumeId, translatorId, chapterId)
+        return Result.success(
+            TranslateChapterDto(
+                glossary = glossary?.glossary ?: emptyMap(),
+                paragraphsJp = lines,
+            )
+        )
     }
+
+    @Serializable
+    data class TranslateChapterUpdateBody(
+        val glossaryUuid: String? = null,
+        val paragraphsZh: List<String>,
+    )
 
     suspend fun updateChapterTranslation(
         novelId: String,
         translatorId: TranslatorId,
         volumeId: String,
         chapterId: String,
-        lines: List<String>,
+        body: TranslateChapterUpdateBody,
     ): Result<Long> {
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
+
+        val novel =
+            if (novelId == "non-archived" || novelId.startsWith("user")) null
+            else metadataRepo.findOne(novelId)
+
+        if (
+            translatorId.supportGlossary() &&
+            body.glossaryUuid != novel?.glossaryUuid
+        ) {
+            return httpBadRequest("术语表uuid失效")
+        }
 
         val jpLines = volumeRepo.getChapter(novelId, volumeId, chapterId)
             ?: return httpNotFound("章节不存在")
@@ -468,7 +562,7 @@ class WenkuNovelApi(
         if (volumeRepo.isTranslationExist(novelId, volumeId, translatorId, chapterId))
             return httpConflict("章节翻译已经存在")
 
-        if (jpLines.size != lines.size)
+        if (jpLines.size != body.paragraphsZh.size)
             return httpBadRequest("翻译行数不匹配")
 
         volumeRepo.updateTranslation(
@@ -476,7 +570,61 @@ class WenkuNovelApi(
             volumeId = volumeId,
             translatorId = translatorId,
             chapterId = chapterId,
-            lines = lines,
+            lines = body.paragraphsZh,
+            glossaryUuid = body.glossaryUuid,
+            glossary = novel?.glossary ?: emptyMap(),
+        )
+
+        val zhChapters = volumeRepo.getTranslatedNumber(
+            novelId, volumeId, translatorId
+        )
+        return Result.success(zhChapters)
+    }
+
+    @Serializable
+    data class TranslateChapterUpdatePartlyBody(
+        val glossaryUuid: String? = null,
+        val paragraphsZh: Map<Int, String>,
+    )
+
+    suspend fun updateChapterTranslationPartly(
+        novelId: String,
+        translatorId: TranslatorId,
+        volumeId: String,
+        chapterId: String,
+        body: TranslateChapterUpdatePartlyBody,
+    ): Result<Long> {
+        if (!translatorId.supportGlossary()) {
+            return httpBadRequest("翻译器不支持术语表")
+        }
+
+        if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
+
+        val novel =
+            if (novelId == "non-archived" || novelId.startsWith("user")) null
+            else metadataRepo.findOne(novelId)
+
+        if (body.glossaryUuid == null) {
+            return httpBadRequest("术语表uuid失效")
+        }
+        if (
+            translatorId.supportGlossary() &&
+            body.glossaryUuid != novel?.glossaryUuid
+        ) {
+            return httpBadRequest("术语表uuid失效")
+        }
+
+        if (!volumeRepo.isTranslationExist(novelId, volumeId, translatorId, chapterId))
+            return httpNotFound("章节翻译不存在")
+
+        volumeRepo.updateTranslation(
+            novelId = novelId,
+            volumeId = volumeId,
+            translatorId = translatorId,
+            chapterId = chapterId,
+            paragraphsZh = body.paragraphsZh,
+            glossaryUuid = body.glossaryUuid,
+            glossary = novel?.glossary ?: emptyMap(),
         )
 
         val zhChapters = volumeRepo.getTranslatedNumber(

@@ -27,6 +27,8 @@ data class WenkuNovelMetadata(
     val artists: List<String>,
     val keywords: List<String>,
     val introduction: String,
+    val glossaryUuid: String? = null,
+    val glossary: Map<String, String> = emptyMap(),
     val visited: Long,
 ) {
     companion object {

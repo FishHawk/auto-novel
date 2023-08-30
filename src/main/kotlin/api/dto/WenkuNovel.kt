@@ -36,6 +36,7 @@ data class WenkuNovelDto(
     val artists: List<String>,
     val keywords: List<String>,
     val introduction: String,
+    val glossary: Map<String, String>,
     val visited: Long,
     val favored: Boolean?,
     val volumeZh: List<String>,

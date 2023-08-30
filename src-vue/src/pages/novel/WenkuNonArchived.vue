@@ -51,12 +51,37 @@ getVolumesUser();
       <br />
       上传到这里的小说过一段时间会清理（现在还没做）。
     </n-p>
-    <ListVolumes
-      type="jp"
-      :volumesResult="volumesUserResult"
-      :novelId="userNovelId"
-      @uploadFinished="getVolumesUser()"
-    />
+    <UploadButton type="jp" :novelId="userNovelId" />
+    <ResultView
+      :result="volumesUserResult"
+      :showEmpty="(it: any) => it.length === 0"
+      v-slot="{ value: volumes }"
+    >
+      <n-collapse
+        display-directive="show"
+        :theme-overrides="{
+          itemMargin: '0px',
+          titlePadding: '0px',
+        }"
+        style="margin-top: 16px"
+      >
+        <n-collapse-item
+          v-for="volume in volumes"
+          :title="volume.volumeId"
+          style="padding: 4px"
+        >
+          <WenkuTranslateItem
+            :novelId="userNovelId"
+            :volume-id="volume.volumeId"
+            :total="volume.total"
+            v-model:baidu="volume.baidu"
+            v-model:youdao="volume.youdao"
+            v-model:gpt="volume.gpt"
+            style="padding-top: -8px"
+          />
+        </n-collapse-item>
+      </n-collapse>
+    </ResultView>
 
     <SectionHeader title="通用缓存区" />
     <n-p>
@@ -66,11 +91,49 @@ getVolumesUser();
         在上传之前请确定文库列表还没有你的小说页面。如果有的话，请在小说页面上传。
       </b>
     </n-p>
-    <ListVolumes
+    <UploadButton
       type="jp"
-      :volumesResult="volumesResult"
       novelId="non-archived"
       @uploadFinished="getVolumesNonArchived()"
     />
+    <ResultView
+      :result="volumesResult"
+      :showEmpty="(it: any) => it.length === 0"
+      v-slot="{ value: volumes }"
+    >
+      <n-collapse
+        display-directive="show"
+        :theme-overrides="{
+          itemMargin: '0px',
+          titlePadding: '0px',
+        }"
+        style="margin-top: 16px"
+      >
+        <n-collapse-item
+          v-for="volume in volumes"
+          :title="volume.volumeId"
+          style="padding: 4px"
+        >
+          <WenkuTranslateItem
+            novelId="non-archived"
+            :volume-id="volume.volumeId"
+            :total="volume.total"
+            v-model:baidu="volume.baidu"
+            v-model:youdao="volume.youdao"
+            v-model:gpt="volume.gpt"
+            style="padding-top: -8px"
+          />
+        </n-collapse-item>
+      </n-collapse>
+    </ResultView>
   </MainLayout>
 </template>
+
+<style>
+.n-collapse
+  .n-collapse-item
+  .n-collapse-item__content-wrapper
+  .n-collapse-item__content-inner {
+  padding-top: 0px;
+}
+</style>

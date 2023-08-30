@@ -20,6 +20,8 @@ import org.bson.types.ObjectId
 import org.litote.kmongo.combine
 import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
+import util.Optional
+import java.util.*
 
 class WenkuNovelMetadataRepository(
     private val mongo: MongoDataSource,
@@ -138,6 +140,22 @@ class WenkuNovelMetadataRepository(
             keywords = keywords,
         )
         return novel
+    }
+
+    suspend fun updateGlossary(
+        novelId: String,
+        glossary: Map<String, String>,
+    ): WenkuNovelMetadata? {
+        return mongo
+            .wenkuNovelMetadataCollection
+            .findOneAndUpdate(
+                WenkuNovelMetadata.byId(novelId),
+                combine(
+                    setValue(WebNovelMetadata::glossaryUuid, UUID.randomUUID().toString()),
+                    setValue(WebNovelMetadata::glossary, glossary)
+                ),
+                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
+            )
     }
 
     suspend fun insertOne(

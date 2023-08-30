@@ -2,15 +2,17 @@
 import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const props = defineProps<{
   novelId: string;
-  glossary: { [key: string]: string };
-  volumes: VolumeJpDto[];
+  volumeId: string;
+  total: number;
+  baidu: number;
+  youdao: number;
+  gpt: number;
 }>();
 
 const emits = defineEmits<{
@@ -40,7 +42,7 @@ const message = useMessage();
 
 const taskDetail: Ref<TaskDetail | undefined> = ref();
 
-async function startUpdateTask(volumeId: string, translatorId: TranslatorId) {
+async function startUpdateTask(translatorId: TranslatorId) {
   if (taskDetail.value?.running) {
     message.info('已有任务在运行。');
     return;
@@ -64,7 +66,7 @@ async function startUpdateTask(volumeId: string, translatorId: TranslatorId) {
   await ApiWenkuNovel.translate(
     props.novelId,
     translatorId,
-    volumeId,
+    props.volumeId,
     accessToken,
     {
       onStart: (total: number) => {
@@ -98,9 +100,9 @@ interface NovelFiles {
   files: { label: string; url: string; name: string }[];
 }
 
-function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
+function stateToFileList(): NovelFiles[] {
   let ext: string;
-  if (volume.volumeId.toLowerCase().endsWith('.txt')) {
+  if (props.volumeId.toLowerCase().endsWith('.txt')) {
     ext = 'txt';
   } else {
     ext = 'epub';
@@ -117,14 +119,14 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
   ) {
     return {
       label,
-      url: ApiWenkuNovel.createFileUrl(props.novelId, volume.volumeId, lang),
+      url: ApiWenkuNovel.createFileUrl(props.novelId, props.volumeId, lang),
       name: `${lang}.${ext}`,
     };
   }
   const extUpper = ext.toUpperCase();
   return [
     {
-      label: `百度(${volume.baidu}/${volume.total})`,
+      label: `百度(${props.baidu}/${props.total})`,
       translatorId: 'baidu',
       files: [
         createFile(extUpper, 'zh-baidu'),
@@ -132,7 +134,7 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
       ],
     },
     {
-      label: `有道(${volume.youdao}/${volume.total})`,
+      label: `有道(${props.youdao}/${props.total})`,
       translatorId: 'youdao',
       files: [
         createFile(extUpper, 'zh-youdao'),
@@ -140,7 +142,7 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
       ],
     },
     {
-      label: `GPT3(${volume.gpt}/${volume.total})`,
+      label: `GPT3(${props.gpt}/${props.total})`,
       translatorId: 'gpt',
       files: [
         createFile(extUpper, 'zh-gpt'),
@@ -149,64 +151,17 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
     },
   ];
 }
-
-const showAdvanceOptions = ref(false);
-const authInfoStore = useAuthInfoStore();
-
-async function submitGlossary() {
-  const token = authInfoStore.token;
-  if (!token) {
-    message.info('请先登录');
-    return;
-  }
-  const result = await ApiWenkuNovel.updateGlossary(
-    props.novelId,
-    props.glossary,
-    token
-  );
-  if (result.ok) {
-    message.success('术语表提交成功');
-  } else {
-    message.error('术语表提交失败：' + result.error.message);
-  }
-}
-
-function sortVolumesJp(volumes: VolumeJpDto[]) {
-  return volumes.sort((a, b) => a.volumeId.localeCompare(b.volumeId));
-}
 </script>
 
 <template>
-  <n-text depth="3" style="font-size: 12px">
-    # 翻译功能需要需要安装浏览器插件，参见
-    <n-a href="/wiki/extension" target="_blank">插件使用说明</n-a>
-  </n-text>
-  <n-p>
-    高级选项
-    <n-switch
-      :rubber-band="false"
-      size="small"
-      v-model:value="showAdvanceOptions"
-    />
-  </n-p>
-  <n-collapse-transition :show="showAdvanceOptions" style="margin-bottom: 16px">
-    <n-list bordered>
-      <n-list-item>
-        <GlossaryEdit :glossary="glossary" :submit="submitGlossary" />
-      </n-list-item>
-    </n-list>
-  </n-collapse-transition>
-
   <n-auto-complete
     v-model:value="gptAccessToken"
     :options="gptAccessTokenOptions"
     placeholder="请输入GPT的Access Token"
     :get-show="() => true"
   />
-
-  <template v-for="volume of sortVolumesJp(volumes)">
-    <n-p>{{ volume.volumeId }}</n-p>
-    <n-space v-for="row in stateToFileList(volume)" style="padding: 4px">
+  <div v-for="row in stateToFileList()">
+    <n-space style="padding: 4px">
       <span>{{ row.label }}</span>
       <n-space>
         <n-a
@@ -220,13 +175,13 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
       </n-space>
       <n-button
         size="tiny"
-        @click="startUpdateTask(volume.volumeId, row.translatorId)"
+        @click="startUpdateTask(row.translatorId)"
         style="margin-left: 24px"
       >
         更新
       </n-button>
     </n-space>
-  </template>
+  </div>
 
   <TranslateTaskDetail
     v-if="taskDetail"

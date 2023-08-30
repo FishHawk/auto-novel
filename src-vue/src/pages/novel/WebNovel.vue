@@ -220,17 +220,21 @@ function enableEditMode() {
           />
         </n-space>
 
-        <WebTranslate
-          :provider-id="providerId"
-          :novel-id="novelId"
-          :title="metadata.titleZh ?? metadata.titleJp"
-          :total="metadata.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
-          v-model:jp="metadata.jp"
-          v-model:baidu="metadata.baidu"
-          v-model:youdao="metadata.youdao"
-          :gpt="metadata.gpt"
-          :glossary="metadata.glossary"
-        />
+        <section>
+          <SectionHeader title="翻译" />
+          <WebTranslate
+            :provider-id="providerId"
+            :novel-id="novelId"
+            :title="metadata.titleZh ?? metadata.titleJp"
+            :total="metadata.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
+            v-model:jp="metadata.jp"
+            v-model:baidu="metadata.baidu"
+            v-model:youdao="metadata.youdao"
+            :gpt="metadata.gpt"
+            :glossary="metadata.glossary"
+          />
+        </section>
+
         <SectionWebToc
           :provider-id="providerId"
           :novel-id="novelId"

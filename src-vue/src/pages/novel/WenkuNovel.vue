@@ -11,7 +11,11 @@ import {
 
 import { Ok, ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
-import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
+import {
+  ApiWenkuNovel,
+  VolumeJpDto,
+  WenkuMetadataDto,
+} from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
@@ -105,6 +109,10 @@ async function notifyUpdate() {
     message.error('提醒更新错误：' + result.error.message);
   }
   isFavoriteChanging = false;
+}
+
+function sortVolumesZh(volumes: string[]) {
+  return volumes.sort((a, b) => a.localeCompare(b));
 }
 </script>
 
@@ -230,20 +238,36 @@ async function notifyUpdate() {
         </n-space>
 
         <SectionHeader title="中文章节" />
-        <ListVolumes
+        <UploadButton
           type="zh"
-          :volumesResult="Ok(metadata.volumeZh)"
           :novelId="novelId"
           @uploadFinished="refreshMetadata()"
         />
+        <n-ul>
+          <n-li v-for="fileName in sortVolumesZh(metadata.volumeZh)">
+            <n-a
+              :href="`/files-wenku/${novelId}/${fileName}`"
+              target="_blank"
+              :download="fileName"
+            >
+              {{ fileName }}
+            </n-a>
+          </n-li>
+        </n-ul>
 
-        <SectionHeader title="日文章节" />
-        <ListVolumes
-          type="jp"
-          :volumesResult="Ok(metadata.volumeJp)"
-          :novelId="novelId"
-          @uploadFinished="refreshMetadata()"
-        />
+        <section>
+          <SectionHeader title="日文章节" />
+          <UploadButton
+            type="jp"
+            :novelId="novelId"
+            @uploadFinished="refreshMetadata()"
+          />
+          <WenkuTranslate
+            :novel-id="novelId"
+            :glossary="metadata.glossary"
+            :volumes="metadata.volumeJp"
+          />
+        </section>
 
         <SectionComment :post-id="route.path" />
       </template>
