@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /$
-Allow: /how-to-use/
 Allow: /novel/
 Allow: /wenku/
 Disallow: /
