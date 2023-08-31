@@ -102,59 +102,6 @@ async function getMetadata(
   return runCatching(api.get(`novel/${providerId}/${novelId}`, options).json());
 }
 
-async function putWenkuId(
-  providerId: string,
-  novelId: string,
-  wenkuId: string,
-  token: string
-): Promise<Result<WebNovelMetadataDto>> {
-  return runCatching(
-    api
-      .put(`novel/${providerId}/${novelId}/wenku`, {
-        headers: { Authorization: 'Bearer ' + token },
-        body: wenkuId,
-      })
-      .json()
-  );
-}
-
-async function deleteWenkuId(
-  providerId: string,
-  novelId: string,
-  token: string
-): Promise<Result<WebNovelMetadataDto>> {
-  return runCatching(
-    api
-      .delete(`novel/${providerId}/${novelId}/wenku`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .json()
-  );
-}
-
-interface WebNovelMetadataPatchBody {
-  title?: string;
-  introduction?: string;
-  glossary?: { [key: string]: string };
-  toc: { [key: string]: string };
-}
-
-async function putMetadata(
-  providerId: string,
-  novelId: string,
-  patch: WebNovelMetadataPatchBody,
-  token: string
-): Promise<Result<WebNovelMetadataDto>> {
-  return runCatching(
-    api
-      .put(`novel/${providerId}/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-        json: patch,
-      })
-      .json()
-  );
-}
-
 export interface WebNovelChapterDto {
   titleJp: string;
   titleZh: string | undefined;
@@ -173,6 +120,72 @@ async function getChapter(
 ): Promise<Result<WebNovelChapterDto>> {
   return runCatching(
     api.get(`novel/${providerId}/${novelId}/chapter/${chapterId}`).json()
+  );
+}
+
+async function updateMetadata(
+  providerId: string,
+  novelId: string,
+  body: {
+    title?: string;
+    introduction?: string;
+    toc: { [key: string]: string };
+  },
+  token: string
+): Promise<Result<WebNovelMetadataDto>> {
+  return runCatching(
+    api
+      .post(`novel/${providerId}/${novelId}`, {
+        headers: { Authorization: 'Bearer ' + token },
+        json: body,
+      })
+      .json()
+  );
+}
+
+async function updateGlossary(
+  providerId: string,
+  novelId: string,
+  body: { [key: string]: string },
+  token: string
+): Promise<Result<string>> {
+  return runCatching(
+    api
+      .put(`novel/${providerId}/${novelId}/glossary`, {
+        headers: { Authorization: 'Bearer ' + token },
+        json: body,
+      })
+      .text()
+  );
+}
+
+async function putWenkuId(
+  providerId: string,
+  novelId: string,
+  wenkuId: string,
+  token: string
+): Promise<Result<string>> {
+  return runCatching(
+    api
+      .put(`novel/${providerId}/${novelId}/wenku`, {
+        headers: { Authorization: 'Bearer ' + token },
+        body: wenkuId,
+      })
+      .text()
+  );
+}
+
+async function deleteWenkuId(
+  providerId: string,
+  novelId: string,
+  token: string
+): Promise<Result<string>> {
+  return runCatching(
+    api
+      .delete(`novel/${providerId}/${novelId}/wenku`, {
+        headers: { Authorization: 'Bearer ' + token },
+      })
+      .text()
   );
 }
 
@@ -196,11 +209,15 @@ function createFileUrl(
 export const ApiWebNovel = {
   list,
   listRank,
+  //
   getMetadata,
-  putMetadata,
+  getChapter,
+  //
+  updateMetadata,
+  updateGlossary,
   putWenkuId,
   deleteWenkuId,
-  getChapter,
+  //
   translate,
   checkUpdate,
   createFileUrl,

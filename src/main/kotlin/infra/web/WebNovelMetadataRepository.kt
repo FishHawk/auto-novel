@@ -5,6 +5,7 @@ import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
+import com.mongodb.client.result.UpdateResult
 import infra.ElasticSearchDataSource
 import infra.MongoDataSource
 import infra.WebNovelFavoriteModel
@@ -12,6 +13,8 @@ import infra.WebNovelMetadataEsModel
 import infra.model.*
 import infra.provider.RemoteNovelListItem
 import infra.provider.WebNovelProviderDataSource
+import infra.provider.providers.Hameln
+import infra.provider.providers.Syosetu
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import org.bson.conversions.Bson
@@ -20,6 +23,7 @@ import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
 import util.Optional
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 object WebNovelFilter {
@@ -40,15 +44,15 @@ class WebNovelMetadataRepository(
         providerId: String,
         options: Map<String, String>,
     ): Result<List<WebNovelMetadataOutline>> {
-        WebNovelType
-        val ranks = provider.listRank(providerId, options)
-            .getOrElse { return Result.failure(it) }
-        val items = ranks.map {
-            val novel = mongo.webNovelMetadataCollection
-                .findOne(WebNovelMetadata.byId(providerId, it.novelId))
-            it.toOutline(providerId, novel)
-        }
-        return Result.success(items)
+        return provider
+            .listRank(providerId, options)
+            .map { rank ->
+                rank.map { remote ->
+                    val local = mongo.webNovelMetadataCollection
+                        .findOne(WebNovelMetadata.byId(providerId, remote.novelId))
+                    remote.toOutline(providerId, local)
+                }
+            }
     }
 
     suspend fun search(
@@ -166,52 +170,128 @@ class WebNovelMetadataRepository(
             .findOne(WebNovelMetadata.byId(providerId, novelId))
     }
 
-    suspend fun getRemote(
+    private suspend fun getRemote(
         providerId: String,
         novelId: String,
     ): Result<WebNovelMetadata> {
-        val remote = provider
+        return provider
             .getMetadata(providerId, novelId)
-            .getOrElse { return Result.failure(it) }
-        val model = WebNovelMetadata(
-            id = ObjectId(),
-            providerId = providerId,
-            novelId = novelId,
-            titleJp = remote.title,
-            authors = remote.authors.map { WebNovelAuthor(it.name, it.link) },
-            type = remote.type,
-            keywords = remote.keywords,
-            attentions = remote.attentions,
-            introductionJp = remote.introduction,
-            toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId, it.createAt) },
-        )
-        return Result.success(model)
+            .map { remote ->
+                WebNovelMetadata(
+                    id = ObjectId(),
+                    providerId = providerId,
+                    novelId = novelId,
+                    titleJp = remote.title,
+                    authors = remote.authors.map { WebNovelAuthor(it.name, it.link) },
+                    type = remote.type,
+                    keywords = remote.keywords,
+                    attentions = remote.attentions,
+                    introductionJp = remote.introduction,
+                    toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId, it.createAt) },
+                )
+            }
     }
 
-    suspend fun getRemoteAndSave(
+    suspend fun getNovelAndSave(
         providerId: String,
         novelId: String,
+        expiredMinutes: Int = 20 * 60,
     ): Result<WebNovelMetadata> {
-        val remote = provider
-            .getMetadata(providerId, novelId)
-            .getOrElse { return Result.failure(it) }
-        val model = WebNovelMetadata(
-            id = ObjectId(),
+        val local = get(providerId, novelId)
+
+        // 不在数据库中
+        if (local == null) {
+            return getRemote(providerId, novelId)
+                .onSuccess {
+                    mongo
+                        .webNovelMetadataCollection
+                        .insertOne(it)
+                    syncEs(it)
+                }
+        }
+
+        // 在数据库中，暂停更新
+        if (local.pauseUpdate) {
+            return Result.success(local)
+        }
+
+        // 在数据库中，没有过期
+        val minutes = ChronoUnit.MINUTES.between(local.syncAt, LocalDateTime.now())
+        val isExpired = minutes > expiredMinutes
+        if (!isExpired) {
+            return Result.success(local)
+        }
+
+        // 在数据库中，过期，合并
+        val remoteNovel = getRemote(providerId, novelId)
+            .getOrElse {
+                // 无法更新，大概率小说被删了
+                return Result.success(local)
+            }
+        val merged = mergeNovel(
             providerId = providerId,
             novelId = novelId,
-            titleJp = remote.title,
-            authors = remote.authors.map { WebNovelAuthor(it.name, it.link) },
-            type = remote.type,
-            keywords = remote.keywords,
-            attentions = remote.attentions,
-            introductionJp = remote.introduction,
-            toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId) },
+            local = local,
+            remote = remoteNovel,
         )
-        mongo
+        return Result.success(merged)
+    }
+
+    private suspend fun mergeNovel(
+        providerId: String,
+        novelId: String,
+        local: WebNovelMetadata,
+        remote: WebNovelMetadata,
+    ): WebNovelMetadata {
+        val merged = mergeToc(
+            remoteToc = remote.toc,
+            localToc = local.toc,
+            isIdUnstable = isProviderIdUnstable(providerId)
+        )
+        if (merged.reviewReason != null) {
+            mongo
+                .webNovelTocMergeHistoryCollection
+                .insertOne(
+                    WebNovelTocMergeHistory(
+                        id = ObjectId(),
+                        providerId = providerId,
+                        novelId = novelId,
+                        tocOld = local.toc,
+                        tocNew = remote.toc,
+                        reason = merged.reviewReason,
+                    )
+                )
+        }
+
+        val list = mutableListOf(
+            setValue(WebNovelMetadata::titleJp, remote.titleJp),
+            setValue(WebNovelMetadata::type, remote.type),
+            setValue(WebNovelMetadata::attentions, remote.attentions),
+            setValue(WebNovelMetadata::keywords, remote.keywords),
+            setValue(WebNovelMetadata::introductionJp, remote.introductionJp),
+            setValue(WebNovelMetadata::toc, merged.toc),
+            setValue(WebNovelMetadata::syncAt, LocalDateTime.now()),
+        )
+        if (merged.hasChanged) {
+            list.add(setValue(WebNovelMetadata::changeAt, LocalDateTime.now()))
+            list.add(setValue(WebNovelMetadata::updateAt, Clock.System.now()))
+        }
+
+        val novel = mongo
             .webNovelMetadataCollection
-            .insertOne(model)
-        syncEs(model)
-        return Result.success(get(providerId, novelId)!!)
+            .findOneAndUpdate(
+                WebNovelMetadata.byId(providerId, novelId),
+                combine(list),
+                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
+            )!!
+        syncEs(novel)
+        if (merged.hasChanged) {
+            mongo.webNovelFavoriteCollection.updateMany(
+                WebNovelFavoriteModel::novelId eq novel.id.toId(),
+                setValue(WebNovelFavoriteModel::updateAt, novel.updateAt)
+            )
+        }
+        return novel
     }
 
     suspend fun increaseVisited(providerId: String, novelId: String) {
@@ -223,86 +303,7 @@ class WebNovelMetadataRepository(
             )
     }
 
-    suspend fun update(
-        providerId: String,
-        novelId: String,
-        titleJp: String?,
-        type: WebNovelType,
-        attentions: List<WebNovelAttention>,
-        keywords: List<String>,
-        introductionJp: String?,
-        toc: List<WebNovelTocItem>?,
-        hasChanged: Boolean,
-    ): WebNovelMetadata? {
-        val list = mutableListOf(
-            setValue(WebNovelMetadata::titleJp, titleJp),
-            setValue(WebNovelMetadata::type, type),
-            setValue(WebNovelMetadata::attentions, attentions),
-            setValue(WebNovelMetadata::keywords, keywords),
-            setValue(WebNovelMetadata::introductionJp, introductionJp),
-            setValue(WebNovelMetadata::syncAt, LocalDateTime.now())
-        )
-        if (toc != null) {
-            list.add(setValue(WebNovelMetadata::toc, toc))
-        }
-        if (hasChanged) {
-            list.add(setValue(WebNovelMetadata::changeAt, LocalDateTime.now()))
-            list.add(setValue(WebNovelMetadata::updateAt, Clock.System.now()))
-        }
-
-        val novel = mongo
-            .webNovelMetadataCollection
-            .findOneAndUpdate(
-                WebNovelMetadata.byId(providerId, novelId),
-                combine(list),
-                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-            )
-        if (novel != null) {
-            syncEs(novel)
-            if (hasChanged) {
-                mongo.webNovelFavoriteCollection.updateMany(
-                    WebNovelFavoriteModel::novelId eq novel.id.toId(),
-                    setValue(WebNovelFavoriteModel::updateAt, novel.updateAt)
-                )
-            }
-        }
-        return novel
-    }
-
-    suspend fun updateWenkuId(
-        providerId: String,
-        novelId: String,
-        wenkuId: String?,
-    ): WebNovelMetadata? {
-        return mongo
-            .webNovelMetadataCollection
-            .findOneAndUpdate(
-                WebNovelMetadata.byId(providerId, novelId),
-                setValue(WebNovelMetadata::wenkuId, wenkuId),
-                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-            )
-    }
-
-    suspend fun updateTranslateStateJp(
-        providerId: String,
-        novelId: String,
-    ) {
-        val jp = mongo.webNovelChapterCollection
-            .countDocuments(
-                WebNovelChapter.byNovelId(providerId, novelId)
-            )
-        mongo
-            .webNovelMetadataCollection
-            .updateOne(
-                WebNovelMetadata.byId(providerId, novelId),
-                combine(
-                    setValue(WebNovelMetadata::jp, jp),
-                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
-                ),
-            )
-    }
-
-    suspend fun updateTranslateStateZh(
+    suspend fun updateChapterTranslateState(
         providerId: String,
         novelId: String,
         translatorId: TranslatorId,
@@ -337,12 +338,11 @@ class WebNovelMetadataRepository(
         return zh
     }
 
-    suspend fun updateZh(
+    suspend fun updateTranslation(
         providerId: String,
         novelId: String,
         titleZh: Optional<String?>,
         introductionZh: Optional<String?>,
-        glossary: Optional<Map<String, String>>,
         tocZh: Map<Int, String?>,
     ): WebNovelMetadata? {
         val list = mutableListOf<Bson>()
@@ -351,10 +351,6 @@ class WebNovelMetadataRepository(
         }
         introductionZh.ifSome {
             list.add(setValue(WebNovelMetadata::introductionZh, it))
-        }
-        glossary.ifSome {
-            list.add(setValue(WebNovelMetadata::glossaryUuid, UUID.randomUUID().toString()))
-            list.add(setValue(WebNovelMetadata::glossary, it))
         }
         tocZh.forEach { (index, itemTitleZh) ->
             list.add(setValue(WebNovelMetadata::toc.pos(index) / WebNovelTocItem::titleZh, itemTitleZh))
@@ -369,6 +365,35 @@ class WebNovelMetadataRepository(
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )
             ?.also { syncEs(it) }
+    }
+
+    suspend fun updateGlossary(
+        providerId: String,
+        novelId: String,
+        glossary: Map<String, String>,
+    ) {
+        mongo
+            .webNovelMetadataCollection
+            .updateOne(
+                WebNovelMetadata.byId(providerId, novelId),
+                combine(
+                    setValue(WebNovelMetadata::glossaryUuid, UUID.randomUUID().toString()),
+                    setValue(WebNovelMetadata::glossary, glossary),
+                ),
+            )
+    }
+
+    suspend fun updateWenkuId(
+        providerId: String,
+        novelId: String,
+        wenkuId: String?,
+    ): UpdateResult {
+        return mongo
+            .webNovelMetadataCollection
+            .updateOne(
+                WebNovelMetadata.byId(providerId, novelId),
+                setValue(WebNovelMetadata::wenkuId, wenkuId),
+            )
     }
 
     private suspend fun syncEs(
@@ -430,3 +455,86 @@ fun WebNovelMetadata.toOutline() =
         gpt = gpt,
         extra = null,
     )
+
+fun isProviderIdUnstable(providerId: String): Boolean {
+    return providerId == Syosetu.id || providerId == Hameln.id
+}
+
+data class MergedResult(
+    val toc: List<WebNovelTocItem>,
+    val hasChanged: Boolean,
+    val reviewReason: String?,
+)
+
+fun mergeToc(
+    remoteToc: List<WebNovelTocItem>,
+    localToc: List<WebNovelTocItem>,
+    isIdUnstable: Boolean,
+): MergedResult {
+    return if (isIdUnstable) {
+        mergeTocUnstable(remoteToc, localToc)
+    } else {
+        mergeTocStable(remoteToc, localToc)
+    }
+}
+
+private fun mergeTocUnstable(
+    remoteToc: List<WebNovelTocItem>,
+    localToc: List<WebNovelTocItem>,
+): MergedResult {
+    val remoteIdToTitle = remoteToc.mapNotNull {
+        if (it.chapterId == null) null
+        else it.chapterId to it.titleJp
+    }.toMap()
+    val localIdToTitle = localToc.mapNotNull {
+        if (it.chapterId == null) null
+        else it.chapterId to it.titleJp
+    }.toMap()
+
+    if (remoteIdToTitle.size < localIdToTitle.size) {
+        return MergedResult(
+            simpleMergeToc(remoteToc, localToc),
+            true,
+            "有未知章节被删了"
+        )
+    } else {
+        val hasEpisodeTitleChanged = localIdToTitle.any { (eid, localTitle) ->
+            val remoteTitle = remoteIdToTitle[eid]
+            remoteTitle != localTitle
+        }
+        return MergedResult(
+            simpleMergeToc(remoteToc, localToc),
+            remoteIdToTitle.size != localIdToTitle.size,
+            if (hasEpisodeTitleChanged) "有章节标题变化" else null
+        )
+    }
+}
+
+private fun mergeTocStable(
+    remoteToc: List<WebNovelTocItem>,
+    localToc: List<WebNovelTocItem>,
+): MergedResult {
+    val remoteEpIds = remoteToc.mapNotNull { it.chapterId }
+    val localEpIds = localToc.mapNotNull { it.chapterId }
+    val noEpDeleted = remoteEpIds.containsAll(localEpIds)
+    val noEpAdded = localEpIds.containsAll(remoteEpIds)
+    return MergedResult(
+        simpleMergeToc(remoteToc, localToc),
+        !(noEpAdded && noEpDeleted),
+        if (noEpDeleted) null else "有章节被删了"
+    )
+}
+
+private fun simpleMergeToc(
+    remoteToc: List<WebNovelTocItem>,
+    localToc: List<WebNovelTocItem>,
+): List<WebNovelTocItem> {
+    return remoteToc.map { itemNew ->
+        val itemOld = localToc.find { it.titleJp == itemNew.titleJp }
+        if (itemOld?.titleZh == null) {
+            itemNew
+        } else {
+            itemNew.copy(titleZh = itemOld.titleZh)
+        }
+    }
+}

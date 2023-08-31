@@ -123,6 +123,19 @@ data class WebNovelTocItemDto(
     }
 }
 
+
+@Serializable
+data class WebNovelChapterDto(
+    val titleJp: String,
+    val titleZh: String? = null,
+    val prevId: String? = null,
+    val nextId: String? = null,
+    val paragraphs: List<String>,
+    val baiduParagraphs: List<String>? = null,
+    val youdaoParagraphs: List<String>? = null,
+    val gptParagraphs: List<String>? = null,
+)
+
 @Serializable
 data class WebNovelTocMergeHistoryOutlineDto(
     val id: String,

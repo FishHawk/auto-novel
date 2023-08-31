@@ -145,7 +145,7 @@ class WebNovelAdminApi(
         providerId: String,
         novelId: String,
     ): Result<WebNovelPatchHistoryDto> {
-        val patch = patchRepo.findOne(providerId, novelId)
+        val patch = patchRepo.get(providerId, novelId)
             ?: return httpNotFound("未找到")
         val dto = WebNovelPatchHistoryDto.fromDomain(patch)
         return Result.success(dto)
@@ -155,7 +155,7 @@ class WebNovelAdminApi(
         providerId: String,
         novelId: String,
     ): Result<Unit> {
-        patchRepo.deleteOne(
+        patchRepo.delete(
             providerId = providerId,
             novelId = novelId,
         )
@@ -166,7 +166,7 @@ class WebNovelAdminApi(
         providerId: String,
         novelId: String,
     ): Result<Unit> {
-        val patch = patchRepo.findOne(providerId, novelId)
+        val patch = patchRepo.get(providerId, novelId)
             ?: return httpNotFound("未找到")
         val novel = novelRepo.get(providerId, novelId)
             ?: return httpNotFound("未找到对应小说")
@@ -186,15 +186,14 @@ class WebNovelAdminApi(
                 tocZh[index] = tocMap[item.titleJp]
             }
         }
-        novelRepo.updateZh(
+        novelRepo.updateTranslation(
             providerId = providerId,
             novelId = novelId,
             titleZh = titleZh,
             introductionZh = introductionZh,
-            glossary = None,
             tocZh = tocZh,
         )
-        patchRepo.deleteOne(
+        patchRepo.delete(
             providerId = providerId,
             novelId = novelId,
         )

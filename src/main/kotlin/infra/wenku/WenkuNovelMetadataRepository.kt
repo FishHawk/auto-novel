@@ -1,26 +1,23 @@
 package infra.wenku
 
 import com.jillesvangurp.ktsearch.*
-import com.jillesvangurp.searchdsls.querydsl.bool
-import com.jillesvangurp.searchdsls.querydsl.disMax
-import com.jillesvangurp.searchdsls.querydsl.match
-import com.jillesvangurp.searchdsls.querydsl.sort
+import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import infra.ElasticSearchDataSource
 import infra.MongoDataSource
 import infra.WenkuNovelMetadataEsModel
-import infra.model.*
+import infra.model.Page
+import infra.model.WebNovelMetadata
+import infra.model.WenkuNovelMetadata
+import infra.model.WenkuNovelMetadataOutline
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.bson.types.ObjectId
 import org.litote.kmongo.combine
 import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
-import util.Optional
 import java.util.*
 
 class WenkuNovelMetadataRepository(
@@ -40,15 +37,16 @@ class WenkuNovelMetadataRepository(
             query = bool {
                 if (queryString != null) {
                     must(
-                        disMax {
-                            queries(
-                                match(WenkuNovelMetadataEsModel::title, queryString),
-                                match(WenkuNovelMetadataEsModel::titleZh, queryString),
-                                match(WenkuNovelMetadataEsModel::titleZhAlias, queryString),
-                                match(WenkuNovelMetadataEsModel::authors, queryString),
-                                match(WenkuNovelMetadataEsModel::artists, queryString),
-                                match(WenkuNovelMetadataEsModel::keywords, queryString),
-                            )
+                        simpleQueryString(
+                            queryString,
+                            WenkuNovelMetadataEsModel::title,
+                            WenkuNovelMetadataEsModel::titleZh,
+                            WenkuNovelMetadataEsModel::titleZhAlias,
+                            WenkuNovelMetadataEsModel::authors,
+                            WenkuNovelMetadataEsModel::artists,
+                            WenkuNovelMetadataEsModel::keywords,
+                        ) {
+                            defaultOperator = MatchOperator.AND
                         }
                     )
                 } else {
@@ -82,19 +80,18 @@ class WenkuNovelMetadataRepository(
             ) != 0L
     }
 
-    suspend fun findOne(novelId: String): WenkuNovelMetadata? {
+    suspend fun get(novelId: String): WenkuNovelMetadata? {
         return mongo
             .wenkuNovelMetadataCollection
             .findOne(WenkuNovelMetadata.byId(novelId))
     }
 
-    suspend fun findOneAndIncreaseVisited(novelId: String): WenkuNovelMetadata? {
-        return mongo
+    suspend fun increaseVisited(novelId: String) {
+        mongo
             .wenkuNovelMetadataCollection
-            .findOneAndUpdate(
+            .updateOne(
                 WenkuNovelMetadata.byId(novelId),
                 inc(WenkuNovelMetadata::visited, 1),
-                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )
     }
 
@@ -145,20 +142,30 @@ class WenkuNovelMetadataRepository(
     suspend fun updateGlossary(
         novelId: String,
         glossary: Map<String, String>,
-    ): WenkuNovelMetadata? {
-        return mongo
+    ) {
+        mongo
             .wenkuNovelMetadataCollection
-            .findOneAndUpdate(
+            .updateOne(
                 WenkuNovelMetadata.byId(novelId),
                 combine(
                     setValue(WebNovelMetadata::glossaryUuid, UUID.randomUUID().toString()),
                     setValue(WebNovelMetadata::glossary, glossary)
                 ),
-                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )
     }
 
-    suspend fun insertOne(
+    suspend fun notifyUpdate(novelId: String) {
+        @Serializable
+        data class EsUpdate(val updateAt: Long)
+        es.client.updateDocument(
+            id = novelId,
+            target = ElasticSearchDataSource.wenkuNovelIndexName,
+            doc = EsUpdate(Clock.System.now().epochSeconds),
+            refresh = Refresh.WaitFor,
+        )
+    }
+
+    suspend fun insert(
         title: String,
         titleZh: String,
         titleZhAlias: List<String>,
@@ -224,19 +231,6 @@ class WenkuNovelMetadataRepository(
                 keywords = keywords,
                 updateAt = Clock.System.now().epochSeconds,
             ),
-            refresh = Refresh.WaitFor,
-        )
-    }
-
-    suspend fun notifyUpdateAt(novelId: String) {
-        @Serializable
-        data class EsUpdate(
-            val updateAt: Long = Clock.System.now().epochSeconds
-        )
-        es.client.updateDocument(
-            id = novelId,
-            target = ElasticSearchDataSource.wenkuNovelIndexName,
-            doc = EsUpdate(),
             refresh = Refresh.WaitFor,
         )
     }

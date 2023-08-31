@@ -2,7 +2,6 @@ package infra.web
 
 import infra.MongoDataSource
 import infra.model.Page
-import infra.model.WebNovelTocItem
 import infra.model.WebNovelTocMergeHistory
 import org.bson.types.ObjectId
 import org.litote.kmongo.util.KMongoUtil.toBson
@@ -37,26 +36,5 @@ class WebNovelTocMergeHistoryRepository(
         mongo
             .webNovelTocMergeHistoryCollection
             .deleteOneById(ObjectId(id))
-    }
-
-    suspend fun insert(
-        providerId: String,
-        novelId: String,
-        tocOld: List<WebNovelTocItem>,
-        tocNew: List<WebNovelTocItem>,
-        reason: String
-    ) {
-        mongo
-            .webNovelTocMergeHistoryCollection
-            .insertOne(
-                WebNovelTocMergeHistory(
-                    id = ObjectId(),
-                    providerId = providerId,
-                    novelId = novelId,
-                    tocOld = tocOld,
-                    tocNew = tocNew,
-                    reason = reason,
-                )
-            )
     }
 }

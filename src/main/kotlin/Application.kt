@@ -1,7 +1,6 @@
 import api.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import domain.WebNovelUpdateService
 import infra.*
 import infra.ElasticSearchDataSource
 import infra.MongoDataSource
@@ -138,9 +137,6 @@ val appModule = module {
     single { EmailCodeRepository(get()) }
     single { ResetPasswordTokenRepository(get()) }
 
-    // Service
-    single { WebNovelUpdateService(get(), get(), get()) }
-
     // Api
     single(createdAtStart = true) {
         val secret = System.getenv("JWT_SECRET") ?: ""
@@ -149,7 +145,7 @@ val appModule = module {
     single(createdAtStart = true) { CommentApi(get()) }
     single(createdAtStart = true) { UserApi(get(), get(), get()) }
 
-    single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
 
     single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get()) }

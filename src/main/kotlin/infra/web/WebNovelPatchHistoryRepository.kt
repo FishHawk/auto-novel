@@ -39,13 +39,13 @@ class WebNovelPatchHistoryRepository(
         return Page(items = items, total = total)
     }
 
-    suspend fun findOne(providerId: String, novelId: String): WebNovelPatchHistory? {
+    suspend fun get(providerId: String, novelId: String): WebNovelPatchHistory? {
         return mongo
             .webNovelPatchHistoryCollection
             .findOne(WebNovelPatchHistory.byId(providerId, novelId))
     }
 
-    suspend fun deleteOne(providerId: String, novelId: String) {
+    suspend fun delete(providerId: String, novelId: String) {
         mongo
             .webNovelPatchHistoryCollection
             .deleteOne(WebNovelPatchHistory.byId(providerId, novelId))

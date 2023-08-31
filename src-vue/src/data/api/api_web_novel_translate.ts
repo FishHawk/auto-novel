@@ -24,7 +24,7 @@ async function getTranslateTask(
   startIndex: number,
   endIndex: number
 ): Promise<TranslateTaskDto> {
-  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}`;
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}`;
   return api.get(url, { searchParams: { startIndex, endIndex } }).json();
 }
 
@@ -40,7 +40,7 @@ async function postMetadata(
   translatorId: TranslatorId,
   body: MetadataUpdateBody
 ): Promise<string> {
-  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/metadata`;
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/metadata`;
   return api.post(url, { json: body }).text();
 }
 
@@ -60,7 +60,7 @@ async function getChapter(
   translatorId: TranslatorId,
   chapterId: string
 ): Promise<ChapterToTranslateDto> {
-  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/chapter/${chapterId}`;
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
   return api.get(url).json();
 }
 
@@ -76,7 +76,7 @@ async function postChapter(
   chapterId: string,
   body: ChapterUpdateBody
 ): Promise<TranslateStateDto> {
-  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/chapter/${chapterId}`;
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
   return api.post(url, { json: body }).json();
 }
 
@@ -92,8 +92,8 @@ async function putChapter(
   chapterId: string,
   body: ChapterUpdatePartlyBody
 ): Promise<TranslateStateDto> {
-  const url = `novel/${providerId}/${novelId}/translate-alt/${translatorId}/chapter/${chapterId}`;
-  return api.put(url, { json: body }).json();
+  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
+  return api.patch(url, { json: body }).json();
 }
 
 function encodeMetadataToTranslate(metadata: TranslateTaskDto): string[] {

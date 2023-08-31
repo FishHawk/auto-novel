@@ -91,7 +91,7 @@ async function submit() {
         .map((item) => ({ [item.jp]: ifEdited(item) }))
     ),
   };
-  const result = await ApiWebNovel.putMetadata(
+  const result = await ApiWebNovel.updateMetadata(
     props.providerId,
     props.novelId,
     patch,
@@ -126,7 +126,6 @@ async function updateWenkuId() {
     token
   );
   if (result.ok) {
-    emit('update:novelMetadata', result.value);
     message.success('提交成功');
   } else {
     message.error('提交失败：' + result.error.message);
@@ -145,7 +144,6 @@ async function deleteWenkuId() {
     token
   );
   if (result.ok) {
-    emit('update:novelMetadata', result.value);
     message.success('提交成功');
   } else {
     message.error('提交失败：' + result.error.message);

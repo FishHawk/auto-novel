@@ -1,4 +1,4 @@
-package api;
+package api
 
 import api.dto.PageDto
 import api.dto.WenkuNovelUploadHistoryDto

@@ -208,14 +208,10 @@ async function submitGlossary() {
     message.info('请先登录');
     return;
   }
-  const patch = {
-    glossary: props.glossary,
-    toc: {},
-  };
-  const result = await ApiWebNovel.putMetadata(
+  const result = await ApiWebNovel.updateGlossary(
     props.providerId,
     props.novelId,
-    patch,
+    props.glossary,
     token
   );
   if (result.ok) {

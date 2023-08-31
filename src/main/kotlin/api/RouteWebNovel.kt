@@ -16,6 +16,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
+import io.ktor.server.resources.patch
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.response.*
@@ -23,10 +24,10 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
-import util.None
 import util.safeSubList
 import util.toOptional
 import java.nio.file.Path
+import java.util.UUID
 
 @Resource("/novel")
 private class WebNovelRes {
@@ -50,6 +51,9 @@ private class WebNovelRes {
         @Resource("/wenku")
         data class Wenku(val parent: Id)
 
+        @Resource("/glossary")
+        data class Glossary(val parent: Id)
+
         @Resource("/chapter/{chapterId}")
         data class Chapter(val parent: Id, val chapterId: String)
 
@@ -62,7 +66,7 @@ private class WebNovelRes {
             class Chapter(val parent: CheckUpdate, val chapterId: String)
         }
 
-        @Resource("/translate-alt/{translatorId}")
+        @Resource("/translate/{translatorId}")
         class Translate(val parent: Id, val translatorId: TranslatorId) {
             @Resource("")
             data class Task(val parent: Translate, val startIndex: Int = 0, val endIndex: Int = 65536)
@@ -88,6 +92,7 @@ private fun syosetuNovelIdMustBeLowercase(providerId: String, novelId: String) {
 fun Route.routeWebNovel() {
     val service by inject<WebNovelApi>()
 
+    // List
     get<WebNovelRes.List> { loc ->
         val result = service.list(
             queryString = loc.query?.ifBlank { null },
@@ -112,7 +117,6 @@ fun Route.routeWebNovel() {
         )
         call.respondResult(result)
     }
-
     get<WebNovelRes.Rank> { loc ->
         val options = call.request.queryParameters.toMap().mapValues { it.value.first() }
         val result = service.listRank(loc.providerId, options)
@@ -120,6 +124,7 @@ fun Route.routeWebNovel() {
         call.respondResult(result)
     }
 
+    // Get
     authenticate(optional = true) {
         get<WebNovelRes.Id> { loc ->
             syosetuNovelIdMustBeLowercase(loc.providerId, loc.novelId)
@@ -127,37 +132,40 @@ fun Route.routeWebNovel() {
             val result = service.getMetadata(loc.providerId, loc.novelId, jwtUser?.username)
             call.respondResult(result)
         }
-    }
-
-    authenticate {
-        put<WebNovelRes.Id> { loc ->
-            val jwtUser = call.jwtUser()
-            val patch = call.receive<WebNovelApi.NovelMetadataPatchBody>()
-            val result = service.patchMetadata(loc.providerId, loc.novelId, patch, jwtUser.username)
+        get<WebNovelRes.Id.Chapter> { loc ->
+            syosetuNovelIdMustBeLowercase(loc.parent.providerId, loc.parent.novelId)
+            val jwtUser = call.jwtUserOrNull()
+            val result = service.getChapter(loc.parent.providerId, loc.parent.novelId, loc.chapterId)
             call.respondResult(result)
         }
     }
 
+    // Update
     authenticate {
+        post<WebNovelRes.Id> { loc ->
+            val jwtUser = call.jwtUser()
+            val patch = call.receive<WebNovelApi.UpdateMetadataBody>()
+            val result = service.updateMetadata(loc.providerId, loc.novelId, patch, jwtUser.username)
+            call.respondResult(result)
+        }
+        put<WebNovelRes.Id.Glossary> { loc ->
+            val body = call.receive<Map<String, String>>()
+            val result = service.updateGlossary(loc.parent.providerId, loc.parent.novelId, body)
+            call.respondResult(result)
+        }
         put<WebNovelRes.Id.Wenku> { loc ->
             val body = call.receive<String>()
-            val result = call.requireAtLeastMaintainer { user ->
-                service.updateWenkuId(loc.parent.providerId, loc.parent.novelId, body, user.username)
+            val result = call.requireAtLeastMaintainer {
+                service.updateWenkuId(loc.parent.providerId, loc.parent.novelId, body)
             }
             call.respondResult(result)
         }
         delete<WebNovelRes.Id.Wenku> { loc ->
-            val result = call.requireAtLeastMaintainer { user ->
-                service.deleteWenkuId(loc.parent.providerId, loc.parent.novelId, user.username)
+            val result = call.requireAtLeastMaintainer {
+                service.deleteWenkuId(loc.parent.providerId, loc.parent.novelId)
             }
             call.respondResult(result)
         }
-    }
-
-    get<WebNovelRes.Id.Chapter> { loc ->
-        syosetuNovelIdMustBeLowercase(loc.parent.providerId, loc.parent.novelId)
-        val result = service.getChapter(loc.parent.providerId, loc.parent.novelId, loc.chapterId)
-        call.respondResult(result)
     }
 
     // Check update
@@ -170,7 +178,6 @@ fun Route.routeWebNovel() {
         )
         call.respondResult(result)
     }
-
     post<WebNovelRes.Id.CheckUpdate.Chapter> { loc ->
         val result = service.checkChapterUpdate(
             providerId = loc.parent.parent.providerId,
@@ -195,7 +202,6 @@ fun Route.routeWebNovel() {
         )
         call.respondResult(result)
     }
-
     post<WebNovelRes.Id.Translate.Metadata> { loc ->
         val metadataTranslated = call.receive<WebNovelApi.TranslateMetadataUpdateBody>()
         val result = service.updateMetadataTranslation(
@@ -205,9 +211,8 @@ fun Route.routeWebNovel() {
         )
         call.respondResult(result)
     }
-
     get<WebNovelRes.Id.Translate.Chapter> { loc ->
-        val result = service.getChapterToTranslate(
+        val result = service.getChapterTranslateTask(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
             translatorId = loc.parent.translatorId,
@@ -215,9 +220,8 @@ fun Route.routeWebNovel() {
         )
         call.respondResult(result)
     }
-
     post<WebNovelRes.Id.Translate.Chapter> { loc ->
-        val body = call.receive<WebNovelApi.TranslateChapterUpdateBody>()
+        val body = call.receive<WebNovelApi.UpdateChapterTranslateBody>()
         val result = service.updateChapterTranslation(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
@@ -227,10 +231,9 @@ fun Route.routeWebNovel() {
         )
         call.respondResult(result)
     }
-
-    put<WebNovelRes.Id.Translate.Chapter> { loc ->
-        val body = call.receive<WebNovelApi.TranslateChapterUpdatePartlyBody>()
-        val result = service.updateChapterPartly(
+    patch<WebNovelRes.Id.Translate.Chapter> { loc ->
+        val body = call.receive<WebNovelApi.UpdateChapterTranslationPartiallyBody>()
+        val result = service.updateChapterTranslationPartially(
             providerId = loc.parent.parent.providerId,
             novelId = loc.parent.parent.novelId,
             translatorId = loc.parent.translatorId,
@@ -258,15 +261,14 @@ fun Route.routeWebNovel() {
 }
 
 class WebNovelApi(
+    private val metadataRepo: WebNovelMetadataRepository,
     private val chapterRepo: WebNovelChapterRepository,
     private val fileRepo: WebNovelFileRepository,
     private val userRepo: UserRepository,
     private val patchRepo: WebNovelPatchHistoryRepository,
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
-    //
-    private val novelService: domain.WebNovelUpdateService,
-    private val novelRepo: WebNovelMetadataRepository,
 ) {
+    // List
     suspend fun list(
         queryString: String?,
         filterProvider: String?,
@@ -276,7 +278,7 @@ class WebNovelApi(
         page: Int,
         pageSize: Int,
     ): Result<PageDto<WebNovelOutlineDto>> {
-        val novelPage = novelRepo.search(
+        val novelPage = metadataRepo.search(
             userQuery = queryString,
             filterProvider = filterProvider,
             filterType = filterType,
@@ -295,7 +297,7 @@ class WebNovelApi(
         providerId: String,
         options: Map<String, String>,
     ): Result<PageDto<WebNovelOutlineDto>> {
-        val items = novelRepo.listRank(providerId, options)
+        val items = metadataRepo.listRank(providerId, options)
             .getOrElse { return Result.failure(it) }
         val pageDto = PageDto(
             items = items.map { outline ->
@@ -306,6 +308,7 @@ class WebNovelApi(
         return Result.success(pageDto)
     }
 
+    // Get
     private suspend fun buildNovelDto(novel: WebNovelMetadata, username: String?): WebNovelDto {
         username?.let {
             val novelId = novel.id.toHexString()
@@ -320,34 +323,57 @@ class WebNovelApi(
         novelId: String,
         username: String?,
     ): Result<WebNovelDto> {
-        val novel = novelService.getNovelAndSave(providerId, novelId)
+        val novel = metadataRepo.getNovelAndSave(providerId, novelId)
             .getOrElse { return httpInternalServerError(it.message) }
         val dto = buildNovelDto(novel, username)
-        novelRepo.increaseVisited(providerId, novelId)
+        metadataRepo.increaseVisited(providerId, novelId)
         return Result.success(dto)
     }
 
+    suspend fun getChapter(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+    ): Result<WebNovelChapterDto> {
+        val novel = metadataRepo.getNovelAndSave(providerId, novelId)
+            .getOrElse { return httpInternalServerError(it.message) }
+
+        val toc = novel.toc.filter { it.chapterId != null }
+        val currIndex = toc.indexOfFirst { it.chapterId == chapterId }
+        if (currIndex == -1) return httpInternalServerError("章节不在目录中")
+
+        val chapter = chapterRepo.getOrSyncRemote(providerId, novelId, chapterId)
+            .getOrElse { return httpInternalServerError(it.message) }
+
+        return Result.success(
+            WebNovelChapterDto(
+                titleJp = toc[currIndex].titleJp,
+                titleZh = toc[currIndex].titleZh,
+                prevId = toc.getOrNull(currIndex - 1)?.chapterId,
+                nextId = toc.getOrNull(currIndex + 1)?.chapterId,
+                paragraphs = chapter.paragraphs,
+                baiduParagraphs = chapter.baiduParagraphs,
+                youdaoParagraphs = chapter.youdaoParagraphs,
+                gptParagraphs = chapter.gptParagraphs,
+            )
+        )
+    }
+
+    // Update
     @Serializable
-    data class NovelMetadataPatchBody(
+    data class UpdateMetadataBody(
         val title: String? = null,
         val introduction: String? = null,
-        val glossary: Map<String, String>? = null,
         val toc: Map<String, String>,
     )
 
-    suspend fun patchMetadata(
+    suspend fun updateMetadata(
         providerId: String,
         novelId: String,
-        body: NovelMetadataPatchBody,
+        body: UpdateMetadataBody,
         username: String,
     ): Result<WebNovelDto> {
-        if (body.title == null &&
-            body.introduction == null &&
-            body.glossary == null &&
-            body.toc.isEmpty()
-        ) return httpInternalServerError("修改为空")
-
-        val metadata = novelRepo.get(providerId, novelId)
+        val metadata = metadataRepo.get(providerId, novelId)
             ?: return httpNotFound("小说不存在")
 
         fun createTextChangeOrNull(
@@ -370,9 +396,6 @@ class WebNovelApi(
             metadata.introductionZh,
             body.introduction,
         )
-        val glossaryChange = body.glossary?.takeIf {
-            body.glossary != metadata.glossary
-        }
         val tocChange = body.toc.mapNotNull { (jp, zhNew) ->
             metadata.toc.find { it.titleJp == jp }?.let { item ->
                 WebNovelPatchHistory.TextChange(
@@ -386,7 +409,6 @@ class WebNovelApi(
         if (
             titleChange == null &&
             introductionChange == null &&
-            glossaryChange == null &&
             tocChange.isEmpty()
         ) {
             return httpInternalServerError("修改为空")
@@ -400,7 +422,7 @@ class WebNovelApi(
             titleZh = metadata.titleZh,
             titleChange = titleChange,
             introductionChange = introductionChange,
-            glossaryChange = glossaryChange,
+            glossaryChange = emptyMap(),
             tocChange = tocChange,
         )
 
@@ -412,12 +434,11 @@ class WebNovelApi(
             }
         }
 
-        val novel = novelRepo.updateZh(
+        val novel = metadataRepo.updateTranslation(
             providerId = providerId,
             novelId = novelId,
             titleZh = titleChange?.zhNew.toOptional(),
             introductionZh = introductionChange?.zhNew.toOptional(),
-            glossary = glossaryChange.toOptional(),
             tocZh = tocZh,
         )
 
@@ -425,72 +446,47 @@ class WebNovelApi(
         return Result.success(dto)
     }
 
+    suspend fun updateGlossary(
+        providerId: String,
+        novelId: String,
+        glossary: Map<String, String>,
+    ): Result<Unit> {
+        val metadata = metadataRepo.get(providerId, novelId)
+            ?: return httpNotFound("小说不存在")
+
+        if (metadata.glossary == glossary)
+            return httpInternalServerError("修改为空")
+
+        metadataRepo.updateGlossary(providerId, novelId, glossary)
+        return Result.success(Unit)
+    }
+
     suspend fun updateWenkuId(
         providerId: String,
         novelId: String,
         wenkuId: String,
-        username: String,
-    ): Result<WebNovelDto> {
-        wenkuMetadataRepo.findOne(wenkuId)
+    ): Result<Unit> {
+        wenkuMetadataRepo.get(wenkuId)
             ?: return httpNotFound("文库版不存在")
-        val novel = novelRepo.updateWenkuId(providerId, novelId, wenkuId)
-            ?: return httpNotFound("网页版不存在")
-        val dto = buildNovelDto(novel, username)
-        return Result.success(dto)
+        val updateResult = metadataRepo.updateWenkuId(providerId, novelId, wenkuId)
+        if (updateResult.matchedCount == 0L) {
+            return httpNotFound("网页版不存在")
+        }
+        return Result.success(Unit)
     }
 
     suspend fun deleteWenkuId(
         providerId: String,
         novelid: String,
-        username: String,
-    ): Result<WebNovelDto> {
-        val novel = novelRepo.updateWenkuId(providerId, novelid, null)
-            ?: return httpNotFound("网页版不存在")
-        val dto = buildNovelDto(novel, username)
-        return Result.success(dto)
+    ): Result<Unit> {
+        val updateResult = metadataRepo.updateWenkuId(providerId, novelid, null)
+        if (updateResult.matchedCount == 0L) {
+            return httpNotFound("网页版不存在")
+        }
+        return Result.success(Unit)
     }
 
-    @Serializable
-    data class NovelChapterDto(
-        val titleJp: String,
-        val titleZh: String? = null,
-        val prevId: String? = null,
-        val nextId: String? = null,
-        val paragraphs: List<String>,
-        val baiduParagraphs: List<String>? = null,
-        val youdaoParagraphs: List<String>? = null,
-        val gptParagraphs: List<String>? = null,
-    )
-
-    suspend fun getChapter(
-        providerId: String,
-        novelId: String,
-        chapterId: String,
-    ): Result<NovelChapterDto> {
-        val novel = novelService.getNovelAndSave(providerId, novelId)
-            .getOrElse { return httpInternalServerError(it.message) }
-
-        val toc = novel.toc.filter { it.chapterId != null }
-        val currIndex = toc.indexOfFirst { it.chapterId == chapterId }
-        if (currIndex == -1) return httpInternalServerError("episode id not in toc")
-
-        val chapter = novelService.getChapterAndSave(providerId, novelId, chapterId)
-            .getOrElse { return httpInternalServerError(it.message) }
-
-        return Result.success(
-            NovelChapterDto(
-                titleJp = toc[currIndex].titleJp,
-                titleZh = toc[currIndex].titleZh,
-                prevId = toc.getOrNull(currIndex - 1)?.chapterId,
-                nextId = toc.getOrNull(currIndex + 1)?.chapterId,
-                paragraphs = chapter.paragraphs,
-                baiduParagraphs = chapter.baiduParagraphs,
-                youdaoParagraphs = chapter.youdaoParagraphs,
-                gptParagraphs = chapter.gptParagraphs,
-            )
-        )
-    }
-
+    // Check update
     @Serializable
     data class CheckUpdateTaskDto(
         val chapters: Map<Int, String>,
@@ -502,7 +498,7 @@ class WebNovelApi(
         startIndex: Int,
         endIndex: Int,
     ): Result<CheckUpdateTaskDto> {
-        val novel = novelService.getNovelAndSave(providerId, novelId, 10)
+        val novel = metadataRepo.getNovelAndSave(providerId, novelId, 10)
             .getOrElse { return httpNotFound("元数据获取失败") }
         val chapters = novel.toc
             .mapNotNull { it.chapterId }
@@ -531,10 +527,10 @@ class WebNovelApi(
         } else {
             chapterRepo.replace(providerId, novelId, chapterId, remote.paragraphs)
             if (local.baiduParagraphs != null) {
-                novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Baidu)
+                metadataRepo.updateChapterTranslateState(providerId, novelId, TranslatorId.Baidu)
             }
             if (local.youdaoParagraphs != null) {
-                novelRepo.updateTranslateStateZh(providerId, novelId, TranslatorId.Youdao)
+                metadataRepo.updateChapterTranslateState(providerId, novelId, TranslatorId.Youdao)
             }
             Result.success("章节已经过期，删除翻译并更新")
         }
@@ -559,7 +555,7 @@ class WebNovelApi(
         startIndex: Int,
         endIndex: Int,
     ): Result<TranslateTaskDto> {
-        val novel = novelService.getNovelAndSave(providerId, novelId, 10)
+        val novel = metadataRepo.getNovelAndSave(providerId, novelId, 10)
             .getOrElse { return httpNotFound("元数据获取失败") }
 
         val title = novel.titleJp.takeIf { novel.titleZh == null }
@@ -622,7 +618,7 @@ class WebNovelApi(
         novelId: String,
         body: TranslateMetadataUpdateBody,
     ): Result<Unit> {
-        val metadata = novelRepo.get(providerId, novelId)
+        val metadata = metadataRepo.get(providerId, novelId)
             ?: return Result.success(Unit)
 
         val titleZh = body.title.takeIf { metadata.titleZh == null }
@@ -644,12 +640,11 @@ class WebNovelApi(
             return Result.success(Unit)
         }
 
-        novelRepo.updateZh(
+        metadataRepo.updateTranslation(
             providerId = providerId,
             novelId = novelId,
             titleZh = titleZh.toOptional(),
             introductionZh = introductionZh.toOptional(),
-            glossary = None,
             tocZh = tocZh,
         )
         return Result.success(Unit)
@@ -667,13 +662,13 @@ class WebNovelApi(
         val zh: Long,
     )
 
-    suspend fun getChapterToTranslate(
+    suspend fun getChapterTranslateTask(
         providerId: String,
         novelId: String,
         chapterId: String,
         translatorId: TranslatorId,
     ): Result<TranslateChapterDto> {
-        val chapter = novelService.getChapterAndSave(providerId, novelId, chapterId)
+        val chapter = chapterRepo.getOrSyncRemote(providerId, novelId, chapterId)
             .getOrElse { return httpInternalServerError(it.message) }
         return Result.success(
             TranslateChapterDto(
@@ -688,7 +683,7 @@ class WebNovelApi(
     }
 
     @Serializable
-    data class TranslateChapterUpdateBody(
+    data class UpdateChapterTranslateBody(
         val glossaryUuid: String? = null,
         val paragraphsZh: List<String>,
     )
@@ -698,9 +693,9 @@ class WebNovelApi(
         novelId: String,
         chapterId: String,
         translatorId: TranslatorId,
-        body: TranslateChapterUpdateBody,
+        body: UpdateChapterTranslateBody,
     ): Result<TranslateStateDto> {
-        val novel = novelRepo.get(providerId, novelId)
+        val novel = metadataRepo.get(providerId, novelId)
             ?: return httpNotFound("元数据不存在")
         if (
             translatorId.supportGlossary() &&
@@ -723,46 +718,35 @@ class WebNovelApi(
             return httpConflict("翻译已经存在")
         }
 
-        if (translatorId.supportGlossary()) {
-            chapterRepo.updateTranslationWithGlossary(
-                providerId = providerId,
-                novelId = novelId,
-                chapterId = chapterId,
-                translatorId = translatorId,
-                glossaryUuid = novel.glossaryUuid,
-                glossary = novel.glossary,
-                paragraphsZh = body.paragraphsZh,
-            )
-        } else {
-            chapterRepo.updateTranslation(
-                providerId = providerId,
-                novelId = novelId,
-                chapterId = chapterId,
-                translatorId = translatorId,
-                paragraphsZh = body.paragraphsZh,
-            )
-        }
-        val zh = novelRepo.updateTranslateStateZh(providerId, novelId, translatorId)
+        chapterRepo.updateTranslation(
+            providerId = providerId,
+            novelId = novelId,
+            chapterId = chapterId,
+            translatorId = translatorId,
+            glossary = novel.glossaryUuid?.let { Glossary(it, novel.glossary) },
+            paragraphsZh = body.paragraphsZh,
+        )
+        val zh = metadataRepo.updateChapterTranslateState(providerId, novelId, translatorId)
         return Result.success(TranslateStateDto(jp = novel.jp, zh = zh))
     }
 
     @Serializable
-    data class TranslateChapterUpdatePartlyBody(
+    data class UpdateChapterTranslationPartiallyBody(
         val glossaryUuid: String? = null,
         val paragraphsZh: Map<Int, String>,
     )
 
-    suspend fun updateChapterPartly(
+    suspend fun updateChapterTranslationPartially(
         providerId: String,
         novelId: String,
         chapterId: String,
         translatorId: TranslatorId,
-        body: TranslateChapterUpdatePartlyBody,
+        body: UpdateChapterTranslationPartiallyBody,
     ): Result<TranslateStateDto> {
         if (!translatorId.supportGlossary()) {
             return httpBadRequest("翻译器不支持术语表")
         }
-        val novel = novelRepo.get(providerId, novelId)
+        val novel = metadataRepo.get(providerId, novelId)
             ?: return httpNotFound("元数据不存在")
         if (body.glossaryUuid != novel.glossaryUuid) {
             return httpBadRequest("术语表uuid失效")
@@ -777,19 +761,19 @@ class WebNovelApi(
             else -> Unit
         } ?: return httpConflict("翻译不存在")
 
-        chapterRepo.updateTranslationWithGlossary(
+        chapterRepo.updateTranslationPartially(
             providerId = providerId,
             novelId = novelId,
             chapterId = chapterId,
             translatorId = translatorId,
-            glossaryUuid = novel.glossaryUuid,
-            glossary = novel.glossary,
+            glossary = novel.glossaryUuid?.let { Glossary(it, novel.glossary) },
             paragraphsZh = body.paragraphsZh,
         )
-        val zh = novelRepo.updateTranslateStateZh(providerId, novelId, translatorId)
+        val zh = metadataRepo.updateChapterTranslateState(providerId, novelId, translatorId)
         return Result.success(TranslateStateDto(jp = novel.jp, zh = zh))
     }
 
+    // File
     suspend fun updateFile(
         providerId: String,
         novelId: String,

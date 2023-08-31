@@ -112,7 +112,7 @@ fun Route.routeWenkuNovel() {
 
         patch<WenkuNovelRes.Id> { loc ->
             val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
-            val result = service.patchMetadata(loc.novelId, body)
+            val result = service.updateMetadata(loc.novelId, body)
             call.respondResult(result)
         }
 
@@ -270,8 +270,10 @@ class WenkuNovelApi(
             userRepo.isUserFavoriteWenkuNovel(it, novelId)
         }
 
-        val metadata = metadataRepo.findOneAndIncreaseVisited(novelId)
+        val metadata = metadataRepo.get(novelId)
             ?: return httpNotFound("书不存在")
+        metadataRepo.increaseVisited(novelId)
+
         val volumes = volumeRepo.list(novelId)
 
         val metadataDto = WenkuNovelDto(
@@ -309,7 +311,7 @@ class WenkuNovelApi(
     suspend fun createMetadata(
         body: MetadataCreateBody,
     ): Result<String> {
-        val novelId = metadataRepo.insertOne(
+        val novelId = metadataRepo.insert(
             title = body.title,
             titleZh = body.titleZh,
             titleZhAlias = body.titleZhAlias,
@@ -323,11 +325,11 @@ class WenkuNovelApi(
         return Result.success(novelId)
     }
 
-    suspend fun patchMetadata(
+    suspend fun updateMetadata(
         novelId: String,
         body: MetadataCreateBody,
     ): Result<Unit> {
-        metadataRepo.findOne(novelId)
+        metadataRepo.get(novelId)
             ?: return httpNotFound("书不存在")
         metadataRepo.findOneAndUpdate(
             novelId = novelId,
@@ -348,19 +350,16 @@ class WenkuNovelApi(
         novelId: String,
         glossary: Map<String, String>,
     ): Result<Unit> {
-        val metadata = metadataRepo.findOne(novelId)
+        val metadata = metadataRepo.get(novelId)
             ?: return httpNotFound("小说不存在")
         if (glossary == metadata.glossary)
             return httpBadRequest("术语表没有改变")
-        metadataRepo.updateGlossary(
-            novelId = novelId,
-            glossary = glossary,
-        )
+        metadataRepo.updateGlossary(novelId, glossary)
         return Result.success(Unit)
     }
 
     suspend fun notifyUpdate(novelId: String): Result<Unit> {
-        metadataRepo.notifyUpdateAt(novelId)
+        metadataRepo.notifyUpdate(novelId)
         return Result.success(Unit)
     }
 
@@ -433,7 +432,7 @@ class WenkuNovelApi(
                     volumeId = volumeId,
                     uploader = username,
                 )
-                metadataRepo.notifyUpdateAt(novelId)
+                metadataRepo.notifyUpdate(novelId)
             }
         }
     }
@@ -457,7 +456,7 @@ class WenkuNovelApi(
                     volumeId = volumeId,
                     uploader = username,
                 )
-                metadataRepo.notifyUpdateAt(novelId)
+                metadataRepo.notifyUpdate(novelId)
             }
         }
     }
@@ -480,7 +479,7 @@ class WenkuNovelApi(
 
         val novel =
             if (novelId == "non-archived" || novelId.startsWith("user")) null
-            else metadataRepo.findOne(novelId)
+            else metadataRepo.get(novelId)
 
         if (!volumeRepo.isVolumeJpExisted(novelId, volumeId))
             return httpNotFound("卷不存在")
@@ -547,7 +546,7 @@ class WenkuNovelApi(
 
         val novel =
             if (novelId == "non-archived" || novelId.startsWith("user")) null
-            else metadataRepo.findOne(novelId)
+            else metadataRepo.get(novelId)
 
         if (
             translatorId.supportGlossary() &&
@@ -602,7 +601,7 @@ class WenkuNovelApi(
 
         val novel =
             if (novelId == "non-archived" || novelId.startsWith("user")) null
-            else metadataRepo.findOne(novelId)
+            else metadataRepo.get(novelId)
 
         if (body.glossaryUuid == null) {
             return httpBadRequest("术语表uuid失效")
