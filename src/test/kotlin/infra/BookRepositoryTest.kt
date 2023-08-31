@@ -40,6 +40,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                 val attentions: List<WebNovelAttention> = emptyList(),
                 val keywords: List<String> = emptyList(),
                 val gpt: Long = 0,
+                val toc: List<WebNovelTocItem>,
                 @Contextual val updateAt: Instant,
             )
 
@@ -58,6 +59,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                         WebNovelMetadata::attentions,
                         WebNovelMetadata::keywords,
                         WebNovelMetadata::gpt,
+                        WebNovelMetadata::toc,
                         WebNovelMetadata::updateAt,
                     )
                     .skip(skip)
@@ -76,6 +78,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                                 attentions = it.attentions,
                                 keywords = it.keywords,
                                 hasGpt = it.gpt > 0,
+                                tocSize = it.toc.count { it.chapterId != null },
                                 updateAt = it.updateAt.epochSeconds,
                             ),
                             id = "${it.providerId}.${it.bookId}",
@@ -86,16 +89,16 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
             }
 
             var batch = 0
-            val batchSize = 1000
+            val batchSize = 500
             while (true) {
                 println("batch${batch} start")
                 val actualBatchSize = buildIndex(
                     batch * batchSize,
-                    batchSize + 100,
+                    batchSize + 50,
                 )
                 println("batch${batch} finish ${actualBatchSize}")
 
-                if (actualBatchSize == batchSize + 100) {
+                if (actualBatchSize == batchSize + 50) {
                     batch += 1
                 } else {
                     break

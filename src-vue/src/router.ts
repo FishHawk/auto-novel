@@ -71,7 +71,6 @@ const routes = [
         path: '/wiki/search',
         component: () => import('./pages/wiki/Search.vue'),
       },
-
       {
         path: '/wiki/feedback',
         component: () => import('./pages/wiki/Feedback.vue'),

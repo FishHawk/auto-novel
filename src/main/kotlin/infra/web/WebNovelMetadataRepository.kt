@@ -111,18 +111,31 @@ class WebNovelMetadataRepository(
                 val queryWords = mutableListOf<String>()
                 userQuery
                     ?.split(" ")
-                    ?.forEach {
-                        if (it.endsWith("$")) {
-                            val rawToken = it.removePrefix("-").removeSuffix("$")
+                    ?.forEach { token ->
+                        if (token.startsWith('>') || token.startsWith('<')) {
+                            token.substring(1).toUIntOrNull()?.toInt()?.let { number ->
+                                mustQueries.add(range(WebNovelMetadataEsModel::tocSize) {
+                                    if (token.startsWith('>')) {
+                                        gt = number
+                                    } else {
+                                        lt = number
+                                    }
+                                })
+                                return@forEach
+                            }
+                        }
+
+                        if (token.endsWith('$')) {
+                            val rawToken = token.removePrefix("-").removeSuffix("$")
                             val queries =
-                                if (it.startsWith("-")) mustNotQueries
+                                if (token.startsWith("-")) mustNotQueries
                                 else mustQueries
                             val field =
                                 if (allAttentions.contains(rawToken)) WebNovelMetadataEsModel::attentions
                                 else WebNovelMetadataEsModel::keywords
                             queries.add(term(field, rawToken))
                         } else {
-                            queryWords.add(it)
+                            queryWords.add(token)
                         }
                     }
 
@@ -411,6 +424,7 @@ class WebNovelMetadataRepository(
                 type = novel.type,
                 keywords = novel.keywords,
                 attentions = novel.attentions,
+                tocSize = novel.toc.count { it.chapterId != null },
                 hasGpt = novel.gpt > 0,
                 updateAt = novel.updateAt.epochSeconds,
             ),

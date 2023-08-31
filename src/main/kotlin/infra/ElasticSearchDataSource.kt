@@ -4,13 +4,11 @@ import com.jillesvangurp.ktsearch.*
 import infra.model.WebNovelAttention
 import infra.model.WebNovelType
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class WebNovelMetadataEsModel(
     val providerId: String,
-    @SerialName("bookId")
     val novelId: String,
     val titleJp: String,
     val titleZh: String?,
@@ -18,6 +16,7 @@ data class WebNovelMetadataEsModel(
     val type: WebNovelType = WebNovelType.连载中,
     val attentions: List<WebNovelAttention> = emptyList(),
     val keywords: List<String>,
+    val tocSize: Int,
     val hasGpt: Boolean,
     val updateAt: Long,
 )
@@ -43,8 +42,7 @@ class ElasticSearchDataSource(url: String) {
     )
 
     companion object {
-        // const val webNovelIndexName = "metadata"
-        const val webNovelIndexName = "web-index"
+        const val webNovelIndexName = "web-index-alt"
         const val wenkuNovelIndexName = "wenku-index"
     }
 
@@ -60,6 +58,7 @@ class ElasticSearchDataSource(url: String) {
                         keyword(WebNovelMetadataEsModel::type)
                         keyword(WebNovelMetadataEsModel::attentions)
                         keyword(WebNovelMetadataEsModel::keywords)
+                        number<Int>(WebNovelMetadataEsModel::tocSize)
                         bool(WebNovelMetadataEsModel::hasGpt)
                         date(WebNovelMetadataEsModel::updateAt)
                     }
