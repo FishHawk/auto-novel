@@ -130,13 +130,13 @@ class WebNovelChapterRepository(
         val updateBson = when (translatorId) {
             TranslatorId.Baidu -> combine(
                 setValue(WebNovelChapter::baiduGlossaryUuid, glossary?.id),
-                setValue(WebNovelChapter::baiduGlossary, glossary?.map),
+                setValue(WebNovelChapter::baiduGlossary, glossary?.map ?: emptyMap()),
                 setValue(WebNovelChapter::baiduParagraphs, paragraphsZh)
             )
 
             TranslatorId.Youdao -> combine(
                 setValue(WebNovelChapter::youdaoGlossaryUuid, glossary?.id),
-                setValue(WebNovelChapter::youdaoGlossary, glossary?.map),
+                setValue(WebNovelChapter::youdaoGlossary, glossary?.map ?: emptyMap()),
                 setValue(WebNovelChapter::youdaoParagraphs, paragraphsZh)
             )
 
@@ -165,7 +165,7 @@ class WebNovelChapterRepository(
             TranslatorId.Baidu -> combine(
                 listOf(
                     setValue(WebNovelChapter::baiduGlossaryUuid, glossary?.id),
-                    setValue(WebNovelChapter::baiduGlossary, glossary?.map),
+                    setValue(WebNovelChapter::baiduGlossary, glossary?.map ?: emptyMap()),
                 ) + paragraphsZh.map { (index, textZh) ->
                     // hacky, fix https://github.com/Litote/kmongo/issues/415
                     Updates.set("paragraphsZh.${index}", textZh)
@@ -175,7 +175,7 @@ class WebNovelChapterRepository(
             TranslatorId.Youdao -> combine(
                 listOf(
                     setValue(WebNovelChapter::youdaoGlossaryUuid, glossary?.id),
-                    setValue(WebNovelChapter::youdaoGlossary, glossary?.map),
+                    setValue(WebNovelChapter::youdaoGlossary, glossary?.map ?: emptyMap()),
                 ) + paragraphsZh.map { (index, textZh) ->
                     setValue(WebNovelChapter::youdaoParagraphs.pos(index), textZh)
                 }
