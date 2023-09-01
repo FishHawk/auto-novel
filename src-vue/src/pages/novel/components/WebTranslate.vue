@@ -5,17 +5,14 @@ import { useMessage } from 'naive-ui';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { TaskCallback } from '@/data/api/api_web_novel_translate';
 import { useSettingStore } from '@/data/stores/setting';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
 import { useIsDesktop } from '@/data/util';
-
-const isDesktop = useIsDesktop(600);
-const message = useMessage();
 
 const props = defineProps<{
   providerId: string;
   novelId: string;
-  title: string;
+  titleJp: string;
+  titleZh?: string;
   total: number;
   jp: number;
   baidu: number;
@@ -32,6 +29,9 @@ const emits = defineEmits<{
 }>();
 
 const setting = useSettingStore();
+const isDesktop = useIsDesktop(600);
+const message = useMessage();
+
 const gptAccessToken = ref('');
 const gptAccessTokenOptions = computed(() => {
   return setting.openAiAccessTokens.map((t) => {
@@ -128,7 +128,14 @@ interface NovelFiles {
 }
 
 function stateToFileList(): NovelFiles[] {
-  const validTitle = props.title.replace(/[\/|\\:*?"<>]/g, '');
+  let title: string;
+  if (setting.downloadFilenameType === 'jp') {
+    title = props.titleJp;
+  } else {
+    title = props.titleZh ?? props.titleJp;
+  }
+  const validTitle = title.replace(/[\/|\\:*?"<>]/g, '');
+
   function createFile(
     label: string,
     lang:
@@ -200,7 +207,11 @@ function stateToFileList(): NovelFiles[] {
 }
 
 const showAdvanceOptions = ref(false);
-const authInfoStore = useAuthInfoStore();
+
+const downloadFilenameTypeOptions = [
+  { value: 'jp', label: '日文' },
+  { value: 'zh', label: '中文' },
+];
 
 async function submitGlossary(token: string) {
   const result = await ApiWebNovel.updateGlossary(
@@ -232,6 +243,22 @@ async function submitGlossary(token: string) {
   </n-p>
   <n-collapse-transition :show="showAdvanceOptions" style="margin-bottom: 16px">
     <n-list bordered>
+      <n-list-item>
+        <n-thing title="下载文件名">
+          <n-radio-group v-model:value="setting.downloadFilenameType">
+            <n-space>
+              <n-radio
+                v-for="option in downloadFilenameTypeOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </n-radio>
+            </n-space>
+          </n-radio-group>
+        </n-thing>
+      </n-list-item>
+
       <n-list-item>
         <n-thing title="自定义更新范围">
           <template #description>

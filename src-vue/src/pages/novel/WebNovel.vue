@@ -206,7 +206,8 @@ function toggleEditMode() {
           <WebTranslate
             :provider-id="providerId"
             :novel-id="novelId"
-            :title="metadata.titleZh ?? metadata.titleJp"
+            :title-jp="metadata.titleJp"
+            :title-zh="metadata.titleZh"
             :total="metadata.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
             v-model:jp="metadata.jp"
             v-model:baidu="metadata.baidu"

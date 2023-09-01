@@ -78,18 +78,16 @@ defineEmits<{
             :options="modeOptions"
           />
         </ReuseOption>
-        <ReuseOption label="翻译模式">
+        <ReuseOption label="翻译">
           <ReaderSettingDialogSelect
             :desktop="isDesktop"
             v-model:value="setting.translationsMode"
             :options="translationModeOptions"
           />
-        </ReuseOption>
-        <ReuseOption label="翻译">
           <n-transfer
             v-model:value="setting.translations"
             :options="translationOptions"
-            style="height: 160px"
+            style="height: 160px; margin-top: 8px"
           />
         </ReuseOption>
         <ReuseOption label="字体">
@@ -137,12 +135,6 @@ defineEmits<{
   </n-modal>
 </template>
 
-<style scoped>
-.label {
-  margin-right: 24px;
-  white-space: nowrap;
-}
-</style>
 <style>
 .n-transfer-list-header__extra {
   display: none;

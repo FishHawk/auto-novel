@@ -3,10 +3,16 @@ import { defineStore } from 'pinia';
 export interface Setting {
   tocSortReverse: boolean;
   openAiAccessTokens: string[];
+  downloadFilenameType: 'jp' | 'zh';
 }
 
 export const useSettingStore = defineStore('setting', {
-  state: () => <Setting>{ tocSortReverse: false, openAiAccessTokens: [] },
+  state: () =>
+    <Setting>{
+      tocSortReverse: false,
+      openAiAccessTokens: [],
+      downloadFilenameType: 'zh',
+    },
   actions: {
     addToken(token: string) {
       this.deleteToken(token);
