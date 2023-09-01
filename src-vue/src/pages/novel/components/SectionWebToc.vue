@@ -1,11 +1,9 @@
 <script lang="ts" setup>
-import { SortFilled } from '@vicons/material';
 import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
 import { NA } from 'naive-ui';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
-import { useSettingStore } from '@/data/stores/setting';
 import { useIsDesktop } from '@/data/util';
 
 const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
@@ -18,14 +16,15 @@ const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   };
 }>();
 
-const isDesktop = useIsDesktop(600);
-
 const props = defineProps<{
+  reverse: boolean;
   providerId: string;
   novelId: string;
   toc: WebNovelTocItemDto[];
   lastReadChapterId?: string;
 }>();
+
+const isDesktop = useIsDesktop(600);
 
 function readableDate(createAt: number) {
   return new Date(createAt * 1000).toLocaleString('zh-CN', {
@@ -37,7 +36,6 @@ function readableDate(createAt: number) {
   });
 }
 
-const setting = useSettingStore();
 const readableToc = computed(() => {
   const newToc = [];
   let index = 0;
@@ -68,61 +66,50 @@ const lastReadTocItem = computed(() => {
 </script>
 
 <template>
-  <section>
-    <DefineTocItem v-slot="{ item }">
-      <component
-        :is="item.chapterId ? NA : 'div'"
-        :href="`/novel/${providerId}/${novelId}/${item.chapterId}`"
-      >
-        <div v-if="isDesktop" style="width: 100; display: flex; padding: 6px">
-          <span style="flex: 1 1 0">{{ item.titleJp }}</span>
-          <span style="color: grey; flex: 1 1 0">{{ item.titleZh }}</span>
-          <span style="color: grey; width: 155px; text-align: right">
-            <template v-if="item.chapterId">
-              {{ item.createAt }} [{{ item.index }}]
-            </template>
-          </span>
-        </div>
-
-        <div v-else style="width: 100; padding: 6px">
-          {{ item.titleJp }}
-          <br />
-          <span style="color: grey">{{ item.titleZh }}</span>
-          <br />
-          <span v-if="item.chapterId" style="color: grey">
+  <DefineTocItem v-slot="{ item }">
+    <component
+      :is="item.chapterId ? NA : 'div'"
+      :href="`/novel/${providerId}/${novelId}/${item.chapterId}`"
+    >
+      <div v-if="isDesktop" style="width: 100; display: flex; padding: 6px">
+        <span style="flex: 1 1 0">{{ item.titleJp }}</span>
+        <span style="color: grey; flex: 1 1 0">{{ item.titleZh }}</span>
+        <span style="color: grey; width: 155px; text-align: right">
+          <template v-if="item.chapterId">
             {{ item.createAt }} [{{ item.index }}]
-          </span>
-        </div>
-      </component>
-    </DefineTocItem>
+          </template>
+        </span>
+      </div>
 
-    <SectionHeader title="目录">
-      <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
-        <template #icon>
-          <n-icon :component="SortFilled" />
-        </template>
-        {{ setting.tocSortReverse ? '倒序' : '正序' }}
-      </n-button>
-    </SectionHeader>
+      <div v-else style="width: 100; padding: 6px">
+        {{ item.titleJp }}
+        <br />
+        <span style="color: grey">{{ item.titleZh }}</span>
+        <br />
+        <span v-if="item.chapterId" style="color: grey">
+          {{ item.createAt }} [{{ item.index }}]
+        </span>
+      </div>
+    </component>
+  </DefineTocItem>
 
-    <n-list>
-      <n-list-item
-        v-if="lastReadTocItem"
-        style="
-          background-color: rgb(244, 244, 248);
-          padding: 6px 0px 0px;
-          margin-bottom: 16px;
-        "
-      >
-        <b style="padding-left: 6px">上次读到:</b>
-        <ReuseTocItem :item="lastReadTocItem" />
-      </n-list-item>
-      <n-list-item
-        v-for="tocItem in setting.tocSortReverse ? reverseToc : readableToc"
-        style="padding: 0px"
-      >
-        <ReuseTocItem :item="tocItem" />
-      </n-list-item>
-    </n-list>
-  </section>
+  <n-list>
+    <n-list-item
+      v-if="lastReadTocItem"
+      style="
+        background-color: rgb(244, 244, 248);
+        padding: 6px 0px 0px;
+        margin-bottom: 16px;
+      "
+    >
+      <b style="padding-left: 6px">上次读到:</b>
+      <ReuseTocItem :item="lastReadTocItem" />
+    </n-list-item>
+    <n-list-item
+      v-for="tocItem in reverse ? reverseToc : readableToc"
+      style="padding: 0px"
+    >
+      <ReuseTocItem :item="tocItem" />
+    </n-list-item>
+  </n-list>
 </template>

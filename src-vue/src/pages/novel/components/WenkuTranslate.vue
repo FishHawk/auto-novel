@@ -153,12 +153,7 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
 const showAdvanceOptions = ref(false);
 const authInfoStore = useAuthInfoStore();
 
-async function submitGlossary() {
-  const token = authInfoStore.token;
-  if (!token) {
-    message.info('请先登录');
-    return;
-  }
+async function submitGlossary(token: string) {
   const result = await ApiWenkuNovel.updateGlossary(
     props.novelId,
     props.glossary,

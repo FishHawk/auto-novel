@@ -1,20 +1,37 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useMessage } from 'naive-ui';
+
+import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const { onAsyncClick } = defineProps<{
-  onAsyncClick: () => Promise<void>;
+  onAsyncClick: (token: string) => Promise<void>;
 }>();
 
-const loading = ref(false);
+const authInfoStore = useAuthInfoStore();
+const message = useMessage();
+
+const running = ref(false);
 
 async function onClick() {
-  if (loading.value) return;
-  loading.value = true;
-  await onAsyncClick();
-  loading.value = false;
+  const token = authInfoStore.token;
+  if (!token) {
+    message.info('请先登录');
+    return;
+  }
+
+  if (running.value) return;
+  running.value = true;
+  await onAsyncClick(token);
+  running.value = false;
 }
 </script>
 
 <template>
-  <n-button :loading="loading" @click="onClick()"><slot /></n-button>
+  <n-button @click="onClick()">
+    <template #icon>
+      <slot name="icon" />
+    </template>
+    <slot />
+  </n-button>
 </template>

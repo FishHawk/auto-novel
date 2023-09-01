@@ -6,6 +6,7 @@ import {
   FavoriteBorderFilled,
   FavoriteFilled,
   BookFilled,
+  SortFilled,
 } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { createReusableTemplate } from '@vueuse/core';
@@ -20,12 +21,14 @@ import {
 import { buildMetadataUrl } from '@/data/provider';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { tryTranslateKeyword } from '@/data/keyword_translate';
+import { useSettingStore } from '@/data/stores/setting';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;
-  isAttention: boolean;
+  attention: boolean;
 }>();
 
+const setting = useSettingStore();
 const authInfoStore = useAuthInfoStore();
 const message = useMessage();
 
@@ -49,18 +52,7 @@ async function getMetadata() {
 }
 getMetadata();
 
-let isFavoriteChanging = false;
-
-async function addFavorite() {
-  if (isFavoriteChanging) return;
-
-  const token = authInfoStore.token;
-  if (!token) {
-    message.info('请先登录');
-    return;
-  }
-
-  isFavoriteChanging = true;
+async function addFavorite(token: string) {
   const result = await ApiUser.putFavoritedWebNovel(providerId, novelId, token);
   if (result.ok) {
     if (metadataResult.value?.ok) {
@@ -69,19 +61,9 @@ async function addFavorite() {
   } else {
     message.error('收藏错误：' + result.error.message);
   }
-  isFavoriteChanging = false;
 }
 
-async function removeFavorite() {
-  if (isFavoriteChanging) return;
-
-  const token = authInfoStore.token;
-  if (!token) {
-    message.info('请先登录');
-    return;
-  }
-
-  isFavoriteChanging = true;
+async function removeFavorite(token: string) {
   const result = await ApiUser.deleteFavoritedWebNovel(
     providerId,
     novelId,
@@ -94,31 +76,35 @@ async function removeFavorite() {
   } else {
     message.error('取消收藏错误：' + result.error.message);
   }
-  isFavoriteChanging = false;
 }
 
 const editMode = ref(false);
-function enableEditMode() {
-  const token = authInfoStore.token;
-  if (!token) {
-    message.info('请先登录');
-    return;
+function toggleEditMode() {
+  if (!editMode.value) {
+    const token = authInfoStore.token;
+    if (!token) {
+      message.info('请先登录');
+      return;
+    }
   }
-  editMode.value = true;
+  editMode.value = !editMode.value;
 }
 </script>
 
 <template>
-  <DefineTag v-slot="{ tag, isAttention }">
+  <DefineTag v-slot="{ tag, attention }">
     <n-a
       :href="`/novel-list?query=${tag}\$`"
       target="_blank"
       style="color: rgb(51, 54, 57)"
     >
       <n-tag :bordered="false" size="small">
-        <component :is="isAttention ? 'b' : 'span'">
-          {{ isAttention ? tag : tryTranslateKeyword(tag) }}
-        </component>
+        <template v-if="attention">
+          <b>{{ tag }}</b>
+        </template>
+        <template v-else>
+          {{ tryTranslateKeyword(tag) }}
+        </template>
       </n-tag>
     </n-a>
   </DefineTag>
@@ -143,33 +129,29 @@ function enableEditMode() {
       </n-p>
 
       <n-space>
-        <n-button v-if="!editMode" @click="enableEditMode()">
+        <n-button @click="toggleEditMode()">
           <template #icon>
-            <n-icon> <EditNoteFilled /> </n-icon>
+            <n-icon :component="EditNoteFilled" />
           </template>
-          编辑
+          {{ editMode ? '退出编辑' : '编辑' }}
         </n-button>
 
-        <n-button v-else @click="editMode = false">
+        <AsyncButton
+          v-if="metadata.favored === true"
+          :on-async-click="removeFavorite"
+        >
           <template #icon>
-            <n-icon> <EditNoteFilled /> </n-icon>
-          </template>
-          退出编辑
-        </n-button>
-
-        <n-button v-if="metadata.favored === true" @click="removeFavorite()">
-          <template #icon>
-            <n-icon> <FavoriteFilled /> </n-icon>
+            <n-icon :component="FavoriteFilled" />
           </template>
           取消收藏
-        </n-button>
+        </AsyncButton>
 
-        <n-button v-else @click="addFavorite()">
+        <AsyncButton v-else :on-async-click="addFavorite">
           <template #icon>
-            <n-icon> <FavoriteBorderFilled /> </n-icon>
+            <n-icon :component="FavoriteBorderFilled" />
           </template>
           收藏
-        </n-button>
+        </AsyncButton>
 
         <n-a
           v-if="metadata.wenkuId"
@@ -178,25 +160,24 @@ function enableEditMode() {
         >
           <n-button>
             <template #icon>
-              <n-icon> <BookFilled /> </n-icon>
+              <n-icon :component="BookFilled" />
             </template>
             文库版
           </n-button>
         </n-a>
       </n-space>
 
-      <n-p>{{ metadata.type }} / 浏览次数:{{ metadata.visited }} </n-p>
-
-      <template v-if="editMode">
-        <WebEdit
-          :provider-id="providerId"
-          :novel-id="novelId"
-          :novel-metadata="metadata"
-          @update:novel-metadata="metadataResult = Ok(metadata)"
-        />
-      </template>
+      <WebEdit
+        v-if="editMode"
+        :provider-id="providerId"
+        :novel-id="novelId"
+        :novel-metadata="metadata"
+        @update:novel-metadata="metadataResult = Ok(metadata)"
+      />
 
       <template v-else>
+        <n-p>{{ metadata.type }} / 浏览次数:{{ metadata.visited }}</n-p>
+
         <n-p style="word-break: break-all">
           {{ metadata.introductionJp }}
         </n-p>
@@ -211,12 +192,12 @@ function enableEditMode() {
           <ReuseTag
             v-for="attention of metadata.attentions.sort()"
             :tag="attention"
-            :isAttention="true"
+            :attention="true"
           />
           <ReuseTag
             v-for="keyword of metadata.keywords"
             :tag="keyword"
-            :isAttention="false"
+            :attention="false"
           />
         </n-space>
 
@@ -235,12 +216,24 @@ function enableEditMode() {
           />
         </section>
 
-        <SectionWebToc
-          :provider-id="providerId"
-          :novel-id="novelId"
-          :toc="metadata.toc"
-          :last-read-chapter-id="metadata.lastReadChapterId"
-        />
+        <section>
+          <SectionHeader title="目录">
+            <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
+              <template #icon>
+                <n-icon :component="SortFilled" />
+              </template>
+              {{ setting.tocSortReverse ? '倒序' : '正序' }}
+            </n-button>
+          </SectionHeader>
+          <SectionWebToc
+            :provider-id="providerId"
+            :novel-id="novelId"
+            :toc="metadata.toc"
+            :reverse="setting.tocSortReverse"
+            :last-read-chapter-id="metadata.lastReadChapterId"
+          />
+        </section>
+
         <SectionComment :post-id="route.path" />
       </template>
     </ResultView>

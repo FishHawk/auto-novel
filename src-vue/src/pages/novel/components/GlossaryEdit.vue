@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 const { glossary } = defineProps<{
   glossary: { [key: string]: string };
-  submit: () => Promise<void>;
+  submit: (token: string) => Promise<void>;
 }>();
 
 const termsToAdd = ref<[string, string]>(['', '']);
