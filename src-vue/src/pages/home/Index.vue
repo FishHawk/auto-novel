@@ -32,12 +32,7 @@ function query(url: string) {
 const authInfoStore = useAuthInfoStore();
 const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadFavorite() {
-  const result = await ApiUser.listFavoritedWebNovel(
-    0,
-    8,
-    'update',
-    authInfoStore.token!!
-  );
+  const result = await ApiUser.listFavoritedWebNovel(0, 8, 'update');
   if (result.ok) {
     favoriteList.value = Ok(result.value.items);
   } else {

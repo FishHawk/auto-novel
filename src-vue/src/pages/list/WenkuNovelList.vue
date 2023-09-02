@@ -30,10 +30,7 @@ async function importMetadataFromBangumi(url: string) {
   if (metadataResult.ok) {
     const token = authInfoStore.token;
     if (!token) return message.info('请先登录');
-    const result = await ApiWenkuNovel.postMetadata(
-      metadataResult.value,
-      token
-    );
+    const result = await ApiWenkuNovel.postMetadata(metadataResult.value);
     if (result.ok) {
       message.success('创建成功');
     } else {

@@ -9,13 +9,9 @@ import {
   FavoriteFilled,
 } from '@vicons/material';
 
-import { Ok, ResultState } from '@/data/api/result';
+import { ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
-import {
-  ApiWenkuNovel,
-  VolumeJpDto,
-  WenkuMetadataDto,
-} from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const authInfoStore = useAuthInfoStore();
@@ -27,7 +23,7 @@ const novelId = route.params.novelId as string;
 const novelMetadataResult = ref<ResultState<WenkuMetadataDto>>();
 
 async function getMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
+  const result = await ApiWenkuNovel.getMetadata(novelId);
   novelMetadataResult.value = result;
   if (result.ok) {
     document.title = result.value.title;
@@ -36,7 +32,7 @@ async function getMetadata() {
 getMetadata();
 
 async function refreshMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(novelId, authInfoStore.token);
+  const result = await ApiWenkuNovel.getMetadata(novelId);
   if (result.ok) {
     novelMetadataResult.value = result;
   }
@@ -54,7 +50,7 @@ async function addFavorite() {
     return;
   }
 
-  const result = await ApiUser.putFavoritedWenkuNovel(novelId, token);
+  const result = await ApiUser.putFavoritedWenkuNovel(novelId);
   if (result.ok) {
     if (novelMetadataResult.value?.ok) {
       novelMetadataResult.value.value.favored = true;
@@ -75,7 +71,7 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiUser.deleteFavoritedWenkuNovel(novelId, token);
+  const result = await ApiUser.deleteFavoritedWenkuNovel(novelId);
   if (result.ok) {
     if (novelMetadataResult.value?.ok) {
       novelMetadataResult.value.value.favored = false;
@@ -102,7 +98,7 @@ async function notifyUpdate() {
     return;
   }
 
-  const result = await ApiWenkuNovel.notifyUpdate(novelId, token);
+  const result = await ApiWenkuNovel.notifyUpdate(novelId);
   if (result.ok) {
     message.info('提醒更新成功');
   } else {

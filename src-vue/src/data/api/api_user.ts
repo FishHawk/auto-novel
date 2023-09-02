@@ -1,119 +1,66 @@
-import api from './api';
-import { Result, runCatching } from './result';
+import { api } from './api';
+import { runCatching } from './result';
 import { WenkuNovelOutlineDto } from './api_wenku_novel';
 import { WebNovelOutlineDto } from './api_web_novel';
 import { Page } from './page';
 
-async function listReadHistoryWebNovel(
-  page: number,
-  pageSize: number,
-  token: string
-): Promise<Result<Page<WebNovelOutlineDto>>> {
-  return runCatching(
+const listReadHistoryWebNovel = (page: number, pageSize: number) =>
+  runCatching(
     api
-      .get(`user/read-history-web/list`, {
-        headers: { Authorization: 'Bearer ' + token },
-        searchParams: { page, pageSize },
-      })
-      .json()
+      .get(`user/read-history-web/list`, { searchParams: { page, pageSize } })
+      .json<Page<WebNovelOutlineDto>>()
   );
-}
 
-async function putReadHistoryWebNovel(
+const putReadHistoryWebNovel = (
   providerId: string,
   novelId: string,
-  chapterId: string,
-  token: string
-) {
-  return runCatching(
+  chapterId: string
+) =>
+  runCatching(
     api
       .put(`user/read-history-web/${providerId}/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
         body: chapterId,
       })
-      .json()
+      .text()
   );
-}
 
-async function listFavoritedWebNovel(
+const listFavoritedWebNovel = (
   page: number,
   pageSize: number,
-  sort: 'create' | 'update',
-  token: string
-): Promise<Result<Page<WebNovelOutlineDto>>> {
-  return runCatching(
+  sort: 'create' | 'update'
+) =>
+  runCatching(
     api
       .get(`user/favorited-web/list`, {
-        headers: { Authorization: 'Bearer ' + token },
         searchParams: { page, pageSize, sort },
       })
-      .json()
+      .json<Page<WebNovelOutlineDto>>()
   );
-}
 
-async function putFavoritedWebNovel(
-  providerId: string,
-  novelId: string,
-  token: string
-) {
-  return runCatching(
-    api
-      .put(`user/favorited-web/${providerId}/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .json()
-  );
-}
+const putFavoritedWebNovel = (providerId: string, novelId: string) =>
+  runCatching(api.put(`user/favorited-web/${providerId}/${novelId}`).text());
 
-async function deleteFavoritedWebNovel(
-  providerId: string,
-  novelId: string,
-  token: string
-) {
-  return runCatching(
-    api
-      .delete(`user/favorited-web/${providerId}/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .json()
-  );
-}
+const deleteFavoritedWebNovel = (providerId: string, novelId: string) =>
+  runCatching(api.delete(`user/favorited-web/${providerId}/${novelId}`).text());
 
-async function listFavoritedWenkuNovel(
+const listFavoritedWenkuNovel = (
   page: number,
   pageSize: number,
-  sort: 'create' | 'update',
-  token: string
-): Promise<Result<Page<WenkuNovelOutlineDto>>> {
-  return runCatching(
+  sort: 'create' | 'update'
+) =>
+  runCatching(
     api
       .get(`user/favorited-wenku/list`, {
-        headers: { Authorization: 'Bearer ' + token },
         searchParams: { page, pageSize, sort },
       })
-      .json()
+      .json<Page<WenkuNovelOutlineDto>>()
   );
-}
 
-async function putFavoritedWenkuNovel(novelId: string, token: string) {
-  return runCatching(
-    api
-      .put(`user/favorited-wenku/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .json()
-  );
-}
+const putFavoritedWenkuNovel = (novelId: string) =>
+  runCatching(api.put(`user/favorited-wenku/${novelId}`).text());
 
-async function deleteFavoritedWenkuNovel(novelId: string, token: string) {
-  return runCatching(
-    api
-      .delete(`user/favorited-wenku/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .json()
-  );
-}
+const deleteFavoritedWenkuNovel = (novelId: string) =>
+  runCatching(api.delete(`user/favorited-wenku/${novelId}`).text());
 
 export const ApiUser = {
   listReadHistoryWebNovel,

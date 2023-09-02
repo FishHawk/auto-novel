@@ -7,12 +7,10 @@ import {
   ApiWenkuNovelHistory,
   WenkuUploadHistory,
 } from '@/data/api/api_wenku_novel_history';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { Page } from '@/data/api/page';
 import { readableDate } from '@/data/util';
 
 const message = useMessage();
-const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
@@ -32,10 +30,7 @@ async function loadPage(page: number) {
 }
 
 async function deleteHistory(id: string) {
-  const result = await ApiWenkuNovelHistory.deleteUploadHistory(
-    id,
-    auth.token!
-  );
+  const result = await ApiWenkuNovelHistory.deleteUploadHistory(id);
   if (result.ok) {
     message.info('删除成功');
     if (historiesResult.value?.ok) {

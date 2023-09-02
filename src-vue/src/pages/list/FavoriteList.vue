@@ -30,19 +30,13 @@ const loader: Loader = (page, _query, selected) => {
     }
   }
   if (optionNth(0) === '网页小说') {
-    return ApiUser.listFavoritedWebNovel(
-      page - 1,
-      10,
-      optionSort(),
-      authInfoStore.token!
-    ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
+    return ApiUser.listFavoritedWebNovel(page - 1, 10, optionSort()).then(
+      (result) => mapOk(result, (page) => ({ type: 'web', page }))
+    );
   } else {
-    return ApiUser.listFavoritedWenkuNovel(
-      page - 1,
-      24,
-      optionSort(),
-      authInfoStore.token!
-    ).then((result) => mapOk(result, (page) => ({ type: 'wenku', page })));
+    return ApiUser.listFavoritedWenkuNovel(page - 1, 24, optionSort()).then(
+      (result) => mapOk(result, (page) => ({ type: 'wenku', page }))
+    );
   }
 };
 </script>

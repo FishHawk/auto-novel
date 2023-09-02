@@ -1,15 +1,14 @@
-import { Options } from 'ky';
-
 import { Translator } from '@/data/translator/base';
 import {
   TranslatorConfig,
   TranslatorId,
   createTranslator,
 } from '@/data/translator/translator';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 
-import api from './api';
+import { api } from './api';
 import { Ok } from './result';
+
+// Api
 
 interface TranslateTaskDto {
   glossaryUuid?: string;
@@ -18,86 +17,74 @@ interface TranslateTaskDto {
   expiredChapters: string;
 }
 
-function getTranslateTask(
+const getTranslateTask = (
   novelId: string,
   translatorId: TranslatorId,
-  volumeId: string,
-  token: string | undefined
-): Promise<TranslateTaskDto> {
-  const options: Options = {};
-  if (token) {
-    options.headers = { Authorization: 'Bearer ' + token };
-  }
-  const url = `wenku/${novelId}/translate/${translatorId}/${volumeId}`;
-  return api.get(url, options).json();
-}
+  volumeId: string
+) =>
+  api
+    .get(`wenku/${novelId}/translate/${translatorId}/${volumeId}`)
+    .json<TranslateTaskDto>();
 
 interface ChapterToTranslateDto {
   glossary: { [key: string]: string };
   paragraphsJp: string[];
 }
 
-function getChapterToTranslate(
+const getChapterToTranslate = (
   novelId: string,
   translatorId: TranslatorId,
   volumeId: string,
-  chapterId: string,
-  token: string | undefined
-): Promise<ChapterToTranslateDto> {
-  const options: Options = {};
-  if (token) {
-    options.headers = { Authorization: 'Bearer ' + token };
-  }
-  const url = `wenku/${novelId}/translate/${translatorId}/${volumeId}/${chapterId}`;
-  return api.get(url, options).json();
-}
+  chapterId: string
+) =>
+  api
+    .get(`wenku/${novelId}/translate/${translatorId}/${volumeId}/${chapterId}`)
+    .json<ChapterToTranslateDto>();
 
 interface ChapterUpdateBody {
   glossaryUuid: string | undefined;
   paragraphsZh: string[];
 }
 
-function postTranslateChapter(
+const postTranslateChapter = (
   novelId: string,
   translatorId: TranslatorId,
   volumeId: string,
   chapterId: string,
-  body: ChapterUpdateBody,
-  token: string | undefined
-): Promise<number> {
-  const options: Options = { json: body };
-  if (token) {
-    options.headers = { Authorization: 'Bearer ' + token };
-  }
-  const url = `wenku/${novelId}/translate/${translatorId}/${volumeId}/${chapterId}`;
-  return api.post(url, options).json();
-}
+  body: ChapterUpdateBody
+) =>
+  api
+    .post(
+      `wenku/${novelId}/translate/${translatorId}/${volumeId}/${chapterId}`,
+      { json: body }
+    )
+    .json<number>();
 
 interface ChapterUpdatePartlyBody {
   glossaryUuid: string | undefined;
   paragraphsZh: { [key: number]: string };
 }
 
-async function putTranslateChapter(
+const putTranslateChapter = (
   novelId: string,
   translatorId: TranslatorId,
   volumeId: string,
   chapterId: string,
-  body: ChapterUpdatePartlyBody,
-  token: string | undefined
-): Promise<number> {
-  const options: Options = { json: body };
-  if (token) {
-    options.headers = { Authorization: 'Bearer ' + token };
-  }
-  const url = `wenku/${novelId}/translate/${translatorId}/${volumeId}/${chapterId}`;
-  return api.put(url, options).json();
-}
+  body: ChapterUpdatePartlyBody
+) =>
+  api
+    .put(
+      `wenku/${novelId}/translate/${translatorId}/${volumeId}/${chapterId}`,
+      { json: body }
+    )
+    .json<number>();
 
-function getExpiredParagraphs(
+// Translate
+
+const getExpiredParagraphs = (
   chapter: ChapterToTranslateDto,
   glossary: { [key: string]: string }
-) {
+) => {
   const changedWords: string[] = [];
   for (const word in glossary) {
     if (chapter.glossary[word] != glossary[word]) {
@@ -117,7 +104,7 @@ function getExpiredParagraphs(
       }
       return false;
     });
-}
+};
 
 interface UpdateCallback {
   onStart: (total: number) => void;
@@ -126,19 +113,17 @@ interface UpdateCallback {
   log: (message: any) => void;
 }
 
-export async function translate(
+export const translate = async (
   novelId: string,
   translatorId: TranslatorId,
   volumeId: string,
   accessToken: string | undefined,
   callback: UpdateCallback
-) {
-  const token = useAuthInfoStore().token;
-
+) => {
   let task: TranslateTaskDto;
   try {
     callback.log(`获取未翻译章节 ${volumeId}`);
-    task = await getTranslateTask(novelId, translatorId, volumeId, token);
+    task = await getTranslateTask(novelId, translatorId, volumeId);
   } catch (e: any) {
     callback.log(`发生错误，结束翻译任务：${e}`);
     return;
@@ -178,8 +163,7 @@ export async function translate(
         novelId,
         translatorId,
         volumeId,
-        chapterId,
-        token
+        chapterId
       );
 
       const textsSrc = chapter.paragraphsJp;
@@ -195,8 +179,7 @@ export async function translate(
         {
           glossaryUuid: task.glossaryUuid,
           paragraphsZh: textsDst,
-        },
-        token
+        }
       );
       callback.onChapterSuccess(state);
     } catch (e) {
@@ -217,8 +200,7 @@ export async function translate(
         novelId,
         translatorId,
         volumeId,
-        chapterId,
-        token
+        chapterId
       );
       const expiredParagraphs = getExpiredParagraphs(chapter, task.glossary);
 
@@ -240,8 +222,7 @@ export async function translate(
         {
           glossaryUuid: task.glossaryUuid,
           paragraphsZh,
-        },
-        token
+        }
       );
       callback.onChapterSuccess(state);
     } catch (e) {
@@ -256,4 +237,4 @@ export async function translate(
   }
 
   return Ok(undefined);
-}
+};

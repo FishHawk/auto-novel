@@ -94,8 +94,7 @@ async function submit() {
   const result = await ApiWebNovel.updateMetadata(
     props.providerId,
     props.novelId,
-    patch,
-    token
+    patch
   );
 
   isSubmitting.value = false;
@@ -123,7 +122,6 @@ async function updateWenkuId() {
     props.providerId,
     props.novelId,
     wenkuId.value,
-    token
   );
   if (result.ok) {
     message.success('提交成功');
@@ -141,7 +139,6 @@ async function deleteWenkuId() {
   const result = await ApiWebNovel.deleteWenkuId(
     props.providerId,
     props.novelId,
-    token
   );
   if (result.ok) {
     message.success('提交成功');

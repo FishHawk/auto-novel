@@ -38,7 +38,6 @@ async function getChapter() {
         providerId,
         novelId,
         chapterId,
-        authInfoStore.token
       );
     }
   }

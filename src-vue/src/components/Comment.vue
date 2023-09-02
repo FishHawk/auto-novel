@@ -27,7 +27,7 @@ const message = useMessage();
 async function vote(isUpvote: boolean, isCancel: boolean) {
   const token = authInfoStore.token;
   if (token) {
-    const result = await ApiComment.vote(comment.id, isUpvote, isCancel, token);
+    const result = await ApiComment.vote(comment.id, isUpvote, isCancel);
     if (result.ok) {
       if (isUpvote && isCancel) {
         comment.upvote--;
@@ -102,8 +102,7 @@ async function reply() {
         postId,
         parentId ?? comment.id,
         receiver,
-        replyContent.value,
-        token
+        replyContent.value
       );
       if (result.ok) {
         emit('replied');

@@ -1,5 +1,13 @@
 <script lang="ts" setup>
 import { zhCN, dateZhCN } from 'naive-ui';
+
+import { updateToken } from './data/api/api';
+import { useAuthInfoStore } from './data/stores/authInfo';
+
+useAuthInfoStore().$subscribe(
+  (_mutation, state) => updateToken(state.info?.token),
+  { detached: true, immediate: true }
+);
 </script>
 
 <template>

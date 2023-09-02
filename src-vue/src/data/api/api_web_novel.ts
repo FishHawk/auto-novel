@@ -1,6 +1,4 @@
-import { Options } from 'ky';
-
-import api from './api';
+import { api } from './api';
 import { Result, runCatching } from './result';
 import { checkUpdate, translate } from './api_web_novel_translate';
 import { Page } from './page';
@@ -90,17 +88,10 @@ export interface WebNovelMetadataDto {
   gpt: number;
 }
 
-async function getMetadata(
-  providerId: string,
-  novelId: string,
-  token: string | undefined
-): Promise<Result<WebNovelMetadataDto>> {
-  const options: Options = {};
-  if (token) {
-    options.headers = { Authorization: 'Bearer ' + token };
-  }
-  return runCatching(api.get(`novel/${providerId}/${novelId}`, options).json());
-}
+const getMetadata = (providerId: string, novelId: string) =>
+  runCatching(
+    api.get(`novel/${providerId}/${novelId}`).json<WebNovelMetadataDto>()
+  );
 
 export interface WebNovelChapterDto {
   titleJp: string;
@@ -130,13 +121,11 @@ async function updateMetadata(
     title?: string;
     introduction?: string;
     toc: { [key: string]: string };
-  },
-  token: string
+  }
 ): Promise<Result<WebNovelMetadataDto>> {
   return runCatching(
     api
       .post(`novel/${providerId}/${novelId}`, {
-        headers: { Authorization: 'Bearer ' + token },
         json: body,
       })
       .json()
@@ -146,13 +135,11 @@ async function updateMetadata(
 async function updateGlossary(
   providerId: string,
   novelId: string,
-  body: { [key: string]: string },
-  token: string
+  body: { [key: string]: string }
 ): Promise<Result<string>> {
   return runCatching(
     api
       .put(`novel/${providerId}/${novelId}/glossary`, {
-        headers: { Authorization: 'Bearer ' + token },
         json: body,
       })
       .text()
@@ -162,31 +149,18 @@ async function updateGlossary(
 async function putWenkuId(
   providerId: string,
   novelId: string,
-  wenkuId: string,
-  token: string
+  wenkuId: string
 ): Promise<Result<string>> {
   return runCatching(
-    api
-      .put(`novel/${providerId}/${novelId}/wenku`, {
-        headers: { Authorization: 'Bearer ' + token },
-        body: wenkuId,
-      })
-      .text()
+    api.put(`novel/${providerId}/${novelId}/wenku`, { body: wenkuId }).text()
   );
 }
 
 async function deleteWenkuId(
   providerId: string,
-  novelId: string,
-  token: string
+  novelId: string
 ): Promise<Result<string>> {
-  return runCatching(
-    api
-      .delete(`novel/${providerId}/${novelId}/wenku`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
-  );
+  return runCatching(api.delete(`novel/${providerId}/${novelId}/wenku`).text());
 }
 
 function createFileUrl(

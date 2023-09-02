@@ -5,7 +5,7 @@ import { useMessage } from 'naive-ui';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const { onAsyncClick } = defineProps<{
-  onAsyncClick: (token: string) => Promise<void>;
+  onAsyncClick: () => Promise<void>;
 }>();
 
 const authInfoStore = useAuthInfoStore();
@@ -22,7 +22,7 @@ async function onClick() {
 
   if (running.value) return;
   running.value = true;
-  await onAsyncClick(token);
+  await onAsyncClick();
   running.value = false;
 }
 </script>

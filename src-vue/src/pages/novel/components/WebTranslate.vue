@@ -213,12 +213,11 @@ const downloadFilenameTypeOptions = [
   { value: 'zh', label: '中文' },
 ];
 
-async function submitGlossary(token: string) {
+async function submitGlossary() {
   const result = await ApiWebNovel.updateGlossary(
     props.providerId,
     props.novelId,
-    props.glossary,
-    token
+    props.glossary
   );
   if (result.ok) {
     message.success('术语表提交成功');

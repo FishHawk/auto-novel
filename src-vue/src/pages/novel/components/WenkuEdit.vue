@@ -38,11 +38,7 @@ async function submit() {
     introduction: props.metadata.introduction,
   };
 
-  const result = await ApiWenkuNovel.patchMetadata(
-    props.id,
-    patch,
-    authInfoStore.token!!
-  );
+  const result = await ApiWenkuNovel.patchMetadata(props.id, patch);
   isSubmitting.value = false;
   if (result.ok) {
     message.success('提交成功');

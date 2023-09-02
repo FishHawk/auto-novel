@@ -8,11 +8,9 @@ import {
   WebNovelPatchHistoryDto,
   WebNovelPatchHistoryOutlineDto,
 } from '@/data/api/api_web_novel_history';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { Page } from '@/data/api/page';
 
 const message = useMessage();
-const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
@@ -38,11 +36,7 @@ async function loadPatch(providerId: string, novelId: string) {
 }
 
 async function deletePatch(providerId: string, novelId: string) {
-  const result = await ApiWebNovelHistory.deletePatch(
-    providerId,
-    novelId,
-    auth.token!
-  );
+  const result = await ApiWebNovelHistory.deletePatch(providerId, novelId);
   if (result.ok) {
     message.info('删除成功');
     if (novelPage.value?.ok) {
@@ -56,11 +50,7 @@ async function deletePatch(providerId: string, novelId: string) {
 }
 
 async function revokePatch(providerId: string, novelId: string) {
-  const result = await ApiWebNovelHistory.revokePatch(
-    providerId,
-    novelId,
-    auth.token!
-  );
+  const result = await ApiWebNovelHistory.revokePatch(providerId, novelId);
   if (result.ok) {
     message.info('撤销成功');
     if (novelPage.value?.ok) {

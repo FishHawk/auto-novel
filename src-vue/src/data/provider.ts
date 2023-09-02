@@ -1,8 +1,3 @@
-interface ParseResult {
-  providerId: string;
-  novelId: string;
-}
-
 interface Provider {
   parseUrl(url: string): string | undefined;
   buildMetadataUrl(novelId: string): string;
@@ -130,6 +125,11 @@ const providers: { [id: string]: Provider } = {
   alphapolis,
   novelism,
 };
+
+interface ParseResult {
+  providerId: string;
+  novelId: string;
+}
 
 export function parseUrl(url: string): ParseResult | undefined {
   for (const providerId in providers) {

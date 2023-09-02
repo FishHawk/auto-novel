@@ -5,7 +5,6 @@ import { useMessage } from 'naive-ui';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const props = defineProps<{
   novelId: string;
@@ -151,13 +150,11 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
 }
 
 const showAdvanceOptions = ref(false);
-const authInfoStore = useAuthInfoStore();
 
-async function submitGlossary(token: string) {
+async function submitGlossary() {
   const result = await ApiWenkuNovel.updateGlossary(
     props.novelId,
-    props.glossary,
-    token
+    props.glossary
   );
   if (result.ok) {
     message.success('术语表提交成功');

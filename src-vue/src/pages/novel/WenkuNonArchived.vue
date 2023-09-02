@@ -20,7 +20,7 @@ getVolumesNonArchived();
 async function getVolumesUser() {
   const token = authInfoStore.token;
   if (token) {
-    const result = await ApiWenkuNovel.listVolumesUser(token);
+    const result = await ApiWenkuNovel.listVolumesUser();
     if (result.ok) {
       volumesUserResult.value = Ok(result.value.list);
       userNovelId.value = result.value.novelId;

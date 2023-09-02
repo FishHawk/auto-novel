@@ -5,7 +5,9 @@ import {
 } from '@/data/translator/translator';
 import { Translator } from '@/data/translator/base';
 
-import api from './api';
+import { api } from './api';
+
+// Api
 
 interface TranslateTaskDto {
   title?: string;
@@ -17,16 +19,18 @@ interface TranslateTaskDto {
   expiredChapters: { [key: number]: string };
 }
 
-async function getTranslateTask(
+const getTranslateTask = (
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
   startIndex: number,
   endIndex: number
-): Promise<TranslateTaskDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}`;
-  return api.get(url, { searchParams: { startIndex, endIndex } }).json();
-}
+) =>
+  api
+    .get(`novel/${providerId}/${novelId}/translate/${translatorId}`, {
+      searchParams: { startIndex, endIndex },
+    })
+    .json<TranslateTaskDto>();
 
 interface MetadataUpdateBody {
   title?: string;
@@ -34,15 +38,17 @@ interface MetadataUpdateBody {
   toc: { [key: string]: string };
 }
 
-async function postMetadata(
+const postMetadata = (
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
   body: MetadataUpdateBody
-): Promise<string> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/metadata`;
-  return api.post(url, { json: body }).text();
-}
+) =>
+  api
+    .post(`novel/${providerId}/${novelId}/translate/${translatorId}/metadata`, {
+      json: body,
+    })
+    .text();
 
 interface ChapterToTranslateDto {
   glossary: { [key: string]: string };
@@ -54,49 +60,59 @@ interface TranslateStateDto {
   zh: number;
 }
 
-async function getChapter(
+const getChapter = (
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
   chapterId: string
-): Promise<ChapterToTranslateDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
-  return api.get(url).json();
-}
+) =>
+  api
+    .get(
+      `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`
+    )
+    .json<ChapterToTranslateDto>();
 
 interface ChapterUpdateBody {
   glossaryUuid: string | undefined;
   paragraphsZh: string[];
 }
 
-async function postChapter(
+const postChapter = (
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
   chapterId: string,
   body: ChapterUpdateBody
-): Promise<TranslateStateDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
-  return api.post(url, { json: body }).json();
-}
+) =>
+  api
+    .post(
+      `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`,
+      { json: body }
+    )
+    .json<TranslateStateDto>();
 
 interface ChapterUpdatePartlyBody {
   glossaryUuid: string | undefined;
   paragraphsZh: { [key: number]: string };
 }
 
-async function putChapter(
+const putChapter = (
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
   chapterId: string,
   body: ChapterUpdatePartlyBody
-): Promise<TranslateStateDto> {
-  const url = `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`;
-  return api.patch(url, { json: body }).json();
-}
+) =>
+  api
+    .patch(
+      `novel/${providerId}/${novelId}/translate/${translatorId}/chapter/${chapterId}`,
+      { json: body }
+    )
+    .json<TranslateStateDto>();
 
-function encodeMetadataToTranslate(metadata: TranslateTaskDto): string[] {
+// Translate
+
+const encodeMetadataToTranslate = (metadata: TranslateTaskDto) => {
   const query = [];
   if (metadata.title) {
     query.push(metadata.title);
@@ -106,12 +122,12 @@ function encodeMetadataToTranslate(metadata: TranslateTaskDto): string[] {
   }
   query.push(...metadata.toc);
   return query;
-}
+};
 
-function decodeAsMetadataTranslated(
+const decodeAsMetadataTranslated = (
   metadata: TranslateTaskDto,
   translated: string[]
-): MetadataUpdateBody {
+) => {
   const obj: MetadataUpdateBody = { toc: {} };
   if (metadata.title) {
     obj.title = translated.shift();
@@ -123,12 +139,12 @@ function decodeAsMetadataTranslated(
     obj.toc[textJp] = translated.shift()!!;
   }
   return obj;
-}
+};
 
-function getExpiredParagraphs(
+const getExpiredParagraphs = (
   chapter: ChapterToTranslateDto,
   glossary: { [key: string]: string }
-) {
+) => {
   const changedWords: string[] = [];
   for (const word in glossary) {
     if (chapter.glossary[word] != glossary[word]) {
@@ -148,7 +164,7 @@ function getExpiredParagraphs(
       }
       return false;
     });
-}
+};
 
 export interface TaskCallback {
   onStart: (total: number) => void;
@@ -159,7 +175,7 @@ export interface TaskCallback {
   log: (message: any) => void;
 }
 
-export async function translate(
+export const translate = async (
   providerId: string,
   novelId: string,
   translatorId: TranslatorId,
@@ -167,7 +183,7 @@ export async function translate(
   startIndex: number,
   endIndex: number,
   callback: TaskCallback
-) {
+) => {
   let task: TranslateTaskDto;
   let translator: Translator | undefined = undefined;
   try {
@@ -313,7 +329,7 @@ export async function translate(
       }
     }
   }
-}
+};
 
 interface CheckUpdateTask {
   chapters: { [key: number]: string };

@@ -30,11 +30,7 @@ const commentPage = ref<ResultState<CommentPage>>();
 onMounted(() => loadPage(1, true));
 
 async function loadPage(page: number, isFirst: boolean = false) {
-  const result = await ApiComment.list(
-    props.postId,
-    page - 1,
-    authInfoStore.token
-  );
+  const result = await ApiComment.list(props.postId, page - 1);
   if (result.ok) {
     commentPage.value = Ok({
       ...result.value,
@@ -50,12 +46,7 @@ async function loadPage(page: number, isFirst: boolean = false) {
 }
 
 async function loadSubPage(page: number, comment: Comment) {
-  const result = await ApiComment.listSub(
-    props.postId,
-    comment.id,
-    page - 1,
-    authInfoStore.token
-  );
+  const result = await ApiComment.listSub(props.postId, comment.id, page - 1);
   if (result.ok) {
     comment.page = page;
     comment.pageNumber = result.value.pageNumber;
@@ -94,8 +85,7 @@ async function reply() {
         props.postId,
         undefined,
         undefined,
-        replyContent.value,
-        token
+        replyContent.value
       );
       if (result.ok) {
         if (commentPage.value?.ok) {

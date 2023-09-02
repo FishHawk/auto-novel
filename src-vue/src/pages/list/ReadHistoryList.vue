@@ -7,11 +7,9 @@ import { Loader } from './components/NovelList.vue';
 
 const authInfoStore = useAuthInfoStore();
 const loader: Loader = (page, _query, _selected) => {
-  return ApiUser.listReadHistoryWebNovel(
-    page - 1,
-    10,
-    authInfoStore.token!
-  ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
+  return ApiUser.listReadHistoryWebNovel(page - 1, 10).then((result) =>
+    mapOk(result, (page) => ({ type: 'web', page }))
+  );
 };
 </script>
 

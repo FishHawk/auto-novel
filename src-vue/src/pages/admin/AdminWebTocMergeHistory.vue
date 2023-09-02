@@ -8,11 +8,9 @@ import {
   TocMergeHistoryDto,
   TocMergeHistoryOutlineDto,
 } from '@/data/api/api_web_novel_history';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
 import { Page } from '@/data/api/page';
 
 const message = useMessage();
-const auth = useAuthInfoStore();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
@@ -40,7 +38,7 @@ async function loadDetail(id: string) {
 }
 
 async function deleteDetail(id: string) {
-  const result = await ApiWebNovelHistory.deleteMergeHistory(id, auth.token!);
+  const result = await ApiWebNovelHistory.deleteMergeHistory(id);
   if (result.ok) {
     message.info('删除成功');
     if (novelPage.value?.ok) {

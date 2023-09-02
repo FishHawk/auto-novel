@@ -40,11 +40,7 @@ const url = buildMetadataUrl(providerId, novelId);
 const metadataResult = ref<ResultState<WebNovelMetadataDto>>();
 
 async function getMetadata() {
-  const result = await ApiWebNovel.getMetadata(
-    providerId,
-    novelId,
-    authInfoStore.token
-  );
+  const result = await ApiWebNovel.getMetadata(providerId, novelId);
   metadataResult.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
@@ -52,8 +48,8 @@ async function getMetadata() {
 }
 getMetadata();
 
-async function addFavorite(token: string) {
-  const result = await ApiUser.putFavoritedWebNovel(providerId, novelId, token);
+async function addFavorite() {
+  const result = await ApiUser.putFavoritedWebNovel(providerId, novelId);
   if (result.ok) {
     if (metadataResult.value?.ok) {
       metadataResult.value.value.favored = true;
@@ -63,12 +59,8 @@ async function addFavorite(token: string) {
   }
 }
 
-async function removeFavorite(token: string) {
-  const result = await ApiUser.deleteFavoritedWebNovel(
-    providerId,
-    novelId,
-    token
-  );
+async function removeFavorite() {
+  const result = await ApiUser.deleteFavoritedWebNovel(providerId, novelId);
   if (result.ok) {
     if (metadataResult.value?.ok) {
       metadataResult.value.value.favored = false;

@@ -1,4 +1,4 @@
-import api from './api';
+import { api } from './api';
 import { Result, runCatching } from './result';
 
 export interface SignInDto {
@@ -9,22 +9,20 @@ export interface SignInDto {
   expiresAt: number;
 }
 
-async function signIn(
-  emailOrUsername: string,
-  password: string
-): Promise<Result<SignInDto>> {
-  return runCatching(
-    api.post(`auth/sign-in`, { json: { emailOrUsername, password } }).json()
+const signIn = (emailOrUsername: string, password: string) =>
+  runCatching(
+    api
+      .post(`auth/sign-in`, { json: { emailOrUsername, password } })
+      .json<SignInDto>()
   );
-}
 
-async function signUp(
+const signUp = (
   email: string,
   emailCode: string,
   username: string,
   password: string
-): Promise<Result<SignInDto>> {
-  return runCatching(
+) =>
+  runCatching(
     api
       .post('auth/sign-up', {
         json: {
@@ -34,38 +32,33 @@ async function signUp(
           password,
         },
       })
-      .json()
+      .json<SignInDto>()
   );
-}
 
-async function verifyEmail(email: string): Promise<Result<string>> {
-  return runCatching(
+const verifyEmail = (email: string) =>
+  runCatching(
     api
       .post('auth/verify-email', {
         searchParams: { email },
       })
       .text()
   );
-}
 
-async function sendResetPasswordEmail(
-  emailOrUsername: string
-): Promise<Result<string>> {
-  return runCatching(
+const sendResetPasswordEmail = (emailOrUsername: string) =>
+  runCatching(
     api
       .post('auth/reset-password-email', {
         searchParams: { emailOrUsername },
       })
       .text()
   );
-}
 
-async function resetPassword(
+const resetPassword = (
   emailOrUsername: string,
   token: string,
   password: string
-): Promise<Result<string>> {
-  return runCatching(
+) =>
+  runCatching(
     api
       .post('auth/reset-password', {
         searchParams: { emailOrUsername },
@@ -73,7 +66,6 @@ async function resetPassword(
       })
       .text()
   );
-}
 
 export const ApiAuth = {
   signIn,

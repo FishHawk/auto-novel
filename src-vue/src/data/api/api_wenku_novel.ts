@@ -1,7 +1,7 @@
-import ky, { Options } from 'ky';
+import ky from 'ky';
 
-import api from './api';
-import { Ok, Result, runCatching } from './result';
+import { api } from './api';
+import { Ok, runCatching } from './result';
 import { translate } from './api_wenku_novel_translate';
 import { Page } from './page';
 
@@ -12,18 +12,12 @@ export interface WenkuNovelOutlineDto {
   cover: string;
 }
 
-async function list(
-  page: number,
-  query: string
-): Promise<Result<Page<WenkuNovelOutlineDto>>> {
-  return runCatching(
+const list = (page: number, query: string) =>
+  runCatching(
     api
-      .get(`wenku/list`, {
-        searchParams: { page, query },
-      })
-      .json()
+      .get(`wenku/list`, { searchParams: { page, query } })
+      .json<Page<WenkuNovelOutlineDto>>()
   );
-}
 
 export interface WenkuMetadataDto {
   title: string;
@@ -50,29 +44,16 @@ export interface VolumeJpDto {
   gpt: number;
 }
 
-async function listVolumesNonArchived(): Promise<Result<VolumeJpDto[]>> {
-  return runCatching(api.get(`wenku/non-archived`).json());
-}
-async function listVolumesUser(
-  token: string
-): Promise<Result<{ list: VolumeJpDto[]; novelId: string }>> {
-  return runCatching(
-    api
-      .get(`wenku/user`, { headers: { Authorization: 'Bearer ' + token } })
-      .json()
-  );
-}
+const listVolumesNonArchived = () =>
+  runCatching(api.get(`wenku/non-archived`).json<VolumeJpDto[]>());
 
-async function getMetadata(
-  novelId: string,
-  token: string | undefined
-): Promise<Result<WenkuMetadataDto>> {
-  const options: Options = {};
-  if (token) {
-    options.headers = { Authorization: 'Bearer ' + token };
-  }
-  return runCatching(api.get(`wenku/${novelId}`, options).json());
-}
+const listVolumesUser = () =>
+  runCatching(
+    api.get(`wenku/user`).json<{ list: VolumeJpDto[]; novelId: string }>()
+  );
+
+const getMetadata = (novelId: string) =>
+  runCatching(api.get(`wenku/${novelId}`).json<WenkuMetadataDto>());
 
 interface MetadataCreateBody {
   title: string;
@@ -86,62 +67,17 @@ interface MetadataCreateBody {
   introduction: string;
 }
 
-async function postMetadata(
-  body: MetadataCreateBody,
-  token: string
-): Promise<Result<String>> {
-  return runCatching(
-    api
-      .post(`wenku`, {
-        json: body,
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
-  );
-}
+const postMetadata = (body: MetadataCreateBody) =>
+  runCatching(api.post(`wenku`, { json: body }).text());
 
-async function patchMetadata(
-  id: string,
-  body: MetadataCreateBody,
-  token: string
-): Promise<Result<String>> {
-  return runCatching(
-    api
-      .patch(`wenku/${id}`, {
-        json: body,
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
-  );
-}
+const patchMetadata = (id: string, body: MetadataCreateBody) =>
+  runCatching(api.patch(`wenku/${id}`, { json: body }).text());
 
-async function updateGlossary(
-  id: string,
-  body: { [key: string]: string },
-  token: string
-): Promise<Result<String>> {
-  return runCatching(
-    api
-      .put(`wenku/${id}/glossary`, {
-        json: body,
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
-  );
-}
+const updateGlossary = (id: string, body: { [key: string]: string }) =>
+  runCatching(api.put(`wenku/${id}/glossary`, { json: body }).text());
 
-async function notifyUpdate(
-  id: string,
-  token: string
-): Promise<Result<String>> {
-  return runCatching(
-    api
-      .post(`wenku/${id}/notify-update`, {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-      .text()
-  );
-}
+const notifyUpdate = (id: string) =>
+  runCatching(api.post(`wenku/${id}/notify-update`).text());
 
 interface BangumiSection {
   name: string;
@@ -158,9 +94,7 @@ interface BangumiSection {
   tags: { name: string; count: number }[];
 }
 
-async function getMetadataFromBangumi(
-  novelId: string
-): Promise<Result<MetadataCreateBody>> {
+const getMetadataFromBangumi = async (novelId: string) => {
   const sectionResult = await runCatching(
     ky.get(`https://api.bgm.tv/v0/subjects/${novelId}`).json<BangumiSection>()
   );
@@ -187,17 +121,15 @@ async function getMetadataFromBangumi(
   } else {
     return sectionResult;
   }
-}
+};
 
-function createVolumeZhUploadUrl(novelId: string) {
-  return `/api/wenku/${novelId}/volume-zh`;
-}
+const createVolumeZhUploadUrl = (novelId: string) =>
+  `/api/wenku/${novelId}/volume-zh`;
 
-function createVolumeJpUploadUrl(novelId: string) {
-  return `/api/wenku/${novelId}/volume-jp`;
-}
+const createVolumeJpUploadUrl = (novelId: string) =>
+  `/api/wenku/${novelId}/volume-jp`;
 
-function createFileUrl(
+const createFileUrl = (
   novelId: string,
   volumeId: string,
   lang:
@@ -207,9 +139,7 @@ function createFileUrl(
     | 'mix-baidu'
     | 'mix-youdao'
     | 'mix-gpt'
-) {
-  return `/api/wenku/${novelId}/file/${volumeId}/${lang}`;
-}
+) => `/api/wenku/${novelId}/file/${volumeId}/${lang}`;
 
 export const ApiWenkuNovel = {
   list,
