@@ -17,6 +17,7 @@ export interface WebNovelOutlineDto {
   baidu: number;
   youdao: number;
   gpt: number;
+  updateAt?: number;
 }
 
 async function list(

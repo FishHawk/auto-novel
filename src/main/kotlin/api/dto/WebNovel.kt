@@ -19,6 +19,7 @@ data class WebNovelOutlineDto(
     val baidu: Long,
     val youdao: Long,
     val gpt: Long,
+    val updateAt: Long?,
 ) {
     companion object {
         fun fromDomain(domain: WebNovelMetadataOutline) =
@@ -36,6 +37,7 @@ data class WebNovelOutlineDto(
                 baidu = domain.baidu,
                 youdao = domain.youdao,
                 gpt = domain.gpt,
+                updateAt = domain.updateAt?.epochSeconds,
             )
     }
 }

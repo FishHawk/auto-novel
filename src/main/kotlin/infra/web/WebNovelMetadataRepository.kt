@@ -451,6 +451,7 @@ private fun RemoteNovelListItem.toOutline(
         youdao = novel?.youdao ?: 0,
         gpt = novel?.gpt ?: 0,
         extra = extra,
+        updateAt = novel?.updateAt,
     )
 
 fun WebNovelMetadata.toOutline() =
@@ -468,6 +469,7 @@ fun WebNovelMetadata.toOutline() =
         youdao = youdao,
         gpt = gpt,
         extra = null,
+        updateAt = updateAt,
     )
 
 fun isProviderIdUnstable(providerId: String): Boolean {

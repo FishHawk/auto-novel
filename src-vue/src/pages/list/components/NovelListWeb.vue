@@ -39,11 +39,12 @@ defineProps<{
       {{ item.providerId + '.' + item.novelId }}
     </n-a>
 
-    <div v-if="item.extra" style="color: #666">
-      {{ item.extra }}
-    </div>
-
     <div style="color: #666">
+      <template v-if="item.extra">
+        {{ item.extra }}
+        <br />
+      </template>
+
       <ReuseTag
         v-for="attention in item.attentions.sort()"
         :tag="attention"
@@ -54,15 +55,20 @@ defineProps<{
         :tag="keyword"
         :isAttention="false"
       />
-    </div>
 
-    <template v-if="item.total">
-      <div style="color: #666">
+      <template v-if="item.total">
+        <br />
         {{ item.type ? item.type + ' / ' : '' }}
         总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }} /
-        GPT3 {{ item.gpt }}
-      </div>
-    </template>
+        GPT3
+        {{ item.gpt }}
+      </template>
+
+      <template v-if="item.updateAt">
+        <br />
+        本站更新于<n-time :time="item.updateAt * 1000" type="relative" />
+      </template>
+    </div>
     <n-divider />
   </div>
 </template>

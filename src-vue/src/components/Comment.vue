@@ -75,7 +75,7 @@ function toggleInput() {
         回复
       </n-button>
     </n-space>
-    <n-card embedded size="small">
+    <n-card embedded :bordered="false" size="small">
       <span style="white-space: pre-wrap">{{ comment.content }}</span>
     </n-card>
   </DefineCommentContent>

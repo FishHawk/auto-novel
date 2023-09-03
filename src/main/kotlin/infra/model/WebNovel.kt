@@ -57,6 +57,7 @@ data class WebNovelMetadataOutline(
     val youdao: Long = 0,
     val gpt: Long = 0,
     val extra: String? = null,
+    @Contextual val updateAt: Instant? = null,
 )
 
 @Serializable
