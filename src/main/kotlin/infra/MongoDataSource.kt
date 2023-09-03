@@ -6,25 +6,13 @@ import infra.model.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.bson.types.ObjectId
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import java.util.*
 import java.util.concurrent.TimeUnit
-
-@Serializable
-data class CommentModelX(
-    @Contextual @SerialName("_id") val id: ObjectId,
-    @Contextual val parentId: ObjectId?,
-    val postId: String,
-    val username: String,
-    val receiver: String?,
-    val content: String,
-)
 
 @Serializable
 data class EmailCodeModel(
@@ -79,8 +67,6 @@ class MongoDataSource(url: String) {
 
     val articleCollection
         get() = database.getCollection<ArticleModel>("article")
-    val commentXCollection
-        get() = database.getCollection<CommentModelX>("comment")
     val commentCollection
         get() = database.getCollection<CommentModel>("comment-alt")
 
@@ -137,10 +123,10 @@ class MongoDataSource(url: String) {
                 ArticleModel::pinned,
                 ArticleModel::updateAt,
             )
-            commentXCollection.ensureIndex(
-                CommentModelX::postId,
-                CommentModelX::parentId,
-                CommentModelX::id,
+            commentCollection.ensureIndex(
+                CommentModel::site,
+                CommentModel::parent,
+                CommentModel::id,
             )
 
             // Web novel
