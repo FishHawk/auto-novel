@@ -98,6 +98,7 @@ fun main() {
 
         routing {
             routeAuth()
+            routeArticle()
             routeComment()
             routeUser()
 
@@ -132,6 +133,7 @@ val appModule = module {
     single { WenkuNovelVolumeRepository() }
     single { WenkuNovelUploadHistoryRepository(get()) }
 
+    single { ArticleRepository(get()) }
     single { CommentRepository(get()) }
     single { UserRepository(get(), get()) }
     single { EmailCodeRepository(get()) }
@@ -142,6 +144,7 @@ val appModule = module {
         val secret = System.getenv("JWT_SECRET") ?: ""
         AuthApi(secret, get(), get(), get())
     }
+    single(createdAtStart = true) { ArticleApi(get(), get()) }
     single(createdAtStart = true) { CommentApi(get()) }
     single(createdAtStart = true) { UserApi(get(), get(), get()) }
 

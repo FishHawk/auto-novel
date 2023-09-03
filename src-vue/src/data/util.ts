@@ -1,7 +1,8 @@
 import { useWindowSize } from '@vueuse/core';
 import { computed } from 'vue';
+import { UserRole } from './api/api_article';
 
-export function readableDate(epochSeconds: number) {
+export function formatDate(epochSeconds: number) {
   return new Date(epochSeconds * 1000).toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',

@@ -47,14 +47,14 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('列表', '/novel-list'),
     menuOption('文件翻译', '/wenku/non-archived'),
-    menuOption('帮助', '/wiki'),
+    menuOption('论坛', '/forum'),
   ];
 });
 
 const path = useRoute().path;
 function getTopMenuOptionKey() {
-  if (path.startsWith('/wiki')) {
-    return '/wiki';
+  if (path.startsWith('/forum')) {
+    return '/forum';
   } else if (
     ['/favorite-list', '/read-history', '/novel-list', '/wenku-list'].includes(
       path
@@ -85,7 +85,7 @@ const collapsedMenuOptions = computed(() => {
       ],
     },
     menuOption('文件翻译', '/wenku/non-archived'),
-    menuOption('帮助', '/wiki'),
+    menuOption('论坛', '/forum'),
   ];
 });
 

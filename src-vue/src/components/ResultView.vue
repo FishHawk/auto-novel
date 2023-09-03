@@ -9,8 +9,8 @@ defineProps<{
 
 <template>
   <template v-if="result?.ok">
-    <slot :value="result.value" />
     <n-empty v-if="showEmpty(result.value)" description="空列表" />
+    <slot v-else :value="result.value" />
   </template>
 
   <n-result

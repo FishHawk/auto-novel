@@ -56,29 +56,6 @@ async function vote(isUpvote: boolean, isCancel: boolean) {
   }
 }
 
-function readableDate(timestamp: number) {
-  const diff = Math.abs(Date.now() / 1000 - timestamp);
-  if (diff < 60) {
-    return '刚刚';
-  } else if (diff < 3600) {
-    return `${Math.floor(diff / 60)}分钟前`;
-  } else if (diff < 86400) {
-    return `${Math.floor(diff / 3600)}小时前`;
-  } else {
-    const date = new Date(timestamp * 1000);
-    const year = date.getFullYear();
-    var month = (1 + date.getMonth()).toString();
-    month = month.length > 1 ? month : '0' + month;
-    var day = date.getDate().toString();
-    day = day.length > 1 ? day : '0' + day;
-    if (new Date().getFullYear() === year) {
-      return `${month}-${day}`;
-    } else {
-      return `${year}-${month}-${day}`;
-    }
-  }
-}
-
 const showInput = ref(false);
 const replyContent = ref('');
 
@@ -125,7 +102,9 @@ async function reply() {
       <n-text style="color: #7c7c7c">></n-text>
       <n-text style="font-weight: 900">{{ comment.receiver }}</n-text>
     </template>
-    <n-text style="color: #7c7c7c">{{ readableDate(comment.createAt) }}</n-text>
+    <n-text style="color: #7c7c7c">
+      <n-time :time="comment.createAt * 1000" type="relative" />
+    </n-text>
   </n-space>
 
   <div style="margin-top: 8px; margin-bottom: 4px">{{ comment.content }}</div>

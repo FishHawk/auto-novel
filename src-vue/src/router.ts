@@ -60,26 +60,20 @@ const routes = [
   },
 
   {
-    path: '/wiki',
-    redirect: '/wiki/feedback',
-    children: [
-      {
-        path: '/wiki/extension',
-        component: () => import('./pages/wiki/Extension.vue'),
-      },
-      {
-        path: '/wiki/search',
-        component: () => import('./pages/wiki/Search.vue'),
-      },
-      {
-        path: '/wiki/feedback',
-        component: () => import('./pages/wiki/Feedback.vue'),
-      },
-      {
-        path: '/wiki/donate',
-        component: () => import('./pages/wiki/Donate.vue'),
-      },
-    ],
+    path: '/forum',
+    component: () => import('./pages/forum/Forum.vue'),
+  },
+  {
+    path: '/forum-edit',
+    component: () => import('./pages/forum/ForumEdit.vue'),
+  },
+  {
+    path: '/forum/:id',
+    component: () => import('./pages/forum/ForumArticle.vue'),
+  },
+  {
+    path: '/forum-edit/:id',
+    component: () => import('./pages/forum/ForumEdit.vue'),
   },
 
   {

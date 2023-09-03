@@ -8,7 +8,6 @@ import {
   WenkuUploadHistory,
 } from '@/data/api/api_wenku_novel_history';
 import { Page } from '@/data/api/page';
-import { readableDate } from '@/data/util';
 
 const message = useMessage();
 
@@ -69,7 +68,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
           </template>
           <template #description>
             <b>{{ item.uploader }}</b>
-            于{{ readableDate(item.createAt) }}上传
+            于<n-time :time="item.createAt * 1000" type="relative" />上传
           </template>
           <template #header-extra>
             <n-button @click="deleteHistory(item.id)">删除</n-button>

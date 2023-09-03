@@ -171,7 +171,7 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
 <template>
   <n-text depth="3" style="font-size: 12px">
     # 翻译功能需要需要安装浏览器插件，参见
-    <n-a href="/wiki/extension" target="_blank">插件使用说明</n-a>
+    <n-a href="/forum/64f3d63f794cbb1321145c07" target="_blank">插件使用说明</n-a>
   </n-text>
   <n-p>
     高级选项

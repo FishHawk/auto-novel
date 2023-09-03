@@ -24,6 +24,16 @@ enum class FavoriteListSort {
     UpdateAt,
 }
 
+//@Serializable
+//data class ForumPost(
+//    @Contextual @SerialName("_id") val id: ObjectId,
+//    val thread: Id<ForumThread>,
+//    val content: String,
+//    @Contextual val user: Id<User>,
+//    @Contextual val createAt: Instant,
+//    @Contextual val updateAt: Instant,
+//)
+
 @Serializable
 data class Comment(
     val id: String,
@@ -35,6 +45,12 @@ data class Comment(
     val downvote: Int,
     val viewerVote: Boolean?,
     val content: String,
+)
+
+@Serializable
+data class UserOutline(
+    val username: String,
+    val role: User.Role,
 )
 
 @Serializable

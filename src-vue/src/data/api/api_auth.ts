@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Result, runCatching } from './result';
+import { runCatching } from './result';
 
 export interface SignInDto {
   email: string;

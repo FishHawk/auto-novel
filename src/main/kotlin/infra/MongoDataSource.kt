@@ -1,5 +1,6 @@
 package infra
 
+import com.mongodb.client.model.Filters
 import com.mongodb.client.model.IndexOptions
 import infra.model.*
 import kotlinx.coroutines.runBlocking
@@ -10,6 +11,7 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.coroutine
+import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -72,8 +74,13 @@ class MongoDataSource(url: String) {
         get() = database.getCollection<EmailCodeModel>("email-code")
     val resetPasswordTokenCollection
         get() = database.getCollection<ResetPasswordToken>("reset-password-token")
+
+    val userCollectionName = "user"
     val userCollection
-        get() = database.getCollection<User>("user")
+        get() = database.getCollection<User>(userCollectionName)
+
+    val articleCollection
+        get() = database.getCollection<ArticleModel>("article")
     val commentCollection
         get() = database.getCollection<CommentModel>("comment")
 
@@ -120,6 +127,16 @@ class MongoDataSource(url: String) {
             userCollection.ensureUniqueIndex(User::email)
             userCollection.ensureUniqueIndex(User::username)
 
+            articleCollection.ensureIndex(
+                ArticleModel::updateAt,
+                indexOptions = IndexOptions().partialFilterExpression(
+                    Filters.eq(ArticleModel::pinned.path(), true)
+                )
+            )
+            articleCollection.ensureIndex(
+                ArticleModel::pinned,
+                ArticleModel::updateAt,
+            )
             commentCollection.ensureIndex(
                 CommentModel::postId,
                 CommentModel::parentId,

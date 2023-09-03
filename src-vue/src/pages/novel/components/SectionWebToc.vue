@@ -4,7 +4,7 @@ import { createReusableTemplate } from '@vueuse/core';
 import { NA } from 'naive-ui';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
-import { useIsDesktop } from '@/data/util';
+import { formatDate, useIsDesktop } from '@/data/util';
 
 const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   item: {
@@ -26,16 +26,6 @@ const props = defineProps<{
 
 const isDesktop = useIsDesktop(600);
 
-function readableDate(createAt: number) {
-  return new Date(createAt * 1000).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 const readableToc = computed(() => {
   const newToc = [];
   let index = 0;
@@ -45,7 +35,7 @@ const readableToc = computed(() => {
       titleJp: it.titleJp,
       titleZh: it.titleZh,
       chapterId: it.chapterId,
-      createAt: it.createAt ? readableDate(it.createAt) : undefined,
+      createAt: it.createAt ? formatDate(it.createAt) : undefined,
     });
     if (it.chapterId) {
       index += 1;

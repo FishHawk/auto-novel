@@ -18,6 +18,7 @@ declare module 'vue' {
     ListFilters: typeof import('./src/pages/list/components/ListFilters.vue')['default']
     ListLayout: typeof import('./src/pages/list/components/ListLayout.vue')['default']
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
+    Markdown: typeof import('./src/components/Markdown.vue')['default']
     NA: typeof import('naive-ui')['NA']
     NAutoComplete: typeof import('naive-ui')['NAutoComplete']
     NButton: typeof import('naive-ui')['NButton']
@@ -53,7 +54,6 @@ declare module 'vue' {
     NMenu: typeof import('naive-ui')['NMenu']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NModal: typeof import('naive-ui')['NModal']
-    NOl: typeof import('naive-ui')['NOl']
     NovelList: typeof import('./src/pages/list/components/NovelList.vue')['default']
     NovelListWeb: typeof import('./src/pages/list/components/NovelListWeb.vue')['default']
     NovelListWenku: typeof import('./src/pages/list/components/NovelListWenku.vue')['default']
@@ -75,6 +75,7 @@ declare module 'vue' {
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']
     NThing: typeof import('naive-ui')['NThing']
+    NTime: typeof import('naive-ui')['NTime']
     NTransfer: typeof import('naive-ui')['NTransfer']
     NUl: typeof import('naive-ui')['NUl']
     NUpload: typeof import('naive-ui')['NUpload']
@@ -102,6 +103,5 @@ declare module 'vue' {
     WenkuEdit: typeof import('./src/pages/novel/components/WenkuEdit.vue')['default']
     WenkuTranslate: typeof import('./src/pages/novel/components/WenkuTranslate.vue')['default']
     WenkuTranslateItem: typeof import('./src/pages/novel/components/WenkuTranslateItem.vue')['default']
-    WikiLayout: typeof import('./src/pages/wiki/components/WikiLayout.vue')['default']
   }
 }

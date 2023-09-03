@@ -62,7 +62,8 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
   <ListLayout>
     <n-h1>网络小说</n-h1>
     <n-text depth="3" style="font-size: 12px">
-      # 搜索语法参见 <n-a href="/wiki/search" target="_blank">如何使用搜索</n-a>
+      # 搜索语法参见
+      <n-a href="/forum/64f3da23794cbb1321145c08">如何使用搜索</n-a>
     </n-text>
     <NovelList search :options="options" :loader="loader" />
   </ListLayout>
