@@ -1,13 +1,9 @@
 <script lang="ts" setup>
-import {
-  KeyboardArrowUpFilled,
-  KeyboardArrowDownFilled,
-  CommentFilled,
-} from '@vicons/material';
+import { CommentFilled } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import ApiComment, { SubCommentDto } from '@/data/api/api_comment';
+import { ApiComment, SubCommentDto } from '@/data/api/api_comment';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
 const { postId, parentId, comment } = withDefaults(
@@ -23,38 +19,6 @@ const emit = defineEmits<{ replied: [] }>();
 
 const authInfoStore = useAuthInfoStore();
 const message = useMessage();
-
-async function vote(isUpvote: boolean, isCancel: boolean) {
-  const token = authInfoStore.token;
-  if (token) {
-    const result = await ApiComment.vote(comment.id, isUpvote, isCancel);
-    if (result.ok) {
-      if (isUpvote && isCancel) {
-        comment.upvote--;
-        comment.viewerVote = undefined;
-      } else if (isUpvote && !isCancel) {
-        if (comment.viewerVote === false) {
-          comment.upvote++;
-        }
-        comment.upvote++;
-        comment.viewerVote = true;
-      } else if (!isUpvote && isCancel) {
-        comment.downvote--;
-        comment.viewerVote = undefined;
-      } else {
-        if (comment.viewerVote === true) {
-          comment.upvote--;
-        }
-        comment.downvote++;
-        comment.viewerVote = false;
-      }
-    } else {
-      message.error('评论投票错误：' + result.error.message);
-    }
-  } else {
-    message.info('请先登录');
-  }
-}
 
 const showInput = ref(false);
 const replyContent = ref('');
@@ -105,50 +69,15 @@ async function reply() {
     <n-text style="color: #7c7c7c">
       <n-time :time="comment.createAt * 1000" type="relative" />
     </n-text>
-  </n-space>
-
-  <div style="margin-top: 8px; margin-bottom: 4px">{{ comment.content }}</div>
-
-  <n-space align="center">
-    <n-button
-      quaternary
-      :type="comment.viewerVote === true ? 'primary' : 'tertiary'"
-      @click="vote(true, comment.viewerVote === true)"
-      style="padding: 4px"
-    >
-      <template #icon>
-        <n-icon :size="24">
-          <KeyboardArrowUpFilled />
-        </n-icon>
-      </template>
-    </n-button>
-
-    <div style="color: #7c7c7c; font-weight: 900">
-      {{ comment.upvote - comment.downvote }}
-    </div>
-
-    <n-button
-      quaternary
-      :type="comment.viewerVote === false ? 'primary' : 'tertiary'"
-      @click="vote(false, comment.viewerVote === false)"
-      style="padding: 4px"
-    >
-      <template #icon>
-        <n-icon :size="24">
-          <KeyboardArrowDownFilled />
-        </n-icon>
-      </template>
-    </n-button>
 
     <n-button quaternary type="tertiary" @click="replyClicked()">
       <template #icon>
-        <n-icon>
-          <CommentFilled />
-        </n-icon>
+        <n-icon :component="CommentFilled" />
       </template>
       回复
     </n-button>
   </n-space>
+  <n-card embedded size="small">{{ comment.content }}</n-card>
 
   <template v-if="showInput">
     <n-input

@@ -26,9 +26,6 @@ data class SubCommentDto(
     val createAt: Int,
     val username: String,
     val receiver: String?,
-    val upvote: Int,
-    val downvote: Int,
-    val viewerVote: Boolean?,
     val content: String,
 )
 
@@ -37,9 +34,6 @@ data class CommentDto(
     val id: String,
     val createAt: Int,
     val username: String,
-    val upvote: Int,
-    val downvote: Int,
-    val viewerVote: Boolean?,
     val content: String,
     val pageNumber: Int,
     val items: List<SubCommentDto>,

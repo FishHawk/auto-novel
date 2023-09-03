@@ -4,7 +4,7 @@ const isDesktop = useIsDesktop(850);
 </script>
 
 <template>
-  <WikiLayout>
+  <MainLayout>
     <n-space align="center" justify="space-evenly" :wrap="!isDesktop">
       <div style="max-width: 600px">
         <n-h1>赞助</n-h1>
@@ -29,5 +29,5 @@ const isDesktop = useIsDesktop(850);
         style="max-width: 500px; width: 100%; margin-top: 30px"
       />
     </n-space>
-  </WikiLayout>
+  </MainLayout>
 </template>

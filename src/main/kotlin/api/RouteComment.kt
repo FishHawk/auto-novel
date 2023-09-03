@@ -30,39 +30,22 @@ private class CommentRes {
         val parentId: String,
         val page: Int,
     )
-
-    @Resource("/vote")
-    class Vote(
-        val parent: CommentRes = CommentRes(),
-        val commentId: String,
-        val isUpvote: Boolean,
-        val isCancel: Boolean,
-    )
 }
 
 fun Route.routeComment() {
     val service by inject<CommentApi>()
 
-    authenticate(optional = true) {
-        get<CommentRes.List> { loc ->
-            val jwtUser = call.jwtUserOrNull()
-            val result = service.list(jwtUser?.username, loc.postId, loc.page)
-            call.respondResult(result)
-        }
-
-        get<CommentRes.ListSub> { loc ->
-            val jwtUser = call.jwtUserOrNull()
-            val result = service.listSub(jwtUser?.username, loc.postId, loc.parentId, loc.page)
-            call.respondResult(result)
-        }
+    get<CommentRes.List> { loc ->
+        val result = service.list(loc.postId, loc.page)
+        call.respondResult(result)
     }
-    authenticate {
-        post<CommentRes.Vote> { loc ->
-            val jwtUser = call.jwtUser()
-            val result = service.vote(loc.commentId, loc.isUpvote, loc.isCancel, jwtUser.username)
-            call.respondResult(result)
-        }
 
+    get<CommentRes.ListSub> { loc ->
+        val result = service.listSub(loc.postId, loc.parentId, loc.page)
+        call.respondResult(result)
+    }
+
+    authenticate {
         post<CommentRes> {
             val jwtUser = call.jwtUser()
             val body = call.receive<CommentApi.CommentBody>()
@@ -76,7 +59,6 @@ class CommentApi(
     private val commentRepository: CommentRepository,
 ) {
     suspend fun listSub(
-        viewer: String?,
         postId: String,
         parentId: String,
         page: Int,
@@ -84,7 +66,6 @@ class CommentApi(
         val commentPage = commentRepository.list(
             postId = postId,
             parentId = parentId,
-            viewer = viewer,
             page = page,
             pageSize = 10,
         )
@@ -94,9 +75,6 @@ class CommentApi(
                 createAt = it.createAt,
                 username = it.username,
                 receiver = it.receiver,
-                upvote = it.upvote,
-                downvote = it.downvote,
-                viewerVote = it.viewerVote,
                 content = it.content,
             )
         }
@@ -104,14 +82,12 @@ class CommentApi(
     }
 
     suspend fun list(
-        viewer: String?,
         postId: String,
         page: Int,
     ): Result<PageDto<CommentDto>> {
         val commentPage = commentRepository.list(
             postId = postId,
             parentId = null,
-            viewer = viewer,
             page = page,
             pageSize = 10,
             reverse = true,
@@ -120,7 +96,6 @@ class CommentApi(
             val subCommentPage = commentRepository.list(
                 postId = postId,
                 parentId = it.id,
-                viewer = viewer,
                 page = 0,
                 pageSize = 10,
             )
@@ -128,9 +103,6 @@ class CommentApi(
                 id = it.id,
                 createAt = it.createAt,
                 username = it.username,
-                upvote = it.upvote,
-                downvote = it.downvote,
-                viewerVote = it.viewerVote,
                 content = it.content,
                 pageNumber = (subCommentPage.total / 10).toInt(),
                 items = subCommentPage.items.map {
@@ -139,37 +111,12 @@ class CommentApi(
                         createAt = it.createAt,
                         username = it.username,
                         receiver = it.receiver,
-                        upvote = it.upvote,
-                        downvote = it.downvote,
-                        viewerVote = it.viewerVote,
                         content = it.content,
                     )
                 }
             )
         }
         return Result.success(dto)
-    }
-
-    suspend fun vote(
-        commentId: String,
-        isUpvote: Boolean,
-        isCancel: Boolean,
-        username: String,
-    ): Result<Unit> {
-        if (isUpvote) {
-            if (isCancel) {
-                commentRepository.cancelUpvote(commentId, username)
-            } else {
-                commentRepository.upvote(commentId, username)
-            }
-        } else {
-            if (isCancel) {
-                commentRepository.cancelDownvote(commentId, username)
-            } else {
-                commentRepository.downvote(commentId, username)
-            }
-        }
-        return Result.success(Unit)
     }
 
     @Serializable

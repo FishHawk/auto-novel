@@ -12,7 +12,6 @@ class CommentRepository(
     suspend fun list(
         postId: String,
         parentId: String?,
-        viewer: String?,
         page: Int,
         pageSize: Int,
         reverse: Boolean = false,
@@ -42,17 +41,6 @@ class CommentRepository(
                     parentId = it.parentId?.toHexString(),
                     username = it.username,
                     receiver = it.receiver,
-                    upvote = it.upvoteUsers.size,
-                    downvote = it.downvoteUsers.size,
-                    viewerVote = viewer?.let { viewer ->
-                        if (it.upvoteUsers.contains(viewer)) {
-                            true
-                        } else if (it.downvoteUsers.contains(viewer)) {
-                            false
-                        } else {
-                            null
-                        }
-                    },
                     content = it.content,
                 )
             }
@@ -90,48 +78,6 @@ class CommentRepository(
                     downvoteUsers = emptySet(),
                     content = content,
                 )
-            )
-    }
-
-    suspend fun upvote(commentId: String, username: String) {
-        mongo
-            .commentCollection
-            .updateOne(
-                CommentModel::id eq ObjectId(commentId),
-                combine(
-                    addToSet(CommentModel::upvoteUsers, username),
-                    pull(CommentModel::downvoteUsers, username)
-                )
-            )
-    }
-
-    suspend fun cancelUpvote(commentId: String, username: String) {
-        mongo
-            .commentCollection
-            .updateOne(
-                CommentModel::id eq ObjectId(commentId),
-                pull(CommentModel::upvoteUsers, username)
-            )
-    }
-
-    suspend fun downvote(commentId: String, username: String) {
-        mongo
-            .commentCollection
-            .updateOne(
-                CommentModel::id eq ObjectId(commentId),
-                combine(
-                    addToSet(CommentModel::downvoteUsers, username),
-                    pull(CommentModel::upvoteUsers, username)
-                )
-            )
-    }
-
-    suspend fun cancelDownvote(commentId: String, username: String) {
-        mongo
-            .commentCollection
-            .updateOne(
-                CommentModel::id eq ObjectId(commentId),
-                pull(CommentModel::downvoteUsers, username)
             )
     }
 }

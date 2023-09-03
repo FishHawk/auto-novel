@@ -5,9 +5,6 @@ interface BaseCommentDto {
   id: string;
   createAt: number;
   username: string;
-  upvote: number;
-  downvote: number;
-  viewerVote?: boolean;
   content: string;
 }
 
@@ -42,19 +39,6 @@ const listSub = (postId: string, parentId: string, page: number) =>
       .json<SubCommentPageDto>()
   );
 
-const vote = (commentId: string, isUpvote: boolean, isCancel: boolean) =>
-  runCatching(
-    api
-      .post('comment/vote', {
-        searchParams: {
-          commentId,
-          isUpvote,
-          isCancel,
-        },
-      })
-      .text()
-  );
-
 const reply = (
   postId: string,
   parentId: string | undefined,
@@ -74,9 +58,8 @@ const reply = (
       .text()
   );
 
-export default {
+export const ApiComment = {
   list,
   listSub,
-  vote,
   reply,
 };

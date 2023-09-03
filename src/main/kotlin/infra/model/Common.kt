@@ -41,9 +41,6 @@ data class Comment(
     val parentId: String?,
     val username: String,
     val receiver: String?,
-    val upvote: Int,
-    val downvote: Int,
-    val viewerVote: Boolean?,
     val content: String,
 )
 
