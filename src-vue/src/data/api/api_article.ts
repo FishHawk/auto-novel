@@ -4,7 +4,7 @@ import { runCatching } from './result';
 
 export type UserRole = 'admin' | 'maintainer' | 'normal';
 
-interface UserOutline {
+export interface UserOutline {
   username: string;
   role: UserRole;
 }

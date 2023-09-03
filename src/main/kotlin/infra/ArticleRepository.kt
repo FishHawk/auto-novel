@@ -112,7 +112,7 @@ class ArticleRepository(
         if (deleted) {
             mongo
                 .commentCollection
-                .deleteMany(CommentModel::postId eq "article/${id.toHexString()}")
+                .deleteMany(CommentModel::site eq "article-${id.toHexString()}")
         }
         return deleted
     }

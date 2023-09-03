@@ -8,19 +8,20 @@ const isDesktop = useIsDesktop(600);
   <n-space :wrap="false">
     <img v-if="isDesktop" src="/qq.png" width="130" />
     <n-ul>
-      <n-li
-        >有朋友整不明白术语表在哪改，现在术语表编辑功能也放在高级选项里面了。</n-li
-      >
-      <n-li>支持按章节数目搜索了，用法看教程。</n-li>
+      <n-li>
+        <b>
+          想自己生成翻译请参考
+          <n-a href="/forum/64f3d63f794cbb1321145c07">插件教程</n-a>
+          ，有什么问题和建议请在
+          <n-a href="/forum/64f3e280794cbb1321145c09">反馈帖</n-a>
+          集中讨论。
+        </b>
+      </n-li>
+      <n-li>加了个论坛功能，用来整理书单或是讨论小说。</n-li>
       <n-li>
         新建了个交流群：819513328，无论你是想上传自己收集的资源，还是单纯想讨论轻小说，都欢迎加群。加群验证的答案是“绿色”。
       </n-li>
       <n-li>
-        <b>
-          如何使用翻译插件请参考
-          <n-a href="/forum/64f3d63f794cbb1321145c07">插件使用说明</n-a>
-          。
-        </b>
         Alphapolis和Pixiv是我用自己的帐号垫进去的，如果加载不了请提醒我更新。
       </n-li>
     </n-ul>

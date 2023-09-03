@@ -42,10 +42,9 @@ onMounted(async () => {
 
       <Markdown :source="article.content" />
 
-      <SectionComment
-        v-if="!article.locked"
-        :post-id="`article/${articleId}`"
-      />
+      <section>
+        <CommentList :site="`article-${articleId}`" :locked="article.locked" />
+      </section>
     </ResultView>
   </MainLayout>
 </template>

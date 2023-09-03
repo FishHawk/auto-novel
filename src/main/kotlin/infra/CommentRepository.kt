@@ -1,68 +1,85 @@
 package infra
 
-import com.mongodb.client.model.CountOptions
-import infra.model.Comment
-import infra.model.Page
+import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Facet
+import infra.model.*
+import kotlinx.datetime.Clock
+import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
+import org.litote.kmongo.coroutine.aggregate
+import org.litote.kmongo.id.toId
 
 class CommentRepository(
     private val mongo: MongoDataSource,
 ) {
-    suspend fun list(
-        postId: String,
-        parentId: String?,
+    suspend fun listComment(
+        site: String,
+        parent: ObjectId?,
         page: Int,
         pageSize: Int,
         reverse: Boolean = false,
     ): Page<Comment> {
-        val total = mongo
+        @Serializable
+        data class CommentPage(val total: Int = 0, val items: List<Comment>)
+
+        val doc = mongo
             .commentCollection
-            .countDocuments(
-                and(
-                    CommentModel::postId eq postId,
-                    CommentModel::parentId eq parentId?.let { ObjectId(it) },
+            .aggregate<CommentPage>(
+                match(
+                    and(
+                        CommentModel::site eq site,
+                        CommentModel::parent eq parent?.toId(),
+                    ),
+                ),
+                facet(
+                    Facet("count", Aggregates.count()),
+                    Facet(
+                        "items",
+                        sort(
+                            if (reverse) descending(CommentModel::id)
+                            else ascending(CommentModel::id),
+                        ),
+                        skip(page * pageSize),
+                        limit(pageSize),
+                        lookup(
+                            from = mongo.userCollectionName,
+                            localField = CommentModel::user.path(),
+                            foreignField = User::id.path(),
+                            newAs = Comment::user.path(),
+                        ),
+                        unwind(Comment::user.path().projection),
+                        project(
+                            Comment::id,
+                            Comment::site,
+                            Comment::content,
+                            Comment::numReplies,
+                            Comment::user / UserOutline::username,
+                            Comment::user / UserOutline::role,
+                            Comment::createAt,
+                        )
+                    )
+                ),
+                project(
+                    CommentPage::total from arrayElemAt("count.count".projection, 0),
+                    CommentPage::items from "items".projection,
                 )
             )
-        val items = mongo
-            .commentCollection
-            .find(
-                CommentModel::postId eq postId,
-                CommentModel::parentId eq parentId?.let { ObjectId(it) },
+            .first()
+        return if (doc == null) {
+            emptyPage()
+        } else {
+            Page(
+                total = doc.total.toLong(),
+                items = doc.items,
             )
-            .let { if (reverse) it.descendingSort(CommentModel::id) else it }
-            .skip(page * pageSize)
-            .limit(pageSize)
-            .toList()
-            .map {
-                Comment(
-                    id = it.id.toHexString(),
-                    createAt = it.id.timestamp,
-                    parentId = it.parentId?.toHexString(),
-                    username = it.username,
-                    receiver = it.receiver,
-                    content = it.content,
-                )
-            }
-        return Page(items = items, total = total)
+        }
     }
 
-    suspend fun exist(
-        id: String?,
-    ): Boolean {
-        return mongo
-            .commentCollection
-            .countDocuments(
-                CommentModel::id eq ObjectId(id),
-                CountOptions().limit(1),
-            ) != 0L
-    }
-
-    suspend fun add(
-        postId: String,
-        parentId: String?,
-        username: String,
-        receiver: String?,
+    suspend fun createComment(
+        site: String,
+        parent: ObjectId?,
+        user: ObjectId,
         content: String,
     ) {
         mongo
@@ -70,14 +87,23 @@ class CommentRepository(
             .insertOne(
                 CommentModel(
                     id = ObjectId(),
-                    parentId = parentId?.let { ObjectId(it) },
-                    postId = postId,
-                    username = username,
-                    receiver = receiver,
-                    upvoteUsers = emptySet(),
-                    downvoteUsers = emptySet(),
+                    site = site,
                     content = content,
+                    numReplies = 0,
+                    parent = parent?.toId(),
+                    user = user.toId(),
+                    createAt = Clock.System.now(),
                 )
             )
+    }
+
+    suspend fun increaseNumReplies(id: ObjectId): Boolean {
+        val updateResult = mongo
+            .commentCollection
+            .updateOne(
+                CommentModel::id eq id,
+                inc(CommentModel::numReplies, 1),
+            )
+        return updateResult.matchedCount > 0
     }
 }

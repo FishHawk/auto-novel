@@ -1,93 +1,108 @@
 <script lang="ts" setup>
 import { CommentFilled } from '@vicons/material';
 import { useMessage } from 'naive-ui';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { createReusableTemplate } from '@vueuse/core';
 
-import { ApiComment, SubCommentDto } from '@/data/api/api_comment';
+import { ApiComment, Comment1 } from '@/data/api/api_comment';
 import { useAuthInfoStore } from '@/data/stores/authInfo';
 
-const { postId, parentId, comment } = withDefaults(
-  defineProps<{
-    postId: string;
-    parentId: string | undefined;
-    comment: SubCommentDto;
-  }>(),
-  { parentId: undefined }
-);
+const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
+  comment: Comment1;
+  reply: boolean;
+}>();
 
-const emit = defineEmits<{ replied: [] }>();
+const { site, comment } = defineProps<{
+  site: string;
+  comment: Comment1;
+  locked: boolean;
+}>();
 
-const authInfoStore = useAuthInfoStore();
 const message = useMessage();
 
-const showInput = ref(false);
-const replyContent = ref('');
+const currentPage = ref(1);
+const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
 
-function replyClicked() {
-  const token = authInfoStore.token;
-  if (token) {
-    showInput.value = !showInput.value;
+const loadReplies = async (page: number) => {
+  const result = await ApiComment.listSub(site, comment.id, page - 1);
+  if (result.ok) {
+    pageCount.value = result.value.pageNumber;
+    comment.replies = result.value.items;
   } else {
-    message.info('请先登录');
+    message.error('回复加载错误：' + result.error.message);
+  }
+};
+
+watch(currentPage, async (page) => loadReplies(page));
+
+function onReplied() {
+  showInput.value = false;
+  if (currentPage >= pageCount) {
+    loadReplies(currentPage.value);
   }
 }
 
-async function reply() {
+const authInfoStore = useAuthInfoStore();
+const showInput = ref(false);
+function toggleInput() {
   const token = authInfoStore.token;
-  if (token) {
-    if (replyContent.value.length === 0) {
-      message.info('回复内容不能为空');
-    } else {
-      const receiver = parentId === undefined ? undefined : comment.username;
-      const result = await ApiComment.reply(
-        postId,
-        parentId ?? comment.id,
-        receiver,
-        replyContent.value
-      );
-      if (result.ok) {
-        emit('replied');
-        replyContent.value = '';
-        showInput.value = false;
-      } else {
-        message.error('回复加载错误：' + result.error.message);
-      }
-    }
-  } else {
+  if (!token) {
     message.info('请先登录');
+    return;
   }
+  showInput.value = !showInput.value;
 }
 </script>
 
 <template>
-  <n-space align="center">
-    <n-text style="font-weight: 900">{{ comment.username }}</n-text>
-    <template v-if="comment.receiver">
-      <n-text style="color: #7c7c7c">></n-text>
-      <n-text style="font-weight: 900">{{ comment.receiver }}</n-text>
-    </template>
-    <n-text style="color: #7c7c7c">
-      <n-time :time="comment.createAt * 1000" type="relative" />
-    </n-text>
+  <DefineCommentContent v-slot="{ comment, reply }">
+    <n-space align="center">
+      <n-text style="font-weight: 900">{{ comment.user.username }}</n-text>
+      <n-text style="color: #7c7c7c">
+        <n-time :time="comment.createAt * 1000" type="relative" />
+      </n-text>
 
-    <n-button quaternary type="tertiary" @click="replyClicked()">
-      <template #icon>
-        <n-icon :component="CommentFilled" />
-      </template>
-      回复
-    </n-button>
-  </n-space>
-  <n-card embedded size="small">{{ comment.content }}</n-card>
+      <n-button
+        v-if="reply"
+        quaternary
+        type="tertiary"
+        size="tiny"
+        @click="toggleInput()"
+      >
+        <template #icon>
+          <n-icon :component="CommentFilled" />
+        </template>
+        回复
+      </n-button>
+    </n-space>
+    <n-card embedded size="small">
+      <span style="white-space: pre-wrap">{{ comment.content }}</span>
+    </n-card>
+  </DefineCommentContent>
 
-  <template v-if="showInput">
-    <n-input
-      v-model:value="replyContent"
-      :placeholder="`回复${comment.username}`"
-      type="textarea"
-      style="margin-top: 10px"
-    />
-    <n-button type="primary" @click="reply()" style="margin-top: 10px">
-      发布
-    </n-button>
-  </template>
+  <div ref="topElement" />
+  <ReuseCommentContent :comment="comment" :reply="!locked" />
+
+  <CommentInput
+    v-if="showInput"
+    :site="site"
+    :parent="comment.id"
+    :placeholder="`回复${comment.user.username}`"
+    @replied="onReplied()"
+  />
+
+  <div
+    v-for="replyComment in comment.replies"
+    style="margin-left: 30px; margin-top: 20px"
+  >
+    <ReuseCommentContent :comment="replyComment" :reply="false" />
+  </div>
+
+  <n-pagination
+    v-if="comment.numReplies > 10"
+    v-model:page="currentPage"
+    :page-count="pageCount"
+    :page-slot="7"
+    style="margin-left: 30px; margin-top: 20px"
+  />
 </template>

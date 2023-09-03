@@ -11,11 +11,17 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.Document
+import org.bson.types.ObjectId
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
+import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.projection
+import org.litote.kmongo.eq
+import org.litote.kmongo.id.toId
+import org.litote.kmongo.setValue
 import java.io.File
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
@@ -26,8 +32,27 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
 
     private val wenkuVR by inject<WenkuNovelVolumeRepository>(WenkuNovelVolumeRepository::class.java)
+    private val userR by inject<UserRepository>(UserRepository::class.java)
 
     init {
+        describe("temp") {
+//            mongo
+//                .commentXCollection
+//                .find()
+//                .toList()
+//                .forEach {
+//                    val a = CommentModel(
+//                        id = it.id,
+//                        site = it.postId,
+//                        content = it.content,
+//                        parent = it.parentId?.toId(),
+//                        user = userR.getUserIdByUsername(it.username).toId(),
+//                        createAt = Instant.fromEpochSeconds(it.id.timestamp.toLong()),
+//                    )
+//                    mongo.commentCollection.insertOne(a)
+//                }
+        }
+
         describe("build es index") {
             @Serializable
             data class WNMP(

@@ -4,7 +4,6 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
-import org.litote.kmongo.Id
 import org.litote.kmongo.eq
 import java.time.LocalDateTime
 
@@ -23,26 +22,6 @@ enum class FavoriteListSort {
     @SerialName("update")
     UpdateAt,
 }
-
-//@Serializable
-//data class ForumPost(
-//    @Contextual @SerialName("_id") val id: ObjectId,
-//    val thread: Id<ForumThread>,
-//    val content: String,
-//    @Contextual val user: Id<User>,
-//    @Contextual val createAt: Instant,
-//    @Contextual val updateAt: Instant,
-//)
-
-@Serializable
-data class Comment(
-    val id: String,
-    val createAt: Int,
-    val parentId: String?,
-    val username: String,
-    val receiver: String?,
-    val content: String,
-)
 
 @Serializable
 data class UserOutline(

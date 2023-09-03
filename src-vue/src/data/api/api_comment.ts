@@ -1,57 +1,40 @@
 import { api } from './api';
+import { UserOutline } from './api_article';
+import { Page } from './page';
 import { runCatching } from './result';
 
-interface BaseCommentDto {
+export interface Comment1 {
   id: string;
-  createAt: number;
-  username: string;
+  user: UserOutline;
   content: string;
+  createAt: number;
+  numReplies: number;
+  replies: Comment1[];
 }
 
-export type SubCommentDto = BaseCommentDto & { receiver?: string };
-
-export type CommentDto = BaseCommentDto & {
-  pageNumber: number;
-  items: SubCommentDto[];
-};
-
-export interface SubCommentPageDto {
-  pageNumber: number;
-  items: SubCommentDto[];
-}
-
-export interface CommentPageDto {
-  pageNumber: number;
-  items: CommentDto[];
-}
-
-const list = (postId: string, page: number) =>
+const list = (site: string, page: number) =>
   runCatching(
     api
-      .get(`comment/list`, { searchParams: { postId, page } })
-      .json<CommentPageDto>()
+      .get(`comment/list`, { searchParams: { site, page } })
+      .json<Page<Comment1>>()
   );
 
-const listSub = (postId: string, parentId: string, page: number) =>
+const listSub = (site: string, parent: string, page: number) =>
   runCatching(
     api
-      .get(`comment/list-sub`, { searchParams: { postId, parentId, page } })
-      .json<SubCommentPageDto>()
+      .get(`comment/list-sub`, {
+        searchParams: { site, parentId: parent, page },
+      })
+      .json<Page<Comment1>>()
   );
 
-const reply = (
-  postId: string,
-  parentId: string | undefined,
-  receiver: string | undefined,
-  content: string
-) =>
+const reply = (site: string, parent: string | undefined, content: string) =>
   runCatching(
     api
       .post('comment', {
         json: {
-          postId,
-          parentId,
-          receiver,
+          site,
+          parent,
           content,
         },
       })

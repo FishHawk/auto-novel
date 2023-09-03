@@ -151,7 +151,7 @@ const formatExample: [string, string][] = [
             <td>
               <b>{{ name }}</b>
             </td>
-            <td style="white-space: pre">{{ code }}</td>
+            <td style="white-space: pre-wrap">{{ code }}</td>
             <td v-html="md.render(code)"></td>
           </tr>
         </tbody>

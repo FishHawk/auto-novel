@@ -227,7 +227,7 @@ function toggleEditMode() {
           />
         </section>
 
-        <SectionComment :post-id="route.path" />
+        <CommentList :site="`web-${providerId}-${novelId}`" />
       </template>
     </ResultView>
   </MainLayout>

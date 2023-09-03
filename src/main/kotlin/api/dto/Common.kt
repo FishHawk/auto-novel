@@ -1,6 +1,7 @@
 package api.dto
 
 import infra.model.Page
+import infra.model.UserOutline
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,22 +20,3 @@ data class PageDto<T>(
         )
     }
 }
-
-@Serializable
-data class SubCommentDto(
-    val id: String,
-    val createAt: Int,
-    val username: String,
-    val receiver: String?,
-    val content: String,
-)
-
-@Serializable
-data class CommentDto(
-    val id: String,
-    val createAt: Int,
-    val username: String,
-    val content: String,
-    val pageNumber: Int,
-    val items: List<SubCommentDto>,
-)

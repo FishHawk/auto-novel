@@ -17,14 +17,12 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Serializable
-data class CommentModel(
+data class CommentModelX(
     @Contextual @SerialName("_id") val id: ObjectId,
     @Contextual val parentId: ObjectId?,
     val postId: String,
     val username: String,
     val receiver: String?,
-    val upvoteUsers: Set<String>,
-    val downvoteUsers: Set<String>,
     val content: String,
 )
 
@@ -81,8 +79,10 @@ class MongoDataSource(url: String) {
 
     val articleCollection
         get() = database.getCollection<ArticleModel>("article")
+    val commentXCollection
+        get() = database.getCollection<CommentModelX>("comment")
     val commentCollection
-        get() = database.getCollection<CommentModel>("comment")
+        get() = database.getCollection<CommentModel>("comment-alt")
 
     // Web novel
     val webNovelMetadataCollectionName = "metadata"
@@ -137,10 +137,10 @@ class MongoDataSource(url: String) {
                 ArticleModel::pinned,
                 ArticleModel::updateAt,
             )
-            commentCollection.ensureIndex(
-                CommentModel::postId,
-                CommentModel::parentId,
-                CommentModel::id,
+            commentXCollection.ensureIndex(
+                CommentModelX::postId,
+                CommentModelX::parentId,
+                CommentModelX::id,
             )
 
             // Web novel

@@ -6,7 +6,7 @@ import { LockFilled, PushPinFilled } from '@vicons/material';
 import { ApiArticle, ArticleOutline } from '@/data/api/api_article';
 import { Page } from '@/data/api/page';
 import { Result, ResultState } from '@/data/api/result';
-import { DropdownOption, useMessage } from 'naive-ui';
+import { useMessage } from 'naive-ui';
 import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
 
 const route = useRoute();
@@ -150,7 +150,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
                 <n-dropdown
                   trigger="hover"
                   :options="generateOptions(article)"
-                  @select="(key) => handleSelect(key, article)"
+                  @select="(key: any) => handleSelect(key, article)"
                 >
                   <n-button size="tiny">操作</n-button>
                 </n-dropdown>

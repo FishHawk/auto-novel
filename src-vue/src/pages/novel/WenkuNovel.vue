@@ -265,7 +265,7 @@ function sortVolumesZh(volumes: string[]) {
           />
         </section>
 
-        <SectionComment :post-id="route.path" />
+        <CommentList :site="`wenku-${novelId}`" />
       </template>
     </ResultView>
   </MainLayout>

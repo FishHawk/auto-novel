@@ -145,7 +145,7 @@ val appModule = module {
         AuthApi(secret, get(), get(), get())
     }
     single(createdAtStart = true) { ArticleApi(get(), get()) }
-    single(createdAtStart = true) { CommentApi(get()) }
+    single(createdAtStart = true) { CommentApi(get(), get(), get()) }
     single(createdAtStart = true) { UserApi(get(), get(), get()) }
 
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get()) }
