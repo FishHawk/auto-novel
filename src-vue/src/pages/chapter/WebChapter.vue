@@ -7,7 +7,7 @@ import { onKeyStroke, createReusableTemplate } from '@vueuse/core';
 import { ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
 import { buildChapterUrl } from '@/data/provider';
 
@@ -15,7 +15,7 @@ const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
 }>();
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const setting = useReaderSettingStore();
 
 const route = useRoute();
@@ -33,7 +33,7 @@ async function getChapter() {
   chapterResult.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
-    if (authInfoStore.token) {
+    if (userData.logined) {
       ApiUser.putReadHistoryWebNovel(
         providerId,
         novelId,

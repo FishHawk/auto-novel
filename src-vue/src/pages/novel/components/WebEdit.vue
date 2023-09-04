@@ -4,7 +4,7 @@ import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
-import { atLeastMaintainer, useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 import { useIsDesktop } from '@/data/util';
 
 const props = defineProps<{
@@ -18,7 +18,7 @@ const emit = defineEmits<{
 }>();
 
 const isDesktop = useIsDesktop(850);
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 
 interface EditField {
   jp: string;
@@ -69,8 +69,7 @@ async function submit() {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
 
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }
@@ -113,15 +112,14 @@ async function updateWenkuId() {
     message.info('文库版Id不能为空');
     return;
   }
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }
   const result = await ApiWebNovel.putWenkuId(
     props.providerId,
     props.novelId,
-    wenkuId.value,
+    wenkuId.value
   );
   if (result.ok) {
     message.success('提交成功');
@@ -131,14 +129,13 @@ async function updateWenkuId() {
 }
 
 async function deleteWenkuId() {
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }
   const result = await ApiWebNovel.deleteWenkuId(
     props.providerId,
-    props.novelId,
+    props.novelId
   );
   if (result.ok) {
     message.success('提交成功');
@@ -149,7 +146,7 @@ async function deleteWenkuId() {
 </script>
 
 <template>
-  <n-p v-if="atLeastMaintainer(authInfoStore.role)">
+  <n-p v-if="userData.asAdmin">
     <n-input-group>
       <n-input v-model:value="wenkuId" placeholder="文库版Id" />
       <n-button @click="updateWenkuId()">更新</n-button>

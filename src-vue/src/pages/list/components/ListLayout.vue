@@ -2,11 +2,11 @@
 import { computed } from 'vue';
 
 import { menuOption } from '@/components/MainLayout.vue';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const menuOptions = computed(() => {
-  const signed = authInfoStore.info !== undefined;
+  const signed = userData.info !== undefined;
   return [
     menuOption('我的收藏', '/favorite-list', signed),
     menuOption('阅读历史', '/read-history', signed),

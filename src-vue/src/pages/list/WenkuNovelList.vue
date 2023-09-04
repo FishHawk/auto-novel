@@ -3,14 +3,14 @@ import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
-import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 import { mapOk } from '@/data/api/result';
 
 import { Loader } from './components/NovelList.vue';
 
 const message = useMessage();
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 
 const loader: Loader = (page: number, query: string, _selected: number[]) => {
   return ApiWenkuNovel.list(page - 1, query).then((result) =>
@@ -22,14 +22,16 @@ const showModal = ref(false);
 const bangumiUrl = ref('');
 
 async function importMetadataFromBangumi(url: string) {
+  if (!userData.logined) {
+    return message.info('请先登录');
+  }
+
   const novelId = /bangumi\.tv\/subject\/([0-9]+)/.exec(url)?.[1];
   if (!novelId) {
     return message.error('链接格式错误');
   }
   const metadataResult = await ApiWenkuNovel.getMetadataFromBangumi(novelId);
   if (metadataResult.ok) {
-    const token = authInfoStore.token;
-    if (!token) return message.info('请先登录');
     const result = await ApiWenkuNovel.postMetadata(metadataResult.value);
     if (result.ok) {
       message.success('创建成功');
@@ -42,7 +44,7 @@ async function importMetadataFromBangumi(url: string) {
 }
 
 function openDialog() {
-  if (!authInfoStore.token) return message.info('请先登录');
+  if (!userData.logined) return message.info('请先登录');
   showModal.value = true;
 }
 </script>
@@ -52,15 +54,9 @@ function openDialog() {
     <n-space align="baseline" justify="space-between" style="width: 100">
       <n-h1>文库小说</n-h1>
       <n-space>
-        <n-button
-          v-if="atLeastMaintainer(authInfoStore.role)"
-          @click="openDialog()"
-        >
+        <n-button v-if="userData.asAdmin" @click="openDialog()">
           创建
         </n-button>
-        <n-a href="/wenku/non-archived" target="_blank">
-          <n-button> 翻译Epub </n-button>
-        </n-a>
       </n-space>
     </n-space>
     <NovelList :search="true" :options="[]" :loader="loader" />

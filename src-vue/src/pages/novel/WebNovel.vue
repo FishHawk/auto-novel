@@ -19,7 +19,7 @@ import {
   WebNovelTocItemDto,
 } from '@/data/api/api_web_novel';
 import { buildMetadataUrl } from '@/data/provider';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 import { tryTranslateKeyword } from '@/data/keyword_translate';
 import { useSettingStore } from '@/data/stores/setting';
 
@@ -29,7 +29,7 @@ const [DefineTag, ReuseTag] = createReusableTemplate<{
 }>();
 
 const setting = useSettingStore();
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const message = useMessage();
 
 const route = useRoute();
@@ -72,12 +72,8 @@ async function removeFavorite() {
 
 const editMode = ref(false);
 function toggleEditMode() {
-  if (!editMode.value) {
-    const token = authInfoStore.token;
-    if (!token) {
-      message.info('请先登录');
-      return;
-    }
+  if (!userData.logined) {
+    return message.info('请先登录');
   }
   editMode.value = !editMode.value;
 }

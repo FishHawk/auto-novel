@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ApiUser } from '@/data/api/api_user';
 import { mapOk } from '@/data/api/result';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
 import { Loader } from './components/NovelList.vue';
 
@@ -16,7 +16,7 @@ const options = [
   },
 ];
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const loader: Loader = (page, _query, selected) => {
   function optionNth(n: number): string {
     return options[n].tags[selected[n]];

@@ -5,10 +5,10 @@ import { CommentFilled } from '@vicons/material';
 
 import { ApiComment, Comment1 } from '@/data/api/api_comment';
 import { Ok, ResultState } from '@/data/api/result';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 import { Page } from '@/data/api/page';
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const message = useMessage();
 
 const { site } = withDefaults(
@@ -46,8 +46,7 @@ function onReplied() {
 
 const showInput = ref(false);
 function toggleInput() {
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }

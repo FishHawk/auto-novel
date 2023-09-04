@@ -3,15 +3,12 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import { atLeastMaintainer, useAuthInfoStore } from '@/data/stores/authInfo';
 import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 
 const props = defineProps<{
   id: string;
   metadata: WenkuMetadataDto;
 }>();
-
-const authInfoStore = useAuthInfoStore();
 
 const message = useMessage();
 
@@ -20,11 +17,6 @@ const isSubmitting = ref(false);
 async function submit() {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
-
-  if (!atLeastMaintainer(authInfoStore.role)) {
-    message.info('权限不够');
-    return;
-  }
 
   const patch = {
     title: props.metadata.title,

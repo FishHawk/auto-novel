@@ -10,7 +10,7 @@ import {
 } from '@/data/api/api_wenku_novel';
 import { parseUrl } from '@/data/provider';
 import { Ok, ResultState } from '@/data/api/result';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 import { useIsDesktop } from '@/data/util';
 
 const isDesktop = useIsDesktop(900);
@@ -29,7 +29,7 @@ function query(url: string) {
   }
 }
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadFavorite() {
   const result = await ApiUser.listFavoritedWebNovel(0, 8, 'update');
@@ -121,7 +121,7 @@ loadLatestUpdateWenku();
       <n-divider />
     </template>
 
-    <template v-if="authInfoStore.token">
+    <template v-if="userData.logined">
       <SectionHeader title="我的收藏">
         <n-a href="/favorite-list">更多</n-a>
       </SectionHeader>

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-import { ApiComment, Comment1 } from '@/data/api/api_comment';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { ApiComment } from '@/data/api/api_comment';
+import { useUserDataStore } from '@/data/stores/userData';
 import { useMessage } from 'naive-ui';
 
 const { site, parent } = withDefaults(
@@ -17,13 +17,12 @@ const { site, parent } = withDefaults(
 const emit = defineEmits<{ replied: [] }>();
 
 const message = useMessage();
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 
 const content = ref('');
 
 async function reply() {
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }

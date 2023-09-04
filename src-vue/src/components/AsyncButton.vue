@@ -2,20 +2,19 @@
 import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
 const { onAsyncClick } = defineProps<{
   onAsyncClick: () => Promise<void>;
 }>();
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const message = useMessage();
 
 const running = ref(false);
 
 async function onClick() {
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }

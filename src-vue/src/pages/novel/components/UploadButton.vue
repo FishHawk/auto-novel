@@ -3,7 +3,7 @@ import { UploadFileInfo, useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
 const { novelId, type } = defineProps<{
   novelId: string;
@@ -12,7 +12,7 @@ const { novelId, type } = defineProps<{
 
 const emits = defineEmits<{ uploadFinished: [] }>();
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const message = useMessage();
 
 function handleFinish({
@@ -27,7 +27,7 @@ function handleFinish({
 }
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
-  if (!authInfoStore.token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return false;
   }
@@ -49,7 +49,7 @@ function createUploadUrl(novelId: string): string {
 <template>
   <n-upload
     multiple
-    :headers="{ Authorization: 'Bearer ' + authInfoStore.token }"
+    :headers="{ Authorization: 'Bearer ' + userData.token }"
     :action="createUploadUrl(novelId)"
     @finish="handleFinish"
     @before-upload="beforeUpload"

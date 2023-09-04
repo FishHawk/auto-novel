@@ -2,9 +2,9 @@
 import { zhCN, dateZhCN } from 'naive-ui';
 
 import { updateToken } from './data/api/api';
-import { useAuthInfoStore } from './data/stores/authInfo';
+import { useUserDataStore } from './data/stores/userData';
 
-useAuthInfoStore().$subscribe(
+useUserDataStore().$subscribe(
   (_mutation, state) => updateToken(state.info?.token),
   { detached: true, immediate: true }
 );

@@ -4,10 +4,10 @@ import { useRoute } from 'vue-router';
 
 import { ApiArticle, Article } from '@/data/api/api_article';
 import { ResultState } from '@/data/api/result';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
 const route = useRoute();
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 
 const articleId = route.params.id as string;
 const articleResult = ref<ResultState<Article>>();
@@ -34,7 +34,7 @@ onMounted(async () => {
         by {{ article.user.username }}
       </n-p>
       <n-a :href="`/forum-edit/${articleId}`">
-        <n-button v-if="authInfoStore.username === article.user.username">
+        <n-button v-if="userData.username === article.user.username">
           编辑
         </n-button>
       </n-a>

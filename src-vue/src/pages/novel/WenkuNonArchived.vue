@@ -3,9 +3,9 @@ import { ref } from 'vue';
 
 import { Err, Ok, ResultState } from '@/data/api/result';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
-import { useAuthInfoStore } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 
 const userNovelId = ref('');
 const volumesResult = ref<ResultState<VolumeJpDto[]>>();
@@ -18,8 +18,7 @@ async function getVolumesNonArchived() {
 getVolumesNonArchived();
 
 async function getVolumesUser() {
-  const token = authInfoStore.token;
-  if (token) {
+  if (userData.logined) {
     const result = await ApiWenkuNovel.listVolumesUser();
     if (result.ok) {
       volumesUserResult.value = Ok(result.value.list);
@@ -39,7 +38,8 @@ getVolumesUser();
     <n-h1>Epub/Txt翻译</n-h1>
     <n-p>
       上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。如何使用翻译插件请参考
-      <n-a href="/forum/64f3d63f794cbb1321145c07" target="_blank">使用说明</n-a>。
+      <n-a href="/forum/64f3d63f794cbb1321145c07" target="_blank">使用说明</n-a
+      >。
       <br />
       Epub的格式千奇百怪，如果生成的中文版有问题，请向我
       <n-a href="/forum/64f3e280794cbb1321145c09" target="_blank">反馈</n-a>。

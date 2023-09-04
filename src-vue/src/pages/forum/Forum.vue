@@ -7,12 +7,12 @@ import { ApiArticle, ArticleOutline } from '@/data/api/api_article';
 import { Page } from '@/data/api/page';
 import { Result, ResultState } from '@/data/api/result';
 import { useMessage } from 'naive-ui';
-import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
-const authInfo = useAuthInfoStore();
+const authInfo = useUserDataStore();
 
 function parsePage(q: typeof route.query) {
   return parseInt(route.query.page as string) || 1;
@@ -145,7 +145,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
             </td>
             <td class="article-number">
               {{ article.numViews }}/{{ article.numComments }}
-              <template v-if="atLeastMaintainer(authInfo.role)" trigger="click">
+              <template v-if="authInfo.asAdmin" trigger="click">
                 <br />
                 <n-dropdown
                   trigger="hover"

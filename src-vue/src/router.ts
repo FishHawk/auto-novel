@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { atLeastMaintainer, useAuthInfoStore } from './data/stores/authInfo';
+import { useUserDataStore } from './data/stores/userData';
 
 const history = createWebHistory();
 
-function requireAtLeastMaintainer(from: any, to: any, next: any) {
-  if (atLeastMaintainer(useAuthInfoStore().role)) {
+function requireAdmin(from: any, to: any, next: any) {
+  if (useUserDataStore().isAdmin) {
     next();
   } else {
     alert('没有管理员权限，无法访问页面');
@@ -79,7 +79,7 @@ const routes = [
   {
     path: '/admin',
     redirect: '/admin/web-patch-history',
-    beforeEnter: requireAtLeastMaintainer,
+    beforeEnter: requireAdmin,
     children: [
       {
         path: '/admin/web-patch-history',

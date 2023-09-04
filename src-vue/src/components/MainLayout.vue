@@ -26,12 +26,9 @@ import { MenuOption, NIcon } from 'naive-ui';
 import { LogOutFilled, MenuFilled } from '@vicons/material';
 import { useRoute } from 'vue-router';
 
-import {
-  atLeastMaintainer,
-  AuthInfo,
-  useAuthInfoStore,
-} from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 import { useIsDesktop } from '@/data/util';
+import { SignInDto } from '@/data/api/api_auth';
 
 withDefaults(
   defineProps<{
@@ -41,7 +38,7 @@ withDefaults(
 );
 
 const isDesktop = useIsDesktop(850);
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const topMenuOptions = computed(() => {
   return [
     menuOption('首页', '/'),
@@ -68,7 +65,7 @@ function getTopMenuOptionKey() {
 }
 
 const collapsedMenuOptions = computed(() => {
-  const signed = authInfoStore.info !== undefined;
+  const signed = userData.info !== undefined;
   return [
     menuOption('首页', '/'),
     menuOption('我的收藏', '/favorite-list', signed),
@@ -91,20 +88,23 @@ const collapsedMenuOptions = computed(() => {
 
 const userDropdownOptions = computed(() => {
   return [
-    menuOption('管理员', '/admin', atLeastMaintainer(authInfoStore.role)),
+    { label: '管理员模式', key: 'admin', show: userData.isAdmin },
+    menuOption('网站管理', '/admin', userData.asAdmin),
     dropdownOption('退出登录', 'signOut', LogOutFilled),
   ];
 });
 function handleUserDropdownSelect(key: string | number) {
   if (key === 'signOut') {
-    authInfoStore.delete();
+    userData.deleteProfile();
+  } else if (key === 'admin') {
+    userData.toggleAdminMode();
   }
 }
 
 const showLoginModal = ref(false);
 
-function onSignInSuccess(info: AuthInfo): void {
-  authInfoStore.set(info);
+function onSignInSuccess(info: SignInDto): void {
+  userData.setProfile(info);
   showLoginModal.value = false;
 }
 </script>
@@ -138,7 +138,7 @@ function onSignInSuccess(info: AuthInfo): void {
 
         <div style="flex: 1"></div>
 
-        <n-space v-if="authInfoStore.username">
+        <n-space v-if="userData.username">
           <n-a v-if="isDesktop" href="/read-history">
             <n-button quaternary>历史</n-button>
           </n-a>
@@ -150,7 +150,7 @@ function onSignInSuccess(info: AuthInfo): void {
             :options="userDropdownOptions"
             @select="handleUserDropdownSelect"
           >
-            <n-button quaternary> @{{ authInfoStore.username }} </n-button>
+            <n-button quaternary> @{{ userData.username }} </n-button>
           </n-dropdown>
         </n-space>
 

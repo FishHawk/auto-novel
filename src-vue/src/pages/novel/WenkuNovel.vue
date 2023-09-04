@@ -12,9 +12,9 @@ import {
 import { ResultState } from '@/data/api/result';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
-import { useAuthInfoStore, atLeastMaintainer } from '@/data/stores/authInfo';
+import { useUserDataStore } from '@/data/stores/userData';
 
-const authInfoStore = useAuthInfoStore();
+const userData = useUserDataStore();
 const message = useMessage();
 
 const route = useRoute();
@@ -44,8 +44,7 @@ async function addFavorite() {
   if (isFavoriteChanging) return;
   isFavoriteChanging = true;
 
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }
@@ -65,8 +64,7 @@ async function removeFavorite() {
   if (isFavoriteChanging) return;
   isFavoriteChanging = true;
 
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }
@@ -83,17 +81,9 @@ async function removeFavorite() {
 }
 
 const editMode = ref(false);
-function enableEditMode() {
-  if (!atLeastMaintainer(authInfoStore.role)) {
-    message.info('权限不够');
-    return;
-  }
-  editMode.value = true;
-}
 
 async function notifyUpdate() {
-  const token = authInfoStore.token;
-  if (!token) {
+  if (!userData.logined) {
     message.info('请先登录');
     return;
   }
@@ -174,42 +164,33 @@ function sortVolumesZh(volumes: string[]) {
       v-slot="{ value: metadata }"
     >
       <n-space>
-        <templage v-if="atLeastMaintainer(authInfoStore.role)">
-          <n-button v-if="!editMode" @click="enableEditMode()">
-            <template #icon>
-              <n-icon> <EditNoteFilled /> </n-icon>
-            </template>
-            编辑
-          </n-button>
-
-          <n-button v-else @click="editMode = false">
-            <template #icon>
-              <n-icon> <EditNoteFilled /> </n-icon>
-            </template>
-            退出编辑
-          </n-button>
-        </templage>
-
-        <n-button v-if="metadata.favored === true" @click="removeFavorite()">
+        <n-button v-if="userData.asAdmin" @click="editMode = !editMode">
           <template #icon>
-            <n-icon> <FavoriteFilled /> </n-icon>
+            <n-icon :component="EditNoteFilled" />
           </template>
-          取消收藏
+          {{ editMode ? '退出编辑' : '编辑' }}
         </n-button>
 
-        <n-button v-else @click="addFavorite()">
-          <template #icon>
-            <n-icon> <FavoriteBorderFilled /> </n-icon>
-          </template>
-          收藏
-        </n-button>
-
-        <n-button
-          v-if="atLeastMaintainer(authInfoStore.role)"
-          @click="notifyUpdate()"
+        <AsyncButton
+          v-if="metadata.favored === true"
+          :on-async-click="removeFavorite"
         >
           <template #icon>
-            <n-icon> <DoorbellFilled /> </n-icon>
+            <n-icon :component="FavoriteFilled" />
+          </template>
+          取消收藏
+        </AsyncButton>
+
+        <AsyncButton v-else :on-async-click="addFavorite">
+          <template #icon>
+            <n-icon :component="FavoriteBorderFilled" />
+          </template>
+          收藏
+        </AsyncButton>
+
+        <n-button v-if="userData.asAdmin" @click="notifyUpdate()">
+          <template #icon>
+            <n-icon :component="DoorbellFilled" />
           </template>
           提醒更新
         </n-button>
