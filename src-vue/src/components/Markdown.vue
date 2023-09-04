@@ -11,7 +11,6 @@ const md = new MarkdownIt();
 </template>
 
 <style>
-/* Markdown */
 .md img {
   max-width: 100%;
 }

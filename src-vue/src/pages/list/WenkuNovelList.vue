@@ -82,6 +82,7 @@ function openDialog() {
           v-model:value="bangumiUrl"
           size="large"
           placeholder="请输入Bangumi链接..."
+          :input-props="{ spellcheck: false }"
           @keyup.enter="importMetadataFromBangumi(bangumiUrl)"
         />
         <n-button

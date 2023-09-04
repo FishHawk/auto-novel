@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
 import { ApiAuth, SignInDto } from '@/data/api/api_auth';
@@ -96,12 +96,20 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
     label-placement="left"
   >
     <n-form-item-row path="email">
-      <n-input v-model:value="formValue.email" placeholder="邮箱" />
+      <n-input
+        v-model:value="formValue.email"
+        placeholder="邮箱"
+        :input-props="{ spellcheck: false }"
+      />
     </n-form-item-row>
     <div style="color: #7c7c7c">*收不到验证邮件的话，记得看垃圾箱。</div>
     <n-form-item-row path="emailCode">
       <n-input-group>
-        <n-input v-model:value="formValue.emailCode" placeholder="邮箱验证码" />
+        <n-input
+          v-model:value="formValue.emailCode"
+          placeholder="邮箱验证码"
+          :input-props="{ spellcheck: false }"
+        />
         <EmailButton
           label="发送验证码"
           :allow-send-email="allowSendEmail"
@@ -110,7 +118,11 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
       </n-input-group>
     </n-form-item-row>
     <n-form-item-row path="username">
-      <n-input v-model:value="formValue.username" placeholder="用户名" />
+      <n-input
+        v-model:value="formValue.username"
+        placeholder="用户名"
+        :input-props="{ spellcheck: false }"
+      />
     </n-form-item-row>
     <n-form-item-row path="password">
       <n-input

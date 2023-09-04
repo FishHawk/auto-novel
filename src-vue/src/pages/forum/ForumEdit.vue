@@ -124,6 +124,7 @@ const formatExample: [string, string][] = [
           placeholder="标题"
           maxlength="80"
           show-count
+          :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
       <n-form-item-row path="content">
@@ -137,6 +138,7 @@ const formatExample: [string, string][] = [
           }"
           maxlength="20000"
           show-count
+          :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
     </n-form>

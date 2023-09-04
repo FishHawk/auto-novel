@@ -32,6 +32,7 @@ function select(optionIndex: number, index: number) {
           v-model:value="filters.query"
           :placeholder="`中/日文标题或作者`"
           style="max-width: 400px"
+          :input-props="{ spellcheck: false }"
           @keyup.enter="emits('userInput')"
         >
           <template #suffix>

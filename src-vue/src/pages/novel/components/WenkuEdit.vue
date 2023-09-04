@@ -42,10 +42,16 @@ async function submit() {
 
 <template>
   <n-p>标题</n-p>
-  <n-input v-model:value="metadata.title" />
+  <n-input
+    v-model:value="metadata.title"
+    :input-props="{ spellcheck: false }"
+  />
 
   <n-p>中文标题</n-p>
-  <n-input v-model:value="metadata.titleZh" />
+  <n-input
+    v-model:value="metadata.titleZh"
+    :input-props="{ spellcheck: false }"
+  />
 
   <n-p>别名</n-p>
   <TagGroupEdit :tags="metadata.titleZhAlias" />
@@ -67,6 +73,7 @@ async function submit() {
       maxRows: 10,
     }"
     type="textarea"
+    :input-props="{ spellcheck: false }"
   />
 
   <n-button

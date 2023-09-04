@@ -92,6 +92,7 @@ loadLatestUpdateWenku();
               size="large"
               placeholder="请输入小说链接，或者输入标题搜索本站缓存..."
               @keyup.enter="query(url)"
+              :input-props="{ spellcheck: false }"
             />
             <n-button size="large" type="primary" @click="query(url)">
               搜索

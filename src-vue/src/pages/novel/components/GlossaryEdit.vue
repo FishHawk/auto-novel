@@ -37,6 +37,7 @@ function addTerm() {
           v-model:value="termsToAdd"
           separator="=>"
           :placeholder="['日文', '中文']"
+          :input-props="{ spellcheck: false }"
         />
         <n-button @click="addTerm()">添加</n-button>
         <AsyncButton :on-async-click="submit">提交</AsyncButton>

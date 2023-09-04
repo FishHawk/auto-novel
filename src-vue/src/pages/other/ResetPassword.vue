@@ -84,6 +84,7 @@ const sendEmail = () =>
         <n-input
           v-model:value="formValue.emailOrUsername"
           placeholder="邮箱/用户名"
+          :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
       <div style="color: #7c7c7c">*收不到口令邮件的话，记得看垃圾箱。</div>
@@ -92,6 +93,7 @@ const sendEmail = () =>
           <n-input
             v-model:value="formValue.resetPasswordToken"
             placeholder="重置密码口令"
+            :input-props="{ spellcheck: false }"
           />
           <EmailButton
             label="发送口令"

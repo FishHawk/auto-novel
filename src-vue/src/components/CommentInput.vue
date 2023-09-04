@@ -54,6 +54,7 @@ async function reply() {
     maxlength="1000"
     show-count
     style="margin-top: 10px"
+    :input-props="{ spellcheck: false }"
   />
   <n-button type="primary" @click="reply()" style="margin-top: 10px">
     发布

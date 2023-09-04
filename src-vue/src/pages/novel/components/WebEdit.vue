@@ -158,6 +158,7 @@ async function deleteWenkuId() {
   <n-input
     v-model:value="editMetadata.title.edit"
     :placeholder="editMetadata.title.jp"
+    :input-props="{ spellcheck: false }"
   />
 
   <n-p>{{ editMetadata.introduction.jp }}</n-p>
@@ -169,6 +170,7 @@ async function deleteWenkuId() {
       maxRows: 10,
     }"
     type="textarea"
+    :input-props="{ spellcheck: false }"
   />
 
   <n-h2 prefix="bar">目录</n-h2>
@@ -182,10 +184,15 @@ async function deleteWenkuId() {
             v-if="!isDesktop"
             v-model:value="token.edit"
             :placeholder="token.jp"
+            :input-props="{ spellcheck: false }"
           />
         </td>
         <td v-if="isDesktop" style="padding: 4px">
-          <n-input v-model:value="token.edit" :placeholder="token.jp" />
+          <n-input
+            v-model:value="token.edit"
+            :placeholder="token.jp"
+            :input-props="{ spellcheck: false }"
+          />
         </td>
       </tr>
       <n-divider v-if="isDesktop" style="width: 200%; margin: 0px" />

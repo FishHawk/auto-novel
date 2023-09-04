@@ -29,6 +29,7 @@ function addTag(tag: string) {
       v-model:value="tagToAdd"
       placeholder="请输入要添加的标签..."
       @keyup.enter="addTag(tagToAdd)"
+      :input-props="{ spellcheck: false }"
     />
     <n-button type="primary" @click="addTag(tagToAdd)"> 添加 </n-button>
   </n-input-group>

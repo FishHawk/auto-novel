@@ -61,6 +61,7 @@ function signIn() {
       <n-input
         v-model:value="formValue.emailOrUsername"
         placeholder="用户名/邮箱"
+        :input-props="{ spellcheck: false }"
       />
     </n-form-item-row>
     <n-form-item-row path="password">
@@ -69,6 +70,7 @@ function signIn() {
         type="password"
         show-password-on="click"
         placeholder="密码"
+        @keyup.enter="signIn()"
       />
     </n-form-item-row>
   </n-form>
