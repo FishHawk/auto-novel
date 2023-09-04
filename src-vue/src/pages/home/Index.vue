@@ -21,8 +21,7 @@ function query(url: string) {
   if (url.length === 0) return;
   const parseResult = parseUrl(url);
   if (parseResult !== undefined) {
-    const providerId = parseResult.providerId;
-    const novelId = parseResult.novelId;
+    const { providerId, novelId } = parseResult;
     router.push({ path: `/novel/${providerId}/${novelId}` });
   } else {
     router.push({ path: `/novel-list`, query: { query: url } });

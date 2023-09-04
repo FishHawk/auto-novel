@@ -18,9 +18,8 @@ import {
   WebNovelMetadataDto,
   WebNovelTocItemDto,
 } from '@/data/api/api_web_novel';
-import { buildMetadataUrl } from '@/data/provider';
+import { buildMetadataUrl, tryTranslateKeyword } from '@/data/provider';
 import { useUserDataStore } from '@/data/stores/userData';
-import { tryTranslateKeyword } from '@/data/keyword_translate';
 import { useSettingStore } from '@/data/stores/setting';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{

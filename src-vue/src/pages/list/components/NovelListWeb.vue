@@ -2,8 +2,7 @@
 import { createReusableTemplate } from '@vueuse/core';
 
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { tryTranslateKeyword } from '@/data/keyword_translate';
-import { buildMetadataUrl } from '@/data/provider';
+import { buildMetadataUrl, tryTranslateKeyword } from '@/data/provider';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;
