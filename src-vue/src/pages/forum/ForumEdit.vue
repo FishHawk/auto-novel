@@ -69,15 +69,28 @@ async function submit() {
   });
   if (!validated) return;
 
-  const result = await ApiArticle.createArticle({
-    title: formValue.value.title,
-    content: formValue.value.content,
-  });
-  if (result.ok) {
-    message.info('发布成功');
-    router.push({ path: `/forum/${result.value}` });
+  if (articleId === undefined) {
+    const result = await ApiArticle.createArticle({
+      title: formValue.value.title,
+      content: formValue.value.content,
+    });
+    if (result.ok) {
+      message.info('发布成功');
+      router.push({ path: `/forum/${result.value}` });
+    } else {
+      message.error('发布失败:' + result.error.message);
+    }
   } else {
-    message.error('发布失败:' + result.error.message);
+    const result = await ApiArticle.updateArticle(articleId, {
+      title: formValue.value.title,
+      content: formValue.value.content,
+    });
+    if (result.ok) {
+      message.info('更新成功');
+      router.push({ path: `/forum/${articleId}` });
+    } else {
+      message.error('更新失败:' + result.error.message);
+    }
   }
 }
 
