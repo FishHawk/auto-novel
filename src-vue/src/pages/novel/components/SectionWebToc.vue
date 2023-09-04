@@ -4,7 +4,7 @@ import { createReusableTemplate } from '@vueuse/core';
 import { NA } from 'naive-ui';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
-import { formatDate, useIsDesktop } from '@/data/util';
+import {  useIsDesktop } from '@/data/util';
 
 const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   item: {
@@ -12,7 +12,7 @@ const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
     titleJp: string;
     titleZh?: string;
     chapterId?: string;
-    createAt?: string;
+    createAt?: number;
   };
 }>();
 
@@ -35,7 +35,7 @@ const readableToc = computed(() => {
       titleJp: it.titleJp,
       titleZh: it.titleZh,
       chapterId: it.chapterId,
-      createAt: it.createAt ? formatDate(it.createAt) : undefined,
+      createAt: it.createAt,
     });
     if (it.chapterId) {
       index += 1;
@@ -65,8 +65,9 @@ const lastReadTocItem = computed(() => {
         <span style="flex: 1 1 0">{{ item.titleJp }}</span>
         <span style="color: grey; flex: 1 1 0">{{ item.titleZh }}</span>
         <span style="color: grey; width: 155px; text-align: right">
-          <template v-if="item.chapterId">
-            {{ item.createAt }} [{{ item.index }}]
+          <template v-if="item.createAt">
+            <n-time :time="item.createAt * 1000" format="yyyy-MM-dd HH:mm" />
+            [{{ item.index }}]
           </template>
         </span>
       </div>
