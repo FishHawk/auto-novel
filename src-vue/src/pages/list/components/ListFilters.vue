@@ -21,11 +21,8 @@ function select(optionIndex: number, index: number) {
 <template>
   <table v-if="search || options.length >= 0" style="border-spacing: 0px 8px">
     <tr v-if="search">
-      <td
-        nowrap="nowrap"
-        style="vertical-align: center; padding-right: 20px; color: grey"
-      >
-        搜索
+      <td nowrap="nowrap" style="vertical-align: center; padding-right: 20px">
+        <n-text depth="3">搜索</n-text>
       </td>
       <td>
         <n-input
@@ -42,11 +39,8 @@ function select(optionIndex: number, index: number) {
       </td>
     </tr>
     <tr v-for="(option, optionIndex) in options">
-      <td
-        nowrap="nowrap"
-        style="vertical-align: top; padding-right: 20px; color: grey"
-      >
-        {{ option.label }}
+      <td nowrap="nowrap" style="vertical-align: top; padding-right: 20px">
+        <n-text depth="3">{{ option.label }}</n-text>
       </td>
       <td>
         <n-space :size="[16, 4]">

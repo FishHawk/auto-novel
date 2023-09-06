@@ -162,7 +162,7 @@ function stateToFileList(): NovelFiles[] {
   />
   <div v-for="row in stateToFileList()">
     <n-space style="padding: 4px">
-      <span>{{ row.label }}</span>
+      <n-text>{{ row.label }}</n-text>
       <n-space>
         <n-a
           v-for="file in row.files"

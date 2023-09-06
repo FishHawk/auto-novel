@@ -102,7 +102,7 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
         :input-props="{ spellcheck: false }"
       />
     </n-form-item-row>
-    <div style="color: #7c7c7c">*收不到验证邮件的话，记得看垃圾箱。</div>
+    <n-text depth="3">*收不到验证邮件的话，记得看垃圾箱。</n-text>
     <n-form-item-row path="emailCode">
       <n-input-group>
         <n-input

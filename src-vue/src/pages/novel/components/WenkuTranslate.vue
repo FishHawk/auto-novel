@@ -171,7 +171,7 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
 <template>
   <n-text depth="3" style="font-size: 12px">
     # 翻译功能需要需要安装浏览器插件，参见
-    <n-a href="/forum/64f3d63f794cbb1321145c07" target="_blank">插件使用说明</n-a>
+    <n-a href="/forum/64f3d63f794cbb1321145c07">插件使用说明</n-a>
   </n-text>
   <n-p>
     高级选项
@@ -199,7 +199,7 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
   <template v-for="volume of sortVolumesJp(volumes)">
     <n-p>{{ volume.volumeId }}</n-p>
     <n-space v-for="row in stateToFileList(volume)" style="padding: 4px">
-      <span>{{ row.label }}</span>
+      <n-text>{{ row.label }}</n-text>
       <n-space>
         <n-a
           v-for="file in row.files"

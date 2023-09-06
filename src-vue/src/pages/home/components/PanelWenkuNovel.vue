@@ -23,12 +23,3 @@ defineProps<{ listResult: ResultState<WenkuNovelOutlineDto[]> }>();
     </n-grid>
   </ResultView>
 </template>
-
-<style scoped>
-.text-2line {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-</style>

@@ -17,9 +17,9 @@ const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
 
 const userData = useUserDataStore();
 const setting = useReaderSettingStore();
-
 const route = useRoute();
 const router = useRouter();
+
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
 const chapterId = route.params.chapterId as string;
@@ -34,11 +34,7 @@ async function getChapter() {
   if (result.ok) {
     document.title = result.value.titleJp;
     if (userData.logined) {
-      ApiUser.putReadHistoryWebNovel(
-        providerId,
-        novelId,
-        chapterId,
-      );
+      ApiUser.putReadHistoryWebNovel(providerId, novelId, chapterId);
     }
   }
 }
@@ -142,7 +138,7 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
     >
       <component :is="$slots.default!" />
     </n-a>
-    <n-text v-else style="color: grey">
+    <n-text v-else depth="3">
       <component :is="$slots.default!" />
     </n-text>
   </DefineChapterLink>
@@ -151,7 +147,6 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
     :theme="setting.theme.isDark ? darkTheme : lightTheme"
     :theme-overrides="{
       common: { bodyColor: setting.theme.bodyColor },
-      Pagination: { itemColorDisabled: '#00000' },
     }"
   >
     <n-global-style />
@@ -165,9 +160,9 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
         v-slot="{ value: chapter }"
       >
         <n-h2 style="text-align: center; width: 100%">
-          <n-a :href="url" target="_blank">{{ chapter.titleJp }}</n-a>
+          <n-a :href="url">{{ chapter.titleJp }}</n-a>
           <br />
-          <span style="color: gray">{{ chapter.titleZh }}</span>
+          <n-text depth="3">{{ chapter.titleZh }}</n-text>
         </n-h2>
 
         <n-space align="center" justify="space-between" style="width: 100%">
@@ -181,9 +176,9 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
 
         <div id="chapter-content">
           <template v-for="p in getTextList(chapter)">
-            <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">{{
-              p.text
-            }}</n-p>
+            <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">
+              {{ p.text }}
+            </n-p>
             <br v-else-if="!p" />
             <img
               v-else
@@ -207,8 +202,9 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
 
 <style scoped>
 #chapter-content p {
-  word-wrap: break-word;
   font-size: v-bind('setting.fontSize');
+  color: v-bind("setting.theme.isDark ? 'white' : 'black'");
+  opacity: v-bind('setting.mixZhOpacity');
 }
 #chapter-content .secondary {
   opacity: v-bind('setting.mixJpOpacity');

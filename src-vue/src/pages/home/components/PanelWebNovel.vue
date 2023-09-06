@@ -17,8 +17,9 @@ defineProps<{ listResult: ResultState<WebNovelOutlineDto[]> }>();
           :href="`/novel/${item.providerId}/${item.novelId}`"
           target="_blank"
           class="text-2line"
-          >{{ item.titleJp }}</n-a
         >
+          {{ item.titleJp }}
+        </n-a>
         <div class="text-2line">{{ item.titleZh }}</div>
         <div style="color: #666">
           总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }}

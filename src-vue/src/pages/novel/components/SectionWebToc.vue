@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
-import { NA } from 'naive-ui';
+import { NA, NText } from 'naive-ui';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
-import {  useIsDesktop } from '@/data/util';
+import { useIsDesktop } from '@/data/util';
 
 const [DefineTocItem, ReuseTocItem] = createReusableTemplate<{
   item: {
@@ -58,28 +58,31 @@ const lastReadTocItem = computed(() => {
 <template>
   <DefineTocItem v-slot="{ item }">
     <component
-      :is="item.chapterId ? NA : 'div'"
+      :is="item.chapterId ? NA : NText"
       :href="`/novel/${providerId}/${novelId}/${item.chapterId}`"
     >
       <div v-if="isDesktop" style="width: 100; display: flex; padding: 6px">
         <span style="flex: 1 1 0">{{ item.titleJp }}</span>
-        <span style="color: grey; flex: 1 1 0">{{ item.titleZh }}</span>
-        <span style="color: grey; width: 155px; text-align: right">
+        <n-text depth="3" style="flex: 1 1 0">{{ item.titleZh }}</n-text>
+        <n-text depth="3" style="width: 155px; text-align: right">
           <template v-if="item.createAt">
             <n-time :time="item.createAt * 1000" format="yyyy-MM-dd HH:mm" />
             [{{ item.index }}]
           </template>
-        </span>
+        </n-text>
       </div>
 
       <div v-else style="width: 100; padding: 6px">
         {{ item.titleJp }}
         <br />
-        <span style="color: grey">{{ item.titleZh }}</span>
-        <br />
-        <span v-if="item.chapterId" style="color: grey">
-          {{ item.createAt }} [{{ item.index }}]
-        </span>
+        <n-text depth="3">
+          {{ item.titleZh }}
+          <template v-if="item.createAt">
+            <br />
+            <n-time :time="item.createAt * 1000" format="yyyy-MM-dd HH:mm" />
+            [{{ item.index }}]
+          </template>
+        </n-text>
       </div>
     </component>
   </DefineTocItem>

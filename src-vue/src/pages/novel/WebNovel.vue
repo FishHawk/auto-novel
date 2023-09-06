@@ -105,14 +105,14 @@ function toggleEditMode() {
       <n-h1 prefix="bar" style="font-size: 22px">
         <n-a :href="url" target="_blank">{{ metadata.titleJp }}</n-a>
         <br />
-        <span style="color: grey">{{ metadata.titleZh }}</span>
+        <n-text depth="3">{{ metadata.titleZh }}</n-text>
       </n-h1>
 
       <n-p v-if="metadata.authors.length > 0">
         作者：
-        <span v-for="author in metadata.authors">
+        <template v-for="author in metadata.authors">
           <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
-        </span>
+        </template>
       </n-p>
 
       <n-space>

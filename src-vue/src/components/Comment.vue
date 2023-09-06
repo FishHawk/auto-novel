@@ -56,8 +56,10 @@ function toggleInput() {
 <template>
   <DefineCommentContent v-slot="{ comment, reply }">
     <n-space align="center">
-      <n-text style="font-weight: 900">{{ comment.user.username }}</n-text>
-      <n-text style="color: #7c7c7c">
+      <n-text>
+        <b>{{ comment.user.username }}</b>
+      </n-text>
+      <n-text depth="3">
         <n-time :time="comment.createAt * 1000" type="relative" />
       </n-text>
 
@@ -67,6 +69,7 @@ function toggleInput() {
         type="tertiary"
         size="tiny"
         @click="toggleInput()"
+        style="margin-top: 2px"
       >
         <template #icon>
           <n-icon :component="CommentFilled" />
@@ -75,7 +78,7 @@ function toggleInput() {
       </n-button>
     </n-space>
     <n-card embedded :bordered="false" size="small">
-      <span style="white-space: pre-wrap">{{ comment.content }}</span>
+      <n-p style="white-space: pre-wrap">{{ comment.content }}</n-p>
     </n-card>
   </DefineCommentContent>
 

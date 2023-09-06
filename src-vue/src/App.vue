@@ -11,7 +11,11 @@ useUserDataStore().$subscribe(
 </script>
 
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
+  <n-config-provider
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+    inline-theme-disabled
+  >
     <n-message-provider>
       <router-view :key="$route.path" />
     </n-message-provider>
@@ -25,6 +29,11 @@ body {
 a {
   text-decoration: none;
 }
+p,
+li {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 .n-h:first-child {
   margin: var(--n-margin);
 }
@@ -34,7 +43,6 @@ a {
 .n-layout .n-layout-scroll-container {
   overflow-x: visible;
 }
-
 .text-2line {
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -61,6 +61,18 @@ async function loadLatestUpdateWenku() {
   }
 }
 loadLatestUpdateWenku();
+
+const showLinkExampleModal = ref(false);
+const linkExample = [
+  ['Kakuyomu', 'https://kakuyomu.jp/works/16817139555217983105'],
+  ['成为小说家吧', 'https://ncode.syosetu.com/n0833hi'],
+  ['Novelup', 'https://novelup.plus/story/206612087'],
+  ['Hameln', 'https://syosetu.org/novel/297874/'],
+  ['Pixiv系列', 'https://www.pixiv.net/novel/series/9406879'],
+  ['Pixiv短篇', 'https://www.pixiv.net/novel/show.php?id=18304868'],
+  ['Alphapolis', 'https://www.alphapolis.co.jp/novel/638978238/525733370'],
+  ['Novelism', 'https://novelism.jp/novel/2m0xulekSsCxfixwam8d7g'],
+];
 </script>
 
 <template>
@@ -102,24 +114,36 @@ loadLatestUpdateWenku();
       </div>
     </template>
 
-    <template v-if="isDesktop">
-      <div style="display: flex">
-        <div style="flex: 1; margin-right: 20px">
-          <PanelAnnouncement />
-        </div>
-        <div style="flex: 1">
-          <PanelLinkExample />
-        </div>
-      </div>
-      <n-divider />
-    </template>
+    <n-space :wrap="false" style="max-width: 600px">
+      <img v-if="isDesktop" src="/qq.png" width="120" />
 
-    <template v-else>
-      <PanelAnnouncement />
-      <n-divider />
-      <PanelLinkExample />
-      <n-divider />
-    </template>
+      <n-ul>
+        <n-li>
+          <b>使用说明</b>
+          ：将想要翻译的小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。
+          <n-ul>
+            <n-li>
+              支持的小说站请参考
+              <n-a @click="showLinkExampleModal = true">小说链接示例</n-a>。
+            </n-li>
+            <n-li>
+              想自己生成翻译请参考
+              <n-a href="/forum/64f3d63f794cbb1321145c07">插件教程</n-a>。
+            </n-li>
+            <n-li>
+              有什么问题和建议请在
+              <n-a href="/forum/64f3e280794cbb1321145c09">反馈帖</n-a>
+              集中讨论。
+            </n-li>
+          </n-ul>
+        </n-li>
+        <n-li>
+          新建了个交流群：819513328，加群验证的答案是“绿色”。
+          无论你是想上传自己收集的资源，还是单纯想讨论轻小说，都欢迎加群。
+        </n-li>
+      </n-ul>
+    </n-space>
+    <n-divider />
 
     <template v-if="userData.logined">
       <SectionHeader title="我的收藏">
@@ -141,4 +165,25 @@ loadLatestUpdateWenku();
     <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
   </MainLayout>
+
+  <n-modal v-model:show="showLinkExampleModal">
+    <n-card
+      style="width: min(600px, calc(100% - 16px))"
+      :bordered="false"
+      size="large"
+      role="dialog"
+      aria-modal="true"
+    >
+      <n-scrollbar trigger="none" style="max-height: 400px">
+        <n-table :bordered="false">
+          <tr v-for="[name, link] of linkExample">
+            <td style="white-space: nowrap">
+              <b>{{ name }}</b>
+            </td>
+            <td>{{ link }}</td>
+          </tr>
+        </n-table>
+      </n-scrollbar>
+    </n-card>
+  </n-modal>
 </template>

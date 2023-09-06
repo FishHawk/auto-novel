@@ -16,10 +16,12 @@ defineProps<{
 
 <template>
   <DefineTag v-slot="{ tag, isAttention }">
-    <n-a :href="`/novel-list?query=${tag}\$`" style="color: #666">
-      <component :is="isAttention ? 'b' : 'span'">
-        {{ isAttention ? tag : tryTranslateKeyword(tag) }}
-      </component>
+    <n-a :href="`/novel-list?query=${tag}\$`">
+      <n-text depth="3">
+        <component :is="isAttention ? 'b' : 'span'">
+          {{ isAttention ? tag : tryTranslateKeyword(tag) }}
+        </component>
+      </n-text>
     </n-a>
     /
   </DefineTag>

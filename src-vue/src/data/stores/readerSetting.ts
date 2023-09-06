@@ -8,6 +8,7 @@ export interface ReaderSetting {
   fontSize: '14px' | '16px' | '18px' | '20px';
   theme: { isDark: boolean; bodyColor: string };
   mixJpOpacity: number;
+  mixZhOpacity: number;
 }
 
 export const useReaderSettingStore = defineStore('readerSetting', {
@@ -18,7 +19,8 @@ export const useReaderSettingStore = defineStore('readerSetting', {
       translations: ['gpt', 'youdao', 'baidu'],
       fontSize: '14px',
       theme: { isDark: false, bodyColor: '#FFFFFF' },
-      mixJpOpacity: 0.4,
+      mixJpOpacity: 0.40,
+      mixZhOpacity: 0.75,
     },
   persist: true,
 });

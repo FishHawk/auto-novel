@@ -56,15 +56,11 @@ const percentage = computed(() => {
       />
       <n-space align="center" vertical size="large" style="flex: none">
         <n-progress type="circle" :percentage="percentage" />
-        <div>
-          <span>
-            成功 {{ chapterFinished ?? '-' }}/{{ chapterTotal ?? '-' }}
-          </span>
+        <n-text>
+          成功 {{ chapterFinished ?? '-' }}/{{ chapterTotal ?? '-' }}
           <br />
-          <span>
-            失败 {{ chapterError ?? '-' }}/{{ chapterTotal ?? '-' }}
-          </span>
-        </div>
+          失败 {{ chapterError ?? '-' }}/{{ chapterTotal ?? '-' }}
+        </n-text>
       </n-space>
     </div>
   </n-card>

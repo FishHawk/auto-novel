@@ -118,7 +118,16 @@ defineEmits<{
             </n-radio>
           </n-space>
         </ReuseOption>
-        <ReuseOption label="日文透明度">
+        <ReuseOption label="主文本透明度">
+          <n-slider
+            v-model:value="setting.mixZhOpacity"
+            :max="1"
+            :min="0"
+            :step="0.05"
+            :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
+          />
+        </ReuseOption>
+        <ReuseOption label="辅文本透明度">
           <n-slider
             v-model:value="setting.mixJpOpacity"
             :max="1"

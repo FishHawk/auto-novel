@@ -136,7 +136,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
                   <b>{{ article.title }}</b>
                 </n-a>
               </div>
-              <n-text style="font-size: 11px">
+              <n-text style="font-size: 12px">
                 {{
                   article.updateAt === article.createAt ? '发布' : '更新'
                 }}于<n-time :time="article.updateAt * 1000" type="relative" />
