@@ -12,12 +12,6 @@ const props = defineProps<{
   volumes: VolumeJpDto[];
 }>();
 
-const emits = defineEmits<{
-  (e: 'update:baidu', v: number): void;
-  (e: 'update:youdao', v: number): void;
-  (e: 'update:gpt', v: number): void;
-}>();
-
 const setting = useSettingStore();
 const gptAccessToken = ref('');
 const gptAccessTokenOptions = computed(() => {
@@ -39,15 +33,22 @@ const message = useMessage();
 
 const taskDetail: Ref<TaskDetail | undefined> = ref();
 
-async function startUpdateTask(volumeId: string, translatorId: TranslatorId) {
+async function startUpdateTask(
+  volume: VolumeJpDto,
+  translatorId: TranslatorId
+) {
   if (taskDetail.value?.running) {
     message.info('已有任务在运行。');
     return;
   }
 
-  const label = `${getTranslatorLabel(translatorId)}翻译`;
+  const buildLabel = () => {
+    let label = `${getTranslatorLabel(translatorId)}翻译`;
+    if (translateExpireChapter.value) label += '[翻译过期章节]';
+    return label;
+  };
   taskDetail.value = {
-    label,
+    label: buildLabel(),
     running: true,
     chapterFinished: 0,
     chapterError: 0,
@@ -61,22 +62,25 @@ async function startUpdateTask(volumeId: string, translatorId: TranslatorId) {
   } catch {}
 
   await ApiWenkuNovel.translate(
-    props.novelId,
-    translatorId,
-    volumeId,
-    accessToken,
+    {
+      novelId: props.novelId,
+      translatorId,
+      volumeId: volume.volumeId,
+      accessToken,
+      translateExpireChapter: translateExpireChapter.value,
+    },
     {
       onStart: (total: number) => {
         taskDetail.value!.chapterTotal = total;
       },
       onChapterSuccess: (state) => {
         if (translatorId === 'baidu') {
-          emits('update:baidu', state);
+          volume.baidu = state;
         } else if (translatorId === 'youdao') {
-          emits('update:youdao', state);
+          volume.youdao = state;
         } else if (translatorId === 'gpt') {
           setting.addToken(gptAccessToken.value);
-          emits('update:gpt', state);
+          volume.gpt = state;
         }
         taskDetail.value!.chapterFinished += 1;
       },
@@ -151,6 +155,8 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
 
 const showAdvanceOptions = ref(false);
 
+const translateExpireChapter = ref(false);
+
 async function submitGlossary() {
   const result = await ApiWenkuNovel.updateGlossary(
     props.novelId,
@@ -184,7 +190,19 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
   <n-collapse-transition :show="showAdvanceOptions" style="margin-bottom: 16px">
     <n-list bordered>
       <n-list-item>
-        <GlossaryEdit :glossary="glossary" :submit="submitGlossary" />
+        <AdvanceOptionSwitch
+          title="翻译过期章节"
+          description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
+          v-model:value="translateExpireChapter"
+        />
+      </n-list-item>
+      <n-list-item>
+        <AdvanceOption
+          title="术语表"
+          description="术语表过大可能会使得翻译质量下降（例如：百度/有道将无法从判断人名性别，导致人称代词错误）。GPT暂不支持。"
+        >
+          <GlossaryEdit :glossary="glossary" :submit="submitGlossary" />
+        </AdvanceOption>
       </n-list-item>
     </n-list>
   </n-collapse-transition>
@@ -212,7 +230,7 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
       </n-space>
       <n-button
         size="tiny"
-        @click="startUpdateTask(volume.volumeId, row.translatorId)"
+        @click="startUpdateTask(volume, row.translatorId)"
         style="margin-left: 24px"
       >
         更新

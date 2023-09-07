@@ -115,16 +115,6 @@ data class WebNovelTocItem(
 )
 
 @Serializable
-data class WebNovelChapterOutline(
-    @SerialName("glossaryUuid")
-    val baiduGlossaryUuid: String? = null,
-    val baiduExist: Boolean,
-    val youdaoGlossaryUuid: String? = null,
-    val youdaoExist: Boolean,
-    val gptExist: Boolean,
-)
-
-@Serializable
 data class WebNovelChapter(
     val providerId: String,
     @SerialName("bookId")
@@ -145,6 +135,8 @@ data class WebNovelChapter(
     val youdaoGlossary: Map<String, String> = emptyMap(),
     val youdaoParagraphs: List<String>? = null,
 
+    val gptGlossaryUuid: String? = null,
+    val gptGlossary: Map<String, String> = emptyMap(),
     val gptParagraphs: List<String>? = null,
 ) {
     companion object {
@@ -164,3 +156,10 @@ data class WebNovelChapter(
         }
     }
 }
+
+@Serializable
+data class WebNovelChapterTranslationState(
+    val chapterId: String,
+    val glossaryUuid: String?,
+    val translated: Boolean,
+)

@@ -3,10 +3,10 @@ import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { ApiWebNovel } from '@/data/api/api_web_novel';
-import { TaskCallback } from '@/data/api/api_web_novel_translate';
 import { useSettingStore } from '@/data/stores/setting';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
 import { useIsDesktop } from '@/data/util';
+import { watch } from 'vue';
 
 const props = defineProps<{
   providerId: string;
@@ -21,11 +21,13 @@ const props = defineProps<{
   glossary: { [key: string]: string };
 }>();
 
+const { providerId, novelId, titleJp, titleZh, total } = props;
+
 const emits = defineEmits<{
-  (e: 'update:jp', v: number): void;
-  (e: 'update:baidu', v: number): void;
-  (e: 'update:youdao', v: number): void;
-  (e: 'update:gpt', v: number): void;
+  'update:jp': [number];
+  'update:baidu': [number];
+  'update:youdao': [number];
+  'update:gpt': [number];
 }>();
 
 const setting = useSettingStore();
@@ -52,70 +54,65 @@ const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
 const taskDetail: Ref<TaskDetail | undefined> = ref();
 
-async function startTask(translatorId: TranslatorId | 'check-update') {
+async function startTask(translatorId: TranslatorId) {
   if (taskDetail.value?.running) {
     message.info('已有任务在运行。');
     return;
   }
+
+  const buildLabel = () => {
+    let label = `${getTranslatorLabel(translatorId)}翻译`;
+    if (translateExpireChapter.value) label += '[翻译过期章节]';
+    if (syncFromProvider.value) label += '[强制同步]';
+    return label;
+  };
   taskDetail.value = {
-    label: '',
+    label: buildLabel(),
     running: true,
     chapterFinished: 0,
     chapterError: 0,
     logs: [],
   };
 
-  const callback: TaskCallback = {
-    onStart: (total) => {
-      taskDetail.value!.chapterTotal = total;
-    },
-    onChapterSuccess: (state) => {
-      if (state.jp) emits('update:jp', state.jp);
-      if (state.baidu) emits('update:baidu', state.baidu);
-      if (state.youdao) emits('update:youdao', state.youdao);
-      if (state.gpt) {
-        setting.addToken(gptAccessToken.value);
-        emits('update:gpt', state.gpt);
-      }
-      taskDetail.value!.chapterFinished += 1;
-    },
-    onChapterFailure: () => {
-      taskDetail.value!.chapterError += 1;
-    },
-    log: (message: any) => {
-      taskDetail.value!.logs.push(`${message}`);
-    },
-  };
+  let accessToken = gptAccessToken.value.trim();
+  try {
+    const obj = JSON.parse(accessToken);
+    accessToken = obj.accessToken;
+  } catch {}
 
-  if (translatorId === 'check-update') {
-    taskDetail.value.label = '检查更新';
-
-    await ApiWebNovel.checkUpdate(
-      props.providerId,
-      props.novelId,
-      startIndex.value ?? 0,
-      endIndex.value ?? 65536,
-      callback
-    );
-  } else {
-    taskDetail.value.label = `${getTranslatorLabel(translatorId)}翻译`;
-
-    let accessToken = gptAccessToken.value.trim();
-    try {
-      const obj = JSON.parse(accessToken);
-      accessToken = obj.accessToken;
-    } catch {}
-
-    await ApiWebNovel.translate(
-      props.providerId,
-      props.novelId,
+  await ApiWebNovel.translate(
+    {
+      providerId,
+      novelId,
       translatorId,
       accessToken,
-      startIndex.value ?? 0,
-      endIndex.value ?? 65536,
-      callback
-    );
-  }
+      startIndex: startIndex.value ?? 0,
+      endIndex: endIndex.value ?? 65536,
+      translateExpireChapter: translateExpireChapter.value,
+      syncFromProvider: syncFromProvider.value,
+    },
+    {
+      onStart: (total) => {
+        taskDetail.value!.chapterTotal = total;
+      },
+      onChapterSuccess: (state) => {
+        if (state.jp !== undefined) emits('update:jp', state.jp);
+        if (state.baidu !== undefined) emits('update:baidu', state.baidu);
+        if (state.youdao !== undefined) emits('update:youdao', state.youdao);
+        if (state.gpt !== undefined) {
+          setting.addToken(gptAccessToken.value);
+          emits('update:gpt', state.gpt);
+        }
+        taskDetail.value!.chapterFinished += 1;
+      },
+      onChapterFailure: () => {
+        taskDetail.value!.chapterError += 1;
+      },
+      log: (message: any) => {
+        taskDetail.value!.logs.push(`${message}`);
+      },
+    }
+  );
 
   taskDetail.value!.logs.push('\n结束');
   taskDetail.value!.running = false;
@@ -130,9 +127,9 @@ interface NovelFiles {
 function stateToFileList(): NovelFiles[] {
   let title: string;
   if (setting.downloadFilenameType === 'jp') {
-    title = props.titleJp;
+    title = titleJp;
   } else {
-    title = props.titleZh ?? props.titleJp;
+    title = titleZh ?? titleJp;
   }
   const validTitle = title.replace(/[\/|\\:*?"<>]/g, '');
 
@@ -151,23 +148,18 @@ function stateToFileList(): NovelFiles[] {
   ) {
     return {
       label,
-      url: ApiWebNovel.createFileUrl(
-        props.providerId,
-        props.novelId,
-        lang,
-        type
-      ),
-      name: `${props.providerId}.${props.novelId}.${lang}.${validTitle}.${type}`,
+      url: ApiWebNovel.createFileUrl(providerId, novelId, lang, type),
+      name: `${providerId}.${novelId}.${lang}.${validTitle}.${type}`,
     };
   }
 
   return [
     {
-      label: `日文(${props.jp}/${props.total})`,
+      label: `日文(${props.jp}/${total})`,
       files: [createFile('TXT', 'jp', 'txt'), createFile('EPUB', 'jp', 'epub')],
     },
     {
-      label: `百度(${props.baidu}/${props.total})`,
+      label: `百度(${props.baidu}/${total})`,
       translatorId: 'baidu',
       files: [
         createFile('TXT', 'zh-baidu', 'txt'),
@@ -177,7 +169,7 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
-      label: `有道(${props.youdao}/${props.total})`,
+      label: `有道(${props.youdao}/${total})`,
       translatorId: 'youdao',
       files: [
         createFile('TXT', 'zh-youdao', 'txt'),
@@ -187,7 +179,7 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
-      label: `GPT3(${props.gpt}/${props.total})`,
+      label: `GPT3(${props.gpt}/${total})`,
       translatorId: 'gpt',
       files: [
         createFile('TXT', 'zh-gpt', 'txt'),
@@ -208,15 +200,18 @@ function stateToFileList(): NovelFiles[] {
 
 const showAdvanceOptions = ref(false);
 
-const downloadFilenameTypeOptions = [
-  { value: 'jp', label: '日文' },
-  { value: 'zh', label: '中文' },
-];
+const tryUseChineseTitleAsFilename = ref(setting.downloadFilenameType === 'zh');
+const translateExpireChapter = ref(false);
+const syncFromProvider = ref(false);
+watch(
+  tryUseChineseTitleAsFilename,
+  (it) => (setting.downloadFilenameType = it ? 'zh' : 'jp')
+);
 
 async function submitGlossary() {
   const result = await ApiWebNovel.updateGlossary(
-    props.providerId,
-    props.novelId,
+    providerId,
+    novelId,
     props.glossary
   );
   if (result.ok) {
@@ -243,59 +238,60 @@ async function submitGlossary() {
   <n-collapse-transition :show="showAdvanceOptions" style="margin-bottom: 16px">
     <n-list bordered>
       <n-list-item>
-        <n-thing title="下载文件名">
-          <n-radio-group v-model:value="setting.downloadFilenameType">
-            <n-space>
-              <n-radio
-                v-for="option in downloadFilenameTypeOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </n-radio>
-            </n-space>
-          </n-radio-group>
-        </n-thing>
+        <AdvanceOptionSwitch
+          title="中文文件名"
+          description="如果小说标题已经被翻译，则使用翻译后的中文标题作为下载的文件名。"
+          v-model:value="tryUseChineseTitleAsFilename"
+        />
       </n-list-item>
 
       <n-list-item>
-        <n-thing title="自定义更新范围">
-          <template #description>
-            控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。
-            <br />
-            比如，从0到10，表示章节需要属于区间[0，10)的章节，不包含序号10。
-          </template>
-          <n-input-group>
-            <n-input-group-label>从</n-input-group-label>
+        <AdvanceOptionSwitch
+          title="翻译过期章节"
+          description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
+          v-model:value="translateExpireChapter"
+        />
+      </n-list-item>
+
+      <n-list-item>
+        <AdvanceOptionSwitch
+          title="与源站同步"
+          description="在启动翻译任务时，同步已缓存章节。如果缓存章节与源站不匹配，会删除章节，包含现有的翻译，慎用。一次性设定，默认关闭。"
+          v-model:value="syncFromProvider"
+        />
+      </n-list-item>
+
+      <n-list-item>
+        <AdvanceOption
+          title="自定义更新范围"
+          description="控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。比如，从0到10，表示章节需要属于区间[0，10)的章节，不包含序号10。"
+        >
+          <n-input-group style="margin-top: 4px">
+            <n-input-group-label size="small">从</n-input-group-label>
             <n-input-number
+              size="small"
               v-model:value="startIndex"
               :min="0"
-              style="width: 120px"
+              style="width: 100px"
             />
-            <n-input-group-label>到</n-input-group-label>
+            <n-input-group-label size="small">到</n-input-group-label>
             <n-input-number
+              size="small"
               v-model:value="endIndex"
               :min="0"
-              style="width: 120px"
+              style="width: 100px"
             />
           </n-input-group>
-        </n-thing>
+        </AdvanceOption>
       </n-list-item>
 
       <n-list-item>
-        <n-thing title="检查章节更新">
-          <template #description>
-            如果缓存的章节和源网站不匹配，则删除缓存章节。支持自定义范围。
-            <br />
-            删除章节也会删除翻译，尤其是GPT翻译，请谨慎使用。
-          </template>
-
-          <n-button @click="startTask('check-update')">检查更新</n-button>
-        </n-thing>
-      </n-list-item>
-
-      <n-list-item>
-        <GlossaryEdit :glossary="glossary" :submit="submitGlossary" />
+        <AdvanceOption
+          title="术语表"
+          description="术语表过大可能会使得翻译质量下降（例如：百度/有道将无法从判断人名性别，导致人称代词错误）。GPT暂不支持。"
+        >
+          <GlossaryEdit :glossary="glossary" :submit="submitGlossary" />
+        </AdvanceOption>
       </n-list-item>
     </n-list>
   </n-collapse-transition>

@@ -20,10 +20,10 @@ private class WebNovelAdminRes {
     @Resource("/toc-merge")
     class TocMergeHistory(val parent: WebNovelAdminRes) {
         @Resource("/")
-        data class List(val parent: TocMergeHistory, val page: Int)
+        class List(val parent: TocMergeHistory, val page: Int)
 
         @Resource("/{id}")
-        data class Id(val parent: TocMergeHistory, val id: String)
+        class Id(val parent: TocMergeHistory, val id: String)
     }
 
     @Resource("/patch")
@@ -32,9 +32,9 @@ private class WebNovelAdminRes {
         class List(val parent: PatchHistory, val page: Int)
 
         @Resource("/{providerId}/{novelId}")
-        data class Id(val parent: PatchHistory, val providerId: String, val novelId: String) {
+        class Id(val parent: PatchHistory, val providerId: String, val novelId: String) {
             @Resource("/revoke")
-            data class Revoke(val parent: Id)
+            class Revoke(val parent: Id)
         }
     }
 }

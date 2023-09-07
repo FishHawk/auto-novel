@@ -316,41 +316,6 @@ class WebNovelMetadataRepository(
             )
     }
 
-    suspend fun updateChapterTranslateState(
-        providerId: String,
-        novelId: String,
-        translatorId: TranslatorId,
-    ): Long {
-        val zhProperty1 = when (translatorId) {
-            TranslatorId.Baidu -> WebNovelChapter::baiduParagraphs
-            TranslatorId.Youdao -> WebNovelChapter::youdaoParagraphs
-            TranslatorId.Gpt -> WebNovelChapter::gptParagraphs
-        }
-        val zh = mongo.webNovelChapterCollection
-            .countDocuments(
-                and(
-                    WebNovelChapter::providerId eq providerId,
-                    WebNovelChapter::novelId eq novelId,
-                    zhProperty1 ne null,
-                )
-            )
-        val zhProperty = when (translatorId) {
-            TranslatorId.Baidu -> WebNovelMetadata::baidu
-            TranslatorId.Youdao -> WebNovelMetadata::youdao
-            TranslatorId.Gpt -> WebNovelMetadata::gpt
-        }
-        mongo
-            .webNovelMetadataCollection
-            .updateOne(
-                WebNovelMetadata.byId(providerId, novelId),
-                combine(
-                    setValue(zhProperty, zh),
-                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
-                ),
-            )
-        return zh
-    }
-
     suspend fun updateTranslation(
         providerId: String,
         novelId: String,

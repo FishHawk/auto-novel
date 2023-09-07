@@ -199,7 +199,7 @@ function toggleEditMode() {
             v-model:jp="metadata.jp"
             v-model:baidu="metadata.baidu"
             v-model:youdao="metadata.youdao"
-            :gpt="metadata.gpt"
+            v-model:gpt="metadata.gpt"
             :glossary="metadata.glossary"
           />
         </section>

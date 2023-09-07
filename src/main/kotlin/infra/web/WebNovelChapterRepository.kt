@@ -1,6 +1,5 @@
 package infra.web
 
-import com.mongodb.client.model.Updates
 import infra.MongoDataSource
 import infra.model.*
 import infra.provider.RemoteChapter
@@ -13,25 +12,27 @@ class WebNovelChapterRepository(
     private val provider: WebNovelProviderDataSource,
     private val mongo: MongoDataSource,
 ) {
-    suspend fun getOutline(
+    suspend fun getTranslationOutlines(
         providerId: String,
         novelId: String,
-        chapterId: String,
-    ): WebNovelChapterOutline? {
+        translatorId: TranslatorId,
+    ): List<WebNovelChapterTranslationState> {
+        val (glossaryUuidProperty, paragraphsZhProperty) = when (translatorId) {
+            TranslatorId.Baidu -> Pair(WebNovelChapter::baiduGlossaryUuid, WebNovelChapter::baiduParagraphs)
+            TranslatorId.Youdao -> Pair(WebNovelChapter::youdaoGlossaryUuid, WebNovelChapter::youdaoParagraphs)
+            TranslatorId.Gpt -> Pair(WebNovelChapter::gptGlossaryUuid, WebNovelChapter::gptParagraphs)
+        }
         return mongo
             .webNovelChapterCollection
-            .aggregate<WebNovelChapterOutline>(
-                match(WebNovelChapter.byId(providerId, novelId, chapterId)),
-                limit(1),
+            .aggregate<WebNovelChapterTranslationState>(
+                match(WebNovelChapter.byNovelId(providerId, novelId)),
                 project(
-                    WebNovelChapterOutline::baiduGlossaryUuid from WebNovelChapter::baiduGlossaryUuid,
-                    WebNovelChapterOutline::youdaoGlossaryUuid from WebNovelChapter::youdaoGlossaryUuid,
-                    WebNovelChapterOutline::baiduExist from cond(WebNovelChapter::baiduParagraphs, true, false),
-                    WebNovelChapterOutline::youdaoExist from cond(WebNovelChapter::youdaoParagraphs, true, false),
-                    WebNovelChapterOutline::gptExist from cond(WebNovelChapter::gptParagraphs, true, false),
+                    WebNovelChapterTranslationState::chapterId from WebNovelChapter::chapterId,
+                    WebNovelChapterTranslationState::glossaryUuid from glossaryUuidProperty,
+                    WebNovelChapterTranslationState::translated from cond(paragraphsZhProperty, true, false),
                 ),
             )
-            .first()
+            .toList()
     }
 
     suspend fun get(
@@ -44,81 +45,68 @@ class WebNovelChapterRepository(
             .findOne(WebNovelChapter.byId(providerId, novelId, chapterId))
     }
 
-    suspend fun getRemote(
+    private suspend fun getRemote(
         providerId: String,
         novelId: String,
         chapterId: String,
-    ): Result<RemoteChapter> {
+    ): Result<WebNovelChapter> {
         return provider
             .getChapter(providerId, novelId, chapterId)
+            .map {
+                WebNovelChapter(
+                    providerId = providerId,
+                    novelId = novelId,
+                    chapterId = chapterId,
+                    paragraphs = it.paragraphs,
+                )
+            }
     }
 
     suspend fun getOrSyncRemote(
         providerId: String,
         novelId: String,
         chapterId: String,
+        forceSync: Boolean = false,
     ): Result<WebNovelChapter> {
         val local = get(providerId, novelId, chapterId)
-        if (local != null) {
+        if (!forceSync && local != null) {
             return Result.success(local)
         }
 
-        return getRemote(
-            providerId = providerId,
-            novelId = novelId,
-            chapterId = chapterId,
-        ).map {
-            WebNovelChapter(
-                providerId = providerId,
-                novelId = novelId,
-                chapterId = chapterId,
-                paragraphs = it.paragraphs,
-            )
-        }.onSuccess {
+        val remote = getRemote(providerId, novelId, chapterId)
+            .getOrElse { return Result.failure(it) }
+
+        if (local == null) {
+            // 本地不存在
             mongo
                 .webNovelChapterCollection
-                .insertOne(it)
+                .insertOne(remote)
             updateMetadataJp(providerId, novelId)
+            return Result.success(remote)
+        } else if (remote.paragraphs != local.paragraphs) {
+            // 本地存在，但不是最新
+            mongo
+                .webNovelChapterCollection
+                .replaceOne(
+                    WebNovelChapter.byId(providerId, novelId, chapterId),
+                    remote,
+                )
+            if (local.baiduParagraphs != null) {
+                updateChapterTranslateState(providerId, novelId, TranslatorId.Baidu)
+            }
+            if (local.youdaoParagraphs != null) {
+                updateChapterTranslateState(providerId, novelId, TranslatorId.Youdao)
+            }
+            if (local.gptParagraphs != null) {
+                updateChapterTranslateState(providerId, novelId, TranslatorId.Gpt)
+            }
+            return Result.success(remote)
+        } else {
+            // 本地存在，且已是最新
+            return Result.success(local)
         }
     }
 
-    private suspend fun updateMetadataJp(
-        providerId: String,
-        novelId: String,
-    ) {
-        val jp = mongo.webNovelChapterCollection
-            .countDocuments(WebNovelChapter.byNovelId(providerId, novelId))
-        mongo
-            .webNovelMetadataCollection
-            .updateOne(
-                WebNovelMetadata.byId(providerId, novelId),
-                combine(
-                    setValue(WebNovelMetadata::jp, jp),
-                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
-                ),
-            )
-    }
-
-    suspend fun replace(
-        providerId: String,
-        novelId: String,
-        chapterId: String,
-        paragraphs: List<String>,
-    ) {
-        mongo
-            .webNovelChapterCollection
-            .replaceOne(
-                WebNovelChapter.byId(providerId, novelId, chapterId),
-                WebNovelChapter(
-                    providerId = providerId,
-                    novelId = novelId,
-                    chapterId = chapterId,
-                    paragraphs = paragraphs,
-                ),
-            )
-    }
-
-    // Translation
     suspend fun updateTranslation(
         providerId: String,
         novelId: String,
@@ -126,7 +114,7 @@ class WebNovelChapterRepository(
         translatorId: TranslatorId,
         glossary: Glossary?,
         paragraphsZh: List<String>,
-    ) {
+    ): Long {
         val updateBson = when (translatorId) {
             TranslatorId.Baidu -> combine(
                 setValue(WebNovelChapter::baiduGlossaryUuid, glossary?.id),
@@ -151,45 +139,63 @@ class WebNovelChapterRepository(
                 WebNovelChapter.byId(providerId, novelId, chapterId),
                 updateBson,
             )
+
+        return updateChapterTranslateState(
+            providerId = providerId,
+            novelId = novelId,
+            translatorId = translatorId,
+        )
     }
 
-    suspend fun updateTranslationPartially(
+    private suspend fun updateChapterTranslateState(
         providerId: String,
         novelId: String,
-        chapterId: String,
         translatorId: TranslatorId,
-        glossary: Glossary?,
-        paragraphsZh: Map<Int, String>,
-    ) {
-        val updateBson = when (translatorId) {
-            TranslatorId.Baidu -> combine(
-                listOf(
-                    setValue(WebNovelChapter::baiduGlossaryUuid, glossary?.id),
-                    setValue(WebNovelChapter::baiduGlossary, glossary?.map ?: emptyMap()),
-                ) + paragraphsZh.map { (index, textZh) ->
-                    // hacky, fix https://github.com/Litote/kmongo/issues/415
-                    Updates.set("paragraphsZh.${index}", textZh)
-                }
+    ): Long {
+        val zhProperty1 = when (translatorId) {
+            TranslatorId.Baidu -> WebNovelChapter::baiduParagraphs
+            TranslatorId.Youdao -> WebNovelChapter::youdaoParagraphs
+            TranslatorId.Gpt -> WebNovelChapter::gptParagraphs
+        }
+        val zh = mongo.webNovelChapterCollection
+            .countDocuments(
+                and(
+                    WebNovelChapter::providerId eq providerId,
+                    WebNovelChapter::novelId eq novelId,
+                    zhProperty1 ne null,
+                )
             )
-
-            TranslatorId.Youdao -> combine(
-                listOf(
-                    setValue(WebNovelChapter::youdaoGlossaryUuid, glossary?.id),
-                    setValue(WebNovelChapter::youdaoGlossary, glossary?.map ?: emptyMap()),
-                ) + paragraphsZh.map { (index, textZh) ->
-                    setValue(WebNovelChapter::youdaoParagraphs.pos(index), textZh)
-                }
-            )
-
-            TranslatorId.Gpt -> combine(
-                // GPT暂不支持术语表
-            )
+        val zhProperty = when (translatorId) {
+            TranslatorId.Baidu -> WebNovelMetadata::baidu
+            TranslatorId.Youdao -> WebNovelMetadata::youdao
+            TranslatorId.Gpt -> WebNovelMetadata::gpt
         }
         mongo
-            .webNovelChapterCollection
+            .webNovelMetadataCollection
             .updateOne(
-                WebNovelChapter.byId(providerId, novelId, chapterId),
-                updateBson,
+                WebNovelMetadata.byId(providerId, novelId),
+                combine(
+                    setValue(zhProperty, zh),
+                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
+                ),
+            )
+        return zh
+    }
+
+    private suspend fun updateMetadataJp(
+        providerId: String,
+        novelId: String,
+    ) {
+        val jp = mongo.webNovelChapterCollection
+            .countDocuments(WebNovelChapter.byNovelId(providerId, novelId))
+        mongo
+            .webNovelMetadataCollection
+            .updateOne(
+                WebNovelMetadata.byId(providerId, novelId),
+                combine(
+                    setValue(WebNovelMetadata::jp, jp),
+                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
+                ),
             )
     }
 }

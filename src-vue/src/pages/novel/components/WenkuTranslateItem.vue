@@ -2,23 +2,13 @@
 import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
 
 const props = defineProps<{
   novelId: string;
-  volumeId: string;
-  total: number;
-  baidu: number;
-  youdao: number;
-  gpt: number;
-}>();
-
-const emits = defineEmits<{
-  (e: 'update:baidu', v: number): void;
-  (e: 'update:youdao', v: number): void;
-  (e: 'update:gpt', v: number): void;
+  volume: VolumeJpDto;
 }>();
 
 const setting = useSettingStore();
@@ -64,22 +54,25 @@ async function startUpdateTask(translatorId: TranslatorId) {
   } catch {}
 
   await ApiWenkuNovel.translate(
-    props.novelId,
-    translatorId,
-    props.volumeId,
-    accessToken,
+    {
+      novelId: props.novelId,
+      translatorId,
+      volumeId: props.volume.volumeId,
+      accessToken,
+      translateExpireChapter: false,
+    },
     {
       onStart: (total: number) => {
         taskDetail.value!.chapterTotal = total;
       },
       onChapterSuccess: (state) => {
         if (translatorId === 'baidu') {
-          emits('update:baidu', state);
+          props.volume.baidu = state;
         } else if (translatorId === 'youdao') {
-          emits('update:youdao', state);
+          props.volume.youdao = state;
         } else if (translatorId === 'gpt') {
           setting.addToken(gptAccessToken.value);
-          emits('update:gpt', state);
+          props.volume.gpt = state;
         }
         taskDetail.value!.chapterFinished += 1;
       },
@@ -102,7 +95,7 @@ interface NovelFiles {
 
 function stateToFileList(): NovelFiles[] {
   let ext: string;
-  if (props.volumeId.toLowerCase().endsWith('.txt')) {
+  if (props.volume.volumeId.toLowerCase().endsWith('.txt')) {
     ext = 'txt';
   } else {
     ext = 'epub';
@@ -119,14 +112,18 @@ function stateToFileList(): NovelFiles[] {
   ) {
     return {
       label,
-      url: ApiWenkuNovel.createFileUrl(props.novelId, props.volumeId, lang),
+      url: ApiWenkuNovel.createFileUrl(
+        props.novelId,
+        props.volume.volumeId,
+        lang
+      ),
       name: `${lang}.${ext}`,
     };
   }
   const extUpper = ext.toUpperCase();
   return [
     {
-      label: `百度(${props.baidu}/${props.total})`,
+      label: `百度(${props.volume.baidu}/${props.volume.total})`,
       translatorId: 'baidu',
       files: [
         createFile(extUpper, 'zh-baidu'),
@@ -134,7 +131,7 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
-      label: `有道(${props.youdao}/${props.total})`,
+      label: `有道(${props.volume.youdao}/${props.volume.total})`,
       translatorId: 'youdao',
       files: [
         createFile(extUpper, 'zh-youdao'),
@@ -142,7 +139,7 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
-      label: `GPT3(${props.gpt}/${props.total})`,
+      label: `GPT3(${props.volume.gpt}/${props.volume.total})`,
       translatorId: 'gpt',
       files: [
         createFile(extUpper, 'zh-gpt'),

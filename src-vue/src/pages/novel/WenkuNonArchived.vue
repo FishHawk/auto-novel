@@ -71,11 +71,7 @@ getVolumesUser();
         >
           <WenkuTranslateItem
             :novelId="userNovelId"
-            :volume-id="volume.volumeId"
-            :total="volume.total"
-            v-model:baidu="volume.baidu"
-            v-model:youdao="volume.youdao"
-            v-model:gpt="volume.gpt"
+            :volume="volume"
             style="padding-top: -8px"
           />
         </n-collapse-item>
@@ -115,11 +111,7 @@ getVolumesUser();
         >
           <WenkuTranslateItem
             novelId="non-archived"
-            :volume-id="volume.volumeId"
-            :total="volume.total"
-            v-model:baidu="volume.baidu"
-            v-model:youdao="volume.youdao"
-            v-model:gpt="volume.gpt"
+            :volume="volume"
             style="padding-top: -8px"
           />
         </n-collapse-item>

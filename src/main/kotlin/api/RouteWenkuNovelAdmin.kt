@@ -15,10 +15,10 @@ private class WenkuNovelAdminRes {
     @Resource("/upload")
     class UploadHistory(val parent: WenkuNovelAdminRes) {
         @Resource("/")
-        data class List(val parent: UploadHistory, val page: Int)
+        class List(val parent: UploadHistory, val page: Int)
 
         @Resource("/{id}")
-        data class Id(val parent: UploadHistory, val id: String)
+        class Id(val parent: UploadHistory, val id: String)
     }
 }
 

@@ -8,6 +8,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AdminLayout: typeof import('./src/pages/admin/components/AdminLayout.vue')['default']
+    AdvanceOption: typeof import('./src/pages/novel/components/AdvanceOption.vue')['default']
+    AdvanceOptionSwitch: typeof import('./src/pages/novel/components/AdvanceOptionSwitch.vue')['default']
     AsyncButton: typeof import('./src/components/AsyncButton.vue')['default']
     Comment: typeof import('./src/components/Comment.vue')['default']
     CommentInput: typeof import('./src/components/CommentInput.vue')['default']
