@@ -1,31 +1,34 @@
 :80 {
-  encode gzip
+	encode gzip
 
-  handle {
-    root * /dist
-    file_server
-    route {
-      try_files {path} /
-      header / Cache-Control "no-cache,no-store,max-age=0,must-revalidate"
-    }
-  }
+	handle {
+		root * /dist
+		file_server
+		route {
+			try_files {path} /
+			header / Cache-Control "no-cache,no-store,max-age=0,must-revalidate"
+		}
+		header /assets/* Cache-Control "public, max-age=7776000"
+		header /*.png Cache-Control "public, max-age=7776000"
+		header /*.svg Cache-Control "public, max-age=7776000"
+	}
 
-  handle_path /api* {
-    reverse_proxy server:8081
-  }
+	handle_path /api* {
+		reverse_proxy server:8081
+	}
 
-  handle_path /files-web* {
-    root * /data/files-web
-    file_server
-  }
+	handle_path /files-web* {
+		root * /data/files-web
+		file_server
+	}
 
-  handle_path /files-wenku* {
-    root * /data/files-wenku
-    file_server
-  }
+	handle_path /files-wenku* {
+		root * /data/files-wenku
+		file_server
+	}
 
-  handle_path /files-extra* {
-    root * /data/files-extra
-    file_server
-  }
+	handle_path /files-extra* {
+		root * /data/files-extra
+		file_server
+	}
 }
