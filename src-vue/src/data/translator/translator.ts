@@ -16,12 +16,22 @@ export async function createTranslator(
   config: TranslatorConfig
 ): Promise<Translator> {
   if (id === 'baidu') {
-    return await new BaiduTranslator(config.glossary ?? {}, config.log).init();
+    return await new BaiduTranslator(
+      config.log ?? console.log,
+      config.glossary ?? {}
+    ).init();
   } else if (id === 'youdao') {
-    return await new YoudaoTranslator(config.glossary ?? {}, config.log).init();
+    return await new YoudaoTranslator(
+      config.log ?? console.log,
+      config.glossary ?? {}
+    ).init();
   } else {
     if (!config.accessToken) throw new Error('Gpt翻译器需要Token');
-    return new OpenAiTranslator(config.accessToken, config.log);
+    return new OpenAiTranslator(
+      config.log ?? console.log,
+      {},
+      config.accessToken
+    );
   }
 }
 

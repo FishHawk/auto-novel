@@ -1,60 +1,12 @@
 import { customAlphabet } from 'nanoid';
 import { get_encoding } from 'tiktoken';
 
-export type Glossary = { [key: string]: string };
-
-class GlossaryTransformer {
-  glossaryJpToUuid: Glossary = {};
-  glossaryUuidToZh: Glossary = {};
-
-  constructor(glossary: Glossary) {
-    const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 4);
-
-    function generateUuid() {
-      while (true) {
-        const uuid = nanoid();
-        if (/(.)\1/.test(uuid)) return uuid;
-      }
-    }
-
-    for (const wordJp of Object.keys(glossary).sort(
-      (a, b) => b.length - a.length
-    )) {
-      const wordZh = glossary[wordJp];
-      const uuid = generateUuid();
-      this.glossaryJpToUuid[wordJp] = uuid;
-      this.glossaryUuidToZh[uuid] = wordZh;
-    }
-  }
-
-  encode(input: string[]): string[] {
-    return input.map((text) => {
-      for (const wordSrc in this.glossaryJpToUuid) {
-        const wordDst = this.glossaryJpToUuid[wordSrc];
-        text = text.replaceAll(wordSrc, wordDst);
-      }
-      return text;
-    });
-  }
-
-  decode(input: string[]): string[] {
-    return input.map((text) => {
-      for (const wordSrc in this.glossaryUuidToZh) {
-        const wordDst = this.glossaryUuidToZh[wordSrc];
-        text = text.replaceAll(wordSrc, wordDst);
-      }
-      return text;
-    });
-  }
-}
-
-function filterInput(input: string[]) {
-  return input
+const filterInput = (input: string[]) =>
+  input
     .map((line) => line.replace(/\r?\n|\r/g, ''))
     .filter((line) => !(line.trim() === '' || line.startsWith('<图片>')));
-}
 
-function recoverOutput(input: string[], output: string[]) {
+const recoverOutput = (input: string[], output: string[]) => {
   const recoveredOutput: string[] = [];
   for (const line of input) {
     const realLine = line.replace(/\r?\n|\r/g, '');
@@ -65,13 +17,80 @@ function recoverOutput(input: string[], output: string[]) {
       recoveredOutput.push(outputLine!);
     }
   }
+  if (recoveredOutput.length !== input.length) {
+    throw Error('重建翻译长度不匹配，不应当出现');
+  }
   return recoveredOutput;
-}
+};
 
-type Segmenter = (input: string[]) => string[][];
+export const emptyLineFilterWrapper = async (
+  input: string[],
+  callback: (input: string[]) => Promise<string[]>
+) => {
+  const filteredInput = filterInput(input);
+  const output = await callback(filteredInput);
+  const recoveredOutput = recoverOutput(input, output);
+  return recoveredOutput;
+};
 
-export function tokenSegmenter(maxToken: number, maxLine: number): Segmenter {
-  return (input: string[]) => {
+export type Glossary = { [key: string]: string };
+
+export const createNonAiGlossaryWrapper = (glossary: Glossary) => {
+  const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 4);
+  const generateUuid = () => {
+    while (true) {
+      const uuid = nanoid();
+      if (/(.)\1/.test(uuid)) return uuid;
+    }
+  };
+
+  const glossaryJpToUuid: Glossary = {};
+  const glossaryUuidToZh: Glossary = {};
+  for (const wordJp of Object.keys(glossary).sort(
+    (a, b) => b.length - a.length
+  )) {
+    const wordZh = glossary[wordJp];
+    const uuid = generateUuid();
+    glossaryJpToUuid[wordJp] = uuid;
+    glossaryUuidToZh[uuid] = wordZh;
+  }
+
+  const encode = (input: string[]): string[] => {
+    return input.map((text) => {
+      for (const wordSrc in glossaryJpToUuid) {
+        const wordDst = glossaryJpToUuid[wordSrc];
+        text = text.replaceAll(wordSrc, wordDst);
+      }
+      return text;
+    });
+  };
+
+  const decode = (input: string[]): string[] => {
+    return input.map((text) => {
+      for (const wordSrc in glossaryUuidToZh) {
+        const wordDst = glossaryUuidToZh[wordSrc];
+        text = text.replaceAll(wordSrc, wordDst);
+      }
+      return text;
+    });
+  };
+
+  return async (
+    input: string[],
+    callback: (input: string[]) => Promise<string[]>
+  ) => {
+    const encodedInput = encode(input);
+    const output = await callback(encodedInput);
+    const decodedOutput = decode(output);
+    return decodedOutput;
+  };
+};
+
+export const createTokenSegmenterWrapper = (
+  maxToken: number,
+  maxLine: number
+) => {
+  const segmenter = (input: string[]) => {
     const segs: string[][] = [];
     let seg: string[] = [];
     let segSize = 0;
@@ -113,10 +132,26 @@ export function tokenSegmenter(maxToken: number, maxLine: number): Segmenter {
     encoder.free();
     return segs;
   };
-}
+  return async (
+    input: string[],
+    callback: (
+      seg: string[],
+      segInfo: { index: number; size: number }
+    ) => Promise<string[]>
+  ) => {
+    let output: string[] = [];
+    const segs = segmenter(input);
+    const size = segs.length;
+    for (const [index, seg] of segs.entries()) {
+      const segOutput = await callback(seg, { index, size });
+      output = output.concat(segOutput);
+    }
+    return output;
+  };
+};
 
-export function lengthSegmenter(maxLength: number): Segmenter {
-  return (input: string[]) => {
+export const createLengthSegmenterWrapper = (maxLength: number) => {
+  const segmenter = (input: string[]) => {
     const segs: string[][] = [];
     let seg: string[] = [];
     let segSize = 0;
@@ -137,92 +172,25 @@ export function lengthSegmenter(maxLength: number): Segmenter {
     }
     return segs;
   };
-}
 
-export abstract class Translator {
-  private glossaryTransformer: GlossaryTransformer;
-  protected log: (message: string) => void;
-  abstract segmenter: Segmenter;
-
-  constructor(glossary: Glossary, log?: (message: string) => void) {
-    this.glossaryTransformer = new GlossaryTransformer(glossary);
-    this.log = log ?? console.log;
-  }
-
-  abstract translateSegment(
-    seg: string[],
-    segInfo: { index: number; size: number }
-  ): Promise<string[]>;
-
-  async translate(input: string[]): Promise<string[]> {
-    if (input.length === 0) return [];
-    const encodedInput = this.glossaryTransformer.encode(input);
-    const filteredInput = filterInput(encodedInput);
-    const output = await this.translateInner(filteredInput);
-    const recoveredOutput = recoverOutput(encodedInput, output);
-    if (recoveredOutput.length !== encodedInput.length) {
-      throw Error('重建翻译长度不匹配，不应当出现');
-    }
-    const decodedOutput = this.glossaryTransformer.decode(recoveredOutput);
-    return decodedOutput;
-  }
-
-  private async translateInner(input: string[]): Promise<string[]> {
+  return async (
+    input: string[],
+    callback: (
+      seg: string[],
+      segInfo: { index: number; size: number }
+    ) => Promise<string[]>
+  ) => {
     let output: string[] = [];
-    const segs = this.segmenter(input);
+    const segs = segmenter(input);
     const size = segs.length;
     for (const [index, seg] of segs.entries()) {
-      const segOutput = await this.translateSegment(seg, { index, size });
+      const segOutput = await callback(seg, { index, size });
       output = output.concat(segOutput);
     }
     return output;
-  }
+  };
+};
+
+export interface Translator {
+  translate: (input: string[]) => Promise<string[]>;
 }
-
-// Util
-export function* parseEventStream<T>(text: string) {
-  for (const line of text.split('\n')) {
-    if (line == '[DONE]') {
-      return;
-    } else if (!line.trim()) {
-      continue;
-    } else {
-      try {
-        const obj: T = JSON.parse(line.replace(/^data\:/, '').trim());
-        yield obj;
-      } catch {
-        continue;
-      }
-    }
-  }
-}
-
-export function detectChinese(text: string) {
-  const reChinese =
-    /[:|#| |0-9|\u4e00-\u9fa5|\u3002|\uff1f|\uff01|\uff0c|\u3001|\uff1b|\uff1a|\u201c|\u201d|\u2018|\u2019|\uff08|\uff09|\u300a|\u300b|\u3008|\u3009|\u3010|\u3011|\u300e|\u300f|\u300c|\u300d|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|\uffe5]/;
-  const reJapanese = /[\u3041-\u3096|\u30a0-\u30ff]/;
-  const reEnglish = /[a-z|A-Z]/;
-
-  // not calculate url
-  text = text.replace(/(https?:\/\/[^\s]+)/g, '');
-
-  let zh = 0,
-    jp = 0,
-    en = 0;
-  for (const c of text) {
-    if (reChinese.test(c)) {
-      zh++;
-    } else if (reJapanese.test(c)) {
-      jp++;
-    } else if (reEnglish.test(c)) {
-      en++;
-    }
-  }
-  const pZh = zh / text.length,
-    pJp = jp / text.length,
-    pEn = en / text.length;
-  return pZh > 0.75 || (pZh > pJp && pZh > pEn * 2 && pJp < 0.1);
-}
-
-export const delay = (s: number) =>
-  new Promise((res) => setTimeout(res, 1000 * s));

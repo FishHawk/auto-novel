@@ -2,22 +2,39 @@ import ky from 'ky';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
+  Glossary,
   Translator,
-  delay,
-  detectChinese,
-  parseEventStream,
-  tokenSegmenter,
+  createNonAiGlossaryWrapper,
+  createTokenSegmenterWrapper,
+  emptyLineFilterWrapper,
 } from './base';
-import { KyInstance } from 'ky/distribution/types/ky';
 
-export class OpenAiTranslator extends Translator {
-  segmenter = tokenSegmenter(1500, 30);
+export class OpenAiTranslator implements Translator {
+  log: (message: string) => void;
+  glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
+  segmentWarpper: ReturnType<typeof createTokenSegmenterWrapper>;
+
   openAi: OpenAi;
 
-  constructor(accessToken: string, log?: (message: string) => void) {
-    super({}, log);
+  constructor(
+    log: (message: string) => void,
+    glossary: Glossary,
+    accessToken: string
+  ) {
+    this.log = log;
+    this.glossaryWarpper = createNonAiGlossaryWrapper(glossary);
+    this.segmentWarpper = createTokenSegmenterWrapper(1500, 30);
     this.openAi = new OpenAi(accessToken);
   }
+
+  translate = async (input: string[]) => {
+    if (input.length === 0) return [];
+    return emptyLineFilterWrapper(input, (input) =>
+      this.segmentWarpper(input, (seg, segInfo) =>
+        this.translateSegment(seg, segInfo)
+      )
+    );
+  };
 
   async translateSegment(
     seg: string[],
@@ -407,7 +424,7 @@ type OpenAiStreamChunk =
 
 class OpenAi {
   private model: OpenAiModel = 'text-davinci-002-render-sha';
-  private api: KyInstance;
+  private api;
   accessToken: string;
 
   constructor(accessToken: string) {
@@ -448,3 +465,50 @@ class OpenAi {
       .json<OpenAiConversation>();
   }
 }
+
+// Util
+function* parseEventStream<T>(text: string) {
+  for (const line of text.split('\n')) {
+    if (line == '[DONE]') {
+      return;
+    } else if (!line.trim()) {
+      continue;
+    } else {
+      try {
+        const obj: T = JSON.parse(line.replace(/^data\:/, '').trim());
+        yield obj;
+      } catch {
+        continue;
+      }
+    }
+  }
+}
+
+function detectChinese(text: string) {
+  const reChinese =
+    /[:|#| |0-9|\u4e00-\u9fa5|\u3002|\uff1f|\uff01|\uff0c|\u3001|\uff1b|\uff1a|\u201c|\u201d|\u2018|\u2019|\uff08|\uff09|\u300a|\u300b|\u3008|\u3009|\u3010|\u3011|\u300e|\u300f|\u300c|\u300d|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|\uffe5]/;
+  const reJapanese = /[\u3041-\u3096|\u30a0-\u30ff]/;
+  const reEnglish = /[a-z|A-Z]/;
+
+  // not calculate url
+  text = text.replace(/(https?:\/\/[^\s]+)/g, '');
+
+  let zh = 0,
+    jp = 0,
+    en = 0;
+  for (const c of text) {
+    if (reChinese.test(c)) {
+      zh++;
+    } else if (reJapanese.test(c)) {
+      jp++;
+    } else if (reEnglish.test(c)) {
+      en++;
+    }
+  }
+  const pZh = zh / text.length,
+    pJp = jp / text.length,
+    pEn = en / text.length;
+  return pZh > 0.75 || (pZh > pJp && pZh > pEn * 2 && pJp < 0.1);
+}
+
+const delay = (s: number) => new Promise((res) => setTimeout(res, 1000 * s));

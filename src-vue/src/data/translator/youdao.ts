@@ -1,32 +1,37 @@
 import ky from 'ky';
 import CryptoJS from 'crypto-js';
 
-import { Translator, lengthSegmenter } from './base';
+import {
+  Glossary,
+  Translator,
+  createLengthSegmenterWrapper,
+  createNonAiGlossaryWrapper,
+  emptyLineFilterWrapper,
+} from './base';
 
-function getBaseBody(key: string) {
-  const c = 'fanyideskweb';
-  const p = 'webfanyi';
-  const t = Date.now().toString();
+export class YoudaoTranslator implements Translator {
+  log: (message: string) => void;
+  glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
+  segmentWarpper: ReturnType<typeof createLengthSegmenterWrapper>;
 
-  const sign = CryptoJS.MD5(
-    `client=${c}&mysticTime=${t}&product=${p}&key=${key}`
-  ).toString();
-  return {
-    sign,
-    client: c,
-    product: p,
-    appVersion: '1.0.0',
-    vendor: 'web',
-    pointParam: 'client,mysticTime,product',
-    mysticTime: t,
-    keyfrom: 'fanyi.web',
+  constructor(log: (message: string) => void, glossary: Glossary) {
+    this.log = log;
+    this.glossaryWarpper = createNonAiGlossaryWrapper(glossary);
+    this.segmentWarpper = createLengthSegmenterWrapper(2000);
+  }
+
+  translate = async (input: string[]) => {
+    if (input.length === 0) return [];
+    return emptyLineFilterWrapper(input, (input) =>
+      this.glossaryWarpper(input, (input) =>
+        this.segmentWarpper(input, (seg, _segInfo) =>
+          this.translateSegment(seg)
+        )
+      )
+    );
   };
-}
 
-export class YoudaoTranslator extends Translator {
-  segmenter = lengthSegmenter(2000);
   private key = 'fsdsogkndfokasodnaso';
-
   async init() {
     try {
       await ky.get('https://rlogs.youdao.com/rlog.php', {
@@ -82,26 +87,46 @@ export class YoudaoTranslator extends Translator {
       })
       .text();
 
-    const json = this.decode(text);
+    const json = decode(text);
     const result = json['translateResult'].map((it: any) => {
       return it.map((it: any) => it.tgt.trimEnd()).join('');
     });
     return result;
   }
+}
 
-  private decode(src: string) {
-    const key = CryptoJS.MD5(
-      'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
-    );
-    const iv = CryptoJS.MD5(
-      'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4'
-    );
-    const dec = CryptoJS.AES.decrypt(
-      src.replace(/_/g, '/').replace(/-/g, '+'),
-      key,
-      { iv }
-    ).toString(CryptoJS.enc.Utf8);
-    const json = JSON.parse(dec);
-    return json;
-  }
+function getBaseBody(key: string) {
+  const c = 'fanyideskweb';
+  const p = 'webfanyi';
+  const t = Date.now().toString();
+
+  const sign = CryptoJS.MD5(
+    `client=${c}&mysticTime=${t}&product=${p}&key=${key}`
+  ).toString();
+  return {
+    sign,
+    client: c,
+    product: p,
+    appVersion: '1.0.0',
+    vendor: 'web',
+    pointParam: 'client,mysticTime,product',
+    mysticTime: t,
+    keyfrom: 'fanyi.web',
+  };
+}
+
+function decode(src: string) {
+  const key = CryptoJS.MD5(
+    'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
+  );
+  const iv = CryptoJS.MD5(
+    'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4'
+  );
+  const dec = CryptoJS.AES.decrypt(
+    src.replace(/_/g, '/').replace(/-/g, '+'),
+    key,
+    { iv }
+  ).toString(CryptoJS.enc.Utf8);
+  const json = JSON.parse(dec);
+  return json;
 }
