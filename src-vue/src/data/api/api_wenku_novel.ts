@@ -25,6 +25,17 @@ const list = (page: number, query: string) =>
       .json<Page<WenkuNovelOutlineDto>>()
   );
 
+const listFavored = (
+  page: number,
+  pageSize: number,
+  sort: 'create' | 'update'
+) =>
+  runCatching(
+    api
+      .get('wenku/favored', { searchParams: { page, pageSize, sort } })
+      .json<Page<WenkuNovelOutlineDto>>()
+  );
+
 export interface WenkuMetadataDto {
   title: string;
   titleZh: string;
@@ -60,6 +71,12 @@ const listVolumesUser = () =>
 
 const getMetadata = (novelId: string) =>
   runCatching(api.get(`wenku/${novelId}`).json<WenkuMetadataDto>());
+
+const putFavored = (novelId: string) =>
+  runCatching(api.put(`wenku/${novelId}/favored`).text());
+
+const deleteFavored = (novelId: string) =>
+  runCatching(api.delete(`wenku/${novelId}/favored`).text());
 
 interface MetadataCreateBody {
   title: string;
@@ -255,9 +272,14 @@ const translate = async (
 
 export const ApiWenkuNovel = {
   list,
+  listFavored,
   listVolumesUser,
   listVolumesNonArchived,
+  //
   getMetadata,
+  //
+  putFavored,
+  deleteFavored,
   postMetadata,
   patchMetadata,
   updateGlossary,

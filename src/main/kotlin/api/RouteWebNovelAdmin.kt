@@ -1,6 +1,6 @@
 package api
 
-import api.dto.*
+import infra.model.WebNovelPatchHistory
 import infra.web.WebNovelMetadataRepository
 import infra.web.WebNovelPatchHistoryRepository
 import infra.web.WebNovelTocMergeHistoryRepository
@@ -10,6 +10,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.routing.*
+import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.None
 import util.Optional
@@ -101,23 +102,53 @@ class WebNovelAdminApi(
     private val patchRepo: WebNovelPatchHistoryRepository,
     private val novelRepo: WebNovelMetadataRepository,
 ) {
+    @Serializable
+    class TocMergeHistoryOutlineDto(
+        val id: String,
+        val providerId: String,
+        val novelId: String,
+        val reason: String,
+    )
+
     suspend fun listTocMergeHistory(
         page: Int,
         pageSize: Int,
-    ): Result<PageDto<WebNovelTocMergeHistoryOutlineDto>> {
+    ): Result<PageDto<TocMergeHistoryOutlineDto>> {
         val historyPage = tocMergeHistoryRepo.list(
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )
         val dtoPage = PageDto.fromPage(historyPage, pageSize) {
-            WebNovelTocMergeHistoryOutlineDto.fromDomain(it)
+            TocMergeHistoryOutlineDto(
+                id = it.id.toHexString(),
+                providerId = it.providerId,
+                novelId = it.novelId,
+                reason = it.reason,
+            )
         }
         return Result.success(dtoPage)
     }
 
-    suspend fun getTocMergeHistory(id: String): Result<WebNovelTocMergeHistoryDto> {
+    @Serializable
+    class TocMergeHistoryDto(
+        val id: String,
+        val providerId: String,
+        val novelId: String,
+        val tocOld: List<WebNovelApi.NovelTocItemDto>,
+        val tocNew: List<WebNovelApi.NovelTocItemDto>,
+        val reason: String,
+    )
+
+    suspend fun getTocMergeHistory(id: String): Result<TocMergeHistoryDto> {
         val history = tocMergeHistoryRepo.get(id)?.let {
-            WebNovelTocMergeHistoryDto.fromDomain(it)
+            TocMergeHistoryDto(
+                id = it.id.toHexString(),
+                providerId = it.providerId,
+                novelId = it.novelId,
+                tocOld = it.tocOld.map { WebNovelApi.NovelTocItemDto.fromDomain(it) },
+                tocNew = it.tocNew.map { WebNovelApi.NovelTocItemDto.fromDomain(it) },
+                reason = it.reason,
+            )
         } ?: return httpNotFound("未找到")
         return Result.success(history)
     }
@@ -127,19 +158,41 @@ class WebNovelAdminApi(
         return Result.success(Unit)
     }
 
+    @Serializable
+    class PatchHistoryOutlineDto(
+        val providerId: String,
+        val novelId: String,
+        val titleJp: String,
+        val titleZh: String?,
+    )
+
     suspend fun listPatch(
         page: Int,
         pageSize: Int,
-    ): Result<PageDto<WebNovelPatchHistoryOutlineDto>> {
+    ): Result<PageDto<PatchHistoryOutlineDto>> {
         val patchPage = patchRepo.list(
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )
         val dto = PageDto.fromPage(patchPage, pageSize) {
-            WebNovelPatchHistoryOutlineDto.fromDomain(it)
+            PatchHistoryOutlineDto(
+                providerId = it.providerId,
+                novelId = it.novelId,
+                titleJp = it.titleJp,
+                titleZh = it.titleZh,
+            )
         }
         return Result.success(dto)
     }
+
+    @Serializable
+    class WebNovelPatchHistoryDto(
+        val providerId: String,
+        val novelId: String,
+        val titleJp: String,
+        val titleZh: String?,
+        val patches: List<WebNovelPatchHistory.Patch>,
+    )
 
     suspend fun getPatch(
         providerId: String,
@@ -147,7 +200,15 @@ class WebNovelAdminApi(
     ): Result<WebNovelPatchHistoryDto> {
         val patch = patchRepo.get(providerId, novelId)
             ?: return httpNotFound("未找到")
-        val dto = WebNovelPatchHistoryDto.fromDomain(patch)
+        val dto = patch.let {
+            WebNovelPatchHistoryDto(
+                providerId = it.providerId,
+                novelId = it.novelId,
+                titleJp = it.titleJp,
+                titleZh = it.titleZh,
+                patches = it.patches,
+            )
+        }
         return Result.success(dto)
     }
 

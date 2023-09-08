@@ -1,7 +1,5 @@
 package api
 
-import api.dto.*
-import api.dto.WebNovelDto
 import infra.*
 import infra.model.*
 import infra.provider.providers.Syosetu
@@ -26,6 +24,7 @@ import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.toOptional
 import java.nio.file.Path
+import java.time.ZoneId
 
 @Resource("/novel")
 private class WebNovelRes {
@@ -44,8 +43,29 @@ private class WebNovelRes {
     @Resource("/rank/{providerId}")
     class Rank(val parent: WebNovelRes, val providerId: String)
 
+    @Resource("/favored")
+    class Favored(
+        val parent: WebNovelRes,
+        val page: Int,
+        val pageSize: Int = 10,
+        val sort: FavoriteListSort,
+    )
+
+    @Resource("/read-history")
+    class ReadHistory(
+        val parent: WebNovelRes,
+        val page: Int,
+        val pageSize: Int = 10,
+    )
+
     @Resource("/{providerId}/{novelId}")
     class Id(val parent: WebNovelRes, val providerId: String, val novelId: String) {
+        @Resource("/favored")
+        class Favored(val parent: Id)
+
+        @Resource("/read-history")
+        class ReadHistory(val parent: Id)
+
         @Resource("/wenku")
         class Wenku(val parent: Id)
 
@@ -111,6 +131,58 @@ fun Route.routeWebNovel() {
         val result = service.listRank(loc.providerId, options)
         call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 3600 * 2))
         call.respondResult(result)
+    }
+
+    authenticate {
+        get<WebNovelRes.ReadHistory> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.listReadHistory(
+                username = jwtUser.username,
+                page = loc.page.coerceAtLeast(0),
+                pageSize = loc.pageSize.coerceAtMost(20),
+            )
+            call.respondResult(result)
+        }
+        put<WebNovelRes.Id.ReadHistory> { loc ->
+            val jwtUser = call.jwtUser()
+            val chapterId = call.receive<String>()
+            val result = service.updateReadHistory(
+                username = jwtUser.username,
+                providerId = loc.parent.providerId,
+                novelId = loc.parent.novelId,
+                chapterId = chapterId,
+            )
+            call.respondResult(result)
+        }
+
+        get<WebNovelRes.Favored> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.listFavored(
+                username = jwtUser.username,
+                page = loc.page.coerceAtLeast(0),
+                pageSize = loc.pageSize.coerceAtMost(20),
+                sort = loc.sort,
+            )
+            call.respondResult(result)
+        }
+        put<WebNovelRes.Id.Favored> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.setFavored(
+                username = jwtUser.username,
+                providerId = loc.parent.providerId,
+                novelId = loc.parent.novelId,
+            )
+            call.respondResult(result)
+        }
+        delete<WebNovelRes.Id.Favored> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.removeFavored(
+                username = jwtUser.username,
+                providerId = loc.parent.providerId,
+                novelId = loc.parent.novelId,
+            )
+            call.respondResult(result)
+        }
     }
 
     // Get
@@ -256,6 +328,41 @@ class WebNovelApi(
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
 ) {
     // List
+    @Serializable
+    class NovelOutlineDto(
+        val providerId: String,
+        val novelId: String,
+        val titleJp: String,
+        val titleZh: String?,
+        val type: WebNovelType?,
+        val attentions: List<WebNovelAttention>,
+        val keywords: List<String>,
+        val extra: String?,
+        val total: Long,
+        val jp: Long,
+        val baidu: Long,
+        val youdao: Long,
+        val gpt: Long,
+        val updateAt: Long?,
+    ) {
+        constructor(it: WebNovelMetadataOutline) : this(
+            providerId = it.providerId,
+            novelId = it.novelId,
+            titleJp = it.titleJp,
+            titleZh = it.titleZh,
+            type = it.type,
+            attentions = it.attentions,
+            keywords = it.keywords,
+            extra = it.extra,
+            total = it.total,
+            jp = it.jp,
+            baidu = it.baidu,
+            youdao = it.youdao,
+            gpt = it.gpt,
+            updateAt = it.updateAt?.epochSeconds,
+        )
+    }
+
     suspend fun list(
         queryString: String?,
         filterProvider: String?,
@@ -264,7 +371,7 @@ class WebNovelApi(
         filterTranslate: WebNovelFilter.Translate,
         page: Int,
         pageSize: Int,
-    ): Result<PageDto<WebNovelOutlineDto>> {
+    ): Result<PageDto<NovelOutlineDto>> {
         val novelPage = metadataRepo.search(
             userQuery = queryString,
             filterProvider = filterProvider,
@@ -275,7 +382,7 @@ class WebNovelApi(
             pageSize = pageSize,
         )
         val dtoPage = PageDto.fromPage(novelPage, pageSize) {
-            WebNovelOutlineDto.fromDomain(it)
+            NovelOutlineDto(it)
         }
         return Result.success(dtoPage)
     }
@@ -283,33 +390,124 @@ class WebNovelApi(
     suspend fun listRank(
         providerId: String,
         options: Map<String, String>,
-    ): Result<PageDto<WebNovelOutlineDto>> {
+    ): Result<PageDto<NovelOutlineDto>> {
         val items = metadataRepo.listRank(providerId, options)
             .getOrElse { return Result.failure(it) }
         val pageDto = PageDto(
-            items = items.map { outline ->
-                WebNovelOutlineDto.fromDomain(outline)
-            },
+            items = items.map { NovelOutlineDto(it) },
             pageNumber = 1,
         )
         return Result.success(pageDto)
     }
 
+    suspend fun listReadHistory(
+        username: String,
+        page: Int,
+        pageSize: Int,
+    ): Result<PageDto<NovelOutlineDto>> {
+        val novelPage = userRepo.listReaderHistoryWebNovel(
+            username = username,
+            page = page,
+            pageSize = pageSize,
+        )
+        val dto = PageDto.fromPage(novelPage, pageSize) {
+            NovelOutlineDto(it)
+        }
+        return Result.success(dto)
+    }
+
+    suspend fun listFavored(
+        username: String,
+        page: Int,
+        pageSize: Int,
+        sort: FavoriteListSort,
+    ): Result<PageDto<NovelOutlineDto>> {
+        val novelPage = userRepo.listFavoriteWebNovel(
+            username = username,
+            page = page,
+            pageSize = pageSize,
+            sort = sort,
+        )
+        val dto = PageDto.fromPage(novelPage, pageSize) {
+            NovelOutlineDto(it)
+        }
+        return Result.success(dto)
+    }
+
     // Get
-    private suspend fun buildNovelDto(novel: WebNovelMetadata, username: String?): WebNovelDto {
-        username?.let {
-            val novelId = novel.id.toHexString()
-            val favored = userRepo.isUserFavoriteWebNovel(it, novelId)
-            val history = userRepo.getReaderHistory(it, novelId)
-            return WebNovelDto.fromDomain(novel, favored, history?.chapterId)
-        } ?: return WebNovelDto.fromDomain(novel, null, null)
+    @Serializable
+    class NovelTocItemDto(
+        val titleJp: String,
+        val titleZh: String?,
+        val chapterId: String?,
+        val createAt: Long?,
+    ) {
+        companion object {
+            fun fromDomain(domain: WebNovelTocItem) =
+                NovelTocItemDto(
+                    titleJp = domain.titleJp,
+                    titleZh = domain.titleZh,
+                    chapterId = domain.chapterId,
+                    createAt = domain.createAt?.epochSeconds,
+                )
+        }
+    }
+
+    @Serializable
+    class NovelDto(
+        val wenkuId: String?,
+        val titleJp: String,
+        val titleZh: String?,
+        val authors: List<WebNovelAuthor>,
+        val type: WebNovelType?,
+        val attentions: List<WebNovelAttention>,
+        val keywords: List<String>,
+        val introductionJp: String,
+        val introductionZh: String?,
+        val glossary: Map<String, String>,
+        val toc: List<NovelTocItemDto>,
+        val visited: Long,
+        val syncAt: Long,
+        val favored: Boolean?,
+        val lastReadChapterId: String?,
+        val jp: Long,
+        val baidu: Long,
+        val youdao: Long,
+        val gpt: Long,
+    )
+
+    private suspend fun buildNovelDto(novel: WebNovelMetadata, username: String?): NovelDto {
+        val novelId = novel.id.toHexString()
+        val favored = username?.let { userRepo.isUserFavoriteWebNovel(it, novelId) }
+        val history = username?.let { userRepo.getReaderHistory(it, novelId) }
+        return NovelDto(
+            wenkuId = novel.wenkuId,
+            titleJp = novel.titleJp,
+            titleZh = novel.titleZh,
+            authors = novel.authors,
+            type = novel.type,
+            attentions = novel.attentions,
+            keywords = novel.keywords,
+            introductionJp = novel.introductionJp,
+            introductionZh = novel.introductionZh,
+            glossary = novel.glossary,
+            toc = novel.toc.map { NovelTocItemDto.fromDomain(it) },
+            visited = novel.visited,
+            syncAt = novel.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
+            favored = favored,
+            lastReadChapterId = history?.chapterId,
+            jp = novel.jp,
+            baidu = novel.baidu,
+            youdao = novel.youdao,
+            gpt = novel.gpt,
+        )
     }
 
     suspend fun getMetadata(
         providerId: String,
         novelId: String,
         username: String?,
-    ): Result<WebNovelDto> {
+    ): Result<NovelDto> {
         val novel = metadataRepo.getNovelAndSave(providerId, novelId)
             .getOrElse { return httpInternalServerError(it.message) }
         val dto = buildNovelDto(novel, username)
@@ -317,11 +515,23 @@ class WebNovelApi(
         return Result.success(dto)
     }
 
+    @Serializable
+    class ChapterDto(
+        val titleJp: String,
+        val titleZh: String? = null,
+        val prevId: String? = null,
+        val nextId: String? = null,
+        val paragraphs: List<String>,
+        val baiduParagraphs: List<String>? = null,
+        val youdaoParagraphs: List<String>? = null,
+        val gptParagraphs: List<String>? = null,
+    )
+
     suspend fun getChapter(
         providerId: String,
         novelId: String,
         chapterId: String,
-    ): Result<WebNovelChapterDto> {
+    ): Result<ChapterDto> {
         val novel = metadataRepo.getNovelAndSave(providerId, novelId)
             .getOrElse { return httpInternalServerError(it.message) }
 
@@ -333,7 +543,7 @@ class WebNovelApi(
             .getOrElse { return httpInternalServerError(it.message) }
 
         return Result.success(
-            WebNovelChapterDto(
+            ChapterDto(
                 titleJp = toc[currIndex].titleJp,
                 titleZh = toc[currIndex].titleZh,
                 prevId = toc.getOrNull(currIndex - 1)?.chapterId,
@@ -347,6 +557,42 @@ class WebNovelApi(
     }
 
     // Update
+    suspend fun updateReadHistory(
+        username: String,
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+    ): Result<Unit> {
+        val id = metadataRepo.get(providerId, novelId)?.id
+            ?: return httpNotFound("书不存在")
+        userRepo.updateReadHistoryWebNovel(
+            username = username,
+            novelId = id.toHexString(),
+            chapterId = chapterId,
+        )
+        return Result.success(Unit)
+    }
+
+    suspend fun setFavored(username: String, providerId: String, novelId: String): Result<Unit> {
+        val id = metadataRepo.get(providerId, novelId)?.id
+            ?: return httpNotFound("书不存在")
+        userRepo.addFavoriteWebNovel(
+            username = username,
+            novelId = id.toHexString(),
+        )
+        return Result.success(Unit)
+    }
+
+    suspend fun removeFavored(username: String, providerId: String, novelId: String): Result<Unit> {
+        val id = metadataRepo.get(providerId, novelId)?.id
+            ?: return httpNotFound("书不存在")
+        userRepo.removeFavoriteWebNovel(
+            username = username,
+            novelId = id.toHexString(),
+        )
+        return Result.success(Unit)
+    }
+
     suspend fun updateMetadata(
         providerId: String,
         novelId: String,
@@ -354,7 +600,7 @@ class WebNovelApi(
         title: String?,
         introduction: String?,
         toc: Map<String, String>,
-    ): Result<WebNovelDto> {
+    ): Result<NovelDto> {
         val metadata = metadataRepo.get(providerId, novelId)
             ?: return httpNotFound("小说不存在")
 

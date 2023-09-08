@@ -5,7 +5,6 @@ import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 import { onKeyStroke, createReusableTemplate } from '@vueuse/core';
 
 import { ResultState } from '@/data/api/result';
-import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useUserDataStore } from '@/data/stores/userData';
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
@@ -34,7 +33,7 @@ async function getChapter() {
   if (result.ok) {
     document.title = result.value.titleJp;
     if (userData.logined) {
-      ApiUser.putReadHistoryWebNovel(providerId, novelId, chapterId);
+      ApiWebNovel.putReadHistory(providerId, novelId, chapterId);
     }
   }
 }

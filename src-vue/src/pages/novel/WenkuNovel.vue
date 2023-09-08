@@ -10,7 +10,6 @@ import {
 } from '@vicons/material';
 
 import { ResultState } from '@/data/api/result';
-import { ApiUser } from '@/data/api/api_user';
 import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/userData';
 
@@ -49,7 +48,7 @@ async function addFavorite() {
     return;
   }
 
-  const result = await ApiUser.putFavoritedWenkuNovel(novelId);
+  const result = await ApiWenkuNovel.putFavored(novelId);
   if (result.ok) {
     if (novelMetadataResult.value?.ok) {
       novelMetadataResult.value.value.favored = true;
@@ -69,7 +68,7 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiUser.deleteFavoritedWenkuNovel(novelId);
+  const result = await ApiWenkuNovel.deleteFavored(novelId);
   if (result.ok) {
     if (novelMetadataResult.value?.ok) {
       novelMetadataResult.value.value.favored = false;

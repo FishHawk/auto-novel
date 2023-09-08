@@ -1,6 +1,5 @@
 package api
 
-import api.dto.PageDto
 import infra.ArticleRepository
 import infra.CommentRepository
 import infra.UserRepository
@@ -50,7 +49,7 @@ fun Route.routeComment() {
     authenticate {
         post<CommentRes> {
             @Serializable
-            data class Body(
+            class Body(
                 val site: String,
                 val parent: String? = null,
                 val content: String,
@@ -75,7 +74,7 @@ class CommentApi(
     private val articleRepo: ArticleRepository,
 ) {
     @Serializable
-    data class CommentDto(
+    class CommentDto(
         val id: String,
         val user: UserOutline,
         val content: String,

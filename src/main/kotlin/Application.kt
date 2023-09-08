@@ -100,7 +100,6 @@ fun main() {
             routeAuth()
             routeArticle()
             routeComment()
-            routeUser()
 
             routeWebNovel()
             routeWebNovelAdmin()
@@ -146,7 +145,6 @@ val appModule = module {
     }
     single(createdAtStart = true) { ArticleApi(get(), get()) }
     single(createdAtStart = true) { CommentApi(get(), get(), get()) }
-    single(createdAtStart = true) { UserApi(get(), get(), get()) }
 
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }

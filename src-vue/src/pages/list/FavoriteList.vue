@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ApiUser } from '@/data/api/api_user';
 import { mapOk } from '@/data/api/result';
-import { useUserDataStore } from '@/data/stores/userData';
 
 import { Loader } from './components/NovelList.vue';
+import { ApiWebNovel } from '@/data/api/api_web_novel';
+import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
 
 const options = [
   {
@@ -16,7 +16,6 @@ const options = [
   },
 ];
 
-const userData = useUserDataStore();
 const loader: Loader = (page, _query, selected) => {
   function optionNth(n: number): string {
     return options[n].tags[selected[n]];
@@ -30,11 +29,11 @@ const loader: Loader = (page, _query, selected) => {
     }
   }
   if (optionNth(0) === '网页小说') {
-    return ApiUser.listFavoritedWebNovel(page - 1, 10, optionSort()).then(
-      (result) => mapOk(result, (page) => ({ type: 'web', page }))
+    return ApiWebNovel.listFavored(page - 1, 10, optionSort()).then((result) =>
+      mapOk(result, (page) => ({ type: 'web', page }))
     );
   } else {
-    return ApiUser.listFavoritedWenkuNovel(page - 1, 24, optionSort()).then(
+    return ApiWenkuNovel.listFavored(page - 1, 24, optionSort()).then(
       (result) => mapOk(result, (page) => ({ type: 'wenku', page }))
     );
   }

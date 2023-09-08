@@ -12,7 +12,6 @@ import { useMessage } from 'naive-ui';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { Ok, ResultState } from '@/data/api/result';
-import { ApiUser } from '@/data/api/api_user';
 import {
   ApiWebNovel,
   WebNovelMetadataDto,
@@ -48,7 +47,7 @@ async function getMetadata() {
 getMetadata();
 
 async function addFavorite() {
-  const result = await ApiUser.putFavoritedWebNovel(providerId, novelId);
+  const result = await ApiWebNovel.putFavored(providerId, novelId);
   if (result.ok) {
     if (metadataResult.value?.ok) {
       metadataResult.value.value.favored = true;
@@ -59,7 +58,7 @@ async function addFavorite() {
 }
 
 async function removeFavorite() {
-  const result = await ApiUser.deleteFavoritedWebNovel(providerId, novelId);
+  const result = await ApiWebNovel.deleteFavored(providerId, novelId);
   if (result.ok) {
     if (metadataResult.value?.ok) {
       metadataResult.value.value.favored = false;

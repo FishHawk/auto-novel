@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
   ApiWenkuNovel,
@@ -31,7 +30,7 @@ function query(url: string) {
 const userData = useUserDataStore();
 const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadFavorite() {
-  const result = await ApiUser.listFavoritedWebNovel(0, 8, 'update');
+  const result = await ApiWebNovel.listFavored(0, 8, 'update');
   if (result.ok) {
     favoriteList.value = Ok(result.value.items);
   } else {

@@ -66,6 +66,24 @@ async function listRank(
   );
 }
 
+const listReadHistory = (page: number, pageSize: number) =>
+  runCatching(
+    api
+      .get('novel/read-history', { searchParams: { page, pageSize } })
+      .json<Page<WebNovelOutlineDto>>()
+  );
+
+const listFavored = (
+  page: number,
+  pageSize: number,
+  sort: 'create' | 'update'
+) =>
+  runCatching(
+    api
+      .get('novel/favored', { searchParams: { page, pageSize, sort } })
+      .json<Page<WebNovelOutlineDto>>()
+  );
+
 export interface WebNovelTocItemDto {
   titleJp: string;
   titleZh?: string;
@@ -120,6 +138,23 @@ async function getChapter(
     api.get(`novel/${providerId}/${novelId}/chapter/${chapterId}`).json()
   );
 }
+
+const putReadHistory = (
+  providerId: string,
+  novelId: string,
+  chapterId: string
+) =>
+  runCatching(
+    api
+      .put(`novel/${providerId}/${novelId}/read-history`, { body: chapterId })
+      .text()
+  );
+
+const putFavored = (providerId: string, novelId: string) =>
+  runCatching(api.put(`novel/${providerId}/${novelId}/favored`).text());
+
+const deleteFavored = (providerId: string, novelId: string) =>
+  runCatching(api.delete(`novel/${providerId}/${novelId}/favored`).text());
 
 async function updateMetadata(
   providerId: string,
@@ -386,10 +421,15 @@ const translate = async (
 export const ApiWebNovel = {
   list,
   listRank,
+  listReadHistory,
+  listFavored,
   //
   getMetadata,
   getChapter,
   //
+  putReadHistory,
+  putFavored,
+  deleteFavored,
   updateMetadata,
   updateGlossary,
   putWenkuId,

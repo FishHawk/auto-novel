@@ -46,14 +46,36 @@ fun Route.routeAuth() {
     val service by inject<AuthApi>()
 
     post<AuthRes.SignIn> {
-        val body = call.receive<AuthApi.SignInBody>()
-        val result = service.signIn(body)
+        @Serializable
+        class Body(
+            val emailOrUsername: String,
+            val password: String,
+        )
+
+        val body = call.receive<Body>()
+        val result = service.signIn(
+            emailOrUsername = body.emailOrUsername,
+            password = body.password,
+        )
         call.respondResult(result)
     }
 
     post<AuthRes.SignUp> {
-        val body = call.receive<AuthApi.SignUpBody>()
-        val result = service.signUp(body)
+        @Serializable
+        class Body(
+            val email: String,
+            val emailCode: String,
+            val username: String,
+            val password: String,
+        )
+
+        val body = call.receive<Body>()
+        val result = service.signUp(
+            email = body.email,
+            emailCode = body.emailCode,
+            username = body.username,
+            password = body.password,
+        )
         call.respondResult(result)
     }
     post<AuthRes.VerifyEmail> { loc ->
@@ -66,8 +88,18 @@ fun Route.routeAuth() {
         call.respondResult(result)
     }
     post<AuthRes.ResetPassword> { loc ->
-        val body = call.receive<AuthApi.ResetPasswordBody>()
-        val result = service.resetPassword(loc.emailOrUsername, body)
+        @Serializable
+        class Body(
+            val token: String,
+            val password: String,
+        )
+
+        val body = call.receive<Body>()
+        val result = service.resetPassword(
+            emailOrUsername = loc.emailOrUsername,
+            token = body.token,
+            password = body.password,
+        )
         call.respondResult(result)
     }
 }
@@ -100,13 +132,7 @@ class AuthApi(
     }
 
     @Serializable
-    data class SignInBody(
-        val emailOrUsername: String,
-        val password: String,
-    )
-
-    @Serializable
-    data class SignInDto(
+    class SignInDto(
         val email: String,
         val username: String,
         val role: User.Role,
@@ -114,15 +140,18 @@ class AuthApi(
         val expiresAt: Long,
     )
 
-    suspend fun signIn(body: SignInBody): Result<SignInDto> {
-        val user = userRepository.getByEmail(body.emailOrUsername)
-            ?: userRepository.getByUsername(body.emailOrUsername)
+    suspend fun signIn(
+        emailOrUsername: String,
+        password: String,
+    ): Result<SignInDto> {
+        val user = userRepository.getByEmail(emailOrUsername)
+            ?: userRepository.getByUsername(emailOrUsername)
             ?: return httpNotFound("用户不存在")
 
         fun User.validatePassword(password: String): Boolean {
             return this.password == PBKDF2.hash(password, salt)
         }
-        if (!user.validatePassword(body.password))
+        if (!user.validatePassword(password))
             return httpUnauthorized("密码错误")
 
         val (token, expiresAt) = generateToken(user.username, user.role)
@@ -135,48 +164,44 @@ class AuthApi(
                 expiresAt = expiresAt,
             )
         )
-
     }
 
-    @Serializable
-    data class SignUpBody(
-        val email: String,
-        val emailCode: String,
-        val username: String,
-        val password: String,
-    )
-
-    suspend fun signUp(body: SignUpBody): Result<SignInDto> {
-        if (body.username.length < 3) {
+    suspend fun signUp(
+        email: String,
+        emailCode: String,
+        username: String,
+        password: String,
+    ): Result<SignInDto> {
+        if (username.length < 3) {
             return httpBadRequest("用户名至少为3个字符")
         }
-        if (body.username.length > 15) {
+        if (username.length > 15) {
             return httpBadRequest("用户名至多为15个字符")
         }
-        if (body.password.length < 8) {
+        if (password.length < 8) {
             return httpBadRequest("密码至少为8个字符")
         }
-        userRepository.getByEmail(body.email)?.let {
+        userRepository.getByEmail(email)?.let {
             return httpConflict("邮箱已经被使用")
         }
-        userRepository.getByUsername(body.username)?.let {
+        userRepository.getByUsername(username)?.let {
             return httpConflict("用户名已经被使用")
         }
 
-        if (!emailCodeRepository.exist(body.email, body.emailCode))
+        if (!emailCodeRepository.exist(email, emailCode))
             return httpBadRequest("邮箱验证码错误")
 
         userRepository.add(
-            email = body.email,
-            username = body.username,
-            password = body.password,
+            email = email,
+            username = username,
+            password = password,
         )
 
-        val (token, expiresAt) = generateToken(body.username, User.Role.Normal)
+        val (token, expiresAt) = generateToken(username, User.Role.Normal)
         return Result.success(
             SignInDto(
-                email = body.email,
-                username = body.username,
+                email = email,
+                username = username,
                 role = User.Role.Normal,
                 token = token,
                 expiresAt = expiresAt,
@@ -242,19 +267,17 @@ class AuthApi(
         return Result.success("邮件已发送")
     }
 
-    @Serializable
-    data class ResetPasswordBody(
-        val token: String,
-        val password: String,
-    )
-
-    suspend fun resetPassword(emailOrUsername: String, body: ResetPasswordBody): Result<Unit> {
+    suspend fun resetPassword(
+        emailOrUsername: String,
+        token: String,
+        password: String,
+    ): Result<Unit> {
         val user = userRepository.getByUsernameOrEmail(emailOrUsername)
             ?: return httpNotFound("用户不存在")
-        if (!resetPasswordTokenRepository.validate(user.id, body.token)) {
+        if (!resetPasswordTokenRepository.validate(user.id, token)) {
             return httpBadRequest("口令不合法")
         }
-        userRepository.updatePassword(user.id, body.password)
+        userRepository.updatePassword(user.id, password)
         return Result.success(Unit)
     }
 }

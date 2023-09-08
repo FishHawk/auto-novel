@@ -9,7 +9,6 @@ import { mapOk } from '@/data/api/result';
 import { Loader } from './components/NovelList.vue';
 
 const message = useMessage();
-
 const userData = useUserDataStore();
 
 const loader: Loader = (page: number, query: string, _selected: number[]) => {

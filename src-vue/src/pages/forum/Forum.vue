@@ -12,7 +12,7 @@ import { useUserDataStore } from '@/data/stores/userData';
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
-const authInfo = useUserDataStore();
+const userData = useUserDataStore();
 
 function parsePage(q: typeof route.query) {
   return parseInt(route.query.page as string) || 1;
@@ -145,7 +145,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
             </td>
             <td class="article-number">
               {{ article.numViews }}/{{ article.numComments }}
-              <template v-if="authInfo.asAdmin" trigger="click">
+              <template v-if="userData.asAdmin" trigger="click">
                 <br />
                 <n-dropdown
                   trigger="hover"

@@ -1,6 +1,5 @@
 package api
 
-import api.dto.PageDto
 import infra.ArticleRepository
 import infra.UserRepository
 import infra.model.UserOutline
@@ -25,7 +24,7 @@ private class ArticleRes {
     )
 
     @Resource("/{id}")
-    data class Id(
+    class Id(
         val parent: ArticleRes,
         val id: String,
     ) {
@@ -51,7 +50,7 @@ fun Route.routeArticle() {
 
     authenticate {
         @Serializable
-        data class ArticleBody(val title: String, val content: String)
+        class ArticleBody(val title: String, val content: String)
 
         post<ArticleRes> {
             val jwtUser = call.jwtUser()
@@ -114,7 +113,7 @@ class ArticleApi(
     private val userRepo: UserRepository,
 ) {
     @Serializable
-    data class ArticleOutlineDto(
+    class ArticleOutlineDto(
         val id: String,
         val title: String,
         val locked: Boolean,
@@ -150,7 +149,7 @@ class ArticleApi(
     }
 
     @Serializable
-    data class ArticleDto(
+    class ArticleDto(
         val id: String,
         val title: String,
         val content: String,

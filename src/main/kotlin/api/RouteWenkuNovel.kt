@@ -1,12 +1,7 @@
 package api
 
-import api.dto.PageDto
-import api.dto.WenkuNovelDto
-import api.dto.WenkuNovelOutlineDto
 import infra.UserRepository
-import infra.model.NovelFileLang
-import infra.model.TranslatorId
-import infra.model.WenkuNovelVolumeJp
+import infra.model.*
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -37,6 +32,14 @@ private class WenkuNovelRes {
         val query: String? = null,
     )
 
+    @Resource("/favored")
+    class Favored(
+        val parent: WenkuNovelRes,
+        val page: Int,
+        val pageSize: Int = 10,
+        val sort: FavoriteListSort,
+    )
+
     @Resource("/non-archived")
     class VolumesNonArchived(val parent: WenkuNovelRes)
 
@@ -45,6 +48,9 @@ private class WenkuNovelRes {
 
     @Resource("/{novelId}")
     class Id(val parent: WenkuNovelRes, val novelId: String) {
+        @Resource("/favored")
+        class Favored(val parent: Id)
+
         @Resource("/glossary")
         class Glossary(val parent: Id)
 
@@ -78,6 +84,35 @@ fun Route.routeWenkuNovel() {
             pageSize = 24,
         )
         call.respondResult(result)
+    }
+
+    authenticate {
+        get<WenkuNovelRes.Favored> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.listFavored(
+                username = jwtUser.username,
+                page = loc.page.coerceAtLeast(0),
+                pageSize = loc.pageSize.coerceAtMost(20),
+                sort = loc.sort,
+            )
+            call.respondResult(result)
+        }
+        put<WenkuNovelRes.Id.Favored> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.setFavored(
+                username = jwtUser.username,
+                novelId = loc.parent.novelId,
+            )
+            call.respondResult(result)
+        }
+        delete<WenkuNovelRes.Id.Favored> { loc ->
+            val jwtUser = call.jwtUser()
+            val result = service.removeFavored(
+                username = jwtUser.username,
+                novelId = loc.parent.novelId,
+            )
+            call.respondResult(result)
+        }
     }
 
     get<WenkuNovelRes.VolumesNonArchived> { loc ->
@@ -220,18 +255,51 @@ class WenkuNovelApi(
     private val volumeRepo: WenkuNovelVolumeRepository,
     private val uploadHistoryRepo: WenkuNovelUploadHistoryRepository,
 ) {
+    @Serializable
+    class NovelOutlineDto(
+        val id: String,
+        val title: String,
+        val titleZh: String,
+        val cover: String,
+    ) {
+        constructor(it: WenkuNovelMetadataOutline) : this(
+            id = it.id,
+            title = it.title,
+            titleZh = it.titleZh,
+            cover = it.cover,
+        )
+    }
+
     suspend fun list(
         queryString: String?,
         page: Int,
         pageSize: Int,
-    ): Result<PageDto<WenkuNovelOutlineDto>> {
+    ): Result<PageDto<NovelOutlineDto>> {
         val novelPage = metadataRepo.search(
             queryString = queryString,
             page = page,
             pageSize = pageSize,
         )
         val dto = PageDto.fromPage(novelPage, pageSize) {
-            WenkuNovelOutlineDto.fromDomain(it)
+            NovelOutlineDto(it)
+        }
+        return Result.success(dto)
+    }
+
+    suspend fun listFavored(
+        username: String,
+        page: Int,
+        pageSize: Int,
+        sort: FavoriteListSort,
+    ): Result<PageDto<NovelOutlineDto>> {
+        val novelPage = userRepo.listFavoriteWenkuNovel(
+            username = username,
+            page = page,
+            pageSize = pageSize,
+            sort = sort,
+        )
+        val dto = PageDto.fromPage(novelPage, pageSize) {
+            NovelOutlineDto(it)
         }
         return Result.success(dto)
     }
@@ -254,10 +322,28 @@ class WenkuNovelApi(
         return Result.success(WenkuUserVolumeDto(list = volumes, novelId = novelId))
     }
 
+    @Serializable
+    class NovelDto(
+        val title: String,
+        val titleZh: String,
+        val titleZhAlias: List<String>,
+        val cover: String,
+        val coverSmall: String,
+        val authors: List<String>,
+        val artists: List<String>,
+        val keywords: List<String>,
+        val introduction: String,
+        val glossary: Map<String, String>,
+        val visited: Long,
+        val favored: Boolean?,
+        val volumeZh: List<String>,
+        val volumeJp: List<WenkuNovelVolumeJp>,
+    )
+
     suspend fun getMetadata(
         novelId: String,
         username: String?,
-    ): Result<WenkuNovelDto> {
+    ): Result<NovelDto> {
         val favored = username?.let {
             userRepo.isUserFavoriteWenkuNovel(it, novelId)
         }
@@ -268,7 +354,7 @@ class WenkuNovelApi(
 
         val volumes = volumeRepo.list(novelId)
 
-        val metadataDto = WenkuNovelDto(
+        val metadataDto = NovelDto(
             title = metadata.title,
             titleZh = metadata.titleZh,
             titleZhAlias = metadata.titleZhAlias,
@@ -299,6 +385,28 @@ class WenkuNovelApi(
         val keywords: List<String>,
         val introduction: String,
     )
+
+    suspend fun setFavored(username: String, novelId: String): Result<Unit> {
+        if (!metadataRepo.exist(novelId)) {
+            return httpNotFound("书不存在")
+        }
+        userRepo.addFavoriteWenkuNovel(
+            username = username,
+            novelId = novelId,
+        )
+        return Result.success(Unit)
+    }
+
+    suspend fun removeFavored(username: String, novelId: String): Result<Unit> {
+        if (!metadataRepo.exist(novelId)) {
+            return httpNotFound("书不存在")
+        }
+        userRepo.removeFavoriteWenkuNovel(
+            username = username,
+            novelId = novelId,
+        )
+        return Result.success(Unit)
+    }
 
     suspend fun createMetadata(
         body: MetadataCreateBody,

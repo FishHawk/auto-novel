@@ -1,11 +1,10 @@
-package api.dto
+package api
 
 import infra.model.Page
-import infra.model.UserOutline
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PageDto<T>(
+class PageDto<T>(
     val items: List<T>,
     val pageNumber: Long,
 ) {
