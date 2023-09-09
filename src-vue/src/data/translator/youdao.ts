@@ -58,7 +58,7 @@ export class YoudaoTranslator implements Translator {
 
       this.key = json['data']['secretKey'];
     } catch (e) {
-      console.log('无法获得Key，使用默认值');
+      this.log('无法获得Key，使用默认值');
     }
     return this;
   }
@@ -87,11 +87,19 @@ export class YoudaoTranslator implements Translator {
       })
       .text();
 
-    const json = decode(text);
-    const result = json['translateResult'].map((it: any) => {
-      return it.map((it: any) => it.tgt.trimEnd()).join('');
-    });
-    return result;
+    const decoded = decode(text);
+    try {
+      const obj = JSON.parse(decoded);
+      const result = obj['translateResult'].map((it: any) =>
+        it.map((it: any) => it.tgt.trimEnd()).join('')
+      );
+      return result;
+    } catch (e: any) {
+      this.log(`　解码错误：${decoded}`);
+      this.log('　目前有道翻译在部分机子上有问题，原因尚不清楚');
+      this.log('　不过你可以选择手动修改cookie来解决，具体方法参考插件教程');
+      throw 'quit';
+    }
   }
 }
 
@@ -127,6 +135,5 @@ function decode(src: string) {
     key,
     { iv }
   ).toString(CryptoJS.enc.Utf8);
-  const json = JSON.parse(dec);
-  return json;
+  return dec;
 }
