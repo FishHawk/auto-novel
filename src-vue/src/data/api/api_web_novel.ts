@@ -1,9 +1,5 @@
-import {
-  TranslatorConfig,
-  TranslatorId,
-  createTranslator,
-} from '@/data/translator/translator';
 import { Translator } from '@/data/translator/base';
+import { TranslatorId, createTranslator } from '@/data/translator/translator';
 
 import { api } from './api';
 import { Result, runCatching } from './result';
@@ -258,7 +254,10 @@ const translate = async (
     toc: string[];
     glossaryUuid?: string;
     glossary: { [key: string]: string };
-    chapters: { [key: number]: 'untranslated' | 'translated' | 'expired' };
+    chapters: {
+      id: string;
+      state: 'untranslated' | 'translated' | 'expired';
+    }[];
   }
 
   interface MetadataUpdateBody {
@@ -322,30 +321,27 @@ const translate = async (
 
   // Task
   let task: TranslateTaskDto;
-  let translator: Translator;
   try {
     callback.log('获取元数据');
     task = await getTranslateTask();
+  } catch (e: any) {
+    callback.log(`发生错误，结束翻译任务：${e}`);
+    return;
+  }
 
-    try {
-      const config: TranslatorConfig = {
-        log: (message) => callback.log('　　' + message),
-      };
-      if (translatorId === 'gpt') {
-        if (!accessToken) {
-          throw Error('GPT翻译需要输入Token');
-        } else {
-          config.accessToken = accessToken;
-        }
-      } else {
-        config.glossary = task.glossary;
-      }
-      translator = await createTranslator(translatorId, config);
-    } catch (e: any) {
-      callback.log(`发生错误，无法创建翻译器：${e}`);
-      return;
-    }
+  let translator: Translator;
+  try {
+    translator = await createTranslator(translatorId, {
+      glossary: task.glossary,
+      accessToken,
+      log: (message) => callback.log('　　' + message),
+    });
+  } catch (e: any) {
+    callback.log(`发生错误，无法创建翻译器：${e}`);
+    return;
+  }
 
+  try {
     const textsSrc = encodeMetadataToTranslate(task);
     if (textsSrc.length > 0) {
       if (translatorId === 'gpt') {
@@ -361,12 +357,17 @@ const translate = async (
       }
     }
   } catch (e: any) {
-    callback.log(`发生错误，结束翻译任务：${e}`);
-    return;
+    if (e === 'quit') {
+      callback.log(`发生错误，结束翻译任务`);
+      return;
+    } else {
+      callback.log(`发生错误，跳过：${e}`);
+      callback.onChapterFailure();
+    }
   }
 
-  const chapters = Object.entries(task.chapters)
-    .map(([chapterId, state], index) => ({ index, chapterId, state }))
+  const chapters = task.chapters
+    .map(({ id, state }, index) => ({ index, chapterId: id, state }))
     .slice(startIndex, endIndex)
     .filter(({ state }) => {
       if (state === 'untranslated') {
@@ -411,7 +412,7 @@ const translate = async (
         callback.log(`发生错误，结束翻译任务`);
         return;
       } else {
-        callback.log(`发生错误，跳过这个章节：${e}`);
+        callback.log(`发生错误，跳过：${e}`);
         callback.onChapterFailure();
       }
     }

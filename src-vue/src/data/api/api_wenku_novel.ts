@@ -1,11 +1,7 @@
 import ky from 'ky';
 
 import { Translator } from '@/data/translator/base';
-import {
-  TranslatorConfig,
-  TranslatorId,
-  createTranslator,
-} from '@/data/translator/translator';
+import { TranslatorId, createTranslator } from '@/data/translator/translator';
 
 import { api } from './api';
 import { Ok, runCatching } from './result';
@@ -215,19 +211,11 @@ const translate = async (
 
   let translator: Translator;
   try {
-    const config: TranslatorConfig = {
+    translator = await createTranslator(translatorId, {
+      glossary: task.glossary,
+      accessToken,
       log: (message) => callback.log('　　' + message),
-    };
-    if (translatorId === 'gpt') {
-      if (!accessToken) {
-        throw Error('GPT翻译需要输入Token');
-      } else {
-        config.accessToken = accessToken;
-      }
-    } else {
-      config.glossary = task.glossary;
-    }
-    translator = await createTranslator(translatorId, config);
+    });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
     return;
@@ -261,7 +249,7 @@ const translate = async (
         callback.log(`发生错误，结束翻译任务`);
         return;
       } else {
-        callback.log(`发生错误，跳过这个章节：${e}`);
+        callback.log(`发生错误，跳过：${e}`);
         callback.onChapterFailure();
       }
     }

@@ -113,10 +113,14 @@ const linkExample = [
       </div>
     </template>
 
-    <n-space :wrap="false" style="max-width: 600px">
+    <n-space :wrap="false" style="max-width: 650px">
       <img v-if="isDesktop" src="/qq.png" width="120" />
 
       <n-ul>
+        <n-li>
+          <b style="color: red">GPT术语表进入测试阶段</b>：现在GPT也支持术语表了。目前版本可能会因为术语表过大导致GPT回复行数不匹配，遇到的话欢迎反馈。
+          默认不再会更新术语表过期章节，需要在高级选项里面打开<n-text code>翻译过期章节</n-text>。
+        </n-li>
         <n-li>
           <b>使用说明</b>
           ：将想要翻译的小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。
@@ -139,9 +143,6 @@ const linkExample = [
         <n-li>
           新建了个交流群：819513328，加群验证的答案是“绿色”。
           无论你是想上传自己收集的资源，还是单纯想讨论轻小说，都欢迎加群。
-        </n-li>
-        <n-li>
-          现在默认不会更新术语表过期章节了，需要在高级选项里面选择。
         </n-li>
       </n-ul>
     </n-space>

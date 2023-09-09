@@ -19,5 +19,3 @@ data class Glossary(
     val id: String,
     val map: Map<String, String>,
 )
-
-fun TranslatorId.supportGlossary() = this != TranslatorId.Gpt

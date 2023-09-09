@@ -129,7 +129,8 @@ class WebNovelChapterRepository(
             )
 
             TranslatorId.Gpt -> combine(
-                // GPT暂不支持术语表
+                setValue(WebNovelChapter::gptGlossaryUuid, glossary?.id),
+                setValue(WebNovelChapter::gptGlossary, glossary?.map ?: emptyMap()),
                 setValue(WebNovelChapter::gptParagraphs, paragraphsZh)
             )
         }

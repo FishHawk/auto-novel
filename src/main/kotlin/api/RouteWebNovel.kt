@@ -722,8 +722,14 @@ class WebNovelApi(
         val toc: List<String>,
         val glossaryUuid: String?,
         val glossary: Map<String, String>,
-        val chapters: Map<String, ChapterState>,
+        val chapters: List<ChapterIdWithState>,
     ) {
+        @Serializable
+        class ChapterIdWithState(
+            val id: String,
+            val state: ChapterState,
+        )
+
         @Serializable
         enum class ChapterState {
             @SerialName("untranslated")
@@ -758,7 +764,7 @@ class WebNovelApi(
         )
         val chapters = novel.toc
             .mapNotNull { it.chapterId }
-            .associateWith { chapterId ->
+            .map { chapterId ->
                 val chapterTranslationOutline = chapterTranslationOutlines.find {
                     it.chapterId == chapterId
                 }
@@ -769,7 +775,10 @@ class WebNovelApi(
                 } else {
                     TranslateTaskDto.ChapterState.TranslatedAndExpired
                 }
-                chapterState
+                TranslateTaskDto.ChapterIdWithState(
+                    id = chapterId,
+                    state = chapterState,
+                )
             }
 
         return Result.success(

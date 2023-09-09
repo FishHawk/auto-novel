@@ -8,7 +8,7 @@ export type TranslatorId = 'baidu' | 'youdao' | 'gpt';
 export interface TranslatorConfig {
   glossary?: Glossary;
   accessToken?: string;
-  log?: (message: string) => void;
+  log: (message: string) => void;
 }
 
 export async function createTranslator(
@@ -16,20 +16,16 @@ export async function createTranslator(
   config: TranslatorConfig
 ): Promise<Translator> {
   if (id === 'baidu') {
-    return await new BaiduTranslator(
-      config.log ?? console.log,
-      config.glossary ?? {}
-    ).init();
+    return await new BaiduTranslator(config.log, config.glossary ?? {}).init();
   } else if (id === 'youdao') {
-    return await new YoudaoTranslator(
-      config.log ?? console.log,
-      config.glossary ?? {}
-    ).init();
+    return await new YoudaoTranslator(config.log, config.glossary ?? {}).init();
   } else {
-    if (!config.accessToken) throw new Error('Gpt翻译器需要Token');
+    if (!config.accessToken) {
+      throw new Error('Gpt翻译器需要Token');
+    }
     return new OpenAiTranslator(
-      config.log ?? console.log,
-      {},
+      config.log,
+      config.glossary ?? {},
       config.accessToken
     );
   }

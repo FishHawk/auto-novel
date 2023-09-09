@@ -283,42 +283,6 @@ class WenkuNovelVolumeRepository {
         }
     }
 
-    suspend fun updateTranslation(
-        novelId: String,
-        volumeId: String,
-        translatorId: TranslatorId,
-        chapterId: String,
-        paragraphsZh: Map<Int, String>,
-        glossaryUuid: String,
-        glossary: Map<String, String>,
-    ) = withContext(Dispatchers.IO) {
-        val type = when (translatorId) {
-            TranslatorId.Baidu -> "baidu"
-            TranslatorId.Youdao -> "youdao"
-            TranslatorId.Gpt -> "gpt"
-        }
-        val oldChapter = getChapter(novelId, volumeId, type, chapterId)!!
-        val newChapter = oldChapter.mapIndexed { index, it -> paragraphsZh[index] ?: it }
-
-        val path = root / novelId / "$volumeId.unpack" / type / chapterId
-        path.writeLines(newChapter)
-
-        val gType = when (translatorId) {
-            TranslatorId.Baidu -> "baidu.g"
-            TranslatorId.Youdao -> "youdao.g"
-            TranslatorId.Gpt -> "gpt.g"
-        }
-        val gPath = root / novelId / "$volumeId.unpack" / gType / chapterId
-        if (gPath.parent.notExists()) {
-            gPath.parent.createDirectories()
-        }
-        if (gPath.notExists()) {
-            gPath.writeText(
-                Json.encodeToString(ChapterGlossary(glossaryUuid, glossary))
-            )
-        }
-    }
-
     suspend fun makeTranslationVolumeFile(
         novelId: String,
         volumeId: String,
