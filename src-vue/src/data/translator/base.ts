@@ -1,5 +1,4 @@
 import { customAlphabet } from 'nanoid';
-import { get_encoding } from 'tiktoken';
 
 const filterInput = (input: string[]) =>
   input
@@ -90,12 +89,25 @@ export const createTokenSegmenterWrapper = (
   maxToken: number,
   maxLine: number
 ) => {
-  const segmenter = (input: string[]) => {
+  return async (
+    input: string[],
+    callback: (
+      seg: string[],
+      segInfo: { index: number; size: number }
+    ) => Promise<string[]>
+  ) => {
+    const Tiktoken = (await import('tiktoken/lite')).Tiktoken;
+    const p50k_base = (await import('tiktoken/encoders/p50k_base')).default;
+    const encoder = new Tiktoken(
+      p50k_base.bpe_ranks,
+      p50k_base.special_tokens,
+      p50k_base.pat_str
+    );
+
     const segs: string[][] = [];
     let seg: string[] = [];
     let segSize = 0;
 
-    const encoder = get_encoding('p50k_base');
     for (const line of input) {
       const lineSize = encoder.encode(line).length;
       if (
@@ -130,22 +142,14 @@ export const createTokenSegmenterWrapper = (
     }
 
     encoder.free();
-    return segs;
-  };
-  return async (
-    input: string[],
-    callback: (
-      seg: string[],
-      segInfo: { index: number; size: number }
-    ) => Promise<string[]>
-  ) => {
+
     let output: string[] = [];
-    const segs = segmenter(input);
     const size = segs.length;
     for (const [index, seg] of segs.entries()) {
       const segOutput = await callback(seg, { index, size });
       output = output.concat(segOutput);
     }
+
     return output;
   };
 };

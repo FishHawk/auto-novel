@@ -43,6 +43,9 @@ li {
 .n-layout .n-layout-scroll-container {
   overflow-x: visible;
 }
+.n-scrollbar-rail {
+  z-index: 10000;
+}
 .text-2line {
   display: -webkit-box;
   -webkit-line-clamp: 2;

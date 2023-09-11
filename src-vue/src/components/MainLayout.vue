@@ -210,9 +210,6 @@ function onSignInSuccess(info: SignInDto): void {
 </template>
 
 <style>
-div.n-scrollbar-rail {
-  z-index: 10000;
-}
 .header {
   display: flex;
   align-items: center;

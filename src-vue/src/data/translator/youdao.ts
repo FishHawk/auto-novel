@@ -1,5 +1,4 @@
 import ky from 'ky';
-import CryptoJS from 'crypto-js';
 
 import {
   Glossary,
@@ -50,7 +49,7 @@ export class YoudaoTranslator implements Translator {
         .get('https://dict.youdao.com/webtranslate/key', {
           searchParams: {
             keyid: 'webfanyi-key-getter',
-            ...getBaseBody('asdjnjfenknafdfsdfsd'),
+            ...(await getBaseBody('asdjnjfenknafdfsdfsd')),
           },
           credentials: 'include',
         })
@@ -70,7 +69,7 @@ export class YoudaoTranslator implements Translator {
       to: 'zh-CHS',
       dictResult: true,
       keyid: 'webfanyi',
-      ...getBaseBody(this.key),
+      ...(await getBaseBody(this.key)),
     };
     const searchParams = new URLSearchParams();
     for (const name in form) {
@@ -87,7 +86,7 @@ export class YoudaoTranslator implements Translator {
       })
       .text();
 
-    const decoded = decode(text);
+    const decoded = await decode(text);
     try {
       const obj = JSON.parse(decoded);
       const result = obj['translateResult'].map((it: any) =>
@@ -103,12 +102,13 @@ export class YoudaoTranslator implements Translator {
   }
 }
 
-function getBaseBody(key: string) {
+async function getBaseBody(key: string) {
   const c = 'fanyideskweb';
   const p = 'webfanyi';
   const t = Date.now().toString();
 
-  const sign = CryptoJS.MD5(
+  const MD5 = (await import('crypto-js/md5')).default;
+  const sign = MD5(
     `client=${c}&mysticTime=${t}&product=${p}&key=${key}`
   ).toString();
   return {
@@ -123,17 +123,19 @@ function getBaseBody(key: string) {
   };
 }
 
-function decode(src: string) {
-  const key = CryptoJS.MD5(
+async function decode(src: string) {
+  const AES = (await import('crypto-js/aes')).default;
+  const MD5 = (await import('crypto-js/md5')).default;
+  const Utf8 = (await import('crypto-js/enc-utf8')).default;
+
+  const key = MD5(
     'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
   );
-  const iv = CryptoJS.MD5(
+  const iv = MD5(
     'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4'
   );
-  const dec = CryptoJS.AES.decrypt(
-    src.replace(/_/g, '/').replace(/-/g, '+'),
-    key,
-    { iv }
-  ).toString(CryptoJS.enc.Utf8);
+  const dec = AES.decrypt(src.replace(/_/g, '/').replace(/-/g, '+'), key, {
+    iv,
+  }).toString(Utf8);
   return dec;
 }

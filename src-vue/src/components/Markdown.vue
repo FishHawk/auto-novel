@@ -9,17 +9,17 @@ const vars = useThemeVars();
 </script>
 
 <template>
-  <div class="md" v-html="md.render(source)" />
+  <div class="markdown" v-html="md.render(source)" />
 </template>
 
 <style>
-.md a {
+.markdown a {
   transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
   cursor: pointer;
   text-decoration: none;
   color: v-bind('vars.primaryColor');
 }
-.md p {
+.markdown p {
   transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
   box-sizing: border-box;
   margin: 16px 0 16px 0;
@@ -27,42 +27,42 @@ const vars = useThemeVars();
   line-height: v-bind('vars.lineHeight');
   color: v-bind('vars.textColor2');
 }
-.md ul,
-ol {
+.markdown ul,
+.markdown ol {
   font-size: v-bind('vars.fontSize');
   padding: 0 0 0 2em;
 }
-.md li {
+.markdown li {
   transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
   line-height: v-bind('vars.lineHeight');
   margin: 0.25em 0 0 0;
   margin-bottom: 0;
   color: v-bind('vars.textColor2');
 }
-.md code {
+.markdown code {
   padding: 2px 4px;
   font-size: 90%;
   color: #c7254e;
   background-color: #f9f2f4;
 }
-.md img {
+.markdown img {
   max-width: 100%;
 }
-.md table {
+.markdown table {
   border-spacing: 0;
   border-collapse: collapse;
 }
-.md th {
+.markdown th {
   white-space: nowrap;
   background-color: rgb(250, 250, 252);
 }
-.md th,
-td {
+.markdown th,
+.markdown td {
   padding: 12px;
   border-bottom: 1px solid rgb(239, 239, 245);
 }
-.md tr th:not(:last-child),
-td:not(:last-child) {
+.markdown tr th:not(:last-child),
+.markdown td:not(:last-child) {
   border-right: 1px solid rgb(239, 239, 245);
 }
 </style>

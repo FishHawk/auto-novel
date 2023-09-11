@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
@@ -13,6 +13,7 @@ import { useUserDataStore } from '@/data/stores/userData';
 import { useIsDesktop } from '@/data/util';
 
 const isDesktop = useIsDesktop(900);
+const userData = useUserDataStore();
 const router = useRouter();
 
 const url = ref('');
@@ -27,7 +28,6 @@ function query(url: string) {
   }
 }
 
-const userData = useUserDataStore();
 const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadFavorite() {
   const result = await ApiWebNovel.listFavored(0, 8, 'update');
@@ -37,7 +37,13 @@ async function loadFavorite() {
     favoriteList.value = result;
   }
 }
-loadFavorite();
+watch(
+  userData,
+  (userData) => {
+    if (userData.logined) loadFavorite();
+  },
+  { immediate: true }
+);
 
 const latestUpdateWeb = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadLatestUpdateWeb() {
@@ -118,8 +124,11 @@ const linkExample = [
 
       <n-ul>
         <n-li>
-          <b style="color: red">GPT术语表进入测试阶段</b>：现在GPT也支持术语表了。目前版本可能会因为术语表过大导致GPT回复行数不匹配，遇到的话欢迎反馈。
-          默认不再会更新术语表过期章节，需要在高级选项里面打开<n-text code>翻译过期章节</n-text>。
+          <b style="color: red">GPT术语表进入测试阶段</b
+          >：现在GPT也支持术语表了。目前版本可能会因为术语表过大导致GPT回复行数不匹配，遇到的话欢迎反馈。
+          默认不再会更新术语表过期章节，需要在高级选项里面打开<n-text code
+            >翻译过期章节</n-text
+          >。
         </n-li>
         <n-li>
           <b>使用说明</b>
