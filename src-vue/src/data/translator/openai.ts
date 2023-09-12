@@ -451,8 +451,7 @@ class OpenAi {
   constructor(accessToken: string) {
     this.accessToken = accessToken;
     this.api = ky.create({
-      prefixUrl: 'https://bypass.churchless.tech',
-      credentials: 'include',
+      prefixUrl: 'https://ai.fakeopen.com/api',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
