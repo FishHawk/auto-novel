@@ -32,45 +32,52 @@ export class BaiduTranslator implements Translator {
 
   private token = '';
   private gtk = '';
+  private api = ky.create({
+    prefixUrl: 'https://fanyi.baidu.com',
+    credentials: 'include',
+  });
+
   async init() {
     await this.loadMainPage();
     await this.loadMainPage();
+    if (this.token === '') throw Error('无法获取token');
+    if (this.gtk === '') throw Error('无法获取gtk');
     return this;
   }
 
   private async loadMainPage() {
-    const html = await ky
-      .get('https://fanyi.baidu.com', { credentials: 'include' })
-      .text();
-    this.token = html.match(/token: '(.*?)',/)!![1];
-    this.gtk = html.match(/window.gtk = "(.*?)";/)!![1];
+    const html = await this.api.get('').text();
+
+    const match = (pattern: RegExp) => {
+      const res = html.match(pattern);
+      if (res) return res[1];
+      else return null;
+    };
+
+    this.token = match(/token: '(.*?)',/) ?? '';
+    this.gtk =
+      match(/window\.gtk = "(.*?)";/) ?? // Desktop
+      match(/gtk: '(.*?)'/) ?? // Mobile
+      '';
   }
 
   async translateSegment(input: string[]): Promise<string[]> {
     // 开头的空格似乎会导致998错误
     const newInput = input.slice();
     newInput[0] = newInput[0].trimStart();
-
     const query = newInput.join('\n');
-    const sign = token(query, this.gtk);
-    const data = {
-      from: 'jp',
-      to: 'zh',
-      query: query,
-      simple_means_flag: 3,
-      sign: sign,
-      token: this.token,
-      domain: 'common',
-    };
-    const searchParams = new URLSearchParams();
-    for (const name in data) {
-      searchParams.append(name, (data as any)[name].toString());
-    }
 
-    const json: any = await ky
-      .post('https://fanyi.baidu.com/v2transapi', {
-        body: searchParams,
-        credentials: 'include',
+    const json: any = await this.api
+      .post('v2transapi', {
+        body: new URLSearchParams({
+          from: 'jp',
+          to: 'zh',
+          query,
+          simple_means_flag: '3',
+          sign: sign(query, this.gtk),
+          token: this.token,
+          domain: 'common',
+        }),
       })
       .json();
 
@@ -99,49 +106,61 @@ function a(r: any, o: any) {
   }
   return r;
 }
-var C: any = null;
-var token = function (r: any, _gtk: any) {
-  var o = r.length;
-  o > 30 &&
-    (r =
-      '' +
-      r.substr(0, 10) +
-      r.substr(Math.floor(o / 2) - 5, 10) +
-      r.substring(r.length, r.length - 10));
-  var t: any = void 0,
-    t = null !== C ? C : (C = _gtk || '') || '';
-  for (
-    var e = t.split('.'),
-      h = Number(e[0]) || 0,
-      i = Number(e[1]) || 0,
-      d = [],
-      f = 0,
-      g = 0;
-    g < r.length;
-    g++
-  ) {
-    var m = r.charCodeAt(g);
-    128 > m
-      ? (d[f++] = m)
-      : (2048 > m
-          ? (d[f++] = (m >> 6) | 192)
-          : (55296 === (64512 & m) &&
-            g + 1 < r.length &&
-            56320 === (64512 & r.charCodeAt(g + 1))
-              ? ((m = 65536 + ((1023 & m) << 10) + (1023 & r.charCodeAt(++g))),
-                (d[f++] = (m >> 18) | 240),
-                (d[f++] = ((m >> 12) & 63) | 128))
-              : (d[f++] = (m >> 12) | 224),
-            (d[f++] = ((m >> 6) & 63) | 128)),
-        (d[f++] = (63 & m) | 128));
+
+const sign = function (r: string, gtk: string) {
+  if (r.length > 30) {
+    const first10Chars = r.substr(0, 10);
+    const middle10Chars = r.substr(Math.floor(r.length / 2) - 5, 10);
+    const last10Chars = r.substring(r.length - 10, r.length);
+    r = first10Chars + middle10Chars + last10Chars;
   }
-  for (var S = h, u = '+-a^+6', l = '+-3^+b+-f', s = 0; s < d.length; s++)
-    (S += d[s]), (S = a(S, u));
-  return (
-    (S = a(S, l)),
-    (S ^= i),
-    0 > S && (S = (2147483647 & S) + 2147483648),
-    (S %= 1e6),
-    S.toString() + '.' + (S ^ h)
-  );
+
+  const encodedCodes = [];
+  for (let i = 0, j = 0; i < r.length; i++) {
+    let char = r.charCodeAt(i);
+    if (char < 128) {
+      encodedCodes[j++] = char;
+    } else if (char < 2048) {
+      encodedCodes[j++] = (char >> 6) | 192;
+    } else {
+      if (
+        55296 === (64512 & char) &&
+        i + 1 < r.length &&
+        56320 === (64512 & r.charCodeAt(i + 1))
+      ) {
+        char = 65536 + ((1023 & char) << 10) + (1023 & r.charCodeAt(++i));
+        encodedCodes[j++] = (char >> 18) | 240;
+        encodedCodes[j++] = ((char >> 12) & 63) | 128;
+      } else {
+        encodedCodes[j++] = (char >> 12) | 224;
+        encodedCodes[j++] = ((char >> 6) & 63) | 128;
+      }
+      encodedCodes[j++] = (63 & char) | 128;
+    }
+  }
+
+  const gtkArray = gtk.split('.');
+  const gtk1 = Number(gtkArray[0]) || 0;
+  const gtk2 = Number(gtkArray[1]) || 0;
+
+  let S = gtk1;
+  const key1 = '+-a^+6';
+  const key2 = '+-3^+b+-f';
+
+  for (let s = 0; s < encodedCodes.length; s++) {
+    S += encodedCodes[s];
+    S = a(S, key1);
+  }
+
+  S = a(S, key2);
+
+  S ^= gtk2;
+
+  if (S < 0) {
+    S = (2147483647 & S) + 2147483648;
+  }
+
+  S %= 1e6;
+
+  return S.toString() + '.' + (S ^ gtk1);
 };
