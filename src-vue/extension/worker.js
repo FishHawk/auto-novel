@@ -1,23 +1,15 @@
 const notify = (e) => alert(e.message || e);
 
-const domain = 'https://books.fishhawk.top';
-const domainDebug = 'http://localhost:5173';
-const domainGA = 'https://www.google-analytics.com';
-
 function isUrlFromMySite(url) {
-  return (
-    url !== undefined && (url.startsWith(domain) || url.startsWith(domainDebug))
-  );
+  return url.includes('fishhawk.top') || url.includes('localhost');
 }
 
 function shouldHandleRequest(d) {
   const urlSrc = d.initiator ?? d.originUrl;
   const urlDst = d.url;
+  if (!urlSrc || !urlDst) return false;
   const fromMySite = isUrlFromMySite(urlSrc);
-  const requestMySite =
-    urlDst.startsWith(domain) ||
-    urlDst.startsWith(domainDebug) ||
-    urlDst.startsWith(domainGA);
+  const requestMySite = isUrlFromMySite(urlDst) || urlDst.includes('google');
   return fromMySite && !requestMySite;
 }
 
