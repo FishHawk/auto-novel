@@ -2,6 +2,8 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
+import qqUrl from '@/images/qq.png';
+import bannerUrl from '@/images/banner.webp';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
   ApiWenkuNovel,
@@ -84,13 +86,12 @@ const linkExample = [
   <MainLayout>
     <template v-slot:full-width>
       <div
-        style="
-          background: url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80');
-          width: 100%;
-          padding-top: 60px;
-          padding-bottom: 104px;
-          margin-bottom: 20px;
-        "
+        :style="{
+          background: `url(${bannerUrl})`,
+          width: '100%',
+          'padding-top': '60px',
+          'padding-bottom': '104px',
+        }"
       >
         <div class="container" style="max-width: 800px">
           <n-h1
@@ -119,8 +120,11 @@ const linkExample = [
       </div>
     </template>
 
-    <n-space :wrap="false" style="max-width: 650px">
-      <img v-if="isDesktop" src="/qq.png" width="120" />
+    <n-space
+      :wrap="false"
+      style="max-width: 650px; margin-top: 20px; margin-bottom: 20px"
+    >
+      <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
         <n-li>
@@ -155,7 +159,6 @@ const linkExample = [
         </n-li>
       </n-ul>
     </n-space>
-    <n-divider />
 
     <template v-if="userData.logined">
       <SectionHeader title="我的收藏">

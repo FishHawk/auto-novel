@@ -4,6 +4,7 @@ import { FormRules, FormItemRule, FormInst, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import avaterUrl from '@/images/avater.jpg';
 import { ApiArticle } from '@/data/api/api_article';
 
 const route = useRoute();
@@ -103,7 +104,7 @@ const formatExample: [string, string][] = [
   ['分隔线', '---'],
   ['列表', '- 第一项\n- 第二项\n- 第三项\n'],
   ['链接', '[链接名称](https://books.fishhawk.top)'],
-  ['网络图片', '![](https://semantic-ui.com/images/avatar/small/matt.jpg)'],
+  ['网络图片', `![](${avaterUrl})`],
   ['多级标题', '# 一级标题\n\n## 二级标题\n\n### 三级标题'],
 ];
 </script>
