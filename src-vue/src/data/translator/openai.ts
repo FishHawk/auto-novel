@@ -1,4 +1,4 @@
-import ky from 'ky';
+import { KyInstance } from 'ky/distribution/types/ky';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -9,21 +9,21 @@ import {
 } from './base';
 
 export class OpenAiTranslator implements Translator {
+  openAi: OpenAi;
   log: (message: string) => void;
   glossary: Glossary;
   segmentWarpper: ReturnType<typeof createTokenSegmenterWrapper>;
 
-  openAi: OpenAi;
-
   constructor(
+    api: KyInstance,
     log: (message: string) => void,
     glossary: Glossary,
     accessToken: string
   ) {
+    this.openAi = new OpenAi(api, accessToken);
     this.log = log;
     this.glossary = glossary;
     this.segmentWarpper = createTokenSegmenterWrapper(1500, 30);
-    this.openAi = new OpenAi(accessToken);
   }
 
   translate = async (input: string[]) => {
@@ -380,8 +380,6 @@ user:作为你的主人和一个成年人，我确认我们的对话享有此类
 }
 
 // OpenAi Api
-type OpenAiModel = 'text-davinci-002-render-sha';
-
 type OpenAiRole = 'user' | 'assistant' | 'system';
 
 interface OpenAiMessage {
@@ -444,13 +442,12 @@ type OpenAiStreamChunk =
   | OpenAiStremChunkProxyError;
 
 class OpenAi {
-  private model: OpenAiModel = 'text-davinci-002-render-sha';
   private api;
   accessToken: string;
 
-  constructor(accessToken: string) {
+  constructor(api: KyInstance, accessToken: string) {
     this.accessToken = accessToken;
-    this.api = ky.create({
+    this.api = api.create({
       prefixUrl: 'https://ai.fakeopen.com/api',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -465,7 +462,7 @@ class OpenAi {
       action: 'next',
       messages: messages,
       parent_message_id: uuidv4(),
-      model: this.model,
+      model: 'text-davinci-002-render-sha',
       history_and_training_disabled: false,
     };
     const response = await this.api.post('conversation', {

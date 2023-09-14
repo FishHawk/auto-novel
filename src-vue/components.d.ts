@@ -20,7 +20,7 @@ declare module 'vue' {
     ListFilters: typeof import('./src/pages/list/components/ListFilters.vue')['default']
     ListLayout: typeof import('./src/pages/list/components/ListLayout.vue')['default']
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
-    Markdown: typeof import('./src/components/Markdown.vue')['default']
+    Markdown: typeof import('./src/pages/forum/components/Markdown.vue')['default']
     NA: typeof import('naive-ui')['NA']
     NAutoComplete: typeof import('naive-ui')['NAutoComplete']
     NButton: typeof import('naive-ui')['NButton']

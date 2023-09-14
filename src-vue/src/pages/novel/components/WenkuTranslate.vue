@@ -2,9 +2,11 @@
 import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
+import { api } from '@/data/api/api';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
-import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
+import { TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
+import { getTranslatorLabel } from '@/data/util';
 
 const props = defineProps<{
   novelId: string;
@@ -61,8 +63,11 @@ async function startUpdateTask(
     accessToken = obj.accessToken;
   } catch {}
 
-  await ApiWenkuNovel.translate(
+  const translateWenku = (await import('@/data/translator/translator'))
+    .translateWenku;
+  await translateWenku(
     {
+      api,
       novelId: props.novelId,
       translatorId,
       volumeId: volume.volumeId,

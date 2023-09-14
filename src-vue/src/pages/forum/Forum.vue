@@ -2,11 +2,11 @@
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { LockFilled, PushPinFilled } from '@vicons/material';
+import { useMessage } from 'naive-ui';
 
 import { ApiArticle, ArticleOutline } from '@/data/api/api_article';
 import { Page } from '@/data/api/page';
 import { Result, ResultState } from '@/data/api/result';
-import { useMessage } from 'naive-ui';
 import { useUserDataStore } from '@/data/stores/userData';
 
 const route = useRoute();

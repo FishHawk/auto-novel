@@ -1,4 +1,4 @@
-import ky from 'ky';
+import { KyInstance } from 'ky/distribution/types/ky';
 
 import {
   Glossary,
@@ -9,11 +9,20 @@ import {
 } from './base';
 
 export class BaiduTranslator implements Translator {
-  log: (message: string) => void;
-  glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
-  segmentWarpper: ReturnType<typeof createLengthSegmenterWrapper>;
+  private api: KyInstance;
+  private log: (message: string) => void;
+  private glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
+  private segmentWarpper: ReturnType<typeof createLengthSegmenterWrapper>;
 
-  constructor(log: (message: string) => void, glossary: Glossary) {
+  constructor(
+    api: KyInstance,
+    log: (message: string) => void,
+    glossary: Glossary
+  ) {
+    this.api = api.create({
+      prefixUrl: 'https://fanyi.baidu.com',
+      credentials: 'include',
+    });
     this.log = log;
     this.glossaryWarpper = createNonAiGlossaryWrapper(glossary);
     this.segmentWarpper = createLengthSegmenterWrapper(2000);
@@ -32,10 +41,6 @@ export class BaiduTranslator implements Translator {
 
   private token = '';
   private gtk = '';
-  private api = ky.create({
-    prefixUrl: 'https://fanyi.baidu.com',
-    credentials: 'include',
-  });
 
   async init() {
     await this.loadMainPage();

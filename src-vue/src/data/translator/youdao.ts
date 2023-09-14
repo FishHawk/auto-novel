@@ -1,4 +1,7 @@
-import ky from 'ky';
+import { KyInstance } from 'ky/distribution/types/ky';
+import { AES } from 'crypto-es/lib/aes';
+import { MD5 } from 'crypto-es/lib/md5';
+import { Utf8 } from 'crypto-es/lib/core';
 
 import {
   Glossary,
@@ -9,11 +12,17 @@ import {
 } from './base';
 
 export class YoudaoTranslator implements Translator {
-  log: (message: string) => void;
-  glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
-  segmentWarpper: ReturnType<typeof createLengthSegmenterWrapper>;
+  private api: KyInstance;
+  private log: (message: string) => void;
+  private glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
+  private segmentWarpper: ReturnType<typeof createLengthSegmenterWrapper>;
 
-  constructor(log: (message: string) => void, glossary: Glossary) {
+  constructor(
+    api: KyInstance,
+    log: (message: string) => void,
+    glossary: Glossary
+  ) {
+    this.api = api.create({ credentials: 'include' });
     this.log = log;
     this.glossaryWarpper = createNonAiGlossaryWrapper(glossary);
     this.segmentWarpper = createLengthSegmenterWrapper(2000);
@@ -33,7 +42,7 @@ export class YoudaoTranslator implements Translator {
   private key = 'fsdsogkndfokasodnaso';
   async init() {
     try {
-      await ky.get('https://rlogs.youdao.com/rlog.php', {
+      await this.api.get('https://rlogs.youdao.com/rlog.php', {
         searchParams: {
           _npid: 'fanyiweb',
           _ncat: 'pageview',
@@ -42,16 +51,14 @@ export class YoudaoTranslator implements Translator {
           _nver: '1.2.0',
           _ntms: Date.now().toString(),
         },
-        credentials: 'include',
       });
 
-      const json: any = await ky
+      const json: any = await this.api
         .get('https://dict.youdao.com/webtranslate/key', {
           searchParams: {
             keyid: 'webfanyi-key-getter',
             ...(await getBaseBody('asdjnjfenknafdfsdfsd')),
           },
-          credentials: 'include',
         })
         .json();
 
@@ -76,10 +83,9 @@ export class YoudaoTranslator implements Translator {
       searchParams.append(name, (form as any)[name].toString());
     }
 
-    const text = await ky
+    const text = await this.api
       .post('https://dict.youdao.com/webtranslate', {
         body: searchParams,
-        credentials: 'include',
         headers: {
           Accept: 'application/json, text/plain, */*',
         },
@@ -107,7 +113,6 @@ async function getBaseBody(key: string) {
   const p = 'webfanyi';
   const t = Date.now().toString();
 
-  const MD5 = (await import('crypto-js/md5')).default;
   const sign = MD5(
     `client=${c}&mysticTime=${t}&product=${p}&key=${key}`
   ).toString();
@@ -124,10 +129,6 @@ async function getBaseBody(key: string) {
 }
 
 async function decode(src: string) {
-  const AES = (await import('crypto-js/aes')).default;
-  const MD5 = (await import('crypto-js/md5')).default;
-  const Utf8 = (await import('crypto-js/enc-utf8')).default;
-
   const key = MD5(
     'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
   );

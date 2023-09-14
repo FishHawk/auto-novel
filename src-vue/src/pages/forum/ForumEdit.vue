@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import MarkdownIt from 'markdown-it';
 import { FormRules, FormItemRule, FormInst, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -95,7 +94,6 @@ async function submit() {
   }
 }
 
-const md = new MarkdownIt();
 const formatExample: [string, string][] = [
   ['段落之间要有空行', '第一段巴拉巴拉\n\n第二段巴拉巴拉'],
   ['粗体', '**随机文本**'],
@@ -168,7 +166,9 @@ const formatExample: [string, string][] = [
               <b>{{ name }}</b>
             </td>
             <td style="white-space: pre-wrap">{{ code }}</td>
-            <td v-html="md.render(code)"></td>
+            <td>
+              <Markdown :source="code" />
+            </td>
           </tr>
         </tbody>
       </n-table>

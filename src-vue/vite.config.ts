@@ -31,15 +31,23 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     build: {
+      cssCodeSplit: false,
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (id.includes('tiktoken')) {
               return 'tiktoken';
-            } else if (id.includes('crypto')) {
-              return 'crypto';
-            } else {
-              return 'chunk';
+            } else if (
+              id.includes('data/translator') ||
+              id.includes('crypto') ||
+              id.includes('uuid') ||
+              id.includes('nanoid')
+            ) {
+              return 'translator';
+            } else if (id.includes('src-vue/src') || id.includes('naive')) {
+              return 'chunk1';
+            } else if (id.includes('node_module')) {
+              return 'chunk2';
             }
           },
         },

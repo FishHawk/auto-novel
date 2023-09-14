@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { computed, Ref, ref } from 'vue';
+import { computed, Ref, ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
+import { api } from '@/data/api/api';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
-import { getTranslatorLabel, TranslatorId } from '@/data/translator/translator';
-import { useIsDesktop } from '@/data/util';
-import { watch } from 'vue';
+import { TranslatorId } from '@/data/translator/translator';
+import { useIsDesktop, getTranslatorLabel } from '@/data/util';
 
 const props = defineProps<{
   providerId: string;
@@ -80,8 +80,11 @@ async function startTask(translatorId: TranslatorId) {
     accessToken = obj.accessToken;
   } catch {}
 
-  await ApiWebNovel.translate(
+  const translateWeb = (await import('@/data/translator/translator'))
+    .translateWeb;
+  await translateWeb(
     {
+      api,
       providerId,
       novelId,
       translatorId,

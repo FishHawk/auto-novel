@@ -1,8 +1,5 @@
 import ky from 'ky';
 
-import { Translator } from '@/data/translator/base';
-import { TranslatorId, createTranslator } from '@/data/translator/translator';
-
 import { api } from './api';
 import { Ok, runCatching } from './result';
 import { Page } from './page';
@@ -160,104 +157,6 @@ const createFileUrl = (
     | 'mix-gpt'
 ) => `/api/wenku/${novelId}/file/${volumeId}/${lang}`;
 
-const translate = async (
-  {
-    novelId,
-    translatorId,
-    volumeId,
-    accessToken,
-    translateExpireChapter,
-  }: {
-    novelId: string;
-    translatorId: TranslatorId;
-    volumeId: string;
-    accessToken?: string;
-    translateExpireChapter: boolean;
-  },
-  callback: {
-    onStart: (total: number) => void;
-    onChapterSuccess: (state: number) => void;
-    onChapterFailure: () => void;
-    log: (message: any) => void;
-  }
-) => {
-  // Api
-  interface TranslateTaskDto {
-    glossaryUuid?: string;
-    glossary: { [key: string]: string };
-    untranslatedChapters: string[];
-    expiredChapters: string;
-  }
-  const endpoint = `wenku/${novelId}/translate/${translatorId}/${volumeId}`;
-  const getTranslateTask = () => api.get(endpoint).json<TranslateTaskDto>();
-
-  const getChapterToTranslate = (chapterId: string) =>
-    api.get(`${endpoint}/${chapterId}`).json<string[]>();
-
-  const updateChapterTranslation = (
-    chapterId: string,
-    json: { glossaryUuid: string | undefined; paragraphsZh: string[] }
-  ) => api.put(`${endpoint}/${chapterId}`, { json }).json<number>();
-
-  // Task
-  let task: TranslateTaskDto;
-  try {
-    callback.log(`获取未翻译章节 ${volumeId}`);
-    task = await getTranslateTask();
-  } catch (e: any) {
-    callback.log(`发生错误，结束翻译任务：${e}`);
-    return;
-  }
-
-  let translator: Translator;
-  try {
-    translator = await createTranslator(translatorId, {
-      glossary: task.glossary,
-      accessToken,
-      log: (message) => callback.log('　　' + message),
-    });
-  } catch (e: any) {
-    callback.log(`发生错误，无法创建翻译器：${e}`);
-    return;
-  }
-
-  let chapters = translateExpireChapter
-    ? task.untranslatedChapters.concat(task.expiredChapters)
-    : task.untranslatedChapters;
-
-  callback.onStart(chapters.length);
-  if (chapters.length === 0) {
-    callback.log(`没有需要更新的章节`);
-  }
-
-  for (const chapterId of chapters) {
-    try {
-      callback.log(`\n获取章节 ${volumeId}/${chapterId}`);
-      const textsJp = await getChapterToTranslate(chapterId);
-
-      callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(textsJp);
-
-      callback.log(`上传章节 ${volumeId}/${chapterId}`);
-      const state = await updateChapterTranslation(chapterId, {
-        glossaryUuid: task.glossaryUuid,
-        paragraphsZh: textsZh,
-      });
-      callback.onChapterSuccess(state);
-    } catch (e) {
-      if (e === 'quit') {
-        callback.log(`发生错误，结束翻译任务`);
-        return;
-      } else {
-        callback.log(`发生错误，跳过：${e}`);
-        callback.onChapterFailure();
-      }
-    }
-  }
-
-  return Ok(undefined);
-};
-
 export const ApiWenkuNovel = {
   list,
   listFavored,
@@ -276,6 +175,5 @@ export const ApiWenkuNovel = {
   createVolumeZhUploadUrl,
   createVolumeJpUploadUrl,
   //
-  translate,
   createFileUrl,
 };
