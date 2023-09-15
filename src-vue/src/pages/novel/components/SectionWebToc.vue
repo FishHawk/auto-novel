@@ -108,3 +108,9 @@ const vars = useThemeVars();
     </n-list-item>
   </n-list>
 </template>
+
+<style scoped>
+a:visited {
+  color: color-mix(in srgb, v-bind('vars.primaryColor') 50%, red);
+}
+</style>
