@@ -9,12 +9,12 @@ defineProps<{
 <template>
   <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
     <n-grid-item v-for="item in items">
-      <n-a :href="`/wenku/${item.id}`" target="_blank">
+      <RouterNA :to="`/wenku/${item.id}`">
         <ImageCard
           :src="item.cover"
           :title="item.titleZh ? item.titleZh : item.title"
         />
-      </n-a>
+      </RouterNA>
     </n-grid-item>
   </n-grid>
 </template>

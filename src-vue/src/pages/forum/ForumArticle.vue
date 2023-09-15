@@ -32,12 +32,11 @@ onMounted(async () => {
           type="relative"
         />
         by {{ article.user.username }}
+        <template v-if="userData.username === article.user.username">
+          /
+          <RouterNA :to="`/forum-edit/${article.id}`">编辑</RouterNA>
+        </template>
       </n-p>
-      <n-a :href="`/forum-edit/${articleId}`">
-        <n-button v-if="userData.username === article.user.username">
-          编辑
-        </n-button>
-      </n-a>
       <n-divider />
 
       <Markdown :source="article.content" />

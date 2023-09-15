@@ -95,7 +95,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
 <template>
   <MainLayout>
     <n-h1>论坛</n-h1>
-    <n-a href="/forum-edit">发布文章</n-a>
+    <RouterNA to="/forum-edit">发布文章</RouterNA>
     <n-pagination
       v-if="pageNumber > 1"
       v-model:page="currentPage"
@@ -132,9 +132,9 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
                   :component="LockFilled"
                   style="vertical-align: middle; margin-bottom: 4px"
                 />
-                <n-a :href="`/forum/${article.id}`">
+                <RouterNA :to="`/forum/${article.id}`">
                   <b>{{ article.title }}</b>
-                </n-a>
+                </RouterNA>
               </div>
               <n-text style="font-size: 12px">
                 {{

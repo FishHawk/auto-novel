@@ -75,7 +75,7 @@ function signIn() {
     </n-form-item-row>
   </n-form>
   <n-space>
-    <n-a href="/reset-password" target="_blank">忘记密码</n-a>
+    <RouterNA to="/reset-password">忘记密码</RouterNA>
   </n-space>
   <n-button type="primary" block style="margin-top: 20px" @click="signIn()">
     登录

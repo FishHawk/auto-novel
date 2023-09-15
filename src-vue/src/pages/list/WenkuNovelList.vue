@@ -71,9 +71,7 @@ function openDialog() {
       aria-modal="true"
     >
       <n-p>
-        从
-        <n-a href="https://bangumi.tv/" target="_blank">Bangumi</n-a>
-        导入元数据来创建书。链接示例: https://bangumi.tv/subject/1177
+        从Bangumi导入元数据来创建书。链接示例: https://bangumi.tv/subject/1177
       </n-p>
 
       <n-input-group>

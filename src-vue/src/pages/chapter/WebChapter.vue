@@ -22,7 +22,6 @@ const router = useRouter();
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
 const chapterId = route.params.chapterId as string;
-const url = buildChapterUrl(providerId, novelId, chapterId);
 
 const showModal = ref(false);
 
@@ -131,12 +130,12 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
 
 <template>
   <DefineChapterLink v-slot="{ $slots, id: chapterId }">
-    <n-a
+    <RouterNA
       v-if="chapterId"
-      :href="`/novel/${providerId}/${novelId}/${chapterId}`"
+      :to="`/novel/${providerId}/${novelId}/${chapterId}`"
     >
       <component :is="$slots.default!" />
-    </n-a>
+    </RouterNA>
     <n-text v-else depth="3">
       <component :is="$slots.default!" />
     </n-text>
@@ -159,15 +158,17 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
         v-slot="{ value: chapter }"
       >
         <n-h2 style="text-align: center; width: 100%">
-          <n-a :href="url">{{ chapter.titleJp }}</n-a>
+          <n-a :href="buildChapterUrl(providerId, novelId, chapterId)">{{
+            chapter.titleJp
+          }}</n-a>
           <br />
           <n-text depth="3">{{ chapter.titleZh }}</n-text>
         </n-h2>
 
         <n-space align="center" justify="space-between" style="width: 100%">
           <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-          <n-a :href="`/novel/${providerId}/${novelId}`">目录</n-a>
-          <n-a @click="showModal = true">设置</n-a>
+          <RouterNA :to="`/novel/${providerId}/${novelId}`">目录</RouterNA>
+          <n-text type="success" @click="showModal = true">设置</n-text>
           <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
         </n-space>
 

@@ -33,7 +33,6 @@ const message = useMessage();
 const route = useRoute();
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
-const url = buildMetadataUrl(providerId, novelId);
 
 const metadataResult = ref<ResultState<WebNovelMetadataDto>>();
 
@@ -79,9 +78,8 @@ function toggleEditMode() {
 
 <template>
   <DefineTag v-slot="{ tag, attention }">
-    <n-a
-      :href="`/novel-list?query=${tag}\$`"
-      target="_blank"
+    <router-link
+      :to="`/novel-list?query=${tag}\$`"
       style="color: rgb(51, 54, 57)"
     >
       <n-tag :bordered="false" size="small">
@@ -92,7 +90,7 @@ function toggleEditMode() {
           {{ tryTranslateKeyword(tag) }}
         </template>
       </n-tag>
-    </n-a>
+    </router-link>
   </DefineTag>
 
   <MainLayout>
@@ -102,7 +100,9 @@ function toggleEditMode() {
       v-slot="{ value: metadata }"
     >
       <n-h1 prefix="bar" style="font-size: 22px">
-        <n-a :href="url" target="_blank">{{ metadata.titleJp }}</n-a>
+        <n-a :href="buildMetadataUrl(providerId, novelId)">{{
+          metadata.titleJp
+        }}</n-a>
         <br />
         <n-text depth="3">{{ metadata.titleZh }}</n-text>
       </n-h1>
@@ -110,7 +110,7 @@ function toggleEditMode() {
       <n-p v-if="metadata.authors.length > 0">
         作者：
         <template v-for="author in metadata.authors">
-          <n-a :href="author.link" target="_blank">{{ author.name }}</n-a>
+          <n-a :href="author.link">{{ author.name }}</n-a>
         </template>
       </n-p>
 
@@ -139,18 +139,14 @@ function toggleEditMode() {
           收藏
         </AsyncButton>
 
-        <n-a
-          v-if="metadata.wenkuId"
-          :href="`/wenku/${metadata.wenkuId}`"
-          target="_blank"
-        >
+        <router-link v-if="metadata.wenkuId" :to="`/wenku/${metadata.wenkuId}`">
           <n-button>
             <template #icon>
               <n-icon :component="BookFilled" />
             </template>
             文库版
           </n-button>
-        </n-a>
+        </router-link>
       </n-space>
 
       <WebEdit

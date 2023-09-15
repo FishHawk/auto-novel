@@ -4,7 +4,11 @@ export function menuOption(
   href: string,
   show?: boolean
 ): MenuOption {
-  return { label: () => h('a', { href }, text), key: href, show };
+  return {
+    label: () => h(RouterLink, { to: { path: href } }, { default: () => text }),
+    key: href,
+    show,
+  };
 }
 
 export function dropdownOption(
@@ -24,7 +28,7 @@ export function dropdownOption(
 import { Component, computed, h, ref } from 'vue';
 import { MenuOption, NIcon } from 'naive-ui';
 import { LogOutFilled, MenuFilled } from '@vicons/material';
-import { useRoute } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 
 import { useUserDataStore } from '@/data/stores/userData';
 import { useIsDesktop } from '@/data/util';
@@ -119,7 +123,7 @@ function onSignInSuccess(info: SignInDto): void {
           </template>
           <n-menu :value="path" :options="collapsedMenuOptions" />
         </n-popover>
-        <n-a v-if="isDesktop" href="/" target="_blank">
+        <router-link v-if="isDesktop" to="/">
           <n-icon size="30" style="margin-right: 8px; margin-bottom: 8px">
             <img
               src="/robot.svg"
@@ -127,7 +131,7 @@ function onSignInSuccess(info: SignInDto): void {
               style="width: 100%; min-width: 100%"
             />
           </n-icon>
-        </n-a>
+        </router-link>
         <div v-if="isDesktop">
           <n-menu
             :value="getTopMenuOptionKey()"
@@ -139,12 +143,12 @@ function onSignInSuccess(info: SignInDto): void {
         <div style="flex: 1"></div>
 
         <n-space v-if="userData.username">
-          <n-a v-if="isDesktop" href="/read-history">
+          <router-link v-if="isDesktop" to="/read-history">
             <n-button quaternary>历史</n-button>
-          </n-a>
-          <n-a v-if="isDesktop" href="/favorite-list">
+          </router-link>
+          <router-link v-if="isDesktop" to="/favorite-list">
             <n-button quaternary>收藏</n-button>
-          </n-a>
+          </router-link>
           <n-dropdown
             trigger="click"
             :options="userDropdownOptions"

@@ -16,29 +16,26 @@ defineProps<{
 
 <template>
   <DefineTag v-slot="{ tag, isAttention }">
-    <n-a :href="`/novel-list?query=${tag}\$`">
+    <RouterNA :to="`/novel-list?query=${tag}\$`">
       <n-text depth="3">
         <component :is="isAttention ? 'b' : 'span'">
           {{ isAttention ? tag : tryTranslateKeyword(tag) }}
         </component>
       </n-text>
-    </n-a>
+    </RouterNA>
     /
   </DefineTag>
 
   <div v-for="item in items">
     <n-h3 class="title" style="margin-bottom: 4px">
-      <n-a :href="`/novel/${item.providerId}/${item.novelId}`" target="_blank">
+      <RouterNA :to="`/novel/${item.providerId}/${item.novelId}`">
         {{ item.titleJp }}
-      </n-a>
+      </RouterNA>
     </n-h3>
     <div>{{ item.titleZh }}</div>
-    <n-a
-      :href="buildMetadataUrl(item.providerId, item.novelId)"
-      target="_blank"
-    >
-      {{ item.providerId + '.' + item.novelId }}
-    </n-a>
+    <n-a :href="buildMetadataUrl(item.providerId, item.novelId)">{{
+      item.providerId + '.' + item.novelId
+    }}</n-a>
 
     <div style="color: #666">
       <template v-if="item.extra">

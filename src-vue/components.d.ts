@@ -87,6 +87,7 @@ declare module 'vue' {
     ReaderSettingDialogSelect: typeof import('./src/pages/chapter/components/ReaderSettingDialogSelect.vue')['default']
     ResultView: typeof import('./src/components/ResultView.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
+    RouterNA: typeof import('./src/components/RouterNA.vue')['default']
     RouterView: typeof import('vue-router')['RouterView']
     SectionHeader: typeof import('./src/components/SectionHeader.vue')['default']
     SectionWebToc: typeof import('./src/pages/novel/components/SectionWebToc.vue')['default']

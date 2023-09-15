@@ -62,9 +62,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       <div v-for="item in histories.items">
         <n-thing>
           <template #header>
-            <n-a :href="`/wenku/${item.novelId}`" target="_blank">
+            <RouterNA :to="`/wenku/${item.novelId}`">
               {{ item.novelId + '/' + item.volumeId }}
-            </n-a>
+            </RouterNA>
           </template>
           <template #description>
             <b>{{ item.uploader }}</b>

@@ -38,10 +38,10 @@ getVolumesUser();
     <n-h1>Epub/Txt翻译</n-h1>
     <n-p>
       上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。如何使用翻译插件请参考
-      <n-a href="/forum/64f3d63f794cbb1321145c07">使用说明</n-a>。
+      <RouterNA to="/forum/64f3d63f794cbb1321145c07">使用说明</RouterNA>。
       <br />
       Epub的格式千奇百怪，如果生成的中文版有问题，请向我
-      <n-a href="/forum/64f3e280794cbb1321145c09">反馈</n-a>。
+      <RouterNA to="/forum/64f3e280794cbb1321145c09">反馈</RouterNA>。
     </n-p>
 
     <SectionHeader title="私人缓存区" />

@@ -79,12 +79,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
     <div v-if="novelPage?.ok">
       <div v-for="item in novelPage.value.items">
         <n-p>
-          <n-a
-            :href="`/novel/${item.providerId}/${item.novelId}`"
-            target="_blank"
-          >
+          <RouterNA :to="`/novel/${item.providerId}/${item.novelId}`">
             {{ `${item.providerId}/${item.novelId}` }}
-          </n-a>
+          </RouterNA>
           <br />
           {{ item.titleJp }}
           <br />
