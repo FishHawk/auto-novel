@@ -306,7 +306,7 @@ async function submitGlossary() {
     :get-show="() => true"
   />
 
-  <n-list>
+  <n-list style="background-color: #0000">
     <n-list-item v-for="row in stateToFileList()">
       <template #suffix>
         <n-button

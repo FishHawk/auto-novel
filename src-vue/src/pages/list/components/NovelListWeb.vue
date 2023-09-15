@@ -17,11 +17,9 @@ defineProps<{
 <template>
   <DefineTag v-slot="{ tag, isAttention }">
     <RouterNA :to="`/novel-list?query=${tag}\$`">
-      <n-text depth="3">
-        <component :is="isAttention ? 'b' : 'span'">
-          {{ isAttention ? tag : tryTranslateKeyword(tag) }}
-        </component>
-      </n-text>
+      <component :is="isAttention ? 'b' : 'span'">
+        {{ isAttention ? tag : tryTranslateKeyword(tag) }}
+      </component>
     </RouterNA>
     /
   </DefineTag>
@@ -37,7 +35,7 @@ defineProps<{
       item.providerId + '.' + item.novelId
     }}</n-a>
 
-    <div style="color: #666">
+    <n-text depth="3" tag="div">
       <template v-if="item.extra">
         {{ item.extra }}
         <br />
@@ -66,7 +64,7 @@ defineProps<{
         <br />
         本站更新于<n-time :time="item.updateAt * 1000" type="relative" />
       </template>
-    </div>
+    </n-text>
     <n-divider />
   </div>
 </template>

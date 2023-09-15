@@ -40,10 +40,18 @@ const vars = useThemeVars();
   color: v-bind('vars.textColor2');
 }
 .markdown code {
-  padding: 2px 4px;
-  font-size: 90%;
-  color: #c7254e;
-  background-color: #f9f2f4;
+  transition: color 0.3s v-bind('vars.cubicBezierEaseInOut'),
+    background-color 0.3s v-bind('vars.cubicBezierEaseInOut'),
+    border-color 0.3s v-bind('vars.cubicBezierEaseInOut');
+  padding: 0.05em 0.35em 0 0.35em;
+  font-size: 0.9em;
+  color: v-bind('vars.textColor2');
+  background-color: v-bind('vars.codeColor');
+  border-radius: v-bind('vars.borderRadiusSmall');
+  border: 1px solid #0000;
+  line-height: 1.4;
+  box-sizing: border-box;
+  display: inline-block;
 }
 .markdown img {
   max-width: 100%;
@@ -54,15 +62,15 @@ const vars = useThemeVars();
 }
 .markdown th {
   white-space: nowrap;
-  background-color: rgb(250, 250, 252);
+  background-color: v-bind('vars.actionColor');
 }
 .markdown th,
 .markdown td {
   padding: 12px;
-  border-bottom: 1px solid rgb(239, 239, 245);
+  border-bottom: 1px solid v-bind('vars.dividerColor');
 }
 .markdown tr th:not(:last-child),
 .markdown td:not(:last-child) {
-  border-right: 1px solid rgb(239, 239, 245);
+  border-right: 1px solid v-bind('vars.dividerColor');
 }
 </style>

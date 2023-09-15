@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 
 export interface Setting {
+  isDark: boolean;
   tocSortReverse: boolean;
   openAiAccessTokens: string[];
   downloadFilenameType: 'jp' | 'zh';
@@ -9,6 +10,7 @@ export interface Setting {
 export const useSettingStore = defineStore('setting', {
   state: () =>
     <Setting>{
+      isDark: false,
       tocSortReverse: false,
       openAiAccessTokens: [],
       downloadFilenameType: 'zh',

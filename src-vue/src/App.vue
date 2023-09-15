@@ -1,8 +1,11 @@
 <script lang="ts" setup>
-import { zhCN, dateZhCN } from 'naive-ui';
+import { zhCN, dateZhCN, lightTheme, darkTheme } from 'naive-ui';
 
 import { updateToken } from './data/api/api';
 import { useUserDataStore } from './data/stores/userData';
+import { useSettingStore } from './data/stores/setting';
+
+const setting = useSettingStore();
 
 useUserDataStore().$subscribe(
   (_mutation, state) => updateToken(state.info?.token),
@@ -12,6 +15,7 @@ useUserDataStore().$subscribe(
 
 <template>
   <n-config-provider
+    :theme="setting.isDark ? darkTheme : lightTheme"
     :locale="zhCN"
     :date-locale="dateZhCN"
     inline-theme-disabled

@@ -97,7 +97,7 @@ const linkExample = [
           <n-h1
             style="
               text-align: center;
-              font-size: 3.5em;
+              font-size: 3.2em;
               color: white;
               filter: drop-shadow(0.05em 0.05em black);
             "
@@ -109,8 +109,8 @@ const linkExample = [
               v-model:value="url"
               size="large"
               placeholder="请输入小说链接，或者输入标题搜索本站缓存..."
-              @keyup.enter="query(url)"
               :input-props="{ spellcheck: false }"
+              @keyup.enter="query(url)"
             />
             <n-button size="large" type="primary" @click="query(url)">
               搜索
@@ -128,6 +128,7 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
+        <n-li>加了个夜间主题，点右上角用户名，弹出的菜单里面开关。</n-li>
         <n-li>
           <b>使用说明</b>
           ：将想要翻译的小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。
@@ -173,26 +174,26 @@ const linkExample = [
     </SectionHeader>
     <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
-  </MainLayout>
 
-  <n-modal v-model:show="showLinkExampleModal">
-    <n-card
-      style="width: min(600px, calc(100% - 16px))"
-      :bordered="false"
-      size="large"
-      role="dialog"
-      aria-modal="true"
-    >
-      <n-scrollbar trigger="none" style="max-height: 400px">
-        <n-table :bordered="false">
-          <tr v-for="[name, link] of linkExample">
-            <td style="white-space: nowrap">
-              <b>{{ name }}</b>
-            </td>
-            <td>{{ link }}</td>
-          </tr>
-        </n-table>
-      </n-scrollbar>
-    </n-card>
-  </n-modal>
+    <n-modal v-model:show="showLinkExampleModal">
+      <n-card
+        style="width: min(600px, calc(100% - 16px))"
+        :bordered="false"
+        size="large"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-scrollbar trigger="none" style="max-height: 400px">
+          <n-table :bordered="false">
+            <tr v-for="[name, link] of linkExample">
+              <td style="white-space: nowrap">
+                <b>{{ name }}</b>
+              </td>
+              <td>{{ link }}</td>
+            </tr>
+          </n-table>
+        </n-scrollbar>
+      </n-card>
+    </n-modal>
+  </MainLayout>
 </template>

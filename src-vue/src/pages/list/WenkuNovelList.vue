@@ -59,39 +59,39 @@ function openDialog() {
       </n-space>
     </n-space>
     <NovelList :search="true" :options="[]" :loader="loader" />
+
+    <n-modal v-model:show="showModal">
+      <n-card
+        style="width: min(400px, calc(100% - 16px))"
+        title="创建"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-p>
+          从Bangumi导入元数据来创建书。链接示例: https://bangumi.tv/subject/1177
+        </n-p>
+
+        <n-input-group>
+          <n-input
+            v-model:value="bangumiUrl"
+            size="large"
+            placeholder="请输入Bangumi链接..."
+            :input-props="{ spellcheck: false }"
+            @keyup.enter="importMetadataFromBangumi(bangumiUrl)"
+          />
+          <n-button
+            size="large"
+            type="primary"
+            @click="importMetadataFromBangumi(bangumiUrl)"
+          >
+            导入
+          </n-button>
+        </n-input-group>
+      </n-card>
+    </n-modal>
   </ListLayout>
-
-  <n-modal v-model:show="showModal">
-    <n-card
-      style="width: min(400px, calc(100% - 16px))"
-      title="创建"
-      :bordered="false"
-      size="huge"
-      role="dialog"
-      aria-modal="true"
-    >
-      <n-p>
-        从Bangumi导入元数据来创建书。链接示例: https://bangumi.tv/subject/1177
-      </n-p>
-
-      <n-input-group>
-        <n-input
-          v-model:value="bangumiUrl"
-          size="large"
-          placeholder="请输入Bangumi链接..."
-          :input-props="{ spellcheck: false }"
-          @keyup.enter="importMetadataFromBangumi(bangumiUrl)"
-        />
-        <n-button
-          size="large"
-          type="primary"
-          @click="importMetadataFromBangumi(bangumiUrl)"
-        >
-          导入
-        </n-button>
-      </n-input-group>
-    </n-card>
-  </n-modal>
 </template>
 
 <style scoped>

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { useMessage } from 'naive-ui';
+import { useMessage, useThemeVars } from 'naive-ui';
 import {
   DoorbellFilled,
   EditNoteFilled,
@@ -99,6 +99,10 @@ async function notifyUpdate() {
 function sortVolumesZh(volumes: string[]) {
   return volumes.sort((a, b) => a.localeCompare(b));
 }
+const vars = useThemeVars();
+console.log(
+  `linear-gradient(color-mix(in srgb, ${vars.value.bodyColor} 40%, transparent), ${vars.value.bodyColor}), `
+);
 </script>
 
 <template>
@@ -108,7 +112,7 @@ function sortVolumesZh(volumes: string[]) {
         v-if="novelMetadataResult?.ok"
         :style="{
           background:
-            'linear-gradient( to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.4)), ' +
+            `linear-gradient(color-mix(in srgb, ${vars.bodyColor} 40%, transparent), ${vars.bodyColor}), ` +
             `url(${novelMetadataResult.value.cover})`,
         }"
         style="

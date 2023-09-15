@@ -6,12 +6,7 @@ defineProps<{
 </script>
 
 <template>
-  <n-card
-    size="small"
-    header-style="padding: 8px;"
-    :bordered="false"
-    style="box-shadow: 2px 2px 8px grey"
-  >
+  <n-card size="small" header-style="padding: 8px;" :bordered="false">
     <template #cover>
       <img
         :src="src"
@@ -21,10 +16,7 @@ defineProps<{
     </template>
   </n-card>
 
-  <div
-    style="height: 2.5em; padding: 8px; color: rgb(51, 54, 57)"
-    class="text-2line"
-  >
+  <n-text tag="div" style="height: 2.5em; padding: 8px" class="text-2line">
     {{ title }}
-  </div>
+  </n-text>
 </template>

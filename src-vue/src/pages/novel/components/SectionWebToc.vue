@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
-import { NA, NText } from 'naive-ui';
+import { NA, NText, useThemeVars } from 'naive-ui';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 import { useIsDesktop } from '@/data/util';
@@ -53,6 +53,8 @@ const lastReadTocItem = computed(() => {
     return undefined;
   }
 });
+
+const vars = useThemeVars();
 </script>
 
 <template>
@@ -87,18 +89,17 @@ const lastReadTocItem = computed(() => {
     </component>
   </DefineTocItem>
 
-  <n-list>
-    <n-list-item
+  <n-list style="background-color: #0000">
+    <n-card
       v-if="lastReadTocItem"
-      style="
-        background-color: rgb(244, 244, 248);
-        padding: 6px 0px 0px;
-        margin-bottom: 16px;
-      "
+      :bordered="false"
+      embedded
+      style="margin-bottom: 8px"
+      content-style="padding: 6px 0px 0px;"
     >
       <b style="padding-left: 6px">上次读到:</b>
       <ReuseTocItem :item="lastReadTocItem" />
-    </n-list-item>
+    </n-card>
     <n-list-item
       v-for="tocItem in reverse ? reverseToc : readableToc"
       style="padding: 0px"

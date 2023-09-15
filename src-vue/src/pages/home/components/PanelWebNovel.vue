@@ -19,9 +19,9 @@ defineProps<{ listResult: ResultState<WebNovelOutlineDto[]> }>();
           </span>
         </RouterNA>
         <div class="text-2line">{{ item.titleZh }}</div>
-        <div style="color: #666">
+        <n-text depth="3" tag="div">
           总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }}
-        </div>
+        </n-text>
       </n-grid-item>
     </n-grid>
   </ResultView>
