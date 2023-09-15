@@ -1,7 +1,7 @@
 FROM node:19.0-slim AS builder
 
-COPY ./src-vue /src
-WORKDIR /src
+COPY ./src-vue /src-vue
+WORKDIR /src-vue
 
 ENV NODE_ENV=production
 RUN npm install; \
@@ -11,4 +11,4 @@ RUN npm install; \
 FROM caddy:2.6.2
 
 COPY Caddyfile /etc/caddy/Caddyfile
-COPY --from=builder /src/dist /dist
+COPY --from=builder /src-vue/dist /dist
