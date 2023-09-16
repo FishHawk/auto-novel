@@ -184,8 +184,8 @@ export class OpenAiTranslator implements Translator {
       this.log('　发生错误：触发24小时限制，退出');
       throw 'quit';
     } else if (result.code === 'proxy_rate_limit') {
-      this.log('　发生错误：触发GPT代理速率限制，暂停10秒');
-      await delay(10);
+      this.log('　发生错误：触发GPT代理速率限制，暂停30秒');
+      await delay(30);
     } else if (result.code === 'account_deactivated') {
       this.log('　发生错误：帐号已经被封，退出');
       throw 'quit';
@@ -246,6 +246,7 @@ export class OpenAiTranslator implements Translator {
               'reach_24_hours_limit',
             ],
             ['Only one message at a time.', 'only_one_message'],
+            ['rate limited', 'proxy_rate_limit'], // 可能是fakeopen特有的
           ];
           for (const [prefix, codeN] of prefixAndCodes) {
             if (chunk.detail.startsWith(prefix)) {
