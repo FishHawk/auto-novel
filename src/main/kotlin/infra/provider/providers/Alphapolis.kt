@@ -129,7 +129,9 @@ class Alphapolis : WebNovelProvider {
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
         val doc = clientText.get(getEpisodeUrl(novelId, chapterId)).document()
-        val els = doc.selectFirst("div#novelBoby")!!
+        val els = doc.selectFirst("div#novelBody")
+            ?: doc.selectFirst("div.text")
+        els!!
         els.select("rp").remove()
         els.select("rt").remove()
         val str = StringBuilder()
