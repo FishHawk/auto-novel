@@ -154,15 +154,15 @@ class MongoDataSource(url: String) {
             )
 
             webNovelReadHistoryCollection.ensureUniqueIndex(
-                WebNovelFavoriteModel::userId,
-                WebNovelFavoriteModel::novelId,
+                WebNovelReadHistoryModel::userId,
+                WebNovelReadHistoryModel::novelId,
             )
-            webNovelFavoriteCollection.ensureIndex(
-                WebNovelFavoriteModel::userId,
-                WebNovelFavoriteModel::createAt,
+            webNovelReadHistoryCollection.ensureIndex(
+                WebNovelReadHistoryModel::userId,
+                WebNovelReadHistoryModel::createAt,
             )
-            webNovelFavoriteCollection.ensureIndex(
-                WebNovelFavoriteModel::createAt,
+            webNovelReadHistoryCollection.ensureIndex(
+                WebNovelReadHistoryModel::createAt,
                 indexOptions = IndexOptions().expireAfter(100, TimeUnit.DAYS),
             )
 
