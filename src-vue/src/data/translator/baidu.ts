@@ -121,26 +121,26 @@ const sign = function (r: string, gtk: string) {
   }
 
   const encodedCodes = [];
-  for (let i = 0, j = 0; i < r.length; i++) {
+  for (let i = 0; i < r.length; i++) {
     let char = r.charCodeAt(i);
-    if (char < 128) {
-      encodedCodes[j++] = char;
-    } else if (char < 2048) {
-      encodedCodes[j++] = (char >> 6) | 192;
+    if (char < 0x80) {
+      encodedCodes.push(char);
     } else {
-      if (
-        55296 === (64512 & char) &&
+      if (char < 0x800) {
+        encodedCodes.push((char >> 6) | 0xC0);
+      } else if (
+        0xD800 === (0xFC00 & char) &&
         i + 1 < r.length &&
-        56320 === (64512 & r.charCodeAt(i + 1))
+        0xDC00 === (0xFC00 & r.charCodeAt(i + 1))
       ) {
-        char = 65536 + ((1023 & char) << 10) + (1023 & r.charCodeAt(++i));
-        encodedCodes[j++] = (char >> 18) | 240;
-        encodedCodes[j++] = ((char >> 12) & 63) | 128;
+        char = 0x10000 + ((1023 & 0x3FF) << 10) + (0x3FF & r.charCodeAt(++i));
+        encodedCodes.push((char >> 18) | 0xF0);
+        encodedCodes.push(((char >> 12) & 0x3F) | 0x80);
       } else {
-        encodedCodes[j++] = (char >> 12) | 224;
-        encodedCodes[j++] = ((char >> 6) & 63) | 128;
+        encodedCodes.push((char >> 12) | 0xE0);
+        encodedCodes.push(((char >> 6) & 0x3F) | 0x80);
       }
-      encodedCodes[j++] = (63 & char) | 128;
+      encodedCodes.push((63 & char) | 0x80);
     }
   }
 
