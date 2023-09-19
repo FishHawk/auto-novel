@@ -128,25 +128,27 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
-        <n-li>加了个夜间主题，点右上角用户名，弹出的菜单里面开关。</n-li>
         <n-li>
           <b>使用说明</b>
           ：将想要翻译的小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。
           <n-ul>
             <n-li>
-              支持的小说站请参考
-              <n-text type="success" @click="showLinkExampleModal = true"
-                >小说链接示例</n-text
-              >。
+              支持的小说站参考
+              <n-text type="success" @click="showLinkExampleModal = true">
+                小说链接示例
+              </n-text>
+              。
             </n-li>
             <n-li>
-              想自己生成翻译请参考
-              <RouterNA to="/forum/64f3d63f794cbb1321145c07">插件教程</RouterNA
-              >。
+              想自己生成翻译参考
+              <RouterNA to="/forum/64f3d63f794cbb1321145c07">插件教程</RouterNA>
+              。
             </n-li>
             <n-li>
               有什么问题和建议请在
-              <RouterNA to="/forum/64f3e280794cbb1321145c09">反馈帖</RouterNA>
+              <RouterNA to="/forum/64f3e280794cbb1321145c09">
+                反馈&更新日志
+              </RouterNA>
               集中讨论。
             </n-li>
           </n-ul>
