@@ -308,3 +308,46 @@ chrome.contextMenus.onClicked.addListener(({ menuItemId, checked }, tab) => {
     });
   }
 });
+
+chrome.browserAction.onClicked.addListener(() => {
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+    const url = tabs[0].url;
+
+    const providers = {
+      kakuyomu: (url) => /kakuyomu\.jp\/works\/([0-9]+)/.exec(url)?.[1],
+      syosetu: (url) =>
+        /syosetu\.com\/([A-Za-z0-9]+)/.exec(url)?.[1].toLowerCase(),
+      novelup: (url) => /novelup\.plus\/story\/([0-9]+)/.exec(url)?.[1],
+      hameln: (url) => /syosetu\.org\/novel\/([0-9]+)/.exec(url)?.[1],
+      pixiv: (url) => {
+        let novelId = /pixiv\.net\/novel\/series\/([0-9]+)/.exec(url)?.[1];
+        if (novelId === undefined) {
+          novelId = /pixiv\.net\/novel\/show.php\?id=([0-9]+)/.exec(url)?.[1];
+          if (novelId !== undefined) {
+            novelId = 's' + novelId;
+          }
+        }
+        return novelId;
+      },
+      alphapolis: (url) => {
+        const matched =
+          /www\.alphapolis\.co\.jp\/novel\/([0-9]+)\/([0-9]+)/.exec(url);
+        if (matched) {
+          return `${matched[1]}-${matched[2]}`;
+        } else {
+          return undefined;
+        }
+      },
+      novelism: (url) => /novelism\.jp\/novel\/([^\/]+)/.exec(url)?.[1],
+    };
+    for (const providerId in providers) {
+      const provider = providers[providerId];
+      const novelId = provider(url);
+      if (novelId !== undefined) {
+        chrome.tabs.create({
+          url: `https://books.fishhawk.top/novel/${providerId}/${novelId}`,
+        });
+      }
+    }
+  });
+});
