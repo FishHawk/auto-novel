@@ -1,16 +1,18 @@
-name: publish
+name: publish-server
 
 on:
   push:
     branches:
       - main
+    paths:
+      - server/**
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-server
   cancel-in-progress: true
 
 jobs:
-  wneg-proxy:
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,53 +35,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push proxy Docker image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: .
-          file: Dockerfile.proxy
-          push: true
-          tags: ghcr.io/fishhawk/wneg-proxy:latest
-
-  wneg-server:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v3
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push server Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: Dockerfile.server
+          context: server
           push: true
           tags: ghcr.io/fishhawk/wneg-server:latest
 
-  delete-untagged-images:
-    needs: [ wneg-proxy, wneg-server ]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
       - name: Delete all containers from repository without tags
         uses: Chizkiyahu/delete-untagged-ghcr-action@v2
         with:

@@ -1,9 +1,0 @@
-FROM gradle:7-jdk17 as builder
-COPY . /app
-WORKDIR /app
-RUN gradle --no-daemon installDist
-
-FROM eclipse-temurin:17
-COPY --from=builder /app/build/install/wneg /app
-ENV LANG C.UTF-8
-CMD ["/app/bin/wneg"]

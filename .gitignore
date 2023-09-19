@@ -1,14 +1,14 @@
-# Editor
-/data/
-/.gradle/
-/.idea/
-/build/
-/log/
-/.env
+# Server
+server/.gradle/
+server/.idea/
+server/build/
+server/data/
 
-# Vue
-src-vue/node_modules/
-src-vue/dist/
-src-vue/auto-imports.d.ts
-src-vue/*.pem
-src-vue/extension/_metadata/
+# Web
+web/dist/
+web/node_modules/
+web/auto-imports.d.ts
+web/components.d.ts
+
+# Web extension
+web-extension/_metadata/

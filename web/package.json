@@ -1,5 +1,5 @@
 {
-  "name": "my-vue-app",
+  "name": "auto-novel-web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
-    "pack-ext": "zip -r public/extension.zip extension"
+    "test": "vitest run"
   },
   "dependencies": {
     "@types/diff": "^5.0.3",
