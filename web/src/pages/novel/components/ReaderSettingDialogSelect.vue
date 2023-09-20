@@ -1,10 +1,13 @@
 <script lang="ts" setup>
-defineProps<{
-  desktop: boolean;
-  value: string;
-  options: { label: string; value: string }[];
-}>();
-
+withDefaults(
+  defineProps<{
+    desktop: boolean;
+    value: string;
+    disabled: boolean;
+    options: { label: string; value: string }[];
+  }>(),
+  { disabled: false }
+);
 const emit = defineEmits<{
   (e: 'update:value', value: string): void;
 }>();
@@ -14,6 +17,7 @@ const emit = defineEmits<{
   <n-radio-group
     v-if="desktop"
     :value="value"
+    :disabled="disabled"
     @update:value="emit('update:value', $event)"
   >
     <n-space>
@@ -32,6 +36,7 @@ const emit = defineEmits<{
     :value="value"
     @update:value="emit('update:value', $event)"
     :options="options"
+    :disabled="disabled"
     style="width: 100%"
   />
 </template>

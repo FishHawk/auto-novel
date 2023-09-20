@@ -31,10 +31,14 @@ async function getVolumesUser() {
   }
 }
 getVolumesUser();
+
+const showModal = ref(false);
 </script>
 
 <template>
   <MainLayout>
+    <DownloadSettingDialog  v-model:show="showModal" />
+
     <n-h1>Epub/Txt翻译</n-h1>
     <n-p>
       上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。如何使用翻译插件请参考
@@ -72,6 +76,7 @@ getVolumesUser();
           <WenkuTranslateItem
             :novelId="userNovelId"
             :volume="volume"
+            @open-setting="showModal = true"
             style="padding-top: -8px"
           />
         </n-collapse-item>
@@ -112,6 +117,7 @@ getVolumesUser();
           <WenkuTranslateItem
             novelId="non-archived"
             :volume="volume"
+            @open-setting="showModal = true"
             style="padding-top: -8px"
           />
         </n-collapse-item>

@@ -145,18 +145,6 @@ const createVolumeZhUploadUrl = (novelId: string) =>
 const createVolumeJpUploadUrl = (novelId: string) =>
   `/api/wenku/${novelId}/volume-jp`;
 
-const createFileUrl = (
-  novelId: string,
-  volumeId: string,
-  lang:
-    | 'zh-baidu'
-    | 'zh-youdao'
-    | 'zh-gpt'
-    | 'mix-baidu'
-    | 'mix-youdao'
-    | 'mix-gpt'
-) => `/api/wenku/${novelId}/file/${volumeId}/${lang}`;
-
 export const ApiWenkuNovel = {
   list,
   listFavored,
@@ -174,6 +162,4 @@ export const ApiWenkuNovel = {
   getMetadataFromBangumi,
   createVolumeZhUploadUrl,
   createVolumeJpUploadUrl,
-  //
-  createFileUrl,
 };

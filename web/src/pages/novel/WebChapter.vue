@@ -1,13 +1,7 @@
 <script lang="ts" setup>
 import { ref, shallowRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {
-  NConfigProvider,
-  zhCN,
-  dateZhCN,
-  lightTheme,
-  darkTheme,
-} from 'naive-ui';
+import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 import { onKeyStroke, createReusableTemplate } from '@vueuse/core';
 
 import { ResultState } from '@/data/api/result';
@@ -152,8 +146,6 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
     :theme-overrides="{
       common: { bodyColor: setting.theme.bodyColor },
     }"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
   >
     <n-global-style />
 

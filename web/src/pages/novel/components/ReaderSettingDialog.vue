@@ -64,7 +64,7 @@ defineEmits<{
   <n-modal :show="show" @update:show="$emit('update:show', $event)">
     <n-card
       style="width: min(600px, calc(100% - 16px))"
-      title="设置"
+      title="阅读设置"
       :bordered="false"
       size="huge"
       role="dialog"

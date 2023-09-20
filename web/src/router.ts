@@ -59,7 +59,7 @@ const router = createRouter({
 
     {
       path: '/novel/:providerId/:novelId/:chapterId',
-      component: () => import('./pages/chapter/WebChapter.vue'),
+      component: () => import('./pages/novel/WebChapter.vue'),
     },
 
     {

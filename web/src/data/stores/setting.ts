@@ -1,10 +1,18 @@
 import { defineStore } from 'pinia';
+import { TranslatorId } from '../translator/translator';
 
 export interface Setting {
   isDark: boolean;
   tocSortReverse: boolean;
   openAiAccessTokens: string[];
   downloadFilenameType: 'jp' | 'zh';
+
+  isDownloadFormatSameAsReaderFormat: boolean;
+  downloadFormat: {
+    mode: 'jp' | 'zh' | 'mix' | 'mix-reverse';
+    translationsMode: 'parallel' | 'priority';
+    translations: TranslatorId[];
+  };
 }
 
 export const useSettingStore = defineStore('setting', {
@@ -14,6 +22,12 @@ export const useSettingStore = defineStore('setting', {
       tocSortReverse: false,
       openAiAccessTokens: [],
       downloadFilenameType: 'zh',
+      isDownloadFormatSameAsReaderFormat: true,
+      downloadFormat: {
+        mode: 'mix',
+        translationsMode: 'priority',
+        translations: ['gpt', 'youdao', 'baidu'],
+      },
     },
   actions: {
     addToken(token: string) {

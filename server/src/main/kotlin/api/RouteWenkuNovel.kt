@@ -26,7 +26,7 @@ import java.io.InputStream
 @Resource("/wenku")
 private class WenkuNovelRes {
     @Resource("/list")
-    class List(
+    class NovelList(
         val parent: WenkuNovelRes,
         val page: Int,
         val query: String? = null,
@@ -69,15 +69,21 @@ private class WenkuNovelRes {
             class Chapter(val parent: Translate, val chapterId: String)
         }
 
-        @Resource("/file/{volumeId}/{lang}")
-        class File(val parent: Id, val volumeId: String, val lang: NovelFileLang)
+        @Resource("/file/{volumeId}")
+        class File(
+            val parent: Id,
+            val volumeId: String,
+            val lang: NovelFileLangV2,
+            val translationsMode: NovelFileTranslationsMode,
+            val translations: List<TranslatorId>,
+        )
     }
 }
 
 fun Route.routeWenkuNovel() {
     val service by inject<WenkuNovelApi>()
 
-    get<WenkuNovelRes.List> { loc ->
+    get<WenkuNovelRes.NovelList> { loc ->
         val result = service.list(
             queryString = loc.query?.ifBlank { null },
             page = loc.page,
@@ -239,6 +245,8 @@ fun Route.routeWenkuNovel() {
             novelId = loc.parent.novelId,
             volumeId = loc.volumeId,
             lang = loc.lang,
+            translationsMode = loc.translationsMode,
+            translations = loc.translations,
         )
         result.onSuccess {
             val url = "../../../../../../files-wenku/$it"
@@ -662,9 +670,14 @@ class WenkuNovelApi(
     suspend fun updateFile(
         novelId: String,
         volumeId: String,
-        lang: NovelFileLang,
+        lang: NovelFileLangV2,
+        translationsMode: NovelFileTranslationsMode,
+        translations: List<TranslatorId>,
     ): Result<String> {
-        if (lang == NovelFileLang.JP)
+        if (translations.isEmpty())
+            return httpBadRequest("没有设置翻译类型")
+
+        if (lang == NovelFileLangV2.Jp)
             return httpBadRequest("不支持的类型")
 
         if (!volumeRepo.isVolumeJpExisted(novelId, volumeId))
@@ -674,6 +687,8 @@ class WenkuNovelApi(
             novelId = novelId,
             volumeId = volumeId,
             lang = lang,
+            translationsMode = translationsMode,
+            translations = translations.distinct(),
         )
 
         return Result.success(

@@ -4,6 +4,30 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+enum class NovelFileLangV2 {
+    @SerialName("jp")
+    Jp,
+
+    @SerialName("zh")
+    Zh,
+
+    @SerialName("jp-zh")
+    JpZh,
+
+    @SerialName("zh-jp")
+    ZhJp,
+}
+
+@Serializable
+enum class NovelFileTranslationsMode {
+    @SerialName("parallel")
+    Parallel,
+
+    @SerialName("priority")
+    Priority,
+}
+
+@Serializable
 enum class NovelFileLang(val value: String) {
     @SerialName("jp")
     JP("jp"),

@@ -3,9 +3,10 @@ import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { api } from '@/data/api/api';
-import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
+import { VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
+import { useReaderSettingStore } from '@/data/stores/readerSetting';
 import { getTranslatorLabel } from '@/data/util';
 
 const props = defineProps<{
@@ -13,7 +14,11 @@ const props = defineProps<{
   volume: VolumeJpDto;
 }>();
 
+const emits = defineEmits<{ openSetting: [] }>();
+
 const setting = useSettingStore();
+const readerSetting = useReaderSettingStore();
+
 const gptAccessToken = ref('');
 const gptAccessTokenOptions = computed(() => {
   return setting.openAiAccessTokens.map((t) => {
@@ -95,95 +100,105 @@ async function startUpdateTask(translatorId: TranslatorId) {
 interface NovelFiles {
   label: string;
   translatorId: TranslatorId;
-  files: { label: string; url: string; name: string }[];
 }
 
-function stateToFileList(): NovelFiles[] {
+const volumeDownload = computed(() => {
   let ext: string;
   if (props.volume.volumeId.toLowerCase().endsWith('.txt')) {
     ext = 'txt';
   } else {
     ext = 'epub';
   }
-  function createFile(
-    label: string,
-    lang:
-      | 'zh-baidu'
-      | 'zh-youdao'
-      | 'zh-gpt'
-      | 'mix-baidu'
-      | 'mix-youdao'
-      | 'mix-gpt'
-  ) {
-    return {
-      label,
-      url: ApiWenkuNovel.createFileUrl(
-        props.novelId,
-        props.volume.volumeId,
-        lang
-      ),
-      name: `${lang}.${ext}`,
-    };
+  ext = ext.toUpperCase();
+
+  const { mode, translationsMode, translations } =
+    setting.isDownloadFormatSameAsReaderFormat
+      ? readerSetting
+      : setting.downloadFormat;
+  const params = new URLSearchParams({
+    translationsMode,
+  });
+
+  if (mode === 'jp' || mode === 'zh') {
+    params.append('lang', 'zh');
+  } else if (mode === 'mix') {
+    params.append('lang', 'zh-jp');
+  } else {
+    params.append('lang', 'jp-zh');
   }
-  const extUpper = ext.toUpperCase();
+  translations.forEach((it) => params.append('translations', it));
+  const url = `/api/wenku/${props.novelId}/file/${props.volume.volumeId}?${params}`;
+
+  let filename = '';
+  if (mode === 'jp' || mode === 'zh') {
+    filename += 'zh';
+  } else if (mode === 'mix') {
+    filename += 'zh-jp';
+  } else {
+    filename += 'jp-zh';
+  }
+  filename += '.';
+
+  if (translationsMode === 'parallel') {
+    filename += 'B';
+  } else {
+    filename += 'Y';
+  }
+  translations.forEach((it) => (filename += it[0]));
+  filename += '.';
+
+  filename += props.volume.volumeId;
+
+  return { ext, url, filename };
+});
+
+function stateToFileList(): NovelFiles[] {
   return [
     {
       label: `百度(${props.volume.baidu}/${props.volume.total})`,
       translatorId: 'baidu',
-      files: [
-        createFile(extUpper, 'zh-baidu'),
-        createFile(`中日对比${extUpper}`, 'mix-baidu'),
-      ],
     },
     {
       label: `有道(${props.volume.youdao}/${props.volume.total})`,
       translatorId: 'youdao',
-      files: [
-        createFile(extUpper, 'zh-youdao'),
-        createFile(`中日对比${extUpper}`, 'mix-youdao'),
-      ],
     },
     {
       label: `GPT3(${props.volume.gpt}/${props.volume.total})`,
       translatorId: 'gpt',
-      files: [
-        createFile(extUpper, 'zh-gpt'),
-        createFile(`中日对比${extUpper}`, 'mix-gpt'),
-      ],
     },
   ];
 }
 </script>
 
 <template>
-  <n-auto-complete
-    v-model:value="gptAccessToken"
-    :options="gptAccessTokenOptions"
-    placeholder="请输入GPT的Access Token"
-    :get-show="() => true"
-  />
-  <div v-for="row in stateToFileList()">
-    <n-space style="padding: 4px">
-      <n-text>{{ row.label }}</n-text>
-      <n-space>
+  <n-space vertical>
+    <n-auto-complete
+      v-model:value="gptAccessToken"
+      :options="gptAccessTokenOptions"
+      placeholder="请输入GPT的Access Token"
+      :get-show="() => true"
+    />
+    <n-button-group>
+      <n-button
+        v-for="row in stateToFileList()"
+        @click="startUpdateTask(row.translatorId)"
+      >
+        更新{{ row.label }}
+      </n-button>
+    </n-button-group>
+    <n-button-group>
+      <n-button>
         <n-a
-          v-for="file in row.files"
-          :href="file.url"
-          :download="file.name"
+          :href="volumeDownload.url"
+          :download="volumeDownload.filename"
           target="_blank"
         >
-          {{ file.label }}
+          下载{{ volumeDownload.ext }}
         </n-a>
-      </n-space>
-      <n-button
-        size="tiny"
-        @click="startUpdateTask(row.translatorId)"
-        style="margin-left: 24px"
-      >
-        更新
       </n-button>
-    </n-space>
-  </div>
+      <n-button @click="emits('openSetting')">下载设置</n-button>
+    </n-button-group>
+  </n-space>
 
   <TranslateTaskDetail
     v-if="taskDetail"

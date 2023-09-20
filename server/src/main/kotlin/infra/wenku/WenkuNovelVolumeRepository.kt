@@ -1,9 +1,6 @@
 package infra.wenku
 
-import infra.model.NovelFileLang
-import infra.model.TranslatorId
-import infra.model.WenkuNovelVolumeJp
-import infra.model.WenkuNovelVolumeList
+import infra.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -176,21 +173,6 @@ class WenkuNovelVolumeRepository {
         }
     }
 
-//    suspend fun listUntranslatedChapter(
-//        novelId: String,
-//        volumeId: String,
-//        translatorId: TranslatorId,
-//    ): List<String> {
-//        val type = when (translatorId) {
-//            TranslatorId.Baidu -> "baidu"
-//            TranslatorId.Youdao -> "youdao"
-//            TranslatorId.Gpt -> "gpt"
-//        }
-//        val jpChapters = listUnpackedChapters(novelId, volumeId, "jp")
-//        val zhChapters = listUnpackedChapters(novelId, volumeId, type)
-//        return jpChapters.filter { it !in zhChapters }
-//    }
-
     private suspend fun getChapter(
         novelId: String,
         volumeId: String,
@@ -286,59 +268,96 @@ class WenkuNovelVolumeRepository {
     suspend fun makeTranslationVolumeFile(
         novelId: String,
         volumeId: String,
-        lang: NovelFileLang,
+        lang: NovelFileLangV2,
+        translationsMode: NovelFileTranslationsMode,
+        translations: List<TranslatorId>,
     ) = withContext(Dispatchers.IO) {
-        val type = when (lang) {
-            NovelFileLang.ZH_BAIDU, NovelFileLang.MIX_BAIDU -> "baidu"
-            NovelFileLang.ZH_YOUDAO, NovelFileLang.MIX_YOUDAO -> "youdao"
-            NovelFileLang.ZH_GPT, NovelFileLang.MIX_GPT -> "gpt"
-            NovelFileLang.MIX_ALL, NovelFileLang.JP -> throw RuntimeException()
-        }
-        val mix = when (lang) {
-            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO, NovelFileLang.ZH_GPT -> false
-            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO, NovelFileLang.MIX_GPT -> true
-            NovelFileLang.MIX_ALL, NovelFileLang.JP -> throw RuntimeException()
+        val zhFilename = buildString {
+            append(
+                when (lang) {
+                    NovelFileLangV2.Jp -> "jp"
+                    NovelFileLangV2.Zh -> "zh"
+                    NovelFileLangV2.JpZh -> "jp-zh"
+                    NovelFileLangV2.ZhJp -> "zh-jp"
+                }
+            )
+            append('.')
+            append(
+                when (translationsMode) {
+                    NovelFileTranslationsMode.Parallel -> "B"
+                    NovelFileTranslationsMode.Priority -> "Y"
+                }
+            )
+            translations.forEach {
+                append(
+                    when (it) {
+                        TranslatorId.Baidu -> "b"
+                        TranslatorId.Youdao -> "y"
+                        TranslatorId.Gpt -> "g"
+                    }
+                )
+            }
+            append('.')
         }
 
-        suspend fun getChapterOrFallback(chapterId: String): Pair<List<String>?, Boolean> {
-            val primary = getChapter(novelId, volumeId, type, chapterId)
-            val fallback = listOf("gpt", "youdao", "baidu")
-                .filter { it != type }
-                .firstNotNullOfOrNull { getChapter(novelId, volumeId, it, chapterId) }
-            return Pair(primary ?: fallback, primary == null)
+        suspend fun getJpLines(chapterId: String): List<String> {
+            return getChapter(novelId, volumeId, chapterId)!!
+        }
+
+        suspend fun getZhLinesList(chapterId: String): List<List<String>> {
+            suspend fun getChapter(translationId: TranslatorId): List<String>? {
+                val type = when (translationId) {
+                    TranslatorId.Baidu -> "baidu"
+                    TranslatorId.Youdao -> "youdao"
+                    TranslatorId.Gpt -> "gpt"
+                }
+                return getChapter(novelId, volumeId, type, chapterId)
+            }
+
+            return when (translationsMode) {
+                NovelFileTranslationsMode.Parallel ->
+                    translations.mapNotNull { getChapter(it) }
+
+                NovelFileTranslationsMode.Priority ->
+                    translations.firstNotNullOfOrNull { getChapter(it) }
+                        ?.let { listOf(it) }
+                        ?: emptyList()
+            }
         }
 
         if (isTxt(volumeId)) {
-            val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.txt"
+            val zhPath = root / novelId / "$volumeId.unpack" / "${zhFilename}.txt"
 
             if (zhPath.notExists()) {
                 zhPath.createFile()
             }
 
-            zhPath.bufferedWriter().use {
+            zhPath.bufferedWriter().use { bf ->
                 listUnpackedChapters(novelId, volumeId, "jp").sorted().forEach { chapterId ->
-                    val jpLines = getChapter(novelId, volumeId, chapterId)!!
-                    val (zhLines, isFallback) = getChapterOrFallback(chapterId)
-                    if (zhLines == null) {
-                        it.appendLine("//该分段缺失。")
-                    } else if (mix) {
-                        if (isFallback) {
-                            it.appendLine("//该分段翻译不存在，使用备用翻译。")
-                        }
-                        jpLines.forEachIndexed { index, jpLine ->
-                            it.appendLine(jpLine)
-                            if (jpLine.isNotBlank()) it.appendLine(zhLines[index])
-                        }
+                    val zhLinesList = getZhLinesList(chapterId)
+                    if (zhLinesList.isEmpty()) {
+                        bf.appendLine("// 该分段翻译缺失。")
                     } else {
-                        zhLines.forEach { zhLine -> it.appendLine(zhLine) }
+                        val linesList = when (lang) {
+                            NovelFileLangV2.Jp -> throw RuntimeException("文库小说不允许日语下载")
+                            NovelFileLangV2.Zh -> zhLinesList
+                            NovelFileLangV2.JpZh -> listOf(getJpLines(chapterId)) + zhLinesList
+                            NovelFileLangV2.ZhJp -> zhLinesList + listOf(getJpLines(chapterId))
+                        }
+                        for (i in 0 until linesList.first().size) {
+                            linesList.forEach { lines ->
+                                bf.appendLine(lines[i])
+                            }
+                        }
                     }
                 }
             }
-            return@withContext "${lang.value}.txt"
+            return@withContext "${zhFilename}.txt"
         } else {
-            val unpackChapters = listUnpackedChapters(novelId, volumeId, "jp")
-            val zhPath = root / novelId / "$volumeId.unpack" / "${lang.value}.epub"
+            val zhPath = root / novelId / "$volumeId.unpack" / "${zhFilename}.epub"
             val jpPath = root / novelId / volumeId
+
+            val unpackChapters = listUnpackedChapters(novelId, volumeId, "jp")
             Epub.modify(srcPath = jpPath, dstPath = zhPath) { entry, bytesIn ->
                 // 为了兼容ChapterId以斜杠开头的旧格式
                 val chapterId = if ("/${entry.name}".escapePath() in unpackChapters) {
@@ -351,19 +370,36 @@ class WenkuNovelVolumeRepository {
 
                 if (chapterId != null) {
                     // XHtml文件，尝试生成翻译版
-                    val (zhLines, _) = getChapterOrFallback(chapterId)
-                    if (zhLines == null) {
+                    val zhLinesList = getZhLinesList(chapterId)
+                    if (zhLinesList.isEmpty()) {
                         bytesIn
                     } else {
                         val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
                         doc.select("p")
                             .filter { el -> el.text().isNotBlank() }
                             .forEachIndexed { index, el ->
-                                if (mix) {
-                                    el.before("<p>${zhLines[index]}<p>")
-                                    el.attr("style", "opacity:0.4;")
-                                } else {
-                                    el.text(zhLines[index])
+                                when (lang) {
+                                    NovelFileLangV2.Jp -> throw RuntimeException("文库小说不允许日语下载")
+                                    NovelFileLangV2.Zh -> {
+                                        zhLinesList.forEach { lines ->
+                                            el.before("<p>${lines[index]}<p>")
+                                        }
+                                        el.remove()
+                                    }
+
+                                    NovelFileLangV2.JpZh -> {
+                                        zhLinesList.asReversed().forEach { lines ->
+                                            el.after("<p>${lines[index]}<p>")
+                                        }
+                                        el.attr("style", "opacity:0.4;")
+                                    }
+
+                                    NovelFileLangV2.ZhJp -> {
+                                        zhLinesList.forEach { lines ->
+                                            el.before("<p>${lines[index]}<p>")
+                                        }
+                                        el.attr("style", "opacity:0.4;")
+                                    }
                                 }
                             }
                         doc.outputSettings().prettyPrint(true)
@@ -375,7 +411,7 @@ class WenkuNovelVolumeRepository {
                     bytesIn
                 }
             }
-            return@withContext "${lang.value}.epub"
+            return@withContext "${zhFilename}.epub"
         }
     }
 }
