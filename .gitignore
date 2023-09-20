@@ -11,4 +11,4 @@ web/auto-imports.d.ts
 web/components.d.ts
 
 # Web extension
-web-extension/_metadata/
+web-extension/src/_metadata/
