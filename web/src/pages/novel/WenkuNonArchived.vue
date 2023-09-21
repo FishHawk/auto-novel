@@ -31,14 +31,10 @@ async function getVolumesUser() {
   }
 }
 getVolumesUser();
-
-const showModal = ref(false);
 </script>
 
 <template>
   <MainLayout>
-    <DownloadSettingDialog  v-model:show="showModal" />
-
     <n-h1>Epub/Txt翻译</n-h1>
     <n-p>
       上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。如何使用翻译插件请参考
@@ -55,32 +51,17 @@ const showModal = ref(false);
       上传到这里的小说过一段时间会清理（现在还没做）。
     </n-p>
     <UploadButton type="jp" :novelId="userNovelId" />
+    <n-divider />
+
     <ResultView
       :result="volumesUserResult"
       :showEmpty="(it: any) => it.length === 0"
       v-slot="{ value: volumes }"
     >
-      <n-collapse
-        display-directive="show"
-        :theme-overrides="{
-          itemMargin: '0px',
-          titlePadding: '0px',
-        }"
-        style="margin-top: 16px"
-      >
-        <n-collapse-item
-          v-for="volume in volumes"
-          :title="volume.volumeId"
-          style="padding: 4px"
-        >
-          <WenkuTranslateItem
-            :novelId="userNovelId"
-            :volume="volume"
-            @open-setting="showModal = true"
-            style="padding-top: -8px"
-          />
-        </n-collapse-item>
-      </n-collapse>
+      <WenkuTranslate
+        :novelId="userNovelId"
+        :volumes="volumes"
+      />
     </ResultView>
 
     <SectionHeader title="通用缓存区" />
@@ -96,32 +77,17 @@ const showModal = ref(false);
       novelId="non-archived"
       @uploadFinished="getVolumesNonArchived()"
     />
+    <n-divider />
+
     <ResultView
       :result="volumesResult"
       :showEmpty="(it: any) => it.length === 0"
       v-slot="{ value: volumes }"
     >
-      <n-collapse
-        display-directive="show"
-        :theme-overrides="{
-          itemMargin: '0px',
-          titlePadding: '0px',
-        }"
-        style="margin-top: 16px"
-      >
-        <n-collapse-item
-          v-for="volume in volumes"
-          :title="volume.volumeId"
-          style="padding: 4px"
-        >
-          <WenkuTranslateItem
-            novelId="non-archived"
-            :volume="volume"
-            @open-setting="showModal = true"
-            style="padding-top: -8px"
-          />
-        </n-collapse-item>
-      </n-collapse>
+      <WenkuTranslate
+        novel-id="non-archived"
+        :volumes="volumes"
+      />
     </ResultView>
   </MainLayout>
 </template>

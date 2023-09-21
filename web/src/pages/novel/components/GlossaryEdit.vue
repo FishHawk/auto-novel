@@ -37,11 +37,11 @@ function addTerm() {
     </n-input-group>
   </n-p>
 
-  <n-scrollbar style="max-height: 400px">
-    <table style="border-spacing: 16px 0px">
+  <n-scrollbar style="max-height: 400px; max-width: 400px">
+    <table style="border-spacing: 16px 0px; font-size: 12px">
       <tr v-for="(termZh, termJp) in glossary">
         <td>{{ termJp }}</td>
-        <td>=></td>
+        <td nowrap="nowrap">=></td>
         <td>{{ termZh }}</td>
         <td>
           <n-button size="tiny" @click="deleteTerm(termJp as string)">

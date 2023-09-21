@@ -1,9 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-const history = createWebHistory();
-
 const router = createRouter({
-  history,
+  history: createWebHistory(),
   routes: [
     {
       path: '/',
@@ -101,8 +99,20 @@ const router = createRouter({
       ],
     },
   ],
-  scrollBehavior(to, from, savedPosition) {
-    return { top: 0 };
+  scrollBehavior(_to, _from, savedPosition) {
+    return new Promise((resolve, _reject) => {
+      if (savedPosition) {
+        const resizeObserver = new ResizeObserver((entries) => {
+          if (entries[0].target.clientHeight >= savedPosition.top) {
+            resolve(savedPosition);
+            resizeObserver.disconnect();
+          }
+        });
+        resizeObserver.observe(document.body);
+      } else {
+        resolve({ top: 0 });
+      }
+    });
   },
 });
 

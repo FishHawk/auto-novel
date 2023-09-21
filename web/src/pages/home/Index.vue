@@ -87,7 +87,8 @@ const linkExample = [
     <template v-slot:full-width>
       <div
         :style="{
-          background: `url(${bannerUrl})`,
+          background: `rgba(0, 0, 0, .15) url(${bannerUrl})`,
+          'background-blend-mode': 'darken',
           width: '100%',
           'padding-top': '60px',
           'padding-bottom': '104px',

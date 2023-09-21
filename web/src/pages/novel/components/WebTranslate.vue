@@ -201,7 +201,7 @@ function stateToFileList(): NovelFiles[] {
   ];
 }
 
-const showAdvanceOptions = ref(false);
+const showTranslateOptions = ref(false);
 
 const tryUseChineseTitleAsFilename = ref(setting.downloadFilenameType === 'zh');
 const translateExpireChapter = ref(false);
@@ -226,19 +226,21 @@ async function submitGlossary() {
 </script>
 
 <template>
-  <n-text depth="3" style="font-size: 12px">
+  <n-p depth="3" style="font-size: 12px">
     # 翻译功能需要需要安装浏览器插件，参见
     <RouterNA to="/forum/64f3d63f794cbb1321145c07">插件使用说明</RouterNA>
-  </n-text>
-  <n-p>
-    高级选项
-    <n-switch
-      :rubber-band="false"
-      size="small"
-      v-model:value="showAdvanceOptions"
-    />
   </n-p>
-  <n-collapse-transition :show="showAdvanceOptions" style="margin-bottom: 16px">
+  <n-button
+    @click="showTranslateOptions = !showTranslateOptions"
+    style="margin-bottom: 8px"
+  >
+    翻译设置
+  </n-button>
+
+  <n-collapse-transition
+    :show="showTranslateOptions"
+    style="margin-bottom: 16px"
+  >
     <n-list bordered>
       <n-list-item>
         <AdvanceOptionSwitch

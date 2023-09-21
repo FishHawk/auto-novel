@@ -100,9 +100,6 @@ function sortVolumesZh(volumes: string[]) {
   return volumes.sort((a, b) => a.localeCompare(b));
 }
 const vars = useThemeVars();
-console.log(
-  `linear-gradient(color-mix(in srgb, ${vars.value.bodyColor} 40%, transparent), ${vars.value.bodyColor}), `
-);
 </script>
 
 <template>
