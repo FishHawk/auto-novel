@@ -27,9 +27,6 @@ useUserDataStore().$subscribe(
 </template>
 
 <style>
-body {
-  font-family: 'IBMPlexSans', Arial, sans-serif;
-}
 a {
   text-decoration: none;
 }
@@ -40,15 +37,6 @@ li {
 }
 .n-h:first-child {
   margin: var(--n-margin);
-}
-.n-layout {
-  overflow: visible;
-}
-.n-layout .n-layout-scroll-container {
-  overflow-x: visible;
-}
-.n-scrollbar-rail {
-  z-index: 10000;
 }
 .text-2line {
   display: -webkit-box;

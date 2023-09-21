@@ -26,15 +26,7 @@ export function dropdownOption(
 
 <script lang="ts" setup>
 import { Component, computed, h, ref } from 'vue';
-import {
-  MenuOption,
-  NIcon,
-  zhCN,
-  dateZhCN,
-  lightTheme,
-  darkTheme,
-  useThemeVars,
-} from 'naive-ui';
+import { MenuOption, NIcon, useThemeVars } from 'naive-ui';
 import { ColorLensFilled, LogOutFilled, MenuFilled } from '@vicons/material';
 import { RouterLink, useRoute } from 'vue-router';
 
@@ -131,7 +123,10 @@ const vars = useThemeVars();
 <template>
   <n-layout style="overflow-x: overlay">
     <n-layout-header bordered>
-      <div class="header">
+      <div
+        class="container"
+        style="display: flex; align-items: center; height: 50px"
+      >
         <n-popover v-if="!isDesktop" trigger="click" :width="280">
           <template #trigger>
             <n-icon size="24"> <MenuFilled /> </n-icon>
@@ -255,12 +250,6 @@ const vars = useThemeVars();
 </template>
 
 <style>
-.header {
-  display: flex;
-  align-items: center;
-  height: 50px;
-}
-.header,
 .container {
   max-width: 1000px;
   margin: 0 auto;
@@ -268,7 +257,6 @@ const vars = useThemeVars();
   padding-right: 30px;
 }
 @media only screen and (max-width: 600px) {
-  .header,
   .container {
     padding-left: 12px;
     padding-right: 12px;

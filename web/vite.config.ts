@@ -44,7 +44,7 @@ export default defineConfig(({ command, mode }) => {
               id.includes('nanoid')
             ) {
               return 'translator';
-            } else if (id.includes('src-vue/src') || id.includes('naive')) {
+            } else if (id.includes('web/src') || id.includes('naive')) {
               return 'chunk1';
             } else if (id.includes('node_module')) {
               return 'chunk2';
