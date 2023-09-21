@@ -297,7 +297,6 @@ class WenkuNovelVolumeRepository {
                     }
                 )
             }
-            append('.')
         }
 
         suspend fun getJpLines(chapterId: String): List<String> {

@@ -45,8 +45,9 @@ object Epub {
                     .forEach {
                         val bytesIn = zipIn.readAllBytes()
                         val bytesOut = modify(it, bytesIn)
-                        zipOut.putNextEntry(it)
+                        zipOut.putNextEntry(ZipEntry(it.name))
                         zipOut.write(bytesOut)
+                        zipOut.closeEntry()
                     }
             }
         }
