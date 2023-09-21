@@ -123,7 +123,7 @@ const linkExample = [
     <n-space
       :wrap="false"
       align="center"
-      style="max-width: 650px; margin-top: 20px; margin-bottom: 20px"
+      style="max-width: 650px; margin-top: 8px"
     >
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 

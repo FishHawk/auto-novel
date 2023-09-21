@@ -134,11 +134,13 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
       v-if="chapterId"
       :to="`/novel/${providerId}/${novelId}/${chapterId}`"
     >
-      <component :is="$slots.default!" />
+      <n-button quaternary type="primary">
+        <component :is="$slots.default!" />
+      </n-button>
     </RouterNA>
-    <n-text v-else depth="3">
+    <n-button v-else disabled quaternary>
       <component :is="$slots.default!" />
-    </n-text>
+    </n-button>
   </DefineChapterLink>
 
   <n-config-provider
@@ -157,7 +159,7 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
         :showEmpty="() => false"
         v-slot="{ value: chapter }"
       >
-        <n-h2 style="text-align: center; width: 100%">
+        <n-h2 style="text-align: center">
           <n-a :href="buildChapterUrl(providerId, novelId, chapterId)">{{
             chapter.titleJp
           }}</n-a>
@@ -167,8 +169,12 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
 
         <n-space align="center" justify="space-between" style="width: 100%">
           <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-          <RouterNA :to="`/novel/${providerId}/${novelId}`">目录</RouterNA>
-          <n-text type="success" @click="showModal = true">设置</n-text>
+          <RouterNA :to="`/novel/${providerId}/${novelId}`">
+            <n-button quaternary type="primary">目录</n-button>
+          </RouterNA>
+          <n-button quaternary type="primary" @click="showModal = true">
+            设置
+          </n-button>
           <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
         </n-space>
 
