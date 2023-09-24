@@ -8,6 +8,7 @@ import {
   FavoriteFilled,
 } from '@vicons/material';
 
+import coverPlaceholder from '@/images/cover_placeholder.png';
 import { ResultState } from '@/data/api/result';
 import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/userData';
@@ -111,7 +112,14 @@ const vars = useThemeVars();
             >
               <n-card size="small" style="width: 160px">
                 <template #cover>
-                  <img :src="novelMetadataResult.value.cover" alt="cover" />
+                  <img
+                    :src="
+                      novelMetadataResult.value.cover
+                        ? novelMetadataResult.value.cover
+                        : coverPlaceholder
+                    "
+                    alt="cover"
+                  />
                 </template>
               </n-card>
               <div>

@@ -65,9 +65,12 @@ getVolumesUser();
     <n-p>
       这里上传的小说是公开的，我会定期整理到文库版页面。
       <br />
-      在上传之前请确定文库列表还没有你的小说页面。如果有的话，请在小说页面上传。
+      在上传之前请确定<RouterNA to="/wenku-list">文库列表</RouterNA
+      >还没有你的小说页面。如果有的话，请在小说页面上传。
       <br />
       你也可以自己<RouterNA to="/wenku-edit">创建文库小说</RouterNA>。
+      <br />
+      <b>请正常使用这个功能，有什么特殊的需求请至少先在反馈帖说下。</b>
     </n-p>
     <UploadButton
       type="jp"
