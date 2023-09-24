@@ -1,5 +1,7 @@
 package api
 
+import infra.model.WenkuNovelEditHistory
+import infra.wenku.WenkuNovelEditHistoryRepository
 import infra.wenku.WenkuNovelUploadHistoryRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -13,11 +15,20 @@ import org.koin.ktor.ext.inject
 private class WenkuNovelAdminRes {
     @Resource("/upload")
     class UploadHistory(val parent: WenkuNovelAdminRes) {
-        @Resource("/")
+        @Resource("")
         class List(val parent: UploadHistory, val page: Int)
 
         @Resource("/{id}")
         class Id(val parent: UploadHistory, val id: String)
+    }
+
+    @Resource("/edit")
+    class EditHistory(val parent: WenkuNovelAdminRes) {
+        @Resource("")
+        class List(val parent: EditHistory, val page: Int)
+
+        @Resource("/{id}")
+        class Id(val parent: EditHistory, val id: String)
     }
 }
 
@@ -41,10 +52,28 @@ fun Route.routeWenkuNovelAdmin() {
             call.respondResult(result)
         }
     }
+
+    get<WenkuNovelAdminRes.EditHistory.List> { loc ->
+        val result = api.listEditHistory(
+            page = loc.page,
+            pageSize = 100,
+        )
+        call.respondResult(result)
+    }
+
+    authenticate {
+        delete<WenkuNovelAdminRes.EditHistory.Id> { loc ->
+            val result = call.requireAtLeastMaintainer {
+                api.deleteEditHistory(id = loc.id)
+            }
+            call.respondResult(result)
+        }
+    }
 }
 
 class WenkuNovelAdminApi(
     private val uploadHistoryRepo: WenkuNovelUploadHistoryRepository,
+    private val editHistoryRepo: WenkuNovelEditHistoryRepository,
 ) {
     @Serializable
     class UploadHistoryDto(
@@ -77,6 +106,42 @@ class WenkuNovelAdminApi(
 
     suspend fun deleteUploadHistory(id: String): Result<Unit> {
         uploadHistoryRepo.delete(id)
+        return Result.success(Unit)
+    }
+
+    @Serializable
+    class EditHistoryDto(
+        val id: String,
+        val novelId: String,
+        val operator: String,
+        val old: WenkuNovelEditHistory.Data?,
+        val new: WenkuNovelEditHistory.Data,
+        val createAt: Long,
+    )
+
+    suspend fun listEditHistory(
+        page: Int,
+        pageSize: Int,
+    ): Result<PageDto<EditHistoryDto>> {
+        val historyPage = editHistoryRepo.list(
+            page = page.coerceAtLeast(0),
+            pageSize = pageSize,
+        )
+        val dtoPage = PageDto.fromPage(historyPage, pageSize) {
+            EditHistoryDto(
+                id = it.id.toHexString(),
+                novelId = it.novelId,
+                operator = it.operator,
+                old = it.old,
+                new = it.new,
+                createAt = it.createAt.epochSeconds,
+            )
+        }
+        return Result.success(dtoPage)
+    }
+
+    suspend fun deleteEditHistory(id: String): Result<Unit> {
+        editHistoryRepo.delete(id)
         return Result.success(Unit)
     }
 }

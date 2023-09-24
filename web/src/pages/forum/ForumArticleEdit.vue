@@ -141,7 +141,7 @@ const formatExample: [string, string][] = [
         />
       </n-form-item-row>
     </n-form>
-    <AsyncButton type="primary" :on-async-click="submit">发布</AsyncButton>
+    <AsyncButton type="primary" :on-async-click="submit">提交</AsyncButton>
 
     <n-divider />
 

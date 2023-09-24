@@ -51,13 +51,23 @@ const router = createRouter({
       component: () => import('./pages/novel/WebNovel.vue'),
     },
     {
-      path: '/wenku/:novelId',
-      component: () => import('./pages/novel/WenkuNovel.vue'),
+      path: '/novel/:providerId/:novelId/:chapterId',
+      component: () => import('./pages/novel/WebChapter.vue'),
     },
 
     {
-      path: '/novel/:providerId/:novelId/:chapterId',
-      component: () => import('./pages/novel/WebChapter.vue'),
+      path: '/wenku/:novelId',
+      component: () => import('./pages/novel/WenkuNovel.vue'),
+    },
+    {
+      path: '/wenku-edit',
+      meta: { title: '新建文库小说' },
+      component: () => import('./pages/novel/WenkuNovelEdit.vue'),
+    },
+    {
+      path: '/wenku-edit/:id',
+      meta: { title: '编辑文库小说' },
+      component: () => import('./pages/novel/WenkuNovelEdit.vue'),
     },
 
     {
@@ -72,12 +82,12 @@ const router = createRouter({
     {
       path: '/forum-edit',
       meta: { title: '发布文章' },
-      component: () => import('./pages/forum/ForumEdit.vue'),
+      component: () => import('./pages/forum/ForumArticleEdit.vue'),
     },
     {
       path: '/forum-edit/:id',
       meta: { title: '编辑文章' },
-      component: () => import('./pages/forum/ForumEdit.vue'),
+      component: () => import('./pages/forum/ForumArticleEdit.vue'),
     },
 
     {
@@ -95,6 +105,10 @@ const router = createRouter({
         {
           path: '/admin/wenku-upload-history',
           component: () => import('./pages/admin/AdminWenkuUploadHistory.vue'),
+        },
+        {
+          path: '/admin/wenku-edit-history',
+          component: () => import('./pages/admin/AdminWenkuEditHistory.vue'),
         },
       ],
     },

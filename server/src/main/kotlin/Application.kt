@@ -6,6 +6,7 @@ import infra.ElasticSearchDataSource
 import infra.MongoDataSource
 import infra.provider.WebNovelProviderDataSource
 import infra.web.*
+import infra.wenku.WenkuNovelEditHistoryRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -131,6 +132,7 @@ val appModule = module {
     single { WenkuNovelMetadataRepository(get(), get()) }
     single { WenkuNovelVolumeRepository() }
     single { WenkuNovelUploadHistoryRepository(get()) }
+    single { WenkuNovelEditHistoryRepository(get()) }
 
     single { ArticleRepository(get()) }
     single { CommentRepository(get()) }
@@ -149,6 +151,6 @@ val appModule = module {
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
 
-    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get()) }
-    single(createdAtStart = true) { WenkuNovelAdminApi(get()) }
+    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelAdminApi(get(), get()) }
 }

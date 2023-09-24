@@ -97,6 +97,8 @@ class MongoDataSource(url: String) {
 
     val wenkuNovelUploadHistoryCollection
         get() = database.getCollection<WenkuNovelUploadHistory>("wenku-upload-history")
+    val wenkuNovelEditHistoryCollection
+        get() = database.getCollection<WenkuNovelEditHistory>("wenku-edit-history")
 
     // Ensure index
     init {

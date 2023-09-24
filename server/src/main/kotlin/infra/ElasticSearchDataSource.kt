@@ -26,7 +26,6 @@ data class WenkuNovelMetadataEsModel(
     val id: String,
     val title: String,
     val titleZh: String,
-    val titleZhAlias: List<String>,
     val cover: String,
     val authors: List<String>,
     val artists: List<String>,
@@ -70,7 +69,6 @@ class ElasticSearchDataSource(url: String) {
                     mappings(dynamicEnabled = false) {
                         text(WenkuNovelMetadataEsModel::title) { analyzer = "icu_analyzer" }
                         text(WenkuNovelMetadataEsModel::titleZh) { analyzer = "icu_analyzer" }
-                        text(WenkuNovelMetadataEsModel::titleZhAlias) { analyzer = "icu_analyzer" }
                         keyword(WenkuNovelMetadataEsModel::authors)
                         keyword(WenkuNovelMetadataEsModel::artists)
                         keyword(WenkuNovelMetadataEsModel::keywords)

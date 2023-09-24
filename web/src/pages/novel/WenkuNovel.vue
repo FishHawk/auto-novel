@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useMessage, useThemeVars } from 'naive-ui';
 import {
-  DoorbellFilled,
   EditNoteFilled,
   FavoriteBorderFilled,
   FavoriteFilled,
@@ -22,7 +21,7 @@ const novelId = route.params.novelId as string;
 const novelMetadataResult = ref<ResultState<WenkuMetadataDto>>();
 
 async function getMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(novelId);
+  const result = await ApiWenkuNovel.getNovel(novelId);
   novelMetadataResult.value = result;
   if (result.ok) {
     document.title = result.value.title;
@@ -31,7 +30,7 @@ async function getMetadata() {
 getMetadata();
 
 async function refreshMetadata() {
-  const result = await ApiWenkuNovel.getMetadata(novelId);
+  const result = await ApiWenkuNovel.getNovel(novelId);
   if (result.ok) {
     novelMetadataResult.value = result;
   }
@@ -81,21 +80,6 @@ async function removeFavorite() {
 
 const editMode = ref(false);
 
-async function notifyUpdate() {
-  if (!userData.logined) {
-    message.info('请先登录');
-    return;
-  }
-
-  const result = await ApiWenkuNovel.notifyUpdate(novelId);
-  if (result.ok) {
-    message.info('提醒更新成功');
-  } else {
-    message.error('提醒更新错误：' + result.error.message);
-  }
-  isFavoriteChanging = false;
-}
-
 function sortVolumesZh(volumes: string[]) {
   return volumes.sort((a, b) => a.localeCompare(b));
 }
@@ -120,7 +104,7 @@ const vars = useThemeVars();
         "
       >
         <div style="width: 100%; height: 100%; backdrop-filter: blur(4px)">
-          <div class="container" style="filter: ">
+          <n-layout class="container" style="background-color: transparent">
             <n-space
               :wrap="false"
               style="padding-top: 40px; padding-bottom: 20px; min-height: 260px"
@@ -153,7 +137,7 @@ const vars = useThemeVars();
                 </table>
               </div>
             </n-space>
-          </div>
+          </n-layout>
         </div>
       </div>
     </template>
@@ -164,12 +148,14 @@ const vars = useThemeVars();
       v-slot="{ value: metadata }"
     >
       <n-space>
-        <n-button v-if="userData.asAdmin" @click="editMode = !editMode">
-          <template #icon>
-            <n-icon :component="EditNoteFilled" />
-          </template>
-          {{ editMode ? '退出编辑' : '编辑' }}
-        </n-button>
+        <RouterNA :to="`/wenku-edit/${novelId}`">
+          <n-button>
+            <template #icon>
+              <n-icon :component="EditNoteFilled" />
+            </template>
+            编辑
+          </n-button>
+        </RouterNA>
 
         <AsyncButton
           v-if="metadata.favored === true"
@@ -187,13 +173,6 @@ const vars = useThemeVars();
           </template>
           收藏
         </AsyncButton>
-
-        <n-button v-if="userData.asAdmin" @click="notifyUpdate()">
-          <template #icon>
-            <n-icon :component="DoorbellFilled" />
-          </template>
-          提醒更新
-        </n-button>
       </n-space>
 
       <template v-if="editMode">

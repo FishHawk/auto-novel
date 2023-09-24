@@ -2,6 +2,7 @@ package api
 
 import infra.UserRepository
 import infra.model.*
+import infra.wenku.WenkuNovelEditHistoryRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -12,7 +13,6 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
-import io.ktor.server.resources.patch
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.response.*
@@ -53,9 +53,6 @@ private class WenkuNovelRes {
 
         @Resource("/glossary")
         class Glossary(val parent: Id)
-
-        @Resource("/notify-update")
-        class NotifyUpdate(val parent: Id)
 
         @Resource("/volume-zh")
         class VolumeZh(val parent: Id)
@@ -136,36 +133,29 @@ fun Route.routeWenkuNovel() {
     authenticate(optional = true) {
         get<WenkuNovelRes.Id> { loc ->
             val user = call.jwtUserOrNull()
-            val result = service.getMetadata(loc.novelId, user?.username)
+            val result = service.getNovel(loc.novelId, user?.username)
             call.respondResult(result)
         }
     }
 
     authenticate {
         post<WenkuNovelRes> {
-            val result = call.requireAtLeastMaintainer {
-                val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
-                service.createMetadata(body)
-            }
+            val user = call.jwtUser()
+            val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
+            val result = service.createNovel(body, user.username)
             call.respondResult(result)
         }
 
-        patch<WenkuNovelRes.Id> { loc ->
+        put<WenkuNovelRes.Id> { loc ->
+            val user = call.jwtUser()
             val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
-            val result = service.updateMetadata(loc.novelId, body)
+            val result = service.updateNovel(loc.novelId, body, user.username)
             call.respondResult(result)
         }
 
         put<WenkuNovelRes.Id.Glossary> { loc ->
             val body = call.receive<Map<String, String>>()
             val result = service.updateGlossary(loc.parent.novelId, body)
-            call.respondResult(result)
-        }
-
-        post<WenkuNovelRes.Id.NotifyUpdate> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                service.notifyUpdate(loc.parent.novelId)
-            }
             call.respondResult(result)
         }
 
@@ -262,6 +252,7 @@ class WenkuNovelApi(
     private val metadataRepo: WenkuNovelMetadataRepository,
     private val volumeRepo: WenkuNovelVolumeRepository,
     private val uploadHistoryRepo: WenkuNovelUploadHistoryRepository,
+    private val editHistoryRepository: WenkuNovelEditHistoryRepository,
 ) {
     @Serializable
     class NovelOutlineDto(
@@ -284,7 +275,7 @@ class WenkuNovelApi(
         pageSize: Int,
     ): Result<PageDto<NovelOutlineDto>> {
         val novelPage = metadataRepo.search(
-            queryString = queryString,
+            userQuery = queryString,
             page = page,
             pageSize = pageSize,
         )
@@ -334,7 +325,6 @@ class WenkuNovelApi(
     class NovelDto(
         val title: String,
         val titleZh: String,
-        val titleZhAlias: List<String>,
         val cover: String,
         val coverSmall: String,
         val authors: List<String>,
@@ -348,7 +338,7 @@ class WenkuNovelApi(
         val volumeJp: List<WenkuNovelVolumeJp>,
     )
 
-    suspend fun getMetadata(
+    suspend fun getNovel(
         novelId: String,
         username: String?,
     ): Result<NovelDto> {
@@ -365,7 +355,6 @@ class WenkuNovelApi(
         val metadataDto = NovelDto(
             title = metadata.title,
             titleZh = metadata.titleZh,
-            titleZhAlias = metadata.titleZhAlias,
             cover = metadata.cover,
             coverSmall = metadata.coverSmall,
             authors = metadata.authors,
@@ -380,19 +369,6 @@ class WenkuNovelApi(
         )
         return Result.success(metadataDto)
     }
-
-    @Serializable
-    class MetadataCreateBody(
-        val title: String,
-        val titleZh: String,
-        val titleZhAlias: List<String>,
-        val cover: String,
-        val coverSmall: String,
-        val authors: List<String>,
-        val artists: List<String>,
-        val keywords: List<String>,
-        val introduction: String,
-    )
 
     suspend fun setFavored(username: String, novelId: String): Result<Unit> {
         if (!metadataRepo.exist(novelId)) {
@@ -416,13 +392,25 @@ class WenkuNovelApi(
         return Result.success(Unit)
     }
 
-    suspend fun createMetadata(
+    @Serializable
+    class MetadataCreateBody(
+        val title: String,
+        val titleZh: String,
+        val cover: String,
+        val coverSmall: String,
+        val authors: List<String>,
+        val artists: List<String>,
+        val keywords: List<String>,
+        val introduction: String,
+    )
+
+    suspend fun createNovel(
         body: MetadataCreateBody,
+        username: String,
     ): Result<String> {
-        val novelId = metadataRepo.insert(
+        val novelId = metadataRepo.create(
             title = body.title,
             titleZh = body.titleZh,
-            titleZhAlias = body.titleZhAlias,
             cover = body.cover,
             coverSmall = body.coverSmall,
             authors = body.authors,
@@ -430,26 +418,56 @@ class WenkuNovelApi(
             keywords = body.keywords,
             introduction = body.introduction,
         )
+        editHistoryRepository.create(
+            novelId,
+            operator = username,
+            old = null,
+            new = WenkuNovelEditHistory.Data(
+                title = body.title,
+                titleZh = body.titleZh,
+                authors = body.authors,
+                artists = body.artists,
+                introduction = body.introduction,
+            ),
+        )
         return Result.success(novelId)
     }
 
-    suspend fun updateMetadata(
+    suspend fun updateNovel(
         novelId: String,
         body: MetadataCreateBody,
+        username: String,
     ): Result<Unit> {
-        metadataRepo.get(novelId)
+        val old = metadataRepo.get(novelId)
             ?: return httpNotFound("书不存在")
-        metadataRepo.findOneAndUpdate(
+        metadataRepo.update(
             novelId = novelId,
             title = body.title,
             titleZh = body.titleZh,
-            titleZhAlias = body.titleZhAlias,
             cover = body.cover,
             coverSmall = body.coverSmall,
             authors = body.authors,
             artists = body.artists,
             keywords = body.keywords,
             introduction = body.introduction,
+        )
+        editHistoryRepository.create(
+            novelId,
+            operator = username,
+            old = WenkuNovelEditHistory.Data(
+                title = old.title,
+                titleZh = old.titleZh,
+                authors = old.authors,
+                artists = old.artists,
+                introduction = old.introduction,
+            ),
+            new = WenkuNovelEditHistory.Data(
+                title = body.title,
+                titleZh = body.titleZh,
+                authors = body.authors,
+                artists = body.artists,
+                introduction = body.introduction,
+            ),
         )
         return Result.success(Unit)
     }
@@ -463,11 +481,6 @@ class WenkuNovelApi(
         if (glossary == metadata.glossary)
             return httpBadRequest("术语表没有改变")
         metadataRepo.updateGlossary(novelId, glossary)
-        return Result.success(Unit)
-    }
-
-    suspend fun notifyUpdate(novelId: String): Result<Unit> {
-        metadataRepo.notifyUpdate(novelId)
         return Result.success(Unit)
     }
 
@@ -535,7 +548,7 @@ class WenkuNovelApi(
             httpNotFound("小说不存在")
         } else {
             createVolume(novelId, volumeId, inputStream).onSuccess {
-                uploadHistoryRepo.insert(
+                uploadHistoryRepo.create(
                     novelId = novelId,
                     volumeId = volumeId,
                     uploader = username,
@@ -559,7 +572,7 @@ class WenkuNovelApi(
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
         return createVolumeAndUnpack(novelId, volumeId, inputStream).onSuccess {
             if (!(novelId == "non-archived" || novelId.startsWith("user"))) {
-                uploadHistoryRepo.insert(
+                uploadHistoryRepo.create(
                     novelId = novelId,
                     volumeId = volumeId,
                     uploader = username,

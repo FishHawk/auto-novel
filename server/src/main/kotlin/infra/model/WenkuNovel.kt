@@ -20,7 +20,6 @@ data class WenkuNovelMetadata(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
     val titleZh: String,
-    val titleZhAlias: List<String>,
     val cover: String,
     val coverSmall: String,
     val authors: List<String>,

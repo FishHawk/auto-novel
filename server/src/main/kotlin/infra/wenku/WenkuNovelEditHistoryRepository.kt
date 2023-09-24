@@ -2,22 +2,22 @@ package infra.wenku
 
 import infra.MongoDataSource
 import infra.model.Page
-import infra.model.WenkuNovelUploadHistory
+import infra.model.WenkuNovelEditHistory
 import kotlinx.datetime.Clock
 import org.bson.types.ObjectId
 
-class WenkuNovelUploadHistoryRepository(
+class WenkuNovelEditHistoryRepository(
     private val mongo: MongoDataSource,
 ) {
     suspend fun list(
         page: Int,
         pageSize: Int,
-    ): Page<WenkuNovelUploadHistory> {
+    ): Page<WenkuNovelEditHistory> {
         val total = mongo
-            .wenkuNovelUploadHistoryCollection
+            .wenkuNovelEditHistoryCollection
             .countDocuments()
         val items = mongo
-            .wenkuNovelUploadHistoryCollection
+            .wenkuNovelEditHistoryCollection
             .find()
             .descendingSort()
             .skip(page * pageSize)
@@ -28,23 +28,25 @@ class WenkuNovelUploadHistoryRepository(
 
     suspend fun delete(id: String) {
         mongo
-            .wenkuNovelUploadHistoryCollection
+            .wenkuNovelEditHistoryCollection
             .deleteOneById(ObjectId(id))
     }
 
     suspend fun create(
         novelId: String,
-        volumeId: String,
-        uploader: String,
+        operator: String,
+        old: WenkuNovelEditHistory.Data?,
+        new: WenkuNovelEditHistory.Data,
     ) {
         mongo
-            .wenkuNovelUploadHistoryCollection
+            .wenkuNovelEditHistoryCollection
             .insertOne(
-                WenkuNovelUploadHistory(
+                WenkuNovelEditHistory(
                     id = ObjectId(),
                     novelId = novelId,
-                    volumeId = volumeId,
-                    uploader = uploader,
+                    operator = operator,
+                    old = old,
+                    new = new,
                     createAt = Clock.System.now(),
                 )
             )

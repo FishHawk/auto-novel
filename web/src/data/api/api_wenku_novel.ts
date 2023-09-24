@@ -32,7 +32,6 @@ const listFavored = (
 export interface WenkuMetadataDto {
   title: string;
   titleZh: string;
-  titleZhAlias: string[];
   cover: string;
   coverSmall: string;
   authors: string[];
@@ -62,7 +61,7 @@ const listVolumesUser = () =>
     api.get(`wenku/user`).json<{ list: VolumeJpDto[]; novelId: string }>()
   );
 
-const getMetadata = (novelId: string) =>
+const getNovel = (novelId: string) =>
   runCatching(api.get(`wenku/${novelId}`).json<WenkuMetadataDto>());
 
 const putFavored = (novelId: string) =>
@@ -71,10 +70,9 @@ const putFavored = (novelId: string) =>
 const deleteFavored = (novelId: string) =>
   runCatching(api.delete(`wenku/${novelId}/favored`).text());
 
-interface MetadataCreateBody {
+interface NovelCreateBody {
   title: string;
   titleZh: string;
-  titleZhAlias: string[];
   cover: string;
   coverSmall: string;
   authors: string[];
@@ -83,42 +81,38 @@ interface MetadataCreateBody {
   introduction: string;
 }
 
-const postMetadata = (body: MetadataCreateBody) =>
-  runCatching(api.post(`wenku`, { json: body }).text());
+const createNovel = (json: NovelCreateBody) =>
+  runCatching(api.post(`wenku`, { json }).text());
 
-const patchMetadata = (id: string, body: MetadataCreateBody) =>
-  runCatching(api.patch(`wenku/${id}`, { json: body }).text());
+const updateNovel = (id: string, json: NovelCreateBody) =>
+  runCatching(api.put(`wenku/${id}`, { json }).text());
 
-const updateGlossary = (id: string, body: { [key: string]: string }) =>
-  runCatching(api.put(`wenku/${id}/glossary`, { json: body }).text());
+const updateGlossary = (id: string, json: { [key: string]: string }) =>
+  runCatching(api.put(`wenku/${id}/glossary`, { json }).text());
 
-const notifyUpdate = (id: string) =>
-  runCatching(api.post(`wenku/${id}/notify-update`).text());
+const getNovelFromBangumi = async (novelId: string) => {
+  interface BangumiSection {
+    name: string;
+    name_cn: string;
+    images: {
+      common: string;
+      grid: string;
+      large: string;
+      medium: string;
+      small: string;
+    };
+    infobox: { key: string; value: string }[];
+    summary: string;
+    tags: { name: string; count: number }[];
+  }
 
-interface BangumiSection {
-  name: string;
-  name_cn: string;
-  images: {
-    common: string;
-    grid: string;
-    large: string;
-    medium: string;
-    small: string;
-  };
-  infobox: { key: string; value: string }[];
-  summary: string;
-  tags: { name: string; count: number }[];
-}
-
-const getMetadataFromBangumi = async (novelId: string) => {
   const sectionResult = await runCatching(
     ky.get(`https://api.bgm.tv/v0/subjects/${novelId}`).json<BangumiSection>()
   );
   if (sectionResult.ok) {
-    const metadata: MetadataCreateBody = {
+    const metadata: NovelCreateBody = {
       title: sectionResult.value.name,
       titleZh: sectionResult.value.name_cn,
-      titleZhAlias: [],
       cover: sectionResult.value.images.medium,
       coverSmall: sectionResult.value.images.small,
       authors: [],
@@ -151,15 +145,16 @@ export const ApiWenkuNovel = {
   listVolumesUser,
   listVolumesNonArchived,
   //
-  getMetadata,
+  getNovel,
   //
   putFavored,
   deleteFavored,
-  postMetadata,
-  patchMetadata,
+  //
+  getNovelFromBangumi,
+  createNovel,
+  updateNovel,
+  //
   updateGlossary,
-  notifyUpdate,
-  getMetadataFromBangumi,
   createVolumeZhUploadUrl,
   createVolumeJpUploadUrl,
 };

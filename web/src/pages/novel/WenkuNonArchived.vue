@@ -48,7 +48,7 @@ getVolumesUser();
     <n-p>
       这里上传的小说是不公开的，如果你的小说有放流时间等限制无法公开，可以上传到这里。
       <br />
-      上传到这里的小说过一段时间会清理（现在还没做）。
+      上传到这里的小说过一段时间会清理（现在还没做，想清理可以在反馈帖找我手动清）。
     </n-p>
     <UploadButton type="jp" :novelId="userNovelId" />
     <n-divider />
@@ -58,19 +58,16 @@ getVolumesUser();
       :showEmpty="(it: any) => it.length === 0"
       v-slot="{ value: volumes }"
     >
-      <WenkuTranslate
-        :novelId="userNovelId"
-        :volumes="volumes"
-      />
+      <WenkuTranslate :novelId="userNovelId" :volumes="volumes" />
     </ResultView>
 
     <SectionHeader title="通用缓存区" />
     <n-p>
       这里上传的小说是公开的，我会定期整理到文库版页面。
       <br />
-      <b>
-        在上传之前请确定文库列表还没有你的小说页面。如果有的话，请在小说页面上传。
-      </b>
+      在上传之前请确定文库列表还没有你的小说页面。如果有的话，请在小说页面上传。
+      <br />
+      你也可以自己<RouterNA to="/wenku-edit">创建文库小说</RouterNA>。
     </n-p>
     <UploadButton
       type="jp"
@@ -84,10 +81,7 @@ getVolumesUser();
       :showEmpty="(it: any) => it.length === 0"
       v-slot="{ value: volumes }"
     >
-      <WenkuTranslate
-        novel-id="non-archived"
-        :volumes="volumes"
-      />
+      <WenkuTranslate novel-id="non-archived" :volumes="volumes" />
     </ResultView>
   </MainLayout>
 </template>

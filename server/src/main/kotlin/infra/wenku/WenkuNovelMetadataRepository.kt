@@ -3,8 +3,6 @@ package infra.wenku
 import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.CountOptions
-import com.mongodb.client.model.FindOneAndUpdateOptions
-import com.mongodb.client.model.ReturnDocument
 import infra.ElasticSearchDataSource
 import infra.MongoDataSource
 import infra.WenkuNovelMetadataEsModel
@@ -25,7 +23,7 @@ class WenkuNovelMetadataRepository(
     private val es: ElasticSearchDataSource,
 ) {
     suspend fun search(
-        queryString: String?,
+        userQuery: String?,
         page: Int,
         pageSize: Int,
     ): Page<WenkuNovelMetadataOutline> {
@@ -35,13 +33,12 @@ class WenkuNovelMetadataRepository(
             size = pageSize
         ) {
             query = bool {
-                if (queryString != null) {
+                if (userQuery != null) {
                     must(
                         simpleQueryString(
-                            queryString,
+                            userQuery,
                             WenkuNovelMetadataEsModel::title,
                             WenkuNovelMetadataEsModel::titleZh,
-                            WenkuNovelMetadataEsModel::titleZhAlias,
                             WenkuNovelMetadataEsModel::authors,
                             WenkuNovelMetadataEsModel::artists,
                             WenkuNovelMetadataEsModel::keywords,
@@ -95,27 +92,64 @@ class WenkuNovelMetadataRepository(
             )
     }
 
-    suspend fun findOneAndUpdate(
-        novelId: String,
+    suspend fun create(
         title: String,
         titleZh: String,
-        titleZhAlias: List<String>,
         cover: String,
         coverSmall: String,
         authors: List<String>,
         artists: List<String>,
         keywords: List<String>,
         introduction: String,
-    ): WenkuNovelMetadata? {
-        val novel = mongo
+    ): String {
+        val insertResult = mongo
             .wenkuNovelMetadataCollection
-            .findOneAndUpdate(
+            .insertOne(
+                WenkuNovelMetadata(
+                    id = ObjectId(),
+                    title = title,
+                    titleZh = titleZh,
+                    cover = cover,
+                    coverSmall = coverSmall,
+                    authors = authors,
+                    artists = artists,
+                    keywords = keywords,
+                    introduction = introduction,
+                    visited = 0,
+                )
+            )
+        val id = insertResult.insertedId!!.asObjectId().value.toHexString()
+        syncEs(
+            novelId = id,
+            title = title,
+            titleZh = titleZh,
+            cover = coverSmall,
+            authors = authors,
+            artists = artists,
+            keywords = keywords,
+        )
+        return id
+    }
+
+    suspend fun update(
+        novelId: String,
+        title: String,
+        titleZh: String,
+        cover: String,
+        coverSmall: String,
+        authors: List<String>,
+        artists: List<String>,
+        keywords: List<String>,
+        introduction: String,
+    ) {
+        mongo
+            .wenkuNovelMetadataCollection
+            .updateOne(
                 WenkuNovelMetadata.byId(novelId),
                 combine(
                     listOf(
                         setValue(WenkuNovelMetadata::title, title),
                         setValue(WenkuNovelMetadata::titleZh, titleZh),
-                        setValue(WenkuNovelMetadata::titleZhAlias, titleZhAlias),
                         setValue(WenkuNovelMetadata::cover, cover),
                         setValue(WenkuNovelMetadata::coverSmall, coverSmall),
                         setValue(WenkuNovelMetadata::authors, authors),
@@ -123,20 +157,43 @@ class WenkuNovelMetadataRepository(
                         setValue(WenkuNovelMetadata::keywords, keywords),
                         setValue(WenkuNovelMetadata::introduction, introduction),
                     )
-                ),
-                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
+                )
             )
         syncEs(
             novelId = novelId,
             title = title,
             titleZh = titleZh,
-            titleZhAlias = titleZhAlias,
             cover = coverSmall,
             authors = authors,
             artists = artists,
             keywords = keywords,
         )
-        return novel
+    }
+
+    private suspend fun syncEs(
+        novelId: String,
+        title: String,
+        titleZh: String,
+        cover: String,
+        authors: List<String>,
+        artists: List<String>,
+        keywords: List<String>,
+    ) {
+        es.client.indexDocument(
+            id = novelId,
+            target = ElasticSearchDataSource.wenkuNovelIndexName,
+            document = WenkuNovelMetadataEsModel(
+                id = novelId,
+                title = title,
+                titleZh = titleZh,
+                cover = cover,
+                authors = authors,
+                artists = artists,
+                keywords = keywords,
+                updateAt = Clock.System.now().epochSeconds,
+            ),
+            refresh = Refresh.WaitFor,
+        )
     }
 
     suspend fun updateGlossary(
@@ -161,76 +218,6 @@ class WenkuNovelMetadataRepository(
             id = novelId,
             target = ElasticSearchDataSource.wenkuNovelIndexName,
             doc = EsUpdate(Clock.System.now().epochSeconds),
-            refresh = Refresh.WaitFor,
-        )
-    }
-
-    suspend fun insert(
-        title: String,
-        titleZh: String,
-        titleZhAlias: List<String>,
-        cover: String,
-        coverSmall: String,
-        authors: List<String>,
-        artists: List<String>,
-        keywords: List<String>,
-        introduction: String,
-    ): String {
-        val insertResult = mongo
-            .wenkuNovelMetadataCollection
-            .insertOne(
-                WenkuNovelMetadata(
-                    id = ObjectId(),
-                    title = title,
-                    titleZh = titleZh,
-                    titleZhAlias = titleZhAlias,
-                    cover = cover,
-                    coverSmall = coverSmall,
-                    authors = authors,
-                    artists = artists,
-                    keywords = keywords,
-                    introduction = introduction,
-                    visited = 0,
-                )
-            )
-        val id = insertResult.insertedId!!.asObjectId().value.toHexString()
-        syncEs(
-            novelId = id,
-            title = title,
-            titleZh = titleZh,
-            titleZhAlias = titleZhAlias,
-            cover = coverSmall,
-            authors = authors,
-            artists = artists,
-            keywords = keywords,
-        )
-        return id
-    }
-
-    private suspend fun syncEs(
-        novelId: String,
-        title: String,
-        titleZh: String,
-        titleZhAlias: List<String>,
-        cover: String,
-        authors: List<String>,
-        artists: List<String>,
-        keywords: List<String>,
-    ) {
-        es.client.indexDocument(
-            id = novelId,
-            target = ElasticSearchDataSource.wenkuNovelIndexName,
-            document = WenkuNovelMetadataEsModel(
-                id = novelId,
-                title = title,
-                titleZh = titleZh,
-                titleZhAlias = titleZhAlias,
-                cover = cover,
-                authors = authors,
-                artists = artists,
-                keywords = keywords,
-                updateAt = Clock.System.now().epochSeconds,
-            ),
             refresh = Refresh.WaitFor,
         )
     }

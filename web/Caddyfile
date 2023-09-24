@@ -30,5 +30,6 @@
 	handle_path /files-extra* {
 		root * /data/files-extra
 		file_server
+		header /*.png Cache-Control "public, max-age=7776000"
 	}
 }

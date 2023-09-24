@@ -14,3 +14,22 @@ data class WenkuNovelUploadHistory(
     val uploader: String,
     @Contextual val createAt: Instant,
 )
+
+@Serializable
+data class WenkuNovelEditHistory(
+    @Contextual @SerialName("_id") val id: ObjectId,
+    val novelId: String,
+    val operator: String,
+    val old: Data?,
+    val new: Data,
+    @Contextual val createAt: Instant,
+) {
+    @Serializable
+    data class Data(
+        val title: String,
+        val titleZh: String,
+        val authors: List<String>,
+        val artists: List<String>,
+        val introduction: String,
+    )
+}
