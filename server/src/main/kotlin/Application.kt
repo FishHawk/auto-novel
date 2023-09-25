@@ -2,8 +2,6 @@ import api.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.*
-import infra.ElasticSearchDataSource
-import infra.MongoDataSource
 import infra.provider.WebNovelProviderDataSource
 import infra.web.*
 import infra.wenku.WenkuNovelEditHistoryRepository
@@ -25,29 +23,10 @@ import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.serializersModuleOf
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-
-object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
-    override val descriptor = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.LONG)
-
-    override fun serialize(encoder: Encoder, value: LocalDateTime) =
-        encoder.encodeLong(value.atZone(ZoneId.systemDefault()).toEpochSecond())
-
-    override fun deserialize(decoder: Decoder): LocalDateTime =
-        Instant.ofEpochSecond(decoder.decodeLong()).atZone(ZoneId.systemDefault()).toLocalDateTime()
-}
 
 fun main() {
     embeddedServer(Netty, 8081) {
@@ -76,9 +55,7 @@ fun main() {
         install(Resources)
         install(CachingHeaders)
         install(ContentNegotiation) {
-            json(Json {
-                serializersModule = serializersModuleOf(LocalDateTimeSerializer)
-            })
+            json(Json)
         }
         install(CallLogging) {
             format { call ->

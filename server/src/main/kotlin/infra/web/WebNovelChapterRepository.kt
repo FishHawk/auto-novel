@@ -2,11 +2,10 @@ package infra.web
 
 import infra.MongoDataSource
 import infra.model.*
-import infra.provider.RemoteChapter
 import infra.provider.WebNovelProviderDataSource
+import kotlinx.datetime.Clock
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
-import java.time.LocalDateTime
 
 class WebNovelChapterRepository(
     private val provider: WebNovelProviderDataSource,
@@ -177,7 +176,7 @@ class WebNovelChapterRepository(
                 WebNovelMetadata.byId(providerId, novelId),
                 combine(
                     setValue(zhProperty, zh),
-                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
+                    setValue(WebNovelMetadata::changeAt, Clock.System.now()),
                 ),
             )
         return zh
@@ -195,7 +194,7 @@ class WebNovelChapterRepository(
                 WebNovelMetadata.byId(providerId, novelId),
                 combine(
                     setValue(WebNovelMetadata::jp, jp),
-                    setValue(WebNovelMetadata::changeAt, LocalDateTime.now()),
+                    setValue(WebNovelMetadata::changeAt, Clock.System.now()),
                 ),
             )
     }

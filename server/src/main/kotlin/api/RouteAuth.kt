@@ -13,13 +13,14 @@ import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
+import kotlinx.datetime.Clock
+import kotlinx.datetime.toJavaInstant
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.Email
 import util.PBKDF2
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.*
+import kotlin.time.Duration.Companion.days
 
 @Resource("/auth")
 private class AuthRes {
@@ -114,9 +115,7 @@ class AuthApi(
         username: String,
         role: User.Role,
     ): Pair<String, Long> {
-        val expiresAt = LocalDateTime.now()
-            .plusMonths(6)
-            .atZone(ZoneId.systemDefault())
+        val expiresAt = (Clock.System.now() + 180.days)
         return Pair(
             JWT.create()
                 .apply {
@@ -124,10 +123,10 @@ class AuthApi(
                     if (role != User.Role.Normal) {
                         withClaim("role", role.toString())
                     }
-                    withExpiresAt(Date.from(expiresAt.toInstant()))
+                    withExpiresAt(expiresAt.toJavaInstant())
                 }
                 .sign(Algorithm.HMAC256(secret)),
-            expiresAt.toEpochSecond(),
+            expiresAt.epochSeconds,
         )
     }
 

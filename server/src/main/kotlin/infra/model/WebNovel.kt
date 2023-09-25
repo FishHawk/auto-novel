@@ -9,7 +9,6 @@ import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
-import java.time.LocalDateTime
 
 @Serializable
 enum class WebNovelAttention {
@@ -86,8 +85,8 @@ class WebNovelMetadata(
     // Misc
     val visited: Long = 0,
     val pauseUpdate: Boolean = false,
-    @Contextual val syncAt: LocalDateTime = LocalDateTime.now(),
-    @Contextual val changeAt: LocalDateTime = LocalDateTime.now(),
+    @Contextual val syncAt: Instant = Clock.System.now(),
+    @Contextual val changeAt: Instant = Clock.System.now(),
     @Contextual val updateAt: Instant = Clock.System.now(),
 ) {
     companion object {

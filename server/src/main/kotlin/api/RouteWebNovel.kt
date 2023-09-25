@@ -493,7 +493,7 @@ class WebNovelApi(
             glossary = novel.glossary,
             toc = novel.toc.map { NovelTocItemDto.fromDomain(it) },
             visited = novel.visited,
-            syncAt = novel.syncAt.atZone(ZoneId.systemDefault()).toEpochSecond(),
+            syncAt = novel.syncAt.epochSeconds,
             favored = favored,
             lastReadChapterId = history?.chapterId,
             jp = novel.jp,

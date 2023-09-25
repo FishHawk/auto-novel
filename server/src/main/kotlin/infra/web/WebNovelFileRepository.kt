@@ -5,9 +5,9 @@ import infra.model.NovelFileLang
 import infra.model.NovelFileType
 import infra.model.WebNovelChapter
 import infra.model.WebNovelMetadata
+import kotlinx.datetime.toKotlinInstant
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
-import java.time.ZoneId
 import kotlin.io.path.*
 
 class WebNovelFileRepository(
@@ -32,10 +32,8 @@ class WebNovelFileRepository(
             val createAt = filePath.readAttributes<BasicFileAttributes>()
                 .creationTime()
                 .toInstant()
-            val updateAt = novel.changeAt
-                .atZone(ZoneId.systemDefault())
-                .toInstant()
-            updateAt > createAt
+                .toKotlinInstant()
+            novel.changeAt > createAt
         } else true
 
 

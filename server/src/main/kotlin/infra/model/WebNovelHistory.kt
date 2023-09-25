@@ -1,5 +1,6 @@
 package infra.model
 
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -7,7 +8,6 @@ import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
-import java.time.LocalDateTime
 
 @Serializable
 data class WebNovelTocMergeHistory(
@@ -51,7 +51,7 @@ data class WebNovelPatchHistory(
         val introductionChange: TextChange?,
         val glossary: Map<String, String>?,
         val tocChange: List<TextChange>,
-        @Contextual val createAt: LocalDateTime,
+        @Contextual val createAt: Instant,
     )
 
     companion object {

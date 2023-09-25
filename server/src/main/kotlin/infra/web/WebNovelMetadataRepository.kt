@@ -22,9 +22,8 @@ import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
 import util.Optional
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.time.Duration.Companion.minutes
 
 object WebNovelFilter {
     enum class Type { 全部, 连载中, 已完结, 短篇 }
@@ -229,9 +228,8 @@ class WebNovelMetadataRepository(
         }
 
         // 在数据库中，没有过期
-        val minutes = ChronoUnit.MINUTES.between(local.syncAt, LocalDateTime.now())
-        val isExpired = minutes > expiredMinutes
-        if (!isExpired) {
+        val sinceLastSync = Clock.System.now() - local.syncAt
+        if (sinceLastSync <= expiredMinutes.minutes) {
             return Result.success(local)
         }
 
@@ -276,6 +274,7 @@ class WebNovelMetadataRepository(
                 )
         }
 
+        val now = Clock.System.now()
         val list = mutableListOf(
             setValue(WebNovelMetadata::titleJp, remote.titleJp),
             setValue(WebNovelMetadata::type, remote.type),
@@ -283,11 +282,11 @@ class WebNovelMetadataRepository(
             setValue(WebNovelMetadata::keywords, remote.keywords),
             setValue(WebNovelMetadata::introductionJp, remote.introductionJp),
             setValue(WebNovelMetadata::toc, merged.toc),
-            setValue(WebNovelMetadata::syncAt, LocalDateTime.now()),
+            setValue(WebNovelMetadata::syncAt, now),
         )
         if (merged.hasChanged) {
-            list.add(setValue(WebNovelMetadata::changeAt, LocalDateTime.now()))
-            list.add(setValue(WebNovelMetadata::updateAt, Clock.System.now()))
+            list.add(setValue(WebNovelMetadata::changeAt, now))
+            list.add(setValue(WebNovelMetadata::updateAt, now))
         }
 
         val novel = mongo
@@ -333,7 +332,7 @@ class WebNovelMetadataRepository(
         tocZh.forEach { (index, itemTitleZh) ->
             list.add(setValue(WebNovelMetadata::toc.pos(index) / WebNovelTocItem::titleZh, itemTitleZh))
         }
-        list.add(setValue(WebNovelMetadata::changeAt, LocalDateTime.now()))
+        list.add(setValue(WebNovelMetadata::changeAt, Clock.System.now()))
 
         return mongo
             .webNovelMetadataCollection

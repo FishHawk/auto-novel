@@ -1,11 +1,11 @@
 package infra.model
 
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
-import java.time.LocalDateTime
 
 data class Page<T>(
     val items: List<T>,
@@ -37,7 +37,7 @@ data class User(
     val salt: String,
     val password: String,
     val role: Role,
-    @Contextual val createdAt: LocalDateTime,
+    @Contextual val createdAt: Instant,
 ) {
     @Serializable
     enum class Role {

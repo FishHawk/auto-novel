@@ -5,11 +5,11 @@ import infra.MongoDataSource
 import infra.model.Page
 import infra.model.WebNovelPatchHistory
 import infra.model.WebNovelPatchHistoryOutline
+import kotlinx.datetime.Clock
 import org.bson.types.ObjectId
 import org.litote.kmongo.push
 import org.litote.kmongo.setValueOnInsert
 import org.litote.kmongo.util.KMongoUtil.toBson
-import java.time.LocalDateTime
 import java.util.*
 
 class WebNovelPatchHistoryRepository(
@@ -97,7 +97,7 @@ class WebNovelPatchHistoryRepository(
             introductionChange = introductionChange,
             tocChange = tocChange,
             glossary = glossaryChange,
-            createAt = LocalDateTime.now(),
+            createAt = Clock.System.now(),
         )
         mongo
             .webNovelPatchHistoryCollection

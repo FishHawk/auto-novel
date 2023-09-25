@@ -17,7 +17,6 @@ import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 import util.PBKDF2
-import java.time.LocalDateTime
 
 class UserRepository(
     private val mongo: MongoDataSource,
@@ -40,7 +39,7 @@ class UserRepository(
                     salt = salt,
                     password = hashedPassword,
                     role = User.Role.Normal,
-                    createdAt = LocalDateTime.now(),
+                    createdAt = Clock.System.now(),
                 )
             )
     }
