@@ -24,7 +24,6 @@ import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.toOptional
 import java.nio.file.Path
-import java.time.ZoneId
 
 @Resource("/novel")
 private class WebNovelRes {
@@ -229,15 +228,11 @@ fun Route.routeWebNovel() {
         }
         put<WebNovelRes.Id.Wenku> { loc ->
             val body = call.receive<String>()
-            val result = call.requireAtLeastMaintainer {
-                service.updateWenkuId(loc.parent.providerId, loc.parent.novelId, body)
-            }
+            val result = service.updateWenkuId(loc.parent.providerId, loc.parent.novelId, body)
             call.respondResult(result)
         }
         delete<WebNovelRes.Id.Wenku> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                service.deleteWenkuId(loc.parent.providerId, loc.parent.novelId)
-            }
+            val result = service.deleteWenkuId(loc.parent.providerId, loc.parent.novelId)
             call.respondResult(result)
         }
     }

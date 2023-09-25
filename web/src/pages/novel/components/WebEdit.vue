@@ -146,9 +146,10 @@ async function deleteWenkuId() {
 </script>
 
 <template>
-  <n-p v-if="userData.asAdmin">
+  <n-p>
     <n-input-group>
-      <n-input v-model:value="wenkuId" placeholder="文库版Id" />
+      <n-input-group-label>books.fishhawk.top/wenku/</n-input-group-label>
+      <n-input v-model:value="wenkuId" placeholder="文库版ID" />
       <n-button @click="updateWenkuId()">更新</n-button>
       <n-button @click="deleteWenkuId()">删除</n-button>
     </n-input-group>
