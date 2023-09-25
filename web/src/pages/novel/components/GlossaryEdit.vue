@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 const { glossary } = defineProps<{
@@ -6,6 +7,9 @@ const { glossary } = defineProps<{
   submit: () => Promise<void>;
 }>();
 
+const message = useMessage();
+
+const importGlossaryRaw = ref('');
 const termsToAdd = ref<[string, string]>(['', '']);
 
 function deleteTerm(jp: string) {
@@ -19,9 +23,54 @@ function addTerm() {
     termsToAdd.value = ['', ''];
   }
 }
+
+function exportGlossary() {
+  navigator.clipboard.writeText(JSON.stringify(glossary));
+  message.info('已经将术语表复制到剪切板');
+}
+
+function importGlossary() {
+  const inputGlossary = (() => {
+    try {
+      const obj = JSON.parse(importGlossaryRaw.value);
+      if (typeof obj !== 'object') return null;
+      const inputGlossary: { [key: string]: string } = {};
+      for (const jp in obj) {
+        const zh = obj[jp];
+        if (typeof zh !== 'string') return null;
+        inputGlossary[jp] = zh;
+      }
+      return inputGlossary;
+    } catch {
+      return null;
+    }
+  })();
+  if (inputGlossary === null) {
+    message.error('导入的术语表格式不正确');
+  } else {
+    for (const jp in inputGlossary) {
+      const zh = inputGlossary[jp];
+      glossary[jp] = zh;
+    }
+    message.info('成功导入');
+  }
+}
 </script>
 
 <template>
+  <n-p>
+    <n-input-group style="max-width: 400px">
+      <n-input
+        v-model:value="importGlossaryRaw"
+        size="small"
+        placeholder="批量导入术语表"
+        :input-props="{ spellcheck: false }"
+      />
+      <n-button size="small" @click="exportGlossary()">导出</n-button>
+      <n-button size="small" @click="importGlossary()">导入</n-button>
+    </n-input-group>
+  </n-p>
+
   <n-p>
     <n-input-group style="max-width: 400px">
       <n-input
