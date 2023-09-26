@@ -48,7 +48,8 @@ const setting = useSettingStore();
 const topMenuOptions = computed(() => {
   return [
     menuOption('首页', '/'),
-    menuOption('列表', '/novel-list'),
+    menuOption('网络小说', '/novel-list'),
+    menuOption('文库小说', '/wenku-list'),
     menuOption('文件翻译', '/wenku/non-archived'),
     menuOption('论坛', '/forum'),
   ];
@@ -58,12 +59,9 @@ const path = useRoute().path;
 function getTopMenuOptionKey() {
   if (path.startsWith('/forum')) {
     return '/forum';
-  } else if (
-    ['/favorite-list', '/read-history', '/novel-list', '/wenku-list'].includes(
-      path
-    ) ||
-    path.startsWith('/novel-rank')
-  ) {
+  } else if (path.startsWith('/wenku') && path !== '/wenku/non-archived') {
+    return '/wenku-list';
+  } else if (path.startsWith('/novel')) {
     return '/novel-list';
   } else {
     return path;
