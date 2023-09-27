@@ -170,6 +170,20 @@ class WenkuNovelMetadataRepository(
         )
     }
 
+    suspend fun delete(
+        novelId: String,
+    ) {
+        mongo
+            .wenkuNovelMetadataCollection
+            .deleteOne(
+                WenkuNovelMetadata.byId(novelId),
+            )
+        es.client.deleteDocument(
+            id = novelId,
+            target = ElasticSearchDataSource.wenkuNovelIndexName,
+        )
+    }
+
     private suspend fun syncEs(
         novelId: String,
         title: String,

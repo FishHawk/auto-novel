@@ -5,6 +5,7 @@ import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
 import infra.model.*
 import infra.provider.WebNovelProviderDataSource
+import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
@@ -13,9 +14,13 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.Document
+import org.bson.types.ObjectId
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
+import org.litote.kmongo.eq
+import org.litote.kmongo.id.toId
+import org.litote.kmongo.setValue
 import java.io.File
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
@@ -26,9 +31,26 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
 
     private val wenkuVR by inject<WenkuNovelVolumeRepository>(WenkuNovelVolumeRepository::class.java)
+    private val wenkuMR by inject<WenkuNovelMetadataRepository>(WenkuNovelMetadataRepository::class.java)
     private val userR by inject<UserRepository>(UserRepository::class.java)
 
     init {
+        describe("test") {
+            val nid = "6450c44884972153850fa845"
+//            mongo.wenkuNovelFavoriteCollection.find(
+//                WenkuNovelFavoriteModel::novelId eq ObjectId(nid).toId()
+//            ).toList().forEach { println(it) }
+//
+//            mongo.wenkuNovelFavoriteCollection.find(
+//                WenkuNovelFavoriteModel::novelId eq ObjectId("65119daeee167f34bff89b1e").toId()
+//            ).toList().forEach { println(it) }
+
+            mongo.wenkuNovelFavoriteCollection.updateMany(
+                WenkuNovelFavoriteModel::novelId eq ObjectId(nid).toId(),
+                setValue(WenkuNovelFavoriteModel::novelId, ObjectId("65119daeee167f34bff89b1e").toId())
+            )
+            wenkuMR.delete(nid)
+        }
         describe("build es index") {
             @Serializable
             data class WNMP(
