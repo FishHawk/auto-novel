@@ -243,9 +243,7 @@ class WenkuNovelVolumeRepository {
         if (path.parent.notExists()) {
             path.parent.createDirectories()
         }
-        if (path.notExists()) {
-            path.writeLines(lines)
-        }
+        path.writeLines(lines)
 
         if (glossaryUuid != null) {
             val gType = when (translatorId) {
@@ -257,11 +255,9 @@ class WenkuNovelVolumeRepository {
             if (gPath.parent.notExists()) {
                 gPath.parent.createDirectories()
             }
-            if (gPath.notExists()) {
-                gPath.writeText(
-                    Json.encodeToString(ChapterGlossary(glossaryUuid, glossary))
-                )
-            }
+            gPath.writeText(
+                Json.encodeToString(ChapterGlossary(glossaryUuid, glossary))
+            )
         }
     }
 
@@ -337,13 +333,14 @@ class WenkuNovelVolumeRepository {
                     if (zhLinesList.isEmpty()) {
                         bf.appendLine("// 该分段翻译缺失。")
                     } else {
+                        val jpLines = getJpLines(chapterId)
                         val linesList = when (lang) {
                             NovelFileLangV2.Jp -> throw RuntimeException("文库小说不允许日语下载")
                             NovelFileLangV2.Zh -> zhLinesList
-                            NovelFileLangV2.JpZh -> listOf(getJpLines(chapterId)) + zhLinesList
-                            NovelFileLangV2.ZhJp -> zhLinesList + listOf(getJpLines(chapterId))
+                            NovelFileLangV2.JpZh -> listOf(jpLines) + zhLinesList
+                            NovelFileLangV2.ZhJp -> zhLinesList + listOf(jpLines)
                         }
-                        for (i in 0 until linesList.first().size) {
+                        for (i in jpLines.indices) {
                             linesList.forEach { lines ->
                                 bf.appendLine(lines[i])
                             }
