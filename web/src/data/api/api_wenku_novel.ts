@@ -11,18 +11,30 @@ export interface WenkuNovelOutlineDto {
   cover: string;
 }
 
-const list = (page: number, query: string) =>
+const list = ({
+  page,
+  pageSize,
+  query = '',
+}: {
+  page: number;
+  pageSize: number;
+  query?: string;
+}) =>
   runCatching(
     api
-      .get(`wenku/list`, { searchParams: { page, query } })
+      .get(`wenku/list`, { searchParams: { page, pageSize, query } })
       .json<Page<WenkuNovelOutlineDto>>()
   );
 
-const listFavored = (
-  page: number,
-  pageSize: number,
-  sort: 'create' | 'update'
-) =>
+const listFavored = ({
+  page,
+  pageSize,
+  sort = 'update',
+}: {
+  page: number;
+  pageSize: number;
+  sort?: 'create' | 'update';
+}) =>
   runCatching(
     api
       .get('wenku/favored', { searchParams: { page, pageSize, sort } })

@@ -46,15 +46,15 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
     Alphapolis: 'alphapolis',
     Novelism: 'novelism',
   };
-  return ApiWebNovel.list(
-    page - 1,
-    10,
+  return ApiWebNovel.list({
+    page,
+    pageSize: 10,
     query,
-    providerMap[optionNth(0)],
-    selected[1],
-    selected[2],
-    selected[3]
-  ).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
+    provider: providerMap[optionNth(0)],
+    type: selected[1],
+    level: selected[2],
+    translate: selected[3],
+  }).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
 };
 </script>
 

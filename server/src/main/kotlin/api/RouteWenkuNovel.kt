@@ -29,6 +29,7 @@ private class WenkuNovelRes {
     class NovelList(
         val parent: WenkuNovelRes,
         val page: Int,
+        val pageSize: Int = 24,
         val query: String? = null,
     )
 
@@ -36,7 +37,7 @@ private class WenkuNovelRes {
     class Favored(
         val parent: WenkuNovelRes,
         val page: Int,
-        val pageSize: Int = 10,
+        val pageSize: Int = 24,
         val sort: FavoriteListSort,
     )
 
@@ -83,19 +84,18 @@ fun Route.routeWenkuNovel() {
     get<WenkuNovelRes.NovelList> { loc ->
         val result = service.list(
             queryString = loc.query?.ifBlank { null },
-            page = loc.page,
-            pageSize = 24,
+            page = loc.page.coerceAtLeast(0),
+            pageSize = loc.pageSize.coerceIn(1, 24),
         )
         call.respondResult(result)
     }
-
     authenticate {
         get<WenkuNovelRes.Favored> { loc ->
             val jwtUser = call.jwtUser()
             val result = service.listFavored(
                 username = jwtUser.username,
                 page = loc.page.coerceAtLeast(0),
-                pageSize = loc.pageSize.coerceAtMost(20),
+                pageSize = loc.pageSize.coerceIn(1, 24),
                 sort = loc.sort,
             )
             call.respondResult(result)

@@ -19,15 +19,23 @@ export interface WebNovelOutlineDto {
   updateAt?: number;
 }
 
-async function list(
-  page: number,
-  pageSize: number,
-  query: string,
-  provider: string,
-  type: number,
-  level: number,
-  translate: number
-): Promise<Result<Page<WebNovelOutlineDto>>> {
+async function list({
+  page,
+  pageSize,
+  query = '',
+  provider = '',
+  type = 0,
+  level = 0,
+  translate = 0,
+}: {
+  page: number;
+  pageSize: number;
+  query?: string;
+  provider?: string;
+  type?: number;
+  level?: number;
+  translate?: number;
+}): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
       .get(`novel/list`, {
@@ -59,18 +67,28 @@ async function listRank(
   );
 }
 
-const listReadHistory = (page: number, pageSize: number) =>
+const listReadHistory = ({
+  page,
+  pageSize,
+}: {
+  page: number;
+  pageSize: number;
+}) =>
   runCatching(
     api
       .get('novel/read-history', { searchParams: { page, pageSize } })
       .json<Page<WebNovelOutlineDto>>()
   );
 
-const listFavored = (
-  page: number,
-  pageSize: number,
-  sort: 'create' | 'update'
-) =>
+const listFavored = ({
+  page,
+  pageSize,
+  sort = 'update',
+}: {
+  page: number;
+  pageSize: number;
+  sort?: 'create' | 'update';
+}) =>
   runCatching(
     api
       .get('novel/favored', { searchParams: { page, pageSize, sort } })

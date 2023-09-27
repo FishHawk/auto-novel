@@ -1,11 +1,15 @@
 <script lang="ts" setup>
 import { FormRules, FormItemRule, FormInst, useMessage } from 'naive-ui';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import coverPlaceholder from '@/images/cover_placeholder.png';
-import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
+import {
+  ApiWenkuNovel,
+  WenkuNovelOutlineDto,
+} from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/userData';
+import { watch } from 'vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -156,6 +160,32 @@ async function importNovel() {
 
   message.error('无法解析链接');
 }
+
+const submitCurrentStep = ref(1);
+const title = computed(() => formValue.value.title);
+const similarNovels = ref<WenkuNovelOutlineDto[] | null>(null);
+
+watch(title, () => {
+  similarNovels.value = null;
+  submitCurrentStep.value = 1;
+});
+async function findSimilarNovels() {
+  const result = await ApiWenkuNovel.list({
+    page: 0,
+    pageSize: 6,
+    query: title.value,
+  });
+  if (result.ok) {
+    similarNovels.value = result.value.items;
+  } else {
+    message.error('搜索相似小说失败:' + result.error.message);
+  }
+}
+function confirmNovelNotExist() {
+  if (submitCurrentStep.value === 1) {
+    submitCurrentStep.value = 2;
+  }
+}
 </script>
 
 <template>
@@ -266,6 +296,57 @@ async function importNovel() {
         />
       </n-form-item-row>
     </n-form>
-    <AsyncButton type="primary" :on-async-click="submit">提交</AsyncButton>
+
+    <AsyncButton v-if="novelId" type="primary" :on-async-click="submit">
+      提交
+    </AsyncButton>
+
+    <n-steps
+      v-else
+      :current="submitCurrentStep"
+      vertical
+      style="margin-left: 8px"
+    >
+      <n-step title="检查小说是否已经存在">
+        <div class="n-step-description">
+          <n-p>
+            请点击搜索按钮，确定你要创建的小说确实还不存在，再进行下一步。
+          </n-p>
+          <n-p>
+            <span v-if="similarNovels === null"> 未搜索 </span>
+            <span v-else-if="similarNovels.length === 0"> 没有相似的小说 </span>
+            <n-grid v-else :x-gap="12" :y-gap="12" cols="3 600:6">
+              <n-grid-item v-for="item in similarNovels">
+                <RouterNA :to="`/wenku/${item.id}`">
+                  <ImageCard
+                    :src="item.cover"
+                    :title="item.titleZh ? item.titleZh : item.title"
+                  />
+                </RouterNA>
+              </n-grid-item>
+            </n-grid>
+          </n-p>
+
+          <n-p>
+            <n-button-group>
+              <n-button @click="findSimilarNovels()"> 搜索相似小说 </n-button>
+              <n-button @click="confirmNovelNotExist()">
+                确定小说不存在
+              </n-button>
+            </n-button-group>
+          </n-p>
+        </div>
+      </n-step>
+      <n-step title="创建小说">
+        <div class="n-step-description"></div>
+        <n-button
+          :disabled="submitCurrentStep !== 2"
+          type="primary"
+          @click="submit()"
+        >
+          提交
+        </n-button>
+      </n-step>
+    </n-steps>
   </MainLayout>
 </template>

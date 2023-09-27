@@ -79,7 +79,7 @@ watch(
 
     novelPageResult.value = undefined;
     const result = await props.loader(
-      currentPage.value,
+      currentPage.value - 1,
       filters.value.query,
       filters.value.selected
     );

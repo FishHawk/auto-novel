@@ -121,7 +121,7 @@ fun Route.routeWebNovel() {
                 else -> WebNovelFilter.Translate.全部
             },
             page = loc.page.coerceAtLeast(0),
-            pageSize = loc.pageSize.coerceAtMost(20),
+            pageSize = loc.pageSize.coerceIn(1, 20),
         )
         call.respondResult(result)
     }
@@ -138,7 +138,7 @@ fun Route.routeWebNovel() {
             val result = service.listReadHistory(
                 username = jwtUser.username,
                 page = loc.page.coerceAtLeast(0),
-                pageSize = loc.pageSize.coerceAtMost(20),
+                pageSize = loc.pageSize.coerceIn(1, 20),
             )
             call.respondResult(result)
         }
@@ -159,7 +159,7 @@ fun Route.routeWebNovel() {
             val result = service.listFavored(
                 username = jwtUser.username,
                 page = loc.page.coerceAtLeast(0),
-                pageSize = loc.pageSize.coerceAtMost(20),
+                pageSize = loc.pageSize.coerceIn(1, 20),
                 sort = loc.sort,
             )
             call.respondResult(result)

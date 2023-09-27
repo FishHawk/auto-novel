@@ -5,7 +5,7 @@ import { mapOk } from '@/data/api/result';
 import { Loader } from './components/NovelList.vue';
 
 const loader: Loader = (page: number, query: string, _selected: number[]) => {
-  return ApiWenkuNovel.list(page - 1, query).then((result) =>
+  return ApiWenkuNovel.list({ page, pageSize: 24, query }).then((result) =>
     mapOk(result, (page) => ({ type: 'wenku', page }))
   );
 };

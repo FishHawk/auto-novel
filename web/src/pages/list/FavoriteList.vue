@@ -29,13 +29,17 @@ const loader: Loader = (page, _query, selected) => {
     }
   }
   if (optionNth(0) === '网页小说') {
-    return ApiWebNovel.listFavored(page - 1, 10, optionSort()).then((result) =>
-      mapOk(result, (page) => ({ type: 'web', page }))
-    );
+    return ApiWebNovel.listFavored({
+      page,
+      pageSize: 10,
+      sort: optionSort(),
+    }).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
   } else {
-    return ApiWenkuNovel.listFavored(page - 1, 24, optionSort()).then(
-      (result) => mapOk(result, (page) => ({ type: 'wenku', page }))
-    );
+    return ApiWenkuNovel.listFavored({
+      page,
+      pageSize: 24,
+      sort: optionSort(),
+    }).then((result) => mapOk(result, (page) => ({ type: 'wenku', page })));
   }
 };
 </script>

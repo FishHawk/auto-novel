@@ -32,7 +32,10 @@ function query(url: string) {
 
 const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadFavorite() {
-  const result = await ApiWebNovel.listFavored(0, 8, 'update');
+  const result = await ApiWebNovel.listFavored({
+    page: 0,
+    pageSize: 8,
+  });
   if (result.ok) {
     favoriteList.value = Ok(result.value.items);
   } else {
@@ -49,7 +52,7 @@ watch(
 
 const latestUpdateWeb = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadLatestUpdateWeb() {
-  const result = await ApiWebNovel.list(0, 8, '', '', 0, 0, 0);
+  const result = await ApiWebNovel.list({ page: 0, pageSize: 8 });
   if (result.ok) {
     latestUpdateWeb.value = Ok(result.value.items);
   } else {
@@ -60,7 +63,7 @@ loadLatestUpdateWeb();
 
 const latestUpdateWenku = ref<ResultState<WenkuNovelOutlineDto[]>>();
 async function loadLatestUpdateWenku() {
-  const result = await ApiWenkuNovel.list(0, '');
+  const result = await ApiWenkuNovel.list({ page: 0, pageSize: 12 });
   if (result.ok) {
     latestUpdateWenku.value = Ok(result.value.items.slice(0, 12));
   } else {
