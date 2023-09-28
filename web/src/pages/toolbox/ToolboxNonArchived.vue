@@ -35,7 +35,7 @@ getVolumesUser();
 
 <template>
   <MainLayout>
-    <n-h1>Epub/Txt翻译</n-h1>
+    <n-h1>EPUB/TXT文件翻译</n-h1>
     <n-p>
       上传日文Epub/Txt小说，可以像翻译网络小说一样生成中文版。如何使用翻译插件请参考
       <RouterNA to="/forum/64f3d63f794cbb1321145c07">使用说明</RouterNA>。
@@ -48,7 +48,7 @@ getVolumesUser();
     <n-p>
       这里上传的小说是不公开的，如果你的小说有放流时间等限制无法公开，可以上传到这里。
       <br />
-      上传到这里的小说过一段时间会清理（现在还没做，想清理可以在反馈帖找我手动清）。
+      想删除可以在反馈帖找我手动删除。
     </n-p>
     <UploadButton type="jp" :novelId="userNovelId" />
     <n-divider />

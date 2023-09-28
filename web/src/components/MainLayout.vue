@@ -50,8 +50,8 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
-    menuOption('文件翻译', '/wenku/non-archived'),
     menuOption('论坛', '/forum'),
+    menuOption('工具箱', '/toolbox'),
   ];
 });
 
@@ -85,8 +85,8 @@ const collapsedMenuOptions = computed(() => {
         menuOption('Kakuyomu：流派', '/novel-rank/kakuyomu/1'),
       ],
     },
-    menuOption('文件翻译', '/wenku/non-archived'),
     menuOption('论坛', '/forum'),
+    menuOption('工具箱', '/toolbox'),
   ];
 });
 

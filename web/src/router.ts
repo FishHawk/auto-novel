@@ -40,11 +40,6 @@ const router = createRouter({
       meta: { title: '排行榜' },
       component: () => import('./pages/list/WebNovelRank.vue'),
     },
-    {
-      path: '/wenku/non-archived',
-      meta: { title: '文件翻译' },
-      component: () => import('./pages/novel/WenkuNonArchived.vue'),
-    },
 
     {
       path: '/novel/:providerId/:novelId',
@@ -91,26 +86,40 @@ const router = createRouter({
     },
 
     {
+      path: '/toolbox',
+      meta: { title: '工具箱' },
+      component: () => import('./pages/toolbox/Toolbox.vue'),
+    },
+    {
+      path: '/toolbox/non-archived',
+      meta: { title: '文件翻译' },
+      component: () => import('./pages/toolbox/ToolboxNonArchived.vue'),
+    },
+    {
+      path: '/toolbox/txt',
+      meta: { title: 'TXT工具箱' },
+      component: () => import('./pages/toolbox/ToolboxTxt.vue'),
+    },
+
+    {
       path: '/admin',
       redirect: '/admin/web-patch-history',
-      children: [
-        {
-          path: '/admin/web-patch-history',
-          component: () => import('./pages/admin/AdminWebPatchHistory.vue'),
-        },
-        {
-          path: '/admin/web-toc-merge-history',
-          component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
-        },
-        {
-          path: '/admin/wenku-upload-history',
-          component: () => import('./pages/admin/AdminWenkuUploadHistory.vue'),
-        },
-        {
-          path: '/admin/wenku-edit-history',
-          component: () => import('./pages/admin/AdminWenkuEditHistory.vue'),
-        },
-      ],
+    },
+    {
+      path: '/admin/web-patch-history',
+      component: () => import('./pages/admin/AdminWebPatchHistory.vue'),
+    },
+    {
+      path: '/admin/web-toc-merge-history',
+      component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
+    },
+    {
+      path: '/admin/wenku-upload-history',
+      component: () => import('./pages/admin/AdminWenkuUploadHistory.vue'),
+    },
+    {
+      path: '/admin/wenku-edit-history',
+      component: () => import('./pages/admin/AdminWenkuEditHistory.vue'),
     },
   ],
   scrollBehavior(_to, _from, savedPosition) {
