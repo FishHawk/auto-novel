@@ -53,6 +53,13 @@ function loadTxtFile() {
     reader.readAsText(selectedFile);
   }
 }
+
+function copyResult() {
+  const obj = Object.fromEntries(katakanas.value);
+  const jsonString = JSON.stringify(obj, null, 2);
+  navigator.clipboard.writeText(jsonString);
+  message.info('已经将结果复制到剪切板');
+}
 </script>
 
 <template>
@@ -80,26 +87,23 @@ function loadTxtFile() {
           片假名次数阈值
           <n-input-number v-model:value="katakanaThredhold" clearable />
         </n-p>
+        <n-button @click="copyResult()">复制结果</n-button>
       </div>
       <div style="flex: 50%">
         <n-card :title="`片假名统计结果(${katakanas.size}个)`">
           <n-scrollbar trigger="none" style="width: 300px; max-height: 400px">
-            <template v-for="[word, number] in katakanas">
-              {{ `${word} : ${number}` }}
+            {
+            <br />
+            <template v-for="([word, number], index) in katakanas">
+              {{ `"${word}": "${number}"` }}
+              <template v-if="index != katakanas.size - 1">,</template>
               <br />
             </template>
+            }
           </n-scrollbar>
         </n-card>
       </div>
     </div>
-
-    <!--
-
-    with open(file_path+'.统计.txt', 'w', encoding=ENCODING) as output_file:
-        for katakana, count in sorted_katakana:
-            if count >= MIN_OCCURRENCE:
-                output_file.write("\n"+f"{count}次：")
-                output_file.write(katakana) -->
 
     <n-modal v-model:show="showPreviewModal">
       <n-card
