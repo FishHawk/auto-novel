@@ -110,7 +110,7 @@ export class OpenAiTranslator implements Translator {
         }
       } else {
         logSegInfo({ retry, lineNumber: [seg.length, NaN] });
-        await this.onError(result);
+        await this.onError(result.message);
       }
 
       retry += 1;
@@ -169,32 +169,31 @@ export class OpenAiTranslator implements Translator {
     return partLeft.concat(partRight);
   }
 
-  private async onError(result: {
-    type: 'error';
-    code: string;
-    message: string;
-  }) {
-    if (result.code === 'token_expired') {
-      this.log('　发生错误：Access token已经过期，退出');
-      throw 'quit';
-    } else if (result.code === 'reach_per_hour_limit') {
-      this.log('　发生错误：触发每小时限制，暂停20分钟');
-      await delay(60 * 20);
-    } else if (result.code === 'reach_24_hours_limit') {
-      this.log('　发生错误：触发24小时限制，退出');
-      throw 'quit';
-    } else if (result.code === 'proxy_rate_limit') {
-      this.log('　发生错误：触发GPT代理速率限制，暂停30秒');
-      await delay(30);
-    } else if (result.code === 'account_deactivated') {
-      this.log('　发生错误：帐号已经被封，退出');
-      throw 'quit';
-    } else if (result.code === 'only_one_message') {
-      this.log('　发生错误：帐号被占用或是未正常退出，暂停2分钟');
-      await delay(60 * 2);
-    } else {
-      this.log(`　未知错误，请反馈给站长：[${result.code}]:${result.message}`);
+  private async onError(error: string) {
+    let errors: [string, string, number][] = [
+      ['token_expired', 'Access token过期', -1],
+      ['account_deactivated', '帐号已经被封', -1],
+      // "You've reached our limit of messages per hour. Please try again later.",
+      ["You've reached our limit of messages per hour", '触发每小时限制', 20],
+      // "You've reached our limit of messages 24 hour. Please try again later.",
+      ["You've reached our limit of messages 24 hour", '触发24小时限制', -1],
+      ['Only one message at a time.', '帐号被占用或是未正常退出', 2],
+      ['rate limited', '触发GPT代理限速', 1],
+    ];
+
+    for (const [prefix, message, delayMinutes] of errors) {
+      if (error.startsWith(prefix)) {
+        if (delayMinutes > 0) {
+          this.log('　发生错误：' + message + `，暂停${delayMinutes}分钟`);
+          await delay(delayMinutes * 60);
+          return;
+        } else {
+          this.log('　发生错误：' + message + '，退出');
+          throw 'quit';
+        }
+      }
     }
+    this.log(`　未知错误，请反馈给站长：${error}`);
   }
 
   private async translateLines(lines: string[], enableBypass: boolean) {
@@ -226,43 +225,20 @@ export class OpenAiTranslator implements Translator {
   ): Promise<
     | { type: 'answer'; answer: string; fromHistory: boolean }
     | { type: 'censored' }
-    | { type: 'error'; code: string; message: string }
+    | { type: 'error'; message: string }
   > {
     let conversationId = '';
     let censored = false;
     let answer = '';
     for (const chunk of await this.openAi.ask(messages)) {
       if ('detail' in chunk) {
-        let code = 'unknown';
         let message = '';
         if (typeof chunk.detail === 'string') {
-          let prefixAndCodes: [string, string][] = [
-            [
-              "You've reached our limit of messages per hour",
-              'reach_per_hour_limit',
-            ],
-            [
-              "You've reached our limit of messages per 24 hours",
-              'reach_24_hours_limit',
-            ],
-            ['Only one message at a time.', 'only_one_message'],
-            ['rate limited', 'proxy_rate_limit'], // 可能是fakeopen特有的
-          ];
-          for (const [prefix, codeN] of prefixAndCodes) {
-            if (chunk.detail.startsWith(prefix)) {
-              code = codeN;
-            }
-          }
           message = chunk.detail;
         } else {
-          code = chunk.detail.code;
-          message = chunk.detail.message;
+          message = chunk.detail.code;
         }
-        return {
-          type: 'error',
-          code,
-          message,
-        };
+        return { type: 'error', message };
       } else if ('moderation_response' in chunk) {
         conversationId = chunk.conversation_id;
         censored = true;
@@ -272,12 +248,7 @@ export class OpenAiTranslator implements Translator {
           answer = chunk.message.content.parts[0] ?? '';
         }
       } else {
-        const message = chunk.error;
-        let code = 'proxy_unknown';
-        if (chunk.error === 'Rate limited by proxy') {
-          code = 'proxy_rate_limit';
-        }
-        return { type: 'error', code, message };
+        return { type: 'error', message: `${chunk}` };
       }
     }
 
@@ -424,11 +395,10 @@ interface OpenAiStreamChunkError {
   detail:
     | {
         message: string;
-        type: 'invalid_request_error' | string;
+        type: string;
         param: null;
-        code: 'token_expired' | string;
+        code: string;
       }
-    | "You've reached our limit of messages per hour. Please try again later."
     | string;
 }
 
@@ -469,11 +439,9 @@ class OpenAi {
     const response = await this.api.post('conversation', {
       json: data,
       headers: { accept: 'text/event-stream' },
+      throwHttpErrors: false,
     });
     const text = await response.text();
-    if (response.status >= 400) {
-      throw Error(`Http${response.status}: ${text}`);
-    }
     return parseEventStream<OpenAiStreamChunk>(text);
   }
 
