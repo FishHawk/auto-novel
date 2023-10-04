@@ -52,52 +52,65 @@ function importGlossary() {
       const zh = inputGlossary[jp];
       glossary[jp] = zh;
     }
-    message.info('成功导入');
   }
 }
 </script>
 
 <template>
-  <n-p>
-    <n-input-group style="max-width: 400px">
-      <n-input
-        v-model:value="importGlossaryRaw"
-        size="small"
-        placeholder="批量导入术语表"
-        :input-props="{ spellcheck: false }"
-      />
-      <n-button size="small" @click="exportGlossary()">导出</n-button>
-      <n-button size="small" @click="importGlossary()">导入</n-button>
-    </n-input-group>
-  </n-p>
+  <div style="max-width: 400px">
+    <n-p>
+      <n-input-group>
+        <n-input
+          v-model:value="importGlossaryRaw"
+          size="small"
+          placeholder="批量导入术语表"
+          :input-props="{ spellcheck: false }"
+        />
+        <n-button size="small" @click="exportGlossary()">导出</n-button>
+        <n-button size="small" @click="importGlossary()">导入</n-button>
+      </n-input-group>
+    </n-p>
 
-  <n-p>
-    <n-input-group style="max-width: 400px">
-      <n-input
-        pair
-        v-model:value="termsToAdd"
-        size="small"
-        separator="=>"
-        :placeholder="['日文', '中文']"
-        :input-props="{ spellcheck: false }"
-      />
-      <n-button size="small" @click="addTerm()">添加</n-button>
-      <AsyncButton size="small" :on-async-click="submit">提交</AsyncButton>
-    </n-input-group>
-  </n-p>
+    <n-p>
+      <n-input-group>
+        <n-input
+          pair
+          v-model:value="termsToAdd"
+          size="small"
+          separator="=>"
+          :placeholder="['日文', '中文']"
+          :input-props="{ spellcheck: false }"
+        />
+        <n-button size="small" @click="addTerm()">添加</n-button>
+      </n-input-group>
+    </n-p>
 
-  <n-scrollbar style="max-height: 400px; max-width: 400px">
-    <table style="border-spacing: 16px 0px; font-size: 12px">
-      <tr v-for="(termZh, termJp) in glossary">
-        <td>{{ termJp }}</td>
-        <td nowrap="nowrap">=></td>
-        <td>{{ termZh }}</td>
-        <td>
-          <n-button size="tiny" @click="deleteTerm(termJp as string)">
-            删除
-          </n-button>
-        </td>
-      </tr>
-    </table>
-  </n-scrollbar>
+    <n-p>
+      <AsyncButton
+        type="primary"
+        secondary
+        size="small"
+        :on-async-click="submit"
+      >
+        提交
+      </AsyncButton>
+    </n-p>
+
+    <n-p>
+      <n-scrollbar style="max-height: 400px">
+        <table style="border-spacing: 16px 0px; font-size: 12px">
+          <tr v-for="(termZh, termJp) in glossary">
+            <td>{{ termJp }}</td>
+            <td nowrap="nowrap">=></td>
+            <td>{{ termZh }}</td>
+            <td>
+              <n-button size="tiny" @click="deleteTerm(termJp as string)">
+                删除
+              </n-button>
+            </td>
+          </tr>
+        </table>
+      </n-scrollbar>
+    </n-p>
+  </div>
 </template>
