@@ -175,8 +175,8 @@ export class OpenAiTranslator implements Translator {
       ['account_deactivated', '帐号已经被封', -1],
       // "You've reached our limit of messages per hour. Please try again later.",
       ["You've reached our limit of messages per hour", '触发每小时限制', 20],
-      // "You've reached our limit of messages 24 hour. Please try again later.",
-      ["You've reached our limit of messages 24 hour", '触发24小时限制', -1],
+      // "You've reached our limit of messages per 24 hours. Please try again later.",
+      ["You've reached our limit of messages per 24 hours", '触发24小时限制', -1],
       ['Only one message at a time.', '帐号被占用或是未正常退出', 2],
       ['rate limited', '触发GPT代理限速', 1],
     ];
