@@ -102,23 +102,8 @@ export class BaiduTranslator implements Translator {
   }
 }
 
-function a(r: any, o: any) {
-  for (var t = 0; t < o.length - 2; t += 3) {
-    var a = o.charAt(t + 2);
-    (a = a >= 'a' ? a.charCodeAt(0) - 87 : Number(a)),
-      (a = '+' === o.charAt(t + 1) ? r >>> a : r << a),
-      (r = '+' === o.charAt(t) ? (r + a) & 4294967295 : r ^ a);
-  }
-  return r;
-}
-
 const sign = function (r: string, gtk: string) {
-  if (r.length > 30) {
-    const first10Chars = r.substr(0, 10);
-    const middle10Chars = r.substr(Math.floor(r.length / 2) - 5, 10);
-    const last10Chars = r.substring(r.length - 10, r.length);
-    r = first10Chars + middle10Chars + last10Chars;
-  }
+  r = b(r);
 
   const encodedCodes = [];
   for (let i = 0; i < r.length; i++) {
@@ -127,18 +112,18 @@ const sign = function (r: string, gtk: string) {
       encodedCodes.push(char);
     } else {
       if (char < 0x800) {
-        encodedCodes.push((char >> 6) | 0xC0);
+        encodedCodes.push((char >> 6) | 0xc0);
       } else if (
-        0xD800 === (0xFC00 & char) &&
+        0xd800 === (0xfc00 & char) &&
         i + 1 < r.length &&
-        0xDC00 === (0xFC00 & r.charCodeAt(i + 1))
+        0xdc00 === (0xfc00 & r.charCodeAt(i + 1))
       ) {
-        char = 0x10000 + ((1023 & 0x3FF) << 10) + (0x3FF & r.charCodeAt(++i));
-        encodedCodes.push((char >> 18) | 0xF0);
-        encodedCodes.push(((char >> 12) & 0x3F) | 0x80);
+        char = 0x10000 + ((1023 & 0x3ff) << 10) + (0x3ff & r.charCodeAt(++i));
+        encodedCodes.push((char >> 18) | 0xf0);
+        encodedCodes.push(((char >> 12) & 0x3f) | 0x80);
       } else {
-        encodedCodes.push((char >> 12) | 0xE0);
-        encodedCodes.push(((char >> 6) & 0x3F) | 0x80);
+        encodedCodes.push((char >> 12) | 0xe0);
+        encodedCodes.push(((char >> 6) & 0x3f) | 0x80);
       }
       encodedCodes.push((63 & char) | 0x80);
     }
@@ -169,3 +154,84 @@ const sign = function (r: string, gtk: string) {
 
   return S.toString() + '.' + (S ^ gtk1);
 };
+
+function a(r: any, o: any) {
+  for (var t = 0; t < o.length - 2; t += 3) {
+    var a = o.charAt(t + 2);
+    (a = a >= 'a' ? a.charCodeAt(0) - 87 : Number(a)),
+      (a = '+' === o.charAt(t + 1) ? r >>> a : r << a),
+      (r = '+' === o.charAt(t) ? (r + a) & 4294967295 : r ^ a);
+  }
+  return r;
+}
+
+function e(t: any, e?: any) {
+  (null == e || e > t.length) && (e = t.length);
+  for (var n = 0, r = new Array(e); n < e; n++) r[n] = t[n];
+  return r;
+}
+
+function b(t: any) {
+  var o,
+    i = t.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g);
+  if (null === i) {
+    var a = t.length;
+    a > 30 &&
+      (t = ''
+        .concat(t.substr(0, 10))
+        .concat(t.substr(Math.floor(a / 2) - 5, 10))
+        .concat(t.substr(-10, 10)));
+  } else {
+    for (
+      var s = t.split(/[\uD800-\uDBFF][\uDC00-\uDFFF]/),
+        c = 0,
+        u = s.length,
+        l: any[] = [];
+      c < u;
+      c++
+    )
+      '' !== s[c] &&
+        l.push.apply(
+          l,
+          (function (t) {
+            if (Array.isArray(t)) return e(t);
+          })((o = s[c].split(''))) ||
+            (function (t) {
+              if (
+                ('undefined' != typeof Symbol && null != t[Symbol.iterator]) ||
+                null != t['@@iterator']
+              )
+                return Array.from(t);
+            })(o) ||
+            (function (t, n) {
+              if (t) {
+                if ('string' == typeof t) return e(t, n);
+                var r = Object.prototype.toString.call(t).slice(8, -1);
+                return (
+                  'Object' === r && t.constructor && (r = t.constructor.name),
+                  'Map' === r || 'Set' === r
+                    ? Array.from(t)
+                    : 'Arguments' === r ||
+                      /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)
+                    ? e(t, n)
+                    : void 0
+                );
+              }
+            })(o) ||
+            (function () {
+              throw new TypeError(
+                'Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'
+              );
+            })()
+        ),
+        c !== u - 1 && l.push(i[c]);
+    var p = l.length;
+    p > 30 &&
+      (t =
+        l.slice(0, 10).join('') +
+        l.slice(Math.floor(p / 2) - 5, Math.floor(p / 2) + 5).join('') +
+        l.slice(-10).join(''));
+  }
+
+  return t;
+}
