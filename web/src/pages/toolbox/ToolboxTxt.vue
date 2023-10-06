@@ -55,7 +55,9 @@ function loadTxtFile() {
 }
 
 function copyResult() {
-  const obj = Object.fromEntries(katakanas.value);
+  const obj = Object.fromEntries(
+    Array.from(katakanas.value).map(([key, value]) => [key, value.toString()])
+  );
   const jsonString = JSON.stringify(obj, null, 2);
   navigator.clipboard.writeText(jsonString);
   message.info('已经将结果复制到剪切板');
