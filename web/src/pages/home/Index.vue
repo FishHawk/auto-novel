@@ -132,16 +132,7 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
-        <n-li>
-          <b>
-            文件翻译现在移到了工具箱页面，后续会将文件翻译这个功能逐渐移到浏览器运行。另外，做术语表的朋友可以试试<RouterNA
-              to="/toolbox/txt"
-            >
-              TXT工具箱
-            </RouterNA>
-            。
-          </b>
-        </n-li>
+        <n-li><b>GPT翻译现在支持Api Key了，使用方法和Access Token一样。你可以在翻译设置里面控制翻译范围，别用到破产。</b></n-li>
         <n-li>
           <b>使用说明</b>
           ：将想要翻译的小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。

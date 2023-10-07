@@ -5,6 +5,6 @@ ENV NODE_ENV=production
 RUN npm install; \
     npm run build
 
-FROM caddy:2.6.2
+FROM caddy:2.7.4
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY --from=builder /web/dist /dist

@@ -304,7 +304,7 @@ async function submitGlossary() {
   <n-auto-complete
     v-model:value="gptAccessToken"
     :options="gptAccessTokenOptions"
-    placeholder="请输入GPT的Access Token"
+    placeholder="请输入ChatGPT的Access Token或者Api Key"
     :get-show="() => true"
   />
 
