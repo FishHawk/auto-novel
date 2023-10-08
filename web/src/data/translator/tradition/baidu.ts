@@ -1,43 +1,28 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import {
-  Glossary,
-  Translator,
-  createLengthSegmenterWrapper,
-  createNonAiGlossaryWrapper,
-  emptyLineFilterWrapper,
-} from './base';
+import { Glossary, SegmentTranslator } from '../type';
+import { createGlossaryWrapper, createLengthSegmentor } from './common';
 
-export class BaiduTranslator implements Translator {
-  private api: KyInstance;
+export class BaiduTranslator implements SegmentTranslator {
+  private client: KyInstance;
   private log: (message: string) => void;
-  private glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
-  private segmentWarpper: ReturnType<typeof createLengthSegmenterWrapper>;
+  private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
+
+  glossary: Glossary;
 
   constructor(
-    api: KyInstance,
+    client: KyInstance,
     log: (message: string) => void,
     glossary: Glossary
   ) {
-    this.api = api.create({
+    this.client = client.create({
       prefixUrl: 'https://fanyi.baidu.com',
       credentials: 'include',
     });
     this.log = log;
-    this.glossaryWarpper = createNonAiGlossaryWrapper(glossary);
-    this.segmentWarpper = createLengthSegmenterWrapper(2000);
+    this.glossary = glossary;
+    this.glossaryWarpper = createGlossaryWrapper(glossary);
   }
-
-  translate = async (input: string[]) => {
-    if (input.length === 0) return [];
-    return emptyLineFilterWrapper(input, (input) =>
-      this.glossaryWarpper(input, (input) =>
-        this.segmentWarpper(input, (seg, _segInfo) =>
-          this.translateSegment(seg)
-        )
-      )
-    );
-  };
 
   private token = '';
   private gtk = '';
@@ -51,7 +36,7 @@ export class BaiduTranslator implements Translator {
   }
 
   private async loadMainPage() {
-    const html = await this.api.get('').text();
+    const html = await this.client.get('').text();
 
     const match = (pattern: RegExp) => {
       const res = html.match(pattern);
@@ -66,13 +51,22 @@ export class BaiduTranslator implements Translator {
       '';
   }
 
-  async translateSegment(input: string[]): Promise<string[]> {
+  createSegments = createLengthSegmentor(3500);
+
+  async translate(
+    seg: string[],
+    _segInfo: { index: number; size: number }
+  ): Promise<string[]> {
+    return this.glossaryWarpper(seg, (seg) => this.translateInner(seg));
+  }
+
+  async translateInner(input: string[]): Promise<string[]> {
     // 开头的空格似乎会导致998错误
     const newInput = input.slice();
     newInput[0] = newInput[0].trimStart();
     const query = newInput.join('\n');
 
-    const json: any = await this.api
+    const json: any = await this.client
       .post('v2transapi', {
         body: new URLSearchParams({
           from: 'jp',

@@ -1,40 +1,8 @@
 import { customAlphabet } from 'nanoid';
 
-const filterInput = (input: string[]) =>
-  input
-    .map((line) => line.replace(/\r?\n|\r/g, ''))
-    .filter((line) => !(line.trim() === '' || line.startsWith('<图片>')));
+import { Glossary, Segmentor } from '../type';
 
-const recoverOutput = (input: string[], output: string[]) => {
-  const recoveredOutput: string[] = [];
-  for (const line of input) {
-    const realLine = line.replace(/\r?\n|\r/g, '');
-    if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
-      recoveredOutput.push(line);
-    } else {
-      const outputLine = output.shift();
-      recoveredOutput.push(outputLine!);
-    }
-  }
-  if (recoveredOutput.length !== input.length) {
-    throw Error('重建翻译长度不匹配，不应当出现');
-  }
-  return recoveredOutput;
-};
-
-export const emptyLineFilterWrapper = async (
-  input: string[],
-  callback: (input: string[]) => Promise<string[]>
-) => {
-  const filteredInput = filterInput(input);
-  const output = await callback(filteredInput);
-  const recoveredOutput = recoverOutput(input, output);
-  return recoveredOutput;
-};
-
-export type Glossary = { [key: string]: string };
-
-export const createNonAiGlossaryWrapper = (glossary: Glossary) => {
+export const createGlossaryWrapper = (glossary: Glossary) => {
   const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 4);
   const generateUuid = () => {
     while (true) {
@@ -85,8 +53,9 @@ export const createNonAiGlossaryWrapper = (glossary: Glossary) => {
   };
 };
 
-export const createLengthSegmenterWrapper = (maxLength: number) => {
-  const segmenter = (input: string[]) => {
+export const createLengthSegmentor =
+  (maxLength: number): Segmentor =>
+  async (input: string[]) => {
     const segs: string[][] = [];
     let seg: string[] = [];
     let segSize = 0;
@@ -107,25 +76,3 @@ export const createLengthSegmenterWrapper = (maxLength: number) => {
     }
     return segs;
   };
-
-  return async (
-    input: string[],
-    callback: (
-      seg: string[],
-      segInfo: { index: number; size: number }
-    ) => Promise<string[]>
-  ) => {
-    let output: string[] = [];
-    const segs = segmenter(input);
-    const size = segs.length;
-    for (const [index, seg] of segs.entries()) {
-      const segOutput = await callback(seg, { index, size });
-      output = output.concat(segOutput);
-    }
-    return output;
-  };
-};
-
-export interface Translator {
-  translate: (input: string[]) => Promise<string[]>;
-}

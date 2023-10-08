@@ -14,4 +14,4 @@ function updateToken(token?: string) {
   });
 }
 
-export { api, updateToken };
+export { api, updateToken, api as client };

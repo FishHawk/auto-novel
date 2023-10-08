@@ -2,7 +2,7 @@
 import { computed, Ref, ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { api } from '@/data/api/api';
+import { client } from '@/data/api/api';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslatorId } from '@/data/translator/translator';
@@ -80,11 +80,10 @@ async function startTask(translatorId: TranslatorId) {
     accessToken = obj.accessToken;
   } catch {}
 
-  const translateWeb = (await import('@/data/translator/translator'))
-    .translateWeb;
+  const translateWeb = (await import('@/data/translator')).translateWeb;
   await translateWeb(
     {
-      api,
+      client,
       providerId,
       novelId,
       translatorId,

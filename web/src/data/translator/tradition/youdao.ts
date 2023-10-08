@@ -3,46 +3,31 @@ import { AES } from 'crypto-es/lib/aes';
 import { MD5 } from 'crypto-es/lib/md5';
 import { Utf8 } from 'crypto-es/lib/core';
 
-import {
-  Glossary,
-  Translator,
-  createLengthSegmenterWrapper,
-  createNonAiGlossaryWrapper,
-  emptyLineFilterWrapper,
-} from './base';
+import { Glossary, SegmentTranslator } from '../type';
+import { createGlossaryWrapper, createLengthSegmentor } from './common';
 
-export class YoudaoTranslator implements Translator {
-  private api: KyInstance;
+export class YoudaoTranslator implements SegmentTranslator {
+  private client: KyInstance;
   private log: (message: string) => void;
-  private glossaryWarpper: ReturnType<typeof createNonAiGlossaryWrapper>;
-  private segmentWarpper: ReturnType<typeof createLengthSegmenterWrapper>;
+  private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
+
+  glossary: Glossary;
 
   constructor(
-    api: KyInstance,
+    client: KyInstance,
     log: (message: string) => void,
     glossary: Glossary
   ) {
-    this.api = api.create({ credentials: 'include' });
+    this.client = client.create({ credentials: 'include' });
     this.log = log;
-    this.glossaryWarpper = createNonAiGlossaryWrapper(glossary);
-    this.segmentWarpper = createLengthSegmenterWrapper(2000);
+    this.glossaryWarpper = createGlossaryWrapper(glossary);
+    this.glossary = glossary;
   }
-
-  translate = async (input: string[]) => {
-    if (input.length === 0) return [];
-    return emptyLineFilterWrapper(input, (input) =>
-      this.glossaryWarpper(input, (input) =>
-        this.segmentWarpper(input, (seg, _segInfo) =>
-          this.translateSegment(seg)
-        )
-      )
-    );
-  };
 
   private key = 'fsdsogkndfokasodnaso';
   async init() {
     try {
-      await this.api.get('https://rlogs.youdao.com/rlog.php', {
+      await this.client.get('https://rlogs.youdao.com/rlog.php', {
         searchParams: {
           _npid: 'fanyiweb',
           _ncat: 'pageview',
@@ -53,7 +38,7 @@ export class YoudaoTranslator implements Translator {
         },
       });
 
-      const json: any = await this.api
+      const json: any = await this.client
         .get('https://dict.youdao.com/webtranslate/key', {
           searchParams: {
             keyid: 'webfanyi-key-getter',
@@ -69,9 +54,18 @@ export class YoudaoTranslator implements Translator {
     return this;
   }
 
-  async translateSegment(textsSrc: string[]): Promise<string[]> {
+  createSegments = createLengthSegmentor(3500);
+
+  async translate(
+    seg: string[],
+    _segInfo: { index: number; size: number }
+  ): Promise<string[]> {
+    return this.glossaryWarpper(seg, (seg) => this.translateInner(seg));
+  }
+
+  async translateInner(seg: string[]): Promise<string[]> {
     const form = {
-      i: textsSrc.join('\n'),
+      i: seg.join('\n'),
       from: 'ja',
       to: 'zh-CHS',
       dictResult: true,
@@ -83,7 +77,7 @@ export class YoudaoTranslator implements Translator {
       searchParams.append(name, (form as any)[name].toString());
     }
 
-    const text = await this.api
+    const text = await this.client
       .post('https://dict.youdao.com/webtranslate', {
         body: searchParams,
         headers: {

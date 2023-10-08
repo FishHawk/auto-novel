@@ -3,7 +3,7 @@ import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { FileDownloadFilled } from '@vicons/material';
 
-import { api } from '@/data/api/api';
+import { client } from '@/data/api/api';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
@@ -69,11 +69,10 @@ async function startUpdateTask(
     accessToken = obj.accessToken;
   } catch {}
 
-  const translateWenku = (await import('@/data/translator/translator'))
-    .translateWenku;
+  const translateWenku = (await import('@/data/translator')).translateWenku;
   await translateWenku(
     {
-      api,
+      client,
       novelId: props.novelId,
       translatorId,
       volumeId: volume.volumeId,
