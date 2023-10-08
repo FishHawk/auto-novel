@@ -89,7 +89,7 @@ async function startUpdateTask(
         } else if (translatorId === 'youdao') {
           volume.youdao = state;
         } else if (translatorId === 'gpt') {
-          setting.addToken(gptAccessToken.value);
+          setting.addToken(accessToken);
           volume.gpt = state;
         }
         taskDetail.value!.chapterFinished += 1;

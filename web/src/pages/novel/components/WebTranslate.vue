@@ -102,7 +102,7 @@ async function startTask(translatorId: TranslatorId) {
         if (state.baidu !== undefined) emits('update:baidu', state.baidu);
         if (state.youdao !== undefined) emits('update:youdao', state.youdao);
         if (state.gpt !== undefined) {
-          setting.addToken(gptAccessToken.value);
+          setting.addToken(accessToken);
           emits('update:gpt', state.gpt);
         }
         taskDetail.value!.chapterFinished += 1;

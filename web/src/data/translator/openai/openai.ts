@@ -212,6 +212,7 @@ export class OpenAiTranslator implements SegmentTranslator {
       const parseError = (error: string) => {
         const errors: [string, string, number][] = [
           ['token_expired', 'Access token过期', -1],
+          ['invalid_api_key', 'Access token无效', -1],
           ['account_deactivated', '帐号已经被封', -1],
           // "You've reached our limit of messages per hour. Please try again later.",
           [
@@ -282,24 +283,24 @@ async function askOfficial(
   api: OpenAiOfficialApi,
   messages: ['user' | 'assistant', string][]
 ): Promise<{ answer: string } | string> {
-  const completion = await api.createChatCompletions(
+  const completionStream = await api.createChatCompletionsStream(
     {
       messages: messages.map(([role, content]) => ({ content, role })),
       model: 'gpt-3.5-turbo',
+      stream: true,
     },
     {
       throwHttpErrors: false,
     }
   );
-  if (typeof completion === 'object' && 'choices' in completion) {
-    const answer = completion.choices.at(0)?.message.content;
-    if (answer) {
-      return { answer };
-    } else {
-      return JSON.stringify(completion);
-    }
+  if (typeof completionStream === 'string') {
+    return completionStream;
   } else {
-    return JSON.stringify(completion);
+    const answer = Array.from(completionStream)
+      .map((chunk) => chunk.choices.at(0)?.delta.content)
+      .filter((content) => typeof content === 'string')
+      .join('');
+    return { answer };
   }
 }
 

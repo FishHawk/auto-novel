@@ -2,6 +2,8 @@ import { KyInstance } from 'ky/distribution/types/ky';
 import { Options } from 'ky/distribution/types/options';
 import { v4 as uuidv4 } from 'uuid';
 
+import { parseEventStream } from './common';
+
 export class OpenAiUnofficialApi {
   private client;
 
@@ -20,17 +22,18 @@ export class OpenAiUnofficialApi {
     body: Conversation.Params,
     options?: Options
   ): Promise<Generator<Conversation.Chunk>> {
-    const response = await this.client.post('conversation', {
-      json: {
-        action: 'next',
-        parent_message_id: uuidv4(),
-        model: 'text-davinci-002-render-sha',
-        ...body,
-      },
-      headers: { accept: 'text/event-stream' },
-      ...options,
-    });
-    const text = await response.text();
+    const text = await this.client
+      .post('conversation', {
+        json: {
+          action: 'next',
+          parent_message_id: uuidv4(),
+          model: 'text-davinci-002-render-sha',
+          ...body,
+        },
+        headers: { accept: 'text/event-stream' },
+        ...options,
+      })
+      .text();
     return parseEventStream<Conversation.Chunk>(text);
   }
 
@@ -107,22 +110,5 @@ export namespace Conversation {
           code: string;
         }
       | string;
-  }
-}
-
-function* parseEventStream<T>(text: string) {
-  for (const line of text.split('\n')) {
-    if (line == '[DONE]') {
-      return;
-    } else if (!line.trim()) {
-      continue;
-    } else {
-      try {
-        const obj: T = JSON.parse(line.replace(/^data\:/, '').trim());
-        yield obj;
-      } catch {
-        continue;
-      }
-    }
   }
 }

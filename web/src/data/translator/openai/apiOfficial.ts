@@ -3,6 +3,8 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 import { Options } from 'ky/distribution/types/options';
 
+import { parseEventStream } from './common';
+
 export class OpenAiOfficialApi {
   client: KyInstance;
 
@@ -18,17 +20,45 @@ export class OpenAiOfficialApi {
     });
   }
 
+  async createChatCompletionsStream(
+    body: ChatCompletion.Params & { stream: true },
+    options?: Options
+  ): Promise<Generator<ChatCompletionChunk> | string> {
+    const response = await this.client.post('chat/completions', {
+      json: body,
+      ...options,
+    });
+    if (response.ok) {
+      return response.text().then(parseEventStream<ChatCompletionChunk>);
+    } else {
+      return `${response.status}:${await response.text()}`;
+    }
+  }
+
   createChatCompletions(
-    body: ChatCompletion.Params,
+    body: ChatCompletion.Params & { stream?: false },
     options?: Options
   ): Promise<ChatCompletion> {
     return this.client
-      .post('chat/completions', {
-        json: body,
-        ...options,
-      })
+      .post('chat/completions', { json: body, ...options })
       .json<ChatCompletion>();
   }
+}
+
+export interface ChatCompletionChunk {
+  id: string;
+  choices: Array<{
+    delta: {
+      content?: string | null;
+    };
+    finish_reason:
+      | 'stop'
+      | 'length'
+      | 'function_call'
+      | 'content_filter'
+      | null;
+    index: number;
+  }>;
 }
 
 export interface ChatCompletion {
