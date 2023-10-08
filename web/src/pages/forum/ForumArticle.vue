@@ -15,6 +15,9 @@ const articleResult = ref<ResultState<Article>>();
 onMounted(async () => {
   const result = await ApiArticle.getArticle(articleId);
   articleResult.value = result;
+  if (result.ok) {
+    document.title = result.value.title;
+  }
 });
 </script>
 

@@ -59,10 +59,12 @@ const path = useRoute().path;
 function getTopMenuOptionKey() {
   if (path.startsWith('/forum')) {
     return '/forum';
-  } else if (path.startsWith('/wenku') && path !== '/wenku/non-archived') {
+  } else if (path.startsWith('/wenku')) {
     return '/wenku-list';
   } else if (path.startsWith('/novel')) {
     return '/novel-list';
+  } else if (path.startsWith('/toolbox')) {
+    return '/toolbox';
   } else {
     return path;
   }
