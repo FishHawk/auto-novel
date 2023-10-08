@@ -133,14 +133,22 @@ export class OpenAiTranslator implements SegmentTranslator {
         enableBypass
       );
 
-      if (typeof result === 'object' && 'answer' in result) {
-        const isChinese = detectChinese(result.answer.join(' '));
-        logSegInfo({
-          binaryRange: [left, right],
-          lineNumber: [right - left, result.answer.length],
-        });
-        if (right - left === result.answer.length && isChinese) {
-          return result.answer;
+      if (typeof result === 'object') {
+        if ('answer' in result) {
+          const isChinese = detectChinese(result.answer.join(' '));
+          logSegInfo({
+            binaryRange: [left, right],
+            lineNumber: [right - left, result.answer.length],
+          });
+          if (right - left === result.answer.length && isChinese) {
+            return result.answer;
+          }
+        } else {
+          logSegInfo({
+            binaryRange: [left, right],
+            lineNumber: [right - left, NaN],
+          });
+          await this.onError(result);
         }
       } else {
         logSegInfo({
@@ -174,7 +182,7 @@ export class OpenAiTranslator implements SegmentTranslator {
     enableBypass: boolean
   ): Promise<
     | 'censored'
-    | { message: string; delayMinutes?: number }
+    | { message: string; delaySeconds?: number }
     | { answer: string[]; fromHistory: boolean }
   > {
     const parseAnswer = (answer: string) => {
@@ -209,7 +217,7 @@ export class OpenAiTranslator implements SegmentTranslator {
           [
             "You've reached our limit of messages per hour",
             '触发每小时限制',
-            20,
+            20 * 60,
           ],
           // "You've reached our limit of messages per 24 hours. Please try again later.",
           [
@@ -217,13 +225,13 @@ export class OpenAiTranslator implements SegmentTranslator {
             '触发24小时限制',
             -1,
           ],
-          ['Only one message at a time.', '帐号被占用或是未正常退出', 2],
-          ['rate limited', '触发GPT代理限速', 1],
+          ['Only one message at a time.', '帐号被占用或是未正常退出', 2 * 60],
+          ['rate limited', '触发GPT代理限速', 5],
         ];
 
-        for (const [prefix, message, delayMinutes] of errors) {
+        for (const [prefix, message, delaySeconds] of errors) {
           if (error.startsWith(prefix)) {
-            return { message, delayMinutes };
+            return { message, delaySeconds };
           }
         }
         return { message: error };
@@ -245,19 +253,23 @@ export class OpenAiTranslator implements SegmentTranslator {
 
   private async onError({
     message,
-    delayMinutes,
+    delaySeconds,
   }: {
     message: string;
-    delayMinutes?: number;
+    delaySeconds?: number;
   }) {
-    if (delayMinutes === undefined) {
+    if (delaySeconds === undefined) {
       this.log(`　未知错误，请反馈给站长：${message}`);
-    } else if (delayMinutes > 0) {
+    } else if (delaySeconds > 0) {
       const delay = (s: number) =>
         new Promise((res) => setTimeout(res, 1000 * s));
 
-      this.log('　发生错误：' + message + `，暂停${delayMinutes}分钟`);
-      await delay(delayMinutes * 60);
+      if (delaySeconds > 60) {
+        this.log('　发生错误：' + message + `，暂停${delaySeconds / 60}分钟`);
+      } else {
+        this.log('　发生错误：' + message + `，暂停${delaySeconds}秒`);
+      }
+      await delay(delaySeconds);
       return;
     } else {
       this.log('　发生错误：' + message + '，退出');
