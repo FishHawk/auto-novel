@@ -2,8 +2,8 @@ package infra
 
 import appModule
 import com.jillesvangurp.ktsearch.*
+import infra.common.UserRepository
 import infra.model.*
-import infra.provider.WebNovelProviderDataSource
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.kotest.core.spec.style.DescribeSpec
@@ -12,10 +12,6 @@ import io.kotest.koin.KoinLifecycleMode
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import org.bson.Document
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
@@ -25,9 +21,9 @@ import java.io.File
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
 
-    private val provider by inject<WebNovelProviderDataSource>(WebNovelProviderDataSource::class.java)
-    private val es by inject<ElasticSearchDataSource>(ElasticSearchDataSource::class.java)
-    private val mongo by inject<MongoDataSource>(MongoDataSource::class.java)
+    private val provider by inject<DataSourceWebNovelProvider>(DataSourceWebNovelProvider::class.java)
+    private val es by inject<DataSourceElasticSearch>(DataSourceElasticSearch::class.java)
+    private val mongo by inject<DataSourceMongo>(DataSourceMongo::class.java)
 
     private val wenkuVR by inject<WenkuNovelVolumeRepository>(WenkuNovelVolumeRepository::class.java)
     private val wenkuMR by inject<WenkuNovelMetadataRepository>(WenkuNovelMetadataRepository::class.java)
@@ -73,7 +69,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                     .skip(skip)
                     .limit(limit)
                     .toList()
-                es.client.bulk(target = ElasticSearchDataSource.webNovelIndexName) {
+                es.client.bulk(target = DataSourceElasticSearch.webNovelIndexName) {
                     list.forEach { it ->
                         index(
                             doc = WebNovelMetadataEsModel(

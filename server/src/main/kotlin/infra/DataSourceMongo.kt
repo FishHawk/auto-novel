@@ -52,23 +52,19 @@ data class WebNovelReadHistoryModel(
     @Contextual val createAt: Instant,
 )
 
-class MongoDataSource(url: String) {
+class DataSourceMongo(url: String) {
     val client = KMongo.createClient(url).coroutine
-    val database = client.getDatabase("main")
+    private val database = client.getDatabase("main")
 
-    val emailCodeCollection
-        get() = database.getCollection<EmailCodeModel>("email-code")
-    val resetPasswordTokenCollection
-        get() = database.getCollection<ResetPasswordToken>("reset-password-token")
-
-    val userCollectionName = "user"
-    val userCollection
-        get() = database.getCollection<User>(userCollectionName)
-
+    // Common
     val articleCollection
         get() = database.getCollection<ArticleModel>("article")
     val commentCollection
         get() = database.getCollection<CommentModel>("comment-alt")
+
+    val userCollectionName = "user"
+    val userCollection
+        get() = database.getCollection<User>(userCollectionName)
 
     // Web novel
     val webNovelMetadataCollectionName = "metadata"
@@ -100,21 +96,10 @@ class MongoDataSource(url: String) {
     val wenkuNovelEditHistoryCollection
         get() = database.getCollection<WenkuNovelEditHistory>("wenku-edit-history")
 
-    // Ensure index
+
     init {
         runBlocking {
-            emailCodeCollection.ensureIndex(
-                EmailCodeModel::createdAt,
-                indexOptions = IndexOptions().expireAfter(15, TimeUnit.MINUTES),
-            )
-            resetPasswordTokenCollection.ensureUniqueIndex(ResetPasswordToken::userId)
-            resetPasswordTokenCollection.ensureIndex(
-                ResetPasswordToken::createAt,
-                indexOptions = IndexOptions().expireAfter(15, TimeUnit.MINUTES),
-            )
-            userCollection.ensureUniqueIndex(User::email)
-            userCollection.ensureUniqueIndex(User::username)
-
+            // Common
             articleCollection.ensureIndex(
                 ArticleModel::updateAt,
                 indexOptions = IndexOptions().partialFilterExpression(
@@ -130,6 +115,10 @@ class MongoDataSource(url: String) {
                 CommentModel::parent,
                 CommentModel::id,
             )
+
+            userCollection.ensureUniqueIndex(User::email)
+            userCollection.ensureUniqueIndex(User::username)
+
 
             // Web novel
             webNovelMetadataCollection.ensureUniqueIndex(

@@ -1,7 +1,7 @@
 package infra.web
 
 import com.mongodb.client.model.UpdateOptions
-import infra.MongoDataSource
+import infra.DataSourceMongo
 import infra.model.Page
 import infra.model.WebNovelPatchHistory
 import infra.model.WebNovelPatchHistoryOutline
@@ -13,7 +13,7 @@ import org.litote.kmongo.util.KMongoUtil.toBson
 import java.util.*
 
 class WebNovelPatchHistoryRepository(
-    private val mongo: MongoDataSource,
+    private val mongo: DataSourceMongo,
 ) {
     suspend fun list(
         page: Int,

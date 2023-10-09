@@ -2,9 +2,7 @@ package api
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import infra.EmailCodeRepository
-import infra.ResetPasswordTokenRepository
-import infra.UserRepository
+import infra.common.UserRepository
 import infra.model.User
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -108,8 +106,6 @@ fun Route.routeAuth() {
 class AuthApi(
     private val secret: String,
     private val userRepository: UserRepository,
-    private val emailCodeRepository: EmailCodeRepository,
-    private val resetPasswordTokenRepository: ResetPasswordTokenRepository,
 ) {
     private fun generateToken(
         username: String,
@@ -187,7 +183,7 @@ class AuthApi(
             return httpConflict("用户名已经被使用")
         }
 
-        if (!emailCodeRepository.exist(email, emailCode))
+        if (!userRepository.validateEmailCode(email, emailCode))
             return httpBadRequest("邮箱验证码错误")
 
         userRepository.add(
@@ -233,7 +229,7 @@ class AuthApi(
             return httpInternalServerError("邮件发送失败")
         }
 
-        emailCodeRepository.add(email, emailCode)
+        userRepository.addEmailCode(email, emailCode)
         return Result.success(Unit)
     }
 
@@ -262,7 +258,7 @@ class AuthApi(
             return httpInternalServerError("邮件发送失败")
         }
 
-        resetPasswordTokenRepository.set(user.id, token)
+        userRepository.addResetPasswordToken(user.id, token)
         return Result.success("邮件已发送")
     }
 
@@ -273,7 +269,7 @@ class AuthApi(
     ): Result<Unit> {
         val user = userRepository.getByUsernameOrEmail(emailOrUsername)
             ?: return httpNotFound("用户不存在")
-        if (!resetPasswordTokenRepository.validate(user.id, token)) {
+        if (!userRepository.validateResetPasswordToken(user.id, token)) {
             return httpBadRequest("口令不合法")
         }
         userRepository.updatePassword(user.id, password)

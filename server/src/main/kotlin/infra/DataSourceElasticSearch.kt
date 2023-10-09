@@ -34,7 +34,7 @@ data class WenkuNovelMetadataEsModel(
     val updateAt: Long,
 )
 
-class ElasticSearchDataSource(url: String) {
+class DataSourceElasticSearch(url: String) {
     val client = SearchClient(
         KtorRestClient(
             Node(url, 9200)

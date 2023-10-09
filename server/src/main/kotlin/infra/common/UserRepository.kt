@@ -1,4 +1,4 @@
-package infra
+package infra.common
 
 import com.jillesvangurp.ktsearch.document
 import com.jillesvangurp.ktsearch.getDocument
@@ -6,8 +6,10 @@ import com.mongodb.client.model.Aggregates.count
 import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.Facet
 import com.mongodb.client.model.UpdateOptions
+import infra.*
 import infra.model.*
 import infra.web.toOutline
+import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -17,10 +19,12 @@ import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 import util.PBKDF2
+import kotlin.time.Duration.Companion.minutes
 
 class UserRepository(
-    private val mongo: MongoDataSource,
-    private val es: ElasticSearchDataSource,
+    private val mongo: DataSourceMongo,
+    private val es: DataSourceElasticSearch,
+    private val redis: DataSourceRedis,
 ) {
     suspend fun add(
         email: String,
@@ -244,7 +248,7 @@ class UserRepository(
             .webNovelMetadataCollection
             .findOneById(ObjectId(novelId))!!
         val esnovel = es.client.getDocument(
-            target = ElasticSearchDataSource.webNovelIndexName,
+            target = DataSourceElasticSearch.webNovelIndexName,
             id = "${novel.providerId}.${novel.novelId}",
         ).document<WebNovelMetadataEsModel>()
         mongo
@@ -347,7 +351,7 @@ class UserRepository(
         novelId: String,
     ) {
         val esnovel = es.client.getDocument(
-            target = ElasticSearchDataSource.wenkuNovelIndexName,
+            target = DataSourceElasticSearch.wenkuNovelIndexName,
             id = novelId,
         ).document<WenkuNovelMetadataEsModel>()
         mongo
@@ -372,5 +376,37 @@ class UserRepository(
                 WenkuNovelFavoriteModel::userId eq getUserIdByUsername(username).toId(),
                 WenkuNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
             )
+    }
+
+    private fun emailCodeRedisKey(email: String) = "ec:${email}"
+
+    suspend fun validateEmailCode(email: String, emailCode: String): Boolean {
+        return redis.get(emailCodeRedisKey(email)) == emailCode
+    }
+
+    suspend fun addEmailCode(email: String, emailCode: String) {
+        redis.set(
+            key = emailCodeRedisKey(email),
+            value = emailCode,
+            setOption = SetOption.Builder()
+                .exSeconds(15.minutes.inWholeSeconds.toULong())
+                .build(),
+        )
+    }
+
+    private fun resetPasswordTokenRedisKey(id: ObjectId) = "rpt:${id.toHexString()}"
+
+    suspend fun validateResetPasswordToken(id: ObjectId, token: String): Boolean {
+        return redis.get(resetPasswordTokenRedisKey(id)) == token
+    }
+
+    suspend fun addResetPasswordToken(id: ObjectId, token: String) {
+        redis.set(
+            key = resetPasswordTokenRedisKey(id),
+            value = token,
+            setOption = SetOption.Builder()
+                .exSeconds(15.minutes.inWholeSeconds.toULong())
+                .build(),
+        )
     }
 }

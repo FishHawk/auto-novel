@@ -1,21 +1,25 @@
-package infra
+package infra.common
 
 import com.jillesvangurp.ktsearch.Refresh
-import com.jillesvangurp.ktsearch.indexDocument
 import com.jillesvangurp.ktsearch.updateDocument
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
+import infra.DataSourceElasticSearch
+import infra.DataSourceMongo
+import infra.DataSourceRedis
+import infra.WebNovelMetadataEsModel
 import infra.model.WebNovelMetadata
 import infra.model.WenkuNovelMetadata
 import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.litote.kmongo.inc
+import kotlin.time.Duration.Companion.hours
 
 class StatisticsRepository(
-    private val mongo: MongoDataSource,
-    private val es: ElasticSearchDataSource,
-    private val redis: RedisDataSource,
+    private val mongo: DataSourceMongo,
+    private val es: DataSourceElasticSearch,
+    private val redis: DataSourceRedis,
 ) {
     suspend fun increaseWebNovelVisited(
         usernameOrIp: String,
@@ -31,7 +35,7 @@ class StatisticsRepository(
             ) ?: return
         es.client.updateDocument(
             id = "${novel.providerId}.${novel.novelId}",
-            target = ElasticSearchDataSource.webNovelIndexName,
+            target = DataSourceElasticSearch.webNovelIndexName,
             doc = buildJsonObject {
                 put(
                     WebNovelMetadataEsModel::visited.name,
@@ -56,8 +60,13 @@ class StatisticsRepository(
 
     private suspend inline fun applyRecord(key: String, block: () -> Unit) {
         if (redis.exists(key) == 0L) {
-            val option = SetOption.Builder().exSeconds((3600 * 3).toULong()).build()
-            redis.set(key, "0", option)
+            redis.set(
+                key = key,
+                value = "0",
+                setOption = SetOption.Builder()
+                    .exSeconds(3.hours.inWholeSeconds.toULong())
+                    .build(),
+            )
             block()
         }
     }

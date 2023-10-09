@@ -1,13 +1,13 @@
 package infra.wenku
 
-import infra.MongoDataSource
+import infra.DataSourceMongo
 import infra.model.Page
 import infra.model.WenkuNovelUploadHistory
 import kotlinx.datetime.Clock
 import org.bson.types.ObjectId
 
 class WenkuNovelUploadHistoryRepository(
-    private val mongo: MongoDataSource,
+    private val mongo: DataSourceMongo,
 ) {
     suspend fun list(
         page: Int,

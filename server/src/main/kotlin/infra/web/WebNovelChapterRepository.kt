@@ -1,15 +1,15 @@
 package infra.web
 
-import infra.MongoDataSource
+import infra.DataSourceMongo
 import infra.model.*
-import infra.provider.WebNovelProviderDataSource
+import infra.DataSourceWebNovelProvider
 import kotlinx.datetime.Clock
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
 
 class WebNovelChapterRepository(
-    private val provider: WebNovelProviderDataSource,
-    private val mongo: MongoDataSource,
+    private val provider: DataSourceWebNovelProvider,
+    private val mongo: DataSourceMongo,
 ) {
     suspend fun getTranslationOutlines(
         providerId: String,

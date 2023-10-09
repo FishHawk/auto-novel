@@ -2,7 +2,11 @@ import api.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.*
-import infra.provider.WebNovelProviderDataSource
+import infra.DataSourceWebNovelProvider
+import infra.common.ArticleRepository
+import infra.common.CommentRepository
+import infra.common.StatisticsRepository
+import infra.common.UserRepository
 import infra.web.*
 import infra.wenku.WenkuNovelEditHistoryRepository
 import infra.wenku.WenkuNovelMetadataRepository
@@ -91,17 +95,17 @@ fun main() {
 val appModule = module {
     single {
         val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017"
-        MongoDataSource(mongodbUrl)
+        DataSourceMongo(mongodbUrl)
     }
     single {
         val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
-        ElasticSearchDataSource(url)
+        DataSourceElasticSearch(url)
     }
     single {
         val url = System.getenv("REDIS_URL") ?: "192.168.1.110:6379"
         createRedisDataSource(url)
     }
-    single { WebNovelProviderDataSource() }
+    single { DataSourceWebNovelProvider() }
 
     // Repository
     single { WebNovelMetadataRepository(get(), get(), get()) }
@@ -118,14 +122,12 @@ val appModule = module {
     single { ArticleRepository(get()) }
     single { CommentRepository(get()) }
     single { StatisticsRepository(get(), get(), get()) }
-    single { UserRepository(get(), get()) }
-    single { EmailCodeRepository(get()) }
-    single { ResetPasswordTokenRepository(get()) }
+    single { UserRepository(get(), get(), get()) }
 
     // Api
     single(createdAtStart = true) {
         val secret = System.getenv("JWT_SECRET") ?: ""
-        AuthApi(secret, get(), get(), get())
+        AuthApi(secret, get())
     }
     single(createdAtStart = true) { ArticleApi(get(), get()) }
     single(createdAtStart = true) { CommentApi(get(), get(), get()) }

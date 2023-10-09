@@ -1,7 +1,7 @@
 package api
 
-import infra.StatisticsRepository
-import infra.UserRepository
+import infra.common.StatisticsRepository
+import infra.common.UserRepository
 import infra.model.*
 import infra.wenku.WenkuNovelEditHistoryRepository
 import infra.wenku.WenkuNovelMetadataRepository

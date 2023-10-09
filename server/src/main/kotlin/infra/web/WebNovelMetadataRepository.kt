@@ -6,13 +6,13 @@ import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.result.UpdateResult
-import infra.ElasticSearchDataSource
-import infra.MongoDataSource
+import infra.DataSourceElasticSearch
+import infra.DataSourceMongo
 import infra.WebNovelFavoriteModel
 import infra.WebNovelMetadataEsModel
 import infra.model.*
 import infra.provider.RemoteNovelListItem
-import infra.provider.WebNovelProviderDataSource
+import infra.DataSourceWebNovelProvider
 import infra.provider.providers.Hameln
 import infra.provider.providers.Syosetu
 import kotlinx.datetime.Clock
@@ -36,9 +36,9 @@ private fun Enum<*>.serialName(): String =
     javaClass.getDeclaredField(name).getAnnotation(SerialName::class.java)!!.value
 
 class WebNovelMetadataRepository(
-    private val provider: WebNovelProviderDataSource,
-    private val mongo: MongoDataSource,
-    private val es: ElasticSearchDataSource,
+    private val provider: DataSourceWebNovelProvider,
+    private val mongo: DataSourceMongo,
+    private val es: DataSourceElasticSearch,
 ) {
     suspend fun listRank(
         providerId: String,
@@ -66,7 +66,7 @@ class WebNovelMetadataRepository(
         pageSize: Int,
     ): Page<WebNovelMetadataOutline> {
         val response = es.client.search(
-            ElasticSearchDataSource.webNovelIndexName,
+            DataSourceElasticSearch.webNovelIndexName,
             from = page * pageSize,
             size = pageSize
         ) {
@@ -382,7 +382,7 @@ class WebNovelMetadataRepository(
     ) {
         es.client.indexDocument(
             id = "${novel.providerId}.${novel.novelId}",
-            target = ElasticSearchDataSource.webNovelIndexName,
+            target = DataSourceElasticSearch.webNovelIndexName,
             document = WebNovelMetadataEsModel(
                 providerId = novel.providerId,
                 novelId = novel.novelId,

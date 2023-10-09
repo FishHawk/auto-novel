@@ -1,6 +1,7 @@
 package api
 
-import infra.*
+import infra.common.StatisticsRepository
+import infra.common.UserRepository
 import infra.model.*
 import infra.provider.providers.Syosetu
 import infra.web.*

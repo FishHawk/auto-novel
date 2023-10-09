@@ -1,8 +1,11 @@
-package infra.provider
+package infra
 
+import infra.provider.RemoteChapter
+import infra.provider.RemoteNovelListItem
+import infra.provider.RemoteNovelMetadata
 import infra.provider.providers.*
 
-class WebNovelProviderDataSource {
+class DataSourceWebNovelProvider {
     companion object {
         private val providers = mapOf(
             Hameln.id to Hameln(),

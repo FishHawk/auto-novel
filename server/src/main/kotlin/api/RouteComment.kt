@@ -1,8 +1,8 @@
 package api
 
-import infra.ArticleRepository
-import infra.CommentRepository
-import infra.UserRepository
+import infra.common.ArticleRepository
+import infra.common.CommentRepository
+import infra.common.UserRepository
 import infra.model.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*

@@ -1,7 +1,8 @@
-package infra
+package infra.common
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
+import infra.DataSourceMongo
 import infra.model.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -11,7 +12,7 @@ import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 
 class CommentRepository(
-    private val mongo: MongoDataSource,
+    private val mongo: DataSourceMongo,
 ) {
     suspend fun listComment(
         site: String,

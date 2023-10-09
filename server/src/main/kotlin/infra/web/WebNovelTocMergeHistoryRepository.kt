@@ -1,13 +1,13 @@
 package infra.web
 
-import infra.MongoDataSource
+import infra.DataSourceMongo
 import infra.model.Page
 import infra.model.WebNovelTocMergeHistory
 import org.bson.types.ObjectId
 import org.litote.kmongo.util.KMongoUtil.toBson
 
 class WebNovelTocMergeHistoryRepository(
-    private val mongo: MongoDataSource,
+    private val mongo: DataSourceMongo,
 ) {
     suspend fun list(
         page: Int,

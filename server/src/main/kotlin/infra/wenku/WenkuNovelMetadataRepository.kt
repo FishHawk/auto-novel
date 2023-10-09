@@ -3,8 +3,8 @@ package infra.wenku
 import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.CountOptions
-import infra.ElasticSearchDataSource
-import infra.MongoDataSource
+import infra.DataSourceElasticSearch
+import infra.DataSourceMongo
 import infra.WenkuNovelMetadataEsModel
 import infra.model.Page
 import infra.model.WebNovelMetadata
@@ -14,13 +14,12 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.combine
-import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
 import java.util.*
 
 class WenkuNovelMetadataRepository(
-    private val mongo: MongoDataSource,
-    private val es: ElasticSearchDataSource,
+    private val mongo: DataSourceMongo,
+    private val es: DataSourceElasticSearch,
 ) {
     suspend fun search(
         userQuery: String?,
@@ -28,7 +27,7 @@ class WenkuNovelMetadataRepository(
         pageSize: Int,
     ): Page<WenkuNovelMetadataOutline> {
         val response = es.client.search(
-            ElasticSearchDataSource.wenkuNovelIndexName,
+            DataSourceElasticSearch.wenkuNovelIndexName,
             from = page * pageSize,
             size = pageSize
         ) {
@@ -171,7 +170,7 @@ class WenkuNovelMetadataRepository(
             )
         es.client.deleteDocument(
             id = novelId,
-            target = ElasticSearchDataSource.wenkuNovelIndexName,
+            target = DataSourceElasticSearch.wenkuNovelIndexName,
         )
     }
 
@@ -186,7 +185,7 @@ class WenkuNovelMetadataRepository(
     ) {
         es.client.indexDocument(
             id = novelId,
-            target = ElasticSearchDataSource.wenkuNovelIndexName,
+            target = DataSourceElasticSearch.wenkuNovelIndexName,
             document = WenkuNovelMetadataEsModel(
                 id = novelId,
                 title = title,
@@ -221,7 +220,7 @@ class WenkuNovelMetadataRepository(
         data class EsUpdate(val updateAt: Long)
         es.client.updateDocument(
             id = novelId,
-            target = ElasticSearchDataSource.wenkuNovelIndexName,
+            target = DataSourceElasticSearch.wenkuNovelIndexName,
             doc = EsUpdate(Clock.System.now().epochSeconds),
             refresh = Refresh.WaitFor,
         )

@@ -1,6 +1,6 @@
 package infra.web
 
-import infra.MongoDataSource
+import infra.DataSourceMongo
 import infra.model.NovelFileLang
 import infra.model.NovelFileType
 import infra.model.WebNovelChapter
@@ -11,7 +11,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.*
 
 class WebNovelFileRepository(
-    private val mongo: MongoDataSource,
+    private val mongo: DataSourceMongo,
 ) {
     private val root = Path("./data/files-web")
 
