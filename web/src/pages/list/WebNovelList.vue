@@ -30,6 +30,10 @@ const options = [
     label: '翻译',
     tags: ['全部', 'AI'],
   },
+  {
+    label: '排序',
+    tags: ['更新', '点击', '相关'],
+  },
 ];
 
 const loader: Loader = (page: number, query: string, selected: number[]) => {
@@ -54,6 +58,7 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
     type: selected[1],
     level: selected[2],
     translate: selected[3],
+    sort: selected[4],
   }).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
 };
 </script>

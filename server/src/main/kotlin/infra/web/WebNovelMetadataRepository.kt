@@ -29,6 +29,7 @@ object WebNovelFilter {
     enum class Type { 全部, 连载中, 已完结, 短篇 }
     enum class Level { 全部, 一般向, R18 }
     enum class Translate { 全部, AI }
+    enum class Sort { 更新, 点击, 相关 }
 }
 
 private fun Enum<*>.serialName(): String =
@@ -60,6 +61,7 @@ class WebNovelMetadataRepository(
         filterType: WebNovelFilter.Type,
         filterLevel: WebNovelFilter.Level,
         filterTranslate: WebNovelFilter.Translate,
+        filterSort: WebNovelFilter.Sort,
         page: Int,
         pageSize: Int,
     ): Page<WebNovelMetadataOutline> {
@@ -154,8 +156,19 @@ class WebNovelMetadataRepository(
                             defaultOperator = MatchOperator.AND
                         }
                     )
-                } else {
-                    sort {
+                }
+                when (filterSort) {
+                    WebNovelFilter.Sort.相关 -> if (queryWords.isEmpty()) {
+                        sort {
+                            add(WebNovelMetadataEsModel::updateAt)
+                        }
+                    }
+
+                    WebNovelFilter.Sort.点击 -> sort {
+                        add(WebNovelMetadataEsModel::visited)
+                    }
+
+                    WebNovelFilter.Sort.更新 -> sort {
                         add(WebNovelMetadataEsModel::updateAt)
                     }
                 }

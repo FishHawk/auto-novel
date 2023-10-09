@@ -50,19 +50,19 @@ watch(
   { immediate: true }
 );
 
-const latestUpdateWeb = ref<ResultState<WebNovelOutlineDto[]>>();
-async function loadLatestUpdateWeb() {
-  const result = await ApiWebNovel.list({ page: 0, pageSize: 8 });
+const mostVisitedWeb = ref<ResultState<WebNovelOutlineDto[]>>();
+async function loadWeb() {
+  const result = await ApiWebNovel.list({ page: 0, pageSize: 8, sort: 1 });
   if (result.ok) {
-    latestUpdateWeb.value = Ok(result.value.items);
+    mostVisitedWeb.value = Ok(result.value.items);
   } else {
-    latestUpdateWeb.value = result;
+    mostVisitedWeb.value = result;
   }
 }
-loadLatestUpdateWeb();
+loadWeb();
 
 const latestUpdateWenku = ref<ResultState<WenkuNovelOutlineDto[]>>();
-async function loadLatestUpdateWenku() {
+async function loadWenku() {
   const result = await ApiWenkuNovel.list({ page: 0, pageSize: 12 });
   if (result.ok) {
     latestUpdateWenku.value = Ok(result.value.items.slice(0, 12));
@@ -70,7 +70,7 @@ async function loadLatestUpdateWenku() {
     latestUpdateWenku.value = result;
   }
 }
-loadLatestUpdateWenku();
+loadWenku();
 
 const showLinkExampleModal = ref(false);
 const linkExample = [
@@ -132,7 +132,12 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
-        <n-li><b>GPT翻译现在支持Api Key了，使用方法和Access Token一样。你可以在翻译设置里面控制翻译范围，别用到破产。</b></n-li>
+        <n-li>
+          <b>
+            GPT翻译现在支持Api Key了，使用方法和Access
+            Token一样。你可以在翻译设置里面控制翻译范围，别用到破产。
+          </b>
+        </n-li>
         <n-li>
           <b>使用说明</b>
           ：将想要翻译的小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。
@@ -170,10 +175,10 @@ const linkExample = [
       <n-divider />
     </template>
 
-    <SectionHeader title="最新更新-网络小说">
+    <SectionHeader title="最多点击-网络小说">
       <RouterNA to="/novel-list">更多</RouterNA>
     </SectionHeader>
-    <PanelWebNovel :list-result="latestUpdateWeb" />
+    <PanelWebNovel :list-result="mostVisitedWeb" />
     <n-divider />
 
     <SectionHeader title="最新更新-文库小说" style="margin-bottom: 20px">

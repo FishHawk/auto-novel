@@ -36,6 +36,7 @@ private class WebNovelRes {
         val type: Int = 0,
         val level: Int = 0,
         val translate: Int = 0,
+        val sort: Int = 0,
         val query: String? = null,
     )
 
@@ -119,6 +120,11 @@ fun Route.routeWebNovel() {
             filterTranslate = when (loc.translate) {
                 1 -> WebNovelFilter.Translate.AI
                 else -> WebNovelFilter.Translate.全部
+            },
+            filterSort = when (loc.sort) {
+                1 -> WebNovelFilter.Sort.点击
+                2 -> WebNovelFilter.Sort.相关
+                else -> WebNovelFilter.Sort.更新
             },
             page = loc.page.coerceAtLeast(0),
             pageSize = loc.pageSize.coerceIn(1, 20),
@@ -365,6 +371,7 @@ class WebNovelApi(
         filterType: WebNovelFilter.Type,
         filterLevel: WebNovelFilter.Level,
         filterTranslate: WebNovelFilter.Translate,
+        filterSort: WebNovelFilter.Sort,
         page: Int,
         pageSize: Int,
     ): Result<PageDto<NovelOutlineDto>> {
@@ -374,6 +381,7 @@ class WebNovelApi(
             filterType = filterType,
             filterLevel = filterLevel,
             filterTranslate = filterTranslate,
+            filterSort = filterSort,
             page = page.coerceAtLeast(0),
             pageSize = pageSize,
         )

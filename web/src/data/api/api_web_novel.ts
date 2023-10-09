@@ -27,6 +27,7 @@ async function list({
   type = 0,
   level = 0,
   translate = 0,
+  sort = 0,
 }: {
   page: number;
   pageSize: number;
@@ -35,6 +36,7 @@ async function list({
   type?: number;
   level?: number;
   translate?: number;
+  sort?: number;
 }): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
@@ -47,6 +49,7 @@ async function list({
           type,
           level,
           translate,
+          sort,
         },
       })
       .json()
