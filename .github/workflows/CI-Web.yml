@@ -1,14 +1,14 @@
-name: publish-server
+name: CI-Web
 
 on:
   push:
     branches:
       - main
     paths:
-      - server/**
+      - web/**
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-server
+  group: ${{ github.workflow }}-${{ github.ref }}-web
   cancel-in-progress: true
 
 jobs:
@@ -38,9 +38,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: server
+          context: web
           push: true
-          tags: ghcr.io/fishhawk/wneg-server:latest
+          tags: ghcr.io/fishhawk/wneg-proxy:latest
 
       - name: Delete all containers from repository without tags
         uses: Chizkiyahu/delete-untagged-ghcr-action@v2
