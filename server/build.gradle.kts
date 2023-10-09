@@ -56,6 +56,8 @@ dependencies {
 
     implementation("com.jillesvangurp:search-client:2.1.1")
 
+    implementation("io.github.crackthecodeabhi:kreds:0.9.0")
+
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.9.0")
 
     val kotestVersion = "5.5.4"

@@ -20,6 +20,7 @@ services:
       - PIXIV_COOKIE_PHPSESSID
       - MONGODB_URL=mongodb://mongo:27017
       - ELASTIC_SEARCH_DB_URL=elasticsearch
+      - REDIS_URL=redis:6379
     ports:
       - 8081:8081
     volumes:
@@ -57,4 +58,10 @@ services:
       - ${DATA_PATH}/es/plugins:/usr/share/elasticsearch/plugins
     ports:
       - 9200:9200
+    restart: always
+
+  redis:
+    image: redis:7.2.1
+    ports:
+      - 6379:6379
     restart: always

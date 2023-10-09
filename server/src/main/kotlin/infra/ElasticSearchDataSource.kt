@@ -17,6 +17,7 @@ data class WebNovelMetadataEsModel(
     val attentions: List<WebNovelAttention> = emptyList(),
     val keywords: List<String>,
     val tocSize: Int,
+    val visited: Int,
     val hasGpt: Boolean,
     val updateAt: Long,
 )
@@ -41,7 +42,7 @@ class ElasticSearchDataSource(url: String) {
     )
 
     companion object {
-        const val webNovelIndexName = "web-index-alt"
+        const val webNovelIndexName = "web-index"
         const val wenkuNovelIndexName = "wenku-index"
     }
 
@@ -58,6 +59,7 @@ class ElasticSearchDataSource(url: String) {
                         keyword(WebNovelMetadataEsModel::attentions)
                         keyword(WebNovelMetadataEsModel::keywords)
                         number<Int>(WebNovelMetadataEsModel::tocSize)
+                        number<Int>(WebNovelMetadataEsModel::visited)
                         bool(WebNovelMetadataEsModel::hasGpt)
                         date(WebNovelMetadataEsModel::updateAt)
                     }

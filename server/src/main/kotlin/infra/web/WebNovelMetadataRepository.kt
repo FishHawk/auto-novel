@@ -306,15 +306,6 @@ class WebNovelMetadataRepository(
         return novel
     }
 
-    suspend fun increaseVisited(providerId: String, novelId: String) {
-        mongo
-            .webNovelMetadataCollection
-            .updateOne(
-                WebNovelMetadata.byId(providerId, novelId),
-                inc(WebNovelMetadata::visited, 1)
-            )
-    }
-
     suspend fun updateTranslation(
         providerId: String,
         novelId: String,
@@ -389,6 +380,7 @@ class WebNovelMetadataRepository(
                 keywords = novel.keywords,
                 attentions = novel.attentions,
                 tocSize = novel.toc.count { it.chapterId != null },
+                visited = novel.visited.toInt(),
                 hasGpt = novel.gpt > 0,
                 updateAt = novel.updateAt.epochSeconds,
             ),

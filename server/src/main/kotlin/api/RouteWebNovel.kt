@@ -321,6 +321,7 @@ class WebNovelApi(
     private val userRepo: UserRepository,
     private val patchRepo: WebNovelPatchHistoryRepository,
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
+    private val statisticsRepo: StatisticsRepository,
 ) {
     // List
     @Serializable
@@ -506,7 +507,13 @@ class WebNovelApi(
         val novel = metadataRepo.getNovelAndSave(providerId, novelId)
             .getOrElse { return httpInternalServerError(it.message) }
         val dto = buildNovelDto(novel, username)
-        metadataRepo.increaseVisited(providerId, novelId)
+        if (username != null) {
+            statisticsRepo.increaseWebNovelVisited(
+                usernameOrIp = username,
+                providerId = novel.providerId,
+                novelId = novel.novelId,
+            )
+        }
         return Result.success(dto)
     }
 

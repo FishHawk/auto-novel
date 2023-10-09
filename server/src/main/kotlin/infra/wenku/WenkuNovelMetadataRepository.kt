@@ -83,15 +83,6 @@ class WenkuNovelMetadataRepository(
             .findOne(WenkuNovelMetadata.byId(novelId))
     }
 
-    suspend fun increaseVisited(novelId: String) {
-        mongo
-            .wenkuNovelMetadataCollection
-            .updateOne(
-                WenkuNovelMetadata.byId(novelId),
-                inc(WenkuNovelMetadata::visited, 1),
-            )
-    }
-
     suspend fun create(
         title: String,
         titleZh: String,

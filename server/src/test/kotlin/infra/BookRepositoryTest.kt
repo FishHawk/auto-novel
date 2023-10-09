@@ -1,8 +1,7 @@
 package infra
 
 import appModule
-import com.jillesvangurp.ktsearch.bulk
-import com.jillesvangurp.ktsearch.index
+import com.jillesvangurp.ktsearch.*
 import infra.model.*
 import infra.provider.WebNovelProviderDataSource
 import infra.wenku.WenkuNovelMetadataRepository
@@ -13,14 +12,14 @@ import io.kotest.koin.KoinLifecycleMode
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.bson.Document
-import org.bson.types.ObjectId
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
-import org.litote.kmongo.eq
-import org.litote.kmongo.id.toId
-import org.litote.kmongo.setValue
 import java.io.File
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
@@ -35,22 +34,6 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val userR by inject<UserRepository>(UserRepository::class.java)
 
     init {
-        describe("test") {
-            val nid = "6450c44884972153850fa845"
-//            mongo.wenkuNovelFavoriteCollection.find(
-//                WenkuNovelFavoriteModel::novelId eq ObjectId(nid).toId()
-//            ).toList().forEach { println(it) }
-//
-//            mongo.wenkuNovelFavoriteCollection.find(
-//                WenkuNovelFavoriteModel::novelId eq ObjectId("65119daeee167f34bff89b1e").toId()
-//            ).toList().forEach { println(it) }
-
-            mongo.wenkuNovelFavoriteCollection.updateMany(
-                WenkuNovelFavoriteModel::novelId eq ObjectId(nid).toId(),
-                setValue(WenkuNovelFavoriteModel::novelId, ObjectId("65119daeee167f34bff89b1e").toId())
-            )
-            wenkuMR.delete(nid)
-        }
         describe("build es index") {
             @Serializable
             data class WNMP(
@@ -62,6 +45,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                 val type: WebNovelType = WebNovelType.连载中,
                 val attentions: List<WebNovelAttention> = emptyList(),
                 val keywords: List<String> = emptyList(),
+                val visited: Long = 0,
                 val gpt: Long = 0,
                 val toc: List<WebNovelTocItem>,
                 @Contextual val updateAt: Instant,
@@ -82,6 +66,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                         WebNovelMetadata::attentions,
                         WebNovelMetadata::keywords,
                         WebNovelMetadata::gpt,
+                        WebNovelMetadata::visited,
                         WebNovelMetadata::toc,
                         WebNovelMetadata::updateAt,
                     )
@@ -101,6 +86,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                                 attentions = it.attentions,
                                 keywords = it.keywords,
                                 hasGpt = it.gpt > 0,
+                                visited = it.visited.toInt(),
                                 tocSize = it.toc.count { it.chapterId != null },
                                 updateAt = it.updateAt.epochSeconds,
                             ),

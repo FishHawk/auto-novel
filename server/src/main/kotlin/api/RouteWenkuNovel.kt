@@ -1,5 +1,6 @@
 package api
 
+import infra.StatisticsRepository
 import infra.UserRepository
 import infra.model.*
 import infra.wenku.WenkuNovelEditHistoryRepository
@@ -253,6 +254,7 @@ class WenkuNovelApi(
     private val volumeRepo: WenkuNovelVolumeRepository,
     private val uploadHistoryRepo: WenkuNovelUploadHistoryRepository,
     private val editHistoryRepository: WenkuNovelEditHistoryRepository,
+    private val statisticsRepo: StatisticsRepository,
 ) {
     @Serializable
     class NovelOutlineDto(
@@ -348,7 +350,12 @@ class WenkuNovelApi(
 
         val metadata = metadataRepo.get(novelId)
             ?: return httpNotFound("书不存在")
-        metadataRepo.increaseVisited(novelId)
+        if (username != null) {
+            statisticsRepo.increaseWenkuNovelVisited(
+                usernameOrIp = username,
+                novelId = novelId,
+            )
+        }
 
         val volumes = volumeRepo.list(novelId)
 

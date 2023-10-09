@@ -97,6 +97,10 @@ val appModule = module {
         val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
         ElasticSearchDataSource(url)
     }
+    single {
+        val url = System.getenv("REDIS_URL") ?: "192.168.1.110:6379"
+        createRedisDataSource(url)
+    }
     single { WebNovelProviderDataSource() }
 
     // Repository
@@ -113,6 +117,7 @@ val appModule = module {
 
     single { ArticleRepository(get()) }
     single { CommentRepository(get()) }
+    single { StatisticsRepository(get(), get(), get()) }
     single { UserRepository(get(), get()) }
     single { EmailCodeRepository(get()) }
     single { ResetPasswordTokenRepository(get()) }
@@ -125,9 +130,9 @@ val appModule = module {
     single(createdAtStart = true) { ArticleApi(get(), get()) }
     single(createdAtStart = true) { CommentApi(get(), get(), get()) }
 
-    single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
 
-    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WenkuNovelAdminApi(get(), get()) }
 }
