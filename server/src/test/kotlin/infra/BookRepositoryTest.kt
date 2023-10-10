@@ -1,7 +1,9 @@
 package infra
 
 import appModule
-import com.jillesvangurp.ktsearch.*
+import com.jillesvangurp.ktsearch.bulk
+import com.jillesvangurp.ktsearch.index
+import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
 import infra.wenku.WenkuNovelMetadataRepository
@@ -28,6 +30,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val wenkuVR by inject<WenkuNovelVolumeRepository>(WenkuNovelVolumeRepository::class.java)
     private val wenkuMR by inject<WenkuNovelMetadataRepository>(WenkuNovelMetadataRepository::class.java)
     private val userR by inject<UserRepository>(UserRepository::class.java)
+    private val ohR by inject<OperationHistoryRepository>(OperationHistoryRepository::class.java)
 
     init {
         describe("build es index") {

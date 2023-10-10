@@ -15,8 +15,6 @@ function menuOption(text: string, href: string): MenuOption {
 const menuOptions: MenuOption[] = [
   menuOption('网页编辑历史', '/admin/web-patch-history'),
   menuOption('网页目录合并历史', '/admin/web-toc-merge-history'),
-  menuOption('文库上传历史', '/admin/wenku-upload-history'),
-  menuOption('文库编辑历史', '/admin/wenku-edit-history'),
 ];
 </script>
 

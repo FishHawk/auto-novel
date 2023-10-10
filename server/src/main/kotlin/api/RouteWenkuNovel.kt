@@ -1,11 +1,10 @@
 package api
 
+import infra.common.OperationHistoryRepository
 import infra.common.StatisticsRepository
 import infra.common.UserRepository
 import infra.model.*
-import infra.wenku.WenkuNovelEditHistoryRepository
 import infra.wenku.WenkuNovelMetadataRepository
-import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -252,8 +251,7 @@ class WenkuNovelApi(
     private val userRepo: UserRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
     private val volumeRepo: WenkuNovelVolumeRepository,
-    private val uploadHistoryRepo: WenkuNovelUploadHistoryRepository,
-    private val editHistoryRepository: WenkuNovelEditHistoryRepository,
+    private val operationHistoryRepo: OperationHistoryRepository,
     private val statisticsRepo: StatisticsRepository,
 ) {
     @Serializable
@@ -425,11 +423,11 @@ class WenkuNovelApi(
             keywords = body.keywords,
             introduction = body.introduction,
         )
-        editHistoryRepository.create(
-            novelId,
-            operator = username,
+        operationHistoryRepo.createWenkuEditHistory(
+            operator = userRepo.getUserIdByUsername(username),
+            novelId = novelId,
             old = null,
-            new = WenkuNovelEditHistory.Data(
+            new = Operation.WenkuEdit.Data(
                 title = body.title,
                 titleZh = body.titleZh,
                 authors = body.authors,
@@ -458,17 +456,17 @@ class WenkuNovelApi(
             keywords = body.keywords,
             introduction = body.introduction,
         )
-        editHistoryRepository.create(
-            novelId,
-            operator = username,
-            old = WenkuNovelEditHistory.Data(
+        operationHistoryRepo.createWenkuEditHistory(
+            operator = userRepo.getUserIdByUsername(username),
+            novelId = novelId,
+            old = Operation.WenkuEdit.Data(
                 title = old.title,
                 titleZh = old.titleZh,
                 authors = old.authors,
                 artists = old.artists,
                 introduction = old.introduction,
             ),
-            new = WenkuNovelEditHistory.Data(
+            new = Operation.WenkuEdit.Data(
                 title = body.title,
                 titleZh = body.titleZh,
                 authors = body.authors,
@@ -555,10 +553,10 @@ class WenkuNovelApi(
             httpNotFound("小说不存在")
         } else {
             createVolume(novelId, volumeId, inputStream).onSuccess {
-                uploadHistoryRepo.create(
+                operationHistoryRepo.createWenkuUploadHistory(
+                    operator = userRepo.getUserIdByUsername(username),
                     novelId = novelId,
                     volumeId = volumeId,
-                    uploader = username,
                 )
                 metadataRepo.notifyUpdate(novelId)
             }
@@ -579,10 +577,10 @@ class WenkuNovelApi(
         if (!validateNovelId(novelId)) return httpNotFound("小说不存在")
         return createVolumeAndUnpack(novelId, volumeId, inputStream).onSuccess {
             if (!(novelId == "non-archived" || novelId.startsWith("user"))) {
-                uploadHistoryRepo.create(
+                operationHistoryRepo.createWenkuUploadHistory(
+                    operator = userRepo.getUserIdByUsername(username),
                     novelId = novelId,
                     volumeId = volumeId,
-                    uploader = username,
                 )
                 metadataRepo.notifyUpdate(novelId)
             }

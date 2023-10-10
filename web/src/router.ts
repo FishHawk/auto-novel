@@ -103,7 +103,7 @@ const router = createRouter({
 
     {
       path: '/admin',
-      redirect: '/admin/web-patch-history',
+      component: () => import('./pages/admin/AdminOperationHistory.vue'),
     },
     {
       path: '/admin/web-patch-history',
@@ -113,15 +113,8 @@ const router = createRouter({
       path: '/admin/web-toc-merge-history',
       component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
     },
-    {
-      path: '/admin/wenku-upload-history',
-      component: () => import('./pages/admin/AdminWenkuUploadHistory.vue'),
-    },
-    {
-      path: '/admin/wenku-edit-history',
-      component: () => import('./pages/admin/AdminWenkuEditHistory.vue'),
-    },
   ],
+
   scrollBehavior(_to, _from, savedPosition) {
     return { top: 0 };
     // return new Promise((resolve, _reject) => {

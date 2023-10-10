@@ -3,14 +3,9 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.*
 import infra.DataSourceWebNovelProvider
-import infra.common.ArticleRepository
-import infra.common.CommentRepository
-import infra.common.StatisticsRepository
-import infra.common.UserRepository
+import infra.common.*
 import infra.web.*
-import infra.wenku.WenkuNovelEditHistoryRepository
 import infra.wenku.WenkuNovelMetadataRepository
-import infra.wenku.WenkuNovelUploadHistoryRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -82,12 +77,11 @@ fun main() {
             routeAuth()
             routeArticle()
             routeComment()
-
+            routeOperationHistory()
             routeWebNovel()
-            routeWebNovelAdmin()
-
             routeWenkuNovel()
-            routeWenkuNovelAdmin()
+
+            routeWebNovelAdmin()
         }
     }.start(wait = true)
 }
@@ -116,11 +110,10 @@ val appModule = module {
 
     single { WenkuNovelMetadataRepository(get(), get()) }
     single { WenkuNovelVolumeRepository() }
-    single { WenkuNovelUploadHistoryRepository(get()) }
-    single { WenkuNovelEditHistoryRepository(get()) }
 
     single { ArticleRepository(get()) }
     single { CommentRepository(get()) }
+    single { OperationHistoryRepository(get()) }
     single { StatisticsRepository(get(), get(), get()) }
     single { UserRepository(get(), get(), get()) }
 
@@ -131,10 +124,9 @@ val appModule = module {
     }
     single(createdAtStart = true) { ArticleApi(get(), get()) }
     single(createdAtStart = true) { CommentApi(get(), get(), get()) }
-
+    single(createdAtStart = true) { OperationHistoryApi(get()) }
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
-    single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
+    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get(), get()) }
 
-    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get(), get(), get()) }
-    single(createdAtStart = true) { WenkuNovelAdminApi(get(), get()) }
+    single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
 }

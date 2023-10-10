@@ -11,22 +11,7 @@ import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
-import java.util.*
 import java.util.concurrent.TimeUnit
-
-@Serializable
-data class EmailCodeModel(
-    val email: String,
-    val emailCode: String,
-    @Contextual val createdAt: Date,
-)
-
-@Serializable
-data class ResetPasswordToken(
-    @Contextual val userId: Id<User>,
-    val token: String,
-    @Contextual val createAt: Instant,
-)
 
 @Serializable
 data class WebNovelFavoriteModel(
@@ -62,6 +47,9 @@ class DataSourceMongo(url: String) {
     val commentCollection
         get() = database.getCollection<CommentModel>("comment-alt")
 
+    val operationHistoryCollection
+        get() = database.getCollection<OperationHistoryModel>("operation-history")
+
     val userCollectionName = "user"
     val userCollection
         get() = database.getCollection<User>(userCollectionName)
@@ -91,12 +79,6 @@ class DataSourceMongo(url: String) {
     val wenkuNovelFavoriteCollection
         get() = database.getCollection<WenkuNovelFavoriteModel>("wenku-favorite")
 
-    val wenkuNovelUploadHistoryCollection
-        get() = database.getCollection<WenkuNovelUploadHistory>("wenku-upload-history")
-    val wenkuNovelEditHistoryCollection
-        get() = database.getCollection<WenkuNovelEditHistory>("wenku-edit-history")
-
-
     init {
         runBlocking {
             // Common
@@ -114,6 +96,9 @@ class DataSourceMongo(url: String) {
                 CommentModel::site,
                 CommentModel::parent,
                 CommentModel::id,
+            )
+            operationHistoryCollection.ensureIndex(
+                OperationHistoryModel::createAt,
             )
 
             userCollection.ensureUniqueIndex(User::email)
