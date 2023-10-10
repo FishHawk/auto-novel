@@ -80,8 +80,6 @@ fun main() {
             routeOperationHistory()
             routeWebNovel()
             routeWenkuNovel()
-
-            routeWebNovelAdmin()
         }
     }.start(wait = true)
 }
@@ -102,20 +100,18 @@ val appModule = module {
     single { DataSourceWebNovelProvider() }
 
     // Repository
-    single { WebNovelMetadataRepository(get(), get(), get()) }
-    single { WebNovelChapterRepository(get(), get()) }
-    single { WebNovelFileRepository(get()) }
-    single { WebNovelPatchHistoryRepository(get()) }
-    single { WebNovelTocMergeHistoryRepository(get()) }
-
-    single { WenkuNovelMetadataRepository(get(), get()) }
-    single { WenkuNovelVolumeRepository() }
-
     single { ArticleRepository(get()) }
     single { CommentRepository(get()) }
     single { OperationHistoryRepository(get()) }
     single { StatisticsRepository(get(), get(), get()) }
     single { UserRepository(get(), get(), get()) }
+
+    single { WebNovelMetadataRepository(get(), get(), get()) }
+    single { WebNovelChapterRepository(get(), get()) }
+    single { WebNovelFileRepository(get()) }
+
+    single { WenkuNovelMetadataRepository(get(), get()) }
+    single { WenkuNovelVolumeRepository() }
 
     // Api
     single(createdAtStart = true) {
@@ -127,6 +123,4 @@ val appModule = module {
     single(createdAtStart = true) { OperationHistoryApi(get()) }
     single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
     single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get(), get()) }
-
-    single(createdAtStart = true) { WebNovelAdminApi(get(), get(), get()) }
 }

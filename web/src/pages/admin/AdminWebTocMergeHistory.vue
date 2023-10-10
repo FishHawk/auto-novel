@@ -4,22 +4,20 @@ import { useMessage } from 'naive-ui';
 
 import { ResultState } from '@/data/api/result';
 import {
-  ApiWebNovelHistory,
+  ApiOperationHistory,
   TocMergeHistoryDto,
-  TocMergeHistoryOutlineDto,
-} from '@/data/api/api_web_novel_history';
+} from '@/data/api/api_operation_history';
 import { Page } from '@/data/api/page';
 
 const message = useMessage();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const novelPage = ref<ResultState<Page<TocMergeHistoryOutlineDto>>>();
-const details = ref<{ [key: string]: DiffTocItem[] }>({});
+const novelPage = ref<ResultState<Page<TocMergeHistoryDto>>>();
 
 async function loadPage(page: number) {
   novelPage.value = undefined;
-  const result = await ApiWebNovelHistory.listTocMergeHistory(
+  const result = await ApiOperationHistory.listTocMergeHistory(
     currentPage.value - 1
   );
   if (currentPage.value == page) {
@@ -30,15 +28,8 @@ async function loadPage(page: number) {
   }
 }
 
-async function loadDetail(id: string) {
-  const result = await ApiWebNovelHistory.getTocMergeHistory(id);
-  if (result.ok) {
-    details.value[id] = diffToc(result.value);
-  }
-}
-
 async function deleteDetail(id: string) {
-  const result = await ApiWebNovelHistory.deleteMergeHistory(id);
+  const result = await ApiOperationHistory.deleteMergeHistory(id);
   if (result.ok) {
     message.info('删除成功');
     if (novelPage.value?.ok) {
@@ -83,7 +74,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 </script>
 
 <template>
-  <AdminLayout>
+  <MainLayout>
     <n-h1>网页目录合并历史</n-h1>
     <n-pagination
       v-if="pageNumber > 1"
@@ -101,12 +92,12 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
           <br />
           {{ item.reason }}
         </n-p>
-        <table v-if="item.id in details">
+        <table>
           <tr>
             <th>旧目录</th>
             <th>新目录</th>
           </tr>
-          <tr v-for="t of details[item.id]">
+          <tr v-for="t of diffToc(item)">
             <td :style="{ color: t.same ? 'grey' : 'red' }">
               {{ t.oldV?.titleJp }}
               <br />
@@ -120,7 +111,6 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
           </tr>
           <n-button @click="deleteDetail(item.id)">删除</n-button>
         </table>
-        <n-button v-else @click="loadDetail(item.id)">加载</n-button>
         <n-divider />
       </div>
     </div>
@@ -130,5 +120,5 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       :page-count="pageNumber"
       :page-slot="7"
     />
-  </AdminLayout>
+  </MainLayout>
 </template>

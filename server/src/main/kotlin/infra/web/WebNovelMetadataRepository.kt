@@ -322,17 +322,14 @@ class WebNovelMetadataRepository(
     suspend fun updateTranslation(
         providerId: String,
         novelId: String,
-        titleZh: Optional<String?>,
-        introductionZh: Optional<String?>,
+        titleZh: String?,
+        introductionZh: String?,
         tocZh: Map<Int, String?>,
     ): WebNovelMetadata? {
-        val list = mutableListOf<Bson>()
-        titleZh.ifSome {
-            list.add(setValue(WebNovelMetadata::titleZh, it))
-        }
-        introductionZh.ifSome {
-            list.add(setValue(WebNovelMetadata::introductionZh, it))
-        }
+        val list = mutableListOf(
+            setValue(WebNovelMetadata::titleZh, titleZh),
+            setValue(WebNovelMetadata::introductionZh, introductionZh)
+        )
         tocZh.forEach { (index, itemTitleZh) ->
             list.add(setValue(WebNovelMetadata::toc.pos(index) / WebNovelTocItem::titleZh, itemTitleZh))
         }

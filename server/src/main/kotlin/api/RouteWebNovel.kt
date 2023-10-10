@@ -1,5 +1,6 @@
 package api
 
+import infra.common.OperationHistoryRepository
 import infra.common.StatisticsRepository
 import infra.common.UserRepository
 import infra.model.*
@@ -23,7 +24,6 @@ import io.ktor.util.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
-import util.toOptional
 import java.nio.file.Path
 
 @Resource("/novel")
@@ -326,9 +326,9 @@ class WebNovelApi(
     private val chapterRepo: WebNovelChapterRepository,
     private val fileRepo: WebNovelFileRepository,
     private val userRepo: UserRepository,
-    private val patchRepo: WebNovelPatchHistoryRepository,
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
     private val statisticsRepo: StatisticsRepository,
+    private val operationHistoryRepo: OperationHistoryRepository,
 ) {
     // List
     @Serializable
@@ -615,55 +615,17 @@ class WebNovelApi(
         val metadata = metadataRepo.get(providerId, novelId)
             ?: return httpNotFound("小说不存在")
 
-        fun createTextChangeOrNull(
-            jp: String,
-            zhOld: String?,
-            zhNew: String?
-        ): WebNovelPatchHistory.TextChange? {
-            return if (zhNew != null && zhNew != zhOld) {
-                WebNovelPatchHistory.TextChange(jp, zhOld, zhNew)
-            } else null
-        }
-
-        val titleChange = createTextChangeOrNull(
-            metadata.titleJp,
-            metadata.titleZh,
-            title,
-        )
-        val introductionChange = createTextChangeOrNull(
-            metadata.introductionJp,
-            metadata.introductionZh,
-            introduction,
-        )
-        val tocChange = toc.mapNotNull { (jp, zhNew) ->
-            metadata.toc.find { it.titleJp == jp }?.let { item ->
-                WebNovelPatchHistory.TextChange(
-                    jp = item.titleJp,
-                    zhOld = item.titleZh,
-                    zhNew = zhNew
-                )
-            }
-        }
-
         if (
-            titleChange == null &&
-            introductionChange == null &&
-            tocChange.isEmpty()
+            title == null &&
+            introduction == null &&
+            toc.any { (jp, zhNew) ->
+                metadata.toc.any {
+                    it.titleJp == jp && it.titleZh != zhNew
+                }
+            }
         ) {
             return httpInternalServerError("修改为空")
         }
-
-        // Add patch
-        patchRepo.addPatch(
-            providerId = providerId,
-            novelId = novelId,
-            titleJp = metadata.titleJp,
-            titleZh = metadata.titleZh,
-            titleChange = titleChange,
-            introductionChange = introductionChange,
-            glossaryChange = emptyMap(),
-            tocChange = tocChange,
-        )
 
         val tocZh = mutableMapOf<Int, String>()
         metadata.toc.forEachIndexed { index, item ->
@@ -673,11 +635,27 @@ class WebNovelApi(
             }
         }
 
+        // Add patch
+        operationHistoryRepo.createWebEditHistory(
+            providerId = providerId,
+            novelId = novelId,
+            old = Operation.WebEdit.Data(
+                titleZh = metadata.titleZh,
+                introductionZh = metadata.introductionZh,
+            ),
+            new = Operation.WebEdit.Data(
+                titleZh = title,
+                introductionZh = introduction,
+            ),
+            operator = userRepo.getUserIdByUsername(username),
+            tocChange = toc,
+        )
+
         val novel = metadataRepo.updateTranslation(
             providerId = providerId,
             novelId = novelId,
-            titleZh = titleChange?.zhNew.toOptional(),
-            introductionZh = introductionChange?.zhNew.toOptional(),
+            titleZh = title ?: metadata.titleZh,
+            introductionZh = introduction ?: metadata.introductionZh,
             tocZh = tocZh,
         )
 
@@ -836,8 +814,8 @@ class WebNovelApi(
         metadataRepo.updateTranslation(
             providerId = providerId,
             novelId = novelId,
-            titleZh = titleZh.toOptional(),
-            introductionZh = introductionZh.toOptional(),
+            titleZh = title ?: metadata.titleZh,
+            introductionZh = introduction ?: metadata.introductionZh,
             tocZh = tocZh,
         )
         return Result.success(Unit)

@@ -7,11 +7,11 @@ import infra.DataSourceMongo
 import infra.model.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
-import org.bson.Document
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
+import org.litote.kmongo.util.KMongoUtil
 
 class OperationHistoryRepository(
     private val mongo: DataSourceMongo,
@@ -67,15 +67,21 @@ class OperationHistoryRepository(
         }
     }
 
-    suspend fun createWenkuUploadHistory(
+    suspend fun createWebEditHistory(
         operator: ObjectId,
+        providerId: String,
         novelId: String,
-        volumeId: String,
+        old: Operation.WebEdit.Data,
+        new: Operation.WebEdit.Data,
+        tocChange: Map<String, String>,
     ) = create(
         operator,
-        Operation.WenkuUpload(
+        Operation.WebEdit(
+            providerId = providerId,
             novelId = novelId,
-            volumeId = volumeId,
+            old = old,
+            new = new,
+            tocChange = tocChange,
         )
     )
 
@@ -90,6 +96,18 @@ class OperationHistoryRepository(
             novelId = novelId,
             old = old,
             new = new,
+        )
+    )
+
+    suspend fun createWenkuUploadHistory(
+        operator: ObjectId,
+        novelId: String,
+        volumeId: String,
+    ) = create(
+        operator,
+        Operation.WenkuUpload(
+            novelId = novelId,
+            volumeId = volumeId,
         )
     )
 
@@ -112,6 +130,29 @@ class OperationHistoryRepository(
     suspend fun delete(id: String) {
         mongo
             .operationHistoryCollection
+            .deleteOneById(ObjectId(id))
+    }
+
+    suspend fun listMergeHistory(
+        page: Int,
+        pageSize: Int,
+    ): Page<WebNovelTocMergeHistory> {
+        val total = mongo
+            .webNovelTocMergeHistoryCollection
+            .countDocuments()
+        val items = mongo
+            .webNovelTocMergeHistoryCollection
+            .find()
+            .sort(KMongoUtil.toBson("{ _id: -1 }"))
+            .skip(page * pageSize)
+            .limit(pageSize)
+            .toList()
+        return Page(items = items, total = total)
+    }
+
+    suspend fun deleteMergeHistory(id: String) {
+        mongo
+            .webNovelTocMergeHistoryCollection
             .deleteOneById(ObjectId(id))
     }
 }

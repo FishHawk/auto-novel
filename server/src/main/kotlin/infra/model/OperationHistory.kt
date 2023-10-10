@@ -10,11 +10,20 @@ import org.litote.kmongo.Id
 @Serializable
 sealed interface Operation {
     @Serializable
-    @SerialName("wenku-upload")
-    data class WenkuUpload(
+    @SerialName("web-edit")
+    data class WebEdit(
+        val providerId: String,
         val novelId: String,
-        val volumeId: String,
-    ) : Operation
+        val old: Data,
+        val new: Data,
+        val tocChange: Map<String, String>,
+    ) : Operation {
+        @Serializable
+        data class Data(
+            val titleZh: String?,
+            val introductionZh: String?,
+        )
+    }
 
     @Serializable
     @SerialName("wenku-edit")
@@ -32,6 +41,13 @@ sealed interface Operation {
             val introduction: String,
         )
     }
+
+    @Serializable
+    @SerialName("wenku-upload")
+    data class WenkuUpload(
+        val novelId: String,
+        val volumeId: String,
+    ) : Operation
 }
 
 @Serializable
@@ -48,4 +64,16 @@ data class OperationHistoryModel(
     @Contextual val operator: Id<User>,
     val operation: Operation,
     @Contextual val createAt: Instant,
+)
+
+@Serializable
+data class WebNovelTocMergeHistory(
+    @Contextual @SerialName("_id")
+    val id: ObjectId,
+    val providerId: String,
+    @SerialName("bookId")
+    val novelId: String,
+    val tocOld: List<WebNovelTocItem>,
+    val tocNew: List<WebNovelTocItem>,
+    val reason: String,
 )

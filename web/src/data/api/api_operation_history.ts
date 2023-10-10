@@ -1,15 +1,27 @@
 import { api } from './api';
 import { UserOutline } from './api_article';
+import { WebNovelTocItemDto } from './api_web_novel';
 import { Page } from './page';
 import { Result, runCatching } from './result';
 
-export type OperationType = 'wenku-upload' | 'wenku-edit';
-export type Operation = OperationWenkuUpload | OperationWenkuEdit;
+export type OperationType = 'web-edit' | 'wenku-edit' | 'wenku-upload';
+export type Operation =
+  | OperationWebEdit
+  | OperationWenkuEdit
+  | OperationWenkuUpload;
 
-export interface OperationWenkuUpload {
-  type: 'wenku-upload';
+interface OperationWebEditData {
+  titleZh: string;
+  introductionZh: string;
+}
+
+export interface OperationWebEdit {
+  type: 'web-edit';
+  providerId: string;
   novelId: string;
-  volumeId: string;
+  old: OperationWebEditData;
+  new: OperationWebEditData;
+  tocChange: { [key: string]: string };
 }
 
 interface OperationWenkuEditData {
@@ -27,6 +39,12 @@ export interface OperationWenkuEdit {
   new: OperationWenkuEditData;
 }
 
+export interface OperationWenkuUpload {
+  type: 'wenku-upload';
+  novelId: string;
+  volumeId: string;
+}
+
 export interface OperationHistory<T> {
   id: string;
   operator: UserOutline;
@@ -38,11 +56,14 @@ type O = {
   (_: { page: number; pageSize: number; type: OperationType }): Promise<
     Result<Page<OperationHistory<Operation>>>
   >;
-  (_: { page: number; pageSize: number; type: 'wenku-upload' }): Promise<
-    Result<Page<OperationHistory<OperationWenkuUpload>>>
+  (_: { page: number; pageSize: number; type: 'web-edit' }): Promise<
+    Result<Page<OperationHistory<OperationWebEdit>>>
   >;
   (_: { page: number; pageSize: number; type: 'wenku-edit' }): Promise<
     Result<Page<OperationHistory<OperationWenkuEdit>>>
+  >;
+  (_: { page: number; pageSize: number; type: 'wenku-upload' }): Promise<
+    Result<Page<OperationHistory<OperationWenkuUpload>>>
   >;
 };
 
@@ -64,7 +85,29 @@ const listOperationHistory = (({
 const deleteOperationHistory = (id: string) =>
   runCatching(api.delete(`operation-history/${id}`).text());
 
+// Toc merge
+export interface TocMergeHistoryDto {
+  id: string;
+  providerId: string;
+  novelId: string;
+  reason: string;
+  tocOld: WebNovelTocItemDto[];
+  tocNew: WebNovelTocItemDto[];
+}
+
+const listTocMergeHistory = (page: number) =>
+  runCatching(
+    api
+      .get('operation-history/toc-merge/', { searchParams: { page } })
+      .json<Page<TocMergeHistoryDto>>()
+  );
+
+const deleteMergeHistory = (id: string) =>
+  runCatching(api.delete(`operation-history/toc-merge/${id}`).text());
+
 export const ApiOperationHistory = {
   listOperationHistory,
   deleteOperationHistory,
+  listTocMergeHistory,
+  deleteMergeHistory,
 };

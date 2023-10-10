@@ -66,8 +66,6 @@ class DataSourceMongo(url: String) {
     val webNovelReadHistoryCollection
         get() = database.getCollection<WebNovelReadHistoryModel>("web-read-history")
 
-    val webNovelPatchHistoryCollection
-        get() = database.getCollection<WebNovelPatchHistory>("web-patch")
     val webNovelTocMergeHistoryCollection
         get() = database.getCollection<WebNovelTocMergeHistory>("toc-merge-history")
 
@@ -142,10 +140,6 @@ class DataSourceMongo(url: String) {
                 indexOptions = IndexOptions().expireAfter(100, TimeUnit.DAYS),
             )
 
-            webNovelPatchHistoryCollection.ensureUniqueIndex(
-                WebNovelPatchHistory::providerId,
-                WebNovelPatchHistory::novelId,
-            )
 
             // Wenku novel
             wenkuNovelFavoriteCollection.ensureUniqueIndex(

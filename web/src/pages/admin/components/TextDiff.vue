@@ -1,19 +1,15 @@
 <script lang="ts" setup>
 import { diffChars } from 'diff';
 defineProps<{
-  diff: {
-    jp: string;
-    zhOld?: string;
-    zhNew: string;
-  };
+  zhOld?: string;
+  zhNew: string;
 }>();
 </script>
 
 <template>
   <div>
-    <div>{{ diff.jp }}</div>
     <n-p>
-      <template v-for="c in diffChars(diff.zhOld ?? '', diff.zhNew)">
+      <template v-for="c in diffChars(zhOld ?? '', zhNew)">
         <ins v-if="c.added">{{ c.value }}</ins>
         <del v-else-if="c.removed">{{ c.value }}</del>
         <template v-else>{{ c.value }}</template>

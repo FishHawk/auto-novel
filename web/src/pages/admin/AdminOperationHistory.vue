@@ -14,10 +14,11 @@ import {
 import OperationWenkuEdit from './components/OperationWenkuEdit.vue';
 import OperationWenkuUpload from './components/OperationWenkuUpload.vue';
 
-const type = ref<OperationType>('wenku-upload');
+const type = ref<OperationType>('web-edit');
 const typeOptions = [
-  { value: 'wenku-upload', label: '文库上传' },
+  { value: 'web-edit', label: '网络编辑' },
   { value: 'wenku-edit', label: '文库编辑' },
+  { value: 'wenku-upload', label: '文库上传' },
 ];
 
 const message = useMessage();
@@ -66,6 +67,8 @@ watch(type, () => {
   <MainLayout>
     <n-h1>操作历史</n-h1>
 
+    <RouterNA to="/admin/web-toc-merge-history">合并历史</RouterNA>
+
     <n-p>
       <n-radio-group v-model:value="type" name="operation-type">
         <n-space>
@@ -88,28 +91,38 @@ watch(type, () => {
     />
     <n-divider />
 
-    <n-list v-if="historiesResult?.ok">
-      <n-list-item v-for="item in historiesResult.value.items">
-        <operation-wenku-upload
-          v-if="item.operation.type === 'wenku-upload'"
-          :op="item.operation"
-        />
-        <operation-wenku-edit
-          v-else-if="item.operation.type === 'wenku-edit'"
-          :op="item.operation"
-        />
-        <n-space>
-          <n-text>
-            于<n-time :time="item.createAt * 1000" type="relative" /> 由{{
-              item.operator.username
-            }}执行
-          </n-text>
-          <n-button type="error" text @click="deleteHistory(item.id)">
-            删除
-          </n-button>
-        </n-space>
-      </n-list-item>
-    </n-list>
+    <ResultView
+      :result="historiesResult"
+      :showEmpty="(it: Page<any>) => it.items.length === 0 "
+      v-slot="{ value }"
+    >
+      <n-list>
+        <n-list-item v-for="item in value.items">
+          <operation-web-edit
+            v-if="item.operation.type === 'web-edit'"
+            :op="item.operation"
+          />
+          <operation-wenku-edit
+            v-else-if="item.operation.type === 'wenku-edit'"
+            :op="item.operation"
+          />
+          <operation-wenku-upload
+            v-else-if="item.operation.type === 'wenku-upload'"
+            :op="item.operation"
+          />
+          <n-space>
+            <n-text>
+              于<n-time :time="item.createAt * 1000" type="relative" /> 由{{
+                item.operator.username
+              }}执行
+            </n-text>
+            <n-button type="error" text @click="deleteHistory(item.id)">
+              删除
+            </n-button>
+          </n-space>
+        </n-list-item>
+      </n-list>
+    </ResultView>
 
     <n-divider />
     <n-pagination
