@@ -2,7 +2,7 @@ import { KyInstance } from 'ky/distribution/types/ky';
 
 import { Glossary, SegmentTranslator } from '../type';
 
-import { OpenAiOfficialApi } from './apiOfficial';
+import { OpenAiError, OpenAiOfficialApi } from './apiOfficial';
 import { OpenAiUnofficialApi } from './apiUnofficial';
 import { createTokenSegmenter } from './common';
 
@@ -199,15 +199,26 @@ export class OpenAiTranslator implements SegmentTranslator {
 
     const messages = buildMessages(lines, this.glossary, enableBypass);
     if (this.api.official) {
-      const result = await askOfficial(this.api, messages);
-      if (typeof result === 'object') {
-        return {
-          answer: parseAnswer(result.answer),
+      return askOfficial(this.api, messages)
+        .then((it) => ({
+          answer: parseAnswer(it.answer),
           fromHistory: false,
-        };
-      } else {
-        return { message: result };
-      }
+        }))
+        .catch((e: any) => {
+          if (e instanceof OpenAiError) {
+            const errors: [string, string, number][] = [
+              ['rate_limit_exceeded', '触发GPT限速', 21],
+            ];
+            for (const [code, message, delaySeconds] of errors) {
+              if (e.code === code) {
+                return { message, delaySeconds };
+              }
+            }
+            return { message: e.message };
+          } else {
+            throw e;
+          }
+        });
     } else {
       const parseError = (error: string) => {
         const errors: [string, string, number][] = [
@@ -279,29 +290,23 @@ export class OpenAiTranslator implements SegmentTranslator {
   }
 }
 
-async function askOfficial(
+function askOfficial(
   api: OpenAiOfficialApi,
   messages: ['user' | 'assistant', string][]
-): Promise<{ answer: string } | string> {
-  const completionStream = await api.createChatCompletionsStream(
-    {
+): Promise<{ answer: string }> {
+  return api
+    .createChatCompletionsStream({
       messages: messages.map(([role, content]) => ({ content, role })),
       model: 'gpt-3.5-turbo',
       stream: true,
-    },
-    {
-      throwHttpErrors: false,
-    }
-  );
-  if (typeof completionStream === 'string') {
-    return completionStream;
-  } else {
-    const answer = Array.from(completionStream)
-      .map((chunk) => chunk.choices.at(0)?.delta.content)
-      .filter((content) => typeof content === 'string')
-      .join('');
-    return { answer };
-  }
+    })
+    .then((completionStream) => {
+      const answer = Array.from(completionStream)
+        .map((chunk) => chunk.choices.at(0)?.delta.content)
+        .filter((content) => typeof content === 'string')
+        .join('');
+      return { answer };
+    });
 }
 
 async function askUnofficial(

@@ -1,7 +1,7 @@
 // Copyright 2023 OpenAI
 
 import { KyInstance } from 'ky/distribution/types/ky';
-import { Options } from 'ky/distribution/types/options';
+import { HTTPError, Options } from 'ky';
 
 import { parseEventStream } from './common';
 
@@ -20,29 +20,24 @@ export class OpenAiOfficialApi {
     });
   }
 
-  async createChatCompletionsStream(
-    body: ChatCompletion.Params & { stream: true },
+  createChatCompletionsStream = (
+    json: ChatCompletion.Params & { stream: true },
     options?: Options
-  ): Promise<Generator<ChatCompletionChunk> | string> {
-    const response = await this.client.post('chat/completions', {
-      json: body,
-      ...options,
-    });
-    if (response.ok) {
-      return response.text().then(parseEventStream<ChatCompletionChunk>);
-    } else {
-      return `${response.status}:${await response.text()}`;
-    }
-  }
+  ): Promise<Generator<ChatCompletionChunk>> =>
+    this.client
+      .post('chat/completions', { json, ...options })
+      .text()
+      .then(parseEventStream<ChatCompletionChunk>)
+      .catch(OpenAiError.handle);
 
-  createChatCompletions(
-    body: ChatCompletion.Params & { stream?: false },
+  createChatCompletions = (
+    json: ChatCompletion.Params & { stream?: false },
     options?: Options
-  ): Promise<ChatCompletion> {
-    return this.client
-      .post('chat/completions', { json: body, ...options })
-      .json<ChatCompletion>();
-  }
+  ): Promise<ChatCompletion> =>
+    this.client
+      .post('chat/completions', { json, ...options })
+      .json<ChatCompletion>()
+      .catch(OpenAiError.handle);
 }
 
 export interface ChatCompletionChunk {
@@ -205,5 +200,45 @@ export namespace ChatCompletion {
      * [Learn more](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids).
      */
     user?: string;
+  }
+}
+
+export const safeJson = (text: string) => {
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    return undefined;
+  }
+};
+
+export class OpenAiError extends Error {
+  readonly status: number | undefined;
+  readonly code: string | null | undefined;
+
+  constructor(
+    status: number | undefined,
+    code: string | undefined,
+    message: string | undefined
+  ) {
+    super(`${status} ${code ?? 'unknown_code'} ${message}`);
+    this.status = status;
+    this.code = code;
+  }
+
+  static async handle(e: any): Promise<never> {
+    if (e instanceof HTTPError) {
+      const errText = await e.response.text().catch((err) => {
+        if (err instanceof Error) return err.message;
+        return `${err}`;
+      });
+      const errJson = safeJson(errText);
+      throw new OpenAiError(
+        e.response.status,
+        errJson?.['error']?.['code'],
+        errText
+      );
+    } else {
+      throw e;
+    }
   }
 }
