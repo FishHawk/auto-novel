@@ -73,7 +73,7 @@ class OperationHistoryRepository(
         novelId: String,
         old: Operation.WebEdit.Data,
         new: Operation.WebEdit.Data,
-        tocChange: Map<String, String>,
+        toc: List<Operation.WebEdit.Toc>,
     ) = create(
         operator,
         Operation.WebEdit(
@@ -81,7 +81,7 @@ class OperationHistoryRepository(
             novelId = novelId,
             old = old,
             new = new,
-            tocChange = tocChange,
+            toc = toc,
         )
     )
 

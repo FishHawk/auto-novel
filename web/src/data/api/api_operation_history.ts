@@ -21,7 +21,7 @@ export interface OperationWebEdit {
   novelId: string;
   old: OperationWebEditData;
   new: OperationWebEditData;
-  tocChange: { [key: string]: string };
+  toc: { jp: string; old?: string; new: string }[];
 }
 
 interface OperationWenkuEditData {

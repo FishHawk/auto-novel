@@ -615,24 +615,24 @@ class WebNovelApi(
         val metadata = metadataRepo.get(providerId, novelId)
             ?: return httpNotFound("小说不存在")
 
-        if (
-            title == null &&
-            introduction == null &&
-            toc.any { (jp, zhNew) ->
-                metadata.toc.any {
-                    it.titleJp == jp && it.titleZh != zhNew
-                }
-            }
-        ) {
-            return httpInternalServerError("修改为空")
-        }
-
         val tocZh = mutableMapOf<Int, String>()
+        val tocRecord = mutableListOf<Operation.WebEdit.Toc>()
         metadata.toc.forEachIndexed { index, item ->
             val newTitleZh = toc[item.titleJp]
-            if (newTitleZh != null) {
+            if (newTitleZh != null && newTitleZh != item.titleZh) {
                 tocZh[index] = newTitleZh
+                tocRecord.add(
+                    Operation.WebEdit.Toc(
+                        jp = item.titleJp,
+                        old = item.titleZh,
+                        new = newTitleZh,
+                    )
+                )
             }
+        }
+
+        if (title == null && introduction == null && tocZh.isEmpty()) {
+            return httpInternalServerError("修改为空")
         }
 
         // Add patch
@@ -648,7 +648,7 @@ class WebNovelApi(
                 introductionZh = introduction,
             ),
             operator = userRepo.getUserIdByUsername(username),
-            tocChange = toc,
+            toc = tocRecord,
         )
 
         val novel = metadataRepo.updateTranslation(

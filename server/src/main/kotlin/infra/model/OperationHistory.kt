@@ -16,12 +16,19 @@ sealed interface Operation {
         val novelId: String,
         val old: Data,
         val new: Data,
-        val tocChange: Map<String, String>,
+        val toc: List<Toc>,
     ) : Operation {
         @Serializable
         data class Data(
             val titleZh: String?,
             val introductionZh: String?,
+        )
+
+        @Serializable
+        data class Toc(
+            val jp: String,
+            val old: String?,
+            val new: String?,
         )
     }
 
