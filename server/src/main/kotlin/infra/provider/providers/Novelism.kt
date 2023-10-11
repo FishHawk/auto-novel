@@ -4,10 +4,11 @@ import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
 import infra.provider.*
+import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.serialization.json.*
 
-class Novelism : WebNovelProvider {
+class Novelism(client: HttpClient) : WebNovelProvider(client) {
     companion object {
         const val id = "novelism"
     }

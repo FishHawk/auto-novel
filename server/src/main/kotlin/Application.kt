@@ -97,7 +97,14 @@ val appModule = module {
         val url = System.getenv("REDIS_URL") ?: "192.168.1.110:6379"
         createRedisDataSource(url)
     }
-    single { DataSourceWebNovelProvider() }
+    single {
+        val httpProxy: String? = System.getenv("HTTPS_PROXY")
+        val pixivPhpsessid: String? = System.getenv("PIXIV_COOKIE_PHPSESSID")
+        DataSourceWebNovelProvider(
+            httpsProxy = httpProxy,
+            pixivPhpsessid = pixivPhpsessid,
+        )
+    }
 
     // Repository
     single { ArticleRepository(get()) }
@@ -115,7 +122,7 @@ val appModule = module {
 
     // Api
     single(createdAtStart = true) {
-        val secret = System.getenv("JWT_SECRET") ?: ""
+        val secret = System.getenv("JWT_SECRET")!!
         AuthApi(secret, get())
     }
     single(createdAtStart = true) { ArticleApi(get(), get()) }

@@ -4,15 +4,32 @@ import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
 import infra.provider.*
+import io.ktor.client.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
-
-class Pixiv : WebNovelProvider {
+class Pixiv(
+    client: HttpClient,
+    cookies: CookiesStorage,
+    phpsessid: String?,
+) : WebNovelProvider(client) {
     companion object {
         const val id = "pixiv"
+    }
+
+    init {
+        if (phpsessid != null) {
+            runBlocking {
+                cookies.addCookie(
+                    "https://www.pixiv.net",
+                    Cookie(name = "PHPSESSID", value = phpsessid, domain = ".pixiv.net")
+                )
+            }
+        }
     }
 
     private suspend fun get(url: String): HttpResponse {
@@ -22,9 +39,6 @@ class Pixiv : WebNovelProvider {
                     HttpHeaders.UserAgent,
                     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
                 )
-            }
-            System.getenv("PIXIV_COOKIE_PHPSESSID")?.let {
-                cookie(name = "PHPSESSID", value = it, domain = ".pixiv.net")
             }
         }
     }

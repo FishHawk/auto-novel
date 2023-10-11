@@ -5,15 +5,9 @@ import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.*
-import io.ktor.client.engine.java.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.cookies.*
 import io.ktor.client.statement.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -48,10 +42,10 @@ data class RemoteNovelListItem(
     val extra: String,
 )
 
-interface WebNovelProvider {
-    suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem>
-    suspend fun getMetadata(novelId: String): RemoteNovelMetadata
-    suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
+abstract class WebNovelProvider(protected val client: HttpClient) {
+    abstract suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem>
+    abstract suspend fun getMetadata(novelId: String): RemoteNovelMetadata
+    abstract suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
 }
 
 fun parseJapanDateString(pattern: String, dateString: String): Instant {
@@ -60,33 +54,6 @@ fun parseJapanDateString(pattern: String, dateString: String): Instant {
         .parse(dateString)
         .toInstant()
         .toKotlinInstant()
-}
-
-val cookies = AcceptAllCookiesStorage()
-
-val client = HttpClient(Java) {
-    install(HttpCookies) { storage = cookies }
-    install(ContentNegotiation) {
-        json(Json { isLenient = true })
-    }
-    expectSuccess = true
-    System.getenv("HTTPS_PROXY")?.let {
-        engine {
-            proxy = ProxyBuilder.http(it)
-        }
-    }
-}
-
-// Ktor的ContentNegotiation会影响Accept头
-// 进一步测试后可能可以去掉这个client
-val clientText = HttpClient(Java) {
-    install(HttpCookies) { storage = cookies }
-    expectSuccess = true
-    System.getenv("HTTPS_PROXY")?.let {
-        engine {
-            proxy = ProxyBuilder.http(it)
-        }
-    }
 }
 
 suspend fun HttpResponse.document(): Document = Jsoup.parse(body<String>())

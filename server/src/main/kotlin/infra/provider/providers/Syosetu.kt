@@ -4,6 +4,7 @@ import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
 import infra.provider.*
+import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -12,7 +13,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 
-class Syosetu : WebNovelProvider {
+class Syosetu(
+    client: HttpClient,
+    cookies: CookiesStorage,
+) : WebNovelProvider(client) {
     companion object {
         const val id = "syosetu"
         private val rangeIds = mapOf(

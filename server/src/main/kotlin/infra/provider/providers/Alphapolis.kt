@@ -4,6 +4,7 @@ import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
 import infra.provider.*
+import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -11,7 +12,10 @@ import kotlinx.coroutines.runBlocking
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 
-class Alphapolis : WebNovelProvider {
+class Alphapolis(
+    client: HttpClient,
+    cookies: CookiesStorage,
+) : WebNovelProvider(client) {
     companion object {
         const val id = "alphapolis"
     }
@@ -38,7 +42,7 @@ class Alphapolis : WebNovelProvider {
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
-        val doc = clientText.get(getMetadataUrl(novelId)).document()
+        val doc = client.get(getMetadataUrl(novelId)).document()
 
         val infoEl = doc.selectFirst("div.content-info > div.content-statuses")!!
         val mainEl = doc.selectFirst("div.content-main")!!
@@ -128,7 +132,7 @@ class Alphapolis : WebNovelProvider {
     }
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
-        val doc = clientText.get(getEpisodeUrl(novelId, chapterId)).document()
+        val doc = client.get(getEpisodeUrl(novelId, chapterId)).document()
         val els = doc.selectFirst("div#novelBody")
             ?: doc.selectFirst("div.text")
         els!!

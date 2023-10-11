@@ -4,6 +4,7 @@ import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
 import infra.provider.*
+import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -13,7 +14,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import org.jsoup.nodes.Element
 
-class Hameln : WebNovelProvider {
+class Hameln(
+    client: HttpClient,
+    cookies: CookiesStorage,
+) : WebNovelProvider(client) {
     companion object {
         const val id = "hameln"
     }
