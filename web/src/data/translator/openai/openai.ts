@@ -10,7 +10,7 @@ export class OpenAiTranslator implements SegmentTranslator {
   log: (message: string) => void;
   glossary: Glossary;
 
-  api:
+  private api:
     | (OpenAiOfficialApi & { official: true })
     | (OpenAiUnofficialApi & { official: false });
 

@@ -4,11 +4,11 @@ import { Glossary, SegmentTranslator } from '../type';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';
 
 export class BaiduTranslator implements SegmentTranslator {
-  private client: KyInstance;
-  private log: (message: string) => void;
-  private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
-
+  log: (message: string) => void;
   glossary: Glossary;
+
+  private client: KyInstance;
+  private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
 
   constructor(
     client: KyInstance,

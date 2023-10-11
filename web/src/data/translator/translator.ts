@@ -3,11 +3,12 @@ import { KyInstance } from 'ky/distribution/types/ky';
 import { Glossary, SegmentTranslator } from './type';
 import { BaiduTranslator, YoudaoTranslator } from './tradition';
 import { OpenAiTranslator } from './openai';
+import { createGptSegIndexedDbCache } from './cache';
 
 export interface SegmentCache {
   cacheKey(segIndex: number, seg: string[], glossary?: Glossary): string;
-  get(cacheKey: string): string[] | null;
-  save(cacheKey: string, output: string[]): void;
+  get(cacheKey: string): Promise<string[] | null>;
+  save(cacheKey: string, output: string[]): Promise<void>;
 }
 
 export type TranslatorId = 'baidu' | 'youdao' | 'gpt';
@@ -50,23 +51,34 @@ export class Translator {
     seg: string[],
     segInfo: { index: number; size: number }
   ) {
-    let cacheKey: string = '';
+    let cacheKey: string | null = null;
     if (this.segCache) {
-      cacheKey = this.segCache.cacheKey(
-        segInfo.index,
-        seg,
-        this.segTranslator.glossary
-      );
-      const cachedSegOutput = this.segCache.get(cacheKey);
-      if (cachedSegOutput && cachedSegOutput.length === seg.length) {
-        return cachedSegOutput;
+      try {
+        cacheKey = this.segCache.cacheKey(
+          segInfo.index,
+          seg,
+          this.segTranslator.glossary
+        );
+        const cachedSegOutput = await this.segCache.get(cacheKey);
+        if (cachedSegOutput && cachedSegOutput.length === seg.length) {
+          this.segTranslator.log(
+            `分段${segInfo.index + 1}/${segInfo.size} 从缓存恢复`
+          );
+          return cachedSegOutput;
+        }
+      } catch (e) {
+        this.segTranslator.log(`缓存读取失败：${e}`);
       }
     }
 
     const segOutput = await this.segTranslator.translate(seg, segInfo);
 
-    if (cacheKey && this.segCache) {
-      this.segCache.save(cacheKey, seg);
+    if (this.segCache && cacheKey !== null) {
+      try {
+        await this.segCache.save(cacheKey, segOutput);
+      } catch (e) {
+        this.segTranslator.log(`缓存保存失败：${e}`);
+      }
     }
 
     return segOutput;
@@ -91,7 +103,7 @@ export class Translator {
         ).init();
       } else {
         if (!config.accessToken) {
-          throw new Error('Gpt翻译器需要Token');
+          throw new Error('Gpt翻译器需要Access Token或者Api Key');
         }
         return new OpenAiTranslator(
           config.client,
@@ -101,8 +113,12 @@ export class Translator {
         );
       }
     }
-    const segmentTranslator = await createSegmentTranslator(id, config);
-    return new Translator(segmentTranslator);
+    const segTranslator = await createSegmentTranslator(id, config);
+    let segCache: SegmentCache | undefined = undefined;
+    if (id === 'gpt') {
+      segCache = await createGptSegIndexedDbCache();
+    }
+    return new Translator(segTranslator, segCache);
   }
 }
 

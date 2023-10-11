@@ -9,4 +9,5 @@ export interface SegmentTranslator {
     seg: string[],
     segInfo: { index: number; size: number }
   ) => Promise<string[]>;
+  log: (message: string) => void;
 }
