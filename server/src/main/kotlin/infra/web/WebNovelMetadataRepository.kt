@@ -6,17 +6,15 @@ import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.result.UpdateResult
-import infra.DataSourceElasticSearch
-import infra.DataSourceMongo
-import infra.WebNovelFavoriteModel
-import infra.WebNovelMetadataEsModel
+import infra.*
 import infra.model.*
 import infra.provider.RemoteNovelListItem
-import infra.DataSourceWebNovelProvider
 import infra.provider.providers.Hameln
 import infra.provider.providers.Syosetu
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
@@ -37,6 +35,7 @@ class WebNovelMetadataRepository(
     private val provider: DataSourceWebNovelProvider,
     private val mongo: DataSourceMongo,
     private val es: DataSourceElasticSearch,
+    private val redis: DataSourceRedis,
 ) {
     suspend fun listRank(
         providerId: String,
@@ -315,6 +314,31 @@ class WebNovelMetadataRepository(
             )
         }
         return novel
+    }
+
+    suspend fun increaseVisited(
+        userIdOrIp: String,
+        providerId: String,
+        novelId: String,
+    ) = redis.withRateLimit("web-visited:${userIdOrIp}:${providerId}:${novelId}") {
+        val novel = mongo
+            .webNovelMetadataCollection
+            .findOneAndUpdate(
+                WebNovelMetadata.byId(providerId, novelId),
+                inc(WebNovelMetadata::visited, 1),
+                FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
+            ) ?: return
+        es.client.updateDocument(
+            id = "${novel.providerId}.${novel.novelId}",
+            target = DataSourceElasticSearch.webNovelIndexName,
+            doc = buildJsonObject {
+                put(
+                    WebNovelMetadataEsModel::visited.name,
+                    novel.visited,
+                )
+            },
+            refresh = Refresh.WaitFor,
+        )
     }
 
     suspend fun updateTranslation(

@@ -1,7 +1,6 @@
 package api
 
 import infra.common.OperationHistoryRepository
-import infra.common.StatisticsRepository
 import infra.common.UserRepository
 import infra.model.*
 import infra.provider.providers.Syosetu
@@ -356,7 +355,6 @@ class WebNovelApi(
     private val fileRepo: WebNovelFileRepository,
     private val userRepo: UserRepository,
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
-    private val statisticsRepo: StatisticsRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
     @Serializable
@@ -565,8 +563,8 @@ class WebNovelApi(
             .getOrElse { throwInternalServerError("从源站获取失败:" + it.message) }
         val dto = buildNovelDto(novel, user)
         if (user != null) {
-            statisticsRepo.increaseWebNovelVisited(
-                usernameOrIp = user.id,
+            metadataRepo.increaseVisited(
+                userIdOrIp = user.id,
                 providerId = novel.providerId,
                 novelId = novel.novelId,
             )

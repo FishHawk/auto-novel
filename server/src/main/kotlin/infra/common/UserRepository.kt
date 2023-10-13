@@ -13,7 +13,6 @@ import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import org.bson.BsonValue
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.litote.kmongo.*

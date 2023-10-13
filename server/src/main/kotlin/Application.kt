@@ -23,6 +23,9 @@ import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.createdAtStart
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -108,27 +111,28 @@ val appModule = module {
     }
 
     // Repository
-    single { ArticleRepository(get()) }
-    single { CommentRepository(get()) }
-    single { OperationHistoryRepository(get()) }
-    single { StatisticsRepository(get(), get(), get()) }
-    single { UserRepository(get(), get(), get()) }
+    singleOf(::ArticleRepository)
+    singleOf(::CommentRepository)
+    singleOf(::OperationHistoryRepository)
+    singleOf(::UserRepository)
 
-    single { WebNovelMetadataRepository(get(), get(), get()) }
-    single { WebNovelChapterRepository(get(), get()) }
-    single { WebNovelFileRepository(get()) }
+    singleOf(::WebNovelMetadataRepository)
+    singleOf(::WebNovelChapterRepository)
+    singleOf(::WebNovelFileRepository)
 
-    single { WenkuNovelMetadataRepository(get(), get()) }
-    single { WenkuNovelVolumeRepository() }
+    singleOf(::WenkuNovelMetadataRepository)
+    singleOf(::WenkuNovelVolumeRepository)
 
     // Api
-    single(createdAtStart = true) {
+    single {
         val secret = System.getenv("JWT_SECRET")!!
         AuthApi(secret, get())
+    } withOptions {
+        createdAtStart()
     }
-    single(createdAtStart = true) { ArticleApi(get(), get()) }
-    single(createdAtStart = true) { CommentApi(get(), get(), get()) }
-    single(createdAtStart = true) { OperationHistoryApi(get()) }
-    single(createdAtStart = true) { WebNovelApi(get(), get(), get(), get(), get(), get(), get()) }
-    single(createdAtStart = true) { WenkuNovelApi(get(), get(), get(), get(), get()) }
+    singleOf(::ArticleApi) { createdAtStart() }
+    singleOf(::CommentApi) { createdAtStart() }
+    singleOf(::OperationHistoryApi) { createdAtStart() }
+    singleOf(::WebNovelApi) { createdAtStart() }
+    singleOf(::WenkuNovelApi) { createdAtStart() }
 }

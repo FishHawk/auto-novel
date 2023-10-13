@@ -3,9 +3,7 @@ package infra.wenku
 import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.CountOptions
-import infra.DataSourceElasticSearch
-import infra.DataSourceMongo
-import infra.WenkuNovelMetadataEsModel
+import infra.*
 import infra.model.Page
 import infra.model.WebNovelMetadata
 import infra.model.WenkuNovelMetadata
@@ -14,12 +12,14 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.combine
+import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
 import java.util.*
 
 class WenkuNovelMetadataRepository(
     private val mongo: DataSourceMongo,
     private val es: DataSourceElasticSearch,
+    private val redis: DataSourceRedis,
 ) {
     suspend fun search(
         userQuery: String?,
@@ -80,6 +80,18 @@ class WenkuNovelMetadataRepository(
         return mongo
             .wenkuNovelMetadataCollection
             .findOne(WenkuNovelMetadata.byId(novelId))
+    }
+
+    suspend fun increaseVisited(
+        userIdOrIp: String,
+        novelId: String,
+    ) = redis.withRateLimit("wenku-visited:${userIdOrIp}:${novelId}") {
+        mongo
+            .wenkuNovelMetadataCollection
+            .updateOne(
+                WenkuNovelMetadata.byId(novelId),
+                inc(WenkuNovelMetadata::visited, 1),
+            )
     }
 
     suspend fun create(
