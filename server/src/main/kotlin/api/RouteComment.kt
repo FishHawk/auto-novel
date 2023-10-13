@@ -137,17 +137,18 @@ class CommentApi(
         parent: String?,
         content: String,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         if (content.isBlank()) throwBadRequest("回复内容不能为空")
         if (parent != null && !commentRepo.increaseNumReplies(ObjectId(parent))) throwNotFound("回复的评论不存在")
 
-        val userId = userRepo.getUserIdByUsername(user.username)
         if (site.startsWith("article-")) {
             articleRepo.increaseNumComments(ObjectId(site.removePrefix("article-")))
         }
         commentRepo.createComment(
             site = site,
             parent = parent?.let { ObjectId(it) },
-            user = userId,
+            user = ObjectId(user.id),
             content = content,
         )
     }

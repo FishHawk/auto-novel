@@ -161,12 +161,8 @@ class AuthApi(
     suspend fun renew(
         user: AuthenticatedUser,
     ): SignInDto {
-        val realUser =
-            if (user.id.isNotBlank()) user
-            else user.copy(
-                id = userRepo.getUserIdByUsername(user.username).toHexString()
-            )
-        val (token, expiresAt) = realUser.generateToken(
+        val user = user.compatEmptyUserId(userRepo)
+        val (token, expiresAt) = user.generateToken(
             secret = secret,
         )
         return SignInDto(

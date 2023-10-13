@@ -19,6 +19,7 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
 import java.io.InputStream
 
@@ -303,11 +304,13 @@ class WenkuNovelApi(
         pageSize: Int,
         sort: FavoriteListSort,
     ): PageDto<NovelOutlineDto> {
+        val user = user.compatEmptyUserId(userRepo)
+
         validatePageNumber(page)
         validatePageSize(pageSize)
         return userRepo
             .listFavoriteWenkuNovel(
-                username = user.username,
+                userId = user.id,
                 page = page,
                 pageSize = pageSize,
                 sort = sort,
@@ -326,8 +329,9 @@ class WenkuNovelApi(
     )
 
     suspend fun getUserVolumes(user: AuthenticatedUser): WenkuUserVolumeDto {
-        val userId = userRepo.getUserIdByUsername(user.username).toHexString()
-        val novelId = "user-${userId}"
+        val user = user.compatEmptyUserId(userRepo)
+
+        val novelId = "user-${user.id}"
         val volumes = volumeRepo.listVolumesUser(novelId)
         return WenkuUserVolumeDto(list = volumes, novelId = novelId)
     }
@@ -356,8 +360,10 @@ class WenkuNovelApi(
         user: AuthenticatedUser?,
         novelId: String,
     ): NovelDto {
+        val user = user?.compatEmptyUserId(userRepo)
+
         val favored = user?.let {
-            userRepo.isUserFavoriteWenkuNovel(it.username, novelId)
+            userRepo.isUserFavoriteWenkuNovel(it.id, novelId)
         }
 
         val metadata = metadataRepo.get(novelId)
@@ -393,16 +399,18 @@ class WenkuNovelApi(
         novelId: String,
         favored: Boolean,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         if (!metadataRepo.exist(novelId))
             throwNovelNotFound()
         if (favored) {
             userRepo.addFavoriteWenkuNovel(
-                username = user.username,
+                userId = user.id,
                 novelId = novelId,
             )
         } else {
             userRepo.removeFavoriteWenkuNovel(
-                username = user.username,
+                userId = user.id,
                 novelId = novelId,
             )
         }
@@ -424,6 +432,8 @@ class WenkuNovelApi(
         user: AuthenticatedUser,
         body: MetadataCreateBody,
     ): String {
+        val user = user.compatEmptyUserId(userRepo)
+
         val novelId = metadataRepo.create(
             title = body.title,
             titleZh = body.titleZh,
@@ -435,7 +445,7 @@ class WenkuNovelApi(
             introduction = body.introduction,
         )
         operationHistoryRepo.createWenkuEditHistory(
-            operator = userRepo.getUserIdByUsername(user.username),
+            operator = ObjectId(user.id),
             novelId = novelId,
             old = null,
             new = Operation.WenkuEdit.Data(
@@ -454,6 +464,8 @@ class WenkuNovelApi(
         novelId: String,
         body: MetadataCreateBody,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         val old = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
         metadataRepo.update(
@@ -468,7 +480,7 @@ class WenkuNovelApi(
             introduction = body.introduction,
         )
         operationHistoryRepo.createWenkuEditHistory(
-            operator = userRepo.getUserIdByUsername(user.username),
+            operator = ObjectId(user.id),
             novelId = novelId,
             old = Operation.WenkuEdit.Data(
                 title = old.title,
@@ -559,11 +571,13 @@ class WenkuNovelApi(
         volumeId: String,
         inputStream: InputStream,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         if (!metadataRepo.exist(novelId))
             throwNovelNotFound()
         createVolume(novelId, volumeId, inputStream)
         operationHistoryRepo.createWenkuUploadHistory(
-            operator = userRepo.getUserIdByUsername(user.username),
+            operator = ObjectId(user.id),
             novelId = novelId,
             volumeId = volumeId,
         )
@@ -581,6 +595,8 @@ class WenkuNovelApi(
         volumeId: String,
         inputStream: InputStream,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         if (!validateNovelId(novelId))
             throwNovelNotFound()
 
@@ -588,7 +604,7 @@ class WenkuNovelApi(
 
         if (!(novelId == "non-archived" || novelId.startsWith("user"))) {
             operationHistoryRepo.createWenkuUploadHistory(
-                operator = userRepo.getUserIdByUsername(user.username),
+                operator = ObjectId(user.id),
                 novelId = novelId,
                 volumeId = volumeId,
             )

@@ -213,14 +213,15 @@ class ArticleApi(
         title: String,
         content: String,
     ): String {
+        val user = user.compatEmptyUserId(userRepo)
+
         validateTitle(title)
         validateContent(content)
 
-        val userId = userRepo.getUserIdByUsername(user.username)
         val articleId = articleRepo.createArticle(
             title = title,
             content = content,
-            userId = userId,
+            userId = ObjectId(user.id),
         )
         return articleId.toHexString()
     }
@@ -231,11 +232,12 @@ class ArticleApi(
         title: String,
         content: String,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         validateTitle(title)
         validateContent(content)
 
-        val userId = userRepo.getUserIdByUsername(user.username)
-        if (!articleRepo.isArticleBelongUser(ObjectId(id), userId))
+        if (!articleRepo.isArticleBelongUser(ObjectId(id), ObjectId(user.id)))
             throwUnauthorized("没有权限修改帖子")
 
         articleRepo.updateArticleTitleAndContent(

@@ -2,6 +2,7 @@ package api
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import infra.common.UserRepository
 import infra.model.User
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -59,6 +60,12 @@ fun ApplicationCall.authenticatedUser(): AuthenticatedUser =
 
 fun ApplicationCall.authenticatedUserOrNull(): AuthenticatedUser? =
     principal<JWTPrincipal>()?.parseAuthenticatedUser()
+
+suspend fun AuthenticatedUser.compatEmptyUserId(userRepo: UserRepository): AuthenticatedUser {
+    return if (id.isEmpty()) copy(id = userRepo.getByUsername(username)!!.id.toHexString())
+    else this
+}
+
 
 fun AuthenticatedUser.shouldBeAtLeastMaintainer() {
     if (!atLeastMaintainer()) {

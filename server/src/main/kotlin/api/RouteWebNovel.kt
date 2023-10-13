@@ -22,6 +22,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
 import java.nio.file.Path
 
@@ -438,11 +439,13 @@ class WebNovelApi(
         page: Int,
         pageSize: Int,
     ): PageDto<NovelOutlineDto> {
+        val user = user.compatEmptyUserId(userRepo)
+
         validatePageNumber(page)
         validatePageSize(pageSize)
         return userRepo
             .listReaderHistoryWebNovel(
-                username = user.username,
+                userId = user.id,
                 page = page,
                 pageSize = pageSize,
             )
@@ -455,11 +458,13 @@ class WebNovelApi(
         pageSize: Int,
         sort: FavoriteListSort,
     ): PageDto<NovelOutlineDto> {
+        val user = user.compatEmptyUserId(userRepo)
+
         validatePageNumber(page)
         validatePageSize(pageSize)
         return userRepo
             .listFavoriteWebNovel(
-                username = user.username,
+                userId = user.id,
                 page = page,
                 pageSize = pageSize,
                 sort = sort,
@@ -520,9 +525,11 @@ class WebNovelApi(
         novel: WebNovelMetadata,
         user: AuthenticatedUser?,
     ): NovelDto {
+        val user = user?.compatEmptyUserId(userRepo)
+
         val novelId = novel.id.toHexString()
-        val favored = user?.username?.let { userRepo.isUserFavoriteWebNovel(it, novelId) }
-        val history = user?.username?.let { userRepo.getReaderHistory(it, novelId) }
+        val favored = user?.id?.let { userRepo.isUserFavoriteWebNovel(it, novelId) }
+        val history = user?.id?.let { userRepo.getReaderHistory(it, novelId) }
         return NovelDto(
             wenkuId = novel.wenkuId,
             titleJp = novel.titleJp,
@@ -551,13 +558,15 @@ class WebNovelApi(
         providerId: String,
         novelId: String,
     ): NovelDto {
+        val user = user?.compatEmptyUserId(userRepo)
+
         validateId(providerId, novelId)
         val novel = metadataRepo.getNovelAndSave(providerId, novelId)
             .getOrElse { throwInternalServerError("从源站获取失败:" + it.message) }
         val dto = buildNovelDto(novel, user)
         if (user != null) {
             statisticsRepo.increaseWebNovelVisited(
-                usernameOrIp = user.username,
+                usernameOrIp = user.id,
                 providerId = novel.providerId,
                 novelId = novel.novelId,
             )
@@ -612,10 +621,12 @@ class WebNovelApi(
         novelId: String,
         chapterId: String,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         userRepo.updateReadHistoryWebNovel(
-            username = user.username,
+            userId = user.id,
             novelId = novel.id.toHexString(),
             chapterId = chapterId,
         )
@@ -627,16 +638,18 @@ class WebNovelApi(
         novelId: String,
         favored: Boolean,
     ) {
+        val user = user.compatEmptyUserId(userRepo)
+
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         if (favored) {
             userRepo.addFavoriteWebNovel(
-                username = user.username,
+                userId = user.id,
                 novelId = novel.id.toHexString(),
             )
         } else {
             userRepo.removeFavoriteWebNovel(
-                username = user.username,
+                userId = user.id,
                 novelId = novel.id.toHexString(),
             )
         }
@@ -650,6 +663,8 @@ class WebNovelApi(
         introduction: String?,
         toc: Map<String, String>,
     ): NovelDto {
+        val user = user.compatEmptyUserId(userRepo)
+
         val metadata = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
 
@@ -685,7 +700,7 @@ class WebNovelApi(
                 titleZh = title,
                 introductionZh = introduction,
             ),
-            operator = userRepo.getUserIdByUsername(user.username),
+            operator = ObjectId(user.id),
             toc = tocRecord,
         )
 
