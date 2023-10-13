@@ -22,7 +22,7 @@ const userData = useUserDataStore();
 const content = ref('');
 
 async function reply() {
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }

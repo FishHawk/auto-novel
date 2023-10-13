@@ -30,7 +30,10 @@ watch(
       currentPage.value = newPage;
     }
     articlePageResult.value = undefined;
-    const result = await ApiArticle.listArticle(currentPage.value - 1);
+    const result = await ApiArticle.listArticle({
+      page: currentPage.value - 1,
+      pageSize: 20,
+    });
     if (currentPage.value === newPage) {
       articlePageResult.value = result;
       if (result.ok) {

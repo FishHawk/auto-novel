@@ -45,7 +45,7 @@ async function loadFavorite() {
 watch(
   userData,
   (userData) => {
-    if (userData.logined) loadFavorite();
+    if (userData.isLoggedIn) loadFavorite();
   },
   { immediate: true }
 );
@@ -169,7 +169,7 @@ const linkExample = [
       </n-ul>
     </n-space>
 
-    <template v-if="userData.logined">
+    <template v-if="userData.isLoggedIn">
       <SectionHeader title="我的收藏">
         <RouterNA to="/favorite-list">更多</RouterNA>
       </SectionHeader>

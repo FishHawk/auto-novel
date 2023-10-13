@@ -3,6 +3,7 @@ package api
 import infra.common.OperationHistoryRepository
 import infra.model.Operation
 import infra.model.UserOutline
+import infra.model.WebNovelTocItem
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -17,15 +18,12 @@ private class OperationHistoryRes {
     class List(
         val parent: OperationHistoryRes,
         val page: Int,
-        val pageSize: Int = 10,
+        val pageSize: Int,
         val type: String,
     )
 
     @Resource("/{id}")
-    class Id(
-        val parent: OperationHistoryRes,
-        val id: String,
-    )
+    class Id(val parent: OperationHistoryRes, val id: String)
 
     // Wait for deprecate
     @Resource("/toc-merge")
@@ -41,38 +39,36 @@ private class OperationHistoryRes {
 fun Route.routeOperationHistory() {
     val api by inject<OperationHistoryApi>()
 
-    authenticate {
-        get<OperationHistoryRes.List> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                api.listOperationHistory(
-                    page = loc.page.coerceAtLeast(0),
-                    pageSize = loc.pageSize.coerceIn(1, 100),
-                    type = loc.type,
-                )
-            }
-            call.respondResult(result)
+    get<OperationHistoryRes.List> { loc ->
+        call.tryRespond {
+            api.listOperationHistory(
+                page = loc.page,
+                pageSize = loc.pageSize,
+                type = loc.type,
+            )
         }
-
-        delete<OperationHistoryRes.Id> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                api.deleteOperationHistory(id = loc.id)
-            }
-            call.respondResult(result)
-        }
-
-        // Wait for deprecate
-        get<OperationHistoryRes.TocMergeHistory.List> { loc ->
-            val result = api.listTocMergeHistory(
+    }
+    get<OperationHistoryRes.TocMergeHistory.List> { loc ->
+        call.tryRespond {
+            api.listTocMergeHistory(
                 page = loc.page,
                 pageSize = 10,
             )
-            call.respondResult(result)
+        }
+    }
+
+    authenticate {
+        delete<OperationHistoryRes.Id> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                api.deleteOperationHistory(user = user, id = loc.id)
+            }
         }
         delete<OperationHistoryRes.TocMergeHistory.Id> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                api.deleteTocMergeHistory(id = loc.id)
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                api.deleteTocMergeHistory(user = user, id = loc.id)
             }
-            call.respondResult(result)
         }
     }
 }
@@ -81,7 +77,7 @@ class OperationHistoryApi(
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
     @Serializable
-    class OperationHistoryDto(
+    data class OperationHistoryDto(
         val id: String,
         val operator: UserOutline,
         val operation: Operation,
@@ -92,13 +88,14 @@ class OperationHistoryApi(
         page: Int,
         pageSize: Int,
         type: String,
-    ): Result<PageDto<OperationHistoryDto>> {
-        val historyPage = operationHistoryRepo.list(
-            page = page.coerceAtLeast(0),
+    ): PageDto<OperationHistoryDto> {
+        validatePageNumber(page)
+        validatePageSize(pageSize)
+        return operationHistoryRepo.list(
+            page = page,
             pageSize = pageSize,
             type = type,
-        )
-        val dtoPage = PageDto.fromPage(historyPage, pageSize) {
+        ).asDto(pageSize) {
             OperationHistoryDto(
                 id = it.id.toHexString(),
                 operator = it.operator,
@@ -106,38 +103,19 @@ class OperationHistoryApi(
                 createAt = it.createAt.epochSeconds,
             )
         }
-        return Result.success(dtoPage)
     }
 
-    suspend fun deleteOperationHistory(id: String): Result<Unit> {
+    suspend fun deleteOperationHistory(
+        user: AuthenticatedUser,
+        id: String,
+    ) {
+        user.shouldBeAtLeastMaintainer()
         operationHistoryRepo.delete(id)
-        return Result.success(Unit)
     }
 
     // Wait for deprecate
-    suspend fun listTocMergeHistory(
-        page: Int,
-        pageSize: Int,
-    ): Result<PageDto<TocMergeHistoryDto>> {
-        val historyPage = operationHistoryRepo.listMergeHistory(
-            page = page.coerceAtLeast(0),
-            pageSize = pageSize,
-        )
-        val dtoPage = PageDto.fromPage(historyPage, pageSize) {
-            TocMergeHistoryDto(
-                id = it.id.toHexString(),
-                providerId = it.providerId,
-                novelId = it.novelId,
-                tocOld = it.tocOld.map { WebNovelApi.NovelTocItemDto.fromDomain(it) },
-                tocNew = it.tocNew.map { WebNovelApi.NovelTocItemDto.fromDomain(it) },
-                reason = it.reason,
-            )
-        }
-        return Result.success(dtoPage)
-    }
-
     @Serializable
-    class TocMergeHistoryDto(
+    data class TocMergeHistoryDto(
         val id: String,
         val providerId: String,
         val novelId: String,
@@ -146,8 +124,40 @@ class OperationHistoryApi(
         val reason: String,
     )
 
-    suspend fun deleteTocMergeHistory(id: String): Result<Unit> {
+    suspend fun listTocMergeHistory(
+        page: Int,
+        pageSize: Int,
+    ): PageDto<TocMergeHistoryDto> {
+        validatePageNumber(page)
+        validatePageSize(pageSize)
+
+        fun WebNovelTocItem.asDto() =
+            WebNovelApi.NovelTocItemDto(
+                titleJp = titleJp,
+                titleZh = titleZh,
+                chapterId = chapterId,
+                createAt = createAt?.epochSeconds,
+            )
+        return operationHistoryRepo.listMergeHistory(
+            page = page,
+            pageSize = pageSize,
+        ).asDto(pageSize) {
+            TocMergeHistoryDto(
+                id = it.id.toHexString(),
+                providerId = it.providerId,
+                novelId = it.novelId,
+                tocOld = it.tocOld.map { it.asDto() },
+                tocNew = it.tocNew.map { it.asDto() },
+                reason = it.reason,
+            )
+        }
+    }
+
+    suspend fun deleteTocMergeHistory(
+        user: AuthenticatedUser,
+        id: String,
+    ) {
+        user.shouldBeAtLeastMaintainer()
         operationHistoryRepo.deleteMergeHistory(id)
-        return Result.success(Unit)
     }
 }

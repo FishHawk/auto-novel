@@ -27,7 +27,7 @@ function handleFinish({
 }
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return false;
   }

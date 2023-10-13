@@ -43,7 +43,7 @@ async function addFavorite() {
   if (isFavoriteChanging) return;
   isFavoriteChanging = true;
 
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }
@@ -63,7 +63,7 @@ async function removeFavorite() {
   if (isFavoriteChanging) return;
   isFavoriteChanging = true;
 
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }

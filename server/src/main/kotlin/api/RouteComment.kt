@@ -17,19 +17,13 @@ import org.koin.ktor.ext.inject
 
 @Resource("/comment")
 private class CommentRes {
-    @Resource("/list")
+    @Resource("")
     class List(
-        val parent: CommentRes = CommentRes(),
+        val parent: CommentRes,
         val site: String,
+        val parentId: String? = null,
         val page: Int,
-    )
-
-    @Resource("/list-sub")
-    class ListSub(
-        val parent: CommentRes = CommentRes(),
-        val site: String,
-        val parentId: String,
-        val page: Int,
+        val pageSize: Int,
     )
 }
 
@@ -37,13 +31,16 @@ fun Route.routeComment() {
     val service by inject<CommentApi>()
 
     get<CommentRes.List> { loc ->
-        val result = service.listCommentWithReply(loc.site, loc.page, 10, 10)
-        call.respondResult(result)
-    }
-
-    get<CommentRes.ListSub> { loc ->
-        val result = service.listReplyComment(loc.site, loc.parentId, loc.page, 10)
-        call.respondResult(result)
+        call.tryRespond {
+            service.listComment(
+                postId = loc.site,
+                parentId = loc.parentId,
+                page = loc.page,
+                pageSize = loc.pageSize,
+                replyPageSize = 10,
+                reverse = loc.parentId == null,
+            )
+        }
     }
 
     authenticate {
@@ -55,15 +52,16 @@ fun Route.routeComment() {
                 val content: String,
             )
 
-            val jwtUser = call.jwtUser()
+            val user = call.authenticatedUser()
             val body = call.receive<Body>()
-            val result = service.createComment(
-                site = body.site,
-                parent = body.parent,
-                username = jwtUser.username,
-                content = body.content
-            )
-            call.respondResult(result)
+            call.tryRespond {
+                service.createComment(
+                    user = user,
+                    site = body.site,
+                    parent = body.parent,
+                    content = body.content,
+                )
+            }
         }
     }
 }
@@ -74,7 +72,7 @@ class CommentApi(
     private val articleRepo: ArticleRepository,
 ) {
     @Serializable
-    class CommentDto(
+    data class CommentDto(
         val id: String,
         val user: UserOutline,
         val content: String,
@@ -83,47 +81,27 @@ class CommentApi(
         val replies: List<CommentDto>,
     )
 
-    suspend fun listReplyComment(
-        site: String,
-        parent: String,
-        page: Int,
-        pageSize: Int,
-    ): Result<PageDto<CommentDto>> {
-        val commentPage = commentRepo.listComment(
-            site = site,
-            parent = ObjectId(parent),
-            page = page,
-            pageSize = pageSize,
-        )
-        val dto = PageDto.fromPage(commentPage, pageSize = 10) {
-            CommentDto(
-                id = it.id.toHexString(),
-                user = it.user,
-                content = it.content,
-                createAt = it.createAt.epochSeconds,
-                numReplies = it.numReplies,
-                replies = emptyList(),
-            )
-        }
-        return Result.success(dto)
-    }
-
-    suspend fun listCommentWithReply(
+    suspend fun listComment(
         postId: String,
+        parentId: String?,
         page: Int,
         pageSize: Int,
+        reverse: Boolean,
         replyPageSize: Int,
-    ): Result<PageDto<CommentDto>> {
-        val commentPage = commentRepo.listComment(
-            site = postId,
-            parent = null,
-            page = page,
-            pageSize = pageSize,
-            reverse = true,
-        )
-        val dto = PageDto.fromPage(commentPage, pageSize = 10) {
-            val replies =
-                if (it.numReplies > 0) {
+    ): PageDto<CommentDto> {
+        validatePageNumber(page)
+        validatePageSize(pageSize)
+        validatePageSize(replyPageSize, max = 20)
+        return commentRepo
+            .listComment(
+                site = postId,
+                parent = parentId?.let { ObjectId(it) },
+                page = page,
+                pageSize = pageSize,
+                reverse = reverse,
+            )
+            .asDto(pageSize) {
+                val replies = if (parentId == null && it.numReplies > 0) {
                     commentRepo.listComment(
                         site = postId,
                         parent = it.id,
@@ -142,40 +120,35 @@ class CommentApi(
                 } else {
                     emptyList()
                 }
-            CommentDto(
-                id = it.id.toHexString(),
-                user = it.user,
-                content = it.content,
-                createAt = it.createAt.epochSeconds,
-                numReplies = it.numReplies,
-                replies = replies,
-            )
-        }
-        return Result.success(dto)
+                CommentDto(
+                    id = it.id.toHexString(),
+                    user = it.user,
+                    content = it.content,
+                    createAt = it.createAt.epochSeconds,
+                    numReplies = it.numReplies,
+                    replies = replies,
+                )
+            }
     }
 
     suspend fun createComment(
+        user: AuthenticatedUser,
         site: String,
         parent: String?,
-        username: String,
         content: String,
-    ): Result<Unit> {
-        if (content.isBlank()) {
-            return httpBadRequest("回复内容不能为空")
-        }
-        if (parent != null && !commentRepo.increaseNumReplies(ObjectId(parent))) {
-            return httpNotFound("回复的评论不存在")
-        }
-        val user = userRepo.getUserIdByUsername(username)
+    ) {
+        if (content.isBlank()) throwBadRequest("回复内容不能为空")
+        if (parent != null && !commentRepo.increaseNumReplies(ObjectId(parent))) throwNotFound("回复的评论不存在")
+
+        val userId = userRepo.getUserIdByUsername(user.username)
         if (site.startsWith("article-")) {
             articleRepo.increaseNumComments(ObjectId(site.removePrefix("article-")))
         }
         commentRepo.createComment(
             site = site,
             parent = parent?.let { ObjectId(it) },
-            user = user,
+            user = userId,
             content = content,
         )
-        return Result.success(Unit)
     }
 }

@@ -34,9 +34,9 @@ export interface Article {
   updateAt: number;
 }
 
-const listArticle = (page: number) =>
+const listArticle = (params: { page: number; pageSize: number }) =>
   runCatching(
-    api.get('article', { searchParams: { page } }).json<Page<ArticleOutline>>()
+    api.get('article', { searchParams: params }).json<Page<ArticleOutline>>()
   );
 
 const getArticle = (id: string) =>

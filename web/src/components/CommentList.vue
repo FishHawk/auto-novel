@@ -23,7 +23,7 @@ const commentPage = ref<ResultState<Page<Comment1>>>();
 const currentPage = ref(1);
 
 async function loadComments(page: number) {
-  const result = await ApiComment.list(site, page - 1);
+  const result = await ApiComment.list({ site, page: page - 1, pageSize: 10 });
   if (result.ok) {
     commentPage.value = Ok({
       ...result.value,
@@ -46,7 +46,7 @@ function onReplied() {
 
 const showInput = ref(false);
 function toggleInput() {
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }

@@ -2,15 +2,30 @@
 import { zhCN, dateZhCN, lightTheme, darkTheme } from 'naive-ui';
 
 import { updateToken } from './data/api/api';
+import { ApiAuth } from './data/api/api_auth';
 import { useUserDataStore } from './data/stores/userData';
 import { useSettingStore } from './data/stores/setting';
 
 const setting = useSettingStore();
+const userData = useUserDataStore();
 
-useUserDataStore().$subscribe(
-  (_mutation, state) => updateToken(state.info?.token),
-  { detached: true, immediate: true }
-);
+// 全局注册token
+userData.$subscribe((_mutation, { info }) => updateToken(info?.token), {
+  detached: true,
+  immediate: true,
+});
+
+// 每隔24小时刷新登录状态
+if (userData.isLoggedIn) {
+  const sinceLoggedIn = Date.now() - (userData.renewedAt ?? 0);
+  if (sinceLoggedIn > 2 * 1000) {
+    ApiAuth.renew().then((result) => {
+      if (result.ok) {
+        userData.setProfile(result.value);
+      }
+    });
+  }
+}
 </script>
 
 <template>

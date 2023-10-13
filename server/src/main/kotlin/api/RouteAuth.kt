@@ -1,44 +1,41 @@
 package api
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import infra.common.UserRepository
 import infra.model.User
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
+import io.ktor.server.resources.get
 import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
-import kotlinx.datetime.Clock
-import kotlinx.datetime.toJavaInstant
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.Email
 import util.PBKDF2
 import java.util.*
-import kotlin.time.Duration.Companion.days
 
 @Resource("/auth")
 private class AuthRes {
     @Resource("/sign-in")
-    class SignIn(val parent: AuthRes = AuthRes())
+    class SignIn(val parent: AuthRes)
+
+    @Resource("/renew")
+    class Renew(val parent: AuthRes)
 
     @Resource("/sign-up")
-    class SignUp(val parent: AuthRes = AuthRes())
+    class SignUp(val parent: AuthRes)
 
     @Resource("/verify-email")
-    class VerifyEmail(
-        val parent: AuthRes = AuthRes(),
-        val email: String,
-    )
+    class VerifyEmail(val parent: AuthRes, val email: String)
 
     @Resource("/reset-password-email")
-    class ResetPasswordEmail(val parent: AuthRes = AuthRes(), val emailOrUsername: String)
+    class ResetPasswordEmail(val parent: AuthRes, val emailOrUsername: String)
 
     @Resource("/reset-password")
-    class ResetPassword(val parent: AuthRes = AuthRes(), val emailOrUsername: String)
+    class ResetPassword(val parent: AuthRes, val emailOrUsername: String)
 }
 
 fun Route.routeAuth() {
@@ -52,11 +49,20 @@ fun Route.routeAuth() {
         )
 
         val body = call.receive<Body>()
-        val result = service.signIn(
-            emailOrUsername = body.emailOrUsername,
-            password = body.password,
-        )
-        call.respondResult(result)
+        call.tryRespond {
+            service.signIn(
+                emailOrUsername = body.emailOrUsername,
+                password = body.password,
+            )
+        }
+    }
+    authenticate {
+        get<AuthRes.Renew> {
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.renew(user)
+            }
+        }
     }
 
     post<AuthRes.SignUp> {
@@ -69,22 +75,25 @@ fun Route.routeAuth() {
         )
 
         val body = call.receive<Body>()
-        val result = service.signUp(
-            email = body.email,
-            emailCode = body.emailCode,
-            username = body.username,
-            password = body.password,
-        )
-        call.respondResult(result)
+        call.tryRespond {
+            service.signUp(
+                email = body.email,
+                emailCode = body.emailCode,
+                username = body.username,
+                password = body.password,
+            )
+        }
     }
     post<AuthRes.VerifyEmail> { loc ->
-        val result = service.sendVerifyEmail(loc.email)
-        call.respondResult(result)
+        call.tryRespond {
+            service.sendVerifyEmail(loc.email)
+        }
     }
 
     post<AuthRes.ResetPasswordEmail> { loc ->
-        val result = service.sendResetPasswordTokenEmail(loc.emailOrUsername)
-        call.respondResult(result)
+        call.tryRespond {
+            service.sendResetPasswordTokenEmail(loc.emailOrUsername)
+        }
     }
     post<AuthRes.ResetPassword> { loc ->
         @Serializable
@@ -94,41 +103,25 @@ fun Route.routeAuth() {
         )
 
         val body = call.receive<Body>()
-        val result = service.resetPassword(
-            emailOrUsername = loc.emailOrUsername,
-            token = body.token,
-            password = body.password,
-        )
-        call.respondResult(result)
+        call.tryRespond {
+            service.resetPassword(
+                emailOrUsername = loc.emailOrUsername,
+                token = body.token,
+                password = body.password,
+            )
+        }
     }
 }
 
 class AuthApi(
     private val secret: String,
-    private val userRepository: UserRepository,
+    private val userRepo: UserRepository,
 ) {
-    private fun generateToken(
-        username: String,
-        role: User.Role,
-    ): Pair<String, Long> {
-        val expiresAt = (Clock.System.now() + 180.days)
-        return Pair(
-            JWT.create()
-                .apply {
-                    withClaim("username", username)
-                    if (role != User.Role.Normal) {
-                        withClaim("role", role.toString())
-                    }
-                    withExpiresAt(expiresAt.toJavaInstant())
-                }
-                .sign(Algorithm.HMAC256(secret)),
-            expiresAt.epochSeconds,
-        )
-    }
+    private fun throwUserNotFound(): Nothing =
+        throwNotFound("用户不存在")
 
     @Serializable
-    class SignInDto(
-        val email: String,
+    data class SignInDto(
         val username: String,
         val role: User.Role,
         val token: String,
@@ -138,26 +131,49 @@ class AuthApi(
     suspend fun signIn(
         emailOrUsername: String,
         password: String,
-    ): Result<SignInDto> {
-        val user = userRepository.getByEmail(emailOrUsername)
-            ?: userRepository.getByUsername(emailOrUsername)
-            ?: return httpNotFound("用户不存在")
+    ): SignInDto {
+        val user = userRepo.getByEmail(emailOrUsername)
+            ?: userRepo.getByUsername(emailOrUsername)
+            ?: throwUserNotFound()
 
         fun User.validatePassword(password: String): Boolean {
             return this.password == PBKDF2.hash(password, salt)
         }
         if (!user.validatePassword(password))
-            return httpUnauthorized("密码错误")
+            throwUnauthorized("密码错误")
 
-        val (token, expiresAt) = generateToken(user.username, user.role)
-        return Result.success(
-            SignInDto(
-                email = user.email,
-                username = user.username,
-                role = user.role,
-                token = token,
-                expiresAt = expiresAt,
+        val (token, expiresAt) = AuthenticatedUser(
+            id = user.id.toHexString(),
+            username = user.username,
+            role = user.role,
+        ).generateToken(
+            secret = secret,
+        )
+
+        return SignInDto(
+            username = user.username,
+            role = user.role,
+            token = token,
+            expiresAt = expiresAt,
+        )
+    }
+
+    suspend fun renew(
+        user: AuthenticatedUser,
+    ): SignInDto {
+        val realUser =
+            if (user.id.isNotBlank()) user
+            else user.copy(
+                id = userRepo.getUserIdByUsername(user.username).toHexString()
             )
+        val (token, expiresAt) = realUser.generateToken(
+            secret = secret,
+        )
+        return SignInDto(
+            username = user.username,
+            role = user.role,
+            token = token,
+            expiresAt = expiresAt,
         )
     }
 
@@ -166,54 +182,45 @@ class AuthApi(
         emailCode: String,
         username: String,
         password: String,
-    ): Result<SignInDto> {
-        if (username.length < 3) {
-            return httpBadRequest("用户名至少为3个字符")
-        }
-        if (username.length > 15) {
-            return httpBadRequest("用户名至多为15个字符")
-        }
-        if (password.length < 8) {
-            return httpBadRequest("密码至少为8个字符")
-        }
-        userRepository.getByEmail(email)?.let {
-            return httpConflict("邮箱已经被使用")
-        }
-        userRepository.getByUsername(username)?.let {
-            return httpConflict("用户名已经被使用")
-        }
+    ): SignInDto {
+        if (username.length < 3) throwBadRequest("用户名至少为3个字符")
+        if (username.length > 15) throwBadRequest("用户名至多为15个字符")
+        if (password.length < 8) throwBadRequest("密码至少为8个字符")
+        if (userRepo.getByEmail(email) != null) throwConflict("邮箱已经被使用")
+        if (userRepo.getByUsername(username) != null) throwConflict("用户名已经被使用")
+        if (!userRepo.validateEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
 
-        if (!userRepository.validateEmailCode(email, emailCode))
-            return httpBadRequest("邮箱验证码错误")
-
-        userRepository.add(
+        val role = User.Role.Normal
+        val userId = userRepo.add(
             email = email,
             username = username,
             password = password,
+        ).toHexString()
+
+        val (token, expiresAt) = AuthenticatedUser(
+            id = userId,
+            username = username,
+            role = role,
+        ).generateToken(
+            secret = secret,
         )
 
-        val (token, expiresAt) = generateToken(username, User.Role.Normal)
-        return Result.success(
-            SignInDto(
-                email = email,
-                username = username,
-                role = User.Role.Normal,
-                token = token,
-                expiresAt = expiresAt,
-            )
+        return SignInDto(
+            username = username,
+            role = role,
+            token = token,
+            expiresAt = expiresAt,
         )
     }
 
-    suspend fun sendVerifyEmail(email: String): Result<Unit> {
-        userRepository.getByEmail(email)?.let {
-            return httpConflict("邮箱已经被使用")
-        }
-
+    suspend fun sendVerifyEmail(email: String) {
         try {
             InternetAddress(email).apply { validate() }
         } catch (e: AddressException) {
-            return httpBadRequest("邮箱不合法")
+            throwBadRequest("邮箱不合法")
         }
+
+        if (userRepo.getByEmail(email) != null) throwConflict("邮箱已经被使用")
 
         val emailCode = String.format("%06d", Random().nextInt(999999))
 
@@ -226,22 +233,15 @@ class AuthApi(
                         "这是系统邮件，请勿回复"
             )
         } catch (e: AddressException) {
-            return httpInternalServerError("邮件发送失败")
+            throwInternalServerError("邮件发送失败")
         }
 
-        userRepository.addEmailCode(email, emailCode)
-        return Result.success(Unit)
+        userRepo.addEmailCode(email, emailCode)
     }
 
-    suspend fun sendResetPasswordTokenEmail(emailOrUsername: String): Result<String> {
-        val user = userRepository.getByUsernameOrEmail(emailOrUsername)
-            ?: return httpNotFound("用户不存在")
-
-        try {
-            InternetAddress(user.email).apply { validate() }
-        } catch (e: AddressException) {
-            return httpBadRequest("邮箱不合法")
-        }
+    suspend fun sendResetPasswordTokenEmail(emailOrUsername: String) {
+        val user = userRepo.getByUsernameOrEmail(emailOrUsername)
+            ?: throwUserNotFound()
 
         val token = UUID.randomUUID().toString()
 
@@ -255,24 +255,22 @@ class AuthApi(
                         "这是系统邮件，请勿回复"
             )
         } catch (e: AddressException) {
-            return httpInternalServerError("邮件发送失败")
+            throwInternalServerError("邮件发送失败")
         }
 
-        userRepository.addResetPasswordToken(user.id, token)
-        return Result.success("邮件已发送")
+        userRepo.addResetPasswordToken(user.id, token)
     }
 
     suspend fun resetPassword(
         emailOrUsername: String,
         token: String,
         password: String,
-    ): Result<Unit> {
-        val user = userRepository.getByUsernameOrEmail(emailOrUsername)
-            ?: return httpNotFound("用户不存在")
-        if (!userRepository.validateResetPasswordToken(user.id, token)) {
-            return httpBadRequest("口令不合法")
+    ) {
+        val user = userRepo.getByUsernameOrEmail(emailOrUsername)
+            ?: throwUserNotFound()
+        if (!userRepo.validateResetPasswordToken(user.id, token)) {
+            throwBadRequest("口令不合法")
         }
-        userRepository.updatePassword(user.id, password)
-        return Result.success(Unit)
+        userRepo.updatePassword(user.id, password)
     }
 }

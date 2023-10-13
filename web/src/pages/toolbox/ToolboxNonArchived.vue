@@ -18,7 +18,7 @@ async function getVolumesNonArchived() {
 getVolumesNonArchived();
 
 async function getVolumesUser() {
-  if (userData.logined) {
+  if (userData.isLoggedIn) {
     const result = await ApiWenkuNovel.listVolumesUser();
     if (result.ok) {
       volumesUserResult.value = Ok(result.value.list);

@@ -13,6 +13,7 @@ import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import org.bson.BsonValue
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
@@ -30,10 +31,10 @@ class UserRepository(
         email: String,
         username: String,
         password: String,
-    ) {
+    ): ObjectId {
         val salt = PBKDF2.randomSalt()
         val hashedPassword = PBKDF2.hash(password, salt)
-        mongo
+        return mongo
             .userCollection
             .insertOne(
                 User(
@@ -45,7 +46,7 @@ class UserRepository(
                     role = User.Role.Normal,
                     createdAt = Clock.System.now(),
                 )
-            )
+            ).insertedId!!.asObjectId().value
     }
 
     suspend fun updatePassword(userId: ObjectId, password: String) {

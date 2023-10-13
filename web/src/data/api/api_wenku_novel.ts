@@ -22,7 +22,7 @@ const list = ({
 }) =>
   runCatching(
     api
-      .get(`wenku/list`, { searchParams: { page, pageSize, query } })
+      .get(`wenku`, { searchParams: { page, pageSize, query } })
       .json<Page<WenkuNovelOutlineDto>>()
   );
 

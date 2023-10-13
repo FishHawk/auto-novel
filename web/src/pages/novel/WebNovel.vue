@@ -69,7 +69,7 @@ async function removeFavorite() {
 
 const editMode = ref(false);
 function toggleEditMode() {
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     return message.info('请先登录');
   }
   editMode.value = !editMode.value;

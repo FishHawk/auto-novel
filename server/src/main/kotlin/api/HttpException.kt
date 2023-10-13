@@ -7,40 +7,52 @@ import io.ktor.server.response.*
 
 data class HttpException(
     val status: HttpStatusCode,
-    override val message: String?,
-) : Exception()
+    override val message: String,
+) : Exception(message)
 
-fun <T> httpBadRequest(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.BadRequest, message))
+fun throwBadRequest(message: String): Nothing =
+    throw HttpException(HttpStatusCode.BadRequest, message)
 
-fun <T> httpUnauthorized(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.Unauthorized, message))
+fun throwUnauthorized(message: String): Nothing =
+    throw HttpException(HttpStatusCode.Unauthorized, message)
 
-fun <T> httpConflict(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.Conflict, message))
+fun throwConflict(message: String): Nothing =
+    throw HttpException(HttpStatusCode.Conflict, message)
 
-fun <T> httpNotFound(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.NotFound, message))
+fun throwNotFound(message: String): Nothing =
+    throw HttpException(HttpStatusCode.NotFound, message)
 
-fun <T> httpInternalServerError(message: String?) =
-    Result.failure<T>(HttpException(HttpStatusCode.InternalServerError, message))
+fun throwInternalServerError(message: String): Nothing =
+    throw HttpException(HttpStatusCode.InternalServerError, message)
 
-suspend inline fun <reified T : Any> ApplicationCall.respondResult(result: Result<T>) {
-    result.onSuccess {
-        if (it is Unit) {
-            response.status(HttpStatusCode.OK)
-        } else {
-            respond(it)
-        }
-    }.onFailure {
+suspend inline fun ApplicationCall.doOrRespondError(block: () -> Unit) {
+    try {
+        block()
+    } catch (e: Throwable) {
         val httpMethod = request.httpMethod.value
         val uri = request.uri
-        application.environment.log.warn("已捕获异常 $httpMethod-$uri:", it)
+        application.environment.log.warn("已捕获异常 $httpMethod-$uri:", e.message)
 
-        if (it is HttpException) {
-            respond(it.status, it.message ?: it.status.description)
+        if (e is HttpException) {
+            respond(e.status, e.message)
         } else {
-            respond(HttpStatusCode.InternalServerError, it.message ?: "未知错误")
+            respond(HttpStatusCode.InternalServerError, e.message ?: "未知错误")
         }
     }
 }
+
+suspend inline fun <reified T : Any> ApplicationCall.tryRespond(block: () -> T) =
+    doOrRespondError {
+        val message = block()
+        if (message is Unit) {
+            response.status(HttpStatusCode.OK)
+        } else {
+            respond(message)
+        }
+    }
+
+suspend inline fun ApplicationCall.tryRespondRedirect(block: () -> String) =
+    doOrRespondError {
+        val url = block()
+        respondRedirect(url)
+    }

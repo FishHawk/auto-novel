@@ -15,6 +15,7 @@ function validExpires(info: SignInDto | undefined) {
 
 interface UserData {
   info?: SignInDto;
+  renewedAt?: number;
   adminMode: boolean;
 }
 
@@ -22,10 +23,11 @@ export const useUserDataStore = defineStore('authInfo', {
   state: () =>
     <UserData>{
       info: undefined,
+      renewedAt: undefined,
       adminMode: false,
     },
   getters: {
-    logined: ({ info }) => validExpires(info) !== undefined,
+    isLoggedIn: ({ info }) => validExpires(info) !== undefined,
     username: ({ info }) => validExpires(info)?.username,
     token: ({ info }) => validExpires(info)?.token,
     isAdmin: ({ info }) => validExpires(info)?.role === 'admin',
@@ -34,6 +36,7 @@ export const useUserDataStore = defineStore('authInfo', {
   },
   actions: {
     setProfile(profile: SignInDto) {
+      this.renewedAt = Date.now();
       this.info = profile;
     },
     deleteProfile() {

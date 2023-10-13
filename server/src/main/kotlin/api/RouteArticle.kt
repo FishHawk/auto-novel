@@ -21,13 +21,11 @@ private class ArticleRes {
     class List(
         val parent: ArticleRes,
         val page: Int,
+        val pageSize: Int,
     )
 
     @Resource("/{id}")
-    class Id(
-        val parent: ArticleRes,
-        val id: String,
-    ) {
+    class Id(val parent: ArticleRes, val id: String) {
         @Resource("/locked")
         class Locked(val parent: Id)
 
@@ -40,70 +38,77 @@ fun Route.routeArticle() {
     val service by inject<ArticleApi>()
 
     get<ArticleRes.List> { loc ->
-        val result = service.listArticle(page = loc.page, pageSize = 20)
-        call.respondResult(result)
+        call.tryRespond {
+            service.listArticle(page = loc.page, pageSize = loc.pageSize)
+        }
     }
     get<ArticleRes.Id> { loc ->
-        val result = service.getArticle(id = loc.id)
-        call.respondResult(result)
+        call.tryRespond {
+            service.getArticle(id = loc.id)
+        }
     }
 
     authenticate {
         @Serializable
-        class ArticleBody(val title: String, val content: String)
+        class ArticleBody(
+            val title: String,
+            val content: String,
+        )
 
         post<ArticleRes> {
-            val jwtUser = call.jwtUser()
+            val user = call.authenticatedUser()
             val body = call.receive<ArticleBody>()
-            val result = service.createArticle(
-                title = body.title,
-                content = body.content,
-                username = jwtUser.username,
-            )
-            call.respondResult(result)
+            call.tryRespond {
+                service.createArticle(
+                    user = user,
+                    title = body.title,
+                    content = body.content,
+                )
+            }
         }
         put<ArticleRes.Id> { loc ->
-            val jwtUser = call.jwtUser()
+            val user = call.authenticatedUser()
             val body = call.receive<ArticleBody>()
-            val result = service.updateArticle(
-                id = loc.id,
-                title = body.title,
-                content = body.content,
-                username = jwtUser.username,
-            )
-            call.respondResult(result)
+            call.tryRespond {
+                service.updateArticle(
+                    user = user,
+                    id = loc.id,
+                    title = body.title,
+                    content = body.content,
+                )
+            }
         }
         delete<ArticleRes.Id> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                service.deleteArticle(id = loc.id)
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.deleteArticle(user = user, id = loc.id)
             }
-            call.respondResult(result)
         }
 
         put<ArticleRes.Id.Locked> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                service.updateArticleLocked(id = loc.parent.id, locked = true)
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateArticleLocked(user = user, id = loc.parent.id, locked = true)
             }
-            call.respondResult(result)
         }
         delete<ArticleRes.Id.Locked> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                service.updateArticleLocked(id = loc.parent.id, locked = false)
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateArticleLocked(user = user, id = loc.parent.id, locked = false)
             }
-            call.respondResult(result)
         }
 
         put<ArticleRes.Id.Pinned> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                service.updateArticlePinned(id = loc.parent.id, pinned = true)
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateArticlePinned(user = user, id = loc.parent.id, pinned = true)
             }
-            call.respondResult(result)
         }
         delete<ArticleRes.Id.Pinned> { loc ->
-            val result = call.requireAtLeastMaintainer {
-                service.updateArticlePinned(id = loc.parent.id, pinned = false)
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateArticlePinned(user = user, id = loc.parent.id, pinned = false)
             }
-            call.respondResult(result)
         }
     }
 }
@@ -113,7 +118,7 @@ class ArticleApi(
     private val userRepo: UserRepository,
 ) {
     @Serializable
-    class ArticleOutlineDto(
+    data class ArticleOutlineDto(
         val id: String,
         val title: String,
         val locked: Boolean,
@@ -125,31 +130,34 @@ class ArticleApi(
         val updateAt: Long,
     )
 
-    suspend fun listArticle(page: Int, pageSize: Int): Result<PageDto<ArticleOutlineDto>> {
-        val list = articleRepo
+    suspend fun listArticle(page: Int, pageSize: Int): PageDto<ArticleOutlineDto> {
+        validatePageNumber(page)
+        validatePageSize(pageSize)
+        return articleRepo
             .listArticle(
-                page = page.coerceAtLeast(0),
-                pageSize = pageSize.coerceAtLeast(0),
+                page = page,
+                pageSize = pageSize,
             )
-        val dto = PageDto.fromPage(list, pageSize = pageSize) {
-            ArticleOutlineDto(
-                id = it.id.toHexString(),
-                title = it.title,
-                locked = it.locked,
-                pinned = it.pinned,
-                numViews = it.numViews,
-                numComments = it.numComments,
-                user = it.user,
-                createAt = it.createAt.epochSeconds,
-                updateAt = it.updateAt.epochSeconds,
-            )
-
-        }
-        return Result.success(dto)
+            .asDto(pageSize) {
+                ArticleOutlineDto(
+                    id = it.id.toHexString(),
+                    title = it.title,
+                    locked = it.locked,
+                    pinned = it.pinned,
+                    numViews = it.numViews,
+                    numComments = it.numComments,
+                    user = it.user,
+                    createAt = it.createAt.epochSeconds,
+                    updateAt = it.updateAt.epochSeconds,
+                )
+            }
     }
 
+    private fun throwArticleNotFound(): Nothing =
+        throwNotFound("帖子不存在")
+
     @Serializable
-    class ArticleDto(
+    data class ArticleDto(
         val id: String,
         val title: String,
         val content: String,
@@ -162,12 +170,13 @@ class ArticleApi(
         val updateAt: Long,
     )
 
-    suspend fun getArticle(id: String): Result<ArticleDto> {
+    suspend fun getArticle(id: String): ArticleDto {
         val article = articleRepo.getArticle(ObjectId(id))
-            ?: return httpNotFound("帖子不存在")
+            ?: throwArticleNotFound()
+
         articleRepo.increaseNumViews(article.id)
 
-        val dto = article.let {
+        return article.let {
             ArticleDto(
                 id = it.id.toHexString(),
                 title = it.title,
@@ -181,98 +190,95 @@ class ArticleApi(
                 updateAt = it.updateAt.epochSeconds,
             )
         }
-        return Result.success(dto)
     }
 
-    private fun <T> validateTitleAndContent(
-        title: String,
-        content: String,
-    ): Result<T>? {
+    private fun validateTitle(title: String) {
         if (title.length < 2) {
-            return httpBadRequest("标题长度不能少于2个字符")
+            throwBadRequest("标题长度不能少于2个字符")
         } else if (title.length > 80) {
-            return httpBadRequest("标题长度不能超过80个字符")
+            throwBadRequest("标题长度不能超过80个字符")
         }
+    }
+
+    private fun validateContent(content: String) {
         if (content.length < 2) {
-            return httpBadRequest("内容长度不能少于2个字符")
+            throwBadRequest("内容长度不能少于2个字符")
         } else if (content.length > 20_000) {
-            return httpBadRequest("内容长度不能超过2万个字符")
+            throwBadRequest("内容长度不能超过2万个字符")
         }
-        return null
     }
 
     suspend fun createArticle(
+        user: AuthenticatedUser,
         title: String,
         content: String,
-        username: String,
-    ): Result<String> {
-        validateTitleAndContent<String>(title = title, content = content)
-            ?.let { return it }
+    ): String {
+        validateTitle(title)
+        validateContent(content)
 
-        val userId = userRepo.getUserIdByUsername(username)
-        val id = articleRepo.createArticle(
+        val userId = userRepo.getUserIdByUsername(user.username)
+        val articleId = articleRepo.createArticle(
             title = title,
             content = content,
             userId = userId,
         )
-        return Result.success(id.toHexString())
+        return articleId.toHexString()
     }
 
     suspend fun updateArticle(
+        user: AuthenticatedUser,
         id: String,
         title: String,
         content: String,
-        username: String,
-    ): Result<Unit> {
-        validateTitleAndContent<Unit>(title = title, content = content)
-            ?.let { return it }
+    ) {
+        validateTitle(title)
+        validateContent(content)
 
-        val userId = userRepo.getUserIdByUsername(username)
+        val userId = userRepo.getUserIdByUsername(user.username)
         if (!articleRepo.isArticleBelongUser(ObjectId(id), userId))
-            return httpUnauthorized("没有权限修改帖子")
+            throwUnauthorized("没有权限修改帖子")
+
         articleRepo.updateArticleTitleAndContent(
             id = ObjectId(id),
             title = title,
             content = content,
         )
-        return Result.success(Unit)
     }
 
-    suspend fun deleteArticle(id: String): Result<Unit> {
+    suspend fun deleteArticle(
+        user: AuthenticatedUser,
+        id: String,
+    ) {
+        user.shouldBeAtLeastMaintainer()
         val isDeleted = articleRepo.deleteArticle(
             id = ObjectId(id),
         )
-        if (!isDeleted) {
-            return httpNotFound("帖子不存在")
-        }
-        return Result.success(Unit)
+        if (!isDeleted) throwArticleNotFound()
     }
 
     suspend fun updateArticlePinned(
+        user: AuthenticatedUser,
         id: String,
         pinned: Boolean,
-    ): Result<Unit> {
+    ) {
+        user.shouldBeAtLeastMaintainer()
         val isUpdated = articleRepo.updateArticlePinned(
             id = ObjectId(id),
             pinned = pinned,
         )
-        if (!isUpdated) {
-            return httpNotFound("帖子不存在")
-        }
-        return Result.success(Unit)
+        if (!isUpdated) throwArticleNotFound()
     }
 
     suspend fun updateArticleLocked(
+        user: AuthenticatedUser,
         id: String,
         locked: Boolean,
-    ): Result<Unit> {
+    ) {
+        user.shouldBeAtLeastMaintainer()
         val isUpdated = articleRepo.updateArticleLocked(
             id = ObjectId(id),
             locked = locked,
         )
-        if (!isUpdated) {
-            return httpNotFound("帖子不存在")
-        }
-        return Result.success(Unit)
+        if (!isUpdated) throwArticleNotFound()
     }
 }

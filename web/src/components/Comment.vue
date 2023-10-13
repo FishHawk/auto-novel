@@ -24,7 +24,12 @@ const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
 
 const loadReplies = async (page: number) => {
-  const result = await ApiComment.listSub(site, comment.id, page - 1);
+  const result = await ApiComment.list({
+    site,
+    parentId: comment.id,
+    page: page - 1,
+    pageSize: 10,
+  });
   if (result.ok) {
     pageCount.value = result.value.pageNumber;
     comment.replies = result.value.items;
@@ -45,7 +50,7 @@ function onReplied() {
 const userData = useUserDataStore();
 const showInput = ref(false);
 function toggleInput() {
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }

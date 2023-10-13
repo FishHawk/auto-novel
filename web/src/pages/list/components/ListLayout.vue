@@ -7,8 +7,8 @@ import { useUserDataStore } from '@/data/stores/userData';
 const userData = useUserDataStore();
 const menuOptions = computed(() => {
   return [
-    menuOption('我的收藏', '/favorite-list', userData.logined),
-    menuOption('阅读历史', '/read-history', userData.logined),
+    menuOption('我的收藏', '/favorite-list', userData.isLoggedIn),
+    menuOption('阅读历史', '/read-history', userData.isLoggedIn),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
     menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),

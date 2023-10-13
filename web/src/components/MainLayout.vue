@@ -112,8 +112,8 @@ function handleUserDropdownSelect(key: string | number) {
 
 const showLoginModal = ref(false);
 
-function onSignInSuccess(info: SignInDto): void {
-  userData.setProfile(info);
+function onSignInSuccess(profile: SignInDto): void {
+  userData.setProfile(profile);
   showLoginModal.value = false;
 }
 

@@ -2,7 +2,6 @@ import { api } from './api';
 import { runCatching } from './result';
 
 export interface SignInDto {
-  email: string;
   username: string;
   role: 'normal' | 'admin' | 'maintainer';
   token: string;
@@ -15,6 +14,8 @@ const signIn = (emailOrUsername: string, password: string) =>
       .post(`auth/sign-in`, { json: { emailOrUsername, password } })
       .json<SignInDto>()
   );
+
+const renew = () => runCatching(api.get(`auth/renew`).json<SignInDto>());
 
 const signUp = (
   email: string,
@@ -69,6 +70,7 @@ const resetPassword = (
 
 export const ApiAuth = {
   signIn,
+  renew,
   signUp,
   verifyEmail,
   sendResetPasswordEmail,

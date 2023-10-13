@@ -17,11 +17,9 @@ import infra.provider.providers.Hameln
 import infra.provider.providers.Syosetu
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
-import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
-import util.Optional
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 

@@ -12,20 +12,14 @@ export interface Comment1 {
   replies: Comment1[];
 }
 
-const list = (site: string, page: number) =>
+const list = (params: {
+  site: string;
+  page: number;
+  parentId?: string;
+  pageSize: number;
+}) =>
   runCatching(
-    api
-      .get(`comment/list`, { searchParams: { site, page } })
-      .json<Page<Comment1>>()
-  );
-
-const listSub = (site: string, parent: string, page: number) =>
-  runCatching(
-    api
-      .get(`comment/list-sub`, {
-        searchParams: { site, parentId: parent, page },
-      })
-      .json<Page<Comment1>>()
+    api.get('comment', { searchParams: params }).json<Page<Comment1>>()
   );
 
 const reply = (site: string, parent: string | undefined, content: string) =>
@@ -43,6 +37,5 @@ const reply = (site: string, parent: string | undefined, content: string) =>
 
 export const ApiComment = {
   list,
-  listSub,
   reply,
 };

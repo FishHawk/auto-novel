@@ -40,7 +40,7 @@ async function list({
 }): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
     api
-      .get(`novel/list`, {
+      .get(`novel`, {
         searchParams: {
           page,
           pageSize,

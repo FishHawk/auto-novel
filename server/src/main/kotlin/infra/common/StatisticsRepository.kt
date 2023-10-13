@@ -13,6 +13,7 @@ import infra.model.WenkuNovelMetadata
 import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.bson.types.ObjectId
 import org.litote.kmongo.inc
 import kotlin.time.Duration.Companion.hours
 

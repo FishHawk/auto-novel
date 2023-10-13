@@ -69,7 +69,7 @@ async function submit() {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
 
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }
@@ -112,7 +112,7 @@ async function updateWenkuId() {
     message.info('文库版Id不能为空');
     return;
   }
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }
@@ -129,7 +129,7 @@ async function updateWenkuId() {
 }
 
 async function deleteWenkuId() {
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }

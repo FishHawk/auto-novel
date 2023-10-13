@@ -31,7 +31,7 @@ async function getChapter() {
   chapterResult.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
-    if (userData.logined) {
+    if (userData.isLoggedIn) {
       ApiWebNovel.putReadHistory(providerId, novelId, chapterId);
     }
   }

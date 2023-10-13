@@ -14,7 +14,7 @@ const message = useMessage();
 const running = ref(false);
 
 async function onClick() {
-  if (!userData.logined) {
+  if (!userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }
