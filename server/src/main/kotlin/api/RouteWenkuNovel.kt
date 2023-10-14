@@ -501,13 +501,12 @@ class WenkuNovelApi(
         user: AuthenticatedUser,
         novelId: String,
         glossary: Map<String, String>,
-    ): Result<Unit> {
+    ) {
         val metadata = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
         if (glossary == metadata.glossary)
             throwBadRequest("术语表没有改变")
         metadataRepo.updateGlossary(novelId, glossary)
-        return Result.success(Unit)
     }
 
     private suspend fun createVolume(
@@ -545,8 +544,6 @@ class WenkuNovelApi(
         if (fileTooLarge) {
             volumeRepo.deleteVolumeIfExist(novelId, volumeId)
             throwBadRequest("文件大小不能超过40MB")
-        } else {
-            Result.success(Unit)
         }
     }
 
@@ -623,7 +620,7 @@ class WenkuNovelApi(
         novelId: String,
         translatorId: TranslatorId,
         volumeId: String,
-    ): Result<TranslateTaskDto> {
+    ): TranslateTaskDto {
         if (!validateNovelId(novelId))
             throwNovelNotFound()
 
@@ -646,13 +643,11 @@ class WenkuNovelApi(
                 expiredChapterIds.add(it)
             }
         }
-        return Result.success(
-            TranslateTaskDto(
-                glossaryUuid = novel?.glossaryUuid,
-                glossary = novel?.glossary ?: emptyMap(),
-                untranslatedChapters = untranslatedChapterIds,
-                expiredChapters = expiredChapterIds,
-            )
+        return TranslateTaskDto(
+            glossaryUuid = novel?.glossaryUuid,
+            glossary = novel?.glossary ?: emptyMap(),
+            untranslatedChapters = untranslatedChapterIds,
+            expiredChapters = expiredChapterIds,
         )
     }
 
@@ -661,10 +656,9 @@ class WenkuNovelApi(
         volumeId: String,
         translatorId: TranslatorId,
         chapterId: String,
-    ): Result<List<String>> {
-        val lines = volumeRepo.getChapter(novelId, volumeId, chapterId)
+    ): List<String> {
+        return volumeRepo.getChapter(novelId, volumeId, chapterId)
             ?: throwNotFound("章节不存在")
-        return Result.success(lines)
     }
 
     suspend fun updateChapterTranslation(
@@ -674,7 +668,7 @@ class WenkuNovelApi(
         chapterId: String,
         glossaryUuid: String?,
         paragraphsZh: List<String>,
-    ): Result<Long> {
+    ): Long {
         if (!validateNovelId(novelId))
             throwNovelNotFound()
 
@@ -702,10 +696,9 @@ class WenkuNovelApi(
             glossary = novel?.glossary ?: emptyMap(),
         )
 
-        val zhChapters = volumeRepo.getTranslatedNumber(
+        return volumeRepo.getTranslatedNumber(
             novelId, volumeId, translatorId
         )
-        return Result.success(zhChapters)
     }
 
     // File
