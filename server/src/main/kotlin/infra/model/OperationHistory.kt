@@ -33,6 +33,15 @@ sealed interface Operation {
     }
 
     @Serializable
+    @SerialName("web-edit-glossary")
+    data class WebEditGlossary(
+        val providerId: String,
+        val novelId: String,
+        val old: Map<String, String>,
+        val new: Map<String, String>,
+    ) : Operation
+
+    @Serializable
     @SerialName("wenku-edit")
     data class WenkuEdit(
         val novelId: String,
@@ -48,6 +57,14 @@ sealed interface Operation {
             val introduction: String,
         )
     }
+
+    @Serializable
+    @SerialName("wenku-edit-glossary")
+    data class WenkuEditGlossary(
+        val novelId: String,
+        val old: Map<String, String>,
+        val new: Map<String, String>,
+    ) : Operation
 
     @Serializable
     @SerialName("wenku-upload")

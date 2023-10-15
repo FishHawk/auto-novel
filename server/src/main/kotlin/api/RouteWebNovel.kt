@@ -687,19 +687,21 @@ class WebNovelApi(
         }
 
         // Add patch
-        operationHistoryRepo.createWebEditHistory(
-            providerId = providerId,
-            novelId = novelId,
-            old = Operation.WebEdit.Data(
-                titleZh = metadata.titleZh,
-                introductionZh = metadata.introductionZh,
-            ),
-            new = Operation.WebEdit.Data(
-                titleZh = title,
-                introductionZh = introduction,
-            ),
+        operationHistoryRepo.create(
             operator = ObjectId(user.id),
-            toc = tocRecord,
+            operation = Operation.WebEdit(
+                providerId = providerId,
+                novelId = novelId,
+                old = Operation.WebEdit.Data(
+                    titleZh = metadata.titleZh,
+                    introductionZh = metadata.introductionZh,
+                ),
+                new = Operation.WebEdit.Data(
+                    titleZh = title,
+                    introductionZh = introduction,
+                ),
+                toc = tocRecord,
+            )
         )
 
         val novel = metadataRepo.updateTranslation(
@@ -727,6 +729,15 @@ class WebNovelApi(
             providerId = providerId,
             novelId = novelId,
             glossary = glossary,
+        )
+        operationHistoryRepo.create(
+            operator = ObjectId(user.id),
+            operation = Operation.WebEditGlossary(
+                providerId = providerId,
+                novelId = novelId,
+                old = novel.glossary,
+                new = glossary,
+            )
         )
     }
 

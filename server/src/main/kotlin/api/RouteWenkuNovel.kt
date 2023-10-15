@@ -437,17 +437,19 @@ class WenkuNovelApi(
             keywords = body.keywords,
             introduction = body.introduction,
         )
-        operationHistoryRepo.createWenkuEditHistory(
+        operationHistoryRepo.create(
             operator = ObjectId(user.id),
-            novelId = novelId,
-            old = null,
-            new = Operation.WenkuEdit.Data(
-                title = body.title,
-                titleZh = body.titleZh,
-                authors = body.authors,
-                artists = body.artists,
-                introduction = body.introduction,
-            ),
+            Operation.WenkuEdit(
+                novelId = novelId,
+                old = null,
+                new = Operation.WenkuEdit.Data(
+                    title = body.title,
+                    titleZh = body.titleZh,
+                    authors = body.authors,
+                    artists = body.artists,
+                    introduction = body.introduction,
+                ),
+            )
         )
         return novelId
     }
@@ -459,7 +461,7 @@ class WenkuNovelApi(
     ) {
         val user = user.compatEmptyUserId(userRepo)
 
-        val old = metadataRepo.get(novelId)
+        val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
         metadataRepo.update(
             novelId = novelId,
@@ -472,23 +474,26 @@ class WenkuNovelApi(
             keywords = body.keywords,
             introduction = body.introduction,
         )
-        operationHistoryRepo.createWenkuEditHistory(
+
+        operationHistoryRepo.create(
             operator = ObjectId(user.id),
-            novelId = novelId,
-            old = Operation.WenkuEdit.Data(
-                title = old.title,
-                titleZh = old.titleZh,
-                authors = old.authors,
-                artists = old.artists,
-                introduction = old.introduction,
-            ),
-            new = Operation.WenkuEdit.Data(
-                title = body.title,
-                titleZh = body.titleZh,
-                authors = body.authors,
-                artists = body.artists,
-                introduction = body.introduction,
-            ),
+            Operation.WenkuEdit(
+                novelId = novelId,
+                old = Operation.WenkuEdit.Data(
+                    title = novel.title,
+                    titleZh = novel.titleZh,
+                    authors = novel.authors,
+                    artists = novel.artists,
+                    introduction = novel.introduction,
+                ),
+                new = Operation.WenkuEdit.Data(
+                    title = body.title,
+                    titleZh = body.titleZh,
+                    authors = body.authors,
+                    artists = body.artists,
+                    introduction = body.introduction,
+                ),
+            )
         )
     }
 
@@ -497,11 +502,22 @@ class WenkuNovelApi(
         novelId: String,
         glossary: Map<String, String>,
     ) {
-        val metadata = metadataRepo.get(novelId)
+        val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
-        if (glossary == metadata.glossary)
+        if (glossary == novel.glossary)
             throwBadRequest("术语表没有改变")
-        metadataRepo.updateGlossary(novelId, glossary)
+        metadataRepo.updateGlossary(
+            novelId = novelId,
+            glossary = glossary,
+        )
+        operationHistoryRepo.create(
+            operator = ObjectId(user.id),
+            operation = Operation.WenkuEditGlossary(
+                novelId = novelId,
+                old = novel.glossary,
+                new = glossary,
+            )
+        )
     }
 
     private fun isCacheArea(novelId: String): Boolean =
@@ -546,10 +562,12 @@ class WenkuNovelApi(
         }
 
         if (!isCacheArea(novelId)) {
-            operationHistoryRepo.createWenkuUploadHistory(
+            operationHistoryRepo.create(
                 operator = ObjectId(user.id),
-                novelId = novelId,
-                volumeId = volumeId,
+                operation = Operation.WenkuUpload(
+                    novelId = novelId,
+                    volumeId = volumeId,
+                )
             )
             metadataRepo.notifyUpdate(novelId)
         }

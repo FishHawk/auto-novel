@@ -17,7 +17,9 @@ import OperationWenkuUpload from './components/OperationWenkuUpload.vue';
 const type = ref<OperationType>('web-edit');
 const typeOptions = [
   { value: 'web-edit', label: '网络编辑' },
+  { value: 'web-edit-glossary', label: '网络编辑术语表' },
   { value: 'wenku-edit', label: '文库编辑' },
+  { value: 'wenku-edit-glossary', label: '文库编辑术语表' },
   { value: 'wenku-upload', label: '文库上传' },
 ];
 
@@ -102,8 +104,16 @@ watch(type, () => {
             v-if="item.operation.type === 'web-edit'"
             :op="item.operation"
           />
+          <operation-web-edit-glossary
+            v-else-if="item.operation.type === 'web-edit-glossary'"
+            :op="item.operation"
+          />
           <operation-wenku-edit
             v-else-if="item.operation.type === 'wenku-edit'"
+            :op="item.operation"
+          />
+          <operation-wenku-edit-glossary
+            v-else-if="item.operation.type === 'wenku-edit-glossary'"
             :op="item.operation"
           />
           <operation-wenku-upload

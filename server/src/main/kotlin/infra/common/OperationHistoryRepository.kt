@@ -67,51 +67,7 @@ class OperationHistoryRepository(
         }
     }
 
-    suspend fun createWebEditHistory(
-        operator: ObjectId,
-        providerId: String,
-        novelId: String,
-        old: Operation.WebEdit.Data,
-        new: Operation.WebEdit.Data,
-        toc: List<Operation.WebEdit.Toc>,
-    ) = create(
-        operator,
-        Operation.WebEdit(
-            providerId = providerId,
-            novelId = novelId,
-            old = old,
-            new = new,
-            toc = toc,
-        )
-    )
-
-    suspend fun createWenkuEditHistory(
-        operator: ObjectId,
-        novelId: String,
-        old: Operation.WenkuEdit.Data?,
-        new: Operation.WenkuEdit.Data,
-    ) = create(
-        operator,
-        Operation.WenkuEdit(
-            novelId = novelId,
-            old = old,
-            new = new,
-        )
-    )
-
-    suspend fun createWenkuUploadHistory(
-        operator: ObjectId,
-        novelId: String,
-        volumeId: String,
-    ) = create(
-        operator,
-        Operation.WenkuUpload(
-            novelId = novelId,
-            volumeId = volumeId,
-        )
-    )
-
-    private suspend fun create(
+    suspend fun create(
         operator: ObjectId,
         operation: Operation,
     ) {

@@ -4,10 +4,17 @@ import { WebNovelTocItemDto } from './api_web_novel';
 import { Page } from './page';
 import { Result, runCatching } from './result';
 
-export type OperationType = 'web-edit' | 'wenku-edit' | 'wenku-upload';
+export type OperationType =
+  | 'web-edit'
+  | 'web-edit-glossary'
+  | 'wenku-edit'
+  | 'wenku-edit-glossary'
+  | 'wenku-upload';
 export type Operation =
   | OperationWebEdit
+  | OperationWebEditGlossary
   | OperationWenkuEdit
+  | OperationWenkuEditGlossary
   | OperationWenkuUpload;
 
 interface OperationWebEditData {
@@ -24,6 +31,16 @@ export interface OperationWebEdit {
   toc: { jp: string; old?: string; new: string }[];
 }
 
+type Glossary = { [key: string]: string };
+
+export interface OperationWebEditGlossary {
+  type: 'web-edit-glossary';
+  providerId: string;
+  novelId: string;
+  old: Glossary;
+  new: Glossary;
+}
+
 interface OperationWenkuEditData {
   title: string;
   titleZh: string;
@@ -37,6 +54,13 @@ export interface OperationWenkuEdit {
   novelId: string;
   old?: OperationWenkuEditData;
   new: OperationWenkuEditData;
+}
+
+export interface OperationWenkuEditGlossary {
+  type: 'wenku-edit-glossary';
+  novelId: string;
+  old: Glossary;
+  new: Glossary;
 }
 
 export interface OperationWenkuUpload {
