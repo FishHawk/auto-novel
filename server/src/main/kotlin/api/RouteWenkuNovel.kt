@@ -3,6 +3,7 @@ package api
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
+import infra.wenku.VolumeCreateException
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
@@ -15,8 +16,6 @@ import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
@@ -54,11 +53,11 @@ private class WenkuNovelRes {
         @Resource("/glossary")
         class Glossary(val parent: Id)
 
-        @Resource("/volume-zh")
-        class VolumeZh(val parent: Id)
+        @Resource("/volume-zh/{volumeId}")
+        class VolumeZh(val parent: Id, val volumeId: String)
 
-        @Resource("/volume-jp")
-        class VolumeJp(val parent: Id)
+        @Resource("/volume-jp/{volumeId}")
+        class VolumeJp(val parent: Id, val volumeId: String)
 
         @Resource("/translate/{translatorId}/{volumeId}")
         class Translate(val parent: Id, val translatorId: TranslatorId, val volumeId: String) {
@@ -162,43 +161,41 @@ fun Route.routeWenkuNovel() {
             }
         }
 
+        suspend fun MultiPartData.firstFilePart(): PartData.FileItem? {
+            while (true) {
+                val part = readPart() ?: return null
+                if (part is PartData.FileItem) return part
+                else part.dispose()
+            }
+        }
+
         post<WenkuNovelRes.Id.VolumeZh> { loc ->
             val user = call.authenticatedUser()
-            call.receiveMultipart().forEachPart { part ->
-                if (part is PartData.FileItem) {
-                    val fileName = part.originalFileName!!
-                    val inputStream = part.streamProvider()
-                    call.tryRespond {
-                        service.createNovelVolumeZh(
-                            user = user,
-                            novelId = loc.parent.novelId,
-                            volumeId = fileName,
-                            inputStream = inputStream,
-                        )
-                    }
-                    return@forEachPart
-                }
-                part.dispose()
+            val filePart = call.receiveMultipart().firstFilePart()
+            call.tryRespond {
+                if (filePart == null) throwBadRequest("请求里没有文件")
+                service.createVolume(
+                    user = user,
+                    novelId = loc.parent.novelId,
+                    volumeId = loc.volumeId,
+                    inputStream = filePart.streamProvider(),
+                    unpack = false,
+                )
             }
         }
 
         post<WenkuNovelRes.Id.VolumeJp> { loc ->
             val user = call.authenticatedUser()
-            call.receiveMultipart().forEachPart { part ->
-                if (part is PartData.FileItem) {
-                    val fileName = part.originalFileName!!
-                    val inputStream = part.streamProvider()
-                    call.tryRespond {
-                        service.createNovelVolumeJp(
-                            user = user,
-                            novelId = loc.parent.novelId,
-                            volumeId = fileName,
-                            inputStream = inputStream,
-                        )
-                    }
-                    return@forEachPart
-                }
-                part.dispose()
+            val filePart = call.receiveMultipart().firstFilePart()
+            call.tryRespond {
+                if (filePart == null) throwBadRequest("请求里没有文件")
+                service.createVolume(
+                    user = user,
+                    novelId = loc.parent.novelId,
+                    volumeId = loc.volumeId,
+                    inputStream = filePart.streamProvider(),
+                    unpack = true,
+                )
             }
         }
     }
@@ -218,7 +215,6 @@ fun Route.routeWenkuNovel() {
             service.getChapterToTranslate(
                 novelId = loc.parent.parent.novelId,
                 volumeId = loc.parent.volumeId,
-                translatorId = loc.parent.translatorId,
                 chapterId = loc.chapterId,
             )
         }
@@ -317,7 +313,7 @@ class WenkuNovelApi(
     }
 
     suspend fun getNonArchivedVolumes(): List<WenkuNovelVolumeJp> {
-        return volumeRepo.listVolumesNonArchived()
+        return volumeRepo.list("non-archived").jp
     }
 
     @Serializable
@@ -328,9 +324,8 @@ class WenkuNovelApi(
 
     suspend fun getUserVolumes(user: AuthenticatedUser): WenkuUserVolumeDto {
         val user = user.compatEmptyUserId(userRepo)
-
         val novelId = "user-${user.id}"
-        val volumes = volumeRepo.listVolumesUser(novelId)
+        val volumes = volumeRepo.list(novelId).jp
         return WenkuUserVolumeDto(list = volumes, novelId = novelId)
     }
 
@@ -509,95 +504,48 @@ class WenkuNovelApi(
         metadataRepo.updateGlossary(novelId, glossary)
     }
 
-    private suspend fun createVolume(
-        novelId: String,
-        volumeId: String,
-        inputStream: InputStream,
-    ) {
-        val outputStream = volumeRepo.createVolumeAndOpen(novelId, volumeId)
-            .getOrElse {
-                if (it is FileAlreadyExistsException) {
-                    throwConflict("文件已经存在")
-                } else {
-                    throwInternalServerError(it.message ?: "")
-                }
-            }
+    private fun isCacheArea(novelId: String): Boolean =
+        novelId == "non-archived" || novelId.startsWith("user")
 
-        var fileTooLarge = false
-        withContext(Dispatchers.IO) {
-            outputStream.use { out ->
-                var bytesCopied: Long = 0
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                var bytes = inputStream.read(buffer)
-                while (bytes >= 0) {
-                    bytesCopied += bytes
-                    if (bytesCopied > 1024 * 1024 * 40) {
-                        fileTooLarge = true
-                        return@use
-                    }
-                    out.write(buffer, 0, bytes)
-                    bytes = inputStream.read(buffer)
-                }
-            }
-        }
-
-        if (fileTooLarge) {
-            volumeRepo.deleteVolumeIfExist(novelId, volumeId)
-            throwBadRequest("文件大小不能超过40MB")
-        }
+    private suspend fun validateNovelId(novelId: String) {
+        if (!isCacheArea(novelId) && !metadataRepo.exist(novelId))
+            throwNovelNotFound()
     }
 
-    private suspend fun createVolumeAndUnpack(
-        novelId: String,
-        volumeId: String,
-        inputStream: InputStream,
-    ) {
-        createVolume(novelId, volumeId, inputStream)
-        runCatching {
-            volumeRepo.unpackVolume(novelId, volumeId)
-        }.onFailure {
-            volumeRepo.deleteVolumeJpIfExist(novelId, volumeId)
-        }
+    private fun validateVolumeId(volumeId: String) {
+        if (!volumeId.endsWith("txt") && !volumeId.endsWith("epub"))
+            throwBadRequest("不支持的文件格式")
     }
 
-    suspend fun createNovelVolumeZh(
+    suspend fun createVolume(
         user: AuthenticatedUser,
         novelId: String,
         volumeId: String,
         inputStream: InputStream,
+        unpack: Boolean,
     ) {
         val user = user.compatEmptyUserId(userRepo)
 
-        if (!metadataRepo.exist(novelId))
-            throwNovelNotFound()
-        createVolume(novelId, volumeId, inputStream)
-        operationHistoryRepo.createWenkuUploadHistory(
-            operator = ObjectId(user.id),
-            novelId = novelId,
-            volumeId = volumeId,
-        )
-        metadataRepo.notifyUpdate(novelId)
-    }
+        validateNovelId(novelId)
+        validateVolumeId(volumeId)
+        if (!unpack && isCacheArea(novelId))
+            throwBadRequest("不允许在缓存区上传中文小说")
 
-    private suspend fun validateNovelId(novelId: String): Boolean {
-        return if (novelId == "non-archived" || novelId.startsWith("user")) true
-        else metadataRepo.exist(novelId)
-    }
+        try {
+            volumeRepo.createVolume(
+                novelId = novelId,
+                volumeId = volumeId,
+                inputStream = inputStream,
+                unpack = unpack,
+            )
+        } catch (e: VolumeCreateException) {
+            when (e) {
+                is VolumeCreateException.VolumeAlreadyExist -> throwConflict("卷已经存在")
+                is VolumeCreateException.VolumeUnpackFailure -> throwInternalServerError("解包失败,由于${e.cause?.message}")
+            }
+        }
 
-    suspend fun createNovelVolumeJp(
-        user: AuthenticatedUser,
-        novelId: String,
-        volumeId: String,
-        inputStream: InputStream,
-    ) {
-        val user = user.compatEmptyUserId(userRepo)
-
-        if (!validateNovelId(novelId))
-            throwNovelNotFound()
-
-        createVolumeAndUnpack(novelId, volumeId, inputStream)
-
-        if (!(novelId == "non-archived" || novelId.startsWith("user"))) {
+        if (!isCacheArea(novelId)) {
             operationHistoryRepo.createWenkuUploadHistory(
                 operator = ObjectId(user.id),
                 novelId = novelId,
@@ -621,24 +569,23 @@ class WenkuNovelApi(
         translatorId: TranslatorId,
         volumeId: String,
     ): TranslateTaskDto {
-        if (!validateNovelId(novelId))
-            throwNovelNotFound()
+        validateNovelId(novelId)
+        validateVolumeId(volumeId)
 
         val novel =
             if (novelId == "non-archived" || novelId.startsWith("user")) null
             else metadataRepo.get(novelId)
 
-        if (!volumeRepo.isVolumeJpExisted(novelId, volumeId))
-            throwNotFound("卷不存在")
+        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+            ?: throwNotFound("卷不存在")
 
         val untranslatedChapterIds = mutableListOf<String>()
         val expiredChapterIds = mutableListOf<String>()
-
-        volumeRepo.listUnpackedChapters(novelId, volumeId, "jp").forEach {
-            if (!volumeRepo.isTranslationExist(novelId, volumeId, translatorId, it)) {
+        volume.listChapter().forEach {
+            if (!volume.translationExist(translatorId, it)) {
                 untranslatedChapterIds.add(it)
             } else if (
-                volumeRepo.getChapterGlossary(novelId, volumeId, translatorId, it)?.uuid != novel?.glossaryUuid
+                volume.getChapterGlossary(translatorId, it)?.uuid != novel?.glossaryUuid
             ) {
                 expiredChapterIds.add(it)
             }
@@ -654,10 +601,14 @@ class WenkuNovelApi(
     suspend fun getChapterToTranslate(
         novelId: String,
         volumeId: String,
-        translatorId: TranslatorId,
         chapterId: String,
     ): List<String> {
-        return volumeRepo.getChapter(novelId, volumeId, chapterId)
+        validateNovelId(novelId)
+        validateVolumeId(volumeId)
+
+        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+            ?: throwNotFound("卷不存在")
+        return volume.getChapter(chapterId)
             ?: throwNotFound("章节不存在")
     }
 
@@ -668,9 +619,9 @@ class WenkuNovelApi(
         chapterId: String,
         glossaryUuid: String?,
         paragraphsZh: List<String>,
-    ): Long {
-        if (!validateNovelId(novelId))
-            throwNovelNotFound()
+    ): Int {
+        validateNovelId(novelId)
+        validateVolumeId(volumeId)
 
         val novel =
             if (novelId == "non-archived" || novelId.startsWith("user")) null
@@ -680,25 +631,32 @@ class WenkuNovelApi(
             throwBadRequest("术语表uuid失效")
         }
 
-        val jpLines = volumeRepo.getChapter(novelId, volumeId, chapterId)
+        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+            ?: throwNotFound("卷不存在")
+
+        val jpLines = volume.getChapter(chapterId)
             ?: throwNotFound("章节不存在")
 
         if (jpLines.size != paragraphsZh.size)
             throwBadRequest("翻译行数不匹配")
 
-        volumeRepo.updateTranslation(
-            novelId = novelId,
-            volumeId = volumeId,
+        volume.setTranslation(
             translatorId = translatorId,
             chapterId = chapterId,
             lines = paragraphsZh,
-            glossaryUuid = glossaryUuid,
-            glossary = novel?.glossary ?: emptyMap(),
         )
+        if (glossaryUuid != null) {
+            volume.setChapterGlossary(
+                translatorId = translatorId,
+                chapterId = chapterId,
+                glossaryUuid = glossaryUuid,
+                glossary = novel?.glossary ?: emptyMap(),
+            )
+        }
 
-        return volumeRepo.getTranslatedNumber(
-            novelId, volumeId, translatorId
-        )
+        return volume.listTranslation(
+            translatorId = translatorId,
+        ).size
     }
 
     // File
@@ -709,18 +667,19 @@ class WenkuNovelApi(
         translationsMode: NovelFileTranslationsMode,
         translations: List<TranslatorId>,
     ): String {
+        validateNovelId(novelId)
+        validateVolumeId(volumeId)
+
         if (translations.isEmpty())
             throwBadRequest("没有设置翻译类型")
 
         if (lang == NovelFileLangV2.Jp)
             throwBadRequest("不支持的类型")
 
-        if (!volumeRepo.isVolumeJpExisted(novelId, volumeId))
-            throwNotFound("卷不存在")
+        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+            ?: throwNotFound("卷不存在")
 
-        val newFileName = volumeRepo.makeTranslationVolumeFile(
-            novelId = novelId,
-            volumeId = volumeId,
+        val newFileName = volume.makeTranslationVolumeFile(
             lang = lang,
             translationsMode = translationsMode,
             translations = translations.distinct(),

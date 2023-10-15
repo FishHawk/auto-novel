@@ -272,9 +272,11 @@ export const translateWenku = async (
     return;
   }
 
-  let chapters = translateExpireChapter
-    ? task.untranslatedChapters.concat(task.expiredChapters)
-    : task.untranslatedChapters;
+  const chapters = (
+    translateExpireChapter
+      ? task.untranslatedChapters.concat(task.expiredChapters)
+      : task.untranslatedChapters
+  ).sort((a, b) => a.localeCompare(b));
 
   callback.onStart(chapters.length);
   if (chapters.length === 0) {

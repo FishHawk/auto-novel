@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { UploadFileInfo, useMessage } from 'naive-ui';
+import {
+  UploadCustomRequestOptions,
+  UploadFileInfo,
+  useMessage,
+} from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
@@ -15,15 +19,16 @@ const emits = defineEmits<{ uploadFinished: [] }>();
 const userData = useUserDataStore();
 const message = useMessage();
 
-function handleFinish({
+function onFinish({
   file,
   event,
 }: {
   file: UploadFileInfo;
   event?: ProgressEvent;
 }) {
+  file.status = 'removed';
   emits('uploadFinished');
-  return undefined;
+  return file;
 }
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
@@ -37,21 +42,46 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
   }
 }
 
-function createUploadUrl(novelId: string): string {
-  if (type === 'jp') {
-    return ApiWenkuNovel.createVolumeJpUploadUrl(novelId);
-  } else {
-    return ApiWenkuNovel.createVolumeZhUploadUrl(novelId);
-  }
-}
+const customRequest = ({
+  file,
+  onFinish,
+  onError,
+  onProgress,
+}: UploadCustomRequestOptions) => {
+  const formData = new FormData();
+  formData.append(file.name, file.file as File);
+
+  var xhr = new XMLHttpRequest();
+
+  xhr.open(
+    'POST',
+    type === 'jp'
+      ? ApiWenkuNovel.createVolumeJpUploadUrl(novelId, file.name)
+      : ApiWenkuNovel.createVolumeZhUploadUrl(novelId, file.name)
+  );
+
+  xhr.setRequestHeader('Authorization', 'Bearer ' + userData.token);
+  xhr.onload = function () {
+    if (xhr.status === 200) {
+      onFinish();
+    } else {
+      message.error(`上传失败:${xhr.responseText}`);
+      onError();
+    }
+  };
+  xhr.upload.addEventListener('progress', (e) => {
+    const percent = e.lengthComputable ? (e.loaded / e.total) * 100 : 0;
+    onProgress({ percent: Math.ceil(percent) });
+  });
+  xhr.send(formData);
+};
 </script>
 
 <template>
   <n-upload
     multiple
-    :headers="{ Authorization: 'Bearer ' + userData.token }"
-    :action="createUploadUrl(novelId)"
-    @finish="handleFinish"
+    :custom-request="customRequest"
+    @finish="onFinish"
     @before-upload="beforeUpload"
   >
     <n-button>

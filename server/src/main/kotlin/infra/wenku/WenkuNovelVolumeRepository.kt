@@ -3,165 +3,138 @@ package infra.wenku
 import infra.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 import util.epub.Epub
-import java.io.OutputStream
+import util.serialName
+import java.io.InputStream
 import java.nio.charset.Charset
+import java.nio.file.Path
 import kotlin.io.path.*
 
-@Serializable
-data class ChapterGlossary(
-    val uuid: String,
-    val glossary: Map<String, String>,
-)
+private fun String.escapePath() =
+    replace('/', '.')
 
-private fun String.escapePath() = replace('/', '.')
+sealed class VolumeCreateException(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    class VolumeAlreadyExist : VolumeCreateException("卷已经存在")
+    class VolumeUnpackFailure(cause: Throwable) : VolumeCreateException("卷解包失败", cause)
+}
 
 class WenkuNovelVolumeRepository {
     private val root = Path("./data/files-wenku")
 
-    suspend fun listVolumesNonArchived() = list("non-archived").jp
-    suspend fun listVolumesUser(userId: String) = list(userId).jp
-
     suspend fun list(
         novelId: String,
     ): WenkuNovelVolumeList = withContext(Dispatchers.IO) {
-        val path = root / novelId
-        val fileExtensions = listOf("epub", "txt")
+        val novelPath = root / novelId
 
         val volumesJp = mutableListOf<WenkuNovelVolumeJp>()
         val volumesZh = mutableListOf<String>()
-        if (path.exists() && path.isDirectory()) {
-            path.listDirectoryEntries()
-                .sortedBy { it.fileName }
-                .filter { it.isRegularFile() && it.fileName.extension in fileExtensions }
+        if (novelPath.exists() && novelPath.isDirectory()) {
+            novelPath
+                .listDirectoryEntries()
+                .filter {
+                    it.isRegularFile() && it.fileName.extension in listOf("epub", "txt")
+                }
+                .map {
+                    VolumeAccessor(novelPath, it.fileName.toString())
+                }
                 .forEach {
-                    val volumeId = it.fileName.toString()
-                    if (hasUnpacked(novelId, volumeId)) {
+                    if (it.unpacked) {
                         volumesJp.add(
                             WenkuNovelVolumeJp(
-                                volumeId = volumeId,
-                                total = listUnpackedChapters(novelId, volumeId, "jp").size.toLong(),
-                                baidu = listUnpackedChapters(novelId, volumeId, "baidu").size.toLong(),
-                                youdao = listUnpackedChapters(novelId, volumeId, "youdao").size.toLong(),
-                                gpt = listUnpackedChapters(novelId, volumeId, "gpt").size.toLong()
+                                volumeId = it.volumeId,
+                                total = it.listChapter().size,
+                                baidu = it.listTranslation(TranslatorId.Baidu).size,
+                                youdao = it.listTranslation(TranslatorId.Youdao).size,
+                                gpt = it.listTranslation(TranslatorId.Gpt).size,
                             )
                         )
                     } else {
-                        volumesZh.add(volumeId)
+                        volumesZh.add(it.volumeId)
                     }
                 }
         }
-        return@withContext WenkuNovelVolumeList(jp = volumesJp, zh = volumesZh)
+        return@withContext WenkuNovelVolumeList(
+            jp = volumesJp,
+            zh = volumesZh,
+        )
     }
 
-
-    private fun hasUnpacked(novelId: String, volumeId: String): Boolean {
-        val unpackPath = root / novelId / "$volumeId.unpack"
-        return unpackPath.exists()
-    }
-
-
-    suspend fun getTranslatedNumber(
+    @OptIn(ExperimentalPathApi::class)
+    suspend fun createVolume(
         novelId: String,
         volumeId: String,
-        translatorId: TranslatorId,
-    ): Long {
-        val type = when (translatorId) {
-            TranslatorId.Baidu -> "baidu"
-            TranslatorId.Youdao -> "youdao"
-            TranslatorId.Gpt -> "gpt"
-        }
-        return listUnpackedChapters(novelId, volumeId, type).size.toLong()
-    }
-
-    suspend fun listUnpackedChapters(
-        novelId: String,
-        volumeId: String,
-        type: String,
+        inputStream: InputStream,
+        unpack: Boolean,
     ) = withContext(Dispatchers.IO) {
-        val unpackPath = root / novelId / "$volumeId.unpack" / type
-        return@withContext if (unpackPath.notExists()) {
-            emptyList()
-        } else {
-            unpackPath
-                .listDirectoryEntries()
-                .map { it.fileName.toString() }
-        }
-    }
-
-    suspend fun isVolumeJpExisted(
-        novelId: String,
-        volumeId: String,
-    ) = withContext(Dispatchers.IO) {
-        val volumePath = root / novelId / volumeId
-        val unpackPath = root / novelId / "$volumeId.unpack"
-        return@withContext volumePath.exists() && unpackPath.exists()
-    }
-
-    suspend fun createVolumeAndOpen(
-        novelId: String,
-        volumeId: String,
-    ): Result<OutputStream> = withContext(Dispatchers.IO) {
         val novelPath = root / novelId
         if (!novelPath.exists()) {
             novelPath.createDirectories()
         }
-        val filePath = novelPath / volumeId
-        return@withContext if (filePath.exists()) {
-            Result.failure(RuntimeException("文件已存在"))
-        } else {
-            Result.success(filePath.createFile().outputStream())
+
+        val volumePath = novelPath / volumeId
+        val volumeOutputStream = try {
+            volumePath.createFile().outputStream()
+        } catch (e: FileAlreadyExistsException) {
+            throw VolumeCreateException.VolumeAlreadyExist()
+        }
+        val volumeTooLarge = volumeOutputStream.use { out ->
+            var bytesCopied: Long = 0
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            var bytes = inputStream.read(buffer)
+            while (bytes >= 0) {
+                bytesCopied += bytes
+                if (bytesCopied > 1024 * 1024 * 40) {
+                    return@use true
+                }
+                out.write(buffer, 0, bytes)
+                bytes = inputStream.read(buffer)
+            }
+            return@use false
+        }
+
+        if (volumeTooLarge) {
+            volumePath.deleteIfExists()
+            throw RuntimeException("文件大小不能超过40MB")
+        }
+
+        if (unpack) {
+            try {
+                unpackVolume(novelId, volumeId)
+            } catch (e: Throwable) {
+                e.printStackTrace()
+                val unpackPath = novelPath / "$volumeId.unpack"
+                volumePath.deleteIfExists()
+                unpackPath.deleteRecursively()
+                throw VolumeCreateException.VolumeUnpackFailure(e)
+            }
         }
     }
 
-    suspend fun deleteVolumeIfExist(
-        novelId: String,
-        volumeId: String,
-    ) = withContext(Dispatchers.IO) {
-        val filePath = root / novelId / volumeId
-        filePath.deleteIfExists()
-    }
-
-    suspend fun deleteVolumeJpIfExist(
-        novelId: String,
-        volumeId: String,
-    ) = withContext(Dispatchers.IO) {
-        val filePath = root / novelId / volumeId
-        val unpackPath = root / novelId / "$volumeId.unpack"
-        filePath.moveTo(root / novelId / "deleted" / volumeId)
-        unpackPath.deleteIfExists()
-    }
-
-    private fun isTxt(volumeId: String): Boolean {
-        return volumeId.lowercase().endsWith(".txt")
-    }
-
-    suspend fun unpackVolume(
+    private suspend fun unpackVolume(
         novelId: String,
         volumeId: String,
     ): Unit = withContext(Dispatchers.IO) {
-        val filePath = root / novelId / volumeId
+        val volumePath = root / novelId / volumeId
         val unpackPath = root / novelId / "$volumeId.unpack" / "jp"
         if (unpackPath.notExists()) {
             unpackPath.createDirectories()
         }
-        if (isTxt(volumeId)) {
+        if (volumePath.extension == "txt") {
             val jpLines = runCatching {
-                filePath.readLines()
+                volumePath.readLines()
             }.getOrElse {
-                filePath.readLines(Charset.forName("GBK"))
+                volumePath.readLines(Charset.forName("GBK"))
             }
             jpLines.chunked(1000).forEachIndexed { index, lines ->
                 val chapterPath = unpackPath / "${String.format("%04d", index)}.txt"
                 chapterPath.writeLines(lines)
             }
         } else {
-            Epub.forEachXHtmlFile(filePath) { xhtmlPath, doc ->
+            Epub.forEachXHtmlFile(volumePath) { xhtmlPath, doc ->
                 doc.select("rt").remove()
                 val lines = doc.body().select("p")
                     .mapNotNull { it.text().ifBlank { null } }
@@ -173,97 +146,115 @@ class WenkuNovelVolumeRepository {
         }
     }
 
-    private suspend fun getChapter(
+    suspend fun getVolumeJp(
         novelId: String,
         volumeId: String,
-        type: String,
-        chapterId: String,
     ) = withContext(Dispatchers.IO) {
-        val path = root / novelId / "$volumeId.unpack" / type / chapterId
-        return@withContext if (path.notExists()) null
-        else path.readText().lines()
-    }
-
-    suspend fun getChapter(
-        novelId: String,
-        volumeId: String,
-        chapterId: String,
-    ) = getChapter(novelId, volumeId, "jp", chapterId)
-
-    suspend fun getChapterGlossary(
-        novelId: String,
-        volumeId: String,
-        translatorId: TranslatorId,
-        chapterId: String,
-    ) = withContext(Dispatchers.IO) {
-        val type = when (translatorId) {
-            TranslatorId.Baidu -> "baidu.g"
-            TranslatorId.Youdao -> "youdao.g"
-            TranslatorId.Gpt -> "gpt.g"
-        }
-        val path = root / novelId / "$volumeId.unpack" / type / chapterId
-        return@withContext if (path.notExists()) null
-        else try {
-            Json.decodeFromString<ChapterGlossary>(path.readText())
-        } catch (e: Throwable) {
+        val volumePath = root / novelId / volumeId
+        val unpackPath = root / novelId / "$volumeId.unpack"
+        return@withContext if (volumePath.exists() && unpackPath.exists()) {
+            VolumeAccessor(root / novelId, volumeId)
+        } else {
             null
         }
     }
+}
 
-    suspend fun isTranslationExist(
-        novelId: String,
-        volumeId: String,
-        translatorId: TranslatorId,
-        chapterId: String,
-    ) = withContext(Dispatchers.IO) {
-        val type = when (translatorId) {
-            TranslatorId.Baidu -> "baidu"
-            TranslatorId.Youdao -> "youdao"
-            TranslatorId.Gpt -> "gpt"
+class VolumeAccessor(private val novelPath: Path, val volumeId: String) {
+    val unpacked
+        get() = (novelPath / "${volumeId}.unpack").exists()
+
+    //
+    private suspend fun listFiles(dir: String) =
+        withContext(Dispatchers.IO) {
+            val chapterPath = novelPath / "$volumeId.unpack" / dir
+            return@withContext if (chapterPath.notExists()) {
+                emptyList()
+            } else {
+                chapterPath
+                    .listDirectoryEntries()
+                    .map { it.fileName.toString() }
+            }
         }
-        val path = root / novelId / "$volumeId.unpack" / type / chapterId
-        return@withContext path.exists()
-    }
 
-    suspend fun updateTranslation(
-        novelId: String,
-        volumeId: String,
+    suspend fun listChapter(): List<String> =
+        listFiles("jp")
+
+    suspend fun listTranslation(translatorId: TranslatorId): List<String> =
+        listFiles(translatorId.serialName())
+
+
+    private fun Path.readTextOrNull() =
+        if (notExists()) null else readText()
+
+    //
+    private fun chapterPath(chapterId: String) =
+        novelPath / "$volumeId.unpack" / "jp" / chapterId
+
+    suspend fun getChapter(chapterId: String) =
+        withContext(Dispatchers.IO) {
+            val path = chapterPath(chapterId)
+            return@withContext path.readTextOrNull()?.lines()
+        }
+
+    //
+    private fun translationPath(translatorId: TranslatorId, chapterId: String) =
+        novelPath / "$volumeId.unpack" / translatorId.serialName() / chapterId
+
+    suspend fun translationExist(translatorId: TranslatorId, chapterId: String) =
+        withContext(Dispatchers.IO) {
+            val path = translationPath(translatorId, chapterId)
+            return@withContext path.exists()
+        }
+
+    private suspend fun getTranslation(translatorId: TranslatorId, chapterId: String) =
+        withContext(Dispatchers.IO) {
+            val path = translationPath(translatorId, chapterId)
+            return@withContext path.readTextOrNull()?.lines()
+        }
+
+    suspend fun setTranslation(translatorId: TranslatorId, chapterId: String, lines: List<String>) =
+        withContext(Dispatchers.IO) {
+            val path = translationPath(translatorId, chapterId)
+            if (path.parent.notExists()) {
+                path.parent.createDirectories()
+            }
+            path.writeLines(lines)
+        }
+
+    //
+    private fun glossaryPath(translatorId: TranslatorId, chapterId: String) =
+        novelPath / "$volumeId.unpack" / "${translatorId.serialName()}.g" / chapterId
+
+    suspend fun getChapterGlossary(translatorId: TranslatorId, chapterId: String) =
+        withContext(Dispatchers.IO) {
+            val path = glossaryPath(translatorId, chapterId)
+            return@withContext if (path.notExists())
+                null
+            else try {
+                Json.decodeFromString<WenkuChapterGlossary>(path.readText())
+            } catch (e: Throwable) {
+                null
+            }
+        }
+
+    suspend fun setChapterGlossary(
         translatorId: TranslatorId,
         chapterId: String,
-        lines: List<String>,
-        glossaryUuid: String?,
+        glossaryUuid: String,
         glossary: Map<String, String>,
     ) = withContext(Dispatchers.IO) {
-        val type = when (translatorId) {
-            TranslatorId.Baidu -> "baidu"
-            TranslatorId.Youdao -> "youdao"
-            TranslatorId.Gpt -> "gpt"
-        }
-        val path = root / novelId / "$volumeId.unpack" / type / chapterId
+        val path = glossaryPath(translatorId, chapterId)
         if (path.parent.notExists()) {
             path.parent.createDirectories()
         }
-        path.writeLines(lines)
-
-        if (glossaryUuid != null) {
-            val gType = when (translatorId) {
-                TranslatorId.Baidu -> "baidu.g"
-                TranslatorId.Youdao -> "youdao.g"
-                TranslatorId.Gpt -> "gpt.g"
-            }
-            val gPath = root / novelId / "$volumeId.unpack" / gType / chapterId
-            if (gPath.parent.notExists()) {
-                gPath.parent.createDirectories()
-            }
-            gPath.writeText(
-                Json.encodeToString(ChapterGlossary(glossaryUuid, glossary))
-            )
-        }
+        path.writeText(
+            Json.encodeToString(WenkuChapterGlossary(glossaryUuid, glossary))
+        )
     }
 
+    //
     suspend fun makeTranslationVolumeFile(
-        novelId: String,
-        volumeId: String,
         lang: NovelFileLangV2,
         translationsMode: NovelFileTranslationsMode,
         translations: List<TranslatorId>,
@@ -295,45 +286,32 @@ class WenkuNovelVolumeRepository {
             }
         }
 
-        suspend fun getJpLines(chapterId: String): List<String> {
-            return getChapter(novelId, volumeId, chapterId)!!
-        }
-
         suspend fun getZhLinesList(chapterId: String): List<List<String>> {
-            suspend fun getChapter(translationId: TranslatorId): List<String>? {
-                val type = when (translationId) {
-                    TranslatorId.Baidu -> "baidu"
-                    TranslatorId.Youdao -> "youdao"
-                    TranslatorId.Gpt -> "gpt"
-                }
-                return getChapter(novelId, volumeId, type, chapterId)
-            }
-
             return when (translationsMode) {
                 NovelFileTranslationsMode.Parallel ->
-                    translations.mapNotNull { getChapter(it) }
+                    translations.mapNotNull { getTranslation(it, chapterId) }
 
                 NovelFileTranslationsMode.Priority ->
-                    translations.firstNotNullOfOrNull { getChapter(it) }
+                    translations.firstNotNullOfOrNull { getTranslation(it, chapterId) }
                         ?.let { listOf(it) }
                         ?: emptyList()
             }
         }
 
-        if (isTxt(volumeId)) {
-            val zhPath = root / novelId / "$volumeId.unpack" / "${zhFilename}.txt"
+        if (volumeId.endsWith(".txt")) {
+            val zhPath = novelPath / "$volumeId.unpack" / "${zhFilename}.txt"
 
             if (zhPath.notExists()) {
                 zhPath.createFile()
             }
 
             zhPath.bufferedWriter().use { bf ->
-                listUnpackedChapters(novelId, volumeId, "jp").sorted().forEach { chapterId ->
+                listChapter().sorted().forEach { chapterId ->
                     val zhLinesList = getZhLinesList(chapterId)
                     if (zhLinesList.isEmpty()) {
                         bf.appendLine("// 该分段翻译缺失。")
                     } else {
-                        val jpLines = getJpLines(chapterId)
+                        val jpLines = getChapter(chapterId)!!
                         val linesList = when (lang) {
                             NovelFileLangV2.Jp -> throw RuntimeException("文库小说不允许日语下载")
                             NovelFileLangV2.Zh -> zhLinesList
@@ -350,15 +328,15 @@ class WenkuNovelVolumeRepository {
             }
             return@withContext "${zhFilename}.txt"
         } else {
-            val zhPath = root / novelId / "$volumeId.unpack" / "${zhFilename}.epub"
-            val jpPath = root / novelId / volumeId
+            val zhPath = novelPath / "$volumeId.unpack" / "${zhFilename}.epub"
+            val jpPath = novelPath / volumeId
 
-            val unpackChapters = listUnpackedChapters(novelId, volumeId, "jp")
+            val chapters = listChapter()
             Epub.modify(srcPath = jpPath, dstPath = zhPath) { entry, bytesIn ->
                 // 为了兼容ChapterId以斜杠开头的旧格式
-                val chapterId = if ("/${entry.name}".escapePath() in unpackChapters) {
+                val chapterId = if ("/${entry.name}".escapePath() in chapters) {
                     "/${entry.name}".escapePath()
-                } else if (entry.name.escapePath() in unpackChapters) {
+                } else if (entry.name.escapePath() in chapters) {
                     entry.name.escapePath()
                 } else {
                     null

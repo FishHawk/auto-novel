@@ -145,11 +145,11 @@ const getNovelFromBangumi = async (novelId: string) => {
   }
 };
 
-const createVolumeZhUploadUrl = (novelId: string) =>
-  `/api/wenku/${novelId}/volume-zh`;
+const createVolumeZhUploadUrl = (novelId: string, volumeId: string) =>
+  `/api/wenku/${novelId}/volume-zh/${volumeId}`;
 
-const createVolumeJpUploadUrl = (novelId: string) =>
-  `/api/wenku/${novelId}/volume-jp`;
+const createVolumeJpUploadUrl = (novelId: string, volumeId: string) =>
+  `/api/wenku/${novelId}/volume-jp/${volumeId}`;
 
 export const ApiWenkuNovel = {
   list,

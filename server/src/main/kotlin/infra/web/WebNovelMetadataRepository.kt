@@ -12,12 +12,12 @@ import infra.provider.RemoteNovelListItem
 import infra.provider.providers.Hameln
 import infra.provider.providers.Syosetu
 import kotlinx.datetime.Clock
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
+import util.serialName
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -27,9 +27,6 @@ object WebNovelFilter {
     enum class Translate { 全部, AI }
     enum class Sort { 更新, 点击, 相关 }
 }
-
-private fun Enum<*>.serialName(): String =
-    javaClass.getDeclaredField(name).getAnnotation(SerialName::class.java)!!.value
 
 class WebNovelMetadataRepository(
     private val provider: DataSourceWebNovelProvider,

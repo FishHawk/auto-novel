@@ -43,8 +43,14 @@ data class WenkuNovelVolumeList(
 @Serializable
 data class WenkuNovelVolumeJp(
     val volumeId: String,
-    val total: Long,
-    val baidu: Long,
-    val youdao: Long,
-    val gpt: Long,
+    val total: Int,
+    val baidu: Int,
+    val youdao: Int,
+    val gpt: Int,
+)
+
+@Serializable
+data class WenkuChapterGlossary(
+    val uuid: String,
+    val glossary: Map<String, String>,
 )
