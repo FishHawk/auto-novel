@@ -4,7 +4,9 @@ import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.Facet
 import infra.DataSourceMongo
+import infra.DataSourceRedis
 import infra.model.*
+import infra.withRateLimit
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
@@ -14,6 +16,7 @@ import org.litote.kmongo.id.toId
 
 class ArticleRepository(
     private val mongo: DataSourceMongo,
+    private val redis: DataSourceRedis,
 ) {
     suspend fun listArticle(
         page: Int,
@@ -143,7 +146,10 @@ class ArticleRepository(
         return insertResult.insertedId!!.asObjectId().value
     }
 
-    suspend fun increaseNumViews(id: ObjectId) {
+    suspend fun increaseNumViews(
+        userIdOrIp: String,
+        id: ObjectId,
+    ) = redis.withRateLimit("article:${userIdOrIp}:${id.toHexString()}") {
         mongo
             .articleCollection
             .updateOne(

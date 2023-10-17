@@ -42,9 +42,13 @@ fun Route.routeArticle() {
             service.listArticle(page = loc.page, pageSize = loc.pageSize)
         }
     }
-    get<ArticleRes.Id> { loc ->
-        call.tryRespond {
-            service.getArticle(id = loc.id)
+
+    authenticate(optional = true) {
+        get<ArticleRes.Id> { loc ->
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                service.getArticle(user = user, id = loc.id)
+            }
         }
     }
 
@@ -130,7 +134,10 @@ class ArticleApi(
         val updateAt: Long,
     )
 
-    suspend fun listArticle(page: Int, pageSize: Int): PageDto<ArticleOutlineDto> {
+    suspend fun listArticle(
+        page: Int,
+        pageSize: Int,
+    ): PageDto<ArticleOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
         return articleRepo
@@ -170,11 +177,21 @@ class ArticleApi(
         val updateAt: Long,
     )
 
-    suspend fun getArticle(id: String): ArticleDto {
+    suspend fun getArticle(
+        user: AuthenticatedUser?,
+        id: String,
+    ): ArticleDto {
+        val user = user?.compatEmptyUserId(userRepo)
+
         val article = articleRepo.getArticle(ObjectId(id))
             ?: throwArticleNotFound()
 
-        articleRepo.increaseNumViews(article.id)
+        if (user != null) {
+            articleRepo.increaseNumViews(
+                userIdOrIp = user.id,
+                id = article.id,
+            )
+        }
 
         return article.let {
             ArticleDto(
