@@ -13,6 +13,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
+import io.ktor.server.resources.delete
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
@@ -53,11 +54,8 @@ private class WenkuNovelRes {
         @Resource("/glossary")
         class Glossary(val parent: Id)
 
-        @Resource("/volume-zh/{volumeId}")
-        class VolumeZh(val parent: Id, val volumeId: String)
-
-        @Resource("/volume-jp/{volumeId}")
-        class VolumeJp(val parent: Id, val volumeId: String)
+        @Resource("/volume/{volumeId}")
+        class Volume(val parent: Id, val volumeId: String)
 
         @Resource("/translate/{translatorId}/{volumeId}")
         class Translate(val parent: Id, val translatorId: TranslatorId, val volumeId: String) {
@@ -161,15 +159,15 @@ fun Route.routeWenkuNovel() {
             }
         }
 
-        suspend fun MultiPartData.firstFilePart(): PartData.FileItem? {
-            while (true) {
-                val part = readPart() ?: return null
-                if (part is PartData.FileItem) return part
-                else part.dispose()
+        post<WenkuNovelRes.Id.Volume> { loc ->
+            suspend fun MultiPartData.firstFilePart(): PartData.FileItem? {
+                while (true) {
+                    val part = readPart() ?: return null
+                    if (part is PartData.FileItem) return part
+                    else part.dispose()
+                }
             }
-        }
 
-        post<WenkuNovelRes.Id.VolumeZh> { loc ->
             val user = call.authenticatedUser()
             val filePart = call.receiveMultipart().firstFilePart()
             call.tryRespond {
@@ -179,22 +177,18 @@ fun Route.routeWenkuNovel() {
                     novelId = loc.parent.novelId,
                     volumeId = loc.volumeId,
                     inputStream = filePart.streamProvider(),
-                    unpack = false,
+                    unpack = filePart.name == "jp",
                 )
             }
         }
 
-        post<WenkuNovelRes.Id.VolumeJp> { loc ->
+        delete<WenkuNovelRes.Id.Volume> { loc ->
             val user = call.authenticatedUser()
-            val filePart = call.receiveMultipart().firstFilePart()
             call.tryRespond {
-                if (filePart == null) throwBadRequest("请求里没有文件")
-                service.createVolume(
+                service.deleteVolume(
                     user = user,
                     novelId = loc.parent.novelId,
                     volumeId = loc.volumeId,
-                    inputStream = filePart.streamProvider(),
-                    unpack = true,
                 )
             }
         }
@@ -544,8 +538,10 @@ class WenkuNovelApi(
 
         validateNovelId(novelId)
         validateVolumeId(volumeId)
+        if (novelId == "non-archived")
+            throwBadRequest("不允许在通用缓存区上传小说")
         if (!unpack && isCacheArea(novelId))
-            throwBadRequest("不允许在缓存区上传中文小说")
+            throwBadRequest("不允许在私人缓存区上传中文小说")
 
         try {
             volumeRepo.createVolume(
@@ -571,6 +567,25 @@ class WenkuNovelApi(
             )
             metadataRepo.notifyUpdate(novelId)
         }
+    }
+
+    suspend fun deleteVolume(
+        user: AuthenticatedUser,
+        novelId: String,
+        volumeId: String,
+    ) {
+        val user = user.compatEmptyUserId(userRepo)
+
+        if (!user.atLeastMaintainer() && novelId != "user-${user.id}")
+            throwUnauthorized("没有权限执行操作")
+
+        validateNovelId(novelId)
+        validateVolumeId(volumeId)
+
+        volumeRepo.deleteVolume(
+            novelId = novelId,
+            volumeId = volumeId,
+        )
     }
 
     // Translate

@@ -26,9 +26,7 @@ function onFinish({
   file: UploadFileInfo;
   event?: ProgressEvent;
 }) {
-  file.status = 'removed';
   emits('uploadFinished');
-  return file;
 }
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
@@ -48,32 +46,25 @@ const customRequest = ({
   onError,
   onProgress,
 }: UploadCustomRequestOptions) => {
-  const formData = new FormData();
-  formData.append(file.name, file.file as File);
-
-  var xhr = new XMLHttpRequest();
-
-  xhr.open(
-    'POST',
-    type === 'jp'
-      ? ApiWenkuNovel.createVolumeJpUploadUrl(novelId, file.name)
-      : ApiWenkuNovel.createVolumeZhUploadUrl(novelId, file.name)
-  );
-
-  xhr.setRequestHeader('Authorization', 'Bearer ' + userData.token);
-  xhr.onload = function () {
-    if (xhr.status === 200) {
+  if (userData.token === undefined) {
+    onError();
+    return;
+  }
+  ApiWenkuNovel.createVolume(
+    novelId,
+    file.name,
+    type,
+    file.file as File,
+    userData.token,
+    (p) => onProgress({ percent: p })
+  ).then((result) => {
+    if (result.ok) {
       onFinish();
     } else {
-      message.error(`上传失败:${xhr.responseText}`);
+      message.error(`上传失败:${result.error.message}`);
       onError();
     }
-  };
-  xhr.upload.addEventListener('progress', (e) => {
-    const percent = e.lengthComputable ? (e.loaded / e.total) * 100 : 0;
-    onProgress({ percent: Math.ceil(percent) });
   });
-  xhr.send(formData);
 };
 </script>
 

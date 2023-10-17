@@ -1,7 +1,7 @@
 import ky from 'ky';
 
 import { api } from './api';
-import { Ok, runCatching } from './result';
+import { Err, Ok, Result, runCatching } from './result';
 import { Page } from './page';
 
 export interface WenkuNovelOutlineDto {
@@ -145,11 +145,39 @@ const getNovelFromBangumi = async (novelId: string) => {
   }
 };
 
-const createVolumeZhUploadUrl = (novelId: string, volumeId: string) =>
-  `/api/wenku/${novelId}/volume-zh/${volumeId}`;
+const createVolume = (
+  novelId: string,
+  volumeId: string,
+  type: 'jp' | 'zh',
+  file: File,
+  token: string,
+  onProgress: (p: number) => void
+) =>
+  new Promise<Result<string>>(function (resolve, _reject) {
+    const formData = new FormData();
+    formData.append(type, file as File);
 
-const createVolumeJpUploadUrl = (novelId: string, volumeId: string) =>
-  `/api/wenku/${novelId}/volume-jp/${volumeId}`;
+    let xhr = new XMLHttpRequest();
+
+    xhr.open('POST', `/api/wenku/${novelId}/volume/${volumeId}`);
+
+    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        resolve(Ok(''));
+      } else {
+        resolve(Err({ message: xhr.responseText }));
+      }
+    };
+    xhr.upload.addEventListener('progress', (e) => {
+      const percent = e.lengthComputable ? (e.loaded / e.total) * 100 : 0;
+      onProgress(Math.ceil(percent));
+    });
+    xhr.send(formData);
+  });
+
+const deleteVolume = (novelId: string, volumeId: string) =>
+  runCatching(api.delete(`wenku/${novelId}/volume/${volumeId}`).text());
 
 export const ApiWenkuNovel = {
   list,
@@ -167,6 +195,7 @@ export const ApiWenkuNovel = {
   updateNovel,
   //
   updateGlossary,
-  createVolumeZhUploadUrl,
-  createVolumeJpUploadUrl,
+  //
+  createVolume,
+  deleteVolume,
 };

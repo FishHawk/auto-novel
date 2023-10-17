@@ -117,7 +117,7 @@ class WenkuNovelVolumeRepository {
     private suspend fun unpackVolume(
         novelId: String,
         volumeId: String,
-    ): Unit = withContext(Dispatchers.IO) {
+    ) = withContext(Dispatchers.IO) {
         val volumePath = root / novelId / volumeId
         val unpackPath = root / novelId / "$volumeId.unpack" / "jp"
         if (unpackPath.notExists()) {
@@ -143,6 +143,19 @@ class WenkuNovelVolumeRepository {
                     chapterPath.writeLines(lines)
                 }
             }
+        }
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    suspend fun deleteVolume(
+        novelId: String,
+        volumeId: String,
+    ) = withContext(Dispatchers.IO) {
+        val volumePath = root / novelId / volumeId
+        val unpackPath = root / novelId / "$volumeId.unpack"
+        volumePath.deleteIfExists()
+        if (unpackPath.exists()) {
+            unpackPath.deleteRecursively()
         }
     }
 

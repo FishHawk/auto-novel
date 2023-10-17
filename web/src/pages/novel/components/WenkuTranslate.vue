@@ -8,6 +8,7 @@ import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
 import { useReaderSettingStore } from '@/data/stores/readerSetting';
+import { useUserDataStore } from '@/data/stores/userData';
 import { getTranslatorLabel } from '@/data/util';
 
 const props = defineProps<{
@@ -16,6 +17,7 @@ const props = defineProps<{
   volumes: VolumeJpDto[];
 }>();
 
+const userData = useUserDataStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
 
@@ -230,6 +232,15 @@ const translationOptions = [
 function sortVolumesJp(volumes: VolumeJpDto[]) {
   return volumes.sort((a, b) => a.volumeId.localeCompare(b.volumeId));
 }
+
+async function deleteVolume(novelId: string, volumeId: string) {
+  const result = await ApiWenkuNovel.deleteVolume(novelId, volumeId);
+  if (result.ok) {
+    message.info('删除成功');
+  } else {
+    message.error('删除失败：' + result.error.message);
+  }
+}
 </script>
 
 <template>
@@ -319,13 +330,25 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
           <n-text>{{ volume.volumeId }}</n-text>
           <n-space>
             <n-button
+              v-for="row in stateToFileList(volume)"
               text
               type="primary"
-              v-for="row in stateToFileList(volume)"
               @click="startUpdateTask(volume, row.translatorId)"
             >
               更新{{ row.label }}
             </n-button>
+
+            <n-popconfirm
+              v-if="userData.asAdmin || novelId.startsWith('user')"
+              :show-icon="false"
+              @positive-click="deleteVolume(novelId, volume.volumeId)"
+              :negative-text="null"
+            >
+              <template #trigger>
+                <n-button text type="error"> 删除 </n-button>
+              </template>
+              真的要删除{{ volume.volumeId }}吗？
+            </n-popconfirm>
           </n-space>
         </n-space>
         <template #suffix>

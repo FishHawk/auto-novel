@@ -3,8 +3,19 @@
     <n-h1>工具箱</n-h1>
     <n-grid :x-gap="12" :y-gap="12" cols="2">
       <n-grid-item>
-        <RouterNA to="/toolbox/non-archived">
-          <n-card title="Epub/Txt文件翻译"> 上传并翻译Epub/Txt小说。 </n-card>
+        <RouterNA to="/toolbox/storage-public">
+          <n-card title="Epub/Txt文件翻译">
+            <n-text type="error">已弃用，请使用文库小说功能</n-text>
+            <br />
+            上传并翻译Epub/Txt小说。这里小说是公开的。
+          </n-card>
+        </RouterNA>
+      </n-grid-item>
+      <n-grid-item>
+        <RouterNA to="/toolbox/storage-private">
+          <n-card title="Epub/Txt文件翻译-私人">
+            上传并翻译Epub/Txt小说。这里小说是不公开的，需要登录。
+          </n-card>
         </RouterNA>
       </n-grid-item>
       <n-grid-item>
