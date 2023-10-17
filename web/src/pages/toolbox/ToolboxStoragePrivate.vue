@@ -7,7 +7,7 @@ import { useUserDataStore } from '@/data/stores/userData';
 
 const userData = useUserDataStore();
 
-const userNovelId = ref('');
+const novelId = ref('');
 const volumesUserResult = ref<ResultState<VolumeJpDto[]>>();
 
 async function getVolumesUser() {
@@ -15,7 +15,7 @@ async function getVolumesUser() {
     const result = await ApiWenkuNovel.listVolumesUser();
     if (result.ok) {
       volumesUserResult.value = Ok(result.value.list);
-      userNovelId.value = result.value.novelId;
+      novelId.value = result.value.novelId;
     } else {
       volumesUserResult.value = Err(result.error);
     }
@@ -30,7 +30,12 @@ getVolumesUser();
   <MainLayout>
     <n-h1>EPUB/TXT文件翻译-私人</n-h1>
 
-    <UploadButton type="jp" :novelId="userNovelId" />
+    <UploadButton
+      v-if="novelId"
+      type="jp"
+      :novelId="novelId"
+      @uploadFinished="getVolumesUser()"
+    />
     <n-divider />
 
     <ResultView
@@ -38,7 +43,11 @@ getVolumesUser();
       :showEmpty="(it: any) => it.length === 0"
       v-slot="{ value: volumes }"
     >
-      <WenkuTranslate :novelId="userNovelId" :volumes="volumes" />
+      <WenkuTranslate
+        :novelId="novelId"
+        :volumes="volumes"
+        @deleted="getVolumesUser()"
+      />
     </ResultView>
   </MainLayout>
 </template>

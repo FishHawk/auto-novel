@@ -230,6 +230,7 @@ const vars = useThemeVars();
             :novel-id="novelId"
             :glossary="metadata.glossary"
             :volumes="metadata.volumeJp"
+            @deleted="refreshMetadata()"
           />
         </section>
 

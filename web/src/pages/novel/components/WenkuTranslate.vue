@@ -17,6 +17,8 @@ const props = defineProps<{
   volumes: VolumeJpDto[];
 }>();
 
+const emits = defineEmits<{ deleted: [] }>();
+
 const userData = useUserDataStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
@@ -236,6 +238,7 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
 async function deleteVolume(novelId: string, volumeId: string) {
   const result = await ApiWenkuNovel.deleteVolume(novelId, volumeId);
   if (result.ok) {
+    emits('deleted');
     message.info('删除成功');
   } else {
     message.error('删除失败：' + result.error.message);
