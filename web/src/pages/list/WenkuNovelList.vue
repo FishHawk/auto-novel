@@ -3,7 +3,7 @@ import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
-import { Page } from '@/data/api/page';
+import { Page } from '@/data/api/common';
 
 import { Loader } from './components/NovelList.vue';
 

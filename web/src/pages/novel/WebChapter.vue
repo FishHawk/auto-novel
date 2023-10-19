@@ -4,11 +4,11 @@ import { useRoute, useRouter } from 'vue-router';
 import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
 import { onKeyStroke, createReusableTemplate } from '@vueuse/core';
 
-import { ResultState } from '@/data/api/result';
+import { ResultState } from '@/data/result';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { useUserDataStore } from '@/data/stores/userData';
-import { useReaderSettingStore } from '@/data/stores/readerSetting';
-import { buildChapterUrl } from '@/data/provider';
+import { useUserDataStore } from '@/data/stores/user_data';
+import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { buildChapterUrl } from '@/data/util_web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;

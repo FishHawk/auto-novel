@@ -1,6 +1,7 @@
-import { api } from './api';
-import { Result, runCatching } from './result';
-import { Page } from './page';
+import { Result, runCatching } from '@/data/result';
+
+import { client } from './client';
+import { Page } from './common';
 
 export interface WebNovelOutlineDto {
   providerId: string;
@@ -39,7 +40,7 @@ async function list({
   sort?: number;
 }): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
-    api
+    client
       .get(`novel`, {
         searchParams: {
           page,
@@ -61,7 +62,7 @@ async function listRank(
   options: { [key: string]: string }
 ): Promise<Result<Page<WebNovelOutlineDto>>> {
   return runCatching(
-    api
+    client
       .get(`novel/rank/${providerId}`, {
         searchParams: options,
         timeout: 20000,
@@ -78,7 +79,7 @@ const listReadHistory = ({
   pageSize: number;
 }) =>
   runCatching(
-    api
+    client
       .get('novel/read-history', { searchParams: { page, pageSize } })
       .json<Page<WebNovelOutlineDto>>()
   );
@@ -93,7 +94,7 @@ const listFavored = ({
   sort?: 'create' | 'update';
 }) =>
   runCatching(
-    api
+    client
       .get('novel/favored', { searchParams: { page, pageSize, sort } })
       .json<Page<WebNovelOutlineDto>>()
   );
@@ -129,7 +130,7 @@ export interface WebNovelMetadataDto {
 
 const getMetadata = (providerId: string, novelId: string) =>
   runCatching(
-    api.get(`novel/${providerId}/${novelId}`).json<WebNovelMetadataDto>()
+    client.get(`novel/${providerId}/${novelId}`).json<WebNovelMetadataDto>()
   );
 
 export interface WebNovelChapterDto {
@@ -149,7 +150,7 @@ async function getChapter(
   chapterId: string
 ): Promise<Result<WebNovelChapterDto>> {
   return runCatching(
-    api.get(`novel/${providerId}/${novelId}/chapter/${chapterId}`).json()
+    client.get(`novel/${providerId}/${novelId}/chapter/${chapterId}`).json()
   );
 }
 
@@ -159,16 +160,16 @@ const putReadHistory = (
   chapterId: string
 ) =>
   runCatching(
-    api
+    client
       .put(`novel/${providerId}/${novelId}/read-history`, { body: chapterId })
       .text()
   );
 
 const putFavored = (providerId: string, novelId: string) =>
-  runCatching(api.put(`novel/${providerId}/${novelId}/favored`).text());
+  runCatching(client.put(`novel/${providerId}/${novelId}/favored`).text());
 
 const deleteFavored = (providerId: string, novelId: string) =>
-  runCatching(api.delete(`novel/${providerId}/${novelId}/favored`).text());
+  runCatching(client.delete(`novel/${providerId}/${novelId}/favored`).text());
 
 async function updateMetadata(
   providerId: string,
@@ -180,7 +181,7 @@ async function updateMetadata(
   }
 ): Promise<Result<WebNovelMetadataDto>> {
   return runCatching(
-    api
+    client
       .post(`novel/${providerId}/${novelId}`, {
         json: body,
       })
@@ -194,7 +195,7 @@ async function updateGlossary(
   body: { [key: string]: string }
 ): Promise<Result<string>> {
   return runCatching(
-    api
+    client
       .put(`novel/${providerId}/${novelId}/glossary`, {
         json: body,
       })
@@ -208,7 +209,7 @@ async function putWenkuId(
   wenkuId: string
 ): Promise<Result<string>> {
   return runCatching(
-    api.put(`novel/${providerId}/${novelId}/wenku`, { body: wenkuId }).text()
+    client.put(`novel/${providerId}/${novelId}/wenku`, { body: wenkuId }).text()
   );
 }
 
@@ -216,7 +217,9 @@ async function deleteWenkuId(
   providerId: string,
   novelId: string
 ): Promise<Result<string>> {
-  return runCatching(api.delete(`novel/${providerId}/${novelId}/wenku`).text());
+  return runCatching(
+    client.delete(`novel/${providerId}/${novelId}/wenku`).text()
+  );
 }
 
 function createFileUrl(

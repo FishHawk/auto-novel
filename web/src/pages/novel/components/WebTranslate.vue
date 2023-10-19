@@ -2,7 +2,7 @@
 import { computed, Ref, ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { client } from '@/data/api/api';
+import { client } from '@/data/api/client';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslatorId } from '@/data/translator/translator';

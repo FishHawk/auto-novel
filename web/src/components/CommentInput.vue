@@ -1,9 +1,9 @@
 <script lang="ts" setup>
+import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { ApiComment } from '@/data/api/api_comment';
-import { useUserDataStore } from '@/data/stores/userData';
-import { useMessage } from 'naive-ui';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const { site, parent } = withDefaults(
   defineProps<{

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { ApiArticle, Article } from '@/data/api/api_article';
-import { ResultState } from '@/data/api/result';
-import { useUserDataStore } from '@/data/stores/userData';
+import { ResultState } from '@/data/result';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const route = useRoute();
 const userData = useUserDataStore();

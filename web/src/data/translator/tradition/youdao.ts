@@ -1,7 +1,7 @@
-import { KyInstance } from 'ky/distribution/types/ky';
 import { AES } from 'crypto-es/lib/aes';
-import { MD5 } from 'crypto-es/lib/md5';
 import { Utf8 } from 'crypto-es/lib/core';
+import { MD5 } from 'crypto-es/lib/md5';
+import { KyInstance } from 'ky/distribution/types/ky';
 
 import { Glossary, SegmentTranslator } from '../type';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';

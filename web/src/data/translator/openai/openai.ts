@@ -1,9 +1,8 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
 import { Glossary, SegmentTranslator } from '../type';
-
-import { OpenAiError, OpenAiOfficialApi } from './apiOfficial';
-import { OpenAiUnofficialApi } from './apiUnofficial';
+import { OpenAiError, OpenAiOfficialApi } from './api_official';
+import { OpenAiUnofficialApi } from './api_unofficial';
 import { createTokenSegmenter } from './common';
 
 export class OpenAiTranslator implements SegmentTranslator {

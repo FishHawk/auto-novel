@@ -7,7 +7,7 @@ import {
 import { UploadFilled } from '@vicons/material';
 
 import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const { novelId, type } = defineProps<{
   novelId: string;

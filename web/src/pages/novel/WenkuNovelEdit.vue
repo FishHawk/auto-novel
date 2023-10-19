@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { FormRules, FormItemRule, FormInst, useMessage } from 'naive-ui';
-import { computed, onMounted, ref } from 'vue';
+import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import coverPlaceholder from '@/images/cover_placeholder.png';
 import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
-import { useUserDataStore } from '@/data/stores/userData';
-import { watch } from 'vue';
+import { useUserDataStore } from '@/data/stores/user_data';
+import { WenkuMetadataFetcher } from '@/data/util_wenku';
+import coverPlaceholder from '@/images/cover_placeholder.png';
 
 const route = useRoute();
 const router = useRouter();
@@ -131,7 +131,7 @@ async function importNovel() {
   const importFromBungumi = () => {
     const bid = /bangumi\.tv\/subject\/([0-9]+)/.exec(url)?.[1];
     if (!bid) return null;
-    return ApiWenkuNovel.getNovelFromBangumi(bid);
+    return WenkuMetadataFetcher.getNovelFromBangumi(bid);
   };
 
   const importers: [string, typeof importFromBungumi][] = [

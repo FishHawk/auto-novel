@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import { LockFilled, PushPinFilled } from '@vicons/material';
 import { useMessage } from 'naive-ui';
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { ApiArticle, ArticleOutline } from '@/data/api/api_article';
-import { Page } from '@/data/api/page';
-import { Result, ResultState } from '@/data/api/result';
-import { useUserDataStore } from '@/data/stores/userData';
+import { Page } from '@/data/api/common';
+import { Result, ResultState } from '@/data/result';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const route = useRoute();
 const router = useRouter();

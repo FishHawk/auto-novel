@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { mapOk } from '@/data/api/result';
-
-import { Loader } from './components/NovelList.vue';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
-import { Page } from '@/data/api/page';
+import { Page } from '@/data/api/common';
+import { mapOk } from '@/data/result';
+
+import { Loader } from './components/NovelList.vue';
 
 const options = [
   {

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import { SignInDto } from '../api/api_auth';
+
+import { SignInDto } from '@/data/api/api_auth';
 
 function validExpires(info: SignInDto | undefined) {
   if (info) {

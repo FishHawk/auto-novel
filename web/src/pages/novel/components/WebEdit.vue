@@ -4,7 +4,7 @@ import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
 import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsDesktop } from '@/data/util';
 
 const props = defineProps<{

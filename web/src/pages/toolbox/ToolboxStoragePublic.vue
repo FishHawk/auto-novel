@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-import { ResultState } from '@/data/api/result';
+import { ResultState } from '@/data/result';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 
 const volumesResult = ref<ResultState<VolumeJpDto[]>>();

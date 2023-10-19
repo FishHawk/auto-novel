@@ -1,13 +1,10 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
+import { ref, watch } from 'vue';
 
-import { ResultState } from '@/data/api/result';
-import {
-  ApiOperationHistory,
-  TocMergeHistoryDto,
-} from '@/data/api/api_operation_history';
-import { Page } from '@/data/api/page';
+import { ApiOperation, TocMergeHistoryDto } from '@/data/api/api_operation';
+import { Page } from '@/data/api/common';
+import { ResultState } from '@/data/result';
 
 const message = useMessage();
 
@@ -17,9 +14,7 @@ const novelPage = ref<ResultState<Page<TocMergeHistoryDto>>>();
 
 async function loadPage(page: number) {
   novelPage.value = undefined;
-  const result = await ApiOperationHistory.listTocMergeHistory(
-    currentPage.value - 1
-  );
+  const result = await ApiOperation.listTocMergeHistory(currentPage.value - 1);
   if (currentPage.value == page) {
     novelPage.value = result;
     if (result.ok) {
@@ -29,7 +24,7 @@ async function loadPage(page: number) {
 }
 
 async function deleteDetail(id: string) {
-  const result = await ApiOperationHistory.deleteMergeHistory(id);
+  const result = await ApiOperation.deleteMergeHistory(id);
   if (result.ok) {
     message.info('删除成功');
     if (novelPage.value?.ok) {

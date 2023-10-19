@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { OperationWebEditGlossary } from '@/data/api/api_operation_history';
+import { OperationWebEditGlossary } from '@/data/api/api_operation';
+
 defineProps<{ op: OperationWebEditGlossary }>();
 </script>
 

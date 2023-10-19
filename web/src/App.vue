@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { zhCN, dateZhCN, lightTheme, darkTheme } from 'naive-ui';
 
-import { updateToken } from './data/api/api';
+import { updateToken } from './data/api/client';
 import { ApiAuth } from './data/api/api_auth';
-import { useUserDataStore } from './data/stores/userData';
+import { useUserDataStore } from './data/stores/user_data';
 import { useSettingStore } from './data/stores/setting';
 
 const setting = useSettingStore();

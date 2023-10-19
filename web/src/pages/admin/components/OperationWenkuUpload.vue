@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { OperationWenkuUpload } from '@/data/api/api_operation_history';
+import { OperationWenkuUpload } from '@/data/api/api_operation';
+
 defineProps<{ op: OperationWenkuUpload }>();
 </script>
 

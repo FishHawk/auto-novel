@@ -2,7 +2,7 @@
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { Result } from '@/data/api/result';
+import { Result } from '@/data/result';
 
 const message = useMessage();
 

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ResultState } from '@/data/api/result';
 import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
+import { ResultState } from '@/data/result';
 
 defineProps<{ listResult: ResultState<WenkuNovelOutlineDto[]> }>();
 </script>

@@ -2,17 +2,17 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import qqUrl from '@/images/qq.png';
-import bannerUrl from '@/images/banner.webp';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
-  ApiWenkuNovel,
-  WenkuNovelOutlineDto,
+ApiWenkuNovel,
+WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
-import { parseUrl } from '@/data/provider';
-import { Ok, ResultState } from '@/data/api/result';
-import { useUserDataStore } from '@/data/stores/userData';
+import { Ok, ResultState } from '@/data/result';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsDesktop } from '@/data/util';
+import { parseUrl } from '@/data/util_web';
+import bannerUrl from '@/images/banner.webp';
+import qqUrl from '@/images/qq.png';
 
 const isDesktop = useIsDesktop(900);
 const userData = useUserDataStore();

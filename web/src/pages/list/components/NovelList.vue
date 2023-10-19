@@ -10,8 +10,8 @@ export type Loader<T extends Page<any>> = (
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Result, ResultState } from '@/data/api/result';
-import { Page } from '@/data/api/page';
+import { Page } from '@/data/api/common';
+import { Result, ResultState } from '@/data/result';
 
 const route = useRoute();
 const router = useRouter();

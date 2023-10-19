@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import { TranslatorId } from '../translator/translator';
+
+import { TranslatorId } from '@/data/translator/translator';
 
 export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'mix' | 'mix-reverse';
@@ -19,7 +20,7 @@ export const useReaderSettingStore = defineStore('readerSetting', {
       translations: ['gpt', 'youdao', 'baidu'],
       fontSize: '14px',
       theme: { isDark: false, bodyColor: '#FFFFFF' },
-      mixJpOpacity: 0.40,
+      mixJpOpacity: 0.4,
       mixZhOpacity: 0.75,
     },
   persist: true,

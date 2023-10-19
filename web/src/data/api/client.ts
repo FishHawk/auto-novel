@@ -1,6 +1,6 @@
 import ky from 'ky';
 
-let api = ky.create({ prefixUrl: window.origin + '/api' });
+let client = ky.create({ prefixUrl: window.origin + '/api' });
 
 function updateToken(token?: string) {
   let headers;
@@ -9,9 +9,9 @@ function updateToken(token?: string) {
   } else {
     headers = {};
   }
-  api = api.extend({
+  client = client.extend({
     headers,
   });
 }
 
-export { api, updateToken, api as client };
+export { updateToken, client };

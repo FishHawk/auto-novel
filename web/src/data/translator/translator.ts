@@ -1,9 +1,9 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { Glossary, SegmentTranslator } from './type';
-import { BaiduTranslator, YoudaoTranslator } from './tradition';
-import { OpenAiTranslator } from './openai';
 import { createGptSegIndexedDbCache } from './cache';
+import { OpenAiTranslator } from './openai';
+import { BaiduTranslator, YoudaoTranslator } from './tradition';
+import { Glossary, SegmentTranslator } from './type';
 
 export interface SegmentCache {
   cacheKey(segIndex: number, seg: string[], glossary?: Glossary): string;

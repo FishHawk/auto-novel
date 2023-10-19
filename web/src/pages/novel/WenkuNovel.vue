@@ -9,9 +9,9 @@ import {
 } from '@vicons/material';
 
 import coverPlaceholder from '@/images/cover_placeholder.png';
-import { ResultState } from '@/data/api/result';
+import { ResultState } from '@/data/result';
 import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const userData = useUserDataStore();
 const message = useMessage();

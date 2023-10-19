@@ -25,14 +25,14 @@ export function dropdownOption(
 </script>
 
 <script lang="ts" setup>
-import { Component, computed, h, ref } from 'vue';
-import { MenuOption, NIcon, useThemeVars } from 'naive-ui';
 import { ColorLensFilled, LogOutFilled, MenuFilled } from '@vicons/material';
+import { MenuOption, NIcon, useThemeVars } from 'naive-ui';
+import { Component, computed, h, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 import { SignInDto } from '@/data/api/api_auth';
 import { useSettingStore } from '@/data/stores/setting';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsDesktop } from '@/data/util';
 
 withDefaults(

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { CommentFilled } from '@vicons/material';
+import { createReusableTemplate } from '@vueuse/core';
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
-import { createReusableTemplate } from '@vueuse/core';
 
 import { ApiComment, Comment1 } from '@/data/api/api_comment';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;

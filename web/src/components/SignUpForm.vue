@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
+import { ref } from 'vue';
 
 import { ApiAuth, SignInDto } from '@/data/api/api_auth';
 

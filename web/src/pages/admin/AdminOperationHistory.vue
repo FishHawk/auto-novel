@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
+import { ref, watch } from 'vue';
 
-import { ResultState } from '@/data/api/result';
-import { Page } from '@/data/api/page';
 import {
-  ApiOperationHistory,
+  ApiOperation,
   Operation,
   OperationHistory,
   OperationType,
-} from '@/data/api/api_operation_history';
+} from '@/data/api/api_operation';
+import { Page } from '@/data/api/common';
+import { ResultState } from '@/data/result';
 
 import OperationWenkuEdit from './components/OperationWenkuEdit.vue';
 import OperationWenkuUpload from './components/OperationWenkuUpload.vue';
@@ -31,7 +31,7 @@ const historiesResult = ref<ResultState<Page<OperationHistory<Operation>>>>();
 
 async function loadPage(page: number) {
   historiesResult.value = undefined;
-  const result = await ApiOperationHistory.listOperationHistory({
+  const result = await ApiOperation.listOperationHistory({
     page: currentPage.value - 1,
     pageSize: 30,
     type: type.value,
@@ -45,7 +45,7 @@ async function loadPage(page: number) {
 }
 
 async function deleteHistory(id: string) {
-  const result = await ApiOperationHistory.deleteOperationHistory(id);
+  const result = await ApiOperation.deleteOperationHistory(id);
   if (result.ok) {
     message.info('删除成功');
     if (historiesResult.value?.ok) {

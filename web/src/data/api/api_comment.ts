@@ -1,7 +1,7 @@
-import { api } from './api';
-import { UserOutline } from './api_article';
-import { Page } from './page';
-import { runCatching } from './result';
+import { runCatching } from '@/data/result';
+
+import { client } from './client';
+import { Page, UserOutline } from './common';
 
 export interface Comment1 {
   id: string;
@@ -19,12 +19,12 @@ const list = (params: {
   pageSize: number;
 }) =>
   runCatching(
-    api.get('comment', { searchParams: params }).json<Page<Comment1>>()
+    client.get('comment', { searchParams: params }).json<Page<Comment1>>()
   );
 
 const reply = (site: string, parent: string | undefined, content: string) =>
   runCatching(
-    api
+    client
       .post('comment', {
         json: {
           site,

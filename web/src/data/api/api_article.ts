@@ -1,13 +1,7 @@
-import { api } from './api';
-import { Page } from './page';
-import { runCatching } from './result';
+import { runCatching } from '@/data/result';
 
-export type UserRole = 'admin' | 'maintainer' | 'normal';
-
-export interface UserOutline {
-  username: string;
-  role: UserRole;
-}
+import { client } from './client';
+import { Page, UserOutline } from './common';
 
 export interface ArticleOutline {
   id: string;
@@ -36,32 +30,32 @@ export interface Article {
 
 const listArticle = (params: { page: number; pageSize: number }) =>
   runCatching(
-    api.get('article', { searchParams: params }).json<Page<ArticleOutline>>()
+    client.get('article', { searchParams: params }).json<Page<ArticleOutline>>()
   );
 
 const getArticle = (id: string) =>
-  runCatching(api.get(`article/${id}`).json<Article>());
+  runCatching(client.get(`article/${id}`).json<Article>());
 
 const createArticle = (json: { title: string; content: string }) =>
-  runCatching(api.post('article', { json }).text());
+  runCatching(client.post('article', { json }).text());
 
 const updateArticle = (id: string, json: { title: string; content: string }) =>
-  runCatching(api.put(`article/${id}`, { json }).text());
+  runCatching(client.put(`article/${id}`, { json }).text());
 
 const deleteArticle = (id: string) =>
-  runCatching(api.delete(`article/${id}`).text());
+  runCatching(client.delete(`article/${id}`).text());
 
 const pinArticle = (id: string) =>
-  runCatching(api.put(`article/${id}/pinned`).text());
+  runCatching(client.put(`article/${id}/pinned`).text());
 
 const unpinArticle = (id: string) =>
-  runCatching(api.delete(`article/${id}/pinned`).text());
+  runCatching(client.delete(`article/${id}/pinned`).text());
 
 const lockArticle = (id: string) =>
-  runCatching(api.put(`article/${id}/locked`).text());
+  runCatching(client.put(`article/${id}/locked`).text());
 
 const unlockArticle = (id: string) =>
-  runCatching(api.delete(`article/${id}/locked`).text());
+  runCatching(client.delete(`article/${id}/locked`).text());
 
 export const ApiArticle = {
   listArticle,

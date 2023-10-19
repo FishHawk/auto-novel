@@ -1,5 +1,6 @@
-import { api } from './api';
-import { runCatching } from './result';
+import { runCatching } from '@/data/result';
+
+import { client } from './client';
 
 export interface SignInDto {
   username: string;
@@ -10,12 +11,12 @@ export interface SignInDto {
 
 const signIn = (emailOrUsername: string, password: string) =>
   runCatching(
-    api
+    client
       .post(`auth/sign-in`, { json: { emailOrUsername, password } })
       .json<SignInDto>()
   );
 
-const renew = () => runCatching(api.get(`auth/renew`).json<SignInDto>());
+const renew = () => runCatching(client.get(`auth/renew`).json<SignInDto>());
 
 const signUp = (
   email: string,
@@ -24,7 +25,7 @@ const signUp = (
   password: string
 ) =>
   runCatching(
-    api
+    client
       .post('auth/sign-up', {
         json: {
           email,
@@ -38,7 +39,7 @@ const signUp = (
 
 const verifyEmail = (email: string) =>
   runCatching(
-    api
+    client
       .post('auth/verify-email', {
         searchParams: { email },
       })
@@ -47,7 +48,7 @@ const verifyEmail = (email: string) =>
 
 const sendResetPasswordEmail = (emailOrUsername: string) =>
   runCatching(
-    api
+    client
       .post('auth/reset-password-email', {
         searchParams: { emailOrUsername },
       })
@@ -60,7 +61,7 @@ const resetPassword = (
   password: string
 ) =>
   runCatching(
-    api
+    client
       .post('auth/reset-password', {
         searchParams: { emailOrUsername },
         json: { token, password },

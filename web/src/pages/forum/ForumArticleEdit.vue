@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { FormRules, FormItemRule, FormInst, useMessage } from 'naive-ui';
+import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import avaterUrl from '@/images/avater.jpg';
 import { ApiArticle } from '@/data/api/api_article';
+import avaterUrl from '@/images/avater.jpg';
 
 const route = useRoute();
 const router = useRouter();

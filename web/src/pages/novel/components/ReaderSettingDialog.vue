@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
 
-import { useReaderSettingStore } from '@/data/stores/readerSetting';
+import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useIsDesktop } from '@/data/util';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{

@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends any">
-import { ResultState } from '@/data/api/result';
+import { ResultState } from '@/data/result';
 
 defineProps<{
   result: ResultState<T>;

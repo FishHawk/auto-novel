@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import { TranslatorId } from '../translator/translator';
+
+import { TranslatorId } from '@/data/translator/translator';
 
 export interface Setting {
   isDark: boolean;

@@ -1,12 +1,12 @@
 <script lang="ts" setup>
+import { CommentFilled } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
-import { CommentFilled } from '@vicons/material';
 
 import { ApiComment, Comment1 } from '@/data/api/api_comment';
-import { Ok, ResultState } from '@/data/api/result';
-import { useUserDataStore } from '@/data/stores/userData';
-import { Page } from '@/data/api/page';
+import { Page } from '@/data/api/common';
+import { Ok, ResultState } from '@/data/result';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const userData = useUserDataStore();
 const message = useMessage();

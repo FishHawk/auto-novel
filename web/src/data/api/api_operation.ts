@@ -1,8 +1,8 @@
-import { api } from './api';
-import { UserOutline } from './api_article';
+import { Result, runCatching } from '@/data/result';
+
 import { WebNovelTocItemDto } from './api_web_novel';
-import { Page } from './page';
-import { Result, runCatching } from './result';
+import { client } from './client';
+import { Page, UserOutline } from './common';
 
 export type OperationType =
   | 'web-edit'
@@ -10,6 +10,7 @@ export type OperationType =
   | 'wenku-edit'
   | 'wenku-edit-glossary'
   | 'wenku-upload';
+
 export type Operation =
   | OperationWebEdit
   | OperationWebEditGlossary
@@ -101,13 +102,13 @@ const listOperationHistory = (({
   type: OperationType;
 }) =>
   runCatching(
-    api
+    client
       .get('operation-history', { searchParams: { page, pageSize, type } })
       .json<Page<OperationHistory<Operation>>>()
   )) as any as O;
 
 const deleteOperationHistory = (id: string) =>
-  runCatching(api.delete(`operation-history/${id}`).text());
+  runCatching(client.delete(`operation-history/${id}`).text());
 
 // Toc merge
 export interface TocMergeHistoryDto {
@@ -121,15 +122,15 @@ export interface TocMergeHistoryDto {
 
 const listTocMergeHistory = (page: number) =>
   runCatching(
-    api
+    client
       .get('operation-history/toc-merge/', { searchParams: { page } })
       .json<Page<TocMergeHistoryDto>>()
   );
 
 const deleteMergeHistory = (id: string) =>
-  runCatching(api.delete(`operation-history/toc-merge/${id}`).text());
+  runCatching(client.delete(`operation-history/toc-merge/${id}`).text());
 
-export const ApiOperationHistory = {
+export const ApiOperation = {
   listOperationHistory,
   deleteOperationHistory,
   listTocMergeHistory,

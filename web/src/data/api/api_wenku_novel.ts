@@ -1,8 +1,7 @@
-import ky from 'ky';
+import { Err, Ok, Result, runCatching } from '@/data/result';
 
-import { api } from './api';
-import { Err, Ok, Result, runCatching } from './result';
-import { Page } from './page';
+import { client } from './client';
+import { Page } from './common';
 
 export interface WenkuNovelOutlineDto {
   id: string;
@@ -21,7 +20,7 @@ const list = ({
   query?: string;
 }) =>
   runCatching(
-    api
+    client
       .get(`wenku`, { searchParams: { page, pageSize, query } })
       .json<Page<WenkuNovelOutlineDto>>()
   );
@@ -36,7 +35,7 @@ const listFavored = ({
   sort?: 'create' | 'update';
 }) =>
   runCatching(
-    api
+    client
       .get('wenku/favored', { searchParams: { page, pageSize, sort } })
       .json<Page<WenkuNovelOutlineDto>>()
   );
@@ -66,23 +65,23 @@ export interface VolumeJpDto {
 }
 
 const listVolumesNonArchived = () =>
-  runCatching(api.get(`wenku/non-archived`).json<VolumeJpDto[]>());
+  runCatching(client.get(`wenku/non-archived`).json<VolumeJpDto[]>());
 
 const listVolumesUser = () =>
   runCatching(
-    api.get(`wenku/user`).json<{ list: VolumeJpDto[]; novelId: string }>()
+    client.get(`wenku/user`).json<{ list: VolumeJpDto[]; novelId: string }>()
   );
 
 const getNovel = (novelId: string) =>
-  runCatching(api.get(`wenku/${novelId}`).json<WenkuMetadataDto>());
+  runCatching(client.get(`wenku/${novelId}`).json<WenkuMetadataDto>());
 
 const putFavored = (novelId: string) =>
-  runCatching(api.put(`wenku/${novelId}/favored`).text());
+  runCatching(client.put(`wenku/${novelId}/favored`).text());
 
 const deleteFavored = (novelId: string) =>
-  runCatching(api.delete(`wenku/${novelId}/favored`).text());
+  runCatching(client.delete(`wenku/${novelId}/favored`).text());
 
-interface NovelCreateBody {
+export interface NovelCreateBody {
   title: string;
   titleZh: string;
   cover: string;
@@ -94,56 +93,13 @@ interface NovelCreateBody {
 }
 
 const createNovel = (json: NovelCreateBody) =>
-  runCatching(api.post(`wenku`, { json }).text());
+  runCatching(client.post(`wenku`, { json }).text());
 
 const updateNovel = (id: string, json: NovelCreateBody) =>
-  runCatching(api.put(`wenku/${id}`, { json }).text());
+  runCatching(client.put(`wenku/${id}`, { json }).text());
 
 const updateGlossary = (id: string, json: { [key: string]: string }) =>
-  runCatching(api.put(`wenku/${id}/glossary`, { json }).text());
-
-const getNovelFromBangumi = async (novelId: string) => {
-  interface BangumiSection {
-    name: string;
-    name_cn: string;
-    images: {
-      common: string;
-      grid: string;
-      large: string;
-      medium: string;
-      small: string;
-    };
-    infobox: { key: string; value: string }[];
-    summary: string;
-    tags: { name: string; count: number }[];
-  }
-
-  const sectionResult = await runCatching(
-    ky.get(`https://api.bgm.tv/v0/subjects/${novelId}`).json<BangumiSection>()
-  );
-  if (sectionResult.ok) {
-    const metadata: NovelCreateBody = {
-      title: sectionResult.value.name,
-      titleZh: sectionResult.value.name_cn,
-      cover: sectionResult.value.images.medium,
-      coverSmall: sectionResult.value.images.small,
-      authors: [],
-      artists: [],
-      keywords: sectionResult.value.tags.map((it) => it.name),
-      introduction: sectionResult.value.summary,
-    };
-    sectionResult.value.infobox.forEach((it) => {
-      if (it.key == '作者') {
-        metadata.authors.push(it.value);
-      } else if (it.key == '插图') {
-        metadata.artists.push(it.value);
-      }
-    });
-    return Ok(metadata);
-  } else {
-    return sectionResult;
-  }
-};
+  runCatching(client.put(`wenku/${id}/glossary`, { json }).text());
 
 const createVolume = (
   novelId: string,
@@ -166,7 +122,7 @@ const createVolume = (
       if (xhr.status === 200) {
         resolve(Ok(''));
       } else {
-        resolve(Err({ message: xhr.responseText }));
+        resolve(Err(xhr.responseText));
       }
     };
     xhr.upload.addEventListener('progress', (e) => {
@@ -177,7 +133,7 @@ const createVolume = (
   });
 
 const deleteVolume = (novelId: string, volumeId: string) =>
-  runCatching(api.delete(`wenku/${novelId}/volume/${volumeId}`).text());
+  runCatching(client.delete(`wenku/${novelId}/volume/${volumeId}`).text());
 
 export const ApiWenkuNovel = {
   list,
@@ -190,7 +146,6 @@ export const ApiWenkuNovel = {
   putFavored,
   deleteFavored,
   //
-  getNovelFromBangumi,
   createNovel,
   updateNovel,
   //

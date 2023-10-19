@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 
 import { menuOption } from '@/components/MainLayout.vue';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const userData = useUserDataStore();
 const menuOptions = computed(() => {

@@ -1,7 +1,7 @@
 // Copyright 2023 OpenAI
 
-import { KyInstance } from 'ky/distribution/types/ky';
 import { HTTPError, Options } from 'ky';
+import { KyInstance } from 'ky/distribution/types/ky';
 
 import { parseEventStream } from './common';
 

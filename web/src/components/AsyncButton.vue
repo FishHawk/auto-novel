@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
+import { ref } from 'vue';
 
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const { onAsyncClick } = defineProps<{
   onAsyncClick: () => Promise<void>;

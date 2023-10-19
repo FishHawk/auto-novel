@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-import { Err, Ok, ResultState } from '@/data/api/result';
+import { Ok, ResultState, mapOk } from '@/data/result';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const userData = useUserDataStore();
 
@@ -13,12 +13,10 @@ const volumesUserResult = ref<ResultState<VolumeJpDto[]>>();
 async function getVolumesUser() {
   if (userData.isLoggedIn) {
     const result = await ApiWenkuNovel.listVolumesUser();
-    if (result.ok) {
-      volumesUserResult.value = Ok(result.value.list);
-      novelId.value = result.value.novelId;
-    } else {
-      volumesUserResult.value = Err(result.error);
-    }
+    volumesUserResult.value = mapOk(result, (it) => {
+      novelId.value = it.novelId;
+      return it.list;
+    });
   } else {
     volumesUserResult.value = Ok([]);
   }

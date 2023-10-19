@@ -3,12 +3,12 @@ import { computed, Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { FileDownloadFilled } from '@vicons/material';
 
-import { client } from '@/data/api/api';
+import { client } from '@/data/api/client';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { TranslatorId } from '@/data/translator/translator';
 import { useSettingStore } from '@/data/stores/setting';
-import { useReaderSettingStore } from '@/data/stores/readerSetting';
-import { useUserDataStore } from '@/data/stores/userData';
+import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { getTranslatorLabel } from '@/data/util';
 
 const props = defineProps<{

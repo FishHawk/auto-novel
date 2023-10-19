@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import { diffChars } from 'diff';
-defineProps<{
-  zhOld?: string;
-  zhNew: string;
-}>();
+
+defineProps<{ zhOld?: string; zhNew: string }>();
 </script>
 
 <template>

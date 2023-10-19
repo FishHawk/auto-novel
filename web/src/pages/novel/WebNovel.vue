@@ -11,14 +11,14 @@ import {
 import { useMessage } from 'naive-ui';
 import { createReusableTemplate } from '@vueuse/core';
 
-import { Ok, ResultState } from '@/data/api/result';
+import { Ok, ResultState } from '@/data/result';
 import {
   ApiWebNovel,
   WebNovelMetadataDto,
   WebNovelTocItemDto,
 } from '@/data/api/api_web_novel';
-import { buildMetadataUrl, tryTranslateKeyword } from '@/data/provider';
-import { useUserDataStore } from '@/data/stores/userData';
+import { buildMetadataUrl, tryTranslateKeyword } from '@/data/util_web';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { useSettingStore } from '@/data/stores/setting';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{

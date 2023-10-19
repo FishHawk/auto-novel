@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { Page } from '@/data/api/page';
+import { Page } from '@/data/api/common';
 
 import { Loader } from './components/NovelList.vue';
 

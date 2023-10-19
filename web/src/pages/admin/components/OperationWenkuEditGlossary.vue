@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { OperationWenkuEditGlossary } from '@/data/api/api_operation_history';
+import { OperationWenkuEditGlossary } from '@/data/api/api_operation';
+
 defineProps<{ op: OperationWenkuEditGlossary }>();
 </script>
 
