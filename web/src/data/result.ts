@@ -1,3 +1,5 @@
+import { HTTPError, TimeoutError } from 'ky';
+
 export type Result<T> =
   | { ok: true; value: T }
   | { ok: false; error: { message: string } };
@@ -16,10 +18,14 @@ export function runCatching<T>(callback: Promise<T>): Promise<Result<T>> {
   return callback
     .then((it) => Ok(it))
     .catch((error) => {
-      if (error.response) {
-        return error.response.text().then((message: string) => Err(message));
-      } else if (error.request) {
-        return Err('没有收到回复');
+      if (error instanceof HTTPError) {
+        return error.response
+          .text()
+          .then((message) => Err(`[${error.response.status}]${message}`));
+      } else if (error instanceof TimeoutError) {
+        return Err('请求超时');
+      } else {
+        return Err(`${error}`);
       }
     });
 }

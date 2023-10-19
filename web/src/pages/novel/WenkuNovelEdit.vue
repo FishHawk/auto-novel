@@ -8,7 +8,7 @@ import {
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { WenkuMetadataFetcher } from '@/data/util_wenku';
+import { fetchMetadata } from '@/data/util_wenku';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 const route = useRoute();
@@ -126,39 +126,14 @@ async function submit() {
 
 const importUrl = ref('');
 async function importNovel() {
-  const url = importUrl.value;
-
-  const importFromBungumi = () => {
-    const bid = /bangumi\.tv\/subject\/([0-9]+)/.exec(url)?.[1];
-    if (!bid) return null;
-    return WenkuMetadataFetcher.getNovelFromBangumi(bid);
-  };
-
-  const importers: [string, typeof importFromBungumi][] = [
-    ['Bangumi', importFromBungumi],
-  ];
-
-  for (const [label, importer] of importers) {
-    const promise = importer();
-    if (promise) {
-      const result = await promise;
-      if (result.ok) {
-        formValue.value.title = result.value.title;
-        formValue.value.titleZh = result.value.titleZh;
-        formValue.value.cover = result.value.cover;
-        formValue.value.coverSmall = result.value.coverSmall;
-        formValue.value.authors = result.value.authors;
-        formValue.value.artists = result.value.artists;
-        formValue.value.keywords = result.value.keywords;
-        formValue.value.introduction = result.value.introduction;
-      } else {
-        message.error(label + '导入失败:' + result.error.message);
-      }
-      return;
-    }
+  const result = await fetchMetadata(importUrl.value);
+  if (result === undefined) {
+    message.error('无法解析链接');
+  } else if (result.ok) {
+    formValue.value = { ...formValue.value, ...result.value };
+  } else {
+    message.error('导入失败:' + result.error.message);
   }
-
-  message.error('无法解析链接');
 }
 
 const submitCurrentStep = ref(1);
@@ -192,24 +167,27 @@ function confirmNovelNotExist() {
   <MainLayout>
     <n-h1>{{ novelId === undefined ? '新建' : '编辑' }}文库小说</n-h1>
 
-    <n-space style="margin-bottom: 24px">
+    <n-space style="margin-bottom: 24px" :wrap="false">
       <div>
         <img
-          :src="formValue.cover ? formValue.cover : coverPlaceholder"
+          :src="formValue.coverSmall ? formValue.coverSmall : coverPlaceholder"
           alt="cover"
           style="width: 160px"
         />
         <br />
         <n-text depth="3" style="font-size: 12px">
           * 暂不支持上传封面。
-          <!-- 如果没设置封面，会自动使用上传的第一本Epub的封面。 -->
         </n-text>
       </div>
 
-      <n-p>
+      <n-p style="max-width: 500px">
         可以从其他网站导入数据，目前支持：
         <n-ul>
           <n-li><b>Bangumi</b>: https://bangumi.tv/subject/101114</n-li>
+          <n-li style="word-break: break-all">
+            <b>亚马逊</b>:
+            https://www.amazon.co.jp/TS%E7%8B%BC%E5%A8%98%E3%81%AF%E5%AE%88%E3%82%8A%E3%81%9F%E3%81%84-%E4%B8%80%E5%B7%BB-%E3%82%AD%E3%83%A8-ebook/dp/B08G57RLYC
+          </n-li>
         </n-ul>
         <n-input-group>
           <n-input
