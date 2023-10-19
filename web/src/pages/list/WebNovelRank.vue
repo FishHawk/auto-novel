@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
 
-import { mapOk } from '@/data/api/result';
-import { ApiWebNovel } from '@/data/api/api_web_novel';
+import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
+import { Page } from '@/data/api/page';
 import { Loader } from './components/NovelList.vue';
 
 const route = useRoute();
@@ -120,7 +120,7 @@ const descriptiors: { [key: string]: Descriptor } = {
 
 const descriptior = descriptiors[providerId][typeId];
 
-const loader: Loader = (_page: number, _query: string, selected: number[]) => {
+const loader: Loader<Page<WebNovelOutlineDto>> = (_page, _query, selected) => {
   function optionNth(n: number): string {
     return descriptior.options[n].tags[selected[n]];
   }
@@ -141,9 +141,7 @@ const loader: Loader = (_page: number, _query: string, selected: number[]) => {
     const range = optionNth(1);
     options = { genre, range };
   }
-  return ApiWebNovel.listRank(providerId, options).then((result) =>
-    mapOk(result, (page) => ({ type: 'web', page }))
-  );
+  return ApiWebNovel.listRank(providerId, options);
 };
 </script>
 
@@ -154,6 +152,9 @@ const loader: Loader = (_page: number, _query: string, selected: number[]) => {
       :search="descriptior.search"
       :options="descriptior.options"
       :loader="loader"
-    />
+      v-slot="{ page }"
+    >
+      <NovelListWeb :items="page.items" />
+    </NovelList>
   </ListLayout>
 </template>

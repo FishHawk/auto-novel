@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ApiWebNovel } from '@/data/api/api_web_novel';
-import { mapOk } from '@/data/api/result';
+import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
+import { Page } from '@/data/api/page';
 
 import { Loader } from './components/NovelList.vue';
 
@@ -36,7 +36,7 @@ const options = [
   },
 ];
 
-const loader: Loader = (page: number, query: string, selected: number[]) => {
+const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
   function optionNth(n: number): string {
     return options[n].tags[selected[n]];
   }
@@ -52,14 +52,14 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
   };
   return ApiWebNovel.list({
     page,
-    pageSize: 10,
+    pageSize: 20,
     query,
     provider: providerMap[optionNth(0)],
     type: selected[1],
     level: selected[2],
     translate: selected[3],
     sort: selected[4],
-  }).then((result) => mapOk(result, (page) => ({ type: 'web', page })));
+  });
 };
 </script>
 
@@ -70,6 +70,8 @@ const loader: Loader = (page: number, query: string, selected: number[]) => {
       # 搜索语法参见
       <RouterNA to="/forum/64f3da23794cbb1321145c08">如何使用搜索</RouterNA>
     </n-text>
-    <NovelList search :options="options" :loader="loader" />
+    <NovelList search :options="options" :loader="loader" v-slot="{ page }">
+      <NovelListWeb :items="page.items" />
+    </NovelList>
   </ListLayout>
 </template>

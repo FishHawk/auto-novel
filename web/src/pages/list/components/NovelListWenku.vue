@@ -17,5 +17,4 @@ defineProps<{
       </RouterNA>
     </n-grid-item>
   </n-grid>
-  <n-divider />
 </template>

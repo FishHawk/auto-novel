@@ -1,43 +1,31 @@
 <script lang="ts">
-type NovelPage =
-  | { type: 'web'; page: Page<WebNovelOutlineDto> }
-  | { type: 'wenku'; page: Page<WenkuNovelOutlineDto> };
-
-export type Loader = (
+export type Loader<T extends Page<any>> = (
   page: number,
   query: string,
   selected: number[]
-) => Promise<Result<NovelPage>>;
+) => Promise<Result<T>>;
 </script>
 
-<script lang="ts" setup>
+<script lang="ts" setup generic="T extends Page<any>">
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Result, ResultState } from '@/data/api/result';
-import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
 import { Page } from '@/data/api/page';
 
 const route = useRoute();
 const router = useRouter();
 
-const props = withDefaults(
-  defineProps<{
-    search: boolean;
-    options: { label: string; tags: string[] }[];
-    loader: Loader;
-  }>(),
-  {
-    search: false,
-    options: () => [],
-  }
-);
+const props = defineProps<{
+  search: boolean;
+  options: { label: string; tags: string[] }[];
+  loader: Loader<T>;
+}>();
 
 const filters = ref(parseFilters(route.query));
 const currentPage = ref(parsePage(route.query));
 const pageNumber = ref(1);
-const novelPageResult = ref<ResultState<NovelPage>>();
+const novelPageResult = ref<ResultState<T>>();
 
 function parsePage(q: typeof route.query) {
   return parseInt(route.query.page as string) || 1;
@@ -86,7 +74,7 @@ watch(
     if (currentPage.value === newPage) {
       novelPageResult.value = result;
       if (result.ok) {
-        pageNumber.value = result.value.page.pageNumber;
+        pageNumber.value = result.value.pageNumber;
       }
     }
   },
@@ -127,14 +115,16 @@ function detectUserInput() {
     style="margin-top: 20px"
   />
   <n-divider />
+
   <ResultView
     :result="novelPageResult"
-    :showEmpty="(it: NovelPage) => it.page.items.length === 0"
+    :showEmpty="(it: T) => it.items.length === 0"
     v-slot="{ value: page }"
   >
-    <NovelListWeb v-if="page.type === 'web'" :items="page.page.items" />
-    <NovelListWenku v-else :items="page.page.items" />
+    <slot :page="page" />
   </ResultView>
+
+  <n-divider />
   <n-pagination
     v-if="pageNumber > 1"
     v-model:page="currentPage"
