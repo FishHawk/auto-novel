@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
 class PixivTest : DescribeSpec({
-    val provider = Pixiv()
+    val provider = Pixiv(client, cookies, null)
 
     describe("getMetadata") {
         it("常规") {

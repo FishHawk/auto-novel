@@ -11,7 +11,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class KakuyomuTest : DescribeSpec({
-    val provider = Kakuyomu()
+    val provider = Kakuyomu(client)
 
     describe("getRank") {
         it("常规") {

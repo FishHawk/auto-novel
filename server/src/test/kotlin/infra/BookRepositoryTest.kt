@@ -15,9 +15,13 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.Document
+import org.bson.types.ObjectId
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
+import org.litote.kmongo.eq
+import org.litote.kmongo.id.toId
+import org.litote.kmongo.toId
 import java.io.File
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
@@ -33,6 +37,15 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val ohR by inject<OperationHistoryRepository>(OperationHistoryRepository::class.java)
 
     init {
+        describe("delete wenku") {
+            val nid = "65320febcdb73b5203ca1bd2"
+            val favored = mongo
+                .wenkuNovelFavoriteCollection
+                .find(WenkuNovelFavoriteModel::novelId eq ObjectId(nid).toId())
+                .toList()
+            println(favored)
+//            wenkuMR.delete(nid)
+        }
         describe("build es index") {
             @Serializable
             data class WNMP(

@@ -8,7 +8,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class NovelismTest : DescribeSpec({
-    val provider = Novelism()
+    val provider = Novelism(client)
 
     describe("getMetadata") {
         it("常规") {

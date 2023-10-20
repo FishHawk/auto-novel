@@ -3,13 +3,12 @@ package infra.provider.providers
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldBeEmpty
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class SyosetuTest : DescribeSpec({
-    val provider = Syosetu()
+    val provider = Syosetu(client, cookies)
 
     describe("getMetadata") {
         it("常规") {

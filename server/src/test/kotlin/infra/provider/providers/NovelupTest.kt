@@ -9,7 +9,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class NovelupTest : DescribeSpec({
-    val provider = Novelup()
+    val provider = Novelup(client)
 
     describe("getMetadata") {
         it("常规") {

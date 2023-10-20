@@ -10,7 +10,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class HamelnTest : DescribeSpec({
-    val provider = Hameln()
+    val provider = Hameln(client, cookies)
 
     describe("getMetadata") {
         it("常规") {
