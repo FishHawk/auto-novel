@@ -62,7 +62,7 @@ const amazon: WenkuMetadataFetcher = {
     }
   },
   async fetchMetadata(id: string): Promise<Partial<NovelCreateBody>> {
-    const html = await ky.get(id).text();
+    const html = await ky.get(id, { credentials: 'include' }).text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 

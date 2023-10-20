@@ -180,15 +180,22 @@ function confirmNovelNotExist() {
         </n-text>
       </div>
 
-      <n-p style="max-width: 500px">
+      <n-p style="max-width: 530px">
         可以从其他网站导入数据，目前支持：
         <n-ul>
           <n-li><b>Bangumi</b>: https://bangumi.tv/subject/101114</n-li>
-          <n-li style="word-break: break-all">
-            <b>亚马逊</b>:
-            https://www.amazon.co.jp/TS%E7%8B%BC%E5%A8%98%E3%81%AF%E5%AE%88%E3%82%8A%E3%81%9F%E3%81%84-%E4%B8%80%E5%B7%BB-%E3%82%AD%E3%83%A8-ebook/dp/B08G57RLYC
-          </n-li>
+          <n-li><b>亚马逊</b>: https://www.amazon.co.jp/dp/B08G57RLYC</n-li>
         </n-ul>
+
+        亚马逊有些R18书导入会出错。这种时候按下面步骤操作：
+        <n-ol>
+          <n-li>确保安装的插件是最新的v1.0.7。</n-li>
+          <n-li>
+            打开亚马逊链接，确定已满18岁并跳转到真正的页面，然后<b>关闭亚马逊页面</b>。
+          </n-li>
+          <n-li>右键插件，选择“强制公开亚马逊Cookies”。</n-li>
+        </n-ol>
+
         <n-input-group>
           <n-input
             v-model:value="importUrl"
