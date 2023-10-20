@@ -393,6 +393,16 @@ class VolumeAccessor(private val novelPath: Path, val volumeId: String) {
                         doc.outputSettings().prettyPrint(true)
                         doc.html().toByteArray()
                     }
+                } else if (entry.name.endsWith("opf")) {
+                    val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
+
+                    // 防止部分阅读器使用竖排
+                    doc
+                        .selectFirst("spine")
+                        ?.removeAttr("page-progression-direction")
+
+                    doc.outputSettings().prettyPrint(true)
+                    doc.html().toByteArray()
                 } else if (entry.name.endsWith("css")) {
                     "".toByteArray()
                 } else {
