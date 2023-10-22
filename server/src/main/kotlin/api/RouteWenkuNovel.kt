@@ -387,6 +387,12 @@ class WenkuNovelApi(
         if (!metadataRepo.exist(novelId))
             throwNovelNotFound()
         if (favored) {
+            val total = userRepo.countFavoriteWenkuNovelByUserId(
+                userId = user.id,
+            )
+            if (total >= 5000) {
+                throwBadRequest("收藏夹已达到上限")
+            }
             userRepo.addFavoriteWenkuNovel(
                 userId = user.id,
                 novelId = novelId,

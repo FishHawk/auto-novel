@@ -230,6 +230,16 @@ class UserRepository(
         }
     }
 
+    suspend fun countFavoriteWebNovelByUserId(
+        userId: String,
+    ): Long {
+        return mongo
+            .webNovelFavoriteCollection
+            .countDocuments(
+                WebNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+            )
+    }
+
     suspend fun addFavoriteWebNovel(
         userId: String,
         novelId: String,
@@ -330,6 +340,16 @@ class UserRepository(
                 },
             )
         }
+    }
+
+    suspend fun countFavoriteWenkuNovelByUserId(
+        userId: String,
+    ): Long {
+        return mongo
+            .wenkuNovelFavoriteCollection
+            .countDocuments(
+                WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+            )
     }
 
     suspend fun addFavoriteWenkuNovel(

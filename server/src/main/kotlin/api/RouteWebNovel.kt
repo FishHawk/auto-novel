@@ -1,6 +1,9 @@
 package api
 
-import api.plugins.*
+import api.plugins.AuthenticatedUser
+import api.plugins.authenticateDb
+import api.plugins.authenticatedUser
+import api.plugins.authenticatedUserOrNull
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
@@ -632,6 +635,12 @@ class WebNovelApi(
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         if (favored) {
+            val total = userRepo.countFavoriteWebNovelByUserId(
+                userId = user.id,
+            )
+            if (total >= 5000) {
+                throwBadRequest("收藏夹已达到上限")
+            }
             userRepo.addFavoriteWebNovel(
                 userId = user.id,
                 novelId = novel.id.toHexString(),
