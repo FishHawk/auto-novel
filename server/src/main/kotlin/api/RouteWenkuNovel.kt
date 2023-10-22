@@ -1,5 +1,6 @@
 package api
 
+import api.plugins.*
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
@@ -10,6 +11,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -134,11 +136,13 @@ fun Route.routeWenkuNovel() {
     }
 
     authenticateDb {
-        post<WenkuNovelRes> {
-            val user = call.authenticatedUser()
-            val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
-            call.tryRespond {
-                service.createNovel(user = user, body = body)
+        rateLimit(RateLimitNames.CreateWenkuNovel) {
+            post<WenkuNovelRes> {
+                val user = call.authenticatedUser()
+                val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
+                call.tryRespond {
+                    service.createNovel(user = user, body = body)
+                }
             }
         }
         put<WenkuNovelRes.Id> { loc ->
@@ -157,29 +161,30 @@ fun Route.routeWenkuNovel() {
             }
         }
 
-        post<WenkuNovelRes.Id.Volume> { loc ->
-            suspend fun MultiPartData.firstFilePart(): PartData.FileItem? {
-                while (true) {
-                    val part = readPart() ?: return null
-                    if (part is PartData.FileItem) return part
-                    else part.dispose()
+        rateLimit(RateLimitNames.CreateWenkuVolume) {
+            post<WenkuNovelRes.Id.Volume> { loc ->
+                suspend fun MultiPartData.firstFilePart(): PartData.FileItem? {
+                    while (true) {
+                        val part = readPart() ?: return null
+                        if (part is PartData.FileItem) return part
+                        else part.dispose()
+                    }
+                }
+
+                val user = call.authenticatedUser()
+                val filePart = call.receiveMultipart().firstFilePart()
+                call.tryRespond {
+                    if (filePart == null) throwBadRequest("请求里没有文件")
+                    service.createVolume(
+                        user = user,
+                        novelId = loc.parent.novelId,
+                        volumeId = loc.volumeId,
+                        inputStream = filePart.streamProvider(),
+                        unpack = filePart.name == "jp",
+                    )
                 }
             }
-
-            val user = call.authenticatedUser()
-            val filePart = call.receiveMultipart().firstFilePart()
-            call.tryRespond {
-                if (filePart == null) throwBadRequest("请求里没有文件")
-                service.createVolume(
-                    user = user,
-                    novelId = loc.parent.novelId,
-                    volumeId = loc.volumeId,
-                    inputStream = filePart.streamProvider(),
-                    unpack = filePart.name == "jp",
-                )
-            }
         }
-
         delete<WenkuNovelRes.Id.Volume> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {

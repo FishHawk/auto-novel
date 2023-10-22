@@ -1,9 +1,11 @@
 package api
 
+import api.plugins.*
 import infra.common.ArticleRepository
 import infra.model.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -56,16 +58,17 @@ fun Route.routeArticle() {
             val title: String,
             val content: String,
         )
-
-        post<ArticleRes> {
-            val user = call.authenticatedUser()
-            val body = call.receive<ArticleBody>()
-            call.tryRespond {
-                service.createArticle(
-                    user = user,
-                    title = body.title,
-                    content = body.content,
-                )
+        rateLimit(RateLimitNames.CreateArticle) {
+            post<ArticleRes> {
+                val user = call.authenticatedUser()
+                val body = call.receive<ArticleBody>()
+                call.tryRespond {
+                    service.createArticle(
+                        user = user,
+                        title = body.title,
+                        content = body.content,
+                    )
+                }
             }
         }
         put<ArticleRes.Id> { loc ->

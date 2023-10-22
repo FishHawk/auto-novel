@@ -1,5 +1,6 @@
 package api
 
+import api.plugins.*
 import infra.common.UserRepository
 import infra.model.User
 import io.ktor.resources.*

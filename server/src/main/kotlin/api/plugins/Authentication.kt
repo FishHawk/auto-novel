@@ -1,5 +1,6 @@
-package api
+package api.plugins
 
+import api.throwUnauthorized
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.common.UserRepository
@@ -8,6 +9,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.datetime.Clock
@@ -15,6 +17,24 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaInstant
 import org.koin.ktor.ext.get
 import kotlin.time.Duration.Companion.days
+
+fun Application.authentication(secret: String) = install(Authentication) {
+    jwt {
+        verifier(
+            JWT.require(Algorithm.HMAC256(secret)).build()
+        )
+        validate { credential ->
+            if (credential["username"] != null) {
+                JWTPrincipal(credential.payload)
+            } else {
+                null
+            }
+        }
+        challenge { _, _ ->
+            call.respond(HttpStatusCode.Unauthorized, "Token不合法或者过期")
+        }
+    }
+}
 
 data class AuthenticatedUser(
     val id: String,
@@ -85,9 +105,7 @@ private val PostAuthenticationInterceptors = createRouteScopedPlugin(name = "Use
                 createdAt = userDb.createdAt,
             )
             if (userDb.role === User.Role.Banned) {
-                call.respondHttpException(
-                    HttpException(HttpStatusCode.Unauthorized, "用户已被封禁"),
-                )
+                call.respond(HttpStatusCode.Unauthorized, "用户已被封禁")
             } else {
                 call.attributes.put(AuthenticatedUserKey, user)
             }

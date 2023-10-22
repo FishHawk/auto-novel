@@ -1,6 +1,6 @@
 import api.*
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
+import api.plugins.authentication
+import api.plugins.rateLimit
 import infra.DataSourceElasticSearch
 import infra.DataSourceMongo
 import infra.DataSourceWebNovelProvider
@@ -17,8 +17,6 @@ import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.cachingheaders.*
@@ -43,24 +41,8 @@ fun main() {
             slf4jLogger()
             modules(appModule)
         }
-        install(Authentication) {
-            jwt {
-                val secret = System.getenv("JWT_SECRET")!!
-                verifier(
-                    JWT.require(Algorithm.HMAC256(secret)).build()
-                )
-                validate { credential ->
-                    if (credential["username"] != null) {
-                        JWTPrincipal(credential.payload)
-                    } else {
-                        null
-                    }
-                }
-                challenge { defaultScheme, realm ->
-                    call.respond(HttpStatusCode.Unauthorized, "Token不合法或者过期")
-                }
-            }
-        }
+        authentication(secret = System.getenv("JWT_SECRET")!!)
+        rateLimit()
         install(Resources)
         install(CachingHeaders)
         install(ContentNegotiation) {

@@ -1,5 +1,6 @@
 package api
 
+import api.plugins.*
 import infra.common.OperationHistoryRepository
 import infra.model.Operation
 import infra.model.UserOutline

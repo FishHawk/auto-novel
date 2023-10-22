@@ -1,10 +1,12 @@
 package api
 
+import api.plugins.*
 import infra.common.ArticleRepository
 import infra.common.CommentRepository
 import infra.model.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -42,23 +44,25 @@ fun Route.routeComment() {
     }
 
     authenticateDb {
-        post<CommentRes> {
-            @Serializable
-            class Body(
-                val site: String,
-                val parent: String? = null,
-                val content: String,
-            )
-
-            val user = call.authenticatedUser()
-            val body = call.receive<Body>()
-            call.tryRespond {
-                service.createComment(
-                    user = user,
-                    site = body.site,
-                    parent = body.parent,
-                    content = body.content,
+        rateLimit(RateLimitNames.CreateComment) {
+            post<CommentRes> {
+                @Serializable
+                class Body(
+                    val site: String,
+                    val parent: String? = null,
+                    val content: String,
                 )
+
+                val user = call.authenticatedUser()
+                val body = call.receive<Body>()
+                call.tryRespond {
+                    service.createComment(
+                        user = user,
+                        site = body.site,
+                        parent = body.parent,
+                        content = body.content,
+                    )
+                }
             }
         }
     }

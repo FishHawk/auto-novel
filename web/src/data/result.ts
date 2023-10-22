@@ -19,9 +19,15 @@ export function runCatching<T>(callback: Promise<T>): Promise<Result<T>> {
     .then((it) => Ok(it))
     .catch((error) => {
       if (error instanceof HTTPError) {
+        let messageOverride: string | null = null;
+        if (error.response.status === 429) {
+          messageOverride = '操作额度耗尽，等明天再试吧';
+        }
         return error.response
           .text()
-          .then((message) => Err(`[${error.response.status}]${message}`));
+          .then((message) =>
+            Err(`[${error.response.status}]${messageOverride ?? message}`)
+          );
       } else if (error instanceof TimeoutError) {
         return Err('请求超时');
       } else {
