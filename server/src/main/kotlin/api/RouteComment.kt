@@ -2,11 +2,9 @@ package api
 
 import infra.common.ArticleRepository
 import infra.common.CommentRepository
-import infra.common.UserRepository
 import infra.model.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -43,7 +41,7 @@ fun Route.routeComment() {
         }
     }
 
-    authenticate {
+    authenticateDb {
         post<CommentRes> {
             @Serializable
             class Body(
@@ -68,7 +66,6 @@ fun Route.routeComment() {
 
 class CommentApi(
     private val commentRepo: CommentRepository,
-    private val userRepo: UserRepository,
     private val articleRepo: ArticleRepository,
 ) {
     @Serializable
@@ -137,8 +134,6 @@ class CommentApi(
         parent: String?,
         content: String,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         if (content.isBlank()) throwBadRequest("回复内容不能为空")
         if (parent != null && !commentRepo.increaseNumReplies(ObjectId(parent))) throwNotFound("回复的评论不存在")
 

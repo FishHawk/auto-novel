@@ -4,13 +4,15 @@ import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
 import infra.provider.providers.Syosetu
-import infra.web.*
+import infra.web.WebNovelChapterRepository
+import infra.web.WebNovelFileRepository
+import infra.web.WebNovelFilter
+import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
@@ -133,7 +135,7 @@ fun Route.routeWebNovel() {
         }
     }
 
-    authenticate {
+    authenticateDb {
         get<WebNovelRes.ReadHistory> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
@@ -193,7 +195,7 @@ fun Route.routeWebNovel() {
     }
 
     // Get
-    authenticate(optional = true) {
+    authenticateDb(optional = true) {
         get<WebNovelRes.Id> { loc ->
             val user = call.authenticatedUserOrNull()
             call.tryRespond {
@@ -216,7 +218,7 @@ fun Route.routeWebNovel() {
     }
 
     // Update
-    authenticate {
+    authenticateDb {
         post<WebNovelRes.Id> { loc ->
             @Serializable
             class Body(
@@ -437,8 +439,6 @@ class WebNovelApi(
         page: Int,
         pageSize: Int,
     ): PageDto<NovelOutlineDto> {
-        val user = user.compatEmptyUserId(userRepo)
-
         validatePageNumber(page)
         validatePageSize(pageSize)
         return userRepo
@@ -456,8 +456,6 @@ class WebNovelApi(
         pageSize: Int,
         sort: FavoriteListSort,
     ): PageDto<NovelOutlineDto> {
-        val user = user.compatEmptyUserId(userRepo)
-
         validatePageNumber(page)
         validatePageSize(pageSize)
         return userRepo
@@ -523,8 +521,6 @@ class WebNovelApi(
         novel: WebNovelMetadata,
         user: AuthenticatedUser?,
     ): NovelDto {
-        val user = user?.compatEmptyUserId(userRepo)
-
         val novelId = novel.id.toHexString()
         val favored = user?.id?.let { userRepo.isUserFavoriteWebNovel(it, novelId) }
         val history = user?.id?.let { userRepo.getReaderHistory(it, novelId) }
@@ -556,8 +552,6 @@ class WebNovelApi(
         providerId: String,
         novelId: String,
     ): NovelDto {
-        val user = user?.compatEmptyUserId(userRepo)
-
         validateId(providerId, novelId)
         val novel = metadataRepo.getNovelAndSave(providerId, novelId)
             .getOrElse { throwInternalServerError("从源站获取失败:" + it.message) }
@@ -619,8 +613,6 @@ class WebNovelApi(
         novelId: String,
         chapterId: String,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         userRepo.updateReadHistoryWebNovel(
@@ -636,8 +628,6 @@ class WebNovelApi(
         novelId: String,
         favored: Boolean,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         if (favored) {
@@ -661,8 +651,6 @@ class WebNovelApi(
         introduction: String?,
         toc: Map<String, String>,
     ): NovelDto {
-        val user = user.compatEmptyUserId(userRepo)
-
         val metadata = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
 

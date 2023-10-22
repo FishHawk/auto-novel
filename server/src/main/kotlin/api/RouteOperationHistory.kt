@@ -6,7 +6,6 @@ import infra.model.UserOutline
 import infra.model.WebNovelTocItem
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.resources.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
@@ -57,7 +56,7 @@ fun Route.routeOperationHistory() {
         }
     }
 
-    authenticate {
+    authenticateDb {
         delete<OperationHistoryRes.Id> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {

@@ -1,11 +1,9 @@
 package api
 
 import infra.common.ArticleRepository
-import infra.common.UserRepository
 import infra.model.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -43,7 +41,7 @@ fun Route.routeArticle() {
         }
     }
 
-    authenticate(optional = true) {
+    authenticateDb(optional = true) {
         get<ArticleRes.Id> { loc ->
             val user = call.authenticatedUserOrNull()
             call.tryRespond {
@@ -52,7 +50,7 @@ fun Route.routeArticle() {
         }
     }
 
-    authenticate {
+    authenticateDb {
         @Serializable
         class ArticleBody(
             val title: String,
@@ -119,7 +117,6 @@ fun Route.routeArticle() {
 
 class ArticleApi(
     private val articleRepo: ArticleRepository,
-    private val userRepo: UserRepository,
 ) {
     @Serializable
     data class ArticleOutlineDto(
@@ -181,8 +178,6 @@ class ArticleApi(
         user: AuthenticatedUser?,
         id: String,
     ): ArticleDto {
-        val user = user?.compatEmptyUserId(userRepo)
-
         val article = articleRepo.getArticle(ObjectId(id))
             ?: throwArticleNotFound()
 
@@ -230,8 +225,6 @@ class ArticleApi(
         title: String,
         content: String,
     ): String {
-        val user = user.compatEmptyUserId(userRepo)
-
         validateTitle(title)
         validateContent(content)
 
@@ -249,8 +242,6 @@ class ArticleApi(
         title: String,
         content: String,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         validateTitle(title)
         validateContent(content)
 

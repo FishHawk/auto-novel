@@ -25,6 +25,9 @@ fun throwNotFound(message: String): Nothing =
 fun throwInternalServerError(message: String): Nothing =
     throw HttpException(HttpStatusCode.InternalServerError, message)
 
+suspend inline fun ApplicationCall.respondHttpException(e: HttpException) =
+    respond(e.status, e.message)
+
 suspend inline fun ApplicationCall.doOrRespondError(block: () -> Unit) {
     try {
         block()
@@ -34,7 +37,7 @@ suspend inline fun ApplicationCall.doOrRespondError(block: () -> Unit) {
         application.environment.log.warn("已捕获异常 $httpMethod-$uri:", e.message)
 
         if (e is HttpException) {
-            respond(e.status, e.message)
+            respondHttpException(e)
         } else {
             respond(HttpStatusCode.InternalServerError, e.message ?: "未知错误")
         }

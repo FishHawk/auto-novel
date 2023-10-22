@@ -10,10 +10,8 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
-import io.ktor.server.resources.delete
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
@@ -86,7 +84,7 @@ fun Route.routeWenkuNovel() {
             )
         }
     }
-    authenticate {
+    authenticateDb {
         get<WenkuNovelRes.Favored> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
@@ -117,7 +115,7 @@ fun Route.routeWenkuNovel() {
             service.getNonArchivedVolumes()
         }
     }
-    authenticate {
+    authenticateDb {
         get<WenkuNovelRes.VolumesUser> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
@@ -126,7 +124,7 @@ fun Route.routeWenkuNovel() {
         }
     }
 
-    authenticate(optional = true) {
+    authenticateDb(optional = true) {
         get<WenkuNovelRes.Id> { loc ->
             val user = call.authenticatedUserOrNull()
             call.tryRespond {
@@ -135,7 +133,7 @@ fun Route.routeWenkuNovel() {
         }
     }
 
-    authenticate {
+    authenticateDb {
         post<WenkuNovelRes> {
             val user = call.authenticatedUser()
             val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
@@ -292,8 +290,6 @@ class WenkuNovelApi(
         pageSize: Int,
         sort: FavoriteListSort,
     ): PageDto<NovelOutlineDto> {
-        val user = user.compatEmptyUserId(userRepo)
-
         validatePageNumber(page)
         validatePageSize(pageSize)
         return userRepo
@@ -317,7 +313,6 @@ class WenkuNovelApi(
     )
 
     suspend fun getUserVolumes(user: AuthenticatedUser): WenkuUserVolumeDto {
-        val user = user.compatEmptyUserId(userRepo)
         val novelId = "user-${user.id}"
         val volumes = volumeRepo.list(novelId).jp
         return WenkuUserVolumeDto(list = volumes, novelId = novelId)
@@ -347,8 +342,6 @@ class WenkuNovelApi(
         user: AuthenticatedUser?,
         novelId: String,
     ): NovelDto {
-        val user = user?.compatEmptyUserId(userRepo)
-
         val favored = user?.let {
             userRepo.isUserFavoriteWenkuNovel(it.id, novelId)
         }
@@ -386,8 +379,6 @@ class WenkuNovelApi(
         novelId: String,
         favored: Boolean,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         if (!metadataRepo.exist(novelId))
             throwNovelNotFound()
         if (favored) {
@@ -419,8 +410,6 @@ class WenkuNovelApi(
         user: AuthenticatedUser,
         body: MetadataCreateBody,
     ): String {
-        val user = user.compatEmptyUserId(userRepo)
-
         val novelId = metadataRepo.create(
             title = body.title,
             titleZh = body.titleZh,
@@ -453,8 +442,6 @@ class WenkuNovelApi(
         novelId: String,
         body: MetadataCreateBody,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
         metadataRepo.update(
@@ -534,8 +521,6 @@ class WenkuNovelApi(
         inputStream: InputStream,
         unpack: Boolean,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         validateNovelId(novelId)
         validateVolumeId(volumeId)
         if (novelId == "non-archived")
@@ -574,8 +559,6 @@ class WenkuNovelApi(
         novelId: String,
         volumeId: String,
     ) {
-        val user = user.compatEmptyUserId(userRepo)
-
         if (!user.atLeastMaintainer() && novelId != "user-${user.id}")
             throwUnauthorized("没有权限执行操作")
 

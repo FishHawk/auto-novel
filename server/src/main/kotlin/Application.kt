@@ -1,10 +1,17 @@
 import api.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import infra.*
+import infra.DataSourceElasticSearch
+import infra.DataSourceMongo
 import infra.DataSourceWebNovelProvider
-import infra.common.*
-import infra.web.*
+import infra.common.ArticleRepository
+import infra.common.CommentRepository
+import infra.common.OperationHistoryRepository
+import infra.common.UserRepository
+import infra.createRedisDataSource
+import infra.web.WebNovelChapterRepository
+import infra.web.WebNovelFileRepository
+import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
@@ -43,7 +50,7 @@ fun main() {
                     JWT.require(Algorithm.HMAC256(secret)).build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("username").asString() != "") {
+                    if (credential["username"] != null) {
                         JWTPrincipal(credential.payload)
                     } else {
                         null

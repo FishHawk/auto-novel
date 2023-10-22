@@ -4,9 +4,8 @@ import infra.common.UserRepository
 import infra.model.User
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.request.*
-import io.ktor.server.resources.get
+import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import jakarta.mail.internet.AddressException
@@ -56,7 +55,7 @@ fun Route.routeAuth() {
             )
         }
     }
-    authenticate {
+    authenticateDb {
         get<AuthRes.Renew> {
             val user = call.authenticatedUser()
             call.tryRespond {
@@ -142,12 +141,10 @@ class AuthApi(
         if (!user.validatePassword(password))
             throwUnauthorized("密码错误")
 
-        val (token, expiresAt) = AuthenticatedUser(
+        val (token, expiresAt) = generateToken(
+            secret = secret,
             id = user.id.toHexString(),
             username = user.username,
-            role = user.role,
-        ).generateToken(
-            secret = secret,
         )
 
         return SignInDto(
@@ -158,12 +155,13 @@ class AuthApi(
         )
     }
 
-    suspend fun renew(
+    fun renew(
         user: AuthenticatedUser,
     ): SignInDto {
-        val user = user.compatEmptyUserId(userRepo)
-        val (token, expiresAt) = user.generateToken(
+        val (token, expiresAt) = generateToken(
             secret = secret,
+            id = user.id,
+            username = user.username,
         )
         return SignInDto(
             username = user.username,
@@ -193,12 +191,10 @@ class AuthApi(
             password = password,
         ).toHexString()
 
-        val (token, expiresAt) = AuthenticatedUser(
+        val (token, expiresAt) = generateToken(
+            secret = secret,
             id = userId,
             username = username,
-            role = role,
-        ).generateToken(
-            secret = secret,
         )
 
         return SignInDto(
