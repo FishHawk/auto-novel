@@ -1,7 +1,9 @@
 package infra.provider.providers
 
+import infra.client
 import infra.model.WebNovelAttention
 import infra.model.WebNovelType
+import infra.web.providers.Kakuyomu
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldBeNull

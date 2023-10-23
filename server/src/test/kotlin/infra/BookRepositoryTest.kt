@@ -6,6 +6,7 @@ import com.jillesvangurp.ktsearch.index
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
+import infra.web.DataSourceWebNovelProvider
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.kotest.core.spec.style.DescribeSpec
@@ -21,7 +22,6 @@ import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
 import org.litote.kmongo.eq
 import org.litote.kmongo.id.toId
-import org.litote.kmongo.toId
 import java.io.File
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {

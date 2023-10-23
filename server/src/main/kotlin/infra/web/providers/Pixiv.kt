@@ -1,29 +1,23 @@
-package infra.provider.providers
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import infra.provider.*
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 class Pixiv(
-    client: HttpClient,
-    cookies: CookiesStorage,
-    phpsessid: String?,
-) : WebNovelProvider(client) {
+    private val client: HttpClient,
+) : WebNovelProvider {
     companion object {
         const val id = "pixiv"
-    }
 
-    init {
-        if (phpsessid != null) {
-            runBlocking {
+        suspend fun addCookies(cookies: CookiesStorage, phpsessid: String?) {
+            if (phpsessid != null) {
                 cookies.addCookie(
                     "https://www.pixiv.net",
                     Cookie(name = "PHPSESSID", value = phpsessid, domain = ".pixiv.net")

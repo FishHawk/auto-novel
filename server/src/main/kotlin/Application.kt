@@ -3,12 +3,12 @@ import api.plugins.authentication
 import api.plugins.rateLimit
 import infra.DataSourceElasticSearch
 import infra.DataSourceMongo
-import infra.DataSourceWebNovelProvider
 import infra.common.ArticleRepository
 import infra.common.CommentRepository
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.createRedisDataSource
+import infra.web.DataSourceWebNovelProvider
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelMetadataRepository

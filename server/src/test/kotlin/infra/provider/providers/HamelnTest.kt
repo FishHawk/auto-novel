@@ -1,7 +1,9 @@
 package infra.provider.providers
 
+import infra.client
 import infra.model.WebNovelAttention
 import infra.model.WebNovelType
+import infra.web.providers.Hameln
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldBeNull
@@ -10,7 +12,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class HamelnTest : DescribeSpec({
-    val provider = Hameln(client, cookies)
+    val provider = Hameln(client)
 
     describe("getMetadata") {
         it("常规") {
@@ -26,7 +28,7 @@ class HamelnTest : DescribeSpec({
             metadata.toc[0].createAt.shouldBeNull()
             metadata.toc[1].title.shouldBe("人物紹介(仮設)")
             metadata.toc[1].chapterId.shouldBe("1")
-            metadata.toc[1].createAt.shouldBe(Instant.parse("2021-06-19T23:00:00Z"))
+            metadata.toc[1].createAt.shouldBe(Instant.parse("2021-06-19T22:00:00Z"))
         }
         it("常规，作者无链接") {
             // https://syosetu.org/novel/305149

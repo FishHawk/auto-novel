@@ -1,9 +1,8 @@
-package infra.provider.providers
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import infra.provider.*
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
@@ -11,19 +10,15 @@ import io.ktor.http.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import org.jsoup.nodes.Element
 
 class Hameln(
-    client: HttpClient,
-    cookies: CookiesStorage,
-) : WebNovelProvider(client) {
+    private val client: HttpClient,
+) : WebNovelProvider {
     companion object {
         const val id = "hameln"
-    }
 
-    init {
-        runBlocking {
+        suspend fun addCookies(cookies: CookiesStorage) {
             cookies.addCookie(
                 "https://syosetu.org/",
                 Cookie(name = "over18", value = "off", domain = ".syosetu.org")

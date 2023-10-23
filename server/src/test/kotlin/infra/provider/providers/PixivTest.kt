@@ -1,10 +1,12 @@
 package infra.provider.providers
 
+import infra.client
+import infra.web.providers.Pixiv
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
 class PixivTest : DescribeSpec({
-    val provider = Pixiv(client, cookies, null)
+    val provider = Pixiv(client)
 
     describe("getMetadata") {
         it("常规") {

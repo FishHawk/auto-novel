@@ -1,16 +1,17 @@
-package infra.provider.providers
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import infra.provider.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 
-class Novelup(client: HttpClient) : WebNovelProvider(client) {
+class Novelup(
+    private val client: HttpClient,
+) : WebNovelProvider {
     companion object {
         const val id = "novelup"
     }

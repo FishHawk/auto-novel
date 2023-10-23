@@ -8,9 +8,9 @@ import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.result.UpdateResult
 import infra.*
 import infra.model.*
-import infra.provider.RemoteNovelListItem
-import infra.provider.providers.Hameln
-import infra.provider.providers.Syosetu
+import infra.web.providers.RemoteNovelListItem
+import infra.web.providers.Hameln
+import infra.web.providers.Syosetu
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

@@ -1,5 +1,7 @@
 package infra.provider.providers
 
+import infra.client
+import infra.web.providers.Novelism
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe

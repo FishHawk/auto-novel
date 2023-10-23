@@ -1,9 +1,8 @@
-package infra.provider.providers
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import infra.provider.*
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
@@ -11,14 +10,20 @@ import io.ktor.http.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 
 class Syosetu(
-    client: HttpClient,
-    cookies: CookiesStorage,
-) : WebNovelProvider(client) {
+    private val client: HttpClient,
+) : WebNovelProvider {
     companion object {
         const val id = "syosetu"
+
+        suspend fun addCookies(cookies: CookiesStorage) {
+            cookies.addCookie(
+                "https://ncode.syosetu.com/",
+                Cookie(name = "over18", value = "yes", domain = ".syosetu.com")
+            )
+        }
+
         private val rangeIds = mapOf(
             "每日" to "daily",
             "每周" to "weekly",
@@ -59,15 +64,6 @@ class Syosetu(
             "幻想" to "2",
             "文学/科幻/其他" to "o",
         )
-    }
-
-    init {
-        runBlocking {
-            cookies.addCookie(
-                "https://ncode.syosetu.com/",
-                Cookie(name = "over18", value = "yes", domain = ".syosetu.com")
-            )
-        }
     }
 
     override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {

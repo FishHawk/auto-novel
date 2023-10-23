@@ -1,4 +1,4 @@
-package infra.provider
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
@@ -42,10 +42,10 @@ data class RemoteNovelListItem(
     val extra: String,
 )
 
-abstract class WebNovelProvider(protected val client: HttpClient) {
-    abstract suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem>
-    abstract suspend fun getMetadata(novelId: String): RemoteNovelMetadata
-    abstract suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
+interface WebNovelProvider {
+    suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem>
+    suspend fun getMetadata(novelId: String): RemoteNovelMetadata
+    suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
 }
 
 fun parseJapanDateString(pattern: String, dateString: String): Instant {

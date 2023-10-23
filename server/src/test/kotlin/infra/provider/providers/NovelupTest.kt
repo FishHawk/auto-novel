@@ -1,5 +1,7 @@
 package infra.provider.providers
 
+import infra.client
+import infra.web.providers.Novelup
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull

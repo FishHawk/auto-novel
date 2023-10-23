@@ -1,30 +1,14 @@
 package infra.provider.providers
 
+import infra.client
+import infra.web.providers.Alphapolis
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
-import io.ktor.client.*
-import io.ktor.client.engine.java.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.cookies.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
-
-val cookies = AcceptAllCookiesStorage()
-val client = HttpClient(Java) {
-    install(HttpCookies) { storage = cookies }
-    install(ContentNegotiation) {
-        json(Json { isLenient = true })
-    }
-    expectSuccess = true
-//    engine {
-//        proxy = ProxyBuilder.http(it)
-//    }
-}
 
 class AlphapolibTest : DescribeSpec({
-    val provider = Alphapolis(client, cookies)
+    val provider = Alphapolis(client)
 
     describe("getMetadata") {
         it("常规") {

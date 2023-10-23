@@ -1,27 +1,22 @@
-package infra.provider.providers
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import infra.provider.*
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 
 class Alphapolis(
-    client: HttpClient,
-    cookies: CookiesStorage,
-) : WebNovelProvider(client) {
+    private val client: HttpClient,
+) : WebNovelProvider {
     companion object {
         const val id = "alphapolis"
-    }
 
-    init {
-        runBlocking {
+        suspend fun addCookies(cookies: CookiesStorage) {
             cookies.addCookie(
                 "https://www.alphapolis.co.jp",
                 Cookie(name = "_pubcid", value = "8807a80b-fc00-4c56-b151-95e6780d9f8f", domain = ".alphapolis.co.jp")
@@ -57,7 +52,7 @@ class Alphapolis(
             .let {
                 WebNovelAuthor(
                     name = it.text(),
-                    link = "https://www.alphapolis.co.jp" + it.attr("href"),
+                    link = it.attr("href"),
                 )
             }
 
@@ -105,11 +100,14 @@ class Alphapolis(
                     )
                 }
             } else if (el.tagName() == "h3") {
-                toc.add(
-                    RemoteNovelMetadata.TocItem(
-                        title = el.text(),
+                val chapterTitle = el.text()
+                if (chapterTitle.isNotBlank()) {
+                    toc.add(
+                        RemoteNovelMetadata.TocItem(
+                            title = el.text(),
+                        )
                     )
-                )
+                }
             } else if (el.hasClass("episode")) {
                 toc.add(
                     RemoteNovelMetadata.TocItem(

@@ -1,14 +1,15 @@
-package infra.provider.providers
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import infra.provider.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.datetime.Instant
 
-class Kakuyomu(client: HttpClient) : WebNovelProvider(client) {
+class Kakuyomu(
+    private val client: HttpClient,
+) : WebNovelProvider {
     companion object {
         const val id = "kakuyomu"
         private val rangeIds = mapOf(

@@ -1,5 +1,7 @@
 package infra.provider.providers
 
+import infra.client
+import infra.web.providers.Syosetu
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -8,7 +10,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class SyosetuTest : DescribeSpec({
-    val provider = Syosetu(client, cookies)
+    val provider = Syosetu(client)
 
     describe("getMetadata") {
         it("常规") {

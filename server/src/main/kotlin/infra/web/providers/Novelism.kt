@@ -1,14 +1,15 @@
-package infra.provider.providers
+package infra.web.providers
 
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import infra.provider.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.serialization.json.*
 
-class Novelism(client: HttpClient) : WebNovelProvider(client) {
+class Novelism(
+    private val client: HttpClient,
+) : WebNovelProvider {
     companion object {
         const val id = "novelism"
     }

@@ -7,7 +7,7 @@ import api.plugins.authenticatedUserOrNull
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
-import infra.provider.providers.Syosetu
+import infra.web.providers.Syosetu
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelFilter
