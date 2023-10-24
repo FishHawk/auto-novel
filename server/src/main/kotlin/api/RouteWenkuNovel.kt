@@ -327,16 +327,17 @@ class WenkuNovelApi(
         throwNotFound("小说不存在")
 
     @Serializable
-    data class NovelDto(
+    data class WenkuNovelDto(
         val title: String,
         val titleZh: String,
         val cover: String,
-        val coverSmall: String,
         val authors: List<String>,
         val artists: List<String>,
         val keywords: List<String>,
+        val r18: Boolean,
         val introduction: String,
         val glossary: Map<String, String>,
+        val volumes: List<WenkuNovelVolume>,
         val visited: Long,
         val favored: Boolean?,
         val volumeZh: List<String>,
@@ -346,7 +347,7 @@ class WenkuNovelApi(
     suspend fun getNovel(
         user: AuthenticatedUser?,
         novelId: String,
-    ): NovelDto {
+    ): WenkuNovelDto {
         val favored = user?.let {
             userRepo.isUserFavoriteWenkuNovel(it.id, novelId)
         }
@@ -362,15 +363,16 @@ class WenkuNovelApi(
 
         val volumes = volumeRepo.list(novelId)
 
-        return NovelDto(
+        return WenkuNovelDto(
             title = metadata.title,
             titleZh = metadata.titleZh,
             cover = metadata.cover,
-            coverSmall = metadata.coverSmall,
             authors = metadata.authors,
             artists = metadata.artists,
-            keywords = metadata.keywords,
+            keywords = emptyList(), // TODO:停用文库关键字，等之后重做
+            r18 = metadata.r18,
             introduction = metadata.introduction,
+            volumes = metadata.volumes,
             glossary = metadata.glossary,
             visited = metadata.visited,
             favored = favored,
@@ -410,11 +412,11 @@ class WenkuNovelApi(
         val title: String,
         val titleZh: String,
         val cover: String,
-        val coverSmall: String,
         val authors: List<String>,
         val artists: List<String>,
-        val keywords: List<String>,
+        val r18: Boolean,
         val introduction: String,
+        val volumes: List<WenkuNovelVolume>,
     )
 
     suspend fun createNovel(
@@ -425,11 +427,11 @@ class WenkuNovelApi(
             title = body.title,
             titleZh = body.titleZh,
             cover = body.cover,
-            coverSmall = body.coverSmall,
             authors = body.authors,
             artists = body.artists,
-            keywords = body.keywords,
+            r18 = body.r18,
             introduction = body.introduction,
+            volumes = body.volumes,
         )
         operationHistoryRepo.create(
             operator = ObjectId(user.id),
@@ -455,16 +457,27 @@ class WenkuNovelApi(
     ) {
         val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
+
+        val noVolumeDeleted = novel
+            .volumes
+            .map { it.asin }
+            .all { oldAsin ->
+                body.volumes.any { newVolume ->
+                    newVolume.asin == oldAsin
+                }
+            }
+        if (!noVolumeDeleted) throwBadRequest("不支持删除已有卷")
+
         metadataRepo.update(
             novelId = novelId,
             title = body.title,
             titleZh = body.titleZh,
             cover = body.cover,
-            coverSmall = body.coverSmall,
             authors = body.authors,
             artists = body.artists,
-            keywords = body.keywords,
+            r18 = body.r18,
             introduction = body.introduction,
+            volumes = body.volumes,
         )
 
         operationHistoryRepo.create(

@@ -1,72 +1,70 @@
 import ky from 'ky';
 
-import { NovelCreateBody } from './api/api_wenku_novel';
-import { runCatching } from './result';
-
-interface WenkuMetadataFetcher {
-  parseUrl(url: string): string | undefined;
-  fetchMetadata(id: string): Promise<Partial<NovelCreateBody>>;
+function extractAsin(url: string) {
+  const asinRegex = /(?:[/dp/]|$)([A-Z0-9]{10})/g;
+  return asinRegex.exec(url)?.[1];
 }
 
-const bangumi: WenkuMetadataFetcher = {
-  parseUrl(url: string): string | undefined {
-    return /bangumi\.tv\/subject\/([0-9]+)/.exec(url)?.[1];
-  },
-  async fetchMetadata(id: string): Promise<Partial<NovelCreateBody>> {
-    interface BangumiSection {
-      name: string;
-      name_cn: string;
-      images: {
-        common: string;
-        grid: string;
-        large: string;
-        medium: string;
-        small: string;
-      };
-      infobox: { key: string; value: string }[];
-      summary: string;
-      tags: { name: string; count: number }[];
-    }
+function prettyTitle(title: string) {
+  return title
+    .replaceAll(/(\([^(]*文庫\))/g, '')
+    .replace('(MFブックス)', '')
+    .trim();
+}
 
-    const section = await ky
-      .get(`https://api.bgm.tv/v0/subjects/${id}`)
-      .json<BangumiSection>();
+async function getHtml(url: string) {
+  const html = await ky.get(url, { credentials: 'include' }).text();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc;
+}
 
-    const metadata: NovelCreateBody = {
-      title: section.name,
-      titleZh: section.name_cn,
-      cover: section.images.medium,
-      coverSmall: section.images.small,
-      authors: [],
-      artists: [],
-      keywords: section.tags.map((it) => it.name),
-      introduction: section.summary,
-    };
-    section.infobox.forEach((it) => {
-      if (it.key == '作者') {
-        metadata.authors.push(it.value);
-      } else if (it.key == '插图') {
-        metadata.artists.push(it.value);
-      }
-    });
-    return metadata;
-  },
-};
+interface AmazonMetadata {
+  title: string;
+  cover: string;
+  r18: boolean;
+  authors: string[];
+  artists: string[];
+  introduction: string;
+  volumes: Array<{
+    asin: string;
+    title: string;
+    cover: string;
+  }>;
+}
 
-const amazon: WenkuMetadataFetcher = {
-  parseUrl(url: string): string | undefined {
-    if (url.indexOf('www.amazon') != -1) {
-      return url;
-    } else {
-      return undefined;
-    }
-  },
-  async fetchMetadata(id: string): Promise<Partial<NovelCreateBody>> {
-    const html = await ky.get(id, { credentials: 'include' }).text();
+async function getProductWithAdultCheck(asin: string) {
+  const url = `https://www.amazon.co.jp/dp/${asin}`;
+
+  function parseHtml(html: string) {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    return parser.parseFromString(html, 'text/html');
+  }
 
-    const title = doc.getElementById('productTitle')!.textContent!.trim();
+  const htmlWithoutCookies = await ky.get(url).text();
+  if (!htmlWithoutCookies.includes('年龄确认')) {
+    return {
+      r18: false,
+      doc: parseHtml(htmlWithoutCookies),
+    };
+  }
+
+  const htmlWithCookies = await ky.get(url, { credentials: 'include' }).text();
+  if (!htmlWithCookies.includes('年龄确认')) {
+    return {
+      r18: true,
+      doc: parseHtml(htmlWithCookies),
+    };
+  }
+
+  throw Error('触发年龄限制，请按说明使用插件公开亚马逊Cookies');
+}
+
+async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
+  const { r18, doc } = await getProductWithAdultCheck(asin);
+  const serial = doc.getElementsByClassName('series-childAsin-widget').item(0);
+  if (serial === null) {
+    const title = prettyTitle(doc.getElementById('productTitle')!.textContent!);
 
     const authors: string[] = [];
     const artists: string[] = [];
@@ -89,32 +87,107 @@ const amazon: WenkuMetadataFetcher = {
       .getElementsByTagName('span')[0]
       .innerHTML.replaceAll('<br>', '\n');
 
-    const coverSmall = doc.getElementById('landingImage')!.getAttribute('src')!;
-    const cover = /"hiRes":"([^"]+)",/.exec(html)![1];
+    const cover = doc.getElementById('landingImage')!.getAttribute('src')!;
 
     return {
       title,
       cover,
-      coverSmall,
+      r18,
       authors,
       artists,
       introduction,
+      volumes: [{ asin, title, cover }],
     };
-  },
-};
+  } else {
+    const total = doc
+      .getElementById('collection-size')!
+      .textContent!.match(/\d+/)![0];
 
-const fetchers: { [id: string]: WenkuMetadataFetcher } = {
-  bangumi,
-  amazon,
-};
+    const doc2 = await getHtml(
+      `https://www.amazon.co.jp/kindle-dbs/productPage/ajax/seriesAsinList?asin=${asin}&pageNumber=1&pageSize=${total}`
+    );
 
-export function fetchMetadata(url: string) {
-  for (const fetcherId in fetchers) {
-    const fetcher = fetchers[fetcherId];
-    const id = fetcher.parseUrl(url);
-    if (id !== undefined) {
-      return runCatching(fetcher.fetchMetadata(id));
-    }
+    const introduction = doc2
+      .getElementsByClassName('a-size-base collectionDescription')
+      .item(0)!.textContent!;
+
+    const authorsSet = new Set<string>();
+    const artistsSet = new Set<string>();
+    Array.from(
+      doc2.getElementsByClassName('series-childAsin-item-details-contributor')
+    ).forEach((element) => {
+      const contribution = element
+        .textContent!.trim()
+        .replace(/(,)$/, '')
+        .trim();
+      if (contribution.endsWith('(著)')) {
+        authorsSet.add(contribution.replace(/(\(著\))$/, '').trim());
+      } else if (contribution.endsWith('(イラスト)')) {
+        artistsSet.add(contribution.replace(/(\(イラスト\))$/, '').trim());
+      }
+    });
+
+    const authors = [...authorsSet].filter((it) => !artistsSet.has(it));
+    const artists = [...artistsSet];
+
+    const volumes = Array.from(
+      doc2.getElementById('series-childAsin-batch_1')!.children
+    ).map((it) => {
+      const titleLink = it.getElementsByClassName(
+        'a-size-base-plus a-link-normal itemBookTitle a-text-bold'
+      )[0]!;
+      const asin = extractAsin(titleLink.getAttribute('href')!)!;
+      const title = prettyTitle(titleLink.textContent!);
+      const cover = it.getElementsByTagName('img')[0].getAttribute('src')!;
+      return { asin, title, cover };
+    });
+
+    return {
+      title: volumes[0].title,
+      cover: volumes[0].cover,
+      r18,
+      authors,
+      artists,
+      introduction,
+      volumes,
+    };
   }
-  return undefined;
+}
+
+async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
+  async function search(query: string) {
+    const doc = await getHtml(
+      `https://www.amazon.co.jp/s?k=${query}&rh=n%3A465392`
+    );
+    return Array.from(
+      doc.getElementsByClassName('s-search-results')[0].children
+    )
+      .filter((it) => it.getAttribute('data-asin'))
+      .map((it) => {
+        const asin = it.getAttribute('data-asin')!;
+        const title = prettyTitle(
+          it.getElementsByTagName('h2')[0].textContent!
+        );
+        const cover = it.getElementsByTagName('img')[0].getAttribute('src')!;
+        return { asin, title, cover };
+      });
+  }
+
+  const volumes = (await search(title + ' 小説')).filter((it) =>
+    it.title.includes(title)
+  );
+  if (volumes.length === 0) throw Error('搜索结果为空');
+
+  const metadata = await fetchMetadataFromAsin(volumes[0].asin);
+  metadata.volumes = volumes;
+  return metadata;
+}
+
+export function fetchMetadata(query: string) {
+  const asin = extractAsin(query);
+  if (asin === undefined) {
+    return fetchMetadataFromSearch(query);
+  } else {
+    return fetchMetadataFromAsin(asin);
+  }
 }

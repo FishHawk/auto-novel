@@ -40,15 +40,23 @@ const listFavored = ({
       .json<Page<WenkuNovelOutlineDto>>()
   );
 
-export interface WenkuMetadataDto {
+export interface WenkuVolumeDto {
+  asin: string;
+  title: string;
+  titleZh?: string;
+  cover: string;
+}
+
+export interface WenkuNovelDto {
   title: string;
   titleZh: string;
   cover: string;
-  coverSmall: string;
   authors: string[];
   artists: string[];
   keywords: string[];
+  r18: boolean;
   introduction: string;
+  volumes: WenkuVolumeDto[];
   glossary: { [key: string]: string };
   visited: number;
   favored?: boolean;
@@ -73,7 +81,7 @@ const listVolumesUser = () =>
   );
 
 const getNovel = (novelId: string) =>
-  runCatching(client.get(`wenku/${novelId}`).json<WenkuMetadataDto>());
+  runCatching(client.get(`wenku/${novelId}`).json<WenkuNovelDto>());
 
 const putFavored = (novelId: string) =>
   runCatching(client.put(`wenku/${novelId}/favored`).text());
@@ -81,21 +89,21 @@ const putFavored = (novelId: string) =>
 const deleteFavored = (novelId: string) =>
   runCatching(client.delete(`wenku/${novelId}/favored`).text());
 
-export interface NovelCreateBody {
+export interface WenkuNovelCreateBody {
   title: string;
   titleZh: string;
   cover: string;
-  coverSmall: string;
   authors: string[];
   artists: string[];
-  keywords: string[];
+  r18: boolean;
   introduction: string;
+  volumes: WenkuVolumeDto[];
 }
 
-const createNovel = (json: NovelCreateBody) =>
+const createNovel = (json: WenkuNovelCreateBody) =>
   runCatching(client.post(`wenku`, { json }).text());
 
-const updateNovel = (id: string, json: NovelCreateBody) =>
+const updateNovel = (id: string, json: WenkuNovelCreateBody) =>
   runCatching(client.put(`wenku/${id}`, { json }).text());
 
 const updateGlossary = (id: string, json: { [key: string]: string }) =>

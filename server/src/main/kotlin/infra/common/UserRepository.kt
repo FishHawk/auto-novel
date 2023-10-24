@@ -335,7 +335,7 @@ class UserRepository(
                         id = it.id.toHexString(),
                         title = it.title,
                         titleZh = it.titleZh,
-                        cover = it.coverSmall,
+                        cover = it.cover,
                     )
                 },
             )

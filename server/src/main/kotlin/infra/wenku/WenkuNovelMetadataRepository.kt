@@ -1,13 +1,13 @@
 package infra.wenku
 
 import com.jillesvangurp.ktsearch.*
-import com.jillesvangurp.searchdsls.querydsl.*
+import com.jillesvangurp.searchdsls.querydsl.MatchOperator
+import com.jillesvangurp.searchdsls.querydsl.bool
+import com.jillesvangurp.searchdsls.querydsl.simpleQueryString
+import com.jillesvangurp.searchdsls.querydsl.sort
 import com.mongodb.client.model.CountOptions
 import infra.*
-import infra.model.Page
-import infra.model.WebNovelMetadata
-import infra.model.WenkuNovelMetadata
-import infra.model.WenkuNovelMetadataOutline
+import infra.model.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
@@ -98,11 +98,11 @@ class WenkuNovelMetadataRepository(
         title: String,
         titleZh: String,
         cover: String,
-        coverSmall: String,
         authors: List<String>,
         artists: List<String>,
-        keywords: List<String>,
+        r18: Boolean,
         introduction: String,
+        volumes: List<WenkuNovelVolume>,
     ): String {
         val insertResult = mongo
             .wenkuNovelMetadataCollection
@@ -112,11 +112,12 @@ class WenkuNovelMetadataRepository(
                     title = title,
                     titleZh = titleZh,
                     cover = cover,
-                    coverSmall = coverSmall,
                     authors = authors,
                     artists = artists,
-                    keywords = keywords,
+                    keywords = emptyList(),
                     introduction = introduction,
+                    r18 = r18,
+                    volumes = volumes,
                     visited = 0,
                 )
             )
@@ -125,10 +126,9 @@ class WenkuNovelMetadataRepository(
             novelId = id,
             title = title,
             titleZh = titleZh,
-            cover = coverSmall,
+            cover = cover,
             authors = authors,
             artists = artists,
-            keywords = keywords,
         )
         return id
     }
@@ -138,11 +138,11 @@ class WenkuNovelMetadataRepository(
         title: String,
         titleZh: String,
         cover: String,
-        coverSmall: String,
         authors: List<String>,
         artists: List<String>,
-        keywords: List<String>,
+        r18: Boolean,
         introduction: String,
+        volumes: List<WenkuNovelVolume>,
     ) {
         mongo
             .wenkuNovelMetadataCollection
@@ -153,11 +153,11 @@ class WenkuNovelMetadataRepository(
                         setValue(WenkuNovelMetadata::title, title),
                         setValue(WenkuNovelMetadata::titleZh, titleZh),
                         setValue(WenkuNovelMetadata::cover, cover),
-                        setValue(WenkuNovelMetadata::coverSmall, coverSmall),
                         setValue(WenkuNovelMetadata::authors, authors),
                         setValue(WenkuNovelMetadata::artists, artists),
-                        setValue(WenkuNovelMetadata::keywords, keywords),
+                        setValue(WenkuNovelMetadata::r18, r18),
                         setValue(WenkuNovelMetadata::introduction, introduction),
+                        setValue(WenkuNovelMetadata::volumes, volumes)
                     )
                 )
             )
@@ -165,10 +165,9 @@ class WenkuNovelMetadataRepository(
             novelId = novelId,
             title = title,
             titleZh = titleZh,
-            cover = coverSmall,
+            cover = cover,
             authors = authors,
             artists = artists,
-            keywords = keywords,
         )
     }
 
@@ -193,7 +192,6 @@ class WenkuNovelMetadataRepository(
         cover: String,
         authors: List<String>,
         artists: List<String>,
-        keywords: List<String>,
     ) {
         es.client.indexDocument(
             id = novelId,
@@ -205,7 +203,7 @@ class WenkuNovelMetadataRepository(
                 cover = cover,
                 authors = authors,
                 artists = artists,
-                keywords = keywords,
+                keywords = emptyList(),
                 updateAt = Clock.System.now().epochSeconds,
             ),
             refresh = Refresh.WaitFor,

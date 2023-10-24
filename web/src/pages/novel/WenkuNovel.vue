@@ -10,7 +10,7 @@ import {
 
 import coverPlaceholder from '@/images/cover_placeholder.png';
 import { ResultState } from '@/data/result';
-import { ApiWenkuNovel, WenkuMetadataDto } from '@/data/api/api_wenku_novel';
+import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 const userData = useUserDataStore();
@@ -19,7 +19,7 @@ const message = useMessage();
 const route = useRoute();
 const novelId = route.params.novelId as string;
 
-const novelMetadataResult = ref<ResultState<WenkuMetadataDto>>();
+const novelMetadataResult = ref<ResultState<WenkuNovelDto>>();
 
 async function getMetadata() {
   const result = await ApiWenkuNovel.getNovel(novelId);
@@ -129,6 +129,9 @@ const vars = useThemeVars();
                       ? novelMetadataResult.value.titleZh
                       : novelMetadataResult.value.title
                   }}
+                  <n-text v-if="novelMetadataResult.value.r18" depth="3">
+                    [成人]
+                  </n-text>
                 </n-h1>
 
                 <table style="border-spacing: 0px 8px">
@@ -201,6 +204,35 @@ const vars = useThemeVars();
           </n-tag>
         </n-space>
 
+        <SectionHeader title="各卷封面" />
+        <div>
+          <n-scrollbar x-scrollable>
+            <div style="white-space: nowrap">
+              <n-card
+                v-for="volume of metadata.volumes"
+                size="small"
+                header-style="padding: 8px;"
+                :bordered="false"
+                :wrap="false"
+                style="
+                  display: inline-block;
+                  width: 100px;
+                  margin: 4px;
+                  padding-bottom: 12px;
+                "
+              >
+                <template #cover>
+                  <img
+                    :src="volume.cover"
+                    alt="cover"
+                    style="aspect-ratio: 1 / 1.5; object-fit: cover"
+                  />
+                </template>
+              </n-card>
+            </div>
+          </n-scrollbar>
+        </div>
+
         <SectionHeader title="中文章节" />
         <UploadButton
           type="zh"
@@ -219,20 +251,18 @@ const vars = useThemeVars();
           </n-li>
         </n-ul>
 
-        <section>
-          <SectionHeader title="日文章节" />
-          <UploadButton
-            type="jp"
-            :novelId="novelId"
-            @uploadFinished="refreshMetadata()"
-          />
-          <WenkuTranslate
-            :novel-id="novelId"
-            :glossary="metadata.glossary"
-            :volumes="metadata.volumeJp"
-            @deleted="refreshMetadata()"
-          />
-        </section>
+        <SectionHeader title="日文章节" />
+        <UploadButton
+          type="jp"
+          :novelId="novelId"
+          @uploadFinished="refreshMetadata()"
+        />
+        <WenkuTranslate
+          :novel-id="novelId"
+          :glossary="metadata.glossary"
+          :volumes="metadata.volumeJp"
+          @deleted="refreshMetadata()"
+        />
 
         <CommentList :site="`wenku-${novelId}`" />
       </template>

@@ -21,11 +21,12 @@ data class WenkuNovelMetadata(
     val title: String,
     val titleZh: String,
     val cover: String,
-    val coverSmall: String,
     val authors: List<String>,
     val artists: List<String>,
     val keywords: List<String>,
+    val r18: Boolean = false,
     val introduction: String,
+    val volumes: List<WenkuNovelVolume> = emptyList(),
     val glossaryUuid: String? = null,
     val glossary: Map<String, String> = emptyMap(),
     val visited: Long,
@@ -34,6 +35,14 @@ data class WenkuNovelMetadata(
         fun byId(id: String): Bson = WenkuNovelMetadata::id eq ObjectId(id)
     }
 }
+
+@Serializable
+data class WenkuNovelVolume(
+    val asin: String,
+    val title: String,
+    val titleZh: String? = null,
+    val cover: String,
+)
 
 data class WenkuNovelVolumeList(
     val jp: List<WenkuNovelVolumeJp>,

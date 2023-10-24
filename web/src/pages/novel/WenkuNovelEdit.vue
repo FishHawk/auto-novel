@@ -7,14 +7,12 @@ import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
-import { useUserDataStore } from '@/data/stores/user_data';
 import { fetchMetadata } from '@/data/util_wenku';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
-const userData = useUserDataStore();
 
 const novelId = route.params.id as string | undefined;
 
@@ -24,11 +22,11 @@ const formValue = ref({
   title: '',
   titleZh: '',
   cover: '',
-  coverSmall: '',
   authors: [] as string[],
   artists: [] as string[],
-  keywords: [] as string[],
+  r18: false,
   introduction: '',
+  volumes: [] as { asin: string; title: string; cover: string }[],
 });
 
 const rules: FormRules = {
@@ -74,10 +72,9 @@ onMounted(async () => {
       formValue.value.title = result.value.title;
       formValue.value.titleZh = result.value.titleZh;
       formValue.value.cover = result.value.cover;
-      formValue.value.coverSmall = result.value.coverSmall;
       formValue.value.authors = result.value.authors;
       formValue.value.artists = result.value.artists;
-      formValue.value.keywords = result.value.keywords;
+      formValue.value.r18 = result.value.r18;
       formValue.value.introduction = result.value.introduction;
     } else {
       message.error('载入失败');
@@ -98,11 +95,11 @@ async function submit() {
     title: formValue.value.title,
     titleZh: formValue.value.titleZh,
     cover: formValue.value.cover,
-    coverSmall: formValue.value.coverSmall,
     authors: formValue.value.authors,
     artists: formValue.value.artists,
-    keywords: formValue.value.keywords,
+    r18: formValue.value.r18,
     introduction: formValue.value.introduction,
+    volumes: formValue.value.volumes,
   };
 
   if (novelId === undefined) {
@@ -124,15 +121,36 @@ async function submit() {
   }
 }
 
-const importUrl = ref('');
-async function importNovel() {
-  const result = await fetchMetadata(importUrl.value);
-  if (result === undefined) {
-    message.error('无法解析链接');
-  } else if (result.ok) {
-    formValue.value = { ...formValue.value, ...result.value };
-  } else {
-    message.error('导入失败:' + result.error.message);
+const url = ref('');
+async function fetchNovel() {
+  try {
+    const amazonMetadata = await fetchMetadata(url.value);
+    const volumes = formValue.value.volumes.concat(
+      amazonMetadata.volumes.filter(
+        (newV) =>
+          !formValue.value.volumes.some((oldV) => oldV.asin === newV.asin)
+      )
+    );
+    formValue.value = {
+      title: formValue.value.title
+        ? formValue.value.title
+        : amazonMetadata.title,
+      titleZh: formValue.value.titleZh,
+      cover: amazonMetadata.cover,
+      authors: formValue.value.authors
+        ? formValue.value.authors
+        : amazonMetadata.authors,
+      artists: formValue.value.artists
+        ? formValue.value.artists
+        : amazonMetadata.artists,
+      r18: formValue.value.r18,
+      introduction: formValue.value.introduction
+        ? formValue.value.introduction
+        : amazonMetadata.introduction,
+      volumes,
+    };
+  } catch (e) {
+    message.error(`获取失败:${e}`);
   }
 }
 
@@ -170,7 +188,7 @@ function confirmNovelNotExist() {
     <n-space style="margin-bottom: 24px" :wrap="false">
       <div>
         <img
-          :src="formValue.coverSmall ? formValue.coverSmall : coverPlaceholder"
+          :src="formValue.cover ? formValue.cover : coverPlaceholder"
           alt="cover"
           style="width: 160px"
         />
@@ -181,28 +199,23 @@ function confirmNovelNotExist() {
       </div>
 
       <n-p style="max-width: 530px">
-        可以从其他网站导入数据，目前支持：
-        <n-ul>
-          <n-li><b>Bangumi</b>: https://bangumi.tv/subject/101114</n-li>
-          <n-li><b>亚马逊</b>: https://www.amazon.co.jp/dp/B08G57RLYC</n-li>
-        </n-ul>
-
+        可以通过亚马逊系列链接/单本链接导入，你也可以输入小说标题从搜索导入。
+        <br />
         亚马逊有些R18书导入会出错。这种时候按下面步骤操作：
         <n-ol>
           <n-li>确保安装的插件是最新的v1.0.7。</n-li>
-          <n-li>
-            打开亚马逊链接，确定已满18岁并跳转到真正的页面，然后<b>关闭亚马逊页面</b>。
-          </n-li>
+          <n-li>确保你之前点过“已满18岁”。</n-li>
+          <n-li>确保现在没有打开亚马逊页面。</n-li>
           <n-li>右键插件，选择“强制公开亚马逊Cookies”。</n-li>
         </n-ol>
 
         <n-input-group>
           <n-input
-            v-model:value="importUrl"
-            placeholder="从链接导入..."
+            v-model:value="url"
+            placeholder="从亚马逊导入..."
             :input-props="{ spellcheck: false }"
           />
-          <n-button type="primary" @click="importNovel()"> 导入 </n-button>
+          <n-button type="primary" @click="fetchNovel()"> 导入 </n-button>
         </n-input-group>
       </n-p>
     </n-space>
@@ -214,23 +227,6 @@ function confirmNovelNotExist() {
       label-placement="left"
       style="max-width: 800px"
     >
-      <n-form-item-row v-if="userData.asAdmin">
-        <n-input
-          v-model:value="formValue.cover"
-          placeholder="封面"
-          :input-props="{ spellcheck: false }"
-        />
-      </n-form-item-row>
-
-      <n-form-item-row v-if="userData.asAdmin">
-        <n-input
-          v-model:value="formValue.coverSmall"
-          placeholder="封面/小"
-          show-count
-          :input-props="{ spellcheck: false }"
-        />
-      </n-form-item-row>
-
       <n-form-item-row path="title">
         <n-input
           v-model:value="formValue.title"
@@ -261,9 +257,9 @@ function confirmNovelNotExist() {
         <n-dynamic-tags v-model:value="formValue.artists" />
       </n-form-item-row>
 
-      <n-form-item-row v-if="userData.asAdmin" path="keywords">
-        <n-text style="white-space: nowrap">标签：</n-text>
-        <n-dynamic-tags v-model:value="formValue.keywords" />
+      <n-form-item-row path="r18">
+        <n-text style="white-space: nowrap">R18：</n-text>
+        <n-switch v-model:value="formValue.r18" />
       </n-form-item-row>
 
       <n-form-item-row path="content">
@@ -281,6 +277,24 @@ function confirmNovelNotExist() {
         />
       </n-form-item-row>
     </n-form>
+
+    <n-list>
+      <n-list-item v-for="volume in formValue.volumes">
+        <n-space>
+          <n-card size="small" style="width: 100px">
+            <template #cover>
+              <img :src="volume.cover" alt="cover" />
+            </template>
+          </n-card>
+          <n-space vertical>
+            <n-p>ASIN: {{ volume.asin }}</n-p>
+            <n-p>日文标题: {{ volume.title }}</n-p>
+          </n-space>
+        </n-space>
+      </n-list-item>
+    </n-list>
+
+    <n-divider />
 
     <AsyncButton v-if="novelId" type="primary" :on-async-click="submit">
       提交
