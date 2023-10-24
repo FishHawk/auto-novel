@@ -76,6 +76,7 @@ onMounted(async () => {
       formValue.value.artists = result.value.artists;
       formValue.value.r18 = result.value.r18;
       formValue.value.introduction = result.value.introduction;
+      formValue.value.volumes = result.value.volumes;
     } else {
       message.error('载入失败');
     }
@@ -125,12 +126,19 @@ const url = ref('');
 async function fetchNovel() {
   try {
     const amazonMetadata = await fetchMetadata(url.value);
-    const volumes = formValue.value.volumes.concat(
-      amazonMetadata.volumes.filter(
-        (newV) =>
-          !formValue.value.volumes.some((oldV) => oldV.asin === newV.asin)
-      )
+    const volumesOld = formValue.value.volumes.map((oldV) => {
+      const newV = amazonMetadata.volumes.find((it) => it.asin === oldV.asin);
+      if (newV === undefined) {
+        return oldV;
+      } else {
+        return newV;
+      }
+    });
+    const volumesNew = amazonMetadata.volumes.filter(
+      (newV) => !formValue.value.volumes.some((oldV) => oldV.asin === newV.asin)
     );
+
+    const volumes = volumesOld.concat(volumesNew);
     formValue.value = {
       title: formValue.value.title
         ? formValue.value.title
@@ -143,7 +151,7 @@ async function fetchNovel() {
       artists: formValue.value.artists
         ? formValue.value.artists
         : amazonMetadata.artists,
-      r18: formValue.value.r18,
+      r18: amazonMetadata.r18,
       introduction: formValue.value.introduction
         ? formValue.value.introduction
         : amazonMetadata.introduction,
@@ -178,6 +186,20 @@ function confirmNovelNotExist() {
   if (submitCurrentStep.value === 1) {
     submitCurrentStep.value = 2;
   }
+}
+
+function moveVolumeUp(index: number) {
+  if (index > 0) {
+    const temp = formValue.value.volumes[index];
+    formValue.value.volumes[index] = formValue.value.volumes[index - 1];
+    formValue.value.volumes[index - 1] = temp;
+  }
+}
+
+function deleteVolume(index: number) {
+  formValue.value.volumes = formValue.value.volumes.filter(
+    (it, i) => i !== index
+  );
 }
 </script>
 
@@ -279,8 +301,8 @@ function confirmNovelNotExist() {
     </n-form>
 
     <n-list>
-      <n-list-item v-for="volume in formValue.volumes">
-        <n-space>
+      <n-list-item v-for="(volume, index) in formValue.volumes">
+        <n-space :wrap="false">
           <n-card size="small" style="width: 100px">
             <template #cover>
               <img :src="volume.cover" alt="cover" />
@@ -289,6 +311,18 @@ function confirmNovelNotExist() {
           <n-space vertical>
             <n-p>ASIN: {{ volume.asin }}</n-p>
             <n-p>日文标题: {{ volume.title }}</n-p>
+            <n-input
+              v-model:value="volume.title"
+              placeholder="日文标题"
+              show-count
+              :input-props="{ spellcheck: false }"
+            />
+            <n-space>
+              <n-button @click="deleteVolume(index)"> 删除 </n-button>
+              <n-button v-if="index > 0" @click="moveVolumeUp(index)">
+                上移
+              </n-button>
+            </n-space>
           </n-space>
         </n-space>
       </n-list-item>

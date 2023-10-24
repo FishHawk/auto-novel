@@ -184,6 +184,13 @@ const vars = useThemeVars();
           </template>
           收藏
         </AsyncButton>
+
+        <n-a
+          :href="`https://www.amazon.co.jp/s?k=${metadata.title}&rh=n%3A465392`"
+          target="_blank"
+        >
+          <n-button>在亚马逊搜索</n-button>
+        </n-a>
       </n-space>
 
       <template v-if="editMode">
@@ -204,8 +211,8 @@ const vars = useThemeVars();
           </n-tag>
         </n-space>
 
-        <SectionHeader title="各卷封面" />
-        <div>
+        <SectionHeader v-if="metadata.volumes.length" title="各卷封面" />
+        <div v-if="metadata.volumes.length">
           <n-scrollbar x-scrollable>
             <div style="white-space: nowrap">
               <n-card

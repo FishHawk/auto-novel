@@ -7,8 +7,8 @@ function extractAsin(url: string) {
 
 function prettyTitle(title: string) {
   return title
-    .replaceAll(/(\([^(]*文庫\))/g, '')
-    .replace('(MFブックス)', '')
+    .replace(/(【[^【】]*】)/g, '')
+    .replace(/(\([^()]*\))/g, '')
     .trim();
 }
 
@@ -85,10 +85,11 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
       }
     });
 
-    const introduction = doc
-      .getElementById('bookDescription_feature_div')!
-      .getElementsByTagName('span')[0]
-      .innerHTML.replaceAll('<br>', '\n');
+    const introduction =
+      doc
+        .getElementById('bookDescription_feature_div')
+        ?.getElementsByTagName('span')?.[0]
+        ?.innerHTML?.replaceAll('<br>', '\n') ?? '';
 
     const cover = doc.getElementById('landingImage')!.getAttribute('src')!;
 
@@ -102,9 +103,9 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
       volumes: [{ asin, title, cover }],
     };
   } else {
-    const total = doc
-      .getElementById('collection-size')!
-      .textContent!.match(/\d+/)![0];
+    const total =
+      doc.getElementById('collection-size')?.textContent?.match(/\d+/)?.[0] ??
+      100;
 
     const doc2 = await getHtml(
       `https://www.amazon.co.jp/kindle-dbs/productPage/ajax/seriesAsinList?asin=${asin}&pageNumber=1&pageSize=${total}`
@@ -158,9 +159,10 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
 }
 
 async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
+  title = title.trim();
   async function search(query: string) {
     const doc = await getHtml(
-      `https://www.amazon.co.jp/s?k=${query}&rh=n%3A465392`
+      `https://www.amazon.co.jp/s?k=${query}&rh=n%3A465392&i=stripbooks`
     );
     return Array.from(
       doc.getElementsByClassName('s-search-results')[0].children
@@ -176,13 +178,15 @@ async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
       });
   }
 
-  const volumes = (await search(title + ' 小説')).filter((it) =>
-    it.title.includes(title)
-  );
+  const volumes = (await search(title + ' 小説'))
+    .filter((it) => it.title.includes(title))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
   if (volumes.length === 0) throw Error('搜索结果为空');
 
   const metadata = await fetchMetadataFromAsin(volumes[0].asin);
   metadata.volumes = volumes;
+  metadata.cover = volumes[0].cover;
   return metadata;
 }
 
