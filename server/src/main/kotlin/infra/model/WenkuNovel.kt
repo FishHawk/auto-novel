@@ -1,5 +1,7 @@
 package infra.model
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -30,6 +32,7 @@ data class WenkuNovelMetadata(
     val glossaryUuid: String? = null,
     val glossary: Map<String, String> = emptyMap(),
     val visited: Long,
+    @Contextual val updateAt: Instant = Clock.System.now(),
 ) {
     companion object {
         fun byId(id: String): Bson = WenkuNovelMetadata::id eq ObjectId(id)
