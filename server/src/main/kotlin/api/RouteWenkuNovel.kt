@@ -5,6 +5,7 @@ import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
 import infra.wenku.VolumeCreateException
+import infra.wenku.WenkuNovelFilter
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
@@ -30,6 +31,7 @@ private class WenkuNovelRes {
         val page: Int,
         val pageSize: Int,
         val query: String? = null,
+        val level: Int = 0,
     )
 
     @Resource("/favored")
@@ -83,6 +85,10 @@ fun Route.routeWenkuNovel() {
                 queryString = loc.query?.ifBlank { null },
                 page = loc.page,
                 pageSize = loc.pageSize,
+                filterLevel = when (loc.level) {
+                    1 -> WenkuNovelFilter.Level.R18
+                    else -> WenkuNovelFilter.Level.一般向
+                },
             )
         }
     }
@@ -277,6 +283,7 @@ class WenkuNovelApi(
         queryString: String?,
         page: Int,
         pageSize: Int,
+        filterLevel: WenkuNovelFilter.Level,
     ): PageDto<NovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
@@ -285,6 +292,7 @@ class WenkuNovelApi(
                 userQuery = queryString,
                 page = page,
                 pageSize = pageSize,
+                filterLevel = filterLevel,
             )
             .asDto(pageSize) { it.asDto() }
     }

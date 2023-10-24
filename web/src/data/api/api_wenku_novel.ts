@@ -14,14 +14,16 @@ const list = ({
   page,
   pageSize,
   query = '',
+  level = 0,
 }: {
   page: number;
   pageSize: number;
   query?: string;
+  level?: number;
 }) =>
   runCatching(
     client
-      .get(`wenku`, { searchParams: { page, pageSize, query } })
+      .get(`wenku`, { searchParams: { page, pageSize, query, level } })
       .json<Page<WenkuNovelOutlineDto>>()
   );
 

@@ -14,6 +14,7 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.Document
 import org.bson.types.ObjectId
@@ -126,6 +127,79 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                 }
             }
         }
+
+        describe("build wenku es index") {
+            @Serializable
+            data class WNMP(
+                @Contextual @SerialName("_id") val id: ObjectId,
+                val title: String,
+                val titleZh: String,
+                val cover: String,
+                val authors: List<String>,
+                val artists: List<String>,
+                val keywords: List<String>,
+                val r18: Boolean = false,
+                @Contextual val updateAt: Instant,
+            )
+
+            suspend fun buildIndex(skip: Int, limit: Int): Int {
+                val list = mongo
+                    .wenkuNovelMetadataCollection
+                    .withDocumentClass<WNMP>()
+                    .find()
+                    .projection(
+                        WenkuNovelMetadata::id,
+                        WenkuNovelMetadata::title,
+                        WenkuNovelMetadata::titleZh,
+                        WenkuNovelMetadata::cover,
+                        WenkuNovelMetadata::authors,
+                        WenkuNovelMetadata::artists,
+                        WenkuNovelMetadata::keywords,
+                        WenkuNovelMetadata::r18,
+                        WenkuNovelMetadata::updateAt,
+                    )
+                    .skip(skip)
+                    .limit(limit)
+                    .toList()
+                es.client.bulk(target = DataSourceElasticSearch.wenkuNovelIndexName) {
+                    list.forEach {
+                        index(
+                            doc = WenkuNovelMetadataEsModel(
+                                id = it.id.toHexString(),
+                                title = it.title,
+                                titleZh = it.titleZh,
+                                cover = it.cover,
+                                authors = it.authors,
+                                artists = it.artists,
+                                keywords = it.keywords,
+                                r18 = it.r18,
+                                updateAt = it.updateAt.epochSeconds,
+                            ),
+                            id = it.id.toHexString(),
+                        )
+                    }
+                }
+                return list.size
+            }
+
+            var batch = 0
+            val batchSize = 500
+            while (true) {
+                println("batch${batch} start")
+                val actualBatchSize = buildIndex(
+                    batch * batchSize,
+                    batchSize + 50,
+                )
+                println("batch${batch} finish ${actualBatchSize}")
+
+                if (actualBatchSize == batchSize + 50) {
+                    batch += 1
+                } else {
+                    break
+                }
+            }
+        }
+
 
         describe("kmongo issue 415") {
 //            println(setValue(BookEpisode::youdaoParagraphs.pos(0), "test").toBsonDocument())

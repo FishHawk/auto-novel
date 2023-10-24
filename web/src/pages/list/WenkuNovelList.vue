@@ -7,15 +7,27 @@ import { Page } from '@/data/api/common';
 
 import { Loader } from './components/NovelList.vue';
 
-const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query) =>
-  ApiWenkuNovel.list({ page, pageSize: 24, query });
+const options = [
+  {
+    label: '分级',
+    tags: ['一般向', 'R18'],
+  },
+];
+
+const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) =>
+  ApiWenkuNovel.list({ page, pageSize: 24, query, level: selected[0] });
 </script>
 
 <template>
   <ListLayout>
     <n-h1>文库小说</n-h1>
     <RouterNA to="/wenku-edit">新建文库小说</RouterNA>
-    <NovelList :search="true" :options="[]" :loader="loader" v-slot="{ page }">
+    <NovelList
+      :search="true"
+      :options="options"
+      :loader="loader"
+      v-slot="{ page }"
+    >
       <NovelListWenku :items="page.items" />
     </NovelList>
   </ListLayout>

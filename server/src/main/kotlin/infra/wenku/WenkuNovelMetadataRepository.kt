@@ -1,10 +1,8 @@
 package infra.wenku
 
+import com.jillesvangurp.jsondsl.JsonDsl
 import com.jillesvangurp.ktsearch.*
-import com.jillesvangurp.searchdsls.querydsl.MatchOperator
-import com.jillesvangurp.searchdsls.querydsl.bool
-import com.jillesvangurp.searchdsls.querydsl.simpleQueryString
-import com.jillesvangurp.searchdsls.querydsl.sort
+import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
@@ -19,6 +17,10 @@ import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
 import java.util.*
 
+object WenkuNovelFilter {
+    enum class Level { 一般向, R18 }
+}
+
 class WenkuNovelMetadataRepository(
     private val mongo: DataSourceMongo,
     private val es: DataSourceElasticSearch,
@@ -28,6 +30,7 @@ class WenkuNovelMetadataRepository(
         userQuery: String?,
         page: Int,
         pageSize: Int,
+        filterLevel: WenkuNovelFilter.Level,
     ): Page<WenkuNovelMetadataOutline> {
         val response = es.client.search(
             DataSourceElasticSearch.wenkuNovelIndexName,
@@ -35,6 +38,25 @@ class WenkuNovelMetadataRepository(
             size = pageSize
         ) {
             query = bool {
+                val mustQueries = mutableListOf<ESQuery>()
+                val mustNotQueries = mutableListOf<ESQuery>()
+
+                // Filter level
+                when (filterLevel) {
+                    WenkuNovelFilter.Level.一般向 -> false
+                    WenkuNovelFilter.Level.R18 -> true
+                }.let {
+                    mustQueries.add(
+                        ESQuery(
+                            "term",
+                            JsonDsl().apply { put("r18", it) },
+                        )
+                    )
+                }
+
+                filter(mustQueries)
+                mustNot(mustNotQueries)
+
                 if (userQuery != null) {
                     must(
                         simpleQueryString(
@@ -190,6 +212,7 @@ class WenkuNovelMetadataRepository(
                 authors = metadata.authors,
                 artists = metadata.artists,
                 keywords = metadata.keywords,
+                r18 = metadata.r18,
                 updateAt = metadata.updateAt.epochSeconds,
             ),
             refresh = Refresh.WaitFor,

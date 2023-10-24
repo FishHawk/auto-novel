@@ -1,6 +1,9 @@
 package infra
 
-import com.jillesvangurp.ktsearch.*
+import com.jillesvangurp.ktsearch.KtorRestClient
+import com.jillesvangurp.ktsearch.Node
+import com.jillesvangurp.ktsearch.SearchClient
+import com.jillesvangurp.ktsearch.createIndex
 import infra.model.WebNovelAttention
 import infra.model.WebNovelType
 import kotlinx.coroutines.runBlocking
@@ -31,6 +34,7 @@ data class WenkuNovelMetadataEsModel(
     val authors: List<String>,
     val artists: List<String>,
     val keywords: List<String>,
+    val r18: Boolean,
     val updateAt: Long,
 )
 
@@ -43,7 +47,7 @@ class DataSourceElasticSearch(url: String) {
 
     companion object {
         const val webNovelIndexName = "web-index"
-        const val wenkuNovelIndexName = "wenku-index"
+        const val wenkuNovelIndexName = "wenku-index-alt"
     }
 
     init {
@@ -74,6 +78,7 @@ class DataSourceElasticSearch(url: String) {
                         keyword(WenkuNovelMetadataEsModel::authors)
                         keyword(WenkuNovelMetadataEsModel::artists)
                         keyword(WenkuNovelMetadataEsModel::keywords)
+                        bool(WenkuNovelMetadataEsModel::r18)
                         date(WenkuNovelMetadataEsModel::updateAt)
                     }
                 }
