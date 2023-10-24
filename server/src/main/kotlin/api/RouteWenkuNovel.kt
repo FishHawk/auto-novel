@@ -466,15 +466,17 @@ class WenkuNovelApi(
         val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
 
-        val noVolumeDeleted = novel
-            .volumes
-            .map { it.asin }
-            .all { oldAsin ->
-                body.volumes.any { newVolume ->
-                    newVolume.asin == oldAsin
+        if (!user.atLeastMaintainer()) {
+            val noVolumeDeleted = novel
+                .volumes
+                .map { it.asin }
+                .all { oldAsin ->
+                    body.volumes.any { newVolume ->
+                        newVolume.asin == oldAsin
+                    }
                 }
-            }
-        if (!noVolumeDeleted) throwBadRequest("不支持删除已有卷")
+            if (!noVolumeDeleted) throwBadRequest("不支持删除已有卷")
+        }
 
         metadataRepo.update(
             novelId = novelId,
