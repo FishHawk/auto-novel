@@ -40,9 +40,12 @@ async function getProductWithAdultCheck(asin: string) {
     const parser = new DOMParser();
     return parser.parseFromString(html, 'text/html');
   }
+  function isAgeConfirm(text: string) {
+    return ['年龄确认', '年齢確認'].some((word) => text.includes(word));
+  }
 
   const htmlWithoutCookies = await ky.get(url).text();
-  if (!htmlWithoutCookies.includes('年龄确认')) {
+  if (!isAgeConfirm(htmlWithoutCookies)) {
     return {
       r18: false,
       doc: parseHtml(htmlWithoutCookies),
@@ -50,7 +53,7 @@ async function getProductWithAdultCheck(asin: string) {
   }
 
   const htmlWithCookies = await ky.get(url, { credentials: 'include' }).text();
-  if (!htmlWithCookies.includes('年龄确认')) {
+  if (!isAgeConfirm(htmlWithCookies)) {
     return {
       r18: true,
       doc: parseHtml(htmlWithCookies),
