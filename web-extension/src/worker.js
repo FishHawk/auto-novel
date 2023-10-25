@@ -124,67 +124,65 @@ v2.beforeSendHeaders.methods = [];
   });
 }
 
-function parseSetCookie(setCookie) {
-  const cookie = {};
+{
+  const publicCookies = {
+    '.amazon.co.jp': ['session-id', 'ubid-acbjp'],
+    '.youdao.com': ['OUTFOX_SEARCH_USER_ID'],
+  };
 
-  const parts = setCookie
-    .split(';')
-    .filter((str) => typeof str === 'string' && !!str.trim());
-
-  {
-    var list = parts.shift().split('=');
-    if (list.length > 1) {
-      cookie.name = list.shift();
-      cookie.value = list.join('=');
-    } else {
-      cookie.name = '';
-      cookie.value = pair;
-    }
-  }
-
-  parts.forEach(function (part) {
-    var list = part.split('=');
-    var key = list.shift().trimLeft().toLowerCase();
-    var value = list.join('=');
-    if (key === 'expires') {
-      cookie.expires = new Date(value).getTime();
-    } else if (key === 'max-age') {
-      cookie.maxAge = parseInt(value, 10);
-    } else if (key === 'secure') {
-      cookie.secure = true;
-    } else if (key === 'httponly') {
-      cookie.httpOnly = true;
-    } else if (key === 'samesite') {
-      cookie.sameSite = value;
-    } else {
-      cookie[key] = value;
-    }
-  });
-
-  return cookie;
-}
-
-v2.headersReceived.methods.push((d) => {
-  if (d.url === 'https://fanyi.baidu.com/v2transapi') {
-    return; // 奇怪，不知道为什么得去掉这个url，不然百度翻译概率失败
-  }
-  for (const header of d.responseHeaders) {
-    if (header.name === 'Set-Cookie') {
-      const cookie = parseSetCookie(header.value);
+  function makeCookiePublic(cookie) {
+    const domainToUrl = {
+      '.amazon.co.jp': 'https://www.amazon.co.jp',
+      '.youdao.com': 'https://fanyi.youdao.com',
+    };
+    const {
+      domain,
+      expirationDate,
+      httpOnly,
+      name,
+      path,
+      sameSite,
+      secure,
+      storeId,
+      value,
+    } = cookie;
+    if (sameSite !== 'no_restriction' || !secure) {
       chrome.cookies.set({
-        domain: cookie.domain,
-        expirationDate: cookie.expires,
-        httpOnly: cookie.httpOnly,
-        name: cookie.name,
-        path: cookie.path,
+        domain,
+        expirationDate,
+        httpOnly,
+        name,
+        path,
         sameSite: 'no_restriction',
         secure: true,
-        url: d.url,
-        value: cookie.value,
+        storeId,
+        url: domainToUrl[domain],
+        value,
       });
     }
   }
-});
+
+  for (const domain in publicCookies) {
+    for (const name of publicCookies[domain]) {
+      chrome.cookies.getAll({ domain, name }, (cookies) => {
+        cookies
+          .filter((cookie) => cookie.domain === domain)
+          .forEach((cookie) => makeCookiePublic(cookie));
+      });
+    }
+  }
+
+  chrome.cookies.onChanged.addListener(({ cause, cookie }) => {
+    const { domain, name } = cookie;
+    if (
+      cause === 'explicit' &&
+      domain in publicCookies &&
+      publicCookies[domain].includes(name)
+    ) {
+      makeCookiePublic(cookie);
+    }
+  });
+}
 
 function start() {
   const isChrome = chrome.runtime.getURL('').startsWith('chrome-extension://');
@@ -246,68 +244,6 @@ function start() {
 
 chrome.runtime.onStartup.addListener(start);
 chrome.runtime.onInstalled.addListener(start);
-
-{
-  const once = chrome.contextMenus.create({
-    title: '启动调试器以支持GPT',
-    contexts: ['browser_action'],
-    id: 'status-code-enable',
-  });
-  chrome.runtime.onStartup.addListener(once);
-  chrome.runtime.onInstalled.addListener(once);
-}
-
-const debug = async (source, method, params) => {
-  if (method === 'Fetch.requestPaused') {
-    const opts = {
-      requestId: params.requestId,
-    };
-    const status = params.responseStatusCode;
-    if (status && status >= 400 && status < 500) {
-      const methods = [
-        'GET',
-        'POST',
-        'PUT',
-        'OPTIONS',
-        'PATCH',
-        'PROPFIND',
-        'PROPPATCH',
-      ];
-      const method = params.request?.method;
-      if (method && methods.includes(method)) {
-        opts.responseCode = 200;
-        opts.responseHeaders = params.responseHeaders || [];
-      }
-    }
-
-    chrome.debugger.sendCommand(
-      { tabId: source.tabId },
-      'Fetch.continueResponse',
-      opts
-    );
-  }
-};
-
-chrome.contextMenus.onClicked.addListener(({ menuItemId, checked }, tab) => {
-  if (menuItemId === 'status-code-enable') {
-    chrome.debugger.onEvent.removeListener(debug);
-    chrome.debugger.onEvent.addListener(debug);
-
-    const target = { tabId: tab.id };
-
-    chrome.debugger.attach(target, '1.2', () => {
-      const { lastError } = chrome.runtime;
-      if (lastError) {
-        console.warn(lastError);
-        notify(lastError.message);
-      } else {
-        chrome.debugger.sendCommand(target, 'Fetch.enable', {
-          patterns: [{ requestStage: 'Response' }],
-        });
-      }
-    });
-  }
-});
 
 chrome.browserAction.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {

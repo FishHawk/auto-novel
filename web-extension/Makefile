@@ -1,2 +1,4 @@
 all:
-	zip -r extension.zip src
+	mv src extension
+	zip -r extension.zip extension
+	mv extension src
