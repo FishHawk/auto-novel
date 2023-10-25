@@ -4,7 +4,6 @@ import { ref, watch } from 'vue';
 
 import {
   ApiOperation,
-  Operation,
   OperationHistory,
   OperationType,
 } from '@/data/api/api_operation';
@@ -27,7 +26,7 @@ const message = useMessage();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const historiesResult = ref<ResultState<Page<OperationHistory<Operation>>>>();
+const historiesResult = ref<ResultState<Page<OperationHistory>>>();
 
 async function loadPage(page: number) {
   historiesResult.value = undefined;

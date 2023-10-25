@@ -2,7 +2,7 @@
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
-import { ApiOperation, TocMergeHistoryDto } from '@/data/api/api_operation';
+import { ApiOperation, MergeHistoryDto } from '@/data/api/api_operation';
 import { Page } from '@/data/api/common';
 import { ResultState } from '@/data/result';
 
@@ -10,11 +10,11 @@ const message = useMessage();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const novelPage = ref<ResultState<Page<TocMergeHistoryDto>>>();
+const novelPage = ref<ResultState<Page<MergeHistoryDto>>>();
 
 async function loadPage(page: number) {
   novelPage.value = undefined;
-  const result = await ApiOperation.listTocMergeHistory(currentPage.value - 1);
+  const result = await ApiOperation.listMergeHistory(currentPage.value - 1);
   if (currentPage.value == page) {
     novelPage.value = result;
     if (result.ok) {
@@ -43,7 +43,7 @@ interface DiffTocItem {
   newV?: { titleJp: string; chapterId?: string };
 }
 
-function diffToc(detail: TocMergeHistoryDto): DiffTocItem[] {
+function diffToc(detail: MergeHistoryDto): DiffTocItem[] {
   const maxLength = Math.max(detail.tocOld.length, detail.tocNew.length);
   const diffItems: DiffTocItem[] = [];
   let firstDiff = false;

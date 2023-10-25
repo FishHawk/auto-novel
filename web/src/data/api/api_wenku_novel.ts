@@ -10,45 +10,6 @@ export interface WenkuNovelOutlineDto {
   cover: string;
 }
 
-const list = ({
-  page,
-  pageSize,
-  query = '',
-  level = 0,
-}: {
-  page: number;
-  pageSize: number;
-  query?: string;
-  level?: number;
-}) =>
-  runCatching(
-    client
-      .get(`wenku`, { searchParams: { page, pageSize, query, level } })
-      .json<Page<WenkuNovelOutlineDto>>()
-  );
-
-const listFavored = ({
-  page,
-  pageSize,
-  sort = 'update',
-}: {
-  page: number;
-  pageSize: number;
-  sort?: 'create' | 'update';
-}) =>
-  runCatching(
-    client
-      .get('wenku/favored', { searchParams: { page, pageSize, sort } })
-      .json<Page<WenkuNovelOutlineDto>>()
-  );
-
-export interface WenkuVolumeDto {
-  asin: string;
-  title: string;
-  titleZh?: string;
-  cover: string;
-}
-
 export interface WenkuNovelDto {
   title: string;
   titleZh: string;
@@ -66,6 +27,13 @@ export interface WenkuNovelDto {
   volumeJp: VolumeJpDto[];
 }
 
+export interface WenkuVolumeDto {
+  asin: string;
+  title: string;
+  titleZh?: string;
+  cover: string;
+}
+
 export interface VolumeJpDto {
   volumeId: string;
   total: number;
@@ -74,8 +42,37 @@ export interface VolumeJpDto {
   gpt: number;
 }
 
-const listVolumesNonArchived = () =>
-  runCatching(client.get(`wenku/non-archived`).json<VolumeJpDto[]>());
+const listNovel = ({
+  page,
+  pageSize,
+  query = '',
+  level = 0,
+}: {
+  page: number;
+  pageSize: number;
+  query?: string;
+  level?: number;
+}) =>
+  runCatching(
+    client
+      .get(`wenku`, { searchParams: { page, pageSize, query, level } })
+      .json<Page<WenkuNovelOutlineDto>>()
+  );
+
+const listFavorite = ({
+  page,
+  pageSize,
+  sort = 'update',
+}: {
+  page: number;
+  pageSize: number;
+  sort?: 'create' | 'update';
+}) =>
+  runCatching(
+    client
+      .get('wenku/favored', { searchParams: { page, pageSize, sort } })
+      .json<Page<WenkuNovelOutlineDto>>()
+  );
 
 const listVolumesUser = () =>
   runCatching(
@@ -85,13 +82,13 @@ const listVolumesUser = () =>
 const getNovel = (novelId: string) =>
   runCatching(client.get(`wenku/${novelId}`).json<WenkuNovelDto>());
 
-const putFavored = (novelId: string) =>
+const favoriteNovel = (novelId: string) =>
   runCatching(client.put(`wenku/${novelId}/favored`).text());
 
-const deleteFavored = (novelId: string) =>
+const unfavoriteNovel = (novelId: string) =>
   runCatching(client.delete(`wenku/${novelId}/favored`).text());
 
-export interface WenkuNovelCreateBody {
+interface WenkuNovelCreateBody {
   title: string;
   titleZh: string;
   cover: string;
@@ -146,21 +143,18 @@ const deleteVolume = (novelId: string, volumeId: string) =>
   runCatching(client.delete(`wenku/${novelId}/volume/${volumeId}`).text());
 
 export const ApiWenkuNovel = {
-  list,
-  listFavored,
+  listNovel,
   listVolumesUser,
-  listVolumesNonArchived,
+  //
+  listFavorite,
+  favoriteNovel,
+  unfavoriteNovel,
   //
   getNovel,
   //
-  putFavored,
-  deleteFavored,
-  //
   createNovel,
   updateNovel,
-  //
   updateGlossary,
-  //
   createVolume,
   deleteVolume,
 };

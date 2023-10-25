@@ -2,7 +2,7 @@
 import { createReusableTemplate } from '@vueuse/core';
 
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { buildMetadataUrl, tryTranslateKeyword } from '@/data/util_web';
+import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;
@@ -41,7 +41,7 @@ withDefaults(
       <br />
       {{ item.titleZh }}
     </div>
-    <n-a v-if="!simple" :href="buildMetadataUrl(item.providerId, item.novelId)">
+    <n-a v-if="!simple" :href="buildWebNovelUrl(item.providerId, item.novelId)">
       {{ item.providerId + '.' + item.novelId }}
     </n-a>
 

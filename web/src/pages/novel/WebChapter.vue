@@ -8,7 +8,7 @@ import { ResultState } from '@/data/result';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { buildChapterUrl } from '@/data/util_web';
+import { buildWebChapterUrl } from '@/data/util_web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
@@ -32,7 +32,7 @@ async function getChapter() {
   if (result.ok) {
     document.title = result.value.titleJp;
     if (userData.isLoggedIn) {
-      ApiWebNovel.putReadHistory(providerId, novelId, chapterId);
+      ApiWebNovel.updateReadHistory(providerId, novelId, chapterId);
     }
   }
 }
@@ -160,7 +160,7 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
         v-slot="{ value: chapter }"
       >
         <n-h2 style="text-align: center">
-          <n-a :href="buildChapterUrl(providerId, novelId, chapterId)">{{
+          <n-a :href="buildWebChapterUrl(providerId, novelId, chapterId)">{{
             chapter.titleJp
           }}</n-a>
           <br />

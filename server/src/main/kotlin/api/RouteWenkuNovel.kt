@@ -42,9 +42,6 @@ private class WenkuNovelRes {
         val sort: FavoriteListSort,
     )
 
-    @Resource("/non-archived")
-    class VolumesNonArchived(val parent: WenkuNovelRes)
-
     @Resource("/user")
     class VolumesUser(val parent: WenkuNovelRes)
 
@@ -118,11 +115,6 @@ fun Route.routeWenkuNovel() {
         }
     }
 
-    get<WenkuNovelRes.VolumesNonArchived> { loc ->
-        call.tryRespond {
-            service.getNonArchivedVolumes()
-        }
-    }
     authenticateDb {
         get<WenkuNovelRes.VolumesUser> { loc ->
             val user = call.authenticatedUser()
@@ -313,10 +305,6 @@ class WenkuNovelApi(
                 sort = sort,
             )
             .asDto(pageSize) { it.asDto() }
-    }
-
-    suspend fun getNonArchivedVolumes(): List<WenkuNovelVolumeJp> {
-        return volumeRepo.list("non-archived").jp
     }
 
     @Serializable
@@ -535,11 +523,8 @@ class WenkuNovelApi(
         )
     }
 
-    private fun isCacheArea(novelId: String): Boolean =
-        novelId == "non-archived" || novelId.startsWith("user")
-
     private suspend fun validateNovelId(novelId: String) {
-        if (!isCacheArea(novelId) && !metadataRepo.exist(novelId))
+        if (!novelId.startsWith("user") && !metadataRepo.exist(novelId))
             throwNovelNotFound()
     }
 
@@ -557,9 +542,7 @@ class WenkuNovelApi(
     ) {
         validateNovelId(novelId)
         validateVolumeId(volumeId)
-        if (novelId == "non-archived")
-            throwBadRequest("不允许在通用缓存区上传小说")
-        if (!unpack && isCacheArea(novelId))
+        if (!unpack && novelId.startsWith("user"))
             throwBadRequest("不允许在私人缓存区上传中文小说")
 
         try {
@@ -576,7 +559,7 @@ class WenkuNovelApi(
             }
         }
 
-        if (!isCacheArea(novelId)) {
+        if (!novelId.startsWith("user")) {
             operationHistoryRepo.create(
                 operator = ObjectId(user.id),
                 operation = Operation.WenkuUpload(
@@ -623,7 +606,7 @@ class WenkuNovelApi(
         validateVolumeId(volumeId)
 
         val novel =
-            if (novelId == "non-archived" || novelId.startsWith("user")) null
+            if (novelId.startsWith("user")) null
             else metadataRepo.get(novelId)
 
         val volume = volumeRepo.getVolumeJp(novelId, volumeId)
@@ -674,7 +657,7 @@ class WenkuNovelApi(
         validateVolumeId(volumeId)
 
         val novel =
-            if (novelId == "non-archived" || novelId.startsWith("user")) null
+            if (novelId.startsWith("user")) null
             else metadataRepo.get(novelId)
 
         if (glossaryUuid != novel?.glossaryUuid) {

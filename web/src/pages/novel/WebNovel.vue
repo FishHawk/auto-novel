@@ -14,11 +14,10 @@ import { createReusableTemplate } from '@vueuse/core';
 import { Ok, ResultState } from '@/data/result';
 import {
   ApiWebNovel,
-  WebNovelMetadataDto,
+  WebNovelDto,
   WebNovelTocItemDto,
 } from '@/data/api/api_web_novel';
-import { buildMetadataUrl, tryTranslateKeyword } from '@/data/util_web';
-import { useUserDataStore } from '@/data/stores/user_data';
+import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
 import { useSettingStore } from '@/data/stores/setting';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
@@ -27,29 +26,28 @@ const [DefineTag, ReuseTag] = createReusableTemplate<{
 }>();
 
 const setting = useSettingStore();
-const userData = useUserDataStore();
 const message = useMessage();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
 
-const metadataResult = ref<ResultState<WebNovelMetadataDto>>();
+const novelResult = ref<ResultState<WebNovelDto>>();
 
-async function getMetadata() {
-  const result = await ApiWebNovel.getMetadata(providerId, novelId);
-  metadataResult.value = result;
+async function getNovel() {
+  const result = await ApiWebNovel.getNovel(providerId, novelId);
+  novelResult.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
   }
 }
-getMetadata();
+getNovel();
 
 async function addFavorite() {
-  const result = await ApiWebNovel.putFavored(providerId, novelId);
+  const result = await ApiWebNovel.favoriteNovel(providerId, novelId);
   if (result.ok) {
-    if (metadataResult.value?.ok) {
-      metadataResult.value.value.favored = true;
+    if (novelResult.value?.ok) {
+      novelResult.value.value.favored = true;
     }
   } else {
     message.error('收藏错误：' + result.error.message);
@@ -57,10 +55,10 @@ async function addFavorite() {
 }
 
 async function removeFavorite() {
-  const result = await ApiWebNovel.deleteFavored(providerId, novelId);
+  const result = await ApiWebNovel.unfavoriteNovel(providerId, novelId);
   if (result.ok) {
-    if (metadataResult.value?.ok) {
-      metadataResult.value.value.favored = false;
+    if (novelResult.value?.ok) {
+      novelResult.value.value.favored = false;
     }
   } else {
     message.error('取消收藏错误：' + result.error.message);
@@ -68,12 +66,6 @@ async function removeFavorite() {
 }
 
 const editMode = ref(false);
-function toggleEditMode() {
-  if (!userData.isLoggedIn) {
-    return message.info('请先登录');
-  }
-  editMode.value = !editMode.value;
-}
 </script>
 
 <template>
@@ -95,56 +87,56 @@ function toggleEditMode() {
 
   <MainLayout>
     <ResultView
-      :result="metadataResult"
+      :result="novelResult"
       :showEmpty="() => false"
-      v-slot="{ value: metadata }"
+      v-slot="{ value: novel }"
     >
       <n-h1 prefix="bar" style="font-size: 22px">
-        <n-a :href="buildMetadataUrl(providerId, novelId)">{{
-          metadata.titleJp
+        <n-a :href="buildWebNovelUrl(providerId, novelId)">{{
+          novel.titleJp
         }}</n-a>
         <br />
-        <n-text depth="3">{{ metadata.titleZh }}</n-text>
+        <n-text depth="3">{{ novel.titleZh }}</n-text>
       </n-h1>
 
-      <n-p v-if="metadata.authors.length > 0">
+      <n-p v-if="novel.authors.length > 0">
         作者：
-        <template v-for="author in metadata.authors">
+        <template v-for="author in novel.authors">
           <n-a :href="author.link">{{ author.name }}</n-a>
         </template>
       </n-p>
 
       <n-space>
-        <n-button @click="toggleEditMode()">
+        <async-button @async-click="async () => (editMode = !editMode)">
           <template #icon>
             <n-icon :component="EditNoteFilled" />
           </template>
           {{ editMode ? '退出编辑' : '编辑' }}
-        </n-button>
+        </async-button>
 
-        <AsyncButton
-          v-if="metadata.favored === true"
-          :on-async-click="removeFavorite"
+        <async-button
+          v-if="novel.favored === true"
+          @async-click="removeFavorite"
         >
           <template #icon>
             <n-icon :component="FavoriteFilled" />
           </template>
           取消收藏
-        </AsyncButton>
+        </async-button>
 
-        <AsyncButton v-else :on-async-click="addFavorite">
+        <async-button v-else @async-click="addFavorite">
           <template #icon>
             <n-icon :component="FavoriteBorderFilled" />
           </template>
           收藏
-        </AsyncButton>
+        </async-button>
 
-        <router-link v-if="metadata.wenkuId" :to="`/wenku/${metadata.wenkuId}`">
+        <router-link v-if="novel.wenkuId" :to="`/wenku/${novel.wenkuId}`">
           <n-button>
             <template #icon>
               <n-icon :component="BookFilled" />
             </template>
-            文库版
+            文库
           </n-button>
         </router-link>
       </n-space>
@@ -153,31 +145,31 @@ function toggleEditMode() {
         v-if="editMode"
         :provider-id="providerId"
         :novel-id="novelId"
-        :novel-metadata="metadata"
-        @update:novel-metadata="metadataResult = Ok(metadata)"
+        :novel-metadata="novel"
+        @update:novel-metadata="novelResult = Ok(novel)"
       />
 
       <template v-else>
-        <n-p>{{ metadata.type }} / 浏览次数:{{ metadata.visited }}</n-p>
+        <n-p>{{ novel.type }} / 浏览次数:{{ novel.visited }}</n-p>
 
         <n-p style="word-break: break-all">
-          {{ metadata.introductionJp }}
+          {{ novel.introductionJp }}
         </n-p>
         <n-p
-          v-if="metadata.introductionZh !== undefined"
+          v-if="novel.introductionZh !== undefined"
           style="word-break: break-all"
         >
-          {{ metadata.introductionZh }}
+          {{ novel.introductionZh }}
         </n-p>
 
         <n-space :size="[4, 4]">
           <ReuseTag
-            v-for="attention of metadata.attentions.sort()"
+            v-for="attention of novel.attentions.sort()"
             :tag="attention"
             :attention="true"
           />
           <ReuseTag
-            v-for="keyword of metadata.keywords"
+            v-for="keyword of novel.keywords"
             :tag="keyword"
             :attention="false"
           />
@@ -188,14 +180,14 @@ function toggleEditMode() {
           <WebTranslate
             :provider-id="providerId"
             :novel-id="novelId"
-            :title-jp="metadata.titleJp"
-            :title-zh="metadata.titleZh"
-            :total="metadata.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
-            v-model:jp="metadata.jp"
-            v-model:baidu="metadata.baidu"
-            v-model:youdao="metadata.youdao"
-            v-model:gpt="metadata.gpt"
-            :glossary="metadata.glossary"
+            :title-jp="novel.titleJp"
+            :title-zh="novel.titleZh"
+            :total="novel.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
+            v-model:jp="novel.jp"
+            v-model:baidu="novel.baidu"
+            v-model:youdao="novel.youdao"
+            v-model:gpt="novel.gpt"
+            :glossary="novel.glossary"
           />
         </section>
 
@@ -211,9 +203,9 @@ function toggleEditMode() {
           <SectionWebToc
             :provider-id="providerId"
             :novel-id="novelId"
-            :toc="metadata.toc"
+            :toc="novel.toc"
             :reverse="setting.tocSortReverse"
-            :last-read-chapter-id="metadata.lastReadChapterId"
+            :last-read-chapter-id="novel.lastReadChapterId"
           />
         </section>
 

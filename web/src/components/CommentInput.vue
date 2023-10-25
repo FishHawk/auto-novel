@@ -30,7 +30,11 @@ async function reply() {
   if (content.value.length === 0) {
     message.info('回复内容不能为空');
   } else {
-    const result = await ApiComment.reply(site, parent, content.value);
+    const result = await ApiComment.createComment({
+      site,
+      parent,
+      content: content.value,
+    });
     if (result.ok) {
       content.value = '';
       message.info('回复发布成功');

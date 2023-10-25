@@ -171,7 +171,7 @@ watch(title, () => {
   submitCurrentStep.value = 1;
 });
 async function findSimilarNovels() {
-  const result = await ApiWenkuNovel.list({
+  const result = await ApiWenkuNovel.listNovel({
     page: 0,
     pageSize: 6,
     query: title.value,

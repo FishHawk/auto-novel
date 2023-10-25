@@ -20,85 +20,6 @@ export interface WebNovelOutlineDto {
   updateAt?: number;
 }
 
-async function list({
-  page,
-  pageSize,
-  query = '',
-  provider = '',
-  type = 0,
-  level = 0,
-  translate = 0,
-  sort = 0,
-}: {
-  page: number;
-  pageSize: number;
-  query?: string;
-  provider?: string;
-  type?: number;
-  level?: number;
-  translate?: number;
-  sort?: number;
-}): Promise<Result<Page<WebNovelOutlineDto>>> {
-  return runCatching(
-    client
-      .get(`novel`, {
-        searchParams: {
-          page,
-          pageSize,
-          query,
-          provider,
-          type,
-          level,
-          translate,
-          sort,
-        },
-      })
-      .json()
-  );
-}
-
-async function listRank(
-  providerId: string,
-  options: { [key: string]: string }
-): Promise<Result<Page<WebNovelOutlineDto>>> {
-  return runCatching(
-    client
-      .get(`novel/rank/${providerId}`, {
-        searchParams: options,
-        timeout: 20000,
-      })
-      .json()
-  );
-}
-
-const listReadHistory = ({
-  page,
-  pageSize,
-}: {
-  page: number;
-  pageSize: number;
-}) =>
-  runCatching(
-    client
-      .get('novel/read-history', { searchParams: { page, pageSize } })
-      .json<Page<WebNovelOutlineDto>>()
-  );
-
-const listFavored = ({
-  page,
-  pageSize,
-  sort = 'update',
-}: {
-  page: number;
-  pageSize: number;
-  sort?: 'create' | 'update';
-}) =>
-  runCatching(
-    client
-      .get('novel/favored', { searchParams: { page, pageSize, sort } })
-      .json<Page<WebNovelOutlineDto>>()
-  );
-
 export interface WebNovelTocItemDto {
   titleJp: string;
   titleZh?: string;
@@ -106,7 +27,7 @@ export interface WebNovelTocItemDto {
   createAt?: number;
 }
 
-export interface WebNovelMetadataDto {
+export interface WebNovelDto {
   wenkuId?: string;
   titleJp: string;
   titleZh?: string;
@@ -128,11 +49,6 @@ export interface WebNovelMetadataDto {
   gpt: number;
 }
 
-const getMetadata = (providerId: string, novelId: string) =>
-  runCatching(
-    client.get(`novel/${providerId}/${novelId}`).json<WebNovelMetadataDto>()
-  );
-
 export interface WebNovelChapterDto {
   titleJp: string;
   titleZh: string | undefined;
@@ -144,17 +60,85 @@ export interface WebNovelChapterDto {
   gptParagraphs: string[] | undefined;
 }
 
-async function getChapter(
-  providerId: string,
-  novelId: string,
-  chapterId: string
-): Promise<Result<WebNovelChapterDto>> {
-  return runCatching(
-    client.get(`novel/${providerId}/${novelId}/chapter/${chapterId}`).json()
+const listNovel = ({
+  page,
+  pageSize,
+  query = '',
+  provider = '',
+  type = 0,
+  level = 0,
+  translate = 0,
+  sort = 0,
+}: {
+  page: number;
+  pageSize: number;
+  query?: string;
+  provider?: string;
+  type?: number;
+  level?: number;
+  translate?: number;
+  sort?: number;
+}) =>
+  runCatching(
+    client
+      .get(`novel`, {
+        searchParams: {
+          page,
+          pageSize,
+          query,
+          provider,
+          type,
+          level,
+          translate,
+          sort,
+        },
+      })
+      .json<Page<WebNovelOutlineDto>>()
   );
-}
 
-const putReadHistory = (
+const listRank = (providerId: string, params: { [key: string]: string }) =>
+  runCatching(
+    client
+      .get(`novel/rank/${providerId}`, {
+        searchParams: params,
+        timeout: 20000,
+      })
+      .json<Page<WebNovelOutlineDto>>()
+  );
+
+const listReadHistory = (params: { page: number; pageSize: number }) =>
+  runCatching(
+    client
+      .get('novel/read-history', { searchParams: params })
+      .json<Page<WebNovelOutlineDto>>()
+  );
+
+const listFavorite = ({
+  page,
+  pageSize,
+  sort = 'update',
+}: {
+  page: number;
+  pageSize: number;
+  sort?: 'create' | 'update';
+}) =>
+  runCatching(
+    client
+      .get('novel/favored', { searchParams: { page, pageSize, sort } })
+      .json<Page<WebNovelOutlineDto>>()
+  );
+
+const getNovel = (providerId: string, novelId: string) =>
+  runCatching(client.get(`novel/${providerId}/${novelId}`).json<WebNovelDto>());
+
+const getChapter = (providerId: string, novelId: string, chapterId: string) =>
+  runCatching(
+    client
+      .get(`novel/${providerId}/${novelId}/chapter/${chapterId}`)
+      .json<WebNovelChapterDto>()
+  );
+
+const updateReadHistory = (
   providerId: string,
   novelId: string,
   chapterId: string
@@ -165,64 +149,44 @@ const putReadHistory = (
       .text()
   );
 
-const putFavored = (providerId: string, novelId: string) =>
+const favoriteNovel = (providerId: string, novelId: string) =>
   runCatching(client.put(`novel/${providerId}/${novelId}/favored`).text());
 
-const deleteFavored = (providerId: string, novelId: string) =>
+const unfavoriteNovel = (providerId: string, novelId: string) =>
   runCatching(client.delete(`novel/${providerId}/${novelId}/favored`).text());
 
-async function updateMetadata(
+const updateNovel = (
   providerId: string,
   novelId: string,
-  body: {
+  json: {
     title?: string;
     introduction?: string;
     toc: { [key: string]: string };
   }
-): Promise<Result<WebNovelMetadataDto>> {
+) => {
   return runCatching(
-    client
-      .post(`novel/${providerId}/${novelId}`, {
-        json: body,
-      })
-      .json()
+    client.post(`novel/${providerId}/${novelId}`, { json }).json<WebNovelDto>()
   );
-}
+};
 
-async function updateGlossary(
+const updateGlossary = (
   providerId: string,
   novelId: string,
-  body: { [key: string]: string }
-): Promise<Result<string>> {
-  return runCatching(
-    client
-      .put(`novel/${providerId}/${novelId}/glossary`, {
-        json: body,
-      })
-      .text()
+  json: { [key: string]: string }
+) =>
+  runCatching(
+    client.put(`novel/${providerId}/${novelId}/glossary`, { json }).text()
   );
-}
 
-async function putWenkuId(
-  providerId: string,
-  novelId: string,
-  wenkuId: string
-): Promise<Result<string>> {
-  return runCatching(
+const updateWenkuId = (providerId: string, novelId: string, wenkuId: string) =>
+  runCatching(
     client.put(`novel/${providerId}/${novelId}/wenku`, { body: wenkuId }).text()
   );
-}
 
-async function deleteWenkuId(
-  providerId: string,
-  novelId: string
-): Promise<Result<string>> {
-  return runCatching(
-    client.delete(`novel/${providerId}/${novelId}/wenku`).text()
-  );
-}
+const deleteWenkuId = (providerId: string, novelId: string) =>
+  runCatching(client.delete(`novel/${providerId}/${novelId}/wenku`).text());
 
-function createFileUrl(
+const createFileUrl = (
   providerId: string,
   novelId: string,
   lang:
@@ -235,25 +199,25 @@ function createFileUrl(
     | 'mix-gpt'
     | 'mix-all',
   type: 'epub' | 'txt'
-) {
-  return `/api/novel/${providerId}/${novelId}/file/${lang}/${type}`;
-}
+) => `/api/novel/${providerId}/${novelId}/file/${lang}/${type}`;
 
 export const ApiWebNovel = {
-  list,
+  listNovel,
   listRank,
-  listReadHistory,
-  listFavored,
   //
-  getMetadata,
+  listReadHistory,
+  updateReadHistory,
+  //
+  listFavorite,
+  favoriteNovel,
+  unfavoriteNovel,
+  //
+  getNovel,
   getChapter,
   //
-  putReadHistory,
-  putFavored,
-  deleteFavored,
-  updateMetadata,
+  updateNovel,
   updateGlossary,
-  putWenkuId,
+  updateWenkuId,
   deleteWenkuId,
   //
   createFileUrl,

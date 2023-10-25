@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 const { onAsyncClick } = defineProps<{
-  onAsyncClick: () => Promise<void>;
+  onAsyncClick: () => Promise<any>;
 }>();
 
 const userData = useUserDataStore();

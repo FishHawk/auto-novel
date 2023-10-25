@@ -91,11 +91,6 @@ const router = createRouter({
       component: () => import('./pages/toolbox/Toolbox.vue'),
     },
     {
-      path: '/toolbox/storage-public',
-      meta: { title: '文件翻译' },
-      component: () => import('./pages/toolbox/ToolboxStoragePublic.vue'),
-    },
-    {
       path: '/toolbox/storage-private',
       meta: { title: '文件翻译/私人' },
       component: () => import('./pages/toolbox/ToolboxStoragePrivate.vue'),

@@ -50,7 +50,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
     Alphapolis: 'alphapolis',
     Novelism: 'novelism',
   };
-  return ApiWebNovel.list({
+  return ApiWebNovel.listNovel({
     page,
     pageSize: 20,
     query,

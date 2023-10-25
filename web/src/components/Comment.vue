@@ -24,7 +24,7 @@ const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
 
 const loadReplies = async (page: number) => {
-  const result = await ApiComment.list({
+  const result = await ApiComment.listComment({
     site,
     parentId: comment.id,
     page: page - 1,

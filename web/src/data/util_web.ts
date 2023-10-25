@@ -1,6 +1,6 @@
 interface Provider {
   parseUrl(url: string): string | undefined;
-  buildMetadataUrl(novelId: string): string;
+  buildNovelUrl(novelId: string): string;
   buildChapterUrl(novelId: string, chapterId: string): string;
 }
 
@@ -8,7 +8,7 @@ const kakuyomu: Provider = {
   parseUrl(url: string): string | undefined {
     return /kakuyomu\.jp\/works\/([0-9]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(novelId: string): string {
+  buildNovelUrl(novelId: string): string {
     return `https://kakuyomu.jp/works/${novelId}`;
   },
   buildChapterUrl(novelId: string, chapterId: string): string {
@@ -20,7 +20,7 @@ const syosetu: Provider = {
   parseUrl(url: string): string | undefined {
     return /syosetu\.com\/([A-Za-z0-9]+)/.exec(url)?.[1].toLowerCase();
   },
-  buildMetadataUrl(novelId: string): string {
+  buildNovelUrl(novelId: string): string {
     return `https://ncode.syosetu.com/${novelId}`;
   },
   buildChapterUrl(novelId: string, chapterId: string): string {
@@ -36,7 +36,7 @@ const novelup: Provider = {
   parseUrl(url: string): string | undefined {
     return /novelup\.plus\/story\/([0-9]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(novelId: string): string {
+  buildNovelUrl(novelId: string): string {
     return `https://novelup.plus/story/${novelId}`;
   },
   buildChapterUrl(novelId: string, chapterId: string): string {
@@ -48,7 +48,7 @@ const hameln: Provider = {
   parseUrl(url: string): string | undefined {
     return /syosetu\.org\/novel\/([0-9]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(novelId: string): string {
+  buildNovelUrl(novelId: string): string {
     return `https://syosetu.org/novel/${novelId}`;
   },
   buildChapterUrl(novelId: string, chapterId: string): string {
@@ -71,7 +71,7 @@ const pixiv: Provider = {
     }
     return novelId;
   },
-  buildMetadataUrl(novelId: string): string {
+  buildNovelUrl(novelId: string): string {
     if (novelId[0] === 's') {
       return `https://www.pixiv.net/novel/show.php?id=${novelId.substring(1)}`;
     } else {
@@ -94,7 +94,7 @@ const alphapolis: Provider = {
       return undefined;
     }
   },
-  buildMetadataUrl(novelId: string): string {
+  buildNovelUrl(novelId: string): string {
     const realNovelId = novelId.replace('-', '/');
     return `https://www.alphapolis.co.jp/novel/${realNovelId}`;
   },
@@ -108,7 +108,7 @@ const novelism: Provider = {
   parseUrl(url: string): string | undefined {
     return /novelism\.jp\/novel\/([^\/]+)/.exec(url)?.[1];
   },
-  buildMetadataUrl(novelId: string): string {
+  buildNovelUrl(novelId: string): string {
     return `https://novelism.jp/novel/${novelId}`;
   },
   buildChapterUrl(novelId: string, chapterId: string): string {
@@ -139,11 +139,11 @@ export function parseUrl(
   return undefined;
 }
 
-export function buildMetadataUrl(providerId: string, novelId: string): string {
-  return providers[providerId].buildMetadataUrl(novelId);
+export function buildWebNovelUrl(providerId: string, novelId: string): string {
+  return providers[providerId].buildNovelUrl(novelId);
 }
 
-export function buildChapterUrl(
+export function buildWebChapterUrl(
   providerId: string,
   novelId: string,
   chapterId: string

@@ -48,7 +48,7 @@ async function addFavorite() {
     return;
   }
 
-  const result = await ApiWenkuNovel.putFavored(novelId);
+  const result = await ApiWenkuNovel.favoriteNovel(novelId);
   if (result.ok) {
     if (novelMetadataResult.value?.ok) {
       novelMetadataResult.value.value.favored = true;
@@ -68,7 +68,7 @@ async function removeFavorite() {
     return;
   }
 
-  const result = await ApiWenkuNovel.deleteFavored(novelId);
+  const result = await ApiWenkuNovel.unfavoriteNovel(novelId);
   if (result.ok) {
     if (novelMetadataResult.value?.ok) {
       novelMetadataResult.value.value.favored = false;

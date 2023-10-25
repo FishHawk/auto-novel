@@ -15,7 +15,7 @@ const options = [
 ];
 
 const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) =>
-  ApiWenkuNovel.list({ page, pageSize: 24, query, level: selected[0] });
+  ApiWenkuNovel.listNovel({ page, pageSize: 24, query, level: selected[0] });
 </script>
 
 <template>

@@ -3,18 +3,18 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { UploadFilled } from '@vicons/material';
 
-import { ApiWebNovel, WebNovelMetadataDto } from '@/data/api/api_web_novel';
+import { ApiWebNovel, WebNovelDto } from '@/data/api/api_web_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsDesktop } from '@/data/util';
 
 const props = defineProps<{
   providerId: string;
   novelId: string;
-  novelMetadata: WebNovelMetadataDto;
+  novelMetadata: WebNovelDto;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:novelMetadata', novelMetadata: WebNovelMetadataDto): void;
+  (e: 'update:novelMetadata', novelMetadata: WebNovelDto): void;
 }>();
 
 const isDesktop = useIsDesktop(850);
@@ -90,7 +90,7 @@ async function submit() {
         .map((item) => ({ [item.jp]: ifEdited(item) }))
     ),
   };
-  const result = await ApiWebNovel.updateMetadata(
+  const result = await ApiWebNovel.updateNovel(
     props.providerId,
     props.novelId,
     patch
@@ -116,7 +116,7 @@ async function updateWenkuId() {
     message.info('请先登录');
     return;
   }
-  const result = await ApiWebNovel.putWenkuId(
+  const result = await ApiWebNovel.updateWenkuId(
     props.providerId,
     props.novelId,
     wenkuId.value

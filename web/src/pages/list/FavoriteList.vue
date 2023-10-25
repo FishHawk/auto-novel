@@ -36,13 +36,13 @@ const loader: Loader<
     }
   }
   if (optionNth(0) === '网页小说') {
-    return ApiWebNovel.listFavored({
+    return ApiWebNovel.listFavorite({
       page,
       pageSize: 30,
       sort: optionSort(),
     }).then((result) => mapOk(result, (page) => ({ type: 'web', ...page })));
   } else {
-    return ApiWenkuNovel.listFavored({
+    return ApiWenkuNovel.listFavorite({
       page,
       pageSize: 24,
       sort: optionSort(),

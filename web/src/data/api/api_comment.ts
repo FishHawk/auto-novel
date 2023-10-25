@@ -12,7 +12,7 @@ export interface Comment1 {
   replies: Comment1[];
 }
 
-const list = (params: {
+const listComment = (params: {
   site: string;
   page: number;
   parentId?: string;
@@ -22,20 +22,13 @@ const list = (params: {
     client.get('comment', { searchParams: params }).json<Page<Comment1>>()
   );
 
-const reply = (site: string, parent: string | undefined, content: string) =>
-  runCatching(
-    client
-      .post('comment', {
-        json: {
-          site,
-          parent,
-          content,
-        },
-      })
-      .text()
-  );
+const createComment = (json: {
+  site: string;
+  parent: string | undefined;
+  content: string;
+}) => runCatching(client.post('comment', { json }).text());
 
 export const ApiComment = {
-  list,
-  reply,
+  listComment,
+  createComment,
 };
