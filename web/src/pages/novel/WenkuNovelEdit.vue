@@ -145,12 +145,14 @@ async function fetchNovel() {
         : amazonMetadata.title,
       titleZh: formValue.value.titleZh,
       cover: amazonMetadata.cover,
-      authors: formValue.value.authors
-        ? formValue.value.authors
-        : amazonMetadata.authors,
-      artists: formValue.value.artists
-        ? formValue.value.artists
-        : amazonMetadata.artists,
+      authors:
+        formValue.value.authors.length > 0
+          ? formValue.value.authors
+          : amazonMetadata.authors,
+      artists:
+        formValue.value.artists.length > 0
+          ? formValue.value.artists
+          : amazonMetadata.artists,
       r18: amazonMetadata.r18,
       introduction: formValue.value.introduction
         ? formValue.value.introduction

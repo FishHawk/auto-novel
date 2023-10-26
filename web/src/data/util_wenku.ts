@@ -74,12 +74,13 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
     Array.from(doc.getElementsByClassName('author')).forEach((element) => {
       const contribution = element
         .getElementsByClassName('contribution')[0]
-        .textContent?.trim();
+        .textContent?.trim()
+        ?.replace(/,$/, '');
       const name = element.getElementsByTagName('a')![0].textContent!.trim();
       if (contribution !== undefined) {
-        if (contribution.startsWith('(著)')) {
+        if (contribution.endsWith('(著)')) {
           authors.push(name);
-        } else if (contribution.startsWith('(イラスト)')) {
+        } else if (contribution.endsWith('(イラスト)')) {
           artists.push(name);
         }
       }
