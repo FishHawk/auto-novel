@@ -26,6 +26,28 @@ class UserRepository(
     private val es: DataSourceElasticSearch,
     private val redis: DataSourceRedis,
 ) {
+    suspend fun listUser(
+        page: Int,
+        pageSize: Int,
+        role: User.Role,
+    ): Page<User> {
+        val users = mongo
+            .userCollection
+            .find()
+            .skip(page * pageSize)
+            .limit(pageSize)
+            .toList()
+
+        val total = mongo
+            .userCollection
+            .countDocuments()
+
+        return Page(
+            total = total,
+            items = users,
+        )
+    }
+
     suspend fun add(
         email: String,
         username: String,

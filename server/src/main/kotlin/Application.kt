@@ -1,5 +1,6 @@
 import api.*
 import api.plugins.authentication
+import api.plugins.contentNegotiation
 import api.plugins.rateLimit
 import infra.DataSourceElasticSearch
 import infra.DataSourceMongo
@@ -15,19 +16,16 @@ import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.plugins.callloging.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
@@ -45,9 +43,7 @@ fun main() {
         rateLimit()
         install(Resources)
         install(CachingHeaders)
-        install(ContentNegotiation) {
-            json(Json)
-        }
+        contentNegotiation()
         install(CallLogging) {
             format { call ->
                 val status = call.response.status()
@@ -70,6 +66,7 @@ fun main() {
             routeArticle()
             routeComment()
             routeOperationHistory()
+            routeUser()
             routeWebNovel()
             routeWenkuNovel()
         }
@@ -122,6 +119,7 @@ val appModule = module {
     singleOf(::ArticleApi) { createdAtStart() }
     singleOf(::CommentApi) { createdAtStart() }
     singleOf(::OperationHistoryApi) { createdAtStart() }
+    singleOf(::UserApi) { createdAtStart() }
     singleOf(::WebNovelApi) { createdAtStart() }
     singleOf(::WenkuNovelApi) { createdAtStart() }
 }

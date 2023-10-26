@@ -106,6 +106,10 @@ const router = createRouter({
       component: () => import('./pages/admin/AdminOperationHistory.vue'),
     },
     {
+      path: '/admin/user',
+      component: () => import('./pages/admin/AdminUserManagement.vue'),
+    },
+    {
       path: '/admin/web-toc-merge-history',
       component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
     },

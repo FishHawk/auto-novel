@@ -1,7 +1,8 @@
 import { runCatching } from '@/data/result';
 
+import { UserReference } from './api_user';
 import { client } from './client';
-import { Page, UserOutline } from './common';
+import { Page } from './common';
 
 export type OperationType =
   | 'web-edit'
@@ -71,7 +72,7 @@ export interface OperationWenkuUpload {
 
 export interface OperationHistory {
   id: string;
-  operator: UserOutline;
+  operator: UserReference;
   operation: Operation;
   createAt: number;
 }

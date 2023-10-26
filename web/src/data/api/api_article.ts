@@ -1,7 +1,8 @@
 import { runCatching } from '@/data/result';
 
+import { UserReference } from './api_user';
 import { client } from './client';
-import { Page, UserOutline } from './common';
+import { Page } from './common';
 
 export interface ArticleOutline {
   id: string;
@@ -10,7 +11,7 @@ export interface ArticleOutline {
   pinned: boolean;
   numViews: number;
   numComments: number;
-  user: UserOutline;
+  user: UserReference;
   createAt: number;
   updateAt: number;
 }
@@ -23,7 +24,7 @@ export interface Article {
   pinned: boolean;
   numViews: number;
   numComments: number;
-  user: UserOutline;
+  user: UserReference;
   createAt: number;
   updateAt: number;
 }

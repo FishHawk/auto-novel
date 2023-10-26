@@ -1,11 +1,12 @@
 import { runCatching } from '@/data/result';
 
+import { UserReference } from './api_user';
 import { client } from './client';
-import { Page, UserOutline } from './common';
+import { Page } from './common';
 
 export interface Comment1 {
   id: string;
-  user: UserOutline;
+  user: UserReference;
   content: string;
   createAt: number;
   numReplies: number;
