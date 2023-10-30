@@ -233,7 +233,7 @@ async function submitGlossary() {
 async function submitGpuJob() {
   const result = await ApiGpu.createGpuJobWebTranslate(providerId, novelId, {
     start: startIndex.value ?? 0,
-    end: endIndex.value ?? 65536,
+    end: endIndex.value ?? 65535,
   });
   if (result.ok) {
     message.info('排队成功');

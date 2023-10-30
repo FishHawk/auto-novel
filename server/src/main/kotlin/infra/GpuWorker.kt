@@ -1,9 +1,6 @@
 package infra
 
-import infra.model.GpuJob
-import infra.model.GpuJobResult
-import infra.model.SakuraFailCase
-import infra.model.WebNovelChapter
+import infra.model.*
 import infra.web.WebNovelChapterRepository
 import infra.web.providers.json
 import io.ktor.client.*
@@ -23,10 +20,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.litote.kmongo.and
-import org.litote.kmongo.eq
-import org.litote.kmongo.ne
-import org.litote.kmongo.setValue
+import org.litote.kmongo.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -227,6 +221,24 @@ class GpuWorker(
                         setValue(WebNovelChapter::sakuraParagraphs, sakuraParagraphs)
                     )
 
+                val zh = mongo.webNovelChapterCollection
+                    .countDocuments(
+                        and(
+                            WebNovelChapter::providerId eq providerId,
+                            WebNovelChapter::novelId eq novelId,
+                            WebNovelChapter::sakuraParagraphs ne null,
+                        )
+                    )
+                mongo
+                    .webNovelMetadataCollection
+                    .updateOne(
+                        WebNovelMetadata.byId(providerId, novelId),
+                        combine(
+                            setValue(WebNovelMetadata::sakura, zh),
+                            setValue(WebNovelMetadata::changeAt, Clock.System.now()),
+                        ),
+                    )
+
                 finished += 1
                 updateProgress()
             } catch (e: Throwable) {
@@ -290,7 +302,7 @@ class GpuWorker(
 
         var retry = 0
 
-        while (retry < 3) {
+        while (retry < 4) {
             val prompt = "<reserved_106>将下面的日文文本翻译成中文：${seg.joinToString("\n")}<reserved_107>";
             val body = if (retry == 0) {
                 ParamBody(

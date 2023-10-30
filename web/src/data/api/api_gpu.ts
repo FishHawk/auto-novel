@@ -43,7 +43,7 @@ const createGpuJobWebTranslate = (
 ) => {
   const paramsString: { [key: string]: string } = {};
   if (params.start > 0) paramsString['start'] = params.start.toString();
-  if (params.end < 65536) paramsString['end'] = params.end.toString();
+  if (params.end < 65535) paramsString['end'] = params.end.toString();
   const searchParams = new URLSearchParams(paramsString).toString();
   const queryString = searchParams ? `?${searchParams}` : '';
   return createGpuJob(`web/${providerId}/${novelId}${queryString}`);
