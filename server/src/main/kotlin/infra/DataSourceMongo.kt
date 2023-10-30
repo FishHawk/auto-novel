@@ -47,6 +47,14 @@ class DataSourceMongo(url: String) {
     val commentCollection
         get() = database.getCollection<CommentModel>("comment-alt")
 
+    val gpuJobCollection
+        get() = database.getCollection<GpuJob>("gpu-job")
+    val gpuJobResultCollection
+        get() = database.getCollection<GpuJobResult>("gpu-job-result")
+    val sakuraFailCaseCollection
+        get() = database.getCollection<SakuraFailCase>("sakura-fail-case")
+
+
     val operationHistoryCollection
         get() = database.getCollection<OperationHistoryModel>("operation-history")
 
@@ -94,6 +102,9 @@ class DataSourceMongo(url: String) {
                 CommentModel::site,
                 CommentModel::parent,
                 CommentModel::id,
+            )
+            gpuJobCollection.ensureUniqueIndex(
+                GpuJob::task,
             )
             operationHistoryCollection.ensureIndex(
                 OperationHistoryModel::createAt,

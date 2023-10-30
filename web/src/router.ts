@@ -10,6 +10,11 @@ const router = createRouter({
     },
 
     {
+      path: '/gpu',
+      meta: { title: 'GPU' },
+      component: () => import('./pages/other/Gpu.vue'),
+    },
+    {
       path: '/reset-password',
       meta: { title: '重置密码' },
       component: () => import('./pages/other/ResetPassword.vue'),

@@ -9,6 +9,7 @@ import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { buildWebChapterUrl } from '@/data/util_web';
+import { TranslatorId } from '@/data/translator/translator';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
@@ -72,14 +73,16 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
     }
 
     function paragraphsWithLabel(
-      t: 'baidu' | 'youdao' | 'gpt'
+      t: TranslatorId
     ): [string, string[] | undefined] {
       if (t === 'youdao') {
         return ['有道', chapter.youdaoParagraphs];
       } else if (t === 'baidu') {
         return ['百度', chapter.baiduParagraphs];
-      } else {
+      } else if (t === 'gpt') {
         return ['GPT3', chapter.gptParagraphs];
+      } else {
+        return ['Sakura', chapter.sakuraParagraphs];
       }
     }
     if (setting.translationsMode === 'priority') {

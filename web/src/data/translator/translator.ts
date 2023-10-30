@@ -11,7 +11,7 @@ export interface SegmentCache {
   save(cacheKey: string, output: string[]): Promise<void>;
 }
 
-export type TranslatorId = 'baidu' | 'youdao' | 'gpt';
+export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
 
 export interface TranslatorConfig {
   client: KyInstance;

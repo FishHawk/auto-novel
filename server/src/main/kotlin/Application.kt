@@ -4,10 +4,8 @@ import api.plugins.contentNegotiation
 import api.plugins.rateLimit
 import infra.DataSourceElasticSearch
 import infra.DataSourceMongo
-import infra.common.ArticleRepository
-import infra.common.CommentRepository
-import infra.common.OperationHistoryRepository
-import infra.common.UserRepository
+import infra.GpuWorkerManager
+import infra.common.*
 import infra.createRedisDataSource
 import infra.web.DataSourceWebNovelProvider
 import infra.web.WebNovelChapterRepository
@@ -65,6 +63,7 @@ fun main() {
             routeAuth()
             routeArticle()
             routeComment()
+            routeGpu()
             routeOperationHistory()
             routeUser()
             routeWebNovel()
@@ -97,8 +96,11 @@ val appModule = module {
     }
 
     // Repository
+    singleOf(::GpuWorkerManager)
+
     singleOf(::ArticleRepository)
     singleOf(::CommentRepository)
+    singleOf(::GpuJobRepository)
     singleOf(::OperationHistoryRepository)
     singleOf(::UserRepository)
 
@@ -118,6 +120,7 @@ val appModule = module {
     }
     singleOf(::ArticleApi) { createdAtStart() }
     singleOf(::CommentApi) { createdAtStart() }
+    singleOf(::GpuApi) { createdAtStart() }
     singleOf(::OperationHistoryApi) { createdAtStart() }
     singleOf(::UserApi) { createdAtStart() }
     singleOf(::WebNovelApi) { createdAtStart() }

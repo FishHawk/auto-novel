@@ -14,6 +14,7 @@ export function getTranslatorLabel(id: TranslatorId) {
     baidu: '百度',
     youdao: '有道',
     gpt: 'GPT3',
+    sakura: 'Sakura',
   };
   return idToLaber[id];
 }

@@ -133,6 +133,9 @@ const linkExample = [
 
       <n-ul>
         <n-li>
+          Sakura翻译开始公开测试。现在网络小说可以使用Sakura模型翻译，使用前请先看完<RouterNA to="/forum/653fbe0492b50672788e3608">说明</RouterNA>。
+        </n-li>
+        <n-li>
           <b>使用说明</b>
           ：将想要翻译的小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。
           <n-ul>

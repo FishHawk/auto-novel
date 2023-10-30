@@ -187,6 +187,7 @@ const editMode = ref(false);
             v-model:baidu="novel.baidu"
             v-model:youdao="novel.youdao"
             v-model:gpt="novel.gpt"
+            :sakura="novel.sakura"
             :glossary="novel.glossary"
           />
         </section>

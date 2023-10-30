@@ -7,11 +7,11 @@ import api.plugins.authenticatedUserOrNull
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
-import infra.web.providers.Syosetu
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelFilter
 import infra.web.WebNovelMetadataRepository
+import infra.web.providers.Syosetu
 import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -519,6 +519,7 @@ class WebNovelApi(
         val baidu: Long,
         val youdao: Long,
         val gpt: Long,
+        val sakura: Long,
     )
 
     private suspend fun buildNovelDto(
@@ -548,6 +549,7 @@ class WebNovelApi(
             baidu = novel.baidu,
             youdao = novel.youdao,
             gpt = novel.gpt,
+            sakura = novel.sakura,
         )
     }
 
@@ -580,6 +582,7 @@ class WebNovelApi(
         val baiduParagraphs: List<String>?,
         val youdaoParagraphs: List<String>?,
         val gptParagraphs: List<String>?,
+        val sakuraParagraphs: List<String>?,
     )
 
     suspend fun getChapter(
@@ -607,6 +610,7 @@ class WebNovelApi(
             baiduParagraphs = chapter.baiduParagraphs,
             youdaoParagraphs = chapter.youdaoParagraphs,
             gptParagraphs = chapter.gptParagraphs,
+            sakuraParagraphs = chapter.sakuraParagraphs,
         )
     }
 

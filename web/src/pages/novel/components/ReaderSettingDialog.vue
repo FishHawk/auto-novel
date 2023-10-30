@@ -21,6 +21,7 @@ const translationModeOptions = [
   { label: '并列', value: 'parallel' },
 ];
 const translationOptions = [
+  { label: 'Sakura', value: 'sakura' },
   { label: 'GPT3', value: 'gpt' },
   { label: '有道', value: 'youdao' },
   { label: '百度', value: 'baidu' },

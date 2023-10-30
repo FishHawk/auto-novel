@@ -17,7 +17,7 @@ export const useReaderSettingStore = defineStore('readerSetting', {
     <ReaderSetting>{
       mode: 'mix',
       translationsMode: 'priority',
-      translations: ['gpt', 'youdao', 'baidu'],
+      translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       fontSize: '14px',
       theme: { isDark: false, bodyColor: '#FFFFFF' },
       mixJpOpacity: 0.4,

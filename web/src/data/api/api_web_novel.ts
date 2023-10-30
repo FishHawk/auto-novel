@@ -17,6 +17,7 @@ export interface WebNovelOutlineDto {
   baidu: number;
   youdao: number;
   gpt: number;
+  sakura: number;
   updateAt?: number;
 }
 
@@ -47,6 +48,7 @@ export interface WebNovelDto {
   baidu: number;
   youdao: number;
   gpt: number;
+  sakura: number;
 }
 
 export interface WebNovelChapterDto {
@@ -58,6 +60,7 @@ export interface WebNovelChapterDto {
   baiduParagraphs: string[] | undefined;
   youdaoParagraphs: string[] | undefined;
   gptParagraphs: string[] | undefined;
+  sakuraParagraphs: string[] | undefined;
 }
 
 const listNovel = ({

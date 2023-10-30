@@ -3,6 +3,7 @@ import { computed, Ref, ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { client } from '@/data/api/client';
+import { ApiGpu } from '@/data/api/api_gpu';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslatorId } from '@/data/translator/translator';
@@ -18,6 +19,7 @@ const props = defineProps<{
   baidu: number;
   youdao: number;
   gpt: number;
+  sakura: number;
   glossary: { [key: string]: string };
 }>();
 
@@ -122,7 +124,7 @@ async function startTask(translatorId: TranslatorId) {
 
 interface NovelFiles {
   label: string;
-  translatorId?: TranslatorId;
+  translatorId?: TranslatorId | 'sakura';
   files: { label: string; url: string; name: string }[];
 }
 
@@ -197,6 +199,11 @@ function stateToFileList(): NovelFiles[] {
         createFile('EPUB', 'mix-all', 'epub'),
       ],
     },
+    {
+      label: `SAKURA(${props.sakura}/${total})`,
+      translatorId: 'sakura',
+      files: [],
+    },
   ];
 }
 
@@ -220,6 +227,15 @@ async function submitGlossary() {
     message.success('术语表提交成功');
   } else {
     message.error('术语表提交失败：' + result.error.message);
+  }
+}
+
+async function submitGpuJob() {
+  const result = await ApiGpu.createGpuJobWebTranslate(providerId, novelId);
+  if (result.ok) {
+    message.info('排队成功');
+  } else {
+    message.error('排队成功失败:' + result.error.message);
   }
 }
 </script>
@@ -310,8 +326,18 @@ async function submitGlossary() {
   <n-list style="background-color: #0000">
     <n-list-item v-for="row in stateToFileList()">
       <template #suffix>
+        <template v-if="row.translatorId === 'sakura'">
+          <n-space :wrap="false">
+            <RouterNA to="/gpu">
+              <n-button tertiary size="small"> 查看 </n-button>
+            </RouterNA>
+            <async-button tertiary size="small" @async-click="submitGpuJob">
+              排队
+            </async-button>
+          </n-space>
+        </template>
         <n-button
-          v-if="row.translatorId"
+          v-else-if="row.translatorId"
           tertiary
           size="small"
           @click="startTask(row.translatorId)"

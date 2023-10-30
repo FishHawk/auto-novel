@@ -435,6 +435,7 @@ private fun RemoteNovelListItem.toOutline(
         baidu = novel?.baidu ?: 0,
         youdao = novel?.youdao ?: 0,
         gpt = novel?.gpt ?: 0,
+        sakura = novel?.sakura ?: 0,
         extra = extra,
         updateAt = novel?.updateAt,
     )
@@ -453,6 +454,7 @@ fun WebNovelMetadata.toOutline() =
         baidu = baidu,
         youdao = youdao,
         gpt = gpt,
+        sakura = sakura,
         extra = null,
         updateAt = updateAt,
     )
