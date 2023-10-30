@@ -78,7 +78,7 @@ async function deleteJob(id: string) {
                 job.submitter
               }}提交
               <async-button
-                v-if="userData.asAdmin"
+                v-if="userData.asAdmin || userData.username === job.submitter"
                 type="error"
                 text
                 @async-click="() => deleteJob(job.id)"

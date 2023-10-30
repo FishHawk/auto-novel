@@ -23,6 +23,16 @@ class GpuJobRepository(
             .countDocuments()
     }
 
+    suspend fun getJob(
+        id: ObjectId,
+    ): GpuJob? {
+        return mongo
+            .gpuJobCollection
+            .findOne(
+                GpuJob::id eq id
+            )
+    }
+
     suspend fun createJob(
         job: GpuJob,
     ): Boolean {

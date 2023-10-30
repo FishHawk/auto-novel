@@ -164,7 +164,13 @@ class GpuApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeastMaintainer()
+        val job = gpuJobRepo.getJob(ObjectId(id))
+            ?: throwNotFound("任务不存在")
+
+        if (job.submitter != user.username) {
+            user.shouldBeAtLeastMaintainer()
+        }
+
         val isSuccess = gpuJobRepo.deleteJob(ObjectId(id))
         if (!isSuccess) throwConflict("任务被占用")
     }
