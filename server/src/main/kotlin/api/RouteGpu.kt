@@ -9,6 +9,7 @@ import infra.GpuWorkerProgress
 import infra.common.GpuJobRepository
 import infra.model.GpuJob
 import infra.web.WebNovelMetadataRepository
+import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -134,11 +135,16 @@ class GpuApi(
         val total = gpuJobRepo.countJob()
         if (total > 30) throwBadRequest("任务队列已满")
 
-        val description = when {
-            task.startsWith("web") -> {
-                val splitResult = task.split('/', limit = 3)
-                if (splitResult.size != 3) throwBadRequest("任务格式错误")
-                val (_, providerId, novelId) = splitResult
+        val taskUrl = try {
+            URLBuilder().takeFrom(task).build()
+        } catch (e: Throwable) {
+            throwBadRequest("任务格式错误")
+        }
+
+        val description = when (taskUrl.pathSegments.first()) {
+            "web" -> {
+                if (taskUrl.pathSegments.size != 3) throwBadRequest("任务格式错误")
+                val (_, providerId, novelId) = taskUrl.pathSegments
                 val novel = webRepo.get(providerId, novelId)
                     ?: throwNotFound("小说不存在")
                 novel.titleJp

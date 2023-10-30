@@ -103,11 +103,13 @@ class GpuWorker(
 
     private suspend fun processJob(job: GpuJob) {
         this.description = job.task + "\n" + job.description
-        when {
-            job.task.startsWith("web") -> {
-                val (_, providerId, novelId) = job.task.split('/')
-                processWebTranslateJob(providerId, novelId)
+
+        try {
+            val taskUrl = URLBuilder().takeFrom(job.task).build()
+            when (taskUrl.pathSegments.first()) {
+                "web" -> processWebTranslateJob(taskUrl)
             }
+        } catch (_: Throwable) {
         }
 
         mongo
@@ -135,9 +137,12 @@ class GpuWorker(
     }
 
     private suspend fun processWebTranslateJob(
-        providerId: String,
-        novelId: String,
+        taskUrl: Url,
     ) {
+        val (_, providerId, novelId) = taskUrl.pathSegments
+        val start = taskUrl.parameters["start"]?.toIntOrNull() ?: 0
+        val end = taskUrl.parameters["end"]?.toIntOrNull() ?: 65536
+
         @Serializable
         data class WebNovelChapterProjection(
             @SerialName("episodeId")
@@ -166,6 +171,7 @@ class GpuWorker(
         val untranslatedChapterId = novel
             .toc
             .mapNotNull { it.chapterId }
+            .filterIndexed { index, _ -> index in start..<end }
             .filterNot { it in translatedChapterId }
             .let {
                 it.subList(0, it.size.coerceAtMost(50))

@@ -33,8 +33,21 @@ const getGpuInfo = () => runCatching(client.get('gpu').json<GpuInfo>());
 const createGpuJob = (task: string) =>
   runCatching(client.post(`gpu/job`, { body: task }).text());
 
-const createGpuJobWebTranslate = (providerId: string, novelId: string) =>
-  createGpuJob(`web/${providerId}/${novelId}`);
+const createGpuJobWebTranslate = (
+  providerId: string,
+  novelId: string,
+  params: {
+    start: number;
+    end: number;
+  }
+) => {
+  const paramsString: { [key: string]: string } = {};
+  if (params.start > 0) paramsString['start'] = params.start.toString();
+  if (params.end < 65536) paramsString['end'] = params.end.toString();
+  const searchParams = new URLSearchParams(paramsString).toString();
+  const queryString = searchParams ? `?${searchParams}` : '';
+  return createGpuJob(`web/${providerId}/${novelId}${queryString}`);
+};
 
 const deleteGpuJob = (id: string) =>
   runCatching(client.delete(`gpu/job/${id}`).text());
