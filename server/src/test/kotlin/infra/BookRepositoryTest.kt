@@ -7,6 +7,7 @@ import infra.web.DataSourceWebNovelProvider
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -18,7 +19,9 @@ import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
 import org.litote.kmongo.eq
+import org.litote.kmongo.setValue
 import java.io.File
+import kotlin.time.Duration.Companion.days
 
 
 val appModule = module {
@@ -55,10 +58,34 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-            val a = mongo.userCollection.findOne(
-                User::username eq "shoutmon"
-            )
-            println(a)
+//            val a = mongo
+//                .gpuJobResultCollection
+//                .deleteMany(
+//                    GpuJobResult::finished eq 0
+//                )
+
+//            mongo
+//                .gpuJobResultCollection
+//                .find(GpuJobResult::finished eq 0)
+//                .toList()
+//                .forEach {
+//                    println(it)
+//                    try {
+//                        mongo
+//                            .gpuJobCollection
+//                            .insertOne(
+//                                GpuJob(
+//                                    id = ObjectId(),
+//                                    task = it.task,
+//                                    description = it.description,
+//                                    workerId = null,
+//                                    submitter = it.submitter,
+//                                    createAt = it.createAt,
+//                                )
+//                            )
+//                    } catch (_: Throwable) {
+//                    }
+//                }
         }
         describe("build es index") {
             @Serializable
