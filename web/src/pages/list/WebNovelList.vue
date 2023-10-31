@@ -28,7 +28,7 @@ const options = [
   },
   {
     label: '翻译',
-    tags: ['全部', 'AI'],
+    tags: ['全部', 'GPT3', 'Sakura'],
   },
   {
     label: '排序',

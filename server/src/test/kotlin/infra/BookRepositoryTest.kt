@@ -1,14 +1,9 @@
 package infra
 
-import appModule
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
-import infra.common.OperationHistoryRepository
-import infra.common.UserRepository
 import infra.model.*
 import infra.web.DataSourceWebNovelProvider
-import infra.wenku.WenkuNovelMetadataRepository
-import infra.wenku.WenkuNovelVolumeRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
@@ -18,6 +13,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.Document
 import org.bson.types.ObjectId
+import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
@@ -25,17 +21,38 @@ import org.litote.kmongo.eq
 import org.litote.kmongo.id.toId
 import java.io.File
 
+
+val appModule = module {
+    // Data Source
+    single {
+        val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017"
+        DataSourceMongo(mongodbUrl)
+    }
+    single {
+        val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
+        DataSourceElasticSearch(url)
+    }
+    single {
+        val httpProxy: String? = System.getenv("HTTPS_PROXY")
+        val pixivPhpsessid: String? = System.getenv("PIXIV_COOKIE_PHPSESSID")
+        DataSourceWebNovelProvider(
+            httpsProxy = httpProxy,
+            pixivPhpsessid = pixivPhpsessid,
+        )
+    }
+}
+
 class BookRepositoryTest : DescribeSpec(), KoinTest {
-    override fun extensions() = listOf(KoinExtension(module = appModule, mode = KoinLifecycleMode.Root))
+    override fun extensions() = listOf(
+        KoinExtension(
+            module = appModule,
+            mode = KoinLifecycleMode.Root,
+        )
+    )
 
     private val provider by inject<DataSourceWebNovelProvider>(DataSourceWebNovelProvider::class.java)
     private val es by inject<DataSourceElasticSearch>(DataSourceElasticSearch::class.java)
     private val mongo by inject<DataSourceMongo>(DataSourceMongo::class.java)
-
-    private val wenkuVR by inject<WenkuNovelVolumeRepository>(WenkuNovelVolumeRepository::class.java)
-    private val wenkuMR by inject<WenkuNovelMetadataRepository>(WenkuNovelMetadataRepository::class.java)
-    private val userR by inject<UserRepository>(UserRepository::class.java)
-    private val ohR by inject<OperationHistoryRepository>(OperationHistoryRepository::class.java)
 
     init {
         describe("delete wenku") {
@@ -60,6 +77,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                 val keywords: List<String> = emptyList(),
                 val visited: Long = 0,
                 val gpt: Long = 0,
+                val sakura: Long = 0,
                 val toc: List<WebNovelTocItem>,
                 @Contextual val updateAt: Instant,
             )
@@ -79,6 +97,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                         WebNovelMetadata::attentions,
                         WebNovelMetadata::keywords,
                         WebNovelMetadata::gpt,
+                        WebNovelMetadata::sakura,
                         WebNovelMetadata::visited,
                         WebNovelMetadata::toc,
                         WebNovelMetadata::updateAt,
@@ -99,6 +118,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                                 attentions = it.attentions,
                                 keywords = it.keywords,
                                 hasGpt = it.gpt > 0,
+                                hasSakura = it.sakura > 0,
                                 visited = it.visited.toInt(),
                                 tocSize = it.toc.count { it.chapterId != null },
                                 updateAt = it.updateAt.epochSeconds,

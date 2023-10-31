@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.minutes
 object WebNovelFilter {
     enum class Type { 全部, 连载中, 已完结, 短篇 }
     enum class Level { 全部, 一般向, R18 }
-    enum class Translate { 全部, AI }
+    enum class Translate { 全部, GPT3, Sakura }
     enum class Sort { 更新, 点击, 相关 }
 }
 
@@ -97,8 +97,14 @@ class WebNovelMetadataRepository(
                 )
 
                 // Filter translate
-                if (filterTranslate == WebNovelFilter.Translate.AI) {
-                    mustQueries.add(ESQuery("term", JsonDsl().apply { put("hasGpt", true) }))
+                when (filterTranslate) {
+                    WebNovelFilter.Translate.GPT3 ->
+                        mustQueries.add(ESQuery("term", JsonDsl().apply { put("hasGpt", true) }))
+
+                    WebNovelFilter.Translate.Sakura ->
+                        mustQueries.add(ESQuery("term", JsonDsl().apply { put("hasSakura", true) }))
+
+                    else -> Unit
                 }
 
                 // Parse query
@@ -411,6 +417,7 @@ class WebNovelMetadataRepository(
                 tocSize = novel.toc.count { it.chapterId != null },
                 visited = novel.visited.toInt(),
                 hasGpt = novel.gpt > 0,
+                hasSakura = novel.sakura > 0,
                 updateAt = novel.updateAt.epochSeconds,
             ),
             refresh = Refresh.WaitFor,

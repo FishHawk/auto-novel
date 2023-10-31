@@ -118,7 +118,8 @@ fun Route.routeWebNovel() {
                     else -> WebNovelFilter.Level.全部
                 },
                 filterTranslate = when (loc.translate) {
-                    1 -> WebNovelFilter.Translate.AI
+                    1 -> WebNovelFilter.Translate.GPT3
+                    2 -> WebNovelFilter.Translate.Sakura
                     else -> WebNovelFilter.Translate.全部
                 },
                 filterSort = when (loc.sort) {
