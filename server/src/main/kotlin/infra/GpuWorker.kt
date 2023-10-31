@@ -265,7 +265,7 @@ class GpuWorker(
             .filterIndexed { index, _ -> index in start..<end }
             .filterNot { it in translatedChapterId }
             .let {
-                it.subList(0, it.size.coerceAtMost(50))
+                it.subList(0, it.size.coerceAtMost(100))
             }
 
         val total = untranslatedChapterId.size

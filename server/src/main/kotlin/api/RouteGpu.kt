@@ -179,7 +179,7 @@ class GpuApi(
             throwUnauthorized("Sakura目前还在测试中，暂时只允许注册超过一个月的用户使用")
 
         val total = gpuJobRepo.countJob()
-        if (total > 30) throwBadRequest("任务队列已满")
+        if (total >= 150) throwBadRequest("任务队列已满")
 
         val taskUrl = try {
             URLBuilder().takeFrom(task).build()
