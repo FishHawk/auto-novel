@@ -100,7 +100,7 @@ class GpuWorkerManager(
     suspend fun deleteWorker(id: String) {
         mongo
             .gpuCardCollection
-            .deleteOneById(id)
+            .deleteOneById(ObjectId(id))
         _workers[id]?.stop()
         _workers.remove(id)
     }
