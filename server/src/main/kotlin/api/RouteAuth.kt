@@ -1,6 +1,9 @@
 package api
 
-import api.plugins.*
+import api.plugins.AuthenticatedUser
+import api.plugins.authenticateDb
+import api.plugins.authenticatedUser
+import api.plugins.generateToken
 import infra.common.UserRepository
 import infra.model.User
 import io.ktor.resources.*
@@ -11,6 +14,9 @@ import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.Email
@@ -125,7 +131,8 @@ class AuthApi(
         val username: String,
         val role: User.Role,
         val token: String,
-        val expiresAt: Long,
+        @Contextual val createAt: Instant,
+        @Contextual val expiresAt: Instant,
     )
 
     suspend fun signIn(
@@ -152,6 +159,7 @@ class AuthApi(
             username = user.username,
             role = user.role,
             token = token,
+            createAt = user.createdAt,
             expiresAt = expiresAt,
         )
     }
@@ -168,6 +176,7 @@ class AuthApi(
             username = user.username,
             role = user.role,
             token = token,
+            createAt = user.createdAt,
             expiresAt = expiresAt,
         )
     }
@@ -202,6 +211,7 @@ class AuthApi(
             username = username,
             role = role,
             token = token,
+            createAt = Clock.System.now(),
             expiresAt = expiresAt,
         )
     }

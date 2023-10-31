@@ -18,7 +18,6 @@ import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
 import org.litote.kmongo.eq
-import org.litote.kmongo.id.toId
 import java.io.File
 
 
@@ -55,14 +54,11 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val mongo by inject<DataSourceMongo>(DataSourceMongo::class.java)
 
     init {
-        describe("delete wenku") {
-            val nid = "65320febcdb73b5203ca1bd2"
-            val favored = mongo
-                .wenkuNovelFavoriteCollection
-                .find(WenkuNovelFavoriteModel::novelId eq ObjectId(nid).toId())
-                .toList()
-            println(favored)
-//            wenkuMR.delete(nid)
+        describe("test") {
+            val a = mongo.userCollection.findOne(
+                User::username eq "shoutmon"
+            )
+            println(a)
         }
         describe("build es index") {
             @Serializable

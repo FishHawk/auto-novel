@@ -6,6 +6,7 @@ export interface SignInDto {
   username: string;
   role: 'normal' | 'admin' | 'maintainer';
   token: string;
+  createAt: number;
   expiresAt: number;
 }
 

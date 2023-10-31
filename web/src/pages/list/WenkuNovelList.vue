@@ -4,18 +4,38 @@ import {
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
 import { Page } from '@/data/api/common';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 import { Loader } from './components/NovelList.vue';
 
-const options = [
-  {
-    label: '分级',
-    tags: ['一般向', 'R18'],
-  },
-];
+const userData = useUserDataStore();
 
-const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) =>
-  ApiWenkuNovel.listNovel({ page, pageSize: 24, query, level: selected[0] });
+const options = userData.isOldAss
+  ? [
+      {
+        label: '分级',
+        tags: ['一般向', 'R18'],
+      },
+    ]
+  : [];
+
+const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
+  if (userData.isOldAss) {
+    return ApiWenkuNovel.listNovel({
+      page,
+      pageSize: 24,
+      query,
+      level: selected[0],
+    });
+  } else {
+    return ApiWenkuNovel.listNovel({
+      page,
+      pageSize: 24,
+      query,
+      level: 0,
+    });
+  }
+};
 </script>
 
 <template>

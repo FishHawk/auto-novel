@@ -31,6 +31,14 @@ export const useUserDataStore = defineStore('authInfo', {
     isLoggedIn: ({ info }) => validExpires(info) !== undefined,
     username: ({ info }) => validExpires(info)?.username,
     token: ({ info }) => validExpires(info)?.token,
+    isOldAss: ({ info }) => {
+      const createAt = validExpires(info)?.createAt;
+      if (createAt) {
+        return Date.now() / 1000 - createAt > 30 * 24 * 3600;
+      } else {
+        return false;
+      }
+    },
     isAdmin: ({ info }) => validExpires(info)?.role === 'admin',
     asAdmin: ({ adminMode, info }) =>
       adminMode && validExpires(info)?.role === 'admin',

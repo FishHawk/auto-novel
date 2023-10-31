@@ -1,9 +1,6 @@
 package api
 
-import api.plugins.AuthenticatedUser
-import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
-import api.plugins.authenticatedUserOrNull
+import api.plugins.*
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
@@ -101,35 +98,39 @@ private class WebNovelRes {
 fun Route.routeWebNovel() {
     val service by inject<WebNovelApi>()
 
-    get<WebNovelRes.List> { loc ->
-        call.tryRespond {
-            service.list(
-                queryString = loc.query?.ifBlank { null },
-                filterProvider = loc.provider.ifEmpty { null },
-                filterType = when (loc.type) {
-                    1 -> WebNovelFilter.Type.连载中
-                    2 -> WebNovelFilter.Type.已完结
-                    3 -> WebNovelFilter.Type.短篇
-                    else -> WebNovelFilter.Type.全部
-                },
-                filterLevel = when (loc.level) {
-                    1 -> WebNovelFilter.Level.一般向
-                    2 -> WebNovelFilter.Level.R18
-                    else -> WebNovelFilter.Level.全部
-                },
-                filterTranslate = when (loc.translate) {
-                    1 -> WebNovelFilter.Translate.GPT3
-                    2 -> WebNovelFilter.Translate.Sakura
-                    else -> WebNovelFilter.Translate.全部
-                },
-                filterSort = when (loc.sort) {
-                    1 -> WebNovelFilter.Sort.点击
-                    2 -> WebNovelFilter.Sort.相关
-                    else -> WebNovelFilter.Sort.更新
-                },
-                page = loc.page,
-                pageSize = loc.pageSize,
-            )
+    authenticateDb(optional = true) {
+        get<WebNovelRes.List> { loc ->
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                service.list(
+                    user = user,
+                    queryString = loc.query?.ifBlank { null },
+                    filterProvider = loc.provider.ifEmpty { null },
+                    filterType = when (loc.type) {
+                        1 -> WebNovelFilter.Type.连载中
+                        2 -> WebNovelFilter.Type.已完结
+                        3 -> WebNovelFilter.Type.短篇
+                        else -> WebNovelFilter.Type.全部
+                    },
+                    filterLevel = when (loc.level) {
+                        1 -> WebNovelFilter.Level.一般向
+                        2 -> WebNovelFilter.Level.R18
+                        else -> WebNovelFilter.Level.全部
+                    },
+                    filterTranslate = when (loc.translate) {
+                        1 -> WebNovelFilter.Translate.GPT3
+                        2 -> WebNovelFilter.Translate.Sakura
+                        else -> WebNovelFilter.Translate.全部
+                    },
+                    filterSort = when (loc.sort) {
+                        1 -> WebNovelFilter.Sort.点击
+                        2 -> WebNovelFilter.Sort.相关
+                        else -> WebNovelFilter.Sort.更新
+                    },
+                    page = loc.page,
+                    pageSize = loc.pageSize,
+                )
+            }
         }
     }
     get<WebNovelRes.Rank> { loc ->
@@ -401,6 +402,7 @@ class WebNovelApi(
         )
 
     suspend fun list(
+        user: AuthenticatedUser?,
         queryString: String?,
         filterProvider: String?,
         filterType: WebNovelFilter.Type,
@@ -410,8 +412,13 @@ class WebNovelApi(
         page: Int,
         pageSize: Int,
     ): PageDto<NovelOutlineDto> {
+        if (filterLevel == WebNovelFilter.Level.全部 || filterLevel == WebNovelFilter.Level.R18) {
+            shouldBeOldAss(user)
+        }
+
         validatePageNumber(page)
         validatePageSize(pageSize)
+
         return metadataRepo
             .search(
                 userQuery = queryString,

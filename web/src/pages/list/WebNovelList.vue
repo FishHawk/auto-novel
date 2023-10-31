@@ -1,9 +1,20 @@
 <script lang="ts" setup>
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { Page } from '@/data/api/common';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 import { Loader } from './components/NovelList.vue';
 
+const userData = useUserDataStore();
+
+const oldAssOptions = userData.isOldAss
+  ? [
+      {
+        label: '分级',
+        tags: ['全部', '一般向', 'R18'],
+      },
+    ]
+  : [];
 const options = [
   {
     label: '来源',
@@ -22,10 +33,7 @@ const options = [
     label: '类型',
     tags: ['全部', '连载中', '已完结', '短篇'],
   },
-  {
-    label: '分级',
-    tags: ['全部', '一般向', 'R18'],
-  },
+  ...oldAssOptions,
   {
     label: '翻译',
     tags: ['全部', 'GPT3', 'Sakura'],
@@ -50,16 +58,29 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
     Alphapolis: 'alphapolis',
     Novelism: 'novelism',
   };
-  return ApiWebNovel.listNovel({
-    page,
-    pageSize: 20,
-    query,
-    provider: providerMap[optionNth(0)],
-    type: selected[1],
-    level: selected[2],
-    translate: selected[3],
-    sort: selected[4],
-  });
+  if (userData.isOldAss) {
+    return ApiWebNovel.listNovel({
+      page,
+      pageSize: 20,
+      query,
+      provider: providerMap[optionNth(0)],
+      type: selected[1],
+      level: selected[2],
+      translate: selected[3],
+      sort: selected[4],
+    });
+  } else {
+    return ApiWebNovel.listNovel({
+      page,
+      pageSize: 20,
+      query,
+      provider: providerMap[optionNth(0)],
+      type: selected[1],
+      level: 1,
+      translate: selected[2],
+      sort: selected[3],
+    });
+  }
 };
 </script>
 

@@ -53,11 +53,17 @@ fun AuthenticatedUser.shouldBeAtLeastMaintainer() {
     }
 }
 
+fun shouldBeOldAss(user: AuthenticatedUser?) {
+    if (user == null || Clock.System.now() - user.createdAt < 30.days) {
+        throwUnauthorized("你还太年轻了")
+    }
+}
+
 fun generateToken(
     secret: String,
     id: String,
     username: String,
-): Pair<String, Long> {
+): Pair<String, Instant> {
     val expiresAt = (Clock.System.now() + 30.days)
     return Pair(
         JWT.create()
@@ -67,7 +73,7 @@ fun generateToken(
                 withExpiresAt(expiresAt.toJavaInstant())
             }
             .sign(Algorithm.HMAC256(secret)),
-        expiresAt.epochSeconds,
+        expiresAt,
     )
 }
 

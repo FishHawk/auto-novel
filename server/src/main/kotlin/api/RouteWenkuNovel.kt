@@ -76,17 +76,21 @@ private class WenkuNovelRes {
 fun Route.routeWenkuNovel() {
     val service by inject<WenkuNovelApi>()
 
-    get<WenkuNovelRes.NovelList> { loc ->
-        call.tryRespond {
-            service.list(
-                queryString = loc.query?.ifBlank { null },
-                page = loc.page,
-                pageSize = loc.pageSize,
-                filterLevel = when (loc.level) {
-                    1 -> WenkuNovelFilter.Level.R18
-                    else -> WenkuNovelFilter.Level.一般向
-                },
-            )
+    authenticateDb(optional = true) {
+        get<WenkuNovelRes.NovelList> { loc ->
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                service.list(
+                    user = user,
+                    queryString = loc.query?.ifBlank { null },
+                    page = loc.page,
+                    pageSize = loc.pageSize,
+                    filterLevel = when (loc.level) {
+                        1 -> WenkuNovelFilter.Level.R18
+                        else -> WenkuNovelFilter.Level.一般向
+                    },
+                )
+            }
         }
     }
     authenticateDb {
@@ -272,11 +276,16 @@ class WenkuNovelApi(
         )
 
     suspend fun list(
+        user: AuthenticatedUser?,
         queryString: String?,
         page: Int,
         pageSize: Int,
         filterLevel: WenkuNovelFilter.Level,
     ): PageDto<NovelOutlineDto> {
+        if (filterLevel == WenkuNovelFilter.Level.R18) {
+            shouldBeOldAss(user)
+        }
+
         validatePageNumber(page)
         validatePageSize(pageSize)
         return metadataRepo
@@ -350,6 +359,11 @@ class WenkuNovelApi(
 
         val metadata = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
+
+        if (metadata.r18) {
+            shouldBeOldAss(user)
+        }
+
         if (user != null) {
             metadataRepo.increaseVisited(
                 userIdOrIp = user.id,
