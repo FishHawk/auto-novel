@@ -4,8 +4,8 @@ import { useRouter } from 'vue-router';
 
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
-ApiWenkuNovel,
-WenkuNovelOutlineDto,
+  ApiWenkuNovel,
+  WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
 import { Ok, ResultState } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
@@ -52,7 +52,12 @@ watch(
 
 const mostVisitedWeb = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadWeb() {
-  const result = await ApiWebNovel.listNovel({ page: 0, pageSize: 8, sort: 1 });
+  const result = await ApiWebNovel.listNovel({
+    page: 0,
+    pageSize: 8,
+    sort: 1,
+    level: 1,
+  });
   if (result.ok) {
     mostVisitedWeb.value = Ok(result.value.items);
   } else {
@@ -133,7 +138,10 @@ const linkExample = [
 
       <n-ul>
         <n-li>
-          Sakura翻译开始公开测试。现在网络小说可以使用Sakura模型翻译，使用前请先看完<RouterNA to="/forum/653fbe0492b50672788e3608">说明</RouterNA>。
+          Sakura翻译开始公开测试。现在网络小说可以使用Sakura模型翻译，使用前请先看完<RouterNA
+            to="/forum/653fbe0492b50672788e3608"
+            >说明</RouterNA
+          >。
         </n-li>
         <n-li>
           <b>使用说明</b>
