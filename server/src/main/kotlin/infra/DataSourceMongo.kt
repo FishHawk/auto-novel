@@ -105,6 +105,9 @@ class DataSourceMongo(url: String) {
                 CommentModel::parent,
                 CommentModel::id,
             )
+            gpuCardCollection.ensureUniqueIndex(
+                GpuCard::endpoint,
+            )
             gpuJobCollection.ensureUniqueIndex(
                 GpuJob::task,
             )

@@ -43,7 +43,7 @@ async function createGpuWorker(json: { gpu: string; endpoint: string }) {
 }
 
 async function deleteGpuWorker(id: string) {
-  const result = await ApiGpu.startGpuWorker(id);
+  const result = await ApiGpu.deleteGpuWorker(id);
   if (result.ok) {
     message.info('删除成功');
     loadGpuInfo();
