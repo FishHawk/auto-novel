@@ -47,6 +47,8 @@ class DataSourceMongo(url: String) {
     val commentCollection
         get() = database.getCollection<CommentModel>("comment-alt")
 
+    val gpuCardCollection
+        get() = database.getCollection<GpuCard>("gpu-card")
     val gpuJobCollection
         get() = database.getCollection<GpuJob>("gpu-job")
     val gpuJobResultCollection

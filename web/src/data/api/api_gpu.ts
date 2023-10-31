@@ -19,7 +19,7 @@ interface GpuJob {
 interface GpuWorker {
   id: string;
   active: boolean;
-  card: string;
+  gpu: string;
   description: string;
   progress: {
     total: number;
@@ -52,8 +52,26 @@ const createGpuJobWebTranslate = (
 const deleteGpuJob = (id: string) =>
   runCatching(client.delete(`gpu/job/${id}`).text());
 
+const createGpuWorker = (json: { gpu: string; endpoint: string }) =>
+  runCatching(client.post('gpu/worker', { json }).text());
+
+const deleteGpuWorker = (id: string) =>
+  runCatching(client.delete(`gpu/worker/${id}`).text());
+
+const startGpuWorker = (id: string) =>
+  runCatching(client.post(`gpu/worker/${id}/start`).text());
+
+const stopGpuWorker = (id: string) =>
+  runCatching(client.post(`gpu/worker/${id}/stop`).text());
+
 export const ApiGpu = {
   getGpuInfo,
+  //
   createGpuJobWebTranslate,
   deleteGpuJob,
+  //
+  createGpuWorker,
+  deleteGpuWorker,
+  startGpuWorker,
+  stopGpuWorker,
 };

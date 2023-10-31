@@ -9,9 +9,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
@@ -20,13 +18,14 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 class GpuWorkerManager(
-    mongo: DataSourceMongo,
-    webNovelChapterRepo: WebNovelChapterRepository,
+    private val mongo: DataSourceMongo,
+    private val webNovelChapterRepo: WebNovelChapterRepository,
 ) {
     private val client = HttpClient(Java) {
         install(ContentNegotiation) {
@@ -38,16 +37,73 @@ class GpuWorkerManager(
         expectSuccess = true
     }
 
-    val workers = listOf(
-        GpuWorker(
-            id = "20537575-b0b4-4593-9666-e1b332deadce",
-            card = "RTX 3090",
-            endpoint = "http://192.168.1.162:5000/api/v1/generate",
+    private val _workers = mutableMapOf<String, GpuWorker>()
+    val workers: Map<String, GpuWorker>
+        get() = _workers
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    init {
+        scope.launch {
+            delay(10.seconds.toJavaDuration())
+            val cards = mongo
+                .gpuCardCollection
+                .find()
+                .toList()
+            cards.forEach {
+                val worker = GpuWorker(
+                    scope = scope,
+                    card = it,
+                    client = client,
+                    mongo = mongo,
+                    chapterRepo = webNovelChapterRepo,
+                )
+                _workers[worker.id] = worker
+                delay(1.seconds.toJavaDuration())
+            }
+        }
+    }
+
+    suspend fun createWorker(
+        gpu: String,
+        endpoint: String,
+    ) {
+        val card = GpuCard(
+            id = ObjectId(),
+            gpu = gpu,
+            endpoint = endpoint,
+        )
+        val id = mongo
+            .gpuCardCollection
+            .insertOne(card)
+            .insertedId!!
+            .asObjectId().value
+
+        val worker = GpuWorker(
+            scope = scope,
+            card = card.copy(id = id),
             client = client,
             mongo = mongo,
             chapterRepo = webNovelChapterRepo,
         )
-    )
+        _workers[worker.id] = worker
+    }
+
+    fun startWorker(id: String) {
+        _workers[id]?.start()
+    }
+
+    suspend fun stopWorker(id: String) {
+        _workers[id]?.stop()
+    }
+
+    suspend fun deleteWorker(id: String) {
+        mongo
+            .gpuCardCollection
+            .deleteOneById(id)
+        _workers[id]?.stop()
+        _workers.remove(id)
+    }
 }
 
 @Serializable
@@ -58,23 +114,57 @@ data class GpuWorkerProgress(
 )
 
 class GpuWorker(
-    val id: String,
-    val card: String,
-    private val endpoint: String,
+    private val scope: CoroutineScope,
+    private val card: GpuCard,
     private val client: HttpClient,
     private val mongo: DataSourceMongo,
     private val chapterRepo: WebNovelChapterRepository,
 ) {
-    val job = CoroutineScope(Dispatchers.Default).launch {
-        delay(10.seconds.toJavaDuration())
-        run()
-    }
+    private var job = createRunningJob()
+
+    val id
+        get() = card.id.toHexString()
+    val gpu
+        get() = card.gpu
+    val isActive
+        get() = job.isActive
 
     var description: String = ""
         private set
 
     var progress: GpuWorkerProgress? = null
         private set
+
+    fun start() {
+        if (isActive) return
+        job = createRunningJob()
+    }
+
+    suspend fun stop() {
+        if (!isActive) return
+        job.cancelAndJoin()
+        releaseGpuJob()
+    }
+
+    private fun createRunningJob(): Job {
+        val coroutineExceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
+            scope.launch { releaseGpuJob() }
+            println("Gpu worker error: $card")
+            throwable.printStackTrace()
+        }
+        return scope.launch(coroutineExceptionHandler) {
+            run()
+        }
+    }
+
+    private suspend fun releaseGpuJob() {
+        mongo
+            .gpuJobCollection
+            .updateMany(
+                GpuJob::workerId eq id,
+                setValue(GpuJob::workerId, null),
+            )
+    }
 
     private suspend fun run() {
         while (true) {
@@ -88,9 +178,42 @@ class GpuWorker(
                         setValue(GpuJob::workerId, id),
                     )
             if (job == null) {
-                delay(5.seconds.toJavaDuration())
-            } else {
+                delay(10.seconds.toJavaDuration())
+                continue
+            }
+            try {
                 processJob(job)
+
+                mongo
+                    .gpuJobCollection
+                    .deleteOne(GpuJob::id eq job.id)
+
+                mongo
+                    .gpuJobResultCollection
+                    .insertOne(
+                        GpuJobResult(
+                            task = job.task,
+                            description = job.description,
+                            workerId = id,
+                            submitter = job.submitter,
+                            total = progress?.total,
+                            finished = progress?.finished,
+                            error = progress?.error,
+                            createAt = job.createAt,
+                            finishAt = Clock.System.now(),
+                        )
+                    )
+            } catch (e: Throwable) {
+                mongo
+                    .gpuJobCollection
+                    .updateMany(
+                        GpuJob::workerId eq id,
+                        setValue(GpuJob::workerId, null),
+                    )
+                if (e is CancellationException) throw e
+            } finally {
+                progress = null
+                description = ""
             }
         }
     }
@@ -98,36 +221,10 @@ class GpuWorker(
     private suspend fun processJob(job: GpuJob) {
         this.description = job.task + "\n" + job.description
 
-        try {
-            val taskUrl = URLBuilder().takeFrom(job.task).build()
-            when (taskUrl.pathSegments.first()) {
-                "web" -> processWebTranslateJob(taskUrl)
-            }
-        } catch (_: Throwable) {
+        val taskUrl = URLBuilder().takeFrom(job.task).build()
+        when (taskUrl.pathSegments.first()) {
+            "web" -> processWebTranslateJob(taskUrl)
         }
-
-        mongo
-            .gpuJobCollection
-            .deleteOne(GpuJob::id eq job.id)
-
-        mongo
-            .gpuJobResultCollection
-            .insertOne(
-                GpuJobResult(
-                    task = job.task,
-                    description = job.description,
-                    workerId = id,
-                    submitter = job.submitter,
-                    total = progress?.total,
-                    finished = progress?.finished,
-                    error = progress?.error,
-                    createAt = job.createAt,
-                    finishAt = Clock.System.now(),
-                )
-            )
-
-        progress = null
-        description = ""
     }
 
     private suspend fun processWebTranslateJob(
@@ -329,7 +426,7 @@ class GpuWorker(
                     repetition_penalty = 1.1,
                 )
             }
-            val obj = client.post(endpoint) {
+            val obj = client.post(card.endpoint) {
                 contentType(ContentType.Application.Json)
                 setBody(body)
             }.json()

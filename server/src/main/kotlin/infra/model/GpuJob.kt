@@ -7,6 +7,13 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 
 @Serializable
+data class GpuCard(
+    @Contextual @SerialName("_id") val id: ObjectId,
+    val gpu: String,
+    val endpoint: String,
+)
+
+@Serializable
 data class GpuJob(
     @Contextual @SerialName("_id") val id: ObjectId,
     val task: String,

@@ -33,7 +33,16 @@ private class GpuRes {
     }
 
     @Resource("/worker")
-    class Worker(val parent: GpuRes)
+    class Worker(val parent: GpuRes) {
+        @Resource("/{id}")
+        class Id(val parent: Worker, val id: String) {
+            @Resource("/start")
+            class Start(val parent: Id)
+
+            @Resource("/stop")
+            class Stop(val parent: Id)
+        }
+    }
 }
 
 fun Route.routeGpu() {
@@ -60,6 +69,42 @@ fun Route.routeGpu() {
             val user = call.authenticatedUser()
             call.tryRespond {
                 api.deleteGpuJob(user = user, id = loc.id)
+            }
+        }
+
+        post<GpuRes.Worker> {
+            @Serializable
+            class Body(
+                val gpu: String,
+                val endpoint: String,
+            )
+
+            val user = call.authenticatedUser()
+            val body = call.receive<Body>()
+            call.tryRespond {
+                api.createGpuWorker(
+                    user = user,
+                    gpu = body.gpu,
+                    endpoint = body.endpoint,
+                )
+            }
+        }
+        delete<GpuRes.Worker.Id> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                api.deleteGpuWorker(user = user, id = loc.id)
+            }
+        }
+        post<GpuRes.Worker.Id.Start> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                api.startGpuWorker(user = user, id = loc.parent.id)
+            }
+        }
+        post<GpuRes.Worker.Id.Stop> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                api.stopGpuWorker(user = user, id = loc.parent.id)
             }
         }
     }
@@ -90,7 +135,7 @@ class GpuApi(
     data class GpuWorkerDto(
         val id: String,
         val active: Boolean,
-        val card: String,
+        val gpu: String,
         val description: String,
         val progress: GpuWorkerProgress?,
     )
@@ -110,11 +155,12 @@ class GpuApi(
             }
         val workers = gpuWorkerManager
             .workers
+            .values
             .map {
                 GpuWorkerDto(
                     id = it.id,
-                    active = it.job.isActive,
-                    card = it.card,
+                    active = it.isActive,
+                    gpu = it.gpu,
                     description = it.description,
                     progress = it.progress,
                 )
@@ -179,5 +225,38 @@ class GpuApi(
 
         val isSuccess = gpuJobRepo.deleteJob(ObjectId(id))
         if (!isSuccess) throwConflict("任务被占用")
+    }
+
+    suspend fun createGpuWorker(
+        user: AuthenticatedUser,
+        gpu: String,
+        endpoint: String,
+    ) {
+        user.shouldBeAtLeastMaintainer()
+        gpuWorkerManager.createWorker(
+            gpu = gpu,
+            endpoint = endpoint,
+        )
+    }
+
+    suspend fun deleteGpuWorker(
+        user: AuthenticatedUser,
+        id: String,
+    ) {
+        user.shouldBeAtLeastMaintainer()
+        gpuWorkerManager.deleteWorker(id)
+    }
+
+    fun startGpuWorker(
+        user: AuthenticatedUser,
+        id: String,
+    ) {
+        user.shouldBeAtLeastMaintainer()
+        gpuWorkerManager.startWorker(id)
+    }
+
+    suspend fun stopGpuWorker(user: AuthenticatedUser, id: String) {
+        user.shouldBeAtLeastMaintainer()
+        gpuWorkerManager.stopWorker(id)
     }
 }
