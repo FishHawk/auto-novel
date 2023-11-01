@@ -330,7 +330,7 @@ async function submitSakuraJob() {
       <template #suffix>
         <template v-if="row.translatorId === 'sakura'">
           <n-space :wrap="false">
-            <RouterNA to="/gpu">
+            <RouterNA to="/sakura">
               <n-button tertiary size="small"> 查看 </n-button>
             </RouterNA>
             <async-button tertiary size="small" @async-click="submitSakuraJob">

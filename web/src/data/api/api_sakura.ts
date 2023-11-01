@@ -30,10 +30,10 @@ interface SakuraWorker {
 }
 
 const getSakuraStatus = () =>
-  runCatching(client.get('gpu').json<SakuraStatus>());
+  runCatching(client.get('sakura').json<SakuraStatus>());
 
 const createSakuraJob = (task: string) =>
-  runCatching(client.post(`gpu/job`, { body: task }).text());
+  runCatching(client.post(`sakura/job`, { body: task }).text());
 
 const createSakuraJobWebTranslate = (
   providerId: string,
@@ -52,19 +52,19 @@ const createSakuraJobWebTranslate = (
 };
 
 const deleteSakuraJob = (id: string) =>
-  runCatching(client.delete(`gpu/job/${id}`).text());
+  runCatching(client.delete(`sakura/job/${id}`).text());
 
 const createSakuraWorker = (json: { gpu: string; endpoint: string }) =>
-  runCatching(client.post('gpu/worker', { json }).text());
+  runCatching(client.post('sakura/worker', { json }).text());
 
 const deleteSakuraWorker = (id: string) =>
-  runCatching(client.delete(`gpu/worker/${id}`).text());
+  runCatching(client.delete(`sakura/worker/${id}`).text());
 
 const startSakuraWorker = (id: string) =>
-  runCatching(client.post(`gpu/worker/${id}/start`).text());
+  runCatching(client.post(`sakura/worker/${id}/start`).text());
 
 const stopSakuraWorker = (id: string) =>
-  runCatching(client.post(`gpu/worker/${id}/stop`).text());
+  runCatching(client.post(`sakura/worker/${id}/stop`).text());
 
 export const ApiSakura = {
   getSakuraStatus,

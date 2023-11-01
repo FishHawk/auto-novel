@@ -7,21 +7,23 @@ import infra.web.DataSourceWebNovelProvider
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
-import kotlinx.datetime.Clock
+import io.ktor.client.*
+import io.ktor.client.engine.java.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
-import org.litote.kmongo.eq
-import org.litote.kmongo.setValue
+import sakura.sakuraTranslateSeg
 import java.io.File
-import kotlin.time.Duration.Companion.days
 
 
 val appModule = module {
@@ -58,34 +60,24 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-//            val a = mongo
-//                .gpuJobResultCollection
-//                .deleteMany(
-//                    GpuJobResult::finished eq 0
-//                )
+            val client = HttpClient(Java) {
+                install(ContentNegotiation) {
+                    json(Json {
+                        isLenient = true
+                        ignoreUnknownKeys = true
+                    })
+                }
+                expectSuccess = true
 
-//            mongo
-//                .gpuJobResultCollection
-//                .find(GpuJobResult::finished eq 0)
-//                .toList()
-//                .forEach {
-//                    println(it)
-//                    try {
-//                        mongo
-//                            .gpuJobCollection
-//                            .insertOne(
-//                                GpuJob(
-//                                    id = ObjectId(),
-//                                    task = it.task,
-//                                    description = it.description,
-//                                    workerId = null,
-//                                    submitter = it.submitter,
-//                                    createAt = it.createAt,
-//                                )
-//                            )
-//                    } catch (_: Throwable) {
-//                    }
-//                }
+            }
+            val text = """「ぽぉおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおおぁあああああああああおおおおおおおおんっ！！」
+俺たちは、同時に――手を出した。""".lines()
+            sakuraTranslateSeg(
+                client,
+                "http://192.168.1.162:5000/api/v1/generate",
+                seg = text,
+            ) { _, _ ->
+            }
         }
         describe("build es index") {
             @Serializable

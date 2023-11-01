@@ -146,21 +146,22 @@ class SakuraWorker(
     }
 
     private suspend fun processJob(job: SakuraJob) {
-        this.description = job.task + "\n" + job.description
-
         val taskUrl = URLBuilder().takeFrom(job.task).build()
         when (taskUrl.pathSegments.first()) {
-            "web" -> processWebTranslateJob(taskUrl)
+            "web" -> processWebTranslateJob(job, taskUrl)
             "wenku" -> processWenkuTranslateJob(taskUrl)
         }
     }
 
     private suspend fun processWebTranslateJob(
+        job: SakuraJob,
         taskUrl: Url,
     ) {
         val (_, providerId, novelId) = taskUrl.pathSegments
         val start = taskUrl.parameters["start"]?.toIntOrNull() ?: 0
         val end = taskUrl.parameters["end"]?.toIntOrNull() ?: 65536
+
+        this.description = job.description + "\n" + "${providerId}/${novelId}"
 
         @Serializable
         data class WebNovelChapterProjection(
@@ -210,6 +211,7 @@ class SakuraWorker(
 
         updateProgress()
         untranslatedChapterId.forEach { chapterId ->
+            this.description = job.description + "\n" + "${providerId}/${novelId}/${chapterId}"
             try {
                 val chapter = chapterRepo.getOrSyncRemote(
                     providerId = providerId,
