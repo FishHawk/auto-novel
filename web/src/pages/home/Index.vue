@@ -138,10 +138,13 @@ const linkExample = [
 
       <n-ul>
         <n-li>
-          Sakura翻译开始公开测试。现在网络小说可以使用Sakura模型翻译，使用前请先看完<RouterNA
-            to="/forum/653fbe0492b50672788e3608"
-            >说明</RouterNA
-          >。
+          我打算移除百度翻译这个功能，在移除之前想听听各位的看法。如果你有不想移除的理由，欢迎到
+          <RouterNA to="/forum/65420ddace353b449e13277b">专门的讨论帖</RouterNA>
+          讨论。
+        </n-li>
+        <n-li>
+          Sakura翻译开始公开测试。现在网络小说可以使用Sakura模型翻译，使用前请先看完
+          <RouterNA to="/forum/653fbe0492b50672788e3608">说明</RouterNA>。
         </n-li>
         <n-li>
           <b>使用说明</b>

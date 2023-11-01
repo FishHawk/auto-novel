@@ -149,7 +149,8 @@ private class TxtWriter(
         chapter: WebNovelChapter,
     ) {
         val fallbackParagraphs =
-            chapter.gptParagraphs
+            chapter.sakuraParagraphs
+                ?: chapter.gptParagraphs
                 ?: chapter.youdaoParagraphs
                 ?: chapter.baiduParagraphs
         when (lang) {
@@ -158,6 +159,7 @@ private class TxtWriter(
             NovelFileLang.ZH_BAIDU -> writeZhParagraphs(chapter.baiduParagraphs, fallbackParagraphs)
             NovelFileLang.ZH_YOUDAO -> writeZhParagraphs(chapter.youdaoParagraphs, fallbackParagraphs)
             NovelFileLang.ZH_GPT -> writeZhParagraphs(chapter.gptParagraphs, fallbackParagraphs)
+            NovelFileLang.ZH_SAKURA -> writeZhParagraphs(chapter.sakuraParagraphs, fallbackParagraphs)
 
             NovelFileLang.MIX_BAIDU -> writeMixParagraphs(
                 chapter.paragraphs,
@@ -174,6 +176,12 @@ private class TxtWriter(
             NovelFileLang.MIX_GPT -> writeMixParagraphs(
                 chapter.paragraphs,
                 chapter.gptParagraphs,
+                fallbackParagraphs,
+            )
+
+            NovelFileLang.MIX_SAKURA -> writeMixParagraphs(
+                chapter.paragraphs,
+                chapter.sakuraParagraphs,
                 fallbackParagraphs,
             )
 

@@ -5,6 +5,7 @@ import infra.model.*
 import kotlinx.datetime.Clock
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
+import util.UnreachableException
 
 class WebNovelChapterRepository(
     private val provider: DataSourceWebNovelProvider,
@@ -19,6 +20,7 @@ class WebNovelChapterRepository(
             TranslatorId.Baidu -> Pair(WebNovelChapter::baiduGlossaryUuid, WebNovelChapter::baiduParagraphs)
             TranslatorId.Youdao -> Pair(WebNovelChapter::youdaoGlossaryUuid, WebNovelChapter::youdaoParagraphs)
             TranslatorId.Gpt -> Pair(WebNovelChapter::gptGlossaryUuid, WebNovelChapter::gptParagraphs)
+            else -> throw UnreachableException()
         }
         return mongo
             .webNovelChapterCollection
@@ -131,6 +133,7 @@ class WebNovelChapterRepository(
                 setValue(WebNovelChapter::gptGlossary, glossary?.map ?: emptyMap()),
                 setValue(WebNovelChapter::gptParagraphs, paragraphsZh)
             )
+            else -> throw UnreachableException()
         }
         mongo
             .webNovelChapterCollection
@@ -155,6 +158,7 @@ class WebNovelChapterRepository(
             TranslatorId.Baidu -> WebNovelChapter::baiduParagraphs
             TranslatorId.Youdao -> WebNovelChapter::youdaoParagraphs
             TranslatorId.Gpt -> WebNovelChapter::gptParagraphs
+            TranslatorId.Sakura -> WebNovelChapter::sakuraParagraphs
         }
         val zh = mongo.webNovelChapterCollection
             .countDocuments(
@@ -168,6 +172,7 @@ class WebNovelChapterRepository(
             TranslatorId.Baidu -> WebNovelMetadata::baidu
             TranslatorId.Youdao -> WebNovelMetadata::youdao
             TranslatorId.Gpt -> WebNovelMetadata::gpt
+            TranslatorId.Sakura -> WebNovelMetadata::sakura
         }
         mongo
             .webNovelMetadataCollection

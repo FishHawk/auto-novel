@@ -12,6 +12,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
@@ -616,6 +617,10 @@ class WenkuNovelApi(
         translatorId: TranslatorId,
         volumeId: String,
     ): TranslateTaskDto {
+        if (translatorId == TranslatorId.Sakura) {
+            throw BadRequestException("Sakura不支持浏览器翻译")
+        }
+
         validateNovelId(novelId)
         validateVolumeId(volumeId)
 
@@ -667,6 +672,10 @@ class WenkuNovelApi(
         glossaryUuid: String?,
         paragraphsZh: List<String>,
     ): Int {
+        if (translatorId == TranslatorId.Sakura) {
+            throw BadRequestException("Sakura不支持浏览器翻译")
+        }
+
         validateNovelId(novelId)
         validateVolumeId(volumeId)
 

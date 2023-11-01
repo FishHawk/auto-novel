@@ -50,6 +50,12 @@ enum class NovelFileLang(val value: String) {
     @SerialName("mix-gpt")
     MIX_GPT("mix-gpt"),
 
+    @SerialName("zh-sakura")
+    ZH_SAKURA("zh-sakura"),
+
+    @SerialName("mix-sakura")
+    MIX_SAKURA("mix-sakura"),
+
     @SerialName("mix-all")
     MIX_ALL("mix-all")
 }

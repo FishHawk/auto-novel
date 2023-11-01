@@ -13,6 +13,9 @@ enum class TranslatorId {
 
     @SerialName("gpt")
     Gpt,
+
+    @SerialName("sakura")
+    Sakura,
 }
 
 data class Glossary(

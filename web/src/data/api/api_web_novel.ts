@@ -197,10 +197,11 @@ const createFileUrl = (
     | 'zh-baidu'
     | 'zh-youdao'
     | 'zh-gpt'
+    | 'zh-sakura'
     | 'mix-baidu'
     | 'mix-youdao'
     | 'mix-gpt'
-    | 'mix-all',
+    | 'mix-sakura',
   type: 'epub' | 'txt'
 ) => `/api/novel/${providerId}/${novelId}/file/${lang}/${type}`;
 

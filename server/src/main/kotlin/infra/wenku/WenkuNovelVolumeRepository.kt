@@ -295,6 +295,7 @@ class VolumeAccessor(private val novelPath: Path, val volumeId: String) {
                         TranslatorId.Baidu -> "b"
                         TranslatorId.Youdao -> "y"
                         TranslatorId.Gpt -> "g"
+                        TranslatorId.Sakura -> "s"
                     }
                 )
             }

@@ -124,7 +124,7 @@ async function startTask(translatorId: TranslatorId) {
 
 interface NovelFiles {
   label: string;
-  translatorId?: TranslatorId | 'sakura';
+  translatorId?: TranslatorId;
   files: { label: string; url: string; name: string }[];
 }
 
@@ -144,10 +144,11 @@ function stateToFileList(): NovelFiles[] {
       | 'zh-baidu'
       | 'zh-youdao'
       | 'zh-gpt'
+      | 'zh-sakura'
       | 'mix-baidu'
       | 'mix-youdao'
       | 'mix-gpt'
-      | 'mix-all',
+      | 'mix-sakura',
     type: 'epub' | 'txt'
   ) {
     return {
@@ -193,16 +194,14 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
     {
-      label: `有道/百度`,
-      files: [
-        createFile('TXT', 'mix-all', 'txt'),
-        createFile('EPUB', 'mix-all', 'epub'),
-      ],
-    },
-    {
-      label: `SAKURA(${props.sakura}/${total})`,
+      label: `Sakura(${props.sakura}/${total})`,
       translatorId: 'sakura',
-      files: [],
+      files: [
+        createFile('TXT', 'zh-sakura', 'txt'),
+        createFile('中日对比TXT', 'mix-sakura', 'txt'),
+        createFile('EPUB', 'zh-sakura', 'epub'),
+        createFile('中日对比EPUB', 'mix-sakura', 'epub'),
+      ],
     },
   ];
 }

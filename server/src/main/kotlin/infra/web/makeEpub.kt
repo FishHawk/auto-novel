@@ -4,6 +4,7 @@ import infra.model.NovelFileLang
 import infra.model.WebNovelChapter
 import infra.model.WebNovelMetadata
 import infra.model.WebNovelTocItem
+import util.UnreachableException
 import util.epub.EpubBook
 import util.epub.Navigation
 import util.epub.createEpubXhtml
@@ -72,7 +73,10 @@ suspend fun makeEpubFile(
                 }
             }
 
-            NovelFileLang.ZH_BAIDU, NovelFileLang.ZH_YOUDAO, NovelFileLang.ZH_GPT -> createEpubXhtml(
+            NovelFileLang.ZH_BAIDU,
+            NovelFileLang.ZH_YOUDAO,
+            NovelFileLang.ZH_GPT,
+            NovelFileLang.ZH_SAKURA -> createEpubXhtml(
                 path,
                 id,
                 "zh",
@@ -83,10 +87,11 @@ suspend fun makeEpubFile(
                     NovelFileLang.ZH_BAIDU -> chapter?.baiduParagraphs
                     NovelFileLang.ZH_YOUDAO -> chapter?.youdaoParagraphs
                     NovelFileLang.ZH_GPT -> chapter?.gptParagraphs
-                    else -> throw RuntimeException("Never reachable")
+                    NovelFileLang.ZH_SAKURA -> chapter?.sakuraParagraphs
+                    else -> throw UnreachableException()
                 }
                 val fallbackParagraphs = chapter?.run {
-                    gptParagraphs ?: youdaoParagraphs ?: baiduParagraphs
+                    sakuraParagraphs ?: gptParagraphs ?: youdaoParagraphs ?: baiduParagraphs
                 }
                 val isFallback = primaryParagraphs == null
                 val paragraphs = primaryParagraphs ?: fallbackParagraphs
@@ -104,7 +109,10 @@ suspend fun makeEpubFile(
                 }
             }
 
-            NovelFileLang.MIX_BAIDU, NovelFileLang.MIX_YOUDAO, NovelFileLang.MIX_GPT -> createEpubXhtml(
+            NovelFileLang.MIX_BAIDU,
+            NovelFileLang.MIX_YOUDAO,
+            NovelFileLang.MIX_GPT,
+            NovelFileLang.MIX_SAKURA -> createEpubXhtml(
                 path,
                 id,
                 "zh",
@@ -121,10 +129,11 @@ suspend fun makeEpubFile(
                     NovelFileLang.MIX_BAIDU -> chapter?.baiduParagraphs
                     NovelFileLang.MIX_YOUDAO -> chapter?.youdaoParagraphs
                     NovelFileLang.MIX_GPT -> chapter?.gptParagraphs
-                    else -> throw RuntimeException("Never reachable")
+                    NovelFileLang.MIX_SAKURA -> chapter?.sakuraParagraphs
+                    else -> throw UnreachableException()
                 }
                 val fallbackParagraphs = chapter?.run {
-                    gptParagraphs ?: youdaoParagraphs ?: baiduParagraphs
+                    sakuraParagraphs ?: gptParagraphs ?: youdaoParagraphs ?: baiduParagraphs
                 }
                 val isFallback = primaryParagraphs == null
                 val paragraphs = primaryParagraphs ?: fallbackParagraphs

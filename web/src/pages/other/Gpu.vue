@@ -213,7 +213,7 @@ const createWorkerFormValue = ref({
         </n-card>
       </n-modal>
 
-      <SectionHeader :title="`任务队列 [${info.jobs.length}/30]`" />
+      <SectionHeader :title="`任务队列 [${info.jobs.length}/150]`" />
       <n-table :bordered="false" style="margin-top: 40px">
         <thead>
           <tr>

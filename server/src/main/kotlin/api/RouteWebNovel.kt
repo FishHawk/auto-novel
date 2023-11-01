@@ -26,6 +26,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
+import java.lang.RuntimeException
 import java.nio.file.Path
 
 @Resource("/novel")
@@ -380,6 +381,7 @@ class WebNovelApi(
         val baidu: Long,
         val youdao: Long,
         val gpt: Long,
+        val sakura: Long,
         val updateAt: Long?,
     )
 
@@ -398,6 +400,7 @@ class WebNovelApi(
             baidu = baidu,
             youdao = youdao,
             gpt = gpt,
+            sakura = sakura,
             updateAt = updateAt?.epochSeconds,
         )
 
@@ -802,6 +805,10 @@ class WebNovelApi(
         novelId: String,
         translatorId: TranslatorId,
     ): TranslateTaskDto {
+        if (translatorId == TranslatorId.Sakura) {
+            throw BadRequestException("Sakura不支持浏览器翻译")
+        }
+
         validateId(providerId, novelId)
 
         val novel = metadataRepo.getNovelAndSave(providerId, novelId, 10)
@@ -890,6 +897,10 @@ class WebNovelApi(
         chapterId: String,
         sync: Boolean,
     ): List<String> {
+        if (translatorId == TranslatorId.Sakura) {
+            throw BadRequestException("Sakura不支持浏览器翻译")
+        }
+
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
 
@@ -905,6 +916,7 @@ class WebNovelApi(
                 TranslatorId.Baidu -> Pair(baiduGlossaryUuid, baiduParagraphs)
                 TranslatorId.Youdao -> Pair(youdaoGlossaryUuid, youdaoParagraphs)
                 TranslatorId.Gpt -> Pair(gptGlossaryUuid, gptParagraphs)
+                else -> throw RuntimeException("不会执行到此")
             }
         }
 
@@ -929,6 +941,10 @@ class WebNovelApi(
         glossaryUuid: String?,
         paragraphsZh: List<String>,
     ): TranslateStateDto {
+        if (translatorId == TranslatorId.Sakura) {
+            throw BadRequestException("Sakura不支持浏览器翻译")
+        }
+
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         if (glossaryUuid != novel.glossaryUuid) {

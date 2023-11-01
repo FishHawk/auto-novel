@@ -36,7 +36,6 @@ class WebNovelFileRepository(
             novel.changeAt > createAt
         } else true
 
-
         if (shouldMake) {
             val chapters = novel.toc
                 .mapNotNull { it.chapterId }
