@@ -3,7 +3,7 @@ import { computed, Ref, ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { client } from '@/data/api/client';
-import { ApiGpu } from '@/data/api/api_gpu';
+import {  ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslatorId } from '@/data/translator/translator';
@@ -229,8 +229,8 @@ async function submitGlossary() {
   }
 }
 
-async function submitGpuJob() {
-  const result = await ApiGpu.createGpuJobWebTranslate(providerId, novelId, {
+async function submitSakuraJob() {
+  const result = await ApiSakura.createSakuraJobWebTranslate(providerId, novelId, {
     start: startIndex.value ?? 0,
     end: endIndex.value ?? 65535,
   });
@@ -333,7 +333,7 @@ async function submitGpuJob() {
             <RouterNA to="/gpu">
               <n-button tertiary size="small"> 查看 </n-button>
             </RouterNA>
-            <async-button tertiary size="small" @async-click="submitGpuJob">
+            <async-button tertiary size="small" @async-click="submitSakuraJob">
               排队
             </async-button>
           </n-space>

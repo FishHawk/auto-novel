@@ -47,12 +47,12 @@ class DataSourceMongo(url: String) {
     val commentCollection
         get() = database.getCollection<CommentModel>("comment-alt")
 
-    val gpuCardCollection
-        get() = database.getCollection<GpuCard>("gpu-card")
-    val gpuJobCollection
-        get() = database.getCollection<GpuJob>("gpu-job")
-    val gpuJobResultCollection
-        get() = database.getCollection<GpuJobResult>("gpu-job-result")
+    val sakuraJobCollection
+        get() = database.getCollection<SakuraJob>("gpu-job")
+    val sakuraJobResultCollection
+        get() = database.getCollection<SakuraJobResult>("gpu-job-result")
+    val sakuraServerCollection
+        get() = database.getCollection<SakuraServer>("sakura-server")
     val sakuraFailCaseCollection
         get() = database.getCollection<SakuraFailCase>("sakura-fail-case")
 
@@ -105,11 +105,11 @@ class DataSourceMongo(url: String) {
                 CommentModel::parent,
                 CommentModel::id,
             )
-            gpuCardCollection.ensureUniqueIndex(
-                GpuCard::endpoint,
+            sakuraServerCollection.ensureUniqueIndex(
+                SakuraServer::endpoint,
             )
-            gpuJobCollection.ensureUniqueIndex(
-                GpuJob::task,
+            sakuraJobCollection.ensureUniqueIndex(
+                SakuraJob::task,
             )
             operationHistoryCollection.ensureIndex(
                 OperationHistoryModel::createAt,

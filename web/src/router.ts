@@ -10,9 +10,9 @@ const router = createRouter({
     },
 
     {
-      path: '/gpu',
-      meta: { title: 'GPU' },
-      component: () => import('./pages/other/Gpu.vue'),
+      path: '/sakura',
+      meta: { title: 'Sakura状态' },
+      component: () => import('./pages/other/Sakura.vue'),
     },
     {
       path: '/reset-password',

@@ -7,14 +7,15 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 
 @Serializable
-data class GpuCard(
+data class SakuraServer(
     @Contextual @SerialName("_id") val id: ObjectId,
     val gpu: String,
     val endpoint: String,
+    val isActive: Boolean = false,
 )
 
 @Serializable
-data class GpuJob(
+data class SakuraJob(
     @Contextual @SerialName("_id") val id: ObjectId,
     val task: String,
     val description: String,
@@ -24,7 +25,7 @@ data class GpuJob(
 )
 
 @Serializable
-data class GpuJobResult(
+data class SakuraJobResult(
     val task: String,
     val description: String,
     val workerId: String?,

@@ -2,23 +2,24 @@ import { runCatching } from '@/data/result';
 
 import { client } from './client';
 
-export interface GpuInfo {
-  jobs: GpuJob[];
-  workers: GpuWorker[];
+export interface SakuraStatus {
+  jobs: SakuraJob[];
+  workers: SakuraWorker[];
 }
 
-interface GpuJob {
+interface SakuraJob {
   id: string;
   task: string;
   description: string;
-  workerUuid?: string;
+  workerId?: string;
   submitter: string;
   createAt: number;
 }
 
-interface GpuWorker {
+interface SakuraWorker {
   id: string;
   active: boolean;
+  endpoint: string;
   gpu: string;
   description: string;
   progress: {
@@ -28,12 +29,13 @@ interface GpuWorker {
   } | null;
 }
 
-const getGpuInfo = () => runCatching(client.get('gpu').json<GpuInfo>());
+const getSakuraStatus = () =>
+  runCatching(client.get('gpu').json<SakuraStatus>());
 
-const createGpuJob = (task: string) =>
+const createSakuraJob = (task: string) =>
   runCatching(client.post(`gpu/job`, { body: task }).text());
 
-const createGpuJobWebTranslate = (
+const createSakuraJobWebTranslate = (
   providerId: string,
   novelId: string,
   params: {
@@ -46,32 +48,32 @@ const createGpuJobWebTranslate = (
   if (params.end < 65535) paramsString['end'] = params.end.toString();
   const searchParams = new URLSearchParams(paramsString).toString();
   const queryString = searchParams ? `?${searchParams}` : '';
-  return createGpuJob(`web/${providerId}/${novelId}${queryString}`);
+  return createSakuraJob(`web/${providerId}/${novelId}${queryString}`);
 };
 
-const deleteGpuJob = (id: string) =>
+const deleteSakuraJob = (id: string) =>
   runCatching(client.delete(`gpu/job/${id}`).text());
 
-const createGpuWorker = (json: { gpu: string; endpoint: string }) =>
+const createSakuraWorker = (json: { gpu: string; endpoint: string }) =>
   runCatching(client.post('gpu/worker', { json }).text());
 
-const deleteGpuWorker = (id: string) =>
+const deleteSakuraWorker = (id: string) =>
   runCatching(client.delete(`gpu/worker/${id}`).text());
 
-const startGpuWorker = (id: string) =>
+const startSakuraWorker = (id: string) =>
   runCatching(client.post(`gpu/worker/${id}/start`).text());
 
-const stopGpuWorker = (id: string) =>
+const stopSakuraWorker = (id: string) =>
   runCatching(client.post(`gpu/worker/${id}/stop`).text());
 
-export const ApiGpu = {
-  getGpuInfo,
+export const ApiSakura = {
+  getSakuraStatus,
   //
-  createGpuJobWebTranslate,
-  deleteGpuJob,
+  createSakuraJobWebTranslate,
+  deleteSakuraJob,
   //
-  createGpuWorker,
-  deleteGpuWorker,
-  startGpuWorker,
-  stopGpuWorker,
+  createSakuraWorker,
+  deleteSakuraWorker,
+  startSakuraWorker,
+  stopSakuraWorker,
 };

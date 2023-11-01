@@ -1,13 +1,8 @@
 package api
 
-import api.plugins.AuthenticatedUser
-import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
-import api.plugins.shouldBeAtLeastMaintainer
-import infra.GpuWorkerManager
-import infra.GpuWorkerProgress
-import infra.common.GpuJobRepository
-import infra.model.GpuJob
+import api.plugins.*
+import infra.common.SakuraJobRepository
+import infra.model.SakuraJob
 import infra.web.WebNovelMetadataRepository
 import io.ktor.http.*
 import io.ktor.resources.*
@@ -22,18 +17,20 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
+import sakura.SakuraWorkerManager
+import sakura.SakuraWorkerProgress
 import kotlin.time.Duration.Companion.days
 
-@Resource("/gpu")
-private class GpuRes {
+@Resource("/sakura")
+private class SakuraRes {
     @Resource("/job")
-    class Job(val parent: GpuRes) {
+    class Job(val parent: SakuraRes) {
         @Resource("/{id}")
         class Id(val parent: Job, val id: String)
     }
 
     @Resource("/worker")
-    class Worker(val parent: GpuRes) {
+    class Worker(val parent: SakuraRes) {
         @Resource("/{id}")
         class Id(val parent: Worker, val id: String) {
             @Resource("/start")
@@ -45,34 +42,37 @@ private class GpuRes {
     }
 }
 
-fun Route.routeGpu() {
-    val api by inject<GpuApi>()
+fun Route.routeSakura() {
+    val api by inject<SakuraApi>()
 
-    get<GpuRes> {
-        call.tryRespond {
-            api.getGpuInfo()
+    authenticateDb(optional = true) {
+        get<SakuraRes> {
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                api.getSakuraStatus(user)
+            }
         }
     }
 
     authenticateDb {
-        post<GpuRes.Job> {
+        post<SakuraRes.Job> {
             val user = call.authenticatedUser()
             val body = call.receive<String>()
             call.tryRespond {
-                api.createGpuJob(
+                api.createSakuraJob(
                     user = user,
                     task = body,
                 )
             }
         }
-        delete<GpuRes.Job.Id> { loc ->
+        delete<SakuraRes.Job.Id> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
-                api.deleteGpuJob(user = user, id = loc.id)
+                api.deleteSakuraJob(user = user, id = loc.id)
             }
         }
 
-        post<GpuRes.Worker> {
+        post<SakuraRes.Worker> {
             @Serializable
             class Body(
                 val gpu: String,
@@ -82,103 +82,108 @@ fun Route.routeGpu() {
             val user = call.authenticatedUser()
             val body = call.receive<Body>()
             call.tryRespond {
-                api.createGpuWorker(
+                api.createSakuraWorker(
                     user = user,
                     gpu = body.gpu,
                     endpoint = body.endpoint,
                 )
             }
         }
-        delete<GpuRes.Worker.Id> { loc ->
+        delete<SakuraRes.Worker.Id> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
-                api.deleteGpuWorker(user = user, id = loc.id)
+                api.deleteSakuraWorker(user = user, id = loc.id)
             }
         }
-        post<GpuRes.Worker.Id.Start> { loc ->
+        post<SakuraRes.Worker.Id.Start> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
-                api.startGpuWorker(user = user, id = loc.parent.id)
+                api.startSakuraWorker(user = user, id = loc.parent.id)
             }
         }
-        post<GpuRes.Worker.Id.Stop> { loc ->
+        post<SakuraRes.Worker.Id.Stop> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
-                api.stopGpuWorker(user = user, id = loc.parent.id)
+                api.stopSakuraWorker(user = user, id = loc.parent.id)
             }
         }
     }
 }
 
-class GpuApi(
-    private val gpuWorkerManager: GpuWorkerManager,
-    private val gpuJobRepo: GpuJobRepository,
+class SakuraApi(
+    private val sakuraWorkerManager: SakuraWorkerManager,
+    private val sakuraJobRepo: SakuraJobRepository,
     private val webRepo: WebNovelMetadataRepository,
 ) {
     @Serializable
-    data class GpuInfoDto(
-        val jobs: List<GpuJobDto>,
-        val workers: List<GpuWorkerDto>,
+    data class SakuraStatusDto(
+        val jobs: List<SakuraJobDto>,
+        val workers: List<SakuraWorkerDto>,
     )
 
     @Serializable
-    data class GpuJobDto(
+    data class SakuraJobDto(
         val id: String,
         val task: String,
         val description: String,
-        val workerUuid: String?,
+        val workerId: String?,
         val submitter: String,
         @Contextual val createAt: Instant,
     )
 
     @Serializable
-    data class GpuWorkerDto(
+    data class SakuraWorkerDto(
         val id: String,
         val active: Boolean,
+        val endpoint: String,
         val gpu: String,
         val description: String,
-        val progress: GpuWorkerProgress?,
+        val progress: SakuraWorkerProgress?,
     )
 
-    suspend fun getGpuInfo(): GpuInfoDto {
-        val jobs = gpuJobRepo
+    suspend fun getSakuraStatus(
+        user: AuthenticatedUser?,
+    ): SakuraStatusDto {
+        val jobs = sakuraJobRepo
             .listJob()
             .map {
-                GpuJobDto(
+                SakuraJobDto(
                     id = it.id.toHexString(),
                     task = it.task,
                     description = it.description,
-                    workerUuid = it.workerId,
+                    workerId = it.workerId,
                     submitter = it.submitter,
                     createAt = it.createAt,
                 )
             }
-        val workers = gpuWorkerManager
+        val showEndpoint = user != null && user.atLeastMaintainer()
+        val workers = sakuraWorkerManager
             .workers
             .values
             .map {
-                GpuWorkerDto(
+                SakuraWorkerDto(
                     id = it.id,
                     active = it.isActive,
+                    endpoint = if (showEndpoint) it.endpoint else "",
                     gpu = it.gpu,
                     description = it.description,
                     progress = it.progress,
                 )
             }
-        return GpuInfoDto(
+        return SakuraStatusDto(
             jobs = jobs,
             workers = workers,
         )
     }
 
-    suspend fun createGpuJob(
+    suspend fun createSakuraJob(
         user: AuthenticatedUser,
         task: String,
     ) {
         if ((Clock.System.now() - user.createdAt) < 30.days)
             throwUnauthorized("Sakura目前还在测试中，暂时只允许注册超过一个月的用户使用")
 
-        val total = gpuJobRepo.countJob()
+        val total = sakuraJobRepo.countJob()
         if (total >= 150) throwBadRequest("任务队列已满")
 
         val taskUrl = try {
@@ -199,8 +204,8 @@ class GpuApi(
             else -> throwBadRequest("任务格式错误")
         }
 
-        val isSuccess = gpuJobRepo.createJob(
-            GpuJob(
+        val isSuccess = sakuraJobRepo.createJob(
+            SakuraJob(
                 id = ObjectId(),
                 submitter = user.username,
                 workerId = null,
@@ -212,51 +217,51 @@ class GpuApi(
         if (!isSuccess) throwConflict("任务已存在")
     }
 
-    suspend fun deleteGpuJob(
+    suspend fun deleteSakuraJob(
         user: AuthenticatedUser,
         id: String,
     ) {
-        val job = gpuJobRepo.getJob(ObjectId(id))
+        val job = sakuraJobRepo.getJob(ObjectId(id))
             ?: throwNotFound("任务不存在")
 
         if (job.submitter != user.username) {
             user.shouldBeAtLeastMaintainer()
         }
 
-        val isSuccess = gpuJobRepo.deleteJob(ObjectId(id))
+        val isSuccess = sakuraJobRepo.deleteJob(ObjectId(id))
         if (!isSuccess) throwConflict("任务被占用")
     }
 
-    suspend fun createGpuWorker(
+    suspend fun createSakuraWorker(
         user: AuthenticatedUser,
         gpu: String,
         endpoint: String,
     ) {
         user.shouldBeAtLeastMaintainer()
-        gpuWorkerManager.createWorker(
+        sakuraWorkerManager.createWorker(
             gpu = gpu,
             endpoint = endpoint,
         )
     }
 
-    suspend fun deleteGpuWorker(
+    suspend fun deleteSakuraWorker(
         user: AuthenticatedUser,
         id: String,
     ) {
         user.shouldBeAtLeastMaintainer()
-        gpuWorkerManager.deleteWorker(id)
+        sakuraWorkerManager.deleteWorker(id)
     }
 
-    fun startGpuWorker(
+    suspend fun startSakuraWorker(
         user: AuthenticatedUser,
         id: String,
     ) {
         user.shouldBeAtLeastMaintainer()
-        gpuWorkerManager.startWorker(id)
+        sakuraWorkerManager.startWorker(id)
     }
 
-    suspend fun stopGpuWorker(user: AuthenticatedUser, id: String) {
+    suspend fun stopSakuraWorker(user: AuthenticatedUser, id: String) {
         user.shouldBeAtLeastMaintainer()
-        gpuWorkerManager.stopWorker(id)
+        sakuraWorkerManager.stopWorker(id)
     }
 }

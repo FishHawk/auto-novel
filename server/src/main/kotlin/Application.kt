@@ -4,7 +4,6 @@ import api.plugins.contentNegotiation
 import api.plugins.rateLimit
 import infra.DataSourceElasticSearch
 import infra.DataSourceMongo
-import infra.GpuWorkerManager
 import infra.common.*
 import infra.createRedisDataSource
 import infra.web.DataSourceWebNovelProvider
@@ -30,6 +29,7 @@ import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import sakura.SakuraWorkerManager
 
 fun main() {
     embeddedServer(Netty, 8081) {
@@ -63,7 +63,7 @@ fun main() {
             routeAuth()
             routeArticle()
             routeComment()
-            routeGpu()
+            routeSakura()
             routeOperationHistory()
             routeUser()
             routeWebNovel()
@@ -96,11 +96,11 @@ val appModule = module {
     }
 
     // Repository
-    singleOf(::GpuWorkerManager)
+    singleOf(::SakuraWorkerManager)
 
     singleOf(::ArticleRepository)
     singleOf(::CommentRepository)
-    singleOf(::GpuJobRepository)
+    singleOf(::SakuraJobRepository)
     singleOf(::OperationHistoryRepository)
     singleOf(::UserRepository)
 
@@ -120,7 +120,7 @@ val appModule = module {
     }
     singleOf(::ArticleApi) { createdAtStart() }
     singleOf(::CommentApi) { createdAtStart() }
-    singleOf(::GpuApi) { createdAtStart() }
+    singleOf(::SakuraApi) { createdAtStart() }
     singleOf(::OperationHistoryApi) { createdAtStart() }
     singleOf(::UserApi) { createdAtStart() }
     singleOf(::WebNovelApi) { createdAtStart() }

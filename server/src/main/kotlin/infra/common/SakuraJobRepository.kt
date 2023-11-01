@@ -2,61 +2,61 @@ package infra.common
 
 import com.mongodb.client.model.CountOptions
 import infra.DataSourceMongo
-import infra.model.GpuJob
+import infra.model.SakuraJob
 import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 
-class GpuJobRepository(
+class SakuraJobRepository(
     private val mongo: DataSourceMongo,
 ) {
-    suspend fun listJob(): List<GpuJob> {
+    suspend fun listJob(): List<SakuraJob> {
         return mongo
-            .gpuJobCollection
+            .sakuraJobCollection
             .find()
             .toList()
     }
 
     suspend fun countJob(): Long {
         return mongo
-            .gpuJobCollection
+            .sakuraJobCollection
             .countDocuments()
     }
 
     suspend fun getJob(
         id: ObjectId,
-    ): GpuJob? {
+    ): SakuraJob? {
         return mongo
-            .gpuJobCollection
+            .sakuraJobCollection
             .findOne(
-                GpuJob::id eq id
+                SakuraJob::id eq id
             )
     }
 
     suspend fun createJob(
-        job: GpuJob,
+        job: SakuraJob,
     ): Boolean {
         val exist = mongo
-            .gpuJobCollection
+            .sakuraJobCollection
             .countDocuments(
-                GpuJob::task eq job.task,
+                SakuraJob::task eq job.task,
                 CountOptions().limit(1),
             ) > 0
         if (exist) return false
 
         val result = mongo
-            .gpuJobCollection
+            .sakuraJobCollection
             .insertOne(job)
         return result.insertedId != null
     }
 
     suspend fun deleteJob(id: ObjectId): Boolean {
         val result = mongo
-            .gpuJobCollection
+            .sakuraJobCollection
             .deleteOne(
                 and(
-                    GpuJob::id eq id,
-                    GpuJob::workerId eq null,
+                    SakuraJob::id eq id,
+                    SakuraJob::workerId eq null,
                 ),
             )
         return result.deletedCount > 0

@@ -2,27 +2,27 @@
 import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { ApiGpu, GpuInfo } from '@/data/api/api_gpu';
+import { ApiSakura, SakuraStatus } from '@/data/api/api_sakura';
 import { ResultState } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 const message = useMessage();
 const userData = useUserDataStore();
 
-const gpuInfo = ref<ResultState<GpuInfo>>();
+const sakuraStatus = ref<ResultState<SakuraStatus>>();
 
-async function loadGpuInfo() {
-  const result = await ApiGpu.getGpuInfo();
-  gpuInfo.value = result;
+async function loadSakuraInfo() {
+  const result = await ApiSakura.getSakuraStatus();
+  sakuraStatus.value = result;
 }
-loadGpuInfo();
+loadSakuraInfo();
 
 async function deleteJob(id: string) {
-  const result = await ApiGpu.deleteGpuJob(id);
+  const result = await ApiSakura.deleteSakuraJob(id);
   if (result.ok) {
     message.info('删除成功');
-    if (gpuInfo.value?.ok) {
-      gpuInfo.value.value.jobs = gpuInfo.value.value.jobs.filter(
+    if (sakuraStatus.value?.ok) {
+      sakuraStatus.value.value.jobs = sakuraStatus.value.value.jobs.filter(
         (it) => it.id !== id
       );
     }
@@ -31,42 +31,42 @@ async function deleteJob(id: string) {
   }
 }
 
-async function createGpuWorker(json: { gpu: string; endpoint: string }) {
-  const result = await ApiGpu.createGpuWorker(json);
+async function createSakuraWorker(json: { gpu: string; endpoint: string }) {
+  const result = await ApiSakura.createSakuraWorker(json);
   if (result.ok) {
     message.info('创建成功');
     showCreateWorkerModal.value = false;
-    loadGpuInfo();
+    loadSakuraInfo();
   } else {
     message.error('创建失败：' + result.error.message);
   }
 }
 
-async function deleteGpuWorker(id: string) {
-  const result = await ApiGpu.deleteGpuWorker(id);
+async function deleteSakuraWorker(id: string) {
+  const result = await ApiSakura.deleteSakuraWorker(id);
   if (result.ok) {
     message.info('删除成功');
-    loadGpuInfo();
+    loadSakuraInfo();
   } else {
     message.error('删除失败：' + result.error.message);
   }
 }
 
-async function startGpuWorker(id: string) {
-  const result = await ApiGpu.startGpuWorker(id);
+async function startSakuraWorker(id: string) {
+  const result = await ApiSakura.startSakuraWorker(id);
   if (result.ok) {
     message.info('启动成功');
-    loadGpuInfo();
+    loadSakuraInfo();
   } else {
     message.error('启动失败：' + result.error.message);
   }
 }
 
-async function stopGpuWorker(id: string) {
-  const result = await ApiGpu.stopGpuWorker(id);
+async function stopSakuraWorker(id: string) {
+  const result = await ApiSakura.stopSakuraWorker(id);
   if (result.ok) {
     message.info('暂停成功');
-    loadGpuInfo();
+    loadSakuraInfo();
   } else {
     message.error('暂停失败：' + result.error.message);
   }
@@ -99,8 +99,8 @@ const createWorkerFormValue = ref({
   <MainLayout>
     <n-h1>GPU状态</n-h1>
     <ResultView
-      :result="gpuInfo"
-      :showEmpty="(it: GpuInfo) => false"
+      :result="sakuraStatus"
+      :showEmpty="(it: SakuraStatus) => false"
       v-slot="{ value: info }"
     >
       <n-space>
@@ -117,21 +117,21 @@ const createWorkerFormValue = ref({
               <async-button
                 v-if="worker.active"
                 secondary
-                @async-click="() => stopGpuWorker(worker.id)"
+                @async-click="() => stopSakuraWorker(worker.id)"
               >
                 暂停
               </async-button>
               <async-button
                 v-else
                 secondary
-                @async-click="() => startGpuWorker(worker.id)"
+                @async-click="() => startSakuraWorker(worker.id)"
               >
                 启动
               </async-button>
               <async-button
                 secondary
                 type="error"
-                @async-click="() => deleteGpuWorker(worker.id)"
+                @async-click="() => deleteSakuraWorker(worker.id)"
               >
                 删除
               </async-button>
@@ -140,6 +140,10 @@ const createWorkerFormValue = ref({
 
           <div style="display: flex">
             <div style="flex: auto; margin-right: 20px">
+              <template v-if="userData.asAdmin">
+                {{ worker.endpoint }}
+                <br />
+              </template>
               <span>{{ worker.id }}</span>
               <br />
               <span style="white-space: pre-wrap">
@@ -206,7 +210,7 @@ const createWorkerFormValue = ref({
             type="primary"
             block
             style="margin-top: 20px"
-            @click="createGpuWorker(createWorkerFormValue)"
+            @click="createSakuraWorker(createWorkerFormValue)"
           >
             添加
           </n-button>
@@ -228,7 +232,7 @@ const createWorkerFormValue = ref({
             <td style="max-width: 300px">{{ job.task }}</td>
             <td>{{ job.description }}</td>
             <td style="white-space: nowrap">
-              {{ job.workerUuid !== null ? '处理中' : '排队中' }}
+              {{ job.workerId !== null ? '处理中' : '排队中' }}
             </td>
             <td style="white-space: nowrap">
               于<n-time :time="job.createAt * 1000" type="relative" />
