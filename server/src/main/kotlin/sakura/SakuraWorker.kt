@@ -8,10 +8,10 @@ import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import kotlinx.datetime.Clock
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
-import org.litote.kmongo.*
+import org.litote.kmongo.eq
+import org.litote.kmongo.setValue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -19,7 +19,6 @@ import kotlin.time.toJavaDuration
 data class SakuraWorkerProgress(
     val total: Int,
     val finished: Int,
-    val error: Int,
 )
 
 class SakuraWorker(
@@ -62,39 +61,52 @@ class SakuraWorker(
 
     suspend fun stop() {
         if (!isActive) return
+        job?.cancelAndJoin()
         mongo
             .sakuraServerCollection
             .updateOneById(
                 ObjectId(id),
                 setValue(SakuraServer::isActive, false),
             )
-        job?.cancelAndJoin()
-        releaseWorkingSakuraJob()
-    }
-
-    private fun createRunningJob(): Job {
-        val coroutineExceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
-            scope.launch { releaseWorkingSakuraJob() }
-            println("Sakura worker error: $id")
-            throwable.printStackTrace()
-        }
-        return scope.launch(coroutineExceptionHandler) {
-            run()
-        }
-    }
-
-    private suspend fun releaseWorkingSakuraJob() {
         mongo
             .sakuraJobCollection
             .updateMany(
                 SakuraJob::workerId eq id,
                 setValue(SakuraJob::workerId, null),
             )
+        progress = null
+        description = ""
+    }
+
+    private fun createRunningJob(): Job {
+        return scope.launch {
+            try {
+                run()
+            } catch (e: Throwable) {
+                mongo
+                    .sakuraServerCollection
+                    .updateOneById(
+                        ObjectId(id),
+                        setValue(SakuraServer::isActive, false),
+                    )
+                mongo
+                    .sakuraJobCollection
+                    .updateMany(
+                        SakuraJob::workerId eq id,
+                        setValue(SakuraJob::workerId, null),
+                    )
+                progress = null
+                if (e !is CancellationException) {
+                    description = e.toString()
+                }
+                ensureActive()
+            }
+        }
     }
 
     private suspend fun run() {
         while (true) {
-            val job = mongo
+            val sakuraJob = mongo
                 .sakuraJobCollection
                 .findOne(SakuraJob::workerId eq id)
                 ?: mongo
@@ -103,49 +115,37 @@ class SakuraWorker(
                         SakuraJob::workerId eq null,
                         setValue(SakuraJob::workerId, id),
                     )
-            if (job == null) {
-                delay(10.seconds.toJavaDuration())
+            if (sakuraJob == null) {
+                delay(60.seconds.toJavaDuration())
                 continue
             }
-            try {
-                processJob(job)
 
-                mongo
-                    .sakuraJobCollection
-                    .deleteOne(SakuraJob::id eq job.id)
+            executeJob(sakuraJob)
 
-                mongo
-                    .sakuraJobResultCollection
-                    .insertOne(
-                        SakuraJobResult(
-                            task = job.task,
-                            description = job.description,
-                            workerId = id,
-                            submitter = job.submitter,
-                            total = progress?.total,
-                            finished = progress?.finished,
-                            error = progress?.error,
-                            createAt = job.createAt,
-                            finishAt = Clock.System.now(),
-                        )
+            mongo
+                .sakuraJobCollection
+                .deleteOne(SakuraJob::id eq sakuraJob.id)
+            mongo
+                .sakuraJobResultCollection
+                .insertOne(
+                    SakuraJobResult(
+                        task = sakuraJob.task,
+                        description = sakuraJob.description,
+                        workerId = id,
+                        submitter = sakuraJob.submitter,
+                        total = progress?.total,
+                        finished = progress?.finished,
+                        createAt = sakuraJob.createAt,
+                        finishAt = Clock.System.now(),
                     )
-            } catch (e: Throwable) {
-                mongo
-                    .sakuraJobCollection
-                    .updateMany(
-                        SakuraJob::workerId eq id,
-                        setValue(SakuraJob::workerId, null),
-                    )
-                if (e is CancellationException) throw e
-                else if (e is SakuraNetworkException) stop()
-            } finally {
-                progress = null
-                description = ""
-            }
+                )
+
+            progress = null
+            description = ""
         }
     }
 
-    private suspend fun processJob(job: SakuraJob) {
+    private suspend fun executeJob(job: SakuraJob) {
         val taskUrl = URLBuilder().takeFrom(job.task).build()
         when (taskUrl.pathSegments.first()) {
             "web" -> processWebTranslateJob(job, taskUrl)
@@ -160,14 +160,9 @@ class SakuraWorker(
         val (_, providerId, novelId) = taskUrl.pathSegments
         val start = taskUrl.parameters["start"]?.toIntOrNull() ?: 0
         val end = taskUrl.parameters["end"]?.toIntOrNull() ?: 65536
+        val shouldTranslateExpiredChapter = true
 
         this.description = job.description + "\n" + "${providerId}/${novelId}"
-
-        @Serializable
-        data class WebNovelChapterProjection(
-            @SerialName("episodeId")
-            val chapterId: String,
-        )
 
         val novel = mongo
             .webNovelMetadataCollection
@@ -176,114 +171,95 @@ class SakuraWorker(
                 WebNovelChapter::novelId eq novelId,
             ) ?: return
 
-        val translatedChapterId = mongo
-            .webNovelChapterCollection
-            .withDocumentClass<WebNovelChapterProjection>()
-            .find(
-                WebNovelChapter::providerId eq providerId,
-                WebNovelChapter::novelId eq novelId,
-                WebNovelChapter::sakuraParagraphs ne null,
+        val chapterTranslationOutlines =
+            chapterRepo.getTranslationOutlines(
+                providerId = providerId,
+                novelId = novelId,
+                translatorId = TranslatorId.Sakura,
             )
-            .projection(WebNovelChapterProjection::chapterId)
-            .toList()
-            .map { it.chapterId }
-
-        val untranslatedChapterId = novel
-            .toc
+        val chapters = novel.toc
             .mapNotNull { it.chapterId }
             .filterIndexed { index, _ -> index in start..<end }
-            .filterNot { it in translatedChapterId }
+            .filter { chapterId ->
+                val chapterTranslationOutline = chapterTranslationOutlines.find {
+                    it.chapterId == chapterId
+                }
+                if (chapterTranslationOutline?.translated != true) {
+                    // 未翻译
+                    true
+                } else if (chapterTranslationOutline.glossaryUuid == novel.glossaryUuid) {
+                    // 翻译未过期
+                    false
+                } else {
+                    // 翻译已过期
+                    shouldTranslateExpiredChapter
+                }
+            }
             .let {
                 it.subList(0, it.size.coerceAtMost(300))
             }
 
-        val total = untranslatedChapterId.size
+        val total = chapters.size
         var finished = 0
-        var error = 0
 
         fun updateProgress() {
             this.progress = SakuraWorkerProgress(
                 total = total,
                 finished = finished,
-                error = error,
             )
         }
 
         updateProgress()
-        untranslatedChapterId.forEach { chapterId ->
+
+        val filteredGlossary = novel
+            .glossary
+            .filterKeys { it.length >= 3 }
+
+        chapters.forEach { chapterId ->
             this.description = job.description + "\n" + "${providerId}/${novelId}/${chapterId}"
-            try {
-                val chapter = chapterRepo.getOrSyncRemote(
-                    providerId = providerId,
-                    novelId = novelId,
-                    chapterId = chapterId,
-                    forceSync = false,
-                ).getOrElse {
-                    error += 1
-                    updateProgress()
-                    return@forEach
+            val chapter = chapterRepo.getOrSyncRemote(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                forceSync = false,
+            ).getOrThrow()
+
+            val paragraphs = chapter.paragraphs.map {
+                var line = it
+                filteredGlossary.forEach { (jpWord, zhWord) ->
+                    line = line.replace(jpWord, zhWord)
                 }
-
-                val sakuraParagraphs = sakuraTranslate(
-                    client = client,
-                    endpoint = endpoint,
-                    input = chapter.paragraphs,
-                ) { prompt, result ->
-                    mongo
-                        .sakuraFailCaseCollection
-                        .insertOne(
-                            SakuraFailCase(
-                                providerId = providerId,
-                                novelId = novelId,
-                                chapterId = chapterId,
-                                prompt = prompt,
-                                result = result,
-                            )
-                        )
-                }
-                mongo
-                    .webNovelChapterCollection
-                    .updateOne(
-                        and(
-                            WebNovelChapter::providerId eq providerId,
-                            WebNovelChapter::novelId eq novelId,
-                            WebNovelChapter::chapterId eq chapterId,
-                        ),
-                        setValue(WebNovelChapter::sakuraParagraphs, sakuraParagraphs)
-                    )
-
-                val zh = mongo.webNovelChapterCollection
-                    .countDocuments(
-                        and(
-                            WebNovelChapter::providerId eq providerId,
-                            WebNovelChapter::novelId eq novelId,
-                            WebNovelChapter::sakuraParagraphs ne null,
-                        )
-                    )
-                mongo
-                    .webNovelMetadataCollection
-                    .updateOne(
-                        WebNovelMetadata.byId(providerId, novelId),
-                        combine(
-                            setValue(WebNovelMetadata::sakura, zh),
-                            setValue(WebNovelMetadata::changeAt, Clock.System.now()),
-                        ),
-                    )
-
-                finished += 1
-                updateProgress()
-            } catch (e: Throwable) {
-                when (e) {
-                    is SakuraNetworkException, is CancellationException -> {
-                        throw e
-                    }
-
-                    else -> {
-                        error += 1
-                        updateProgress()
-                    }
-                }
+                line
             }
+            val sakuraParagraphs = sakuraTranslate(
+                client = client,
+                endpoint = endpoint,
+                input = paragraphs,
+            ) { prompt, result ->
+                mongo
+                    .sakuraFailCaseCollection
+                    .insertOne(
+                        SakuraFailCase(
+                            providerId = providerId,
+                            novelId = novelId,
+                            chapterId = chapterId,
+                            prompt = prompt,
+                            result = result,
+                        )
+                    )
+            }
+
+            chapterRepo.updateTranslation(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                translatorId = TranslatorId.Sakura,
+                glossary = novel.glossaryUuid?.let { Glossary(it, novel.glossary) },
+                paragraphsZh = sakuraParagraphs,
+            )
+
+            finished += 1
+            updateProgress()
         }
     }
 

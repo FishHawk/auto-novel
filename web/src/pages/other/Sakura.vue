@@ -75,16 +75,14 @@ async function stopSakuraWorker(id: string) {
 function computePercentage({
   total,
   finished,
-  error,
 }: {
   total: number;
   finished: number;
-  error: number;
 }) {
   if (total == 0) {
     return 100;
   } else {
-    return Math.round((1000 * (finished + error)) / total) / 10;
+    return Math.round((1000 * finished) / total) / 10;
   }
 }
 
@@ -162,9 +160,7 @@ const createWorkerFormValue = ref({
                 :percentage="computePercentage(worker.progress)"
               />
               <n-text>
-                成功 {{ worker.progress.finished }}/{{ worker.progress.total }}
-                <br />
-                失败 {{ worker.progress.error }}/{{ worker.progress.total }}
+                完成 {{ worker.progress.finished }}/{{ worker.progress.total }}
               </n-text>
             </n-space>
           </div>

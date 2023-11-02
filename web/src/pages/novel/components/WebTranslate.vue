@@ -310,7 +310,7 @@ async function submitSakuraJob() {
       <n-list-item>
         <AdvanceOption
           title="术语表"
-          description="术语表过大可能会使得翻译质量下降（例如：百度/有道将无法从判断人名性别，导致人称代词错误）。"
+          description="术语表过大可能会使得翻译质量下降，此外，出于安全起见，Sakura只会使用日语长度超过两个字的术语。"
         >
           <GlossaryEdit :glossary="glossary" :submit="submitGlossary" />
         </AdvanceOption>

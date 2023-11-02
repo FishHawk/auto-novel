@@ -7,8 +7,6 @@ import io.ktor.http.*
 import kotlinx.serialization.json.*
 import util.UnreachableException
 
-class SakuraNetworkException : Exception("Sakura网络请求错误")
-
 suspend fun sakuraTranslate(
     client: HttpClient,
     endpoint: String,
@@ -140,21 +138,17 @@ suspend fun sakuraTranslatePrompt(
     maxNewTokens: Int = 1024,
     params: JsonObjectBuilder.() -> Unit
 ): Pair<String, Boolean> {
-    val obj = runCatching {
-        client.post(endpoint) {
-            contentType(ContentType.Application.Json)
-            setBody(
-                buildJsonObject {
-                    put("prompt", prompt)
-                    put("preset", "None")
-                    put("max_new_tokens", maxNewTokens)
-                    params()
-                }
-            )
-        }.json()
-    }.getOrElse {
-        throw SakuraNetworkException()
-    }
+    val obj = client.post(endpoint) {
+        contentType(ContentType.Application.Json)
+        setBody(
+            buildJsonObject {
+                put("prompt", prompt)
+                put("preset", "None")
+                put("max_new_tokens", maxNewTokens)
+                params()
+            }
+        )
+    }.json()
 
     val (text, newToken) = obj["results"]!!
         .jsonArray[0]

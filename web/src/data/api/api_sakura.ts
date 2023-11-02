@@ -25,7 +25,6 @@ interface SakuraWorker {
   progress: {
     total: number;
     finished: number;
-    error: number;
   } | null;
 }
 

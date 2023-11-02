@@ -5,7 +5,6 @@ import infra.model.*
 import kotlinx.datetime.Clock
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
-import util.UnreachableException
 
 class WebNovelChapterRepository(
     private val provider: DataSourceWebNovelProvider,
@@ -20,7 +19,7 @@ class WebNovelChapterRepository(
             TranslatorId.Baidu -> Pair(WebNovelChapter::baiduGlossaryUuid, WebNovelChapter::baiduParagraphs)
             TranslatorId.Youdao -> Pair(WebNovelChapter::youdaoGlossaryUuid, WebNovelChapter::youdaoParagraphs)
             TranslatorId.Gpt -> Pair(WebNovelChapter::gptGlossaryUuid, WebNovelChapter::gptParagraphs)
-            else -> throw UnreachableException()
+            TranslatorId.Sakura -> Pair(WebNovelChapter::sakuraGlossaryUuid, WebNovelChapter::sakuraParagraphs)
         }
         return mongo
             .webNovelChapterCollection
@@ -133,7 +132,12 @@ class WebNovelChapterRepository(
                 setValue(WebNovelChapter::gptGlossary, glossary?.map ?: emptyMap()),
                 setValue(WebNovelChapter::gptParagraphs, paragraphsZh)
             )
-            else -> throw UnreachableException()
+
+            TranslatorId.Sakura -> combine(
+                setValue(WebNovelChapter::sakuraGlossaryUuid, glossary?.id),
+                setValue(WebNovelChapter::sakuraGlossary, glossary?.map ?: emptyMap()),
+                setValue(WebNovelChapter::sakuraParagraphs, paragraphsZh)
+            )
         }
         mongo
             .webNovelChapterCollection

@@ -32,7 +32,6 @@ data class SakuraJobResult(
     val submitter: String,
     val total: Int?,
     val finished: Int?,
-    val error: Int?,
     @Contextual val createAt: Instant,
     @Contextual val finishAt: Instant,
 )
