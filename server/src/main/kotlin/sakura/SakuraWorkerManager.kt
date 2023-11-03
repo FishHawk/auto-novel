@@ -3,6 +3,7 @@ package sakura
 import infra.DataSourceMongo
 import infra.model.SakuraServer
 import infra.web.WebNovelChapterRepository
+import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -19,7 +20,8 @@ import kotlin.time.toJavaDuration
 
 class SakuraWorkerManager(
     private val mongo: DataSourceMongo,
-    private val webNovelChapterRepo: WebNovelChapterRepository,
+    private val webChapterRepo: WebNovelChapterRepository,
+    private val wenkuVolumeRepo: WenkuNovelVolumeRepository,
 ) {
     private val client = HttpClient(Java) {
         install(ContentNegotiation) {
@@ -37,6 +39,20 @@ class SakuraWorkerManager(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    private fun addWorker(
+        server: SakuraServer,
+    ) {
+        val worker = SakuraWorker(
+            scope = scope,
+            server = server,
+            client = client,
+            mongo = mongo,
+            webChapterRepo = webChapterRepo,
+            wenkuVolumeRepo = wenkuVolumeRepo,
+        )
+        _workers[worker.id] = worker
+    }
+
     init {
         scope.launch {
             delay(10.seconds.toJavaDuration())
@@ -45,14 +61,7 @@ class SakuraWorkerManager(
                 .find()
                 .toList()
             servers.forEach {
-                val worker = SakuraWorker(
-                    scope = scope,
-                    server = it,
-                    client = client,
-                    mongo = mongo,
-                    chapterRepo = webNovelChapterRepo,
-                )
-                _workers[worker.id] = worker
+                addWorker(it)
                 delay(1.seconds.toJavaDuration())
             }
         }
@@ -73,14 +82,7 @@ class SakuraWorkerManager(
             .insertedId!!
             .asObjectId().value
 
-        val worker = SakuraWorker(
-            scope = scope,
-            server = server.copy(id = id),
-            client = client,
-            mongo = mongo,
-            chapterRepo = webNovelChapterRepo,
-        )
-        _workers[worker.id] = worker
+        addWorker(server.copy(id = id))
     }
 
     suspend fun startWorker(id: String) {

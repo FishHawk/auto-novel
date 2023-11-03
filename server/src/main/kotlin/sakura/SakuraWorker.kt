@@ -3,6 +3,7 @@ package sakura
 import infra.DataSourceMongo
 import infra.model.*
 import infra.web.WebNovelChapterRepository
+import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.client.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
@@ -26,7 +27,8 @@ class SakuraWorker(
     server: SakuraServer,
     private val client: HttpClient,
     private val mongo: DataSourceMongo,
-    private val chapterRepo: WebNovelChapterRepository,
+    private val webChapterRepo: WebNovelChapterRepository,
+    private val wenkuVolumeRepo: WenkuNovelVolumeRepository,
 ) {
     private var job: Job? = null
 
@@ -172,7 +174,7 @@ class SakuraWorker(
             ) ?: return
 
         val chapterTranslationOutlines =
-            chapterRepo.getTranslationOutlines(
+            webChapterRepo.getTranslationOutlines(
                 providerId = providerId,
                 novelId = novelId,
                 translatorId = TranslatorId.Sakura,
@@ -217,7 +219,7 @@ class SakuraWorker(
 
         chapters.forEach { chapterId ->
             this.description = job.description + "\n" + "${providerId}/${novelId}/${chapterId}"
-            val chapter = chapterRepo.getOrSyncRemote(
+            val chapter = webChapterRepo.getOrSyncRemote(
                 providerId = providerId,
                 novelId = novelId,
                 chapterId = chapterId,
@@ -249,7 +251,7 @@ class SakuraWorker(
                     )
             }
 
-            chapterRepo.updateTranslation(
+            webChapterRepo.updateTranslation(
                 providerId = providerId,
                 novelId = novelId,
                 chapterId = chapterId,
@@ -269,5 +271,6 @@ class SakuraWorker(
         val (_, novelId) = taskUrl.pathSegments
         val start = taskUrl.parameters["start"]?.toIntOrNull() ?: 0
         val end = taskUrl.parameters["end"]?.toIntOrNull() ?: 65536
+        val shouldTranslateExpiredChapter = true
     }
 }

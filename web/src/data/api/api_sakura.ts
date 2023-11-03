@@ -7,7 +7,7 @@ export interface SakuraStatus {
   workers: SakuraWorker[];
 }
 
-interface SakuraJob {
+export interface SakuraJob {
   id: string;
   task: string;
   description: string;
@@ -16,7 +16,7 @@ interface SakuraJob {
   createAt: number;
 }
 
-interface SakuraWorker {
+export interface SakuraWorker {
   id: string;
   active: boolean;
   endpoint: string;

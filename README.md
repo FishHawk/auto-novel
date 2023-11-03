@@ -19,7 +19,7 @@
   - [Pixiv](https://www.pixiv.net/)
   - [Alphapolis](https://www.alphapolis.co.jp/)
   - [Novelism](https://novelism.jp/)
-- 生成机翻，支持有道/百度/GPT翻译，支持术语表。
+- 生成机翻，支持有道/百度/GPT3.5/Sakura翻译，支持术语表。
 - 支持日文、中文以及中日对比等多种格式。
 - 可以生成Epub和Txt文件。
 - 可以翻译Epub和Txt文件。

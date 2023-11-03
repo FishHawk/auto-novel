@@ -1,11 +1,24 @@
 <script lang="ts" setup>
+import { CloseFilled, DoneFilled } from '@vicons/material';
+import { createReusableTemplate } from '@vueuse/core';
+import { useMessage, useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
-import { useMessage } from 'naive-ui';
 
-import { ApiSakura, SakuraStatus } from '@/data/api/api_sakura';
+import {
+  ApiSakura,
+  SakuraJob,
+  SakuraStatus,
+  SakuraWorker,
+} from '@/data/api/api_sakura';
 import { ResultState } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 
+const [DefineJob, ReuseJob] = createReusableTemplate<{
+  job: SakuraJob;
+  worker?: SakuraWorker;
+}>();
+
+const vars = useThemeVars();
 const message = useMessage();
 const userData = useUserDataStore();
 
@@ -94,6 +107,39 @@ const createWorkerFormValue = ref({
 </script>
 
 <template>
+  <DefineJob v-slot="{ job, worker }">
+    <tr>
+      <td style="max-width: 150px; word-wrap: break-word">{{ job.task }}</td>
+      <td>
+        {{ job.description }}
+        <template v-if="worker?.progress">
+          <br />
+          <n-progress :percentage="computePercentage(worker.progress)" />
+        </template>
+      </td>
+      <td style="white-space: nowrap">
+        {{ job.workerId !== null ? '处理中' : '排队中' }}
+        <template v-if="worker?.progress">
+          <br />
+          {{ worker.progress.finished }}/{{ worker.progress.total }}
+        </template>
+      </td>
+      <td style="white-space: nowrap">
+        于<n-time :time="job.createAt * 1000" type="relative" />
+        <br />
+        由{{ job.submitter }}提交
+        <async-button
+          v-if="userData.asAdmin || userData.username === job.submitter"
+          type="error"
+          text
+          @async-click="() => deleteJob(job.id)"
+        >
+          删除
+        </async-button>
+      </td>
+    </tr>
+  </DefineJob>
+
   <MainLayout>
     <n-h1>GPU状态</n-h1>
     <ResultView
@@ -101,71 +147,71 @@ const createWorkerFormValue = ref({
       :showEmpty="(it: SakuraStatus) => false"
       v-slot="{ value: info }"
     >
-      <n-space>
-        <n-card
-          v-for="worker of info.workers"
-          :title="worker.gpu"
-          style="width: 400px"
-        >
-          <template #header-extra>
-            {{ worker.active ? '工作中' : '已暂停' }}
-          </template>
-          <template #action v-if="userData.asAdmin">
-            <n-space>
-              <async-button
-                v-if="worker.active"
-                secondary
-                @async-click="() => stopSakuraWorker(worker.id)"
+      <n-list>
+        <n-list-item v-for="worker of info.workers">
+          <n-thing content-indented>
+            <template #avatar>
+              <n-icon-wrapper
+                :size="20"
+                :border-radius="10"
+                :color="worker.active ? undefined : vars.errorColor"
               >
-                暂停
-              </async-button>
-              <async-button
-                v-else
-                secondary
-                @async-click="() => startSakuraWorker(worker.id)"
-              >
-                启动
-              </async-button>
-              <async-button
-                secondary
-                type="error"
-                @async-click="() => deleteSakuraWorker(worker.id)"
-              >
-                删除
-              </async-button>
-            </n-space>
-          </template>
+                <n-icon
+                  :size="16"
+                  :component="worker.active ? DoneFilled : CloseFilled"
+                />
+              </n-icon-wrapper>
+            </template>
 
-          <div style="display: flex">
-            <div style="flex: auto; margin-right: 20px">
-              <template v-if="userData.asAdmin">
+            <template #header>
+              {{ worker.gpu }}
+              <n-text depth="3" style="font-size: 14px">{{ worker.id }}</n-text>
+            </template>
+
+            <template #header-extra>
+              <n-space v-if="userData.asAdmin" :wrap="false">
+                <async-button
+                  v-if="worker.active"
+                  size="small"
+                  secondary
+                  @async-click="() => stopSakuraWorker(worker.id)"
+                >
+                  暂停
+                </async-button>
+                <async-button
+                  v-else
+                  size="small"
+                  secondary
+                  @async-click="() => startSakuraWorker(worker.id)"
+                >
+                  启动
+                </async-button>
+                <async-button
+                  size="small"
+                  secondary
+                  type="error"
+                  @async-click="() => deleteSakuraWorker(worker.id)"
+                >
+                  删除
+                </async-button>
+              </n-space>
+              <template v-else>
+                {{ worker.active ? '工作中' : '已暂停' }}
+              </template>
+            </template>
+
+            <template #description>
+              <n-text v-if="userData.asAdmin">
                 {{ worker.endpoint }}
                 <br />
-              </template>
-              <span>{{ worker.id }}</span>
-              <br />
-              <span style="white-space: pre-wrap">
-                {{ worker.description }}
-              </span>
-            </div>
-            <n-space
-              v-if="worker.progress !== null"
-              align="center"
-              vertical
-              size="large"
-              style="flex: none"
-            >
-              <n-progress
-                type="circle"
-                :percentage="computePercentage(worker.progress)"
-              />
-              <n-text>
-                完成 {{ worker.progress.finished }}/{{ worker.progress.total }}
               </n-text>
-            </n-space>
-          </div>
-        </n-card>
-      </n-space>
+              <n-text v-if="worker.active" style="white-space: pre-wrap">
+                {{ worker.description }}
+              </n-text>
+            </template>
+          </n-thing>
+        </n-list-item>
+      </n-list>
 
       <n-button
         v-if="userData.asAdmin"
@@ -224,26 +270,11 @@ const createWorkerFormValue = ref({
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job of info.jobs">
-            <td style="max-width: 300px">{{ job.task }}</td>
-            <td>{{ job.description }}</td>
-            <td style="white-space: nowrap">
-              {{ job.workerId !== null ? '处理中' : '排队中' }}
-            </td>
-            <td style="white-space: nowrap">
-              于<n-time :time="job.createAt * 1000" type="relative" />
-              <br />
-              由{{ job.submitter }}提交
-              <async-button
-                v-if="userData.asAdmin || userData.username === job.submitter"
-                type="error"
-                text
-                @async-click="() => deleteJob(job.id)"
-              >
-                删除
-              </async-button>
-            </td>
-          </tr>
+          <ReuseJob
+            v-for="job of info.jobs"
+            :job="job"
+            :worker="info.workers.find((worker:SakuraWorker) => worker.id === job.workerId)"
+          />
         </tbody>
       </n-table>
     </ResultView>
