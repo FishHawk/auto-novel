@@ -50,6 +50,22 @@ const createSakuraJobWebTranslate = (
   return createSakuraJob(`web/${providerId}/${novelId}${queryString}`);
 };
 
+const createSakuraJobWenkuTranslate = (
+  novelId: string,
+  volumeId: string,
+  params: {
+    start: number;
+    end: number;
+  }
+) => {
+  const paramsString: { [key: string]: string } = {};
+  if (params.start > 0) paramsString['start'] = params.start.toString();
+  if (params.end < 65535) paramsString['end'] = params.end.toString();
+  const searchParams = new URLSearchParams(paramsString).toString();
+  const queryString = searchParams ? `?${searchParams}` : '';
+  return createSakuraJob(`wenku/${novelId}/${volumeId}${queryString}`);
+};
+
 const deleteSakuraJob = (id: string) =>
   runCatching(client.delete(`sakura/job/${id}`).text());
 
@@ -69,6 +85,7 @@ export const ApiSakura = {
   getSakuraStatus,
   //
   createSakuraJobWebTranslate,
+  createSakuraJobWenkuTranslate,
   deleteSakuraJob,
   //
   createSakuraWorker,

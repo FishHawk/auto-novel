@@ -4,6 +4,8 @@ import api.plugins.*
 import infra.common.SakuraJobRepository
 import infra.model.SakuraJob
 import infra.web.WebNovelMetadataRepository
+import infra.wenku.WenkuNovelMetadataRepository
+import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -114,6 +116,8 @@ class SakuraApi(
     private val sakuraWorkerManager: SakuraWorkerManager,
     private val sakuraJobRepo: SakuraJobRepository,
     private val webRepo: WebNovelMetadataRepository,
+    private val wenkuNovelRepo: WenkuNovelMetadataRepository,
+    private val wenkuVolumeRepo: WenkuNovelVolumeRepository,
 ) {
     @Serializable
     data class SakuraStatusDto(
@@ -180,8 +184,8 @@ class SakuraApi(
         user: AuthenticatedUser,
         task: String,
     ) {
-        if ((Clock.System.now() - user.createdAt) < 30.days)
-            throwUnauthorized("Sakura目前还在测试中，暂时只允许注册超过一个月的用户使用")
+        if ((Clock.System.now() - user.createdAt) < 7.days)
+            throwUnauthorized("Sakura只允许注册超过一周的用户使用")
 
         val total = sakuraJobRepo.countJob()
         if (total >= 150) throwBadRequest("任务队列已满")
@@ -199,6 +203,16 @@ class SakuraApi(
                 val novel = webRepo.get(providerId, novelId)
                     ?: throwNotFound("小说不存在")
                 novel.titleJp
+            }
+
+            "wenku" -> {
+                if (taskUrl.pathSegments.size != 3) throwBadRequest("任务格式错误")
+                val (_, novelId, volumeId) = taskUrl.pathSegments
+                val novel = wenkuNovelRepo.get(novelId)
+                    ?: throwNotFound("小说不存在")
+                wenkuVolumeRepo.getVolumeJp(novelId, volumeId)
+                    ?: throwNotFound("卷不存在")
+                novel.title
             }
 
             else -> throwBadRequest("任务格式错误")

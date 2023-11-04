@@ -109,8 +109,9 @@ const createWorkerFormValue = ref({
 <template>
   <DefineJob v-slot="{ job, worker }">
     <tr>
-      <td style="max-width: 150px; word-wrap: break-word">{{ job.task }}</td>
       <td>
+        <n-text depth="3" style="font-size: 12px">{{ job.task }}</n-text>
+        <br />
         {{ job.description }}
         <template v-if="worker?.progress">
           <br />
@@ -141,7 +142,7 @@ const createWorkerFormValue = ref({
   </DefineJob>
 
   <MainLayout>
-    <n-h1>GPU状态</n-h1>
+    <n-h1>Sakura状态</n-h1>
     <ResultView
       :result="sakuraStatus"
       :showEmpty="(it: SakuraStatus) => false"
@@ -205,7 +206,10 @@ const createWorkerFormValue = ref({
                 {{ worker.endpoint }}
                 <br />
               </n-text>
-              <n-text v-if="worker.active" style="white-space: pre-wrap">
+              <n-text
+                v-if="worker.active || userData.asAdmin"
+                style="white-space: pre-wrap"
+              >
                 {{ worker.description }}
               </n-text>
             </template>
@@ -263,7 +267,6 @@ const createWorkerFormValue = ref({
       <n-table :bordered="false" style="margin-top: 40px">
         <thead>
           <tr>
-            <th><b>任务</b></th>
             <th><b>描述</b></th>
             <th><b>状态</b></th>
             <th><b>信息</b></th>

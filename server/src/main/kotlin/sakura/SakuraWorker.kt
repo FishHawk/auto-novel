@@ -3,6 +3,7 @@ package sakura
 import infra.DataSourceMongo
 import infra.model.*
 import infra.web.WebNovelChapterRepository
+import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.client.*
 import io.ktor.http.*
@@ -13,6 +14,7 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
 import org.litote.kmongo.setValue
+import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -28,6 +30,7 @@ class SakuraWorker(
     private val client: HttpClient,
     private val mongo: DataSourceMongo,
     private val webChapterRepo: WebNovelChapterRepository,
+    private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
     private val wenkuVolumeRepo: WenkuNovelVolumeRepository,
 ) {
     private var job: Job? = null
@@ -49,6 +52,8 @@ class SakuraWorker(
 
     var progress: SakuraWorkerProgress? = null
         private set
+
+    private val logger = LoggerFactory.getLogger("sakura.${id}")
 
     suspend fun start() {
         if (isActive) return
@@ -82,9 +87,11 @@ class SakuraWorker(
 
     private fun createRunningJob(): Job {
         return scope.launch {
+            logger.info("启动Worker")
             try {
                 run()
             } catch (e: Throwable) {
+                logger.info("出错停止，由于${e}")
                 mongo
                     .sakuraServerCollection
                     .updateOneById(
@@ -108,6 +115,7 @@ class SakuraWorker(
 
     private suspend fun run() {
         while (true) {
+            logger.info("获取Job")
             val sakuraJob = mongo
                 .sakuraJobCollection
                 .findOne(SakuraJob::workerId eq id)
@@ -122,6 +130,7 @@ class SakuraWorker(
                 continue
             }
 
+            logger.info("执行Job ${sakuraJob.task}")
             executeJob(sakuraJob)
 
             mongo
@@ -151,7 +160,7 @@ class SakuraWorker(
         val taskUrl = URLBuilder().takeFrom(job.task).build()
         when (taskUrl.pathSegments.first()) {
             "web" -> processWebTranslateJob(job, taskUrl)
-            "wenku" -> processWenkuTranslateJob(taskUrl)
+            "wenku" -> processWenkuTranslateJob(job, taskUrl)
         }
     }
 
@@ -166,13 +175,18 @@ class SakuraWorker(
 
         this.description = job.description + "\n" + "${providerId}/${novelId}"
 
+        logger.info("获取Web小说")
         val novel = mongo
             .webNovelMetadataCollection
             .findOne(
                 WebNovelChapter::providerId eq providerId,
                 WebNovelChapter::novelId eq novelId,
             ) ?: return
+        val filteredGlossary = novel
+            .glossary
+            .filterKeys { it.length >= 3 }
 
+        logger.info("构造需要翻译的章节列表")
         val chapterTranslationOutlines =
             webChapterRepo.getTranslationOutlines(
                 providerId = providerId,
@@ -201,6 +215,7 @@ class SakuraWorker(
                 it.subList(0, it.size.coerceAtMost(300))
             }
 
+        logger.info("开始翻译")
         val total = chapters.size
         var finished = 0
 
@@ -211,14 +226,11 @@ class SakuraWorker(
             )
         }
 
-        updateProgress()
-
-        val filteredGlossary = novel
-            .glossary
-            .filterKeys { it.length >= 3 }
-
         chapters.forEach { chapterId ->
+            updateProgress()
             this.description = job.description + "\n" + "${providerId}/${novelId}/${chapterId}"
+
+            logger.info("获取章节 ${providerId}/${novelId}/${chapterId}")
             val chapter = webChapterRepo.getOrSyncRemote(
                 providerId = providerId,
                 novelId = novelId,
@@ -226,6 +238,7 @@ class SakuraWorker(
                 forceSync = false,
             ).getOrThrow()
 
+            logger.info("翻译章节 ${providerId}/${novelId}/${chapterId}")
             val paragraphs = chapter.paragraphs.map {
                 var line = it
                 filteredGlossary.forEach { (jpWord, zhWord) ->
@@ -239,9 +252,9 @@ class SakuraWorker(
                 input = paragraphs,
             ) { prompt, result ->
                 mongo
-                    .sakuraFailCaseCollection
+                    .sakuraWebFailCaseCollection
                     .insertOne(
-                        SakuraFailCase(
+                        SakuraWebFailCase(
                             providerId = providerId,
                             novelId = novelId,
                             chapterId = chapterId,
@@ -251,6 +264,7 @@ class SakuraWorker(
                     )
             }
 
+            logger.info("更新章节 ${providerId}/${novelId}/${chapterId}")
             webChapterRepo.updateTranslation(
                 providerId = providerId,
                 novelId = novelId,
@@ -259,18 +273,111 @@ class SakuraWorker(
                 glossary = novel.glossaryUuid?.let { Glossary(it, novel.glossary) },
                 paragraphsZh = sakuraParagraphs,
             )
-
             finished += 1
-            updateProgress()
         }
     }
 
     private suspend fun processWenkuTranslateJob(
+        job: SakuraJob,
         taskUrl: Url,
     ) {
-        val (_, novelId) = taskUrl.pathSegments
+        val (_, novelId, volumeId) = taskUrl.pathSegments
         val start = taskUrl.parameters["start"]?.toIntOrNull() ?: 0
         val end = taskUrl.parameters["end"]?.toIntOrNull() ?: 65536
         val shouldTranslateExpiredChapter = true
+
+        this.description = job.description + "\n" + "${novelId}/${volumeId}"
+
+        logger.info("获取小说和卷")
+        val novel = wenkuMetadataRepo.get(novelId)
+            ?: return
+        val filteredGlossary = novel
+            .glossary
+            .filterKeys { it.length >= 3 }
+
+        val volume = wenkuVolumeRepo.getVolumeJp(novelId, volumeId)
+            ?: return
+
+        logger.info("构造需要翻译的章节列表")
+        val chapters = volume
+            .listChapter()
+            .filterIndexed { index, _ -> index in start..<end }
+            .filter {
+                if (!volume.translationExist(TranslatorId.Sakura, it)) {
+                    // 未翻译
+                    true
+                } else if (
+                    volume.getChapterGlossary(TranslatorId.Sakura, it)?.uuid == novel?.glossaryUuid
+                ) {
+                    // 翻译未过期
+                    false
+                } else {
+                    // 翻译已过期
+                    shouldTranslateExpiredChapter
+                }
+            }
+
+        logger.info("开始翻译")
+        val total = chapters.size
+        var finished = 0
+
+        fun updateProgress() {
+            this.progress = SakuraWorkerProgress(
+                total = total,
+                finished = finished,
+            )
+        }
+
+        chapters.forEach { chapterId ->
+            updateProgress()
+            this.description = job.description + "\n" + "${novelId}/${volumeId}/${chapterId}"
+
+            logger.info("获取章节 ${novelId}/${volumeId}/${chapterId}")
+            val paragraphs = volume
+                .getChapter(chapterId)!!
+                .map {
+                    var line = it
+                    filteredGlossary.forEach { (jpWord, zhWord) ->
+                        line = line.replace(jpWord, zhWord)
+                    }
+                    line
+                }
+
+            logger.info("翻译章节 ${novelId}/${volumeId}/${chapterId}")
+            val sakuraParagraphs = sakuraTranslate(
+                client = client,
+                endpoint = endpoint,
+                input = paragraphs,
+            ) { prompt, result ->
+                mongo
+                    .sakuraWenkuFailCaseCollection
+                    .insertOne(
+                        SakuraWenkuFailCase(
+                            novelId = novelId,
+                            volumeId = volumeId,
+                            chapterId = chapterId,
+                            prompt = prompt,
+                            result = result,
+                        )
+                    )
+            }
+
+            logger.info("更新章节 ${novelId}/${volumeId}/${chapterId}")
+            volume.setTranslation(
+                translatorId = TranslatorId.Sakura,
+                chapterId = chapterId,
+                lines = sakuraParagraphs,
+            )
+            if (novel.glossaryUuid != null) {
+                volume.setChapterGlossary(
+                    translatorId = TranslatorId.Sakura,
+                    chapterId = chapterId,
+                    glossaryUuid = novel.glossaryUuid,
+                    glossary = novel.glossary,
+                )
+            }
+
+            finished += 1
+        }
     }
 }

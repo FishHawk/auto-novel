@@ -40,6 +40,7 @@ export interface VolumeJpDto {
   baidu: number;
   youdao: number;
   gpt: number;
+  sakura: number;
 }
 
 const listNovel = ({

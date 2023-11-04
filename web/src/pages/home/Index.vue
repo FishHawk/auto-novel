@@ -143,7 +143,7 @@ const linkExample = [
           讨论。
         </n-li>
         <n-li>
-          Sakura翻译开始公开测试。现在网络小说可以使用Sakura模型翻译，使用前请先看完
+          Sakura翻译现在支持术语表和文库小说了，私人缓存区还不支持，注册满一周即可排队，用之前请先看
           <RouterNA to="/forum/653fbe0492b50672788e3608">说明</RouterNA>。
         </n-li>
         <n-li>

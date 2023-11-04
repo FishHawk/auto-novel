@@ -53,8 +53,10 @@ class DataSourceMongo(url: String) {
         get() = database.getCollection<SakuraJobResult>("gpu-job-result")
     val sakuraServerCollection
         get() = database.getCollection<SakuraServer>("sakura-server")
-    val sakuraFailCaseCollection
-        get() = database.getCollection<SakuraFailCase>("sakura-fail-case")
+    val sakuraWebFailCaseCollection
+        get() = database.getCollection<SakuraWebFailCase>("sakura-fail-case")
+    val sakuraWenkuFailCaseCollection
+        get() = database.getCollection<SakuraWenkuFailCase>("sakura-wenku-fail-case")
 
 
     val operationHistoryCollection

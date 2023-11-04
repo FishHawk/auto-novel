@@ -3,6 +3,7 @@ package sakura
 import infra.DataSourceMongo
 import infra.model.SakuraServer
 import infra.web.WebNovelChapterRepository
+import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
@@ -21,6 +22,7 @@ import kotlin.time.toJavaDuration
 class SakuraWorkerManager(
     private val mongo: DataSourceMongo,
     private val webChapterRepo: WebNovelChapterRepository,
+    private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
     private val wenkuVolumeRepo: WenkuNovelVolumeRepository,
 ) {
     private val client = HttpClient(Java) {
@@ -48,6 +50,7 @@ class SakuraWorkerManager(
             client = client,
             mongo = mongo,
             webChapterRepo = webChapterRepo,
+            wenkuMetadataRepo = wenkuMetadataRepo,
             wenkuVolumeRepo = wenkuVolumeRepo,
         )
         _workers[worker.id] = worker

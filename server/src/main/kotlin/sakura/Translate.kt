@@ -41,7 +41,7 @@ suspend fun sakuraTranslate(
                 endpoint = endpoint,
                 seg = seg,
                 onDegradation = onDegradation,
-            )
+            ).apply { println(this) }
         }
     val recoveredOutput = recoverOutput(input, output)
 

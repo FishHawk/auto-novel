@@ -51,6 +51,7 @@ class WenkuNovelVolumeRepository {
                                 baidu = it.listTranslation(TranslatorId.Baidu).size,
                                 youdao = it.listTranslation(TranslatorId.Youdao).size,
                                 gpt = it.listTranslation(TranslatorId.Gpt).size,
+                                sakura = it.listTranslation(TranslatorId.Sakura).size,
                             )
                         )
                     } else {

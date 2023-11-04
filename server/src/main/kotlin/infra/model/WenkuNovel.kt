@@ -59,6 +59,7 @@ data class WenkuNovelVolumeJp(
     val baidu: Int,
     val youdao: Int,
     val gpt: Int,
+    val sakura: Int,
 )
 
 @Serializable

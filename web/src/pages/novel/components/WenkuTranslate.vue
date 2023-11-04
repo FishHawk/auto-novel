@@ -10,6 +10,7 @@ import { useSettingStore } from '@/data/stores/setting';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { getTranslatorLabel } from '@/data/util';
+import { ApiSakura } from '@/data/api/api_sakura';
 
 const props = defineProps<{
   novelId: string;
@@ -109,9 +110,20 @@ async function startUpdateTask(
   taskDetail.value!.running = false;
 }
 
-interface NovelFiles {
-  label: string;
-  translatorId: TranslatorId;
+async function submitSakuraJob(volume: VolumeJpDto) {
+  const result = await ApiSakura.createSakuraJobWenkuTranslate(
+    props.novelId,
+    volume.volumeId,
+    {
+      start: 0,
+      end: 65535,
+    }
+  );
+  if (result.ok) {
+    message.info('排队成功');
+  } else {
+    message.error('排队成功失败:' + result.error.message);
+  }
 }
 
 function createDownload(volume: VolumeJpDto) {
@@ -164,7 +176,10 @@ function createDownload(volume: VolumeJpDto) {
   return { ext, url, filename };
 }
 
-function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
+function translatorLabels(volume: VolumeJpDto): {
+  label: string;
+  translatorId: TranslatorId;
+}[] {
   return [
     {
       label: `百度(${volume.baidu}/${volume.total})`,
@@ -177,6 +192,10 @@ function stateToFileList(volume: VolumeJpDto): NovelFiles[] {
     {
       label: `GPT3(${volume.gpt}/${volume.total})`,
       translatorId: 'gpt',
+    },
+    {
+      label: `Sakura(${volume.sakura}/${volume.total})`,
+      translatorId: 'sakura',
     },
   ];
 }
@@ -332,14 +351,30 @@ async function deleteVolume(novelId: string, volumeId: string) {
         <n-space vertical>
           <n-text>{{ volume.volumeId }}</n-text>
           <n-space>
-            <n-button
-              v-for="row in stateToFileList(volume)"
-              text
-              type="primary"
-              @click="startUpdateTask(volume, row.translatorId)"
+            <template
+              v-for="{ translatorId, label } in translatorLabels(volume)"
             >
-              更新{{ row.label }}
-            </n-button>
+              <n-button
+                v-if="translatorId !== 'sakura'"
+                text
+                type="primary"
+                @click="startUpdateTask(volume, translatorId)"
+              >
+                更新{{ label }}
+              </n-button>
+
+              <async-button
+                v-else-if="!novelId.startsWith('user')"
+                text
+                type="primary"
+                @async-click="() => submitSakuraJob(volume)"
+              >
+                排队{{ label }}
+              </async-button>
+            </template>
+            <RouterNA to="/sakura">
+              <n-button text type="primary"> 查看队列 </n-button>
+            </RouterNA>
 
             <n-popconfirm
               v-if="userData.asAdmin || novelId.startsWith('user')"

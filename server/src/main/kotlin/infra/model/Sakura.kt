@@ -37,9 +37,18 @@ data class SakuraJobResult(
 )
 
 @Serializable
-data class SakuraFailCase(
+data class SakuraWebFailCase(
     val providerId: String,
     val novelId: String,
+    val chapterId: String,
+    val prompt: String,
+    val result: String,
+)
+
+@Serializable
+data class SakuraWenkuFailCase(
+    val novelId: String,
+    val volumeId: String,
     val chapterId: String,
     val prompt: String,
     val result: String,
