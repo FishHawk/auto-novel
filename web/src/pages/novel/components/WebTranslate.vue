@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-import { computed, Ref, ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
+import { computed, Ref, ref, watch } from 'vue';
 
-import { client } from '@/data/api/client';
-import {  ApiSakura } from '@/data/api/api_sakura';
+import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
+import { client } from '@/data/api/client';
 import { useSettingStore } from '@/data/stores/setting';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { TranslatorId } from '@/data/translator/translator';
-import { useIsDesktop, getTranslatorLabel } from '@/data/util';
+import { getTranslatorLabel, useIsDesktop } from '@/data/util';
 
 const props = defineProps<{
   providerId: string;
@@ -35,6 +36,7 @@ const emits = defineEmits<{
 const setting = useSettingStore();
 const isDesktop = useIsDesktop(600);
 const message = useMessage();
+const userData = useUserDataStore();
 
 const gptAccessToken = ref('');
 const gptAccessTokenOptions = computed(() => {
@@ -230,10 +232,14 @@ async function submitGlossary() {
 }
 
 async function submitSakuraJob() {
-  const result = await ApiSakura.createSakuraJobWebTranslate(providerId, novelId, {
-    start: startIndex.value ?? 0,
-    end: endIndex.value ?? 65535,
-  });
+  const result = await ApiSakura.createSakuraJobWebTranslate(
+    providerId,
+    novelId,
+    {
+      start: startIndex.value ?? 0,
+      end: endIndex.value ?? 65535,
+    }
+  );
   if (result.ok) {
     message.info('排队成功');
   } else {
@@ -275,10 +281,10 @@ async function submitSakuraJob() {
         />
       </n-list-item>
 
-      <n-list-item>
+      <n-list-item v-if="userData.passWeek">
         <AdvanceOptionSwitch
           title="与源站同步"
-          description="在启动翻译任务时，同步已缓存章节。如果缓存章节与源站不匹配，会删除章节，包含现有的翻译，慎用。一次性设定，默认关闭。"
+          description="在启动翻译任务时，同步已缓存章节。如果缓存章节与源站不匹配，会删除章节，包含现有的翻译。慎用，不要抱着试试的心情用这个功能，用之前请确保你知道自己在干什么。一次性设定，默认关闭。"
           v-model:value="syncFromProvider"
         />
       </n-list-item>

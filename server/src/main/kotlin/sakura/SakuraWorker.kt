@@ -212,7 +212,7 @@ class SakuraWorker(
                 }
             }
             .let {
-                it.subList(0, it.size.coerceAtMost(300))
+                it.subList(0, it.size.coerceAtMost(150))
             }
 
         logger.info("开始翻译")
