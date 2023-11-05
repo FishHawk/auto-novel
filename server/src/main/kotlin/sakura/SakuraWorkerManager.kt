@@ -7,6 +7,7 @@ import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,9 @@ class SakuraWorkerManager(
     private val wenkuVolumeRepo: WenkuNovelVolumeRepository,
 ) {
     private val client = HttpClient(Java) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 60_000
+        }
         install(ContentNegotiation) {
             json(Json {
                 isLenient = true
