@@ -295,7 +295,7 @@ class SakuraWorker(
             .glossary
             .filterKeys { it.length >= 3 }
 
-        val volume = wenkuVolumeRepo.getVolumeJp(novelId, volumeId)
+        val volume = wenkuVolumeRepo.getVolume(novelId, volumeId)
             ?: return
 
         logger.info("构造需要翻译的章节列表")

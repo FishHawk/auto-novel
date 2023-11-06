@@ -18,6 +18,8 @@ import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
 import java.io.File
+import kotlin.io.path.Path
+import kotlin.io.path.div
 
 
 val appModule = module {
@@ -54,6 +56,7 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
+            println(Path("./data") / "123/321")
         }
         describe("build es index") {
             @Serializable

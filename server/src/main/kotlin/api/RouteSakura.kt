@@ -210,7 +210,7 @@ class SakuraApi(
                 val (_, novelId, volumeId) = taskUrl.pathSegments
                 val novel = wenkuNovelRepo.get(novelId)
                     ?: throwNotFound("小说不存在")
-                wenkuVolumeRepo.getVolumeJp(novelId, volumeId)
+                wenkuVolumeRepo.getVolume(novelId, volumeId)
                     ?: throwNotFound("卷不存在")
                 novel.title
             }

@@ -1,10 +1,10 @@
 package api
 
 import api.plugins.*
+import infra.VolumeCreateException
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
-import infra.wenku.VolumeCreateException
 import infra.wenku.WenkuNovelFilter
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -42,9 +42,6 @@ private class WenkuNovelRes {
         val pageSize: Int,
         val sort: FavoriteListSort,
     )
-
-    @Resource("/user")
-    class VolumesUser(val parent: WenkuNovelRes)
 
     @Resource("/{novelId}")
     class Id(val parent: WenkuNovelRes, val novelId: String) {
@@ -116,15 +113,6 @@ fun Route.routeWenkuNovel() {
             val user = call.authenticatedUser()
             call.tryRespond {
                 service.updateFavored(user = user, novelId = loc.parent.novelId, favored = false)
-            }
-        }
-    }
-
-    authenticateDb {
-        get<WenkuNovelRes.VolumesUser> { loc ->
-            val user = call.authenticatedUser()
-            call.tryRespond {
-                service.getUserVolumes(user = user)
             }
         }
     }
@@ -249,7 +237,7 @@ fun Route.routeWenkuNovel() {
                 translationsMode = loc.translationsMode,
                 translations = loc.translations,
             )
-            "../../../../../../files-wenku/$path"
+            "../../../../../../$path"
         }
     }
 }
@@ -315,18 +303,6 @@ class WenkuNovelApi(
                 sort = sort,
             )
             .asDto(pageSize) { it.asDto() }
-    }
-
-    @Serializable
-    data class WenkuUserVolumeDto(
-        val list: List<WenkuNovelVolumeJp>,
-        val novelId: String,
-    )
-
-    suspend fun getUserVolumes(user: AuthenticatedUser): WenkuUserVolumeDto {
-        val novelId = "user-${user.id}"
-        val volumes = volumeRepo.list(novelId).jp
-        return WenkuUserVolumeDto(list = volumes, novelId = novelId)
     }
 
     private fun throwNovelNotFound(): Nothing =
@@ -539,7 +515,7 @@ class WenkuNovelApi(
     }
 
     private suspend fun validateNovelId(novelId: String) {
-        if (!novelId.startsWith("user") && !metadataRepo.exist(novelId))
+        if (!metadataRepo.exist(novelId))
             throwNovelNotFound()
     }
 
@@ -557,8 +533,6 @@ class WenkuNovelApi(
     ) {
         validateNovelId(novelId)
         validateVolumeId(volumeId)
-        if (!unpack && novelId.startsWith("user"))
-            throwBadRequest("不允许在私人缓存区上传中文小说")
 
         try {
             volumeRepo.createVolume(
@@ -574,16 +548,14 @@ class WenkuNovelApi(
             }
         }
 
-        if (!novelId.startsWith("user")) {
-            operationHistoryRepo.create(
-                operator = ObjectId(user.id),
-                operation = Operation.WenkuUpload(
-                    novelId = novelId,
-                    volumeId = volumeId,
-                )
+        operationHistoryRepo.create(
+            operator = ObjectId(user.id),
+            operation = Operation.WenkuUpload(
+                novelId = novelId,
+                volumeId = volumeId,
             )
-            metadataRepo.notifyUpdate(novelId)
-        }
+        )
+        metadataRepo.notifyUpdate(novelId)
     }
 
     suspend fun deleteVolume(
@@ -591,7 +563,7 @@ class WenkuNovelApi(
         novelId: String,
         volumeId: String,
     ) {
-        if (!user.atLeastMaintainer() && novelId != "user-${user.id}")
+        if (!user.atLeastMaintainer())
             throwUnauthorized("没有权限执行操作")
 
         validateNovelId(novelId)
@@ -620,15 +592,11 @@ class WenkuNovelApi(
         if (translatorId == TranslatorId.Sakura) {
             throw BadRequestException("Sakura不支持浏览器翻译")
         }
-
-        validateNovelId(novelId)
         validateVolumeId(volumeId)
 
-        val novel =
-            if (novelId.startsWith("user")) null
-            else metadataRepo.get(novelId)
-
-        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+        val novel = metadataRepo.get(novelId)
+            ?: throwNovelNotFound()
+        val volume = volumeRepo.getVolume(novelId, volumeId)
             ?: throwNotFound("卷不存在")
 
         val untranslatedChapterIds = mutableListOf<String>()
@@ -637,14 +605,14 @@ class WenkuNovelApi(
             if (!volume.translationExist(translatorId, it)) {
                 untranslatedChapterIds.add(it)
             } else if (
-                volume.getChapterGlossary(translatorId, it)?.uuid != novel?.glossaryUuid
+                volume.getChapterGlossary(translatorId, it)?.uuid != novel.glossaryUuid
             ) {
                 expiredChapterIds.add(it)
             }
         }
         return TranslateTaskDto(
-            glossaryUuid = novel?.glossaryUuid,
-            glossary = novel?.glossary ?: emptyMap(),
+            glossaryUuid = novel.glossaryUuid,
+            glossary = novel.glossary,
             untranslatedChapters = untranslatedChapterIds,
             expiredChapters = expiredChapterIds,
         )
@@ -658,7 +626,7 @@ class WenkuNovelApi(
         validateNovelId(novelId)
         validateVolumeId(volumeId)
 
-        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+        val volume = volumeRepo.getVolume(novelId, volumeId)
             ?: throwNotFound("卷不存在")
         return volume.getChapter(chapterId)
             ?: throwNotFound("章节不存在")
@@ -676,18 +644,15 @@ class WenkuNovelApi(
             throw BadRequestException("Sakura不支持浏览器翻译")
         }
 
-        validateNovelId(novelId)
         validateVolumeId(volumeId)
 
-        val novel =
-            if (novelId.startsWith("user")) null
-            else metadataRepo.get(novelId)
-
-        if (glossaryUuid != novel?.glossaryUuid) {
+        val novel = metadataRepo.get(novelId)
+            ?: throwNovelNotFound()
+        if (glossaryUuid != novel.glossaryUuid) {
             throwBadRequest("术语表uuid失效")
         }
 
-        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+        val volume = volumeRepo.getVolume(novelId, volumeId)
             ?: throwNotFound("卷不存在")
 
         val jpLines = volume.getChapter(chapterId)
@@ -706,7 +671,7 @@ class WenkuNovelApi(
                 translatorId = translatorId,
                 chapterId = chapterId,
                 glossaryUuid = glossaryUuid,
-                glossary = novel?.glossary ?: emptyMap(),
+                glossary = novel.glossary,
             )
         }
 
@@ -732,7 +697,7 @@ class WenkuNovelApi(
         if (lang == NovelFileLangV2.Jp)
             throwBadRequest("不支持的类型")
 
-        val volume = volumeRepo.getVolumeJp(novelId, volumeId)
+        val volume = volumeRepo.getVolume(novelId, volumeId)
             ?: throwNotFound("卷不存在")
 
         val newFileName = volume.makeTranslationVolumeFile(
@@ -740,6 +705,6 @@ class WenkuNovelApi(
             translationsMode = translationsMode,
             translations = translations.distinct(),
         )
-        return "${novelId}/${volumeId.encodeURLPathPart()}.unpack/$newFileName"
+        return "files-wenku/${novelId}/${volumeId.encodeURLPathPart()}.unpack/$newFileName"
     }
 }

@@ -3,6 +3,7 @@ import api.plugins.authentication
 import api.plugins.contentNegotiation
 import api.plugins.rateLimit
 import infra.DataSourceElasticSearch
+import infra.DataSourceFileSystem
 import infra.DataSourceMongo
 import infra.common.*
 import infra.createRedisDataSource
@@ -10,6 +11,7 @@ import infra.web.DataSourceWebNovelProvider
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelMetadataRepository
+import infra.personal.PersonalNovelVolumeRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
@@ -68,6 +70,7 @@ fun main() {
             routeUser()
             routeWebNovel()
             routeWenkuNovel()
+            routePersonalNovel()
         }
     }.start(wait = true)
 }
@@ -94,6 +97,7 @@ val appModule = module {
             pixivPhpsessid = pixivPhpsessid,
         )
     }
+    singleOf(::DataSourceFileSystem)
 
     // Repository
     singleOf(::SakuraWorkerManager)
@@ -110,6 +114,7 @@ val appModule = module {
 
     singleOf(::WenkuNovelMetadataRepository)
     singleOf(::WenkuNovelVolumeRepository)
+    singleOf(::PersonalNovelVolumeRepository)
 
     // Api
     single {
@@ -125,4 +130,5 @@ val appModule = module {
     singleOf(::UserApi) { createdAtStart() }
     singleOf(::WebNovelApi) { createdAtStart() }
     singleOf(::WenkuNovelApi) { createdAtStart() }
+    singleOf(::PersonalNovelApi) { createdAtStart() }
 }
