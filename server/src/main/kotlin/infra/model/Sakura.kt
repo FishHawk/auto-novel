@@ -5,10 +5,12 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
+import org.litote.kmongo.Id
 
 @Serializable
 data class SakuraServer(
     @Contextual @SerialName("_id") val id: ObjectId,
+    val userId: Id<User>? = null,
     val gpu: String,
     val endpoint: String,
     val isActive: Boolean = false,

@@ -225,8 +225,6 @@ class PersonalNovelApi(
         if (user.id !== userId)
             throwUnauthorized("没有权限")
 
-        if (translatorId == TranslatorId.Sakura)
-            throwBadRequest("Sakura不支持浏览器翻译")
         validateVolumeId(volumeId)
 
         val volume = volumeRepo.getVolume(
@@ -286,8 +284,6 @@ class PersonalNovelApi(
         if (user.id !== userId)
             throwUnauthorized("没有权限")
 
-        if (translatorId == TranslatorId.Sakura)
-            throwBadRequest("Sakura不支持浏览器翻译")
         validateVolumeId(volumeId)
 
         val volume = volumeRepo.getVolume(

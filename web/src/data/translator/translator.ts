@@ -4,6 +4,7 @@ import { createGptSegIndexedDbCache } from './cache';
 import { OpenAiTranslator } from './openai';
 import { BaiduTranslator, YoudaoTranslator } from './tradition';
 import { Glossary, SegmentTranslator } from './type';
+import { SakuraTranslator } from './sakura/sakura';
 
 export interface SegmentCache {
   cacheKey(segIndex: number, seg: string[], glossary?: Glossary): string;
@@ -17,6 +18,7 @@ export interface TranslatorConfig {
   client: KyInstance;
   glossary?: Glossary;
   accessToken?: string;
+  sakuraEndpoint?: string;
   log: (message: string) => void;
 }
 
@@ -101,15 +103,25 @@ export class Translator {
           config.log,
           config.glossary ?? {}
         ).init();
-      } else {
+      } else if (id === 'gpt') {
         if (!config.accessToken) {
-          throw new Error('Gpt翻译器需要Access Token或者Api Key');
+          throw new Error('GPT翻译器需要Access Token或者Api Key');
         }
         return new OpenAiTranslator(
           config.client,
           config.log,
           config.glossary ?? {},
           config.accessToken
+        );
+      } else {
+        if (!config.sakuraEndpoint) {
+          throw new Error('Sakura翻译器需要输入你自己部署的服务网址');
+        }
+        return new SakuraTranslator(
+          config.client,
+          config.log,
+          config.glossary ?? {},
+          config.sakuraEndpoint
         );
       }
     }

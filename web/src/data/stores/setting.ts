@@ -6,6 +6,7 @@ export interface Setting {
   isDark: boolean;
   tocSortReverse: boolean;
   openAiAccessTokens: string[];
+  sakuraEndpoints: string[];
   downloadFilenameType: 'jp' | 'zh';
 
   isDownloadFormatSameAsReaderFormat: boolean;
@@ -22,6 +23,7 @@ export const useSettingStore = defineStore('setting', {
       isDark: false,
       tocSortReverse: false,
       openAiAccessTokens: [],
+      sakuraEndpoints: [],
       downloadFilenameType: 'zh',
       isDownloadFormatSameAsReaderFormat: true,
       downloadFormat: {
@@ -42,6 +44,16 @@ export const useSettingStore = defineStore('setting', {
       this.openAiAccessTokens = this.openAiAccessTokens.filter(
         (t) => t !== token
       );
+    },
+    addSakuraEndpoint(endpoint: string) {
+      this.deleteSakuraEndpoint(endpoint);
+      this.sakuraEndpoints.unshift(endpoint);
+      if (this.sakuraEndpoints.length > 10) {
+        this.sakuraEndpoints.length == 10;
+      }
+    },
+    deleteSakuraEndpoint(endpoint: string) {
+      this.sakuraEndpoints = this.sakuraEndpoints.filter((t) => t !== endpoint);
     },
   },
   persist: true,

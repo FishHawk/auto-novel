@@ -35,7 +35,7 @@ if (userData.isLoggedIn) {
     :date-locale="dateZhCN"
     inline-theme-disabled
   >
-    <n-message-provider>
+    <n-message-provider container-style="white-space: pre-wrap">
       <router-view :key="$route.path" />
     </n-message-provider>
   </n-config-provider>

@@ -315,12 +315,14 @@ export const translatePersonal = async (
     translatorId,
     volumeId,
     accessToken,
+    sakuraEndpoint,
     translateExpireChapter,
   }: {
     client: KyInstance;
     translatorId: TranslatorId;
     volumeId: string;
     accessToken?: string;
+    sakuraEndpoint?: string;
     translateExpireChapter: boolean;
   },
   callback: {
@@ -365,6 +367,7 @@ export const translatePersonal = async (
       client: client,
       glossary: task.glossary,
       accessToken,
+      sakuraEndpoint,
       log: (message) => callback.log('　　' + message),
     });
   } catch (e: any) {

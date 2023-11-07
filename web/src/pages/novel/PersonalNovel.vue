@@ -5,7 +5,7 @@ import {
   UploadFileInfo,
   useMessage,
 } from 'naive-ui';
-import { computed, ref } from 'vue';
+import { computed, h, ref } from 'vue';
 
 import { ApiPersonalNovel } from '@/data/api/api_personal_novel';
 import { VolumeJpDto } from '@/data/api/api_wenku_novel';
@@ -80,6 +80,13 @@ const gptAccessTokenOptions = computed(() => {
   });
 });
 
+const sakuraEndpoint = ref('');
+const sakuraEndpointOptions = computed(() => {
+  return setting.sakuraEndpoints.map((t) => {
+    return { label: t, value: t };
+  });
+});
+
 interface TaskDetail {
   volumeId: string;
   label: string;
@@ -124,6 +131,8 @@ async function startUpdateTask(
     accessToken = obj.accessToken;
   } catch {}
 
+  let sakuraEndpointValue = sakuraEndpoint.value.trim();
+
   const translatePersonal = (await import('@/data/translator'))
     .translatePersonal;
   await translatePersonal(
@@ -132,6 +141,7 @@ async function startUpdateTask(
       translatorId,
       volumeId: volume.volumeId,
       accessToken,
+      sakuraEndpoint: sakuraEndpointValue,
       translateExpireChapter: translateExpireChapter.value,
     },
     {
@@ -146,6 +156,9 @@ async function startUpdateTask(
         } else if (translatorId === 'gpt') {
           setting.addToken(accessToken);
           volume.gpt = state;
+        } else if (translatorId === 'sakura') {
+          setting.addSakuraEndpoint(sakuraEndpointValue);
+          volume.sakura = state;
         }
         taskDetails.value[
           `${volume.volumeId}/${translatorId}`
@@ -286,6 +299,30 @@ async function deleteVolume(volumeId: string) {
     message.error('删除失败：' + result.error.message);
   }
 }
+
+async function testSakura() {
+  sakuraEndpoint.value = 'http://frp.proxy.kuriko.moe:5000/api/v1/generate';
+  if (sakuraEndpoint.value.trim()) {
+    const input =
+      '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
+    const Translator = (await import('@/data/translator')).Translator;
+    const translator = await Translator.create('sakura', {
+      client,
+      glossary: {},
+      sakuraEndpoint: sakuraEndpoint.value.trim(),
+      log: () => {},
+    });
+    try {
+      const result = await translator.translate([input]);
+      const output = result[0];
+      message.success(`原文：${input}\n译文：${output}`);
+    } catch (e: any) {
+      message.error(`Sakura报错：${e}`);
+    }
+  } else {
+    message.error('Sakura链接为空');
+  }
+}
 </script>
 
 <template>
@@ -322,6 +359,7 @@ async function deleteVolume(volumeId: string) {
       <n-button-group style="margin-bottom: 8px">
         <!-- <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button> -->
         <n-button @click="toggleDownloadOptions()">下载设置</n-button>
+        <async-button @async-click="testSakura">测试Sakura</async-button>
       </n-button-group>
 
       <n-collapse-transition
@@ -372,6 +410,17 @@ async function deleteVolume(volumeId: string) {
         :options="gptAccessTokenOptions"
         placeholder="请输入ChatGPT的Access Token或者Api Key"
         :get-show="() => true"
+        style="margin-bottom: 16px"
+      />
+
+      <b>
+        Chrome/Edge用不了Sakura翻译，只有Firefox可以。还在研究怎么解决，如果你可以用请告诉我。
+      </b>
+      <n-auto-complete
+        v-model:value="sakuraEndpoint"
+        :options="sakuraEndpointOptions"
+        placeholder="请输入你自己部署的Sakura实例的链接，例如http://127.0.0.1:5000/api/v1/generate"
+        :get-show="() => true"
       />
 
       <n-list>
@@ -384,7 +433,6 @@ async function deleteVolume(volumeId: string) {
                   v-for="{ translatorId, label } in translatorLabels(volume)"
                 >
                   <n-button
-                    v-if="translatorId !== 'sakura'"
                     text
                     type="primary"
                     @click="startUpdateTask(volume, translatorId)"
