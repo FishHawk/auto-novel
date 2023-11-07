@@ -143,7 +143,10 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
       )[0]!;
       const asin = extractAsin(titleLink.getAttribute('href')!)!;
       const title = prettyTitle(titleLink.textContent!);
-      const cover = it.getElementsByTagName('img')[0].getAttribute('src')!;
+      const cover = it
+        .getElementsByTagName('img')[0]
+        .getAttribute('src')!
+        .replace('_PJku-sticker-v7,TopRight,0,-50.', '');
       return { asin, title, cover };
     });
 
