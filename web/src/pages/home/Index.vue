@@ -175,7 +175,7 @@ const linkExample = [
 
     <template v-if="userData.isLoggedIn">
       <SectionHeader title="我的收藏">
-        <RouterNA to="/favorite-list">更多</RouterNA>
+        <RouterNA to="/favorite">更多</RouterNA>
       </SectionHeader>
       <PanelWebNovel :list-result="favoriteList" />
       <n-divider />

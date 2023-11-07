@@ -245,6 +245,7 @@ const translationModeOptions = [
   { label: '并列', value: 'parallel' },
 ];
 const translationOptions = [
+  { label: 'Sakura', value: 'sakura' },
   { label: 'GPT3', value: 'gpt' },
   { label: '有道', value: 'youdao' },
   { label: '百度', value: 'baidu' },
@@ -331,7 +332,7 @@ async function deleteVolume(novelId: string, volumeId: string) {
             :options="translationOptions"
             :disabled="setting.isDownloadFormatSameAsReaderFormat"
             size="small"
-            style="height: 160px; margin-top: 8px; font-size: 12px"
+            style="height: 190px; margin-top: 8px; font-size: 12px"
           />
         </AdvanceOptionRadio>
       </n-list-item>

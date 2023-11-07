@@ -50,6 +50,7 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
+    menuOption('文件翻译', '/personal'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
@@ -59,6 +60,8 @@ const path = useRoute().path;
 function getTopMenuOptionKey() {
   if (path.startsWith('/forum')) {
     return '/forum';
+  } else if (path.startsWith('/favorite')) {
+    return '/favorite';
   } else if (path.startsWith('/wenku')) {
     return '/wenku-list';
   } else if (path.startsWith('/novel')) {
@@ -74,7 +77,7 @@ const collapsedMenuOptions = computed(() => {
   const signed = userData.info !== undefined;
   return [
     menuOption('首页', '/'),
-    menuOption('我的收藏', '/favorite-list', signed),
+    menuOption('我的收藏', '/favorite', signed),
     menuOption('阅读历史', '/read-history', signed),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
@@ -87,6 +90,7 @@ const collapsedMenuOptions = computed(() => {
         menuOption('Kakuyomu：流派', '/novel-rank/kakuyomu/1'),
       ],
     },
+    menuOption('文件翻译', '/personal'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
@@ -182,7 +186,7 @@ const vars = useThemeVars();
           <router-link v-if="isDesktop" to="/read-history">
             <n-button quaternary>历史</n-button>
           </router-link>
-          <router-link v-if="isDesktop" to="/favorite-list">
+          <router-link v-if="isDesktop" to="/favorite">
             <n-button quaternary>收藏</n-button>
           </router-link>
           <n-dropdown

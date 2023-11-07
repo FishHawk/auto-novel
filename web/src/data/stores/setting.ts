@@ -27,7 +27,7 @@ export const useSettingStore = defineStore('setting', {
       downloadFormat: {
         mode: 'mix',
         translationsMode: 'priority',
-        translations: ['gpt', 'youdao', 'baidu'],
+        translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       },
     },
   actions: {

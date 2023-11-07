@@ -85,7 +85,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
 </script>
 
 <template>
-  <ListLayout>
+  <WebLayout>
     <n-h1>网络小说</n-h1>
     <n-text depth="3" style="font-size: 12px">
       # 搜索语法参见
@@ -94,5 +94,5 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
     <NovelList search :options="options" :loader="loader" v-slot="{ page }">
       <NovelListWeb :items="page.items" />
     </NovelList>
-  </ListLayout>
+  </WebLayout>
 </template>

@@ -147,7 +147,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (_page, _query, selected) => {
 </script>
 
 <template>
-  <ListLayout>
+  <WebLayout>
     <n-h1>{{ descriptior.title }}</n-h1>
     <NovelList
       :search="descriptior.search"
@@ -157,5 +157,5 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (_page, _query, selected) => {
     >
       <NovelListWeb :items="page.items" />
     </NovelList>
-  </ListLayout>
+  </WebLayout>
 </template>

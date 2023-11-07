@@ -39,7 +39,7 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
 </script>
 
 <template>
-  <ListLayout>
+  <MainLayout>
     <n-h1>文库小说</n-h1>
     <RouterNA to="/wenku-edit">新建文库小说</RouterNA>
     <NovelList
@@ -50,7 +50,7 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
     >
       <NovelListWenku :items="page.items" />
     </NovelList>
-  </ListLayout>
+  </MainLayout>
 </template>
 
 <style scoped>

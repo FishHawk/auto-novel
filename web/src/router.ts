@@ -21,10 +21,15 @@ const router = createRouter({
     },
 
     {
-      path: '/favorite-list',
+      path: '/favorite',
+      redirect: '/favorite/web',
+    },
+    {
+      path: '/favorite/:favoriteId',
       meta: { title: '我的收藏' },
       component: () => import('./pages/list/FavoriteList.vue'),
     },
+
     {
       path: '/read-history',
       meta: { title: '阅读历史' },
@@ -71,6 +76,12 @@ const router = createRouter({
     },
 
     {
+      path: '/personal',
+      meta: { title: '文件翻译' },
+      component: () => import('./pages/novel/PersonalNovel.vue'),
+    },
+
+    {
       path: '/forum',
       meta: { title: '论坛' },
       component: () => import('./pages/forum/Forum.vue'),
@@ -94,11 +105,6 @@ const router = createRouter({
       path: '/toolbox',
       meta: { title: '工具箱' },
       component: () => import('./pages/toolbox/Toolbox.vue'),
-    },
-    {
-      path: '/toolbox/storage-private',
-      meta: { title: '文件翻译/私人' },
-      component: () => import('./pages/toolbox/ToolboxStoragePrivate.vue'),
     },
     {
       path: '/toolbox/txt',
