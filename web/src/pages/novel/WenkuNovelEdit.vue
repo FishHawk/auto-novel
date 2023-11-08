@@ -222,17 +222,12 @@ function deleteVolume(index: number) {
         </n-text>
       </div>
 
-      <n-p style="max-width: 530px">
-        可以通过亚马逊系列链接/单本链接导入，你也可以输入小说标题从搜索导入。
-        <br />
-        亚马逊有些R18书导入会出错。这种时候按下面步骤操作：
-        <n-ol>
-          <n-li>确保安装的插件是最新的v1.0.7。</n-li>
-          <n-li>确保你之前点过“已满18岁”。</n-li>
-          <n-li>确保现在没有打开亚马逊页面。</n-li>
-          <n-li>右键插件，选择“强制公开亚马逊Cookies”。</n-li>
-        </n-ol>
-
+      <div style="max-width: 530px">
+        <n-p>
+          可以通过亚马逊系列链接/单本链接导入，你也可以输入小说标题从搜索导入。
+          <br />
+          导入R18书需要安装v1.0.7以上的版本的插件，并在亚马逊上点过“已满18岁”。
+        </n-p>
         <n-input-group>
           <n-input
             v-model:value="url"
@@ -241,7 +236,7 @@ function deleteVolume(index: number) {
           />
           <n-button type="primary" @click="fetchNovel()"> 导入 </n-button>
         </n-input-group>
-      </n-p>
+      </div>
     </n-space>
 
     <n-form
