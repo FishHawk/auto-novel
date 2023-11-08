@@ -308,7 +308,6 @@ async function deleteVolume(volumeId: string) {
 }
 
 async function testSakura() {
-  sakuraEndpoint.value = 'http://frp.proxy.kuriko.moe:5000/api/v1/generate';
   if (sakuraEndpoint.value.trim()) {
     const input =
       '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
