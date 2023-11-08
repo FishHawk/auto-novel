@@ -165,12 +165,28 @@ const createWorkerFormValue = ref({
             </template>
 
             <template #header>
-              {{ worker.gpu }}
-              <n-text depth="3" style="font-size: 14px">{{ worker.id }}</n-text>
+              <n-space>
+                <n-popover v-if="worker.endpoint" trigger="hover">
+                  <template #trigger>
+                    {{ worker.gpu }}
+                  </template>
+                  <span>{{ worker.endpoint }}</span>
+                </n-popover>
+                <template v-else>
+                  {{ worker.gpu }}
+                </template>
+
+                <n-text depth="3" style="font-size: 14px">
+                  @{{ worker.username }}
+                </n-text>
+              </n-space>
             </template>
 
             <template #header-extra>
-              <n-space v-if="userData.asAdmin" :wrap="false">
+              <n-space
+                v-if="userData.asAdmin || userData.username === worker.username"
+                :wrap="false"
+              >
                 <async-button
                   v-if="worker.active"
                   size="small"

@@ -18,8 +18,9 @@ export interface SakuraJob {
 
 export interface SakuraWorker {
   id: string;
+  username: string;
   active: boolean;
-  endpoint: string;
+  endpoint?: string;
   gpu: string;
   description: string;
   progress: {

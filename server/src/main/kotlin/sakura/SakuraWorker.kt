@@ -42,6 +42,7 @@ class SakuraWorker(
     }
 
     val id: String = server.id.toHexString()
+    val username = server.username
     val gpu = server.gpu
     val endpoint = server.endpoint
     val isActive

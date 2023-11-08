@@ -138,8 +138,9 @@ class SakuraApi(
     @Serializable
     data class SakuraWorkerDto(
         val id: String,
+        val username: String,
         val active: Boolean,
-        val endpoint: String,
+        val endpoint: String?,
         val gpu: String,
         val description: String,
         val progress: SakuraWorkerProgress?,
@@ -160,15 +161,21 @@ class SakuraApi(
                     createAt = it.createAt,
                 )
             }
-        val showEndpoint = user != null && user.atLeastMaintainer()
         val workers = sakuraWorkerManager
             .workers
             .values
             .map {
+                val endpoint = when {
+                    user == null -> null
+                    user.username == it.username -> it.endpoint
+                    user.atLeastMaintainer() -> it.endpoint
+                    else -> null
+                }
                 SakuraWorkerDto(
                     id = it.id,
+                    username = it.username,
                     active = it.isActive,
-                    endpoint = if (showEndpoint) it.endpoint else "",
+                    endpoint = endpoint,
                     gpu = it.gpu,
                     description = it.description,
                     progress = it.progress,
@@ -253,6 +260,7 @@ class SakuraApi(
     ) {
         user.shouldBeAtLeastMaintainer()
         sakuraWorkerManager.createWorker(
+            username = user.username,
             gpu = gpu,
             endpoint = endpoint,
         )
@@ -262,7 +270,11 @@ class SakuraApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeastMaintainer()
+        val worker = sakuraWorkerManager.workers[id]
+            ?: throwNotFound("Sakura worker不存在")
+        if (user.username != worker.username) {
+            user.shouldBeAtLeastMaintainer()
+        }
         sakuraWorkerManager.deleteWorker(id)
     }
 
@@ -270,12 +282,20 @@ class SakuraApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeastMaintainer()
+        val worker = sakuraWorkerManager.workers[id]
+            ?: throwNotFound("Sakura worker不存在")
+        if (user.username != worker.username) {
+            user.shouldBeAtLeastMaintainer()
+        }
         sakuraWorkerManager.startWorker(id)
     }
 
     suspend fun stopSakuraWorker(user: AuthenticatedUser, id: String) {
-        user.shouldBeAtLeastMaintainer()
+        val worker = sakuraWorkerManager.workers[id]
+            ?: throwNotFound("Sakura worker不存在")
+        if (user.username != worker.username) {
+            user.shouldBeAtLeastMaintainer()
+        }
         sakuraWorkerManager.stopWorker(id)
     }
 }

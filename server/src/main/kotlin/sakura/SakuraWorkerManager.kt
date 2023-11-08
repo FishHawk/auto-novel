@@ -79,11 +79,13 @@ class SakuraWorkerManager(
     }
 
     suspend fun createWorker(
+        username: String,
         gpu: String,
         endpoint: String,
     ) {
         val server = SakuraServer(
             id = ObjectId(),
+            username = username,
             gpu = gpu,
             endpoint = endpoint,
         )
