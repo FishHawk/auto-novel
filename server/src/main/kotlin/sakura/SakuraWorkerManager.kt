@@ -30,6 +30,10 @@ class SakuraWorkerManager(
         install(HttpTimeout) {
             requestTimeoutMillis = 60_000
         }
+        install(HttpRequestRetry) {
+            retryOnExceptionOrServerErrors(maxRetries = 5)
+            exponentialDelay(base = 4.0)
+        }
         install(ContentNegotiation) {
             json(Json {
                 isLenient = true
