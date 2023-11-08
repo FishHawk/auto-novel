@@ -5,9 +5,9 @@ import {
   UploadFileInfo,
   useMessage,
 } from 'naive-ui';
-import { computed, h, ref } from 'vue';
+import { computed, ref } from 'vue';
 
-import { ApiPersonalNovel } from '@/data/api/api_personal_novel';
+import { ApiPersonalNovel, UserVolumes } from '@/data/api/api_personal_novel';
 import { VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { client } from '@/data/api/client';
 import { ResultState } from '@/data/result';
@@ -23,7 +23,7 @@ const userData = useUserDataStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
 
-const volumesResult = ref<ResultState<VolumeJpDto[]>>();
+const volumesResult = ref<ResultState<UserVolumes>>();
 
 async function loadVolume() {
   if (userData.isLoggedIn) {
@@ -188,8 +188,15 @@ function createDownload(volume: VolumeJpDto) {
     setting.isDownloadFormatSameAsReaderFormat
       ? readerSetting
       : setting.downloadFormat;
+
+  let downloadToken = '';
+  if (volumesResult.value?.ok) {
+    downloadToken = volumesResult.value.value.downloadToken;
+  }
+
   const params = new URLSearchParams({
     translationsMode,
+    downloadToken,
   });
 
   if (mode === 'jp' || mode === 'zh') {
@@ -424,7 +431,7 @@ async function testSakura() {
       />
 
       <n-list>
-        <template v-for="volume of sortVolumesJp(volumes)">
+        <template v-for="volume of sortVolumesJp(volumes.volumes)">
           <n-list-item>
             <n-space vertical>
               <n-text>{{ volume.volumeId }}</n-text>

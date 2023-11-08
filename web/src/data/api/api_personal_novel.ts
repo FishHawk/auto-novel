@@ -3,8 +3,12 @@ import { Err, Ok, Result, runCatching } from '@/data/result';
 import { VolumeJpDto } from './api_wenku_novel';
 import { client } from './client';
 
-const listVolume = () =>
-  runCatching(client.get('personal').json<VolumeJpDto[]>());
+export interface UserVolumes {
+  downloadToken: string;
+  volumes: VolumeJpDto[];
+}
+
+const listVolume = () => runCatching(client.get('personal').json<UserVolumes>());
 
 const createVolume = (
   volumeId: string,

@@ -42,6 +42,7 @@ private class PersonalNovelRes {
         val lang: NovelFileLangV2,
         val translationsMode: NovelFileTranslationsMode,
         val translations: List<TranslatorId>,
+        val downloadToken: String,
     )
 }
 
@@ -134,21 +135,19 @@ fun Route.routePersonalNovel() {
                 )
             }
         }
+    }
 
-        // File
-        get<PersonalNovelRes.File> { loc ->
-            val user = call.authenticatedUser()
-            call.tryRespondRedirect {
-                val path = service.updateFile(
-                    user = user,
-                    userId = user.id,
-                    volumeId = loc.volumeId,
-                    lang = loc.lang,
-                    translationsMode = loc.translationsMode,
-                    translations = loc.translations,
-                )
-                "../../../../../../$path"
-            }
+    // File
+    get<PersonalNovelRes.File> { loc ->
+        call.tryRespondRedirect {
+            val path = service.updateFile(
+                volumeId = loc.volumeId,
+                lang = loc.lang,
+                translationsMode = loc.translationsMode,
+                translations = loc.translations,
+                downloadToken = loc.downloadToken,
+            )
+            "../../../../../$path"
         }
     }
 }
@@ -156,10 +155,20 @@ fun Route.routePersonalNovel() {
 class PersonalNovelApi(
     private val volumeRepo: PersonalNovelVolumeRepository,
 ) {
+    @Serializable
+    data class UserVolumesDto(
+        val downloadToken: String,
+        val volumes: List<WenkuNovelVolumeJp>,
+    )
+
     suspend fun getUserVolumes(
         user: AuthenticatedUser,
-    ): List<WenkuNovelVolumeJp> {
-        return volumeRepo.list(user.id)
+    ): UserVolumesDto {
+        val volumes = volumeRepo.list(user.id)
+        return UserVolumesDto(
+            downloadToken = user.id,
+            volumes = volumes,
+        )
     }
 
     private fun validateVolumeId(volumeId: String) {
@@ -318,16 +327,12 @@ class PersonalNovelApi(
 
     // File
     suspend fun updateFile(
-        user: AuthenticatedUser,
-        userId: String,
         volumeId: String,
         lang: NovelFileLangV2,
         translationsMode: NovelFileTranslationsMode,
         translations: List<TranslatorId>,
+        downloadToken: String,
     ): String {
-        if (user.id !== userId)
-            throwUnauthorized("没有权限")
-
         validateVolumeId(volumeId)
 
         if (translations.isEmpty())
@@ -337,7 +342,7 @@ class PersonalNovelApi(
             throwBadRequest("不支持的类型")
 
         val volume = volumeRepo.getVolume(
-            userId = userId,
+            userId = downloadToken,
             volumeId = volumeId,
         ) ?: throwNotFound("卷不存在")
 
@@ -346,6 +351,6 @@ class PersonalNovelApi(
             translationsMode = translationsMode,
             translations = translations.distinct(),
         )
-        return "files-wenku/user-${userId}/${volumeId.encodeURLPathPart()}.unpack/$newFileName"
+        return "files-wenku/user-${downloadToken}/${volumeId.encodeURLPathPart()}.unpack/$newFileName"
     }
 }
