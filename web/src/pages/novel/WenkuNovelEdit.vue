@@ -307,7 +307,6 @@ function deleteVolume(index: number) {
           </n-card>
           <n-space vertical>
             <n-p>ASIN: {{ volume.asin }}</n-p>
-            <n-p>日文标题: {{ volume.title }}</n-p>
             <n-input
               v-model:value="volume.title"
               placeholder="日文标题"
