@@ -12,6 +12,7 @@ import kotlinx.coroutines.time.delay
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
+import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.setValue
 import org.slf4j.LoggerFactory
@@ -117,15 +118,25 @@ class SakuraWorker(
     private suspend fun run() {
         while (true) {
             logger.info("获取Job")
-            val sakuraJob = mongo
-                .sakuraJobCollection
-                .findOne(SakuraJob::workerId eq id)
-                ?: mongo
+            val sakuraJob =
+                mongo
                     .sakuraJobCollection
-                    .findOneAndUpdate(
-                        SakuraJob::workerId eq null,
-                        setValue(SakuraJob::workerId, id),
-                    )
+                    .findOne(SakuraJob::workerId eq id)
+                    ?: mongo
+                        .sakuraJobCollection
+                        .findOneAndUpdate(
+                            and(
+                                SakuraJob::workerId eq null,
+                                SakuraJob::submitter eq username,
+                            ),
+                            setValue(SakuraJob::workerId, id),
+                        )
+                    ?: mongo
+                        .sakuraJobCollection
+                        .findOneAndUpdate(
+                            SakuraJob::workerId eq null,
+                            setValue(SakuraJob::workerId, id),
+                        )
             if (sakuraJob == null) {
                 delay(60.seconds.toJavaDuration())
                 continue
