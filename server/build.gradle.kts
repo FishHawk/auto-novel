@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.3"
+    val ktorVersion = "2.3.6"
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -41,6 +41,7 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-java:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
 
     implementation("org.codehaus.janino:janino:3.1.9")
