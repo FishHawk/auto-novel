@@ -141,7 +141,7 @@ data class WebNovelChapter(
     val gptParagraphs: List<String>? = null,
 
     val sakuraGlossaryUuid: String? = null,
-    val sakuraGlossary: Map<String, String> = emptyMap(),
+    val sakuraGlossary: Map<String, String>? = emptyMap(),
     val sakuraParagraphs: List<String>? = null,
 ) {
     companion object {
