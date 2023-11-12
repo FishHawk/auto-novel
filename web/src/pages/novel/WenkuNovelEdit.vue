@@ -177,6 +177,7 @@ async function findSimilarNovels() {
     page: 0,
     pageSize: 6,
     query: title.value,
+    level: 0,
   });
   if (result.ok) {
     similarNovels.value = result.value.items;

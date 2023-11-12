@@ -18,7 +18,7 @@ import org.litote.kmongo.setValue
 import java.util.*
 
 object WenkuNovelFilter {
-    enum class Level { 一般向, R18 }
+    enum class Level { 全部, 一般向, R18 }
 }
 
 class WenkuNovelMetadataRepository(
@@ -43,9 +43,10 @@ class WenkuNovelMetadataRepository(
 
                 // Filter level
                 when (filterLevel) {
+                    WenkuNovelFilter.Level.全部 -> null
                     WenkuNovelFilter.Level.一般向 -> false
                     WenkuNovelFilter.Level.R18 -> true
-                }.let {
+                }?.let {
                     mustQueries.add(
                         ESQuery(
                             "term",

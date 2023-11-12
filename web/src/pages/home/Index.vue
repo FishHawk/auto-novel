@@ -68,7 +68,11 @@ loadWeb();
 
 const latestUpdateWenku = ref<ResultState<WenkuNovelOutlineDto[]>>();
 async function loadWenku() {
-  const result = await ApiWenkuNovel.listNovel({ page: 0, pageSize: 12 });
+  const result = await ApiWenkuNovel.listNovel({
+    page: 0,
+    pageSize: 12,
+    level: 1,
+  });
   if (result.ok) {
     latestUpdateWenku.value = Ok(result.value.items.slice(0, 12));
   } else {

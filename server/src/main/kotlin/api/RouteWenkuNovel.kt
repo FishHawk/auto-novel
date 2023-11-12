@@ -84,8 +84,9 @@ fun Route.routeWenkuNovel() {
                     page = loc.page,
                     pageSize = loc.pageSize,
                     filterLevel = when (loc.level) {
-                        1 -> WenkuNovelFilter.Level.R18
-                        else -> WenkuNovelFilter.Level.一般向
+                        1 -> WenkuNovelFilter.Level.一般向
+                        2 -> WenkuNovelFilter.Level.R18
+                        else -> WenkuNovelFilter.Level.全部
                     },
                 )
             }
@@ -271,18 +272,19 @@ class WenkuNovelApi(
         pageSize: Int,
         filterLevel: WenkuNovelFilter.Level,
     ): PageDto<NovelOutlineDto> {
-        if (filterLevel == WenkuNovelFilter.Level.R18) {
-            shouldBeOldAss(user)
-        }
-
         validatePageNumber(page)
         validatePageSize(pageSize)
+
         return metadataRepo
             .search(
                 userQuery = queryString,
                 page = page,
                 pageSize = pageSize,
-                filterLevel = filterLevel,
+                filterLevel = if (isOldAss(user)) {
+                    filterLevel
+                } else {
+                    WenkuNovelFilter.Level.一般向
+                },
             )
             .asDto(pageSize) { it.asDto() }
     }

@@ -53,8 +53,12 @@ fun AuthenticatedUser.shouldBeAtLeastMaintainer() {
     }
 }
 
+fun isOldAss(user: AuthenticatedUser?): Boolean {
+    return user != null && Clock.System.now() - user.createdAt >= 30.days
+}
+
 fun shouldBeOldAss(user: AuthenticatedUser?) {
-    if (user == null || Clock.System.now() - user.createdAt < 30.days) {
+    if (!isOldAss(user)) {
         throwUnauthorized("你还太年轻了")
     }
 }

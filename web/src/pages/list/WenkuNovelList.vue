@@ -25,14 +25,14 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
       page,
       pageSize: 24,
       query,
-      level: selected[0],
+      level: selected[0] + 1,
     });
   } else {
     return ApiWenkuNovel.listNovel({
       page,
       pageSize: 24,
       query,
-      level: 0,
+      level: 1,
     });
   }
 };

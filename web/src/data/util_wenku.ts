@@ -118,6 +118,19 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
 
     const authorsSet = new Set<string>();
     const artistsSet = new Set<string>();
+    doc2.querySelectorAll('[data-action="a-popover"]').forEach((element) => {
+      element
+        .getAttribute('data-a-popover')!
+        .split('\\n')
+        .map((it) => it.trim())
+        .forEach((contribution) => {
+          if (contribution.endsWith('(著)')) {
+            authorsSet.add(contribution.replace(/(\(著\))$/, '').trim());
+          } else if (contribution.endsWith('(イラスト)')) {
+            artistsSet.add(contribution.replace(/(\(イラスト\))$/, '').trim());
+          }
+        });
+    });
     Array.from(
       doc2.getElementsByClassName('series-childAsin-item-details-contributor')
     ).forEach((element) => {
