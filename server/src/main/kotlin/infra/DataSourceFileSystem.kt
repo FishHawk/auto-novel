@@ -342,12 +342,12 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
             val jpPath = volumesDir / volumeId
 
             val chapters = listChapter()
-            Epub.modify(srcPath = jpPath, dstPath = zhPath) { entry, bytesIn ->
+            Epub.modify(srcPath = jpPath, dstPath = zhPath) { name, bytesIn ->
                 // 为了兼容ChapterId以斜杠开头的旧格式
-                val chapterId = if ("/${entry.name}".escapePath() in chapters) {
-                    "/${entry.name}".escapePath()
-                } else if (entry.name.escapePath() in chapters) {
-                    entry.name.escapePath()
+                val chapterId = if ("/${name}".escapePath() in chapters) {
+                    "/${name}".escapePath()
+                } else if (name.escapePath() in chapters) {
+                    name.escapePath()
                 } else {
                     null
                 }
@@ -389,7 +389,7 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
                         doc.outputSettings().prettyPrint(true)
                         doc.html().toByteArray()
                     }
-                } else if (entry.name.endsWith("opf")) {
+                } else if (name.endsWith("opf")) {
                     val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
 
                     // 防止部分阅读器使用竖排
@@ -399,7 +399,7 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
 
                     doc.outputSettings().prettyPrint(true)
                     doc.html().toByteArray()
-                } else if (entry.name.endsWith("css")) {
+                } else if (name.endsWith("css")) {
                     "".toByteArray()
                 } else {
                     bytesIn

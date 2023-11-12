@@ -3,17 +3,19 @@ package util.epub
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Parser
-import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
-import kotlin.io.path.inputStream
+import kotlin.io.path.isRegularFile
 import kotlin.io.path.outputStream
+import kotlin.io.path.readBytes
 import kotlin.io.path.readText
+import kotlin.streams.asSequence
+
 
 private fun FileSystem.readFileAsXHtml(path: String): Document {
     return Jsoup.parse(getPath(path).readText(), Parser.xmlParser())
@@ -36,16 +38,37 @@ object Epub {
     inline fun modify(
         srcPath: Path,
         dstPath: Path,
-        modify: (entry: ZipEntry, bytes: ByteArray) -> ByteArray,
+        modify: (name: String, bytes: ByteArray) -> ByteArray,
     ) {
-        ZipInputStream(BufferedInputStream(srcPath.inputStream())).use { zipIn ->
+        FileSystems.newFileSystem(srcPath).use { fs ->
             ZipOutputStream(BufferedOutputStream(dstPath.outputStream())).use { zipOut ->
-                generateSequence { zipIn.nextEntry }
-                    .filterNot { it.isDirectory }
-                    .forEach {
-                        val bytesIn = zipIn.readAllBytes()
-                        val bytesOut = modify(it, bytesIn)
-                        zipOut.putNextEntry(ZipEntry(it.name))
+                Files
+                    .walk(fs.rootDirectories.first())
+                    .filter { it.isRegularFile() }
+                    .sorted { path1, path2 ->
+                        val pathToNumber = { path: Path ->
+                            val s = path.toString()
+                            when {
+                                s == "/mimetype" -> 3
+                                s == "/META-INF/container.xml" -> 2
+                                s.endsWith("opf") -> 1
+                                else -> 0
+                            }
+                        }
+                        val n1 = pathToNumber(path1)
+                        val n2 = pathToNumber(path2)
+                        if (n1 != n2) {
+                            n2.compareTo(n1)
+                        } else {
+                            path1.compareTo(path2)
+                        }
+                    }
+                    .asSequence()
+                    .forEach { path ->
+                        val name = path.toString().removePrefix("/")
+                        val bytesIn = path.readBytes()
+                        val bytesOut = modify(name, bytesIn)
+                        zipOut.putNextEntry(ZipEntry(name))
                         zipOut.write(bytesOut)
                         zipOut.closeEntry()
                     }
