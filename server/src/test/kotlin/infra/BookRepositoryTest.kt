@@ -2,6 +2,7 @@ package infra
 
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
+import infra.common.SakuraJobRepository
 import infra.model.*
 import infra.web.DataSourceWebNovelProvider
 import io.kotest.core.spec.style.DescribeSpec
@@ -13,13 +14,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.Document
 import org.bson.types.ObjectId
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.litote.kmongo.coroutine.projection
 import java.io.File
-import kotlin.io.path.Path
-import kotlin.io.path.div
 
 
 val appModule = module {
@@ -40,6 +40,8 @@ val appModule = module {
             pixivPhpsessid = pixivPhpsessid,
         )
     }
+
+    singleOf(::SakuraJobRepository)
 }
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
@@ -54,9 +56,12 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val es by inject<DataSourceElasticSearch>(DataSourceElasticSearch::class.java)
     private val mongo by inject<DataSourceMongo>(DataSourceMongo::class.java)
 
+    private val sjRepo by inject<SakuraJobRepository>(SakuraJobRepository::class.java)
+
     init {
         describe("test") {
-            println(Path("./data") / "123/321")
+            val a = sjRepo.countSimilarJob("web/syosetu/n0610eg")
+            println(a)
         }
         describe("build es index") {
             @Serializable

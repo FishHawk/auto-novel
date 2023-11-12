@@ -197,6 +197,9 @@ class SakuraApi(
         val total = sakuraJobRepo.countJob()
         if (total >= 150) throwBadRequest("任务队列已满")
 
+        val similarJobCount = sakuraJobRepo.countSimilarJob(task)
+        if (similarJobCount >= 2) throwBadRequest("同一部小说最多只能有两个任务在排队")
+
         val taskUrl = try {
             URLBuilder().takeFrom(task).build()
         } catch (e: Throwable) {

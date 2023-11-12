@@ -6,6 +6,7 @@ import infra.model.SakuraJob
 import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
+import org.litote.kmongo.regex
 
 class SakuraJobRepository(
     private val mongo: DataSourceMongo,
@@ -21,6 +22,14 @@ class SakuraJobRepository(
         return mongo
             .sakuraJobCollection
             .countDocuments()
+    }
+
+    suspend fun countSimilarJob(task: String): Long {
+        return mongo
+            .sakuraJobCollection
+            .countDocuments(
+                SakuraJob::task regex "^${task.substringBefore("?")}"
+            )
     }
 
     suspend fun getJob(
