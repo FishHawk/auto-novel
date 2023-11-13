@@ -128,16 +128,16 @@ data class WebNovelChapter(
     @SerialName("glossaryUuid")
     val baiduGlossaryUuid: String? = null,
     @SerialName("glossary")
-    val baiduGlossary: Map<String, String> = emptyMap(),
+    val baiduGlossary: Map<String, String>? = emptyMap(),
     @SerialName("paragraphsZh")
     val baiduParagraphs: List<String>? = null,
 
     val youdaoGlossaryUuid: String? = null,
-    val youdaoGlossary: Map<String, String> = emptyMap(),
+    val youdaoGlossary: Map<String, String>? = emptyMap(),
     val youdaoParagraphs: List<String>? = null,
 
     val gptGlossaryUuid: String? = null,
-    val gptGlossary: Map<String, String> = emptyMap(),
+    val gptGlossary: Map<String, String?> = emptyMap(),
     val gptParagraphs: List<String>? = null,
 
     val sakuraGlossaryUuid: String? = null,
