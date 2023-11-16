@@ -89,7 +89,7 @@ export class SakuraTranslator implements SegmentTranslator {
           repetition_penalty: 1.0,
           ...config,
         },
-        timeout: 60_000,
+        timeout: 600_000, // 10 minutes
       })
       .json();
     const { text, new_token } = obj['results'][0] as {
