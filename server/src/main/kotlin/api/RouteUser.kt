@@ -3,7 +3,6 @@ package api
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import api.plugins.shouldBeAtLeastMaintainer
 import infra.common.UserRepository
 import infra.model.User
 import io.ktor.resources.*
@@ -63,7 +62,7 @@ class UserApi(
         pageSize: Int,
         role: User.Role,
     ): PageDto<UserOutlineDto> {
-        user.shouldBeAtLeastMaintainer()
+        user.shouldBeAtLeast(User.Role.Admin)
         return userRepo.listUser(
             page = page,
             pageSize = pageSize,

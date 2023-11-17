@@ -149,7 +149,11 @@ const createWorkerFormValue = ref({
       v-slot="{ value: info }"
     >
       <n-list>
-        <n-list-item v-for="worker of info.workers">
+        <n-list-item
+          v-for="worker of info.workers.sort((a:SakuraWorker, b:SakuraWorker) =>
+            a.username.localeCompare(b.username)
+          )"
+        >
           <n-thing content-indented>
             <template #avatar>
               <n-icon-wrapper
@@ -218,10 +222,6 @@ const createWorkerFormValue = ref({
             </template>
 
             <template #description>
-              <n-text v-if="userData.asAdmin">
-                {{ worker.endpoint }}
-                <br />
-              </n-text>
               <n-text
                 v-if="worker.active || userData.asAdmin"
                 style="white-space: pre-wrap"
@@ -234,11 +234,11 @@ const createWorkerFormValue = ref({
       </n-list>
 
       <n-button
-        v-if="userData.asAdmin"
+        v-if="userData.isMaintainer"
         @click="showCreateWorkerModal = true"
         style="margin-top: 30px"
       >
-        添加GPU
+        添加 Sakura Worker
       </n-button>
       <n-modal v-model:show="showCreateWorkerModal">
         <n-card

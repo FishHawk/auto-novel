@@ -2,6 +2,7 @@ package api
 
 import api.plugins.*
 import infra.common.ArticleRepository
+import infra.model.User
 import infra.model.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -248,8 +249,14 @@ class ArticleApi(
         validateTitle(title)
         validateContent(content)
 
-        if (!articleRepo.isArticleBelongUser(ObjectId(id), ObjectId(user.id)))
-            throwUnauthorized("没有权限修改帖子")
+        if (
+            !articleRepo.isArticleBelongUser(
+                ObjectId(id),
+                ObjectId(user.id),
+            )
+        ) {
+            user.shouldBeAtLeast(User.Role.Admin)
+        }
 
         articleRepo.updateArticleTitleAndContent(
             id = ObjectId(id),
@@ -262,7 +269,7 @@ class ArticleApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeastMaintainer()
+        user.shouldBeAtLeast(User.Role.Admin)
         val isDeleted = articleRepo.deleteArticle(
             id = ObjectId(id),
         )
@@ -274,7 +281,7 @@ class ArticleApi(
         id: String,
         pinned: Boolean,
     ) {
-        user.shouldBeAtLeastMaintainer()
+        user.shouldBeAtLeast(User.Role.Admin)
         val isUpdated = articleRepo.updateArticlePinned(
             id = ObjectId(id),
             pinned = pinned,
@@ -287,7 +294,7 @@ class ArticleApi(
         id: String,
         locked: Boolean,
     ) {
-        user.shouldBeAtLeastMaintainer()
+        user.shouldBeAtLeast(User.Role.Admin)
         val isUpdated = articleRepo.updateArticleLocked(
             id = ObjectId(id),
             locked = locked,

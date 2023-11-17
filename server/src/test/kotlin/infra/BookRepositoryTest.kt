@@ -60,8 +60,8 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-            val a = sjRepo.countSimilarJob("web/syosetu/n0610eg")
-            println(a)
+//            val a = sjRepo.countSimilarJob("web/syosetu/n0610eg")
+//            println(a)
         }
         describe("build es index") {
             @Serializable

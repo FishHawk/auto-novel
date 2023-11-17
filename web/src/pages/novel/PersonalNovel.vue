@@ -419,9 +419,12 @@ async function testSakura() {
         style="margin-bottom: 16px"
       />
 
-      <b>
-        Chrome/Edge用不了Sakura翻译，只有Firefox可以。还在研究怎么解决，如果你可以用请告诉我。
-      </b>
+      <div>
+        你可以使用自己的显卡，或者租用显卡来部署Sakura模型，参见
+        <n-a href="https://sakura.srpr.moe" target="_blank">
+          Sakura模型部署教程
+        </n-a>
+      </div>
       <n-auto-complete
         v-model:value="sakuraEndpoint"
         :options="sakuraEndpointOptions"

@@ -31,11 +31,25 @@ data class User(
         @SerialName("maintainer")
         Maintainer,
 
+        @SerialName("trusted")
+        Trusted,
+
         @SerialName("normal")
         Normal,
 
         @SerialName("banned")
-        Banned,
+        Banned;
+
+        private fun authLevel() = when (this) {
+            Admin -> 4
+            Maintainer -> 3
+            Trusted -> 2
+            Normal -> 1
+            Banned -> 0
+        }
+
+        infix fun atLeast(other: Role): Boolean =
+            authLevel() >= other.authLevel()
     }
 
     companion object {

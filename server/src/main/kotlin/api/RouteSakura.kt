@@ -3,6 +3,7 @@ package api
 import api.plugins.*
 import infra.common.SakuraJobRepository
 import infra.model.SakuraJob
+import infra.model.User
 import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -168,7 +169,7 @@ class SakuraApi(
                 val endpoint = when {
                     user == null -> null
                     user.username == it.username -> it.endpoint
-                    user.atLeastMaintainer() -> it.endpoint
+                    user.role atLeast User.Role.Admin -> it.endpoint
                     else -> null
                 }
                 SakuraWorkerDto(
@@ -191,9 +192,6 @@ class SakuraApi(
         user: AuthenticatedUser,
         task: String,
     ) {
-        if ((Clock.System.now() - user.createdAt) < 7.days)
-            throwUnauthorized("Sakura只允许注册超过一周的用户使用")
-
         val total = sakuraJobRepo.countJob()
         if (total >= 150) throwBadRequest("任务队列已满")
 
@@ -249,7 +247,7 @@ class SakuraApi(
             ?: throwNotFound("任务不存在")
 
         if (job.submitter != user.username) {
-            user.shouldBeAtLeastMaintainer()
+            user.shouldBeAtLeast(User.Role.Admin)
         }
 
         val isSuccess = sakuraJobRepo.deleteJob(ObjectId(id))
@@ -261,7 +259,7 @@ class SakuraApi(
         gpu: String,
         endpoint: String,
     ) {
-        user.shouldBeAtLeastMaintainer()
+        user.shouldBeAtLeast(User.Role.Maintainer)
         sakuraWorkerManager.createWorker(
             username = user.username,
             gpu = gpu,
@@ -273,10 +271,11 @@ class SakuraApi(
         user: AuthenticatedUser,
         id: String,
     ) {
+        user.shouldBeAtLeast(User.Role.Maintainer)
         val worker = sakuraWorkerManager.workers[id]
             ?: throwNotFound("Sakura worker不存在")
         if (user.username != worker.username) {
-            user.shouldBeAtLeastMaintainer()
+            user.shouldBeAtLeast(User.Role.Admin)
         }
         sakuraWorkerManager.deleteWorker(id)
     }
@@ -285,19 +284,21 @@ class SakuraApi(
         user: AuthenticatedUser,
         id: String,
     ) {
+        user.shouldBeAtLeast(User.Role.Maintainer)
         val worker = sakuraWorkerManager.workers[id]
             ?: throwNotFound("Sakura worker不存在")
         if (user.username != worker.username) {
-            user.shouldBeAtLeastMaintainer()
+            user.shouldBeAtLeast(User.Role.Admin)
         }
         sakuraWorkerManager.startWorker(id)
     }
 
     suspend fun stopSakuraWorker(user: AuthenticatedUser, id: String) {
+        user.shouldBeAtLeast(User.Role.Maintainer)
         val worker = sakuraWorkerManager.workers[id]
             ?: throwNotFound("Sakura worker不存在")
         if (user.username != worker.username) {
-            user.shouldBeAtLeastMaintainer()
+            user.shouldBeAtLeast(User.Role.Admin)
         }
         sakuraWorkerManager.stopWorker(id)
     }

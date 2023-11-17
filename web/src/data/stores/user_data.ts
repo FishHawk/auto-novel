@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 
 import { SignInDto } from '@/data/api/api_auth';
+import { UserRole } from '@/data/api/api_user';
 
 function validExpires(info: SignInDto | undefined) {
   if (info) {
@@ -18,6 +19,26 @@ interface UserData {
   info?: SignInDto;
   renewedAt?: number;
   adminMode: boolean;
+}
+
+function userRoleAtLeast(info: SignInDto | undefined, role: UserRole) {
+  const myRole = validExpires(info)?.role;
+  if (!myRole) {
+    return false;
+  }
+
+  const roleToNumber: Map<UserRole, number> = new Map([
+    ['admin', 4],
+    ['maintainer', 3],
+    ['trusted', 2],
+    ['normal', 1],
+    ['banned', 0],
+  ]);
+  if (myRole === undefined) {
+    return false;
+  } else {
+    return roleToNumber.get(myRole)! >= roleToNumber.get(role)!;
+  }
 }
 
 export const useUserDataStore = defineStore('authInfo', {
@@ -47,9 +68,10 @@ export const useUserDataStore = defineStore('authInfo', {
         return false;
       }
     },
-    isAdmin: ({ info }) => validExpires(info)?.role === 'admin',
+    isAdmin: ({ info }) => userRoleAtLeast(info, 'admin'),
+    isMaintainer: ({ info }) => userRoleAtLeast(info, 'maintainer'),
     asAdmin: ({ adminMode, info }) =>
-      adminMode && validExpires(info)?.role === 'admin',
+      adminMode && userRoleAtLeast(info, 'admin'),
   },
   actions: {
     setProfile(profile: SignInDto) {

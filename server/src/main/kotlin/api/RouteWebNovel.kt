@@ -1,6 +1,9 @@
 package api
 
-import api.plugins.*
+import api.plugins.AuthenticatedUser
+import api.plugins.authenticateDb
+import api.plugins.authenticatedUser
+import api.plugins.authenticatedUserOrNull
 import infra.common.OperationHistoryRepository
 import infra.common.UserRepository
 import infra.model.*
@@ -26,7 +29,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
-import java.lang.RuntimeException
 import java.nio.file.Path
 
 @Resource("/novel")
@@ -285,62 +287,73 @@ fun Route.routeWebNovel() {
     }
 
     // Translate
-    get<WebNovelRes.Id.Translate> { loc ->
-        call.tryRespond {
-            service.getTranslateTask(
-                providerId = loc.parent.providerId,
-                novelId = loc.parent.novelId,
-                translatorId = loc.translatorId,
-            )
+    authenticateDb(optional = true) {
+        get<WebNovelRes.Id.Translate> { loc ->
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                service.getTranslateTask(
+                    user = user,
+                    providerId = loc.parent.providerId,
+                    novelId = loc.parent.novelId,
+                    translatorId = loc.translatorId,
+                )
+            }
         }
-    }
-    post<WebNovelRes.Id.Translate.Metadata> { loc ->
-        @Serializable
-        class Body(
-            val title: String? = null,
-            val introduction: String? = null,
-            val toc: Map<String, String>,
-        )
+        post<WebNovelRes.Id.Translate.Metadata> { loc ->
+            @Serializable
+            class Body(
+                val title: String? = null,
+                val introduction: String? = null,
+                val toc: Map<String, String>,
+            )
 
-        val body = call.receive<Body>()
-        call.tryRespond {
-            service.updateMetadataTranslation(
-                providerId = loc.parent.parent.providerId,
-                novelId = loc.parent.parent.novelId,
-                title = body.title,
-                introduction = body.introduction,
-                toc = body.toc,
-            )
+            val user = call.authenticatedUserOrNull()
+            val body = call.receive<Body>()
+            call.tryRespond {
+                service.updateMetadataTranslation(
+                    user = user,
+                    providerId = loc.parent.parent.providerId,
+                    novelId = loc.parent.parent.novelId,
+                    translatorId = loc.parent.translatorId,
+                    title = body.title,
+                    introduction = body.introduction,
+                    toc = body.toc,
+                )
+            }
         }
-    }
-    post<WebNovelRes.Id.Translate.CheckChapter> { loc ->
-        call.tryRespond {
-            service.checkIfChapterNeedTranslate(
-                providerId = loc.parent.parent.providerId,
-                novelId = loc.parent.parent.novelId,
-                translatorId = loc.parent.translatorId,
-                chapterId = loc.chapterId,
-                sync = loc.sync,
-            )
+        post<WebNovelRes.Id.Translate.CheckChapter> { loc ->
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                service.checkIfChapterNeedTranslate(
+                    user = user,
+                    providerId = loc.parent.parent.providerId,
+                    novelId = loc.parent.parent.novelId,
+                    translatorId = loc.parent.translatorId,
+                    chapterId = loc.chapterId,
+                    sync = loc.sync,
+                )
+            }
         }
-    }
-    put<WebNovelRes.Id.Translate.Chapter> { loc ->
-        @Serializable
-        class Body(
-            val glossaryUuid: String? = null,
-            val paragraphsZh: List<String>,
-        )
+        put<WebNovelRes.Id.Translate.Chapter> { loc ->
+            @Serializable
+            class Body(
+                val glossaryUuid: String? = null,
+                val paragraphsZh: List<String>,
+            )
 
-        val body = call.receive<Body>()
-        call.tryRespond {
-            service.updateChapterTranslation(
-                providerId = loc.parent.parent.providerId,
-                novelId = loc.parent.parent.novelId,
-                translatorId = loc.parent.translatorId,
-                chapterId = loc.chapterId,
-                glossaryUuid = body.glossaryUuid,
-                paragraphsZh = body.paragraphsZh,
-            )
+            val user = call.authenticatedUserOrNull()
+            val body = call.receive<Body>()
+            call.tryRespond {
+                service.updateChapterTranslation(
+                    user = user,
+                    providerId = loc.parent.parent.providerId,
+                    novelId = loc.parent.parent.novelId,
+                    translatorId = loc.parent.translatorId,
+                    chapterId = loc.chapterId,
+                    glossaryUuid = body.glossaryUuid,
+                    paragraphsZh = body.paragraphsZh,
+                )
+            }
         }
     }
 
@@ -415,19 +428,21 @@ class WebNovelApi(
         page: Int,
         pageSize: Int,
     ): PageDto<NovelOutlineDto> {
-        if (filterLevel == WebNovelFilter.Level.全部 || filterLevel == WebNovelFilter.Level.R18) {
-            shouldBeOldAss(user)
-        }
-
         validatePageNumber(page)
         validatePageSize(pageSize)
+
+        val filterLevelAllowed = if (user != null && user.isOldAss()) {
+            filterLevel
+        } else {
+            WebNovelFilter.Level.一般向
+        }
 
         return metadataRepo
             .search(
                 userQuery = queryString,
                 filterProvider = filterProvider,
                 filterType = filterType,
-                filterLevel = filterLevel,
+                filterLevel = filterLevelAllowed,
                 filterTranslate = filterTranslate,
                 filterSort = filterSort,
                 page = page,
@@ -801,12 +816,17 @@ class WebNovelApi(
     }
 
     suspend fun getTranslateTask(
+        user: AuthenticatedUser?,
         providerId: String,
         novelId: String,
         translatorId: TranslatorId,
     ): TranslateTaskDto {
         if (translatorId == TranslatorId.Sakura) {
-            throw BadRequestException("Sakura不支持浏览器翻译")
+            if (user == null) {
+                throwUnauthorized("请先登录")
+            } else {
+                user.shouldBeAtLeast(User.Role.Trusted)
+            }
         }
 
         validateId(providerId, novelId)
@@ -855,12 +875,22 @@ class WebNovelApi(
     }
 
     suspend fun updateMetadataTranslation(
+        user: AuthenticatedUser?,
         providerId: String,
         novelId: String,
+        translatorId: TranslatorId,
         title: String?,
         introduction: String?,
         toc: Map<String, String>,
     ) {
+        if (translatorId == TranslatorId.Sakura) {
+            if (user == null) {
+                throwUnauthorized("请先登录")
+            } else {
+                user.shouldBeAtLeast(User.Role.Trusted)
+            }
+        }
+
         val metadata = metadataRepo.get(providerId, novelId)
             ?: return
 
@@ -891,6 +921,7 @@ class WebNovelApi(
     }
 
     suspend fun checkIfChapterNeedTranslate(
+        user: AuthenticatedUser?,
         providerId: String,
         novelId: String,
         translatorId: TranslatorId,
@@ -898,7 +929,11 @@ class WebNovelApi(
         sync: Boolean,
     ): List<String> {
         if (translatorId == TranslatorId.Sakura) {
-            throw BadRequestException("Sakura不支持浏览器翻译")
+            if (user == null) {
+                throwUnauthorized("请先登录")
+            } else {
+                user.shouldBeAtLeast(User.Role.Trusted)
+            }
         }
 
         val novel = metadataRepo.get(providerId, novelId)
@@ -934,6 +969,7 @@ class WebNovelApi(
     data class TranslateStateDto(val jp: Long, val zh: Long)
 
     suspend fun updateChapterTranslation(
+        user: AuthenticatedUser?,
         providerId: String,
         novelId: String,
         chapterId: String,
@@ -942,7 +978,11 @@ class WebNovelApi(
         paragraphsZh: List<String>,
     ): TranslateStateDto {
         if (translatorId == TranslatorId.Sakura) {
-            throw BadRequestException("Sakura不支持浏览器翻译")
+            if (user == null) {
+                throwUnauthorized("请先登录")
+            } else {
+                user.shouldBeAtLeast(User.Role.Trusted)
+            }
         }
 
         val novel = metadataRepo.get(providerId, novelId)

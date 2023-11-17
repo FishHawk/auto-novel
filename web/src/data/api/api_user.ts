@@ -3,7 +3,7 @@ import { runCatching } from '@/data/result';
 import { client } from './client';
 import { Page } from './common';
 
-export type UserRole = 'admin' | 'maintainer' | 'normal' | 'banned';
+export type UserRole = 'admin' | 'maintainer' | 'trusted' | 'normal' | 'banned';
 
 export interface UserReference {
   username: string;

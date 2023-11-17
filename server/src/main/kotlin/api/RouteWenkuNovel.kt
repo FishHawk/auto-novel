@@ -208,23 +208,28 @@ fun Route.routeWenkuNovel() {
             )
         }
     }
-    put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-        @Serializable
-        class Body(
-            val glossaryUuid: String? = null,
-            val paragraphsZh: List<String>,
-        )
+    authenticateDb(optional = true) {
+        put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
+            val user = call.authenticatedUserOrNull()
 
-        val body = call.receive<Body>()
-        call.tryRespond {
-            service.updateChapterTranslation(
-                novelId = loc.parent.parent.novelId,
-                translatorId = loc.parent.translatorId,
-                volumeId = loc.parent.volumeId,
-                chapterId = loc.chapterId,
-                glossaryUuid = body.glossaryUuid,
-                paragraphsZh = body.paragraphsZh,
+            @Serializable
+            class Body(
+                val glossaryUuid: String? = null,
+                val paragraphsZh: List<String>,
             )
+
+            val body = call.receive<Body>()
+            call.tryRespond {
+                service.updateChapterTranslation(
+                    user = user,
+                    novelId = loc.parent.parent.novelId,
+                    translatorId = loc.parent.translatorId,
+                    volumeId = loc.parent.volumeId,
+                    chapterId = loc.chapterId,
+                    glossaryUuid = body.glossaryUuid,
+                    paragraphsZh = body.paragraphsZh,
+                )
+            }
         }
     }
 
@@ -275,16 +280,18 @@ class WenkuNovelApi(
         validatePageNumber(page)
         validatePageSize(pageSize)
 
+        val filterLevelAllowed = if (user != null && user.isOldAss()) {
+            filterLevel
+        } else {
+            WenkuNovelFilter.Level.一般向
+        }
+
         return metadataRepo
             .search(
                 userQuery = queryString,
                 page = page,
                 pageSize = pageSize,
-                filterLevel = if (isOldAss(user)) {
-                    filterLevel
-                } else {
-                    WenkuNovelFilter.Level.一般向
-                },
+                filterLevel = filterLevelAllowed,
             )
             .asDto(pageSize) { it.asDto() }
     }
@@ -340,7 +347,11 @@ class WenkuNovelApi(
             ?: throwNovelNotFound()
 
         if (metadata.r18) {
-            shouldBeOldAss(user)
+            if (user == null) {
+                throwUnauthorized("请先登录")
+            } else {
+                user.shouldBeOldAss()
+            }
         }
 
         if (user != null) {
@@ -447,16 +458,16 @@ class WenkuNovelApi(
         val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
 
-        if (!user.atLeastMaintainer()) {
-            val noVolumeDeleted = novel
-                .volumes
-                .map { it.asin }
-                .all { oldAsin ->
-                    body.volumes.any { newVolume ->
-                        newVolume.asin == oldAsin
-                    }
+        val noVolumeDeleted = novel
+            .volumes
+            .map { it.asin }
+            .all { oldAsin ->
+                body.volumes.any { newVolume ->
+                    newVolume.asin == oldAsin
                 }
-            if (!noVolumeDeleted) throwBadRequest("不支持删除已有卷")
+            }
+        if (noVolumeDeleted) {
+            user.shouldBeAtLeast(User.Role.Maintainer)
         }
 
         metadataRepo.update(
@@ -565,8 +576,7 @@ class WenkuNovelApi(
         novelId: String,
         volumeId: String,
     ) {
-        if (!user.atLeastMaintainer())
-            throwUnauthorized("没有权限执行操作")
+        user.shouldBeAtLeast(User.Role.Admin)
 
         validateNovelId(novelId)
         validateVolumeId(volumeId)
@@ -635,6 +645,7 @@ class WenkuNovelApi(
     }
 
     suspend fun updateChapterTranslation(
+        user: AuthenticatedUser?,
         novelId: String,
         translatorId: TranslatorId,
         volumeId: String,
@@ -643,7 +654,11 @@ class WenkuNovelApi(
         paragraphsZh: List<String>,
     ): Int {
         if (translatorId == TranslatorId.Sakura) {
-            throw BadRequestException("Sakura不支持浏览器翻译")
+            if (user == null) {
+                throwUnauthorized("请先登录")
+            } else {
+                user.shouldBeAtLeast(User.Role.Trusted)
+            }
         }
 
         validateVolumeId(volumeId)

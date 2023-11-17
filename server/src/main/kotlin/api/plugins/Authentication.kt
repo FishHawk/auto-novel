@@ -42,24 +42,20 @@ data class AuthenticatedUser(
     val role: User.Role,
     val createdAt: Instant,
 ) {
-    fun atLeastMaintainer(): Boolean {
-        return role == User.Role.Maintainer || role == User.Role.Admin
+    fun shouldBeAtLeast(role: User.Role) {
+        if (!(this.role atLeast role)) {
+            throwUnauthorized("只有${role.name}及以上的用户才有权限执行此操作")
+        }
     }
-}
 
-fun AuthenticatedUser.shouldBeAtLeastMaintainer() {
-    if (!atLeastMaintainer()) {
-        throwUnauthorized("只有维护者及以上的用户才有权限执行此操作")
+    fun isOldAss(): Boolean {
+        return Clock.System.now() - createdAt >= 30.days
     }
-}
 
-fun isOldAss(user: AuthenticatedUser?): Boolean {
-    return user != null && Clock.System.now() - user.createdAt >= 30.days
-}
-
-fun shouldBeOldAss(user: AuthenticatedUser?) {
-    if (!isOldAss(user)) {
-        throwUnauthorized("你还太年轻了")
+    fun shouldBeOldAss() {
+        if (!isOldAss()) {
+            throwUnauthorized("你还太年轻了")
+        }
     }
 }
 

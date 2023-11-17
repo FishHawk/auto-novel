@@ -1,10 +1,11 @@
 import { runCatching } from '@/data/result';
 
+import { UserRole } from './api_user';
 import { client } from './client';
 
 export interface SignInDto {
   username: string;
-  role: 'normal' | 'admin' | 'maintainer';
+  role: UserRole;
   token: string;
   createAt: number;
   expiresAt: number;
