@@ -2,6 +2,7 @@ import { KyInstance } from 'ky/distribution/types/ky';
 
 import { Glossary, SegmentTranslator } from '../type';
 import { createLengthSegmentor } from '../tradition/common';
+import { parseEventStream } from '../openai/common';
 
 export class SakuraTranslator implements SegmentTranslator {
   log: (message: string) => void;
@@ -74,24 +75,32 @@ export class SakuraTranslator implements SegmentTranslator {
     maxNewToken: number,
     config: any
   ) {
-    const obj: any = await this.client
-      .post(this.endpoint, {
-        json: {
-          prompt,
-          preset: 'None',
-          max_new_tokens: maxNewToken,
-          seed: -1,
-          do_sample: true,
-          temperature: 0.1,
-          top_p: 0.3,
-          top_k: 40,
-          num_beams: 1,
-          repetition_penalty: 1.0,
-          ...config,
-        },
-        timeout: 600_000, // 10 minutes
-      })
-      .json();
+    const response = this.client.post(this.endpoint, {
+      json: {
+        prompt,
+        preset: 'None',
+        max_new_tokens: maxNewToken,
+        seed: -1,
+        do_sample: true,
+        temperature: 0.1,
+        top_p: 0.3,
+        top_k: 40,
+        num_beams: 1,
+        repetition_penalty: 1.0,
+        ...config,
+      },
+      timeout: 60_000_000, // 10 minutes
+    });
+    let obj: SakuraResultChunk | undefined = undefined;
+    if (this.endpoint.includes('stream')) {
+      const stream = await response
+        .text()
+        .then(parseEventStream<SakuraResultChunk>);
+      Array.from(stream).forEach((it) => (obj = it));
+    } else {
+      obj = await response.json();
+    }
+    if (obj === undefined) throw 'quit';
     const { text, new_token } = obj['results'][0] as {
       text: string;
       new_token: number;
@@ -103,3 +112,10 @@ export class SakuraTranslator implements SegmentTranslator {
 
 const makePrompt = (textToTranslate: string) =>
   `<reserved_106>将下面的日文文本翻译成中文：${textToTranslate}<reserved_107>`;
+
+interface SakuraResultChunk {
+  results: Array<{
+    new_token: number;
+    text: string;
+  }>;
+}

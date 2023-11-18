@@ -57,7 +57,7 @@ export function* parseEventStream<T>(text: string) {
   for (const line of text.split('\n')) {
     if (line == '[DONE]') {
       return;
-    } else if (!line.trim()) {
+    } else if (!line.trim() || line.startsWith(': ping')) {
       continue;
     } else {
       try {
