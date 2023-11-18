@@ -243,7 +243,7 @@ async function submitSakuraJob() {
   if (result.ok) {
     message.info('排队成功');
   } else {
-    message.error('排队成功失败:' + result.error.message);
+    message.error('排队失败:' + result.error.message);
   }
 }
 </script>
