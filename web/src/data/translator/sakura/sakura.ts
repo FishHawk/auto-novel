@@ -63,8 +63,8 @@ export class SakuraTranslator implements SegmentTranslator {
         maxNewToken,
         { frequency_penalty: 0.2 }
       );
-      if (hasDegradation) resultPerLine.push(text);
-      else resultPerLine.push(line);
+      if (hasDegradation) resultPerLine.push(line);
+      else resultPerLine.push(text);
     }
     return resultPerLine;
   }
