@@ -466,7 +466,7 @@ class WenkuNovelApi(
                     newVolume.asin == oldAsin
                 }
             }
-        if (noVolumeDeleted) {
+        if (!noVolumeDeleted) {
             user.shouldBeAtLeast(User.Role.Maintainer)
         }
 
