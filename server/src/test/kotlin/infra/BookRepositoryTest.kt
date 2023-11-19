@@ -3,6 +3,7 @@ package infra
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
 import infra.common.SakuraJobRepository
+import infra.common.UserRepository
 import infra.model.*
 import infra.web.DataSourceWebNovelProvider
 import io.kotest.core.spec.style.DescribeSpec
@@ -18,6 +19,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
+import org.koin.test.inject
 import org.litote.kmongo.coroutine.projection
 import java.io.File
 
@@ -33,6 +35,10 @@ val appModule = module {
         DataSourceElasticSearch(url)
     }
     single {
+        val url = System.getenv("REDIS_URL") ?: "192.168.1.110:6379"
+        createRedisDataSource(url)
+    }
+    single {
         val httpProxy: String? = System.getenv("HTTPS_PROXY")
         val pixivPhpsessid: String? = System.getenv("PIXIV_COOKIE_PHPSESSID")
         DataSourceWebNovelProvider(
@@ -41,6 +47,7 @@ val appModule = module {
         )
     }
 
+    singleOf(::UserRepository)
     singleOf(::SakuraJobRepository)
 }
 
@@ -56,12 +63,11 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     private val es by inject<DataSourceElasticSearch>(DataSourceElasticSearch::class.java)
     private val mongo by inject<DataSourceMongo>(DataSourceMongo::class.java)
 
-    private val sjRepo by inject<SakuraJobRepository>(SakuraJobRepository::class.java)
+    private val sjRepo by inject<SakuraJobRepository>()
+    private val userRepo by inject<UserRepository>()
 
     init {
         describe("test") {
-//            val a = sjRepo.countSimilarJob("web/syosetu/n0610eg")
-//            println(a)
         }
         describe("build es index") {
             @Serializable

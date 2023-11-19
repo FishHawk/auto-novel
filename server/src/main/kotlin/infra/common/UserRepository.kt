@@ -2,10 +2,8 @@ package infra.common
 
 import com.jillesvangurp.ktsearch.document
 import com.jillesvangurp.ktsearch.getDocument
+import com.mongodb.client.model.*
 import com.mongodb.client.model.Aggregates.count
-import com.mongodb.client.model.CountOptions
-import com.mongodb.client.model.Facet
-import com.mongodb.client.model.UpdateOptions
 import infra.*
 import infra.model.*
 import infra.web.toOutline
@@ -19,6 +17,7 @@ import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 import util.PBKDF2
+import util.serialName
 import kotlin.time.Duration.Companion.minutes
 
 class UserRepository(
@@ -33,7 +32,7 @@ class UserRepository(
     ): Page<User> {
         val users = mongo
             .userCollection
-            .find()
+            .find(Filters.eq(User::role.path(), role.serialName()))
             .skip(page * pageSize)
             .limit(pageSize)
             .toList()
@@ -81,6 +80,15 @@ class UserRepository(
                     setValue(User::salt, salt),
                     setValue(User::password, hashedPassword),
                 )
+            )
+    }
+
+    suspend fun updateRole(userId: ObjectId, role: User.Role) {
+        mongo
+            .userCollection
+            .updateOne(
+                User::id eq userId,
+                Updates.set(User::role.path(), role.serialName()),
             )
     }
 
