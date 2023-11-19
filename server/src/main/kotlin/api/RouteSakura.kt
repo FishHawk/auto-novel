@@ -10,6 +10,7 @@ import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -22,7 +23,6 @@ import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
 import sakura.SakuraWorkerManager
 import sakura.SakuraWorkerProgress
-import kotlin.time.Duration.Companion.days
 
 @Resource("/sakura")
 private class SakuraRes {
@@ -58,14 +58,16 @@ fun Route.routeSakura() {
     }
 
     authenticateDb {
-        post<SakuraRes.Job> {
-            val user = call.authenticatedUser()
-            val body = call.receive<String>()
-            call.tryRespond {
-                api.createSakuraJob(
-                    user = user,
-                    task = body,
-                )
+        rateLimit(RateLimitNames.CreateSakuraJob) {
+            post<SakuraRes.Job> {
+                val user = call.authenticatedUser()
+                val body = call.receive<String>()
+                call.tryRespond {
+                    api.createSakuraJob(
+                        user = user,
+                        task = body,
+                    )
+                }
             }
         }
         delete<SakuraRes.Job.Id> { loc ->

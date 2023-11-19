@@ -133,16 +133,17 @@ const linkExample = [
       </div>
     </template>
 
-    <n-space
-      :wrap="false"
-      align="center"
-      style="max-width: 650px; margin-top: 8px"
-    >
+    <n-space :wrap="false" align="center" style="margin-top: 8px">
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
+        <n-li style="color: red">
+          <b>
+            请不要使用脚本来抢着排队。现在1分钟只能尝试排队5次，如果之后被检测到用脚本或者开小号来抢Sakura队伍空位的话，会直接封号。
+          </b>
+        </n-li>
         <n-li>
-          Sakura现在支持私人文件翻译了，但是需要你自己找张显卡部署Sakura，具体教程之后会发布。此外租显卡的计划失败了，以后只能去排队了。
+          文件翻译支持自己部署Sakura服务，欢迎有Python经验的朋友来当免费测试员，一键启动的懒人包还得等等。
         </n-li>
         <n-li>今年年底会屏蔽日韩的IP，请日韩的朋友们做好准备。</n-li>
         <n-li>
