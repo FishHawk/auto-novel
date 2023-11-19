@@ -1,11 +1,13 @@
 {
   "manifest_version": 2,
-  "version": "1.0.7",
+  "version": "1.0.8",
   "name": "轻小说机翻机器人",
   "description": "解除浏览器跨域限制，以启用网页端的机翻功能",
   "permissions": [
-    "<all_urls>",
-    "debugger",
+    "*://*.fishhawk.top/*",
+    "*://*.baidu.com/*",
+    "*://*.youdao.com/*",
+    "*://*.amazon.co.jp/*",
     "webRequest",
     "webRequestBlocking",
     "declarativeNetRequest",
