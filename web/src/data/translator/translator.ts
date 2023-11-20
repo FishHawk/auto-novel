@@ -1,6 +1,6 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { createGptSegIndexedDbCache } from './cache';
+import { createSegIndexedDbCache } from './cache';
 import { OpenAiTranslator } from './openai';
 import { BaiduTranslator, YoudaoTranslator } from './tradition';
 import { Glossary, SegmentTranslator } from './type';
@@ -128,7 +128,9 @@ export class Translator {
     const segTranslator = await createSegmentTranslator(id, config);
     let segCache: SegmentCache | undefined = undefined;
     if (id === 'gpt') {
-      segCache = await createGptSegIndexedDbCache();
+      segCache = await createSegIndexedDbCache('gpt-seg-cache');
+    } else if (id === 'sakura') {
+      segCache = await createSegIndexedDbCache('sakura-seg-cache');
     }
     return new Translator(segTranslator, segCache);
   }
