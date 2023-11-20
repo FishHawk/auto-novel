@@ -85,6 +85,20 @@ async function stopSakuraWorker(id: string) {
   }
 }
 
+const showInactiveWorker = ref(false);
+const onlyShowWorkerAddedByMe = ref(false);
+function filterAndSortWorker(workers: SakuraWorker[]) {
+  return workers
+    .filter(
+      (it: SakuraWorker) =>
+        (it.active || showInactiveWorker.value) &&
+        (it.username === userData.username || !onlyShowWorkerAddedByMe.value)
+    )
+    .sort((a: SakuraWorker, b: SakuraWorker) =>
+      a.username.localeCompare(b.username)
+    );
+}
+
 function computePercentage({
   total,
   finished,
@@ -148,11 +162,32 @@ const createWorkerFormValue = ref({
       :showEmpty="(it: SakuraStatus) => false"
       v-slot="{ value: info }"
     >
+      <n-space
+        item-style="display: flex;"
+        align="center"
+        style="margin-bottom: 24px"
+      >
+        <n-checkbox v-model:checked="showInactiveWorker">
+          显示未激活的 Worker
+        </n-checkbox>
+        <n-checkbox
+          v-if="userData.isMaintainer"
+          v-model:checked="onlyShowWorkerAddedByMe"
+        >
+          只显示我添加的 Worker
+        </n-checkbox>
+        <n-button
+          v-if="userData.isMaintainer"
+          @click="showCreateWorkerModal = true"
+        >
+          添加 Worker
+        </n-button>
+      </n-space>
+
       <n-list>
         <n-list-item
-          v-for="worker of info.workers.sort((a:SakuraWorker, b:SakuraWorker) =>
-            a.username.localeCompare(b.username)
-          )"
+          v-for="worker of filterAndSortWorker(info.workers)"
+          :key="worker.id"
         >
           <n-thing content-indented>
             <template #avatar>
@@ -232,14 +267,6 @@ const createWorkerFormValue = ref({
           </n-thing>
         </n-list-item>
       </n-list>
-
-      <n-button
-        v-if="userData.isMaintainer"
-        @click="showCreateWorkerModal = true"
-        style="margin-top: 30px"
-      >
-        添加 Sakura Worker
-      </n-button>
       <n-modal v-model:show="showCreateWorkerModal">
         <n-card
           style="width: min(400px, calc(100% - 16px))"
@@ -291,6 +318,7 @@ const createWorkerFormValue = ref({
         <tbody>
           <ReuseJob
             v-for="job of info.jobs"
+            :key="job.id"
             :job="job"
             :worker="info.workers.find((worker:SakuraWorker) => worker.id === job.workerId)"
           />
