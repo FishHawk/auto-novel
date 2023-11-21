@@ -89,7 +89,7 @@ export class SakuraTranslator implements SegmentTranslator {
         repetition_penalty: 1.0,
         ...config,
       },
-      timeout: 60_000_000, // 10 minutes
+      timeout: false,
     });
     let obj: SakuraResultChunk | undefined = undefined;
     if (this.endpoint.includes('stream')) {

@@ -4,13 +4,23 @@ import { openDB } from 'idb';
 import { SegmentCache } from './translator';
 import { Glossary } from './type';
 
-export async function createSegIndexedDbCache(storeName: string) {
-  const db = await openDB('test', 1, {
-    upgrade(db, _oldVersion, _newVersion, _transaction, _event) {
-      db.createObjectStore(storeName, { keyPath: 'hash' });
+function openTestDB() {
+  return openDB('test', 2, {
+    upgrade(db, oldVersion, _newVersion, _transaction, _event) {
+      if (oldVersion < 1) {
+        db.createObjectStore('gpt-seg-cache', { keyPath: 'hash' });
+      }
+      if (oldVersion < 2) {
+        db.createObjectStore('sakura-seg-cache', { keyPath: 'hash' });
+      }
     },
   });
+}
 
+export async function createSegIndexedDbCache(
+  storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
+) {
+  const db = await openTestDB();
   return <SegmentCache>{
     cacheKey: (
       _segIndex: number,
