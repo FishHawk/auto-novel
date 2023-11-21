@@ -110,6 +110,7 @@ class Pixiv(
             val obj2 = get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles").json()
             val toc = obj2["body"]!!.jsonArray
                 .map { it.jsonObject }
+                .filter { it["available"]!!.jsonPrimitive.boolean }
                 .map {
                     RemoteNovelMetadata.TocItem(
                         title = it["title"]!!.jsonPrimitive.content,

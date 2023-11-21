@@ -28,6 +28,11 @@ class PixivTest : DescribeSpec({
             // https://www.pixiv.net/novel/series/10539710
             val metadata = provider.getMetadata("10539710")
         }
+        it("常规，好友限定") {
+            // https://www.pixiv.net/novel/series/642636
+            val metadata = provider.getMetadata("642636")
+            println(metadata.toc)
+        }
         it("常规，目录很多页") {
             // https://www.pixiv.net/novel/series/870363
             val metadata = provider.getMetadata("870363")
