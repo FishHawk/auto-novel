@@ -193,8 +193,8 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
         listFiles(translatorId.serialName())
 
 
-    private fun Path.readTextOrNull() =
-        if (notExists()) null else readText()
+    private fun Path.readLinesOrNull() =
+        if (notExists()) null else readLines()
 
     //
     private fun chapterPath(chapterId: String) =
@@ -203,7 +203,7 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
     suspend fun getChapter(chapterId: String) =
         withContext(Dispatchers.IO) {
             val path = chapterPath(chapterId)
-            return@withContext path.readTextOrNull()?.lines()
+            return@withContext path.readLinesOrNull()
         }
 
     //
@@ -219,7 +219,7 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
     private suspend fun getTranslation(translatorId: TranslatorId, chapterId: String) =
         withContext(Dispatchers.IO) {
             val path = translationPath(translatorId, chapterId)
-            return@withContext path.readTextOrNull()?.lines()
+            return@withContext path.readLinesOrNull()
         }
 
     suspend fun setTranslation(translatorId: TranslatorId, chapterId: String, lines: List<String>) =
