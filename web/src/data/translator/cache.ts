@@ -5,14 +5,14 @@ import { SegmentCache } from './translator';
 import { Glossary } from './type';
 
 function openTestDB() {
-  return openDB('test', 2, {
-    upgrade(db, oldVersion, _newVersion, _transaction, _event) {
-      if (oldVersion < 1) {
+  return openDB('test', 3, {
+    upgrade(db, _oldVersion, _newVersion, _transaction, _event) {
+      try {
         db.createObjectStore('gpt-seg-cache', { keyPath: 'hash' });
-      }
-      if (oldVersion < 2) {
+      } catch (e) {}
+      try {
         db.createObjectStore('sakura-seg-cache', { keyPath: 'hash' });
-      }
+      } catch (e) {}
     },
   });
 }
