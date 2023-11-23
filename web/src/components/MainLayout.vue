@@ -5,7 +5,7 @@ export function menuOption(
   show?: boolean
 ): MenuOption {
   return {
-    label: () => h(RouterLink, { to: { path: href } }, { default: () => text }),
+    label: () => h(RouterLink, { to: href }, { default: () => text }),
     key: href,
     show,
   };
@@ -25,13 +25,12 @@ export function dropdownOption(
 </script>
 
 <script lang="ts" setup>
-import { ColorLensFilled, LogOutFilled, MenuFilled } from '@vicons/material';
+import { LogOutFilled, MenuFilled } from '@vicons/material';
 import { MenuOption, NIcon, useThemeVars } from 'naive-ui';
 import { Component, computed, h, ref } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 import { SignInDto } from '@/data/api/api_auth';
-import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsDesktop } from '@/data/util';
 
@@ -43,14 +42,13 @@ withDefaults(
 );
 
 const isDesktop = useIsDesktop(850);
+const router = useRouter();
 const userData = useUserDataStore();
-const setting = useSettingStore();
 const topMenuOptions = computed(() => {
   return [
     menuOption('首页', '/'),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
-    menuOption('文件翻译', '/personal'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
@@ -90,7 +88,6 @@ const collapsedMenuOptions = computed(() => {
         menuOption('Kakuyomu：流派', '/novel-rank/kakuyomu/1'),
       ],
     },
-    menuOption('文件翻译', '/personal'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
@@ -100,15 +97,12 @@ const userDropdownOptions = computed(() => {
   return [
     { label: '管理员模式', key: 'admin', show: userData.isAdmin },
     menuOption('网站管理', '/admin', userData.asAdmin),
-    dropdownOption('切换主题', 'darkTheme', ColorLensFilled),
     dropdownOption('退出登录', 'signOut', LogOutFilled),
   ];
 });
 function handleUserDropdownSelect(key: string | number) {
   if (key === 'signOut') {
     userData.deleteProfile();
-  } else if (key === 'darkTheme') {
-    setting.isDark = !setting.isDark;
   } else if (key === 'admin') {
     userData.toggleAdminMode();
   }
@@ -119,6 +113,10 @@ const showLoginModal = ref(false);
 function onSignInSuccess(profile: SignInDto): void {
   userData.setProfile(profile);
   showLoginModal.value = false;
+}
+
+function navToMySpace() {
+  router.push({ path: '/account' });
 }
 
 const vars = useThemeVars();
@@ -190,11 +188,13 @@ const vars = useThemeVars();
             <n-button quaternary>收藏</n-button>
           </router-link>
           <n-dropdown
-            trigger="click"
+            trigger="hover"
             :options="userDropdownOptions"
             @select="handleUserDropdownSelect"
           >
-            <n-button quaternary> @{{ userData.username }} </n-button>
+            <n-button quaternary @click="navToMySpace()">
+              @{{ userData.username }}
+            </n-button>
           </n-dropdown>
         </n-space>
 

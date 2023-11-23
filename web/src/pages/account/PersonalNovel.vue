@@ -332,9 +332,7 @@ async function testSakura() {
 </script>
 
 <template>
-  <MainLayout>
-    <n-h1>文件翻译</n-h1>
-
+  <AccountLayout>
     <n-upload
       multiple
       directory-dnd
@@ -491,7 +489,7 @@ async function testSakura() {
         style="margin-top: 20px"
       />
     </div>
-  </MainLayout>
+  </AccountLayout>
 </template>
 
 <style scoped>

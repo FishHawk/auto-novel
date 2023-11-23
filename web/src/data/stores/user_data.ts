@@ -52,6 +52,7 @@ export const useUserDataStore = defineStore('authInfo', {
     isLoggedIn: ({ info }) => validExpires(info) !== undefined,
     username: ({ info }) => validExpires(info)?.username,
     token: ({ info }) => validExpires(info)?.token,
+    role: ({ info }) => validExpires(info)?.role,
     passWeek: ({ info }) => {
       const createAt = validExpires(info)?.createAt;
       if (createAt) {

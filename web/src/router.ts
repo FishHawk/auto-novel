@@ -21,20 +21,26 @@ const router = createRouter({
     },
 
     {
-      path: '/favorite',
-      redirect: '/favorite/web',
+      path: '/account',
+      meta: { title: '账号中心' },
+      component: () => import('./pages/account/AccountCenter.vue'),
     },
     {
-      path: '/favorite/:favoriteId',
+      path: '/favorite',
       meta: { title: '我的收藏' },
-      component: () => import('./pages/list/FavoriteList.vue'),
+      component: () => import('./pages/account/FavoriteList.vue'),
     },
-
     {
       path: '/read-history',
       meta: { title: '阅读历史' },
-      component: () => import('./pages/list/ReadHistoryList.vue'),
+      component: () => import('./pages/account/ReadHistoryList.vue'),
     },
+    {
+      path: '/personal',
+      meta: { title: '文件翻译' },
+      component: () => import('./pages/account/PersonalNovel.vue'),
+    },
+
     {
       path: '/novel-list',
       meta: { title: '网络小说' },
@@ -75,11 +81,6 @@ const router = createRouter({
       component: () => import('./pages/novel/WenkuNovelEdit.vue'),
     },
 
-    {
-      path: '/personal',
-      meta: { title: '文件翻译' },
-      component: () => import('./pages/novel/PersonalNovel.vue'),
-    },
 
     {
       path: '/forum',
