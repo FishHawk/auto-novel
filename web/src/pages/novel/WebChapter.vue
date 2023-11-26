@@ -232,7 +232,7 @@ const createWebIncorrectCase = async (jp: string, zh: string) => {
                     {{ p.text }}
                   </n-p>
                 </template>
-                <span>这句Sakura翻译不对？请提交帮助我们改进。</span>
+                <span>这段话Sakura翻译不准确？请提交帮助我们改进。（人名不准确请使用术语表，不用提交）</span>
               </n-popconfirm>
 
               <n-p v-else :class="{ secondary: p.secondary }">
