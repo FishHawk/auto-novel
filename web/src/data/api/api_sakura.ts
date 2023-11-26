@@ -82,6 +82,14 @@ const startSakuraWorker = (id: string) =>
 const stopSakuraWorker = (id: string) =>
   runCatching(client.post(`sakura/worker/${id}/stop`).text());
 
+const createWebIncorrectCase = (json: {
+  providerId: string;
+  novelId: string;
+  chapterId: string;
+  jp: string;
+  zh: string;
+}) => runCatching(client.post('sakura/incorrect-case', { json }).text());
+
 export const ApiSakura = {
   getSakuraStatus,
   //
@@ -93,4 +101,6 @@ export const ApiSakura = {
   deleteSakuraWorker,
   startSakuraWorker,
   stopSakuraWorker,
+  //
+  createWebIncorrectCase,
 };

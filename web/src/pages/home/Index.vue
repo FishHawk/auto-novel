@@ -141,7 +141,7 @@ const linkExample = [
       <n-ul>
         <n-li>GPT现在用不了token了，不知道什么时候能修好。</n-li>
         <n-li>
-          文件翻译支持自己部署Sakura服务，欢迎有Python经验的朋友来当免费测试员，一键启动的懒人包还得等等。
+          如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。
         </n-li>
         <n-li>今年年底会屏蔽日韩的IP，请日韩的朋友们做好准备。</n-li>
         <n-li>

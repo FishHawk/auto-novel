@@ -38,6 +38,17 @@ data class SakuraJobResult(
 )
 
 @Serializable
+data class SakuraWebIncorrectCase(
+    val providerId: String,
+    val novelId: String,
+    val chapterId: String,
+    val uploader: String,
+    val jp: String,
+    val zh: String,
+    val createAt: Instant,
+)
+
+@Serializable
 data class SakuraWebFailCase(
     val providerId: String,
     val novelId: String,

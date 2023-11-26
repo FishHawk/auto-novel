@@ -3,6 +3,7 @@ package infra.common
 import com.mongodb.client.model.CountOptions
 import infra.DataSourceMongo
 import infra.model.SakuraJob
+import infra.model.SakuraWebIncorrectCase
 import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
@@ -69,5 +70,13 @@ class SakuraJobRepository(
                 ),
             )
         return result.deletedCount > 0
+    }
+
+    suspend fun createWebIncorrectCase(
+        case: SakuraWebIncorrectCase,
+    ) {
+        mongo
+            .sakuraWebIncorrectCaseCollection
+            .insertOne(case)
     }
 }

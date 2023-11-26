@@ -3,6 +3,7 @@ package api
 import api.plugins.*
 import infra.common.SakuraJobRepository
 import infra.model.SakuraJob
+import infra.model.SakuraWebIncorrectCase
 import infra.model.User
 import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
@@ -43,6 +44,9 @@ private class SakuraRes {
             class Stop(val parent: Id)
         }
     }
+
+    @Resource("/incorrect-case")
+    class IncorrectCase(val parent: SakuraRes)
 }
 
 fun Route.routeSakura() {
@@ -110,6 +114,30 @@ fun Route.routeSakura() {
             val user = call.authenticatedUser()
             call.tryRespond {
                 api.stopSakuraWorker(user = user, id = loc.parent.id)
+            }
+        }
+
+        post<SakuraRes.IncorrectCase> {
+            @Serializable
+            class Body(
+                val providerId: String,
+                val novelId: String,
+                val chapterId: String,
+                val jp: String,
+                val zh: String,
+            )
+
+            val user = call.authenticatedUser()
+            val body = call.receive<Body>()
+            call.tryRespond {
+                api.createSakuraWebIncorrectCase(
+                    user = user,
+                    providerId = body.providerId,
+                    novelId = body.novelId,
+                    chapterId = body.chapterId,
+                    jp = body.jp,
+                    zh = body.zh,
+                )
             }
         }
     }
@@ -303,5 +331,26 @@ class SakuraApi(
             user.shouldBeAtLeast(User.Role.Admin)
         }
         sakuraWorkerManager.stopWorker(id)
+    }
+
+    suspend fun createSakuraWebIncorrectCase(
+        user: AuthenticatedUser,
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        jp: String,
+        zh: String,
+    ) {
+        sakuraJobRepo.createWebIncorrectCase(
+            SakuraWebIncorrectCase(
+                providerId = providerId,
+                novelId = novelId,
+                chapterId = chapterId,
+                uploader = user.username,
+                jp = jp,
+                zh = zh,
+                createAt = Clock.System.now(),
+            )
+        )
     }
 }
