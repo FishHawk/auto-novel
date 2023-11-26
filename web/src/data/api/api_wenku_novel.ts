@@ -1,5 +1,6 @@
 import { Err, Ok, Result, runCatching } from '@/data/result';
 
+import { Favored } from './api_user';
 import { client } from './client';
 import { Page } from './common';
 
@@ -22,7 +23,8 @@ export interface WenkuNovelDto {
   volumes: WenkuVolumeDto[];
   glossary: { [key: string]: string };
   visited: number;
-  favored?: boolean;
+  favored?: string;
+  favoredList: Favored[];
   volumeZh: string[];
   volumeJp: VolumeJpDto[];
 }
@@ -60,21 +62,6 @@ const listNovel = ({
       .json<Page<WenkuNovelOutlineDto>>()
   );
 
-const listFavorite = ({
-  page,
-  pageSize,
-  sort = 'update',
-}: {
-  page: number;
-  pageSize: number;
-  sort?: 'create' | 'update';
-}) =>
-  runCatching(
-    client
-      .get('wenku/favored', { searchParams: { page, pageSize, sort } })
-      .json<Page<WenkuNovelOutlineDto>>()
-  );
-
 const listVolumesUser = () =>
   runCatching(
     client.get(`wenku/user`).json<{ list: VolumeJpDto[]; novelId: string }>()
@@ -82,12 +69,6 @@ const listVolumesUser = () =>
 
 const getNovel = (novelId: string) =>
   runCatching(client.get(`wenku/${novelId}`).json<WenkuNovelDto>());
-
-const favoriteNovel = (novelId: string) =>
-  runCatching(client.put(`wenku/${novelId}/favored`).text());
-
-const unfavoriteNovel = (novelId: string) =>
-  runCatching(client.delete(`wenku/${novelId}/favored`).text());
 
 interface WenkuNovelCreateBody {
   title: string;
@@ -146,10 +127,6 @@ const deleteVolume = (novelId: string, volumeId: string) =>
 export const ApiWenkuNovel = {
   listNovel,
   listVolumesUser,
-  //
-  listFavorite,
-  favoriteNovel,
-  unfavoriteNovel,
   //
   getNovel,
   //

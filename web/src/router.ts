@@ -23,22 +23,22 @@ const router = createRouter({
     {
       path: '/account',
       meta: { title: '账号中心' },
-      component: () => import('./pages/account/AccountCenter.vue'),
+      component: () => import('./pages/user/AccountCenter.vue'),
     },
     {
       path: '/favorite',
       meta: { title: '我的收藏' },
-      component: () => import('./pages/account/FavoriteList.vue'),
+      component: () => import('./pages/user/FavoriteList.vue'),
     },
     {
       path: '/read-history',
       meta: { title: '阅读历史' },
-      component: () => import('./pages/account/ReadHistoryList.vue'),
+      component: () => import('./pages/user/ReadHistoryList.vue'),
     },
     {
       path: '/personal',
       meta: { title: '文件翻译' },
-      component: () => import('./pages/account/PersonalNovel.vue'),
+      component: () => import('./pages/user/PersonalNovel.vue'),
     },
 
     {

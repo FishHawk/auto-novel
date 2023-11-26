@@ -1,15 +1,16 @@
 <script lang="ts" setup>
+import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
+import { NConfigProvider, darkTheme, lightTheme } from 'naive-ui';
 import { ref, shallowRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NConfigProvider, lightTheme, darkTheme } from 'naive-ui';
-import { onKeyStroke, createReusableTemplate } from '@vueuse/core';
 
-import { ResultState } from '@/data/result';
+import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { useUserDataStore } from '@/data/stores/user_data';
+import { ResultState } from '@/data/result';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { buildWebChapterUrl } from '@/data/util_web';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { TranslatorId } from '@/data/translator/translator';
+import { buildWebChapterUrl } from '@/data/util_web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
@@ -33,7 +34,7 @@ async function getChapter() {
   if (result.ok) {
     document.title = result.value.titleJp;
     if (userData.isLoggedIn) {
-      ApiWebNovel.updateReadHistory(providerId, novelId, chapterId);
+      ApiUser.updateReadHistoryWeb(providerId, novelId, chapterId);
     }
   }
 }

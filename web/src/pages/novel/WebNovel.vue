@@ -1,14 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import {
-  EditNoteFilled,
-  FavoriteBorderFilled,
-  FavoriteFilled,
-  BookFilled,
-  SortFilled,
-} from '@vicons/material';
-import { useMessage } from 'naive-ui';
+import { EditNoteFilled, BookFilled, SortFilled } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { Ok, ResultState } from '@/data/result';
@@ -26,7 +19,6 @@ const [DefineTag, ReuseTag] = createReusableTemplate<{
 }>();
 
 const setting = useSettingStore();
-const message = useMessage();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
@@ -35,6 +27,7 @@ const novelId = route.params.novelId as string;
 const novelResult = ref<ResultState<WebNovelDto>>();
 
 async function getNovel() {
+  novelResult.value = undefined;
   const result = await ApiWebNovel.getNovel(providerId, novelId);
   novelResult.value = result;
   if (result.ok) {
@@ -42,28 +35,6 @@ async function getNovel() {
   }
 }
 getNovel();
-
-async function addFavorite() {
-  const result = await ApiWebNovel.favoriteNovel(providerId, novelId);
-  if (result.ok) {
-    if (novelResult.value?.ok) {
-      novelResult.value.value.favored = true;
-    }
-  } else {
-    message.error('收藏错误：' + result.error.message);
-  }
-}
-
-async function removeFavorite() {
-  const result = await ApiWebNovel.unfavoriteNovel(providerId, novelId);
-  if (result.ok) {
-    if (novelResult.value?.ok) {
-      novelResult.value.value.favored = false;
-    }
-  } else {
-    message.error('取消收藏错误：' + result.error.message);
-  }
-}
 
 const editMode = ref(false);
 </script>
@@ -114,22 +85,12 @@ const editMode = ref(false);
           {{ editMode ? '退出编辑' : '编辑' }}
         </async-button>
 
-        <async-button
-          v-if="novel.favored === true"
-          @async-click="removeFavorite"
-        >
-          <template #icon>
-            <n-icon :component="FavoriteFilled" />
-          </template>
-          取消收藏
-        </async-button>
-
-        <async-button v-else @async-click="addFavorite">
-          <template #icon>
-            <n-icon :component="FavoriteBorderFilled" />
-          </template>
-          收藏
-        </async-button>
+        <favorite-button
+          :favored="novel.favored"
+          :favored-list="novel.favoredList"
+          :novel="{ type: 'web', providerId, novelId }"
+          @update:favored="getNovel"
+        />
 
         <router-link v-if="novel.wenkuId" :to="`/wenku/${novel.wenkuId}`">
           <n-button>

@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit
 data class WebNovelFavoriteModel(
     @Contextual val userId: Id<User>,
     @Contextual val novelId: Id<WebNovelMetadata>,
+    @Contextual val favoredId: String,
     @Contextual val createAt: Instant,
     @Contextual val updateAt: Instant,
 )
@@ -25,6 +26,7 @@ data class WebNovelFavoriteModel(
 data class WenkuNovelFavoriteModel(
     @Contextual val userId: Id<User>,
     @Contextual val novelId: Id<WenkuNovelMetadata>,
+    @Contextual val favoredId: String,
     @Contextual val createAt: Instant,
     @Contextual val updateAt: Instant,
 )

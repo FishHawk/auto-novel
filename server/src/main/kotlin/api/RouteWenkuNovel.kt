@@ -1,5 +1,7 @@
 package api
 
+import api.model.WenkuNovelOutlineDto
+import api.model.asDto
 import api.plugins.*
 import infra.VolumeCreateException
 import infra.common.OperationHistoryRepository
@@ -35,19 +37,8 @@ private class WenkuNovelRes {
         val level: Int = 0,
     )
 
-    @Resource("/favored")
-    class Favored(
-        val parent: WenkuNovelRes,
-        val page: Int,
-        val pageSize: Int,
-        val sort: FavoriteListSort,
-    )
-
     @Resource("/{novelId}")
     class Id(val parent: WenkuNovelRes, val novelId: String) {
-        @Resource("/favored")
-        class Favored(val parent: Id)
-
         @Resource("/glossary")
         class Glossary(val parent: Id)
 
@@ -89,31 +80,6 @@ fun Route.routeWenkuNovel() {
                         else -> WenkuNovelFilter.Level.全部
                     },
                 )
-            }
-        }
-    }
-    authenticateDb {
-        get<WenkuNovelRes.Favored> { loc ->
-            val user = call.authenticatedUser()
-            call.tryRespond {
-                service.listFavored(
-                    user = user,
-                    page = loc.page,
-                    pageSize = loc.pageSize,
-                    sort = loc.sort,
-                )
-            }
-        }
-        put<WenkuNovelRes.Id.Favored> { loc ->
-            val user = call.authenticatedUser()
-            call.tryRespond {
-                service.updateFavored(user = user, novelId = loc.parent.novelId, favored = true)
-            }
-        }
-        delete<WenkuNovelRes.Id.Favored> { loc ->
-            val user = call.authenticatedUser()
-            call.tryRespond {
-                service.updateFavored(user = user, novelId = loc.parent.novelId, favored = false)
             }
         }
     }
@@ -254,29 +220,13 @@ class WenkuNovelApi(
     private val volumeRepo: WenkuNovelVolumeRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
-    @Serializable
-    data class NovelOutlineDto(
-        val id: String,
-        val title: String,
-        val titleZh: String,
-        val cover: String,
-    )
-
-    private fun WenkuNovelMetadataOutline.asDto() =
-        NovelOutlineDto(
-            id = id,
-            title = title,
-            titleZh = titleZh,
-            cover = cover,
-        )
-
     suspend fun list(
         user: AuthenticatedUser?,
         queryString: String?,
         page: Int,
         pageSize: Int,
         filterLevel: WenkuNovelFilter.Level,
-    ): PageDto<NovelOutlineDto> {
+    ): PageDto<WenkuNovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
 
@@ -292,24 +242,6 @@ class WenkuNovelApi(
                 page = page,
                 pageSize = pageSize,
                 filterLevel = filterLevelAllowed,
-            )
-            .asDto(pageSize) { it.asDto() }
-    }
-
-    suspend fun listFavored(
-        user: AuthenticatedUser,
-        page: Int,
-        pageSize: Int,
-        sort: FavoriteListSort,
-    ): PageDto<NovelOutlineDto> {
-        validatePageNumber(page)
-        validatePageSize(pageSize)
-        return userRepo
-            .listFavoriteWenkuNovel(
-                userId = user.id,
-                page = page,
-                pageSize = pageSize,
-                sort = sort,
             )
             .asDto(pageSize) { it.asDto() }
     }
@@ -330,7 +262,8 @@ class WenkuNovelApi(
         val glossary: Map<String, String>,
         val volumes: List<WenkuNovelVolume>,
         val visited: Long,
-        val favored: Boolean?,
+        val favored: String?,
+        val favoredList: List<UserFavored>,
         val volumeZh: List<String>,
         val volumeJp: List<WenkuNovelVolumeJp>,
     )
@@ -339,10 +272,6 @@ class WenkuNovelApi(
         user: AuthenticatedUser?,
         novelId: String,
     ): WenkuNovelDto {
-        val favored = user?.let {
-            userRepo.isUserFavoriteWenkuNovel(it.id, novelId)
-        }
-
         val metadata = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
 
@@ -363,7 +292,7 @@ class WenkuNovelApi(
 
         val volumes = volumeRepo.list(novelId)
 
-        return WenkuNovelDto(
+        val dto = WenkuNovelDto(
             title = metadata.title,
             titleZh = metadata.titleZh,
             cover = metadata.cover,
@@ -375,34 +304,22 @@ class WenkuNovelApi(
             volumes = metadata.volumes,
             glossary = metadata.glossary,
             visited = metadata.visited,
-            favored = favored,
+            favored = null,
+            favoredList = emptyList(),
             volumeZh = volumes.zh,
             volumeJp = volumes.jp,
         )
-    }
 
-    suspend fun updateFavored(
-        user: AuthenticatedUser,
-        novelId: String,
-        favored: Boolean,
-    ) {
-        if (!metadataRepo.exist(novelId))
-            throwNovelNotFound()
-        if (favored) {
-            val total = userRepo.countFavoriteWenkuNovelByUserId(
-                userId = user.id,
-            )
-            if (total >= 5000) {
-                throwBadRequest("收藏夹已达到上限")
-            }
-            userRepo.addFavoriteWenkuNovel(
-                userId = user.id,
-                novelId = novelId,
-            )
+        return if (user == null) {
+            dto
         } else {
-            userRepo.removeFavoriteWenkuNovel(
-                userId = user.id,
-                novelId = novelId,
+            val favoredList = userRepo.getById(user.id)!!.favoredWenku
+            val favored = userRepo
+                .isUserFavoriteWenkuNovel(user.id, novelId)
+                .takeIf { favored -> favoredList.any { it.id == favored } }
+            dto.copy(
+                favored = favored,
+                favoredList = favoredList,
             )
         }
     }

@@ -14,6 +14,12 @@ data class UserOutline(
 )
 
 @Serializable
+data class UserFavored(
+    val id: String,
+    val title: String,
+)
+
+@Serializable
 data class User(
     @Contextual @SerialName("_id") val id: ObjectId,
     val email: String,
@@ -21,6 +27,8 @@ data class User(
     val salt: String,
     val password: String,
     val role: Role,
+    val favoredWeb: List<UserFavored>,
+    val favoredWenku: List<UserFavored>,
     @Contextual val createdAt: Instant,
 ) {
     @Serializable

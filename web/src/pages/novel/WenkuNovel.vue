@@ -37,48 +37,6 @@ async function refreshMetadata() {
   }
 }
 
-var isFavoriteChanging = false;
-
-async function addFavorite() {
-  if (isFavoriteChanging) return;
-  isFavoriteChanging = true;
-
-  if (!userData.isLoggedIn) {
-    message.info('请先登录');
-    return;
-  }
-
-  const result = await ApiWenkuNovel.favoriteNovel(novelId);
-  if (result.ok) {
-    if (novelMetadataResult.value?.ok) {
-      novelMetadataResult.value.value.favored = true;
-    }
-  } else {
-    message.error('收藏错误：' + result.error.message);
-  }
-  isFavoriteChanging = false;
-}
-
-async function removeFavorite() {
-  if (isFavoriteChanging) return;
-  isFavoriteChanging = true;
-
-  if (!userData.isLoggedIn) {
-    message.info('请先登录');
-    return;
-  }
-
-  const result = await ApiWenkuNovel.unfavoriteNovel(novelId);
-  if (result.ok) {
-    if (novelMetadataResult.value?.ok) {
-      novelMetadataResult.value.value.favored = false;
-    }
-  } else {
-    message.error('取消收藏错误：' + result.error.message);
-  }
-  isFavoriteChanging = false;
-}
-
 const editMode = ref(false);
 
 function sortVolumesZh(volumes: string[]) {
@@ -168,22 +126,12 @@ const vars = useThemeVars();
           </n-button>
         </RouterNA>
 
-        <AsyncButton
-          v-if="metadata.favored === true"
-          :on-async-click="removeFavorite"
-        >
-          <template #icon>
-            <n-icon :component="FavoriteFilled" />
-          </template>
-          取消收藏
-        </AsyncButton>
-
-        <AsyncButton v-else :on-async-click="addFavorite">
-          <template #icon>
-            <n-icon :component="FavoriteBorderFilled" />
-          </template>
-          收藏
-        </AsyncButton>
+        <favorite-button
+          :favored="metadata.favored"
+          :favored-list="metadata.favoredList"
+          :novel="{ type: 'wenku', novelId }"
+          @update:favored="getMetadata"
+        />
 
         <n-a
           :href="`https://www.amazon.co.jp/s?k=${metadata.title}&rh=n%3A465392`"

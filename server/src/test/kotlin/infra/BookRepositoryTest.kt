@@ -20,7 +20,10 @@ import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import org.litote.kmongo.combine
 import org.litote.kmongo.coroutine.projection
+import org.litote.kmongo.eq
+import org.litote.kmongo.setValue
 import java.io.File
 
 
@@ -68,6 +71,21 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
+            val a = mongo
+                .wenkuNovelFavoriteCollection
+                .updateMany(
+                    WenkuNovelFavoriteModel::favoredId eq null,
+                    setValue(WenkuNovelFavoriteModel::favoredId, "default")
+                )
+            mongo
+                .userCollection
+                .updateMany(
+                    User::favoredWeb eq null,
+                    combine(
+                        setValue(User::favoredWeb, listOf(UserFavored(id = "default", title = "默认收藏夹"))),
+                        setValue(User::favoredWenku, listOf(UserFavored(id = "default", title = "默认收藏夹"))),
+                    ),
+                )
         }
         describe("build es index") {
             @Serializable

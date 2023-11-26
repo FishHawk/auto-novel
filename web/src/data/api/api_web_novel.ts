@@ -1,5 +1,6 @@
-import { Result, runCatching } from '@/data/result';
+import { runCatching } from '@/data/result';
 
+import { Favored } from './api_user';
 import { client } from './client';
 import { Page } from './common';
 
@@ -42,7 +43,8 @@ export interface WebNovelDto {
   toc: WebNovelTocItemDto[];
   visited: number;
   syncAt: number;
-  favored?: boolean;
+  favored?: string;
+  favoredList: Favored[];
   lastReadChapterId?: string;
   jp: number;
   baidu: number;
@@ -109,28 +111,6 @@ const listRank = (providerId: string, params: { [key: string]: string }) =>
       .json<Page<WebNovelOutlineDto>>()
   );
 
-const listReadHistory = (params: { page: number; pageSize: number }) =>
-  runCatching(
-    client
-      .get('novel/read-history', { searchParams: params })
-      .json<Page<WebNovelOutlineDto>>()
-  );
-
-const listFavorite = ({
-  page,
-  pageSize,
-  sort = 'update',
-}: {
-  page: number;
-  pageSize: number;
-  sort?: 'create' | 'update';
-}) =>
-  runCatching(
-    client
-      .get('novel/favored', { searchParams: { page, pageSize, sort } })
-      .json<Page<WebNovelOutlineDto>>()
-  );
-
 const getNovel = (providerId: string, novelId: string) =>
   runCatching(client.get(`novel/${providerId}/${novelId}`).json<WebNovelDto>());
 
@@ -140,23 +120,6 @@ const getChapter = (providerId: string, novelId: string, chapterId: string) =>
       .get(`novel/${providerId}/${novelId}/chapter/${chapterId}`)
       .json<WebNovelChapterDto>()
   );
-
-const updateReadHistory = (
-  providerId: string,
-  novelId: string,
-  chapterId: string
-) =>
-  runCatching(
-    client
-      .put(`novel/${providerId}/${novelId}/read-history`, { body: chapterId })
-      .text()
-  );
-
-const favoriteNovel = (providerId: string, novelId: string) =>
-  runCatching(client.put(`novel/${providerId}/${novelId}/favored`).text());
-
-const unfavoriteNovel = (providerId: string, novelId: string) =>
-  runCatching(client.delete(`novel/${providerId}/${novelId}/favored`).text());
 
 const updateNovel = (
   providerId: string,
@@ -208,13 +171,6 @@ const createFileUrl = (
 export const ApiWebNovel = {
   listNovel,
   listRank,
-  //
-  listReadHistory,
-  updateReadHistory,
-  //
-  listFavorite,
-  favoriteNovel,
-  unfavoriteNovel,
   //
   getNovel,
   getChapter,

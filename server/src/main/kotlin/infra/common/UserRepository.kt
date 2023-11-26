@@ -1,9 +1,10 @@
 package infra.common
 
-import com.jillesvangurp.ktsearch.document
-import com.jillesvangurp.ktsearch.getDocument
-import com.mongodb.client.model.*
 import com.mongodb.client.model.Aggregates.count
+import com.mongodb.client.model.Facet
+import com.mongodb.client.model.Filters
+import com.mongodb.client.model.UpdateOptions
+import com.mongodb.client.model.Updates
 import infra.*
 import infra.model.*
 import infra.web.toOutline
@@ -22,7 +23,6 @@ import kotlin.time.Duration.Companion.minutes
 
 class UserRepository(
     private val mongo: DataSourceMongo,
-    private val es: DataSourceElasticSearch,
     private val redis: DataSourceRedis,
 ) {
     suspend fun listUser(
@@ -64,6 +64,8 @@ class UserRepository(
                     salt = salt,
                     password = hashedPassword,
                     role = User.Role.Normal,
+                    favoredWeb = listOf(UserFavored(id = "default", title = "默认收藏夹")),
+                    favoredWenku = listOf(UserFavored(id = "default", title = "默认收藏夹")),
                     createdAt = Clock.System.now(),
                 )
             ).insertedId!!.asObjectId().value
@@ -90,6 +92,12 @@ class UserRepository(
                 User::id eq userId,
                 Updates.set(User::role.path(), role.serialName()),
             )
+    }
+
+    suspend fun getById(id: String): User? {
+        return mongo
+            .userCollection
+            .findOne(User::id eq ObjectId(id))
     }
 
     suspend fun getByEmail(email: String): User? {
@@ -196,21 +204,34 @@ class UserRepository(
             )
     }
 
+    /*
+     * Favored web
+     */
+    suspend fun updateFavoredWeb(
+        userId: ObjectId,
+        favored: List<UserFavored>,
+    ) {
+        mongo
+            .userCollection
+            .updateOne(
+                User::id eq userId,
+                setValue(User::favoredWeb, favored)
+            )
+    }
+
     suspend fun isUserFavoriteWebNovel(
         userId: String,
         novelId: String,
-    ): Boolean {
-        return mongo.webNovelFavoriteCollection.countDocuments(
-            and(
-                WebNovelFavoriteModel::userId eq ObjectId(userId).toId(),
-                WebNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
-            ),
-            CountOptions().limit(1),
-        ) != 0L
+    ): String? {
+        return mongo.webNovelFavoriteCollection.findOne(
+            WebNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+            WebNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
+        )?.favoredId
     }
 
     suspend fun listFavoriteWebNovel(
         userId: String,
+        favoredId: String,
         page: Int,
         pageSize: Int,
         sort: FavoriteListSort,
@@ -226,7 +247,10 @@ class UserRepository(
         val doc = mongo
             .webNovelFavoriteCollection
             .aggregate<NovelPage>(
-                match(WebNovelFavoriteModel::userId eq ObjectId(userId).toId()),
+                match(
+                    WebNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+                    WebNovelFavoriteModel::favoredId eq favoredId,
+                ),
                 sort(Document(sortProperty.path(), -1)),
                 facet(
                     Facet("count", count()),
@@ -262,60 +286,82 @@ class UserRepository(
 
     suspend fun countFavoriteWebNovelByUserId(
         userId: String,
+        favoredId: String,
     ): Long {
         return mongo
             .webNovelFavoriteCollection
             .countDocuments(
-                WebNovelFavoriteModel::userId eq ObjectId(userId).toId(),
-            )
-    }
-
-    suspend fun addFavoriteWebNovel(
-        userId: String,
-        novelId: String,
-    ) {
-        val novel = mongo
-            .webNovelMetadataCollection
-            .findOneById(ObjectId(novelId))!!
-        mongo
-            .webNovelFavoriteCollection
-            .insertOne(
-                WebNovelFavoriteModel(
-                    userId = ObjectId(userId).toId(),
-                    novelId = ObjectId(novelId).toId(),
-                    createAt = Clock.System.now(),
-                    updateAt = novel.updateAt,
+                and(
+                    WebNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+                    WebNovelFavoriteModel::favoredId eq favoredId,
                 )
             )
     }
 
-    suspend fun removeFavoriteWebNovel(
-        userId: String,
-        novelId: String,
+    suspend fun updateFavoriteWebNovel(
+        userId: ObjectId,
+        novelId: ObjectId,
+        favoredId: String,
+        updateAt: Instant,
+    ) {
+        mongo
+            .webNovelFavoriteCollection
+            .updateOne(
+                and(
+                    WebNovelFavoriteModel::userId eq userId.toId(),
+                    WebNovelFavoriteModel::novelId eq novelId.toId(),
+                ),
+                WebNovelFavoriteModel(
+                    userId = userId.toId(),
+                    novelId = novelId.toId(),
+                    favoredId = favoredId,
+                    createAt = Clock.System.now(),
+                    updateAt = updateAt,
+                ),
+                UpdateOptions().upsert(true),
+            )
+    }
+
+    suspend fun deleteFavoriteWebNovel(
+        userId: ObjectId,
+        novelId: ObjectId,
     ) {
         mongo
             .webNovelFavoriteCollection
             .deleteOne(
-                WebNovelFavoriteModel::userId eq ObjectId(userId).toId(),
-                WebNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
+                WebNovelFavoriteModel::userId eq userId.toId(),
+                WebNovelFavoriteModel::novelId eq novelId.toId(),
+            )
+    }
+
+    /*
+     * Favored wenku
+     */
+    suspend fun updateFavoredWenku(
+        userId: ObjectId,
+        favored: List<UserFavored>,
+    ) {
+        mongo
+            .userCollection
+            .updateOne(
+                User::id eq userId,
+                setValue(User::favoredWenku, favored),
             )
     }
 
     suspend fun isUserFavoriteWenkuNovel(
         userId: String,
         novelId: String,
-    ): Boolean {
-        return mongo.wenkuNovelFavoriteCollection.countDocuments(
-            and(
-                WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId(),
-                WenkuNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
-            ),
-            CountOptions().limit(1),
-        ) != 0L
+    ): String? {
+        return mongo.wenkuNovelFavoriteCollection.findOne(
+            WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+            WenkuNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
+        )?.favoredId
     }
 
     suspend fun listFavoriteWenkuNovel(
         userId: String,
+        favoredId: String,
         page: Int,
         pageSize: Int,
         sort: FavoriteListSort,
@@ -331,7 +377,10 @@ class UserRepository(
         val doc = mongo
             .wenkuNovelFavoriteCollection
             .aggregate<NovelPage>(
-                match(WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId()),
+                match(
+                    WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+                    WenkuNovelFavoriteModel::favoredId eq favoredId,
+                ),
                 sort(Document(sortProperty.path(), -1)),
                 facet(
                     Facet("count", count()),
@@ -374,43 +423,51 @@ class UserRepository(
 
     suspend fun countFavoriteWenkuNovelByUserId(
         userId: String,
+        favoredId: String,
     ): Long {
         return mongo
             .wenkuNovelFavoriteCollection
             .countDocuments(
-                WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId(),
-            )
-    }
-
-    suspend fun addFavoriteWenkuNovel(
-        userId: String,
-        novelId: String,
-    ) {
-        val esnovel = es.client.getDocument(
-            target = DataSourceElasticSearch.wenkuNovelIndexName,
-            id = novelId,
-        ).document<WenkuNovelMetadataEsModel>()
-        mongo
-            .wenkuNovelFavoriteCollection
-            .insertOne(
-                WenkuNovelFavoriteModel(
-                    userId = ObjectId(userId).toId(),
-                    novelId = ObjectId(novelId).toId(),
-                    createAt = Clock.System.now(),
-                    updateAt = Instant.fromEpochSeconds(esnovel.updateAt),
+                and(
+                    WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId(),
+                    WenkuNovelFavoriteModel::favoredId eq favoredId,
                 )
             )
     }
 
-    suspend fun removeFavoriteWenkuNovel(
-        userId: String,
-        novelId: String,
+    suspend fun updateFavoriteWenkuNovel(
+        userId: ObjectId,
+        novelId: ObjectId,
+        favoredId: String,
+        updateAt: Instant,
+    ) {
+        mongo
+            .wenkuNovelFavoriteCollection
+            .updateOne(
+                and(
+                    WenkuNovelFavoriteModel::userId eq userId.toId(),
+                    WenkuNovelFavoriteModel::novelId eq novelId.toId(),
+                ),
+                WenkuNovelFavoriteModel(
+                    userId = userId.toId(),
+                    novelId = novelId.toId(),
+                    favoredId = favoredId,
+                    createAt = Clock.System.now(),
+                    updateAt = updateAt,
+                ),
+                UpdateOptions().upsert(true),
+            )
+    }
+
+    suspend fun deleteFavoriteWenkuNovel(
+        userId: ObjectId,
+        novelId: ObjectId,
     ) {
         mongo
             .wenkuNovelFavoriteCollection
             .deleteOne(
-                WenkuNovelFavoriteModel::userId eq ObjectId(userId).toId(),
-                WenkuNovelFavoriteModel::novelId eq ObjectId(novelId).toId(),
+                WenkuNovelFavoriteModel::userId eq userId.toId(),
+                WenkuNovelFavoriteModel::novelId eq novelId.toId(),
             )
     }
 

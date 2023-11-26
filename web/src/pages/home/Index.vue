@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
   ApiWenkuNovel,
@@ -32,9 +33,10 @@ function query(url: string) {
 
 const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
 async function loadFavorite() {
-  const result = await ApiWebNovel.listFavorite({
+  const result = await ApiUser.listFavoredWebNovel('default', {
     page: 0,
     pageSize: 8,
+    sort: 'update',
   });
   if (result.ok) {
     favoriteList.value = Ok(result.value.items);
@@ -137,11 +139,7 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
-        <n-li style="color: red">
-          <b>
-            请不要使用脚本来抢着排队。现在1分钟只能尝试排队5次，如果之后被检测到用脚本或者开小号来抢Sakura队伍空位的话，会直接封号。
-          </b>
-        </n-li>
+        <n-li>GPT现在用不了token了，不知道什么时候能修好。</n-li>
         <n-li>
           文件翻译支持自己部署Sakura服务，欢迎有Python经验的朋友来当免费测试员，一键启动的懒人包还得等等。
         </n-li>
