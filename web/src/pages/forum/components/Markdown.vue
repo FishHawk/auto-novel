@@ -1,10 +1,13 @@
 <script lang="ts" setup>
+import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownIt from 'markdown-it/lib';
 import { useThemeVars } from 'naive-ui';
 
 defineProps<{ source: string }>();
 
-const md = new MarkdownIt();
+const md = new MarkdownIt({ breaks: true, linkify: true, html: true }).use(
+  MarkdownItAnchor
+);
 const vars = useThemeVars();
 </script>
 
