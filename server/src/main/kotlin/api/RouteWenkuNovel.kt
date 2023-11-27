@@ -5,8 +5,9 @@ import api.model.asDto
 import api.plugins.*
 import infra.VolumeCreateException
 import infra.common.OperationHistoryRepository
-import infra.common.UserRepository
+import infra.user.UserRepository
 import infra.model.*
+import infra.user.UserFavoredWenkuRepository
 import infra.wenku.WenkuNovelFilter
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -218,6 +219,7 @@ class WenkuNovelApi(
     private val userRepo: UserRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
     private val volumeRepo: WenkuNovelVolumeRepository,
+    private val favoredRepo: UserFavoredWenkuRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
     suspend fun list(
@@ -314,8 +316,8 @@ class WenkuNovelApi(
             dto
         } else {
             val favoredList = userRepo.getById(user.id)!!.favoredWenku
-            val favored = userRepo
-                .isUserFavoriteWenkuNovel(user.id, novelId)
+            val favored = favoredRepo
+                .getFavoredId(user.id, novelId)
                 .takeIf { favored -> favoredList.any { it.id == favored } }
             dto.copy(
                 favored = favored,

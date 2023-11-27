@@ -7,8 +7,10 @@ import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import api.plugins.authenticatedUserOrNull
 import infra.common.OperationHistoryRepository
-import infra.common.UserRepository
+import infra.user.UserRepository
 import infra.model.*
+import infra.user.UserFavoredWebRepository
+import infra.user.UserReadHistoryWebRepository
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelFilter
@@ -298,6 +300,8 @@ class WebNovelApi(
     private val chapterRepo: WebNovelChapterRepository,
     private val fileRepo: WebNovelFileRepository,
     private val userRepo: UserRepository,
+    private val favoredRepo: UserFavoredWebRepository,
+    private val historyRepo: UserReadHistoryWebRepository,
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
@@ -431,10 +435,10 @@ class WebNovelApi(
         } else {
             val novelId = novel.id.toHexString()
             val favoredList = userRepo.getById(user.id)!!.favoredWeb
-            val favored = userRepo
-                .isUserFavoriteWebNovel(user.id, novelId)
+            val favored = favoredRepo
+                .getFavoredId(user.id, novelId)
                 .takeIf { favored -> favoredList.any { it.id == favored } }
-            val history = userRepo.getReaderHistory(user.id, novelId)
+            val history = historyRepo.getReaderHistory(user.id, novelId)
             dto.copy(
                 favored = favored,
                 favoredList = favoredList,

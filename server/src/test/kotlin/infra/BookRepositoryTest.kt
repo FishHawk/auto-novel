@@ -3,7 +3,7 @@ package infra
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
 import infra.common.SakuraJobRepository
-import infra.common.UserRepository
+import infra.user.UserRepository
 import infra.model.*
 import infra.web.DataSourceWebNovelProvider
 import io.kotest.core.spec.style.DescribeSpec
@@ -72,10 +72,10 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     init {
         describe("test") {
             val a = mongo
-                .wenkuNovelFavoriteCollection
+                .userFavoredWenkuCollection
                 .updateMany(
-                    WenkuNovelFavoriteModel::favoredId eq null,
-                    setValue(WenkuNovelFavoriteModel::favoredId, "default")
+                    UserFavoredWenkuNovelModel::favoredId eq null,
+                    setValue(UserFavoredWenkuNovelModel::favoredId, "default")
                 )
             mongo
                 .userCollection

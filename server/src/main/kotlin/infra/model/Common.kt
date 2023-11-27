@@ -11,7 +11,7 @@ data class Page<T>(
 fun <T> emptyPage() = Page<T>(items = emptyList(), total = 0L)
 
 @Serializable
-enum class FavoriteListSort {
+enum class FavoredNovelListSort {
     @SerialName("create")
     CreateAt,
 

@@ -12,6 +12,10 @@ import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelMetadataRepository
 import infra.personal.PersonalNovelVolumeRepository
+import infra.user.UserFavoredWebRepository
+import infra.user.UserFavoredWenkuRepository
+import infra.user.UserReadHistoryWebRepository
+import infra.user.UserRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
@@ -65,9 +69,15 @@ fun main() {
             routeAuth()
             routeArticle()
             routeComment()
-            routeSakura()
             routeOperationHistory()
+            //
+            routeSakura()
+            //
             routeUser()
+            routeUserFavoredWeb()
+            routeUserFavoredWenku()
+            routeUserReadHistoryWeb()
+            //
             routeWebNovel()
             routeWenkuNovel()
             routePersonalNovel()
@@ -100,13 +110,17 @@ val appModule = module {
     singleOf(::DataSourceFileSystem)
 
     // Repository
-    singleOf(::SakuraWorkerManager)
-
     singleOf(::ArticleRepository)
     singleOf(::CommentRepository)
-    singleOf(::SakuraJobRepository)
     singleOf(::OperationHistoryRepository)
+
+    singleOf(::SakuraWorkerManager)
+    singleOf(::SakuraJobRepository)
+
     singleOf(::UserRepository)
+    singleOf(::UserFavoredWebRepository)
+    singleOf(::UserFavoredWenkuRepository)
+    singleOf(::UserReadHistoryWebRepository)
 
     singleOf(::WebNovelMetadataRepository)
     singleOf(::WebNovelChapterRepository)
@@ -125,9 +139,15 @@ val appModule = module {
     }
     singleOf(::ArticleApi) { createdAtStart() }
     singleOf(::CommentApi) { createdAtStart() }
-    singleOf(::SakuraApi) { createdAtStart() }
     singleOf(::OperationHistoryApi) { createdAtStart() }
+
+    singleOf(::SakuraApi) { createdAtStart() }
+
     singleOf(::UserApi) { createdAtStart() }
+    singleOf(::UserFavoredWebApi) { createdAtStart() }
+    singleOf(::UserFavoredWenkuApi) { createdAtStart() }
+    singleOf(::UserReadHistoryWebApi) { createdAtStart() }
+
     singleOf(::WebNovelApi) { createdAtStart() }
     singleOf(::WenkuNovelApi) { createdAtStart() }
     singleOf(::PersonalNovelApi) { createdAtStart() }

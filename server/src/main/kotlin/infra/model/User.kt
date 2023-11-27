@@ -5,6 +5,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
+import org.litote.kmongo.Id
 import org.litote.kmongo.eq
 
 @Serializable
@@ -64,3 +65,29 @@ data class User(
         fun byUsername(username: String) = User::username eq username
     }
 }
+
+@Serializable
+data class UserFavoredWebNovelModel(
+    @Contextual val userId: Id<User>,
+    @Contextual val novelId: Id<WebNovelMetadata>,
+    @Contextual val favoredId: String,
+    @Contextual val createAt: Instant,
+    @Contextual val updateAt: Instant,
+)
+
+@Serializable
+data class UserFavoredWenkuNovelModel(
+    @Contextual val userId: Id<User>,
+    @Contextual val novelId: Id<WenkuNovelMetadata>,
+    @Contextual val favoredId: String,
+    @Contextual val createAt: Instant,
+    @Contextual val updateAt: Instant,
+)
+
+@Serializable
+data class UserReadHistoryWebModel(
+    @Contextual val userId: Id<User>,
+    @Contextual val novelId: Id<WenkuNovelMetadata>,
+    @Contextual val chapterId: String,
+    @Contextual val createAt: Instant,
+)

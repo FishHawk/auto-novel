@@ -4,40 +4,10 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.IndexOptions
 import infra.model.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import java.util.concurrent.TimeUnit
-
-@Serializable
-data class WebNovelFavoriteModel(
-    @Contextual val userId: Id<User>,
-    @Contextual val novelId: Id<WebNovelMetadata>,
-    @Contextual val favoredId: String,
-    @Contextual val createAt: Instant,
-    @Contextual val updateAt: Instant,
-)
-
-@Serializable
-data class WenkuNovelFavoriteModel(
-    @Contextual val userId: Id<User>,
-    @Contextual val novelId: Id<WenkuNovelMetadata>,
-    @Contextual val favoredId: String,
-    @Contextual val createAt: Instant,
-    @Contextual val updateAt: Instant,
-)
-
-@Serializable
-data class WebNovelReadHistoryModel(
-    @Contextual val userId: Id<User>,
-    @Contextual val novelId: Id<WenkuNovelMetadata>,
-    @Contextual val chapterId: String,
-    @Contextual val createAt: Instant,
-)
 
 class DataSourceMongo(url: String) {
     val client = KMongo.createClient(url).coroutine
@@ -49,6 +19,10 @@ class DataSourceMongo(url: String) {
     val commentCollection
         get() = database.getCollection<CommentModel>("comment-alt")
 
+    val operationHistoryCollection
+        get() = database.getCollection<OperationHistoryModel>("operation-history")
+
+    // Sakura
     val sakuraJobCollection
         get() = database.getCollection<SakuraJob>("gpu-job")
     val sakuraJobResultCollection
@@ -62,13 +36,18 @@ class DataSourceMongo(url: String) {
     val sakuraWenkuFailCaseCollection
         get() = database.getCollection<SakuraWenkuFailCase>("sakura-wenku-fail-case")
 
-
-    val operationHistoryCollection
-        get() = database.getCollection<OperationHistoryModel>("operation-history")
-
+    // User
     val userCollectionName = "user"
     val userCollection
         get() = database.getCollection<User>(userCollectionName)
+
+    val userFavoredWebCollection
+        get() = database.getCollection<UserFavoredWebNovelModel>("web-favorite")
+    val userFavoredWenkuCollection
+        get() = database.getCollection<UserFavoredWenkuNovelModel>("wenku-favorite")
+
+    val userReadHistoryWebCollection
+        get() = database.getCollection<UserReadHistoryWebModel>("web-read-history")
 
     // Web novel
     val webNovelMetadataCollectionName = "metadata"
@@ -77,11 +56,6 @@ class DataSourceMongo(url: String) {
     val webNovelChapterCollection
         get() = database.getCollection<WebNovelChapter>("episode")
 
-    val webNovelFavoriteCollection
-        get() = database.getCollection<WebNovelFavoriteModel>("web-favorite")
-    val webNovelReadHistoryCollection
-        get() = database.getCollection<WebNovelReadHistoryModel>("web-read-history")
-
     val webNovelTocMergeHistoryCollection
         get() = database.getCollection<WebNovelTocMergeHistory>("toc-merge-history")
 
@@ -89,9 +63,6 @@ class DataSourceMongo(url: String) {
     val wenkuNovelMetadataCollectionName = "wenku-metadata"
     val wenkuNovelMetadataCollection
         get() = database.getCollection<WenkuNovelMetadata>(wenkuNovelMetadataCollectionName)
-
-    val wenkuNovelFavoriteCollection
-        get() = database.getCollection<WenkuNovelFavoriteModel>("wenku-favorite")
 
     init {
         runBlocking {
@@ -111,6 +82,8 @@ class DataSourceMongo(url: String) {
                 CommentModel::parent,
                 CommentModel::id,
             )
+
+            // Sakura
             sakuraServerCollection.ensureUniqueIndex(
                 SakuraServer::endpoint,
             )
@@ -121,9 +94,48 @@ class DataSourceMongo(url: String) {
                 OperationHistoryModel::createAt,
             )
 
+            // User
             userCollection.ensureUniqueIndex(User::email)
             userCollection.ensureUniqueIndex(User::username)
 
+            userFavoredWebCollection.ensureUniqueIndex(
+                UserFavoredWebNovelModel::userId,
+                UserFavoredWebNovelModel::novelId,
+            )
+            userFavoredWebCollection.ensureIndex(
+                UserFavoredWebNovelModel::userId,
+                UserFavoredWebNovelModel::createAt,
+            )
+            userFavoredWebCollection.ensureIndex(
+                UserFavoredWebNovelModel::userId,
+                UserFavoredWebNovelModel::updateAt,
+            )
+
+            userReadHistoryWebCollection.ensureUniqueIndex(
+                UserReadHistoryWebModel::userId,
+                UserReadHistoryWebModel::novelId,
+            )
+            userReadHistoryWebCollection.ensureIndex(
+                UserReadHistoryWebModel::userId,
+                UserReadHistoryWebModel::createAt,
+            )
+            userReadHistoryWebCollection.ensureIndex(
+                UserReadHistoryWebModel::createAt,
+                indexOptions = IndexOptions().expireAfter(100, TimeUnit.DAYS),
+            )
+
+            userFavoredWenkuCollection.ensureUniqueIndex(
+                UserFavoredWenkuNovelModel::userId,
+                UserFavoredWenkuNovelModel::novelId,
+            )
+            userFavoredWenkuCollection.ensureIndex(
+                UserFavoredWenkuNovelModel::userId,
+                UserFavoredWenkuNovelModel::createAt,
+            )
+            userFavoredWenkuCollection.ensureIndex(
+                UserFavoredWenkuNovelModel::userId,
+                UserFavoredWenkuNovelModel::updateAt,
+            )
 
             // Web novel
             webNovelMetadataCollection.ensureUniqueIndex(
@@ -134,47 +146,6 @@ class DataSourceMongo(url: String) {
                 WebNovelChapter::providerId,
                 WebNovelChapter::novelId,
                 WebNovelChapter::chapterId,
-            )
-
-            webNovelFavoriteCollection.ensureUniqueIndex(
-                WebNovelFavoriteModel::userId,
-                WebNovelFavoriteModel::novelId,
-            )
-            webNovelFavoriteCollection.ensureIndex(
-                WebNovelFavoriteModel::userId,
-                WebNovelFavoriteModel::createAt,
-            )
-            webNovelFavoriteCollection.ensureIndex(
-                WebNovelFavoriteModel::userId,
-                WebNovelFavoriteModel::updateAt,
-            )
-
-            webNovelReadHistoryCollection.ensureUniqueIndex(
-                WebNovelReadHistoryModel::userId,
-                WebNovelReadHistoryModel::novelId,
-            )
-            webNovelReadHistoryCollection.ensureIndex(
-                WebNovelReadHistoryModel::userId,
-                WebNovelReadHistoryModel::createAt,
-            )
-            webNovelReadHistoryCollection.ensureIndex(
-                WebNovelReadHistoryModel::createAt,
-                indexOptions = IndexOptions().expireAfter(100, TimeUnit.DAYS),
-            )
-
-
-            // Wenku novel
-            wenkuNovelFavoriteCollection.ensureUniqueIndex(
-                WenkuNovelFavoriteModel::userId,
-                WenkuNovelFavoriteModel::novelId,
-            )
-            wenkuNovelFavoriteCollection.ensureIndex(
-                WenkuNovelFavoriteModel::userId,
-                WenkuNovelFavoriteModel::createAt,
-            )
-            wenkuNovelFavoriteCollection.ensureIndex(
-                WenkuNovelFavoriteModel::userId,
-                WenkuNovelFavoriteModel::updateAt,
             )
         }
     }

@@ -4,7 +4,7 @@ import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import api.plugins.generateToken
-import infra.common.UserRepository
+import infra.user.UserRepository
 import infra.model.User
 import io.ktor.resources.*
 import io.ktor.server.application.*

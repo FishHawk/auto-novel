@@ -311,9 +311,9 @@ class WebNovelMetadataRepository(
             )!!
         syncEs(novel)
         if (merged.hasChanged) {
-            mongo.webNovelFavoriteCollection.updateMany(
-                WebNovelFavoriteModel::novelId eq novel.id.toId(),
-                setValue(WebNovelFavoriteModel::updateAt, novel.updateAt)
+            mongo.userFavoredWebCollection.updateMany(
+                UserFavoredWebNovelModel::novelId eq novel.id.toId(),
+                setValue(UserFavoredWebNovelModel::updateAt, novel.updateAt)
             )
         }
         return novel
