@@ -46,11 +46,20 @@ async function unfavoriteNovel() {
 }
 
 const showFavoredModal = ref(false);
-const selectedFavoredId = ref(favored ?? favoredList.at(0)?.id);
+const selectedFavoredId = ref(favored ?? 'default');
+
+const requestLoginFirst = () => message.info('请先登录');
 </script>
 
 <template>
-  <template v-if="favoredList.length === 1">
+  <n-button v-if="favoredList.length === 0" @click="requestLoginFirst()">
+    <template #icon>
+      <n-icon :component="FavoriteBorderFilled" />
+    </template>
+    收藏
+  </n-button>
+
+  <template v-else-if="favoredList.length === 1">
     <async-button v-if="favored" @async-click="unfavoriteNovel">
       <template #icon>
         <n-icon :component="FavoriteFilled" />
@@ -84,7 +93,7 @@ const selectedFavoredId = ref(favored ?? favoredList.at(0)?.id);
         >
           {{ favored.title }}
         </n-radio>
-        <n-radio :key="undefined" :value="undefined"> 取消收藏 </n-radio>
+        <n-radio key="deleted" value="deleted"> 取消收藏 </n-radio>
       </n-space>
     </n-radio-group>
     <template #action>
@@ -92,9 +101,9 @@ const selectedFavoredId = ref(favored ?? favoredList.at(0)?.id);
         type="primary"
         @async-click="
           () =>
-            selectedFavoredId
-              ? favoriteNovel(selectedFavoredId)
-              : unfavoriteNovel()
+            selectedFavoredId === 'deleted'
+              ? unfavoriteNovel()
+              : favoriteNovel(selectedFavoredId)
         "
       >
         确定
