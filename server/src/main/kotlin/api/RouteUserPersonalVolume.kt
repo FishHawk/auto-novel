@@ -8,8 +8,7 @@ import infra.VolumeCreateException
 import infra.model.NovelFileLangV2
 import infra.model.NovelFileTranslationsMode
 import infra.model.TranslatorId
-import infra.model.WenkuNovelVolumeJp
-import infra.personal.PersonalNovelVolumeRepository
+import infra.user.UserPersonalVolumeRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
@@ -23,21 +22,35 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.io.InputStream
+import java.util.*
 
 @Resource("/personal")
-private class PersonalNovelRes {
+private class UserPersonalVolumeRes {
     @Resource("/volume/{volumeId}")
-    class Volume(val parent: PersonalNovelRes, val volumeId: String)
+    class Volume(
+        val parent: UserPersonalVolumeRes,
+        val volumeId: String,
+    ) {
+        @Resource("/glossary")
+        class Glossary(val parent: Volume)
+    }
 
     @Resource("/translate/{translatorId}/{volumeId}")
-    class Translate(val parent: PersonalNovelRes, val translatorId: TranslatorId, val volumeId: String) {
+    class Translate(
+        val parent: UserPersonalVolumeRes,
+        val translatorId: TranslatorId,
+        val volumeId: String,
+    ) {
         @Resource("/{chapterId}")
-        class Chapter(val parent: Translate, val chapterId: String)
+        class Chapter(
+            val parent: Translate,
+            val chapterId: String
+        )
     }
 
     @Resource("/file/{volumeId}")
     class File(
-        val parent: PersonalNovelRes,
+        val parent: UserPersonalVolumeRes,
         val volumeId: String,
         val lang: NovelFileLangV2,
         val translationsMode: NovelFileTranslationsMode,
@@ -46,11 +59,11 @@ private class PersonalNovelRes {
     )
 }
 
-fun Route.routePersonalNovel() {
-    val service by inject<PersonalNovelApi>()
+fun Route.routeUserPersonalVolume() {
+    val service by inject<UserPersonalVolumeApi>()
 
     authenticateDb {
-        get<PersonalNovelRes> { loc ->
+        get<UserPersonalVolumeRes> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
                 service.getUserVolumes(user = user)
@@ -58,7 +71,7 @@ fun Route.routePersonalNovel() {
         }
 
         rateLimit(RateLimitNames.CreateWenkuVolume) {
-            post<PersonalNovelRes.Volume> { loc ->
+            post<UserPersonalVolumeRes.Volume> { loc ->
                 suspend fun MultiPartData.firstFilePart(): PartData.FileItem? {
                     while (true) {
                         val part = readPart() ?: return null
@@ -80,7 +93,7 @@ fun Route.routePersonalNovel() {
                 }
             }
         }
-        delete<PersonalNovelRes.Volume> { loc ->
+        delete<UserPersonalVolumeRes.Volume> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
                 service.deleteVolume(
@@ -91,19 +104,30 @@ fun Route.routePersonalNovel() {
             }
         }
 
+        put<UserPersonalVolumeRes.Volume.Glossary> { loc ->
+            val user = call.authenticatedUser()
+            val body = call.receive<Map<String, String>>()
+            call.tryRespond {
+                service.updateGlossary(
+                    user = user,
+                    volumeId = loc.parent.volumeId,
+                    glossary = body
+                )
+            }
+        }
+
         // Translate
-        get<PersonalNovelRes.Translate> { loc ->
+        get<UserPersonalVolumeRes.Translate> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
                 service.getTranslateTask(
                     user = user,
-                    userId = user.id,
                     translatorId = loc.translatorId,
                     volumeId = loc.volumeId,
                 )
             }
         }
-        get<PersonalNovelRes.Translate.Chapter> { loc ->
+        get<UserPersonalVolumeRes.Translate.Chapter> { loc ->
             val user = call.authenticatedUser()
             call.tryRespond {
                 service.getChapterToTranslate(
@@ -114,7 +138,7 @@ fun Route.routePersonalNovel() {
                 )
             }
         }
-        put<PersonalNovelRes.Translate.Chapter> { loc ->
+        put<UserPersonalVolumeRes.Translate.Chapter> { loc ->
             @Serializable
             class Body(
                 val glossaryUuid: String? = null,
@@ -138,7 +162,7 @@ fun Route.routePersonalNovel() {
     }
 
     // File
-    get<PersonalNovelRes.File> { loc ->
+    get<UserPersonalVolumeRes.File> { loc ->
         call.tryRespondRedirect {
             val path = service.updateFile(
                 volumeId = loc.volumeId,
@@ -152,22 +176,46 @@ fun Route.routePersonalNovel() {
     }
 }
 
-class PersonalNovelApi(
-    private val volumeRepo: PersonalNovelVolumeRepository,
+class UserPersonalVolumeApi(
+    private val volumeRepo: UserPersonalVolumeRepository,
 ) {
     @Serializable
-    data class UserVolumesDto(
+    data class PersonalVolumesDto(
         val downloadToken: String,
-        val volumes: List<WenkuNovelVolumeJp>,
+        val volumes: List<PersonalVolumeDto>,
+    )
+
+    @Serializable
+    data class PersonalVolumeDto(
+        val volumeId: String,
+        val total: Int,
+        val baidu: Int,
+        val youdao: Int,
+        val gpt: Int,
+        val sakura: Int,
+        val glossary: Map<String, String>,
     )
 
     suspend fun getUserVolumes(
         user: AuthenticatedUser,
-    ): UserVolumesDto {
+    ): PersonalVolumesDto {
         val volumes = volumeRepo.list(user.id)
-        return UserVolumesDto(
+        return PersonalVolumesDto(
             downloadToken = user.id,
-            volumes = volumes,
+            volumes = volumes.map {
+                PersonalVolumeDto(
+                    volumeId = it.volumeId,
+                    total = it.total,
+                    baidu = it.baidu,
+                    youdao = it.youdao,
+                    gpt = it.gpt,
+                    sakura = it.sakura,
+                    glossary = volumeRepo
+                        .getVolume(user.id, it.volumeId)!!
+                        .getVolumeGlossary()
+                        ?.glossary ?: emptyMap(),
+                )
+            },
         )
     }
 
@@ -216,6 +264,25 @@ class PersonalNovelApi(
         )
     }
 
+    suspend fun updateGlossary(
+        user: AuthenticatedUser,
+        volumeId: String,
+        glossary: Map<String, String>,
+    ) {
+        val volume = volumeRepo.getVolume(
+            userId = user.id,
+            volumeId = volumeId,
+        ) ?: throwNotFound("卷不存在")
+
+        if (volume.getVolumeGlossary()?.glossary == glossary)
+            throwBadRequest("修改为空")
+
+        volume.setVolumeGlossary(
+            glossaryUuid = UUID.randomUUID().toString(),
+            glossary = glossary,
+        )
+    }
+
     // Translate
     @Serializable
     data class TranslateTaskDto(
@@ -227,19 +294,17 @@ class PersonalNovelApi(
 
     suspend fun getTranslateTask(
         user: AuthenticatedUser,
-        userId: String,
         translatorId: TranslatorId,
         volumeId: String,
     ): TranslateTaskDto {
-        if (user.id !== userId)
-            throwUnauthorized("没有权限")
-
         validateVolumeId(volumeId)
 
         val volume = volumeRepo.getVolume(
-            userId = userId,
+            userId = user.id,
             volumeId = volumeId,
         ) ?: throwNotFound("卷不存在")
+
+        val glossary = volume.getVolumeGlossary()
 
         val untranslatedChapterIds = mutableListOf<String>()
         val expiredChapterIds = mutableListOf<String>()
@@ -247,15 +312,14 @@ class PersonalNovelApi(
             if (!volume.translationExist(translatorId, it)) {
                 untranslatedChapterIds.add(it)
             } else if (
-                false
-//                volume.getChapterGlossary(translatorId, it)?.uuid != novel?.glossaryUuid
+                volume.getChapterGlossary(translatorId, it)?.uuid != glossary?.uuid
             ) {
                 expiredChapterIds.add(it)
             }
         }
         return TranslateTaskDto(
-            glossaryUuid = null,
-            glossary = emptyMap(),
+            glossaryUuid = glossary?.uuid,
+            glossary = glossary?.glossary ?: emptyMap(),
             untranslatedChapters = untranslatedChapterIds,
             expiredChapters = expiredChapterIds,
         )

@@ -232,35 +232,47 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
         }
 
     //
-    private fun glossaryPath(translatorId: TranslatorId, chapterId: String) =
+    private fun volumeGlossaryPath() =
+        volumesDir / "$volumeId.unpack" / "glossary.json"
+
+    suspend fun getVolumeGlossary() =
+        getGlossary(path = volumeGlossaryPath())
+
+    suspend fun setVolumeGlossary(
+        glossaryUuid: String,
+        glossary: Map<String, String>,
+    ) = setGlossary(
+        path = volumeGlossaryPath(),
+        glossaryUuid = glossaryUuid,
+        glossary = glossary,
+    )
+
+    private fun chapterGlossaryPath(translatorId: TranslatorId, chapterId: String) =
         volumesDir / "$volumeId.unpack" / "${translatorId.serialName()}.g" / chapterId
 
-    suspend fun getChapterGlossary(translatorId: TranslatorId, chapterId: String) =
-        withContext(Dispatchers.IO) {
-            val path = glossaryPath(translatorId, chapterId)
-            return@withContext if (path.notExists())
-                null
-            else try {
-                Json.decodeFromString<WenkuChapterGlossary>(path.readText())
-            } catch (e: Throwable) {
-                null
-            }
-        }
+    suspend fun getChapterGlossary(
+        translatorId: TranslatorId,
+        chapterId: String,
+    ) = getGlossary(
+        path = chapterGlossaryPath(
+            translatorId = translatorId,
+            chapterId = chapterId,
+        ),
+    )
 
     suspend fun setChapterGlossary(
         translatorId: TranslatorId,
         chapterId: String,
         glossaryUuid: String,
         glossary: Map<String, String>,
-    ) = withContext(Dispatchers.IO) {
-        val path = glossaryPath(translatorId, chapterId)
-        if (path.parent.notExists()) {
-            path.parent.createDirectories()
-        }
-        path.writeText(
-            Json.encodeToString(WenkuChapterGlossary(glossaryUuid, glossary))
-        )
-    }
+    ) = setGlossary(
+        path = chapterGlossaryPath(
+            translatorId = translatorId,
+            chapterId = chapterId,
+        ),
+        glossaryUuid = glossaryUuid,
+        glossary = glossary,
+    )
 
     //
     suspend fun makeTranslationVolumeFile(
@@ -409,3 +421,28 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
         }
     }
 }
+
+private suspend fun getGlossary(path: Path) =
+    withContext(Dispatchers.IO) {
+        return@withContext if (path.notExists())
+            null
+        else try {
+            Json.decodeFromString<WenkuChapterGlossary>(path.readText())
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
+private suspend fun setGlossary(
+    path: Path,
+    glossaryUuid: String,
+    glossary: Map<String, String>,
+) = withContext(Dispatchers.IO) {
+    if (path.parent.notExists()) {
+        path.parent.createDirectories()
+    }
+    path.writeText(
+        Json.encodeToString(WenkuChapterGlossary(glossaryUuid, glossary))
+    )
+}
+

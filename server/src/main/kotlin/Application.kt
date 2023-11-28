@@ -5,17 +5,16 @@ import api.plugins.rateLimit
 import infra.DataSourceElasticSearch
 import infra.DataSourceFileSystem
 import infra.DataSourceMongo
-import infra.common.*
+import infra.common.ArticleRepository
+import infra.common.CommentRepository
+import infra.common.OperationHistoryRepository
+import infra.common.SakuraJobRepository
 import infra.createRedisDataSource
+import infra.user.*
 import infra.web.DataSourceWebNovelProvider
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelMetadataRepository
-import infra.personal.PersonalNovelVolumeRepository
-import infra.user.UserFavoredWebRepository
-import infra.user.UserFavoredWenkuRepository
-import infra.user.UserReadHistoryWebRepository
-import infra.user.UserRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
 import io.ktor.http.*
@@ -77,10 +76,10 @@ fun main() {
             routeUserFavoredWeb()
             routeUserFavoredWenku()
             routeUserReadHistoryWeb()
+            routeUserPersonalVolume()
             //
             routeWebNovel()
             routeWenkuNovel()
-            routePersonalNovel()
         }
     }.start(wait = true)
 }
@@ -121,6 +120,7 @@ val appModule = module {
     singleOf(::UserFavoredWebRepository)
     singleOf(::UserFavoredWenkuRepository)
     singleOf(::UserReadHistoryWebRepository)
+    singleOf(::UserPersonalVolumeRepository)
 
     singleOf(::WebNovelMetadataRepository)
     singleOf(::WebNovelChapterRepository)
@@ -128,7 +128,6 @@ val appModule = module {
 
     singleOf(::WenkuNovelMetadataRepository)
     singleOf(::WenkuNovelVolumeRepository)
-    singleOf(::PersonalNovelVolumeRepository)
 
     // Api
     single {
@@ -147,8 +146,8 @@ val appModule = module {
     singleOf(::UserFavoredWebApi) { createdAtStart() }
     singleOf(::UserFavoredWenkuApi) { createdAtStart() }
     singleOf(::UserReadHistoryWebApi) { createdAtStart() }
+    singleOf(::UserPersonalVolumeApi) { createdAtStart() }
 
     singleOf(::WebNovelApi) { createdAtStart() }
     singleOf(::WenkuNovelApi) { createdAtStart() }
-    singleOf(::PersonalNovelApi) { createdAtStart() }
 }

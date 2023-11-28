@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FileDownloadFilled } from '@vicons/material';
 import {
   UploadCustomRequestOptions,
   UploadFileInfo,
@@ -7,27 +6,26 @@ import {
 } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { ApiPersonalNovel, UserVolumes } from '@/data/api/api_personal_novel';
-import { VolumeJpDto } from '@/data/api/api_wenku_novel';
+import type {
+  PersonalVolume,
+  PersonalVolumes,
+} from '@/data/api/api_user_personal';
+import { ApiUserPersonal } from '@/data/api/api_user_personal';
 import { client } from '@/data/api/client';
 import { ResultState } from '@/data/result';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { TranslatorId } from '@/data/translator/translator';
-import { getTranslatorLabel } from '@/data/util';
 import ArchiveOutlined from '@vicons/material/es/ArchiveOutlined';
 
 const message = useMessage();
 const userData = useUserDataStore();
 const setting = useSettingStore();
-const readerSetting = useReaderSettingStore();
 
-const volumesResult = ref<ResultState<UserVolumes>>();
+const volumesResult = ref<ResultState<PersonalVolumes>>();
 
 async function loadVolume() {
   if (userData.isLoggedIn) {
-    const result = await ApiPersonalNovel.listVolume();
+    const result = await ApiUserPersonal.listVolume();
     volumesResult.value = result;
   }
 }
@@ -58,7 +56,7 @@ const customRequest = ({
     onError();
     return;
   }
-  ApiPersonalNovel.createVolume(
+  ApiUserPersonal.createVolume(
     file.name,
     file.file as File,
     userData.token,
@@ -95,165 +93,6 @@ interface TaskDetail {
   chapterFinished: number;
   chapterError: number;
   logs: string[];
-}
-
-const taskDetails = ref<{ [key: string]: TaskDetail }>({});
-
-async function startUpdateTask(
-  volume: VolumeJpDto,
-  translatorId: TranslatorId
-) {
-  if (taskDetails.value[`${volume.volumeId}/${translatorId}`]?.running) {
-    message.info('已有任务在运行。');
-    return;
-  }
-
-  const buildLabel = () => {
-    let label = `${getTranslatorLabel(translatorId)}翻译`;
-    if (translateExpireChapter.value) label += '[翻译过期章节]';
-    return label;
-  };
-  taskDetails.value[`${volume.volumeId}/${translatorId}`] = {
-    volumeId: volume.volumeId,
-    label: buildLabel(),
-    running: true,
-    chapterFinished: 0,
-    chapterError: 0,
-    logs: [],
-  };
-
-  const getTaskDetail = () =>
-    taskDetails.value[`${volume.volumeId}/${translatorId}`];
-
-  let accessToken = gptAccessToken.value.trim();
-  try {
-    const obj = JSON.parse(accessToken);
-    accessToken = obj.accessToken;
-  } catch {}
-
-  let sakuraEndpointValue = sakuraEndpoint.value.trim();
-
-  const translatePersonal = (await import('@/data/translator'))
-    .translatePersonal;
-  await translatePersonal(
-    {
-      client,
-      translatorId,
-      volumeId: volume.volumeId,
-      accessToken,
-      sakuraEndpoint: sakuraEndpointValue,
-      translateExpireChapter: translateExpireChapter.value,
-    },
-    {
-      onStart: (total: number) => {
-        getTaskDetail().chapterTotal = total;
-      },
-      onChapterSuccess: (state) => {
-        if (translatorId === 'baidu') {
-          volume.baidu = state;
-        } else if (translatorId === 'youdao') {
-          volume.youdao = state;
-        } else if (translatorId === 'gpt') {
-          setting.addToken(accessToken);
-          volume.gpt = state;
-        } else if (translatorId === 'sakura') {
-          setting.addSakuraEndpoint(sakuraEndpointValue);
-          volume.sakura = state;
-        }
-        taskDetails.value[
-          `${volume.volumeId}/${translatorId}`
-        ].chapterFinished += 1;
-      },
-      onChapterFailure: () => (getTaskDetail().chapterError += 1),
-      log: (message: any) => {
-        getTaskDetail().logs.push(`${message}`);
-      },
-    }
-  );
-
-  getTaskDetail().logs.push('\n结束');
-  getTaskDetail().running = false;
-}
-
-function createDownload(volume: VolumeJpDto) {
-  let ext: string;
-  if (volume.volumeId.toLowerCase().endsWith('.txt')) {
-    ext = 'txt';
-  } else {
-    ext = 'epub';
-  }
-  ext = ext.toUpperCase();
-
-  const { mode, translationsMode, translations } =
-    setting.isDownloadFormatSameAsReaderFormat
-      ? readerSetting
-      : setting.downloadFormat;
-
-  let downloadToken = '';
-  if (volumesResult.value?.ok) {
-    downloadToken = volumesResult.value.value.downloadToken;
-  }
-
-  const params = new URLSearchParams({
-    translationsMode,
-    downloadToken,
-  });
-
-  if (mode === 'jp' || mode === 'zh') {
-    params.append('lang', 'zh');
-  } else if (mode === 'mix') {
-    params.append('lang', 'zh-jp');
-  } else {
-    params.append('lang', 'jp-zh');
-  }
-  translations.forEach((it) => params.append('translations', it));
-  const url = `/api/personal/file/${volume.volumeId}?${params}`;
-
-  let filename = '';
-  if (mode === 'jp' || mode === 'zh') {
-    filename += 'zh';
-  } else if (mode === 'mix') {
-    filename += 'zh-jp';
-  } else {
-    filename += 'jp-zh';
-  }
-  filename += '.';
-
-  if (translationsMode === 'parallel') {
-    filename += 'B';
-  } else {
-    filename += 'Y';
-  }
-  translations.forEach((it) => (filename += it[0]));
-  filename += '.';
-
-  filename += volume.volumeId;
-
-  return { ext, url, filename };
-}
-
-function translatorLabels(volume: VolumeJpDto): {
-  label: string;
-  translatorId: TranslatorId;
-}[] {
-  return [
-    {
-      label: `百度(${volume.baidu}/${volume.total})`,
-      translatorId: 'baidu',
-    },
-    {
-      label: `有道(${volume.youdao}/${volume.total})`,
-      translatorId: 'youdao',
-    },
-    {
-      label: `GPT3(${volume.gpt}/${volume.total})`,
-      translatorId: 'gpt',
-    },
-    {
-      label: `Sakura(${volume.sakura}/${volume.total})`,
-      translatorId: 'sakura',
-    },
-  ];
 }
 
 const showDownloadOptions = ref(false);
@@ -294,17 +133,8 @@ const translationOptions = [
   { label: '百度', value: 'baidu' },
 ];
 
-function sortVolumesJp(volumes: VolumeJpDto[]) {
+function sortVolumesJp(volumes: PersonalVolume[]) {
   return volumes.sort((a, b) => a.volumeId.localeCompare(b.volumeId));
-}
-
-async function deleteVolume(volumeId: string) {
-  const result = await ApiPersonalNovel.deleteVolume(volumeId);
-  if (result.ok) {
-    message.info('删除成功');
-  } else {
-    message.error('删除失败：' + result.error.message);
-  }
 }
 
 async function testSakura() {
@@ -361,7 +191,7 @@ async function testSakura() {
       v-slot="{ value: volumes }"
     >
       <n-button-group style="margin-bottom: 8px">
-        <!-- <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button> -->
+        <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button>
         <n-button @click="toggleDownloadOptions()">下载设置</n-button>
         <async-button @async-click="testSakura">测试Sakura</async-button>
       </n-button-group>
@@ -370,6 +200,16 @@ async function testSakura() {
         :show="showTranslateOptions || showDownloadOptions"
         style="margin-bottom: 16px"
       >
+        <n-list v-if="showTranslateOptions" bordered>
+          <n-list-item>
+            <AdvanceOptionSwitch
+              title="翻译过期章节"
+              description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
+              v-model:value="translateExpireChapter"
+            />
+          </n-list-item>
+        </n-list>
+
         <n-list v-if="showDownloadOptions" bordered>
           <n-list-item>
             <AdvanceOptionSwitch
@@ -433,62 +273,21 @@ async function testSakura() {
       <n-list>
         <template v-for="volume of sortVolumesJp(volumes.volumes)">
           <n-list-item>
-            <n-space vertical>
-              <n-text>{{ volume.volumeId }}</n-text>
-              <n-space>
-                <template
-                  v-for="{ translatorId, label } in translatorLabels(volume)"
-                >
-                  <n-button
-                    text
-                    type="primary"
-                    @click="startUpdateTask(volume, translatorId)"
-                  >
-                    更新{{ label }}
-                  </n-button>
-                </template>
-
-                <n-popconfirm
-                  :show-icon="false"
-                  @positive-click="deleteVolume(volume.volumeId)"
-                  :negative-text="null"
-                >
-                  <template #trigger>
-                    <n-button text type="error"> 删除 </n-button>
-                  </template>
-                  真的要删除{{ volume.volumeId }}吗？
-                </n-popconfirm>
-              </n-space>
-            </n-space>
-            <template #suffix>
-              <n-a
-                :href="createDownload(volume).url"
-                :download="createDownload(volume).filename"
-                target="_blank"
-              >
-                <n-button>
-                  <template #icon>
-                    <n-icon :component="FileDownloadFilled" />
-                  </template>
-                  下载
-                </n-button>
-              </n-a>
-            </template>
+            <personal-volume
+              :volume="volume"
+              :download-token="volumes.downloadToken"
+              :get-options="
+                () => ({
+                  translateExpireChapter,
+                  gptAccessToken,
+                  sakuraEndpoint,
+                })
+              "
+            />
           </n-list-item>
         </template>
       </n-list>
     </ResultView>
-    <div v-for="detail in taskDetails">
-      <TranslateTaskDetail
-        :label="detail.label"
-        :running="detail.running"
-        :chapter-total="detail.chapterTotal"
-        :chapter-finished="detail.chapterFinished"
-        :chapter-error="detail.chapterError"
-        :logs="detail.logs"
-        style="margin-top: 20px"
-      />
-    </div>
   </UserLayout>
 </template>
 

@@ -34,6 +34,20 @@ export class SakuraTranslator implements SegmentTranslator {
     seg: string[],
     segInfo: { index: number; size: number }
   ): Promise<string[]> {
+    const newSeg = seg.map((text) => {
+      for (const wordJp in this.glossary) {
+        const wordZh = this.glossary[wordJp];
+        text = text.replaceAll(wordJp, wordZh);
+      }
+      return text;
+    });
+    return this.translateInner(newSeg, segInfo);
+  }
+
+  async translateInner(
+    seg: string[],
+    segInfo: { index: number; size: number }
+  ): Promise<string[]> {
     const maxNewToken = 1024;
     const prompt = makePrompt(seg.join('\n'));
 

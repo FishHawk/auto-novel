@@ -1,11 +1,11 @@
-package infra.personal
+package infra.user
 
 import infra.DataSourceFileSystem
 import infra.model.WenkuNovelVolumeJp
 import java.io.InputStream
 import kotlin.io.path.Path
 
-class PersonalNovelVolumeRepository(
+class UserPersonalVolumeRepository(
     private val fs: DataSourceFileSystem,
 ) {
     private fun volumesDir(userId: String) =

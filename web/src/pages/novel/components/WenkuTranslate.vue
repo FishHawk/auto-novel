@@ -127,14 +127,6 @@ async function submitSakuraJob(volume: VolumeJpDto) {
 }
 
 function createDownload(volume: VolumeJpDto) {
-  let ext: string;
-  if (volume.volumeId.toLowerCase().endsWith('.txt')) {
-    ext = 'txt';
-  } else {
-    ext = 'epub';
-  }
-  ext = ext.toUpperCase();
-
   const { mode, translationsMode, translations } =
     setting.isDownloadFormatSameAsReaderFormat
       ? readerSetting
@@ -156,7 +148,7 @@ function createDownload(volume: VolumeJpDto) {
     translationsMode,
     translations,
   });
-  return { ext, url, filename };
+  return { url, filename };
 }
 
 function translatorLabels(volume: VolumeJpDto): {
