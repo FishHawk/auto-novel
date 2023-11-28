@@ -152,9 +152,15 @@ const updateWenkuId = (providerId: string, novelId: string, wenkuId: string) =>
 const deleteWenkuId = (providerId: string, novelId: string) =>
   runCatching(client.delete(`novel/${providerId}/${novelId}/wenku`).text());
 
-const createFileUrl = (
-  providerId: string,
-  novelId: string,
+const createFileUrl = ({
+  providerId,
+  novelId,
+  lang,
+  type,
+  title,
+}: {
+  providerId: string;
+  novelId: string;
   lang:
     | 'jp'
     | 'zh-baidu'
@@ -164,9 +170,15 @@ const createFileUrl = (
     | 'mix-baidu'
     | 'mix-youdao'
     | 'mix-gpt'
-    | 'mix-sakura',
-  type: 'epub' | 'txt'
-) => `/api/novel/${providerId}/${novelId}/file/${lang}/${type}`;
+    | 'mix-sakura';
+  type: 'epub' | 'txt';
+  title: string;
+}) => {
+  const validTitle = title.replace(/[\/|\\:*?"<>]/g, '');
+  const filename = `${providerId}.${novelId}.${lang}.${validTitle}.${type}`;
+  const url = `/api/novel/${providerId}/${novelId}/file/${lang}/${type}?filename=${filename}`;
+  return { url, filename };
+};
 
 export const ApiWebNovel = {
   listNovel,

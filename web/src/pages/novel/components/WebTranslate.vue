@@ -127,17 +127,12 @@ async function startTask(translatorId: TranslatorId) {
 interface NovelFiles {
   label: string;
   translatorId?: TranslatorId;
-  files: { label: string; url: string; name: string }[];
+  files: { label: string; url: string; filename: string }[];
 }
 
 function stateToFileList(): NovelFiles[] {
-  let title: string;
-  if (setting.downloadFilenameType === 'jp') {
-    title = titleJp;
-  } else {
-    title = titleZh ?? titleJp;
-  }
-  const validTitle = title.replace(/[\/|\\:*?"<>]/g, '');
+  const title =
+    setting.downloadFilenameType === 'jp' ? titleJp : titleZh ?? titleJp;
 
   function createFile(
     label: string,
@@ -153,10 +148,17 @@ function stateToFileList(): NovelFiles[] {
       | 'mix-sakura',
     type: 'epub' | 'txt'
   ) {
+    const { url, filename } = ApiWebNovel.createFileUrl({
+      providerId,
+      novelId,
+      lang,
+      type,
+      title,
+    });
     return {
       label,
-      url: ApiWebNovel.createFileUrl(providerId, novelId, lang, type),
-      name: `${providerId}.${novelId}.${lang}.${validTitle}.${type}`,
+      url,
+      filename,
     };
   }
 
@@ -359,7 +361,7 @@ async function submitSakuraJob() {
           <n-a
             v-for="file in row.files"
             :href="file.url"
-            :download="file.name"
+            :download="file.filename"
             target="_blank"
           >
             {{ file.label }}

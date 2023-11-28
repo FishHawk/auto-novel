@@ -139,40 +139,23 @@ function createDownload(volume: VolumeJpDto) {
     setting.isDownloadFormatSameAsReaderFormat
       ? readerSetting
       : setting.downloadFormat;
-  const params = new URLSearchParams({
+
+  let lang: 'zh' | 'zh-jp' | 'jp-zh';
+  if (mode === 'jp' || mode === 'zh') {
+    lang = 'zh';
+  } else if (mode === 'mix') {
+    lang = 'zh-jp';
+  } else {
+    lang = 'jp-zh';
+  }
+
+  const { url, filename } = ApiWenkuNovel.createFileUrl({
+    novelId: props.novelId,
+    volumeId: volume.volumeId,
+    lang,
     translationsMode,
+    translations,
   });
-
-  if (mode === 'jp' || mode === 'zh') {
-    params.append('lang', 'zh');
-  } else if (mode === 'mix') {
-    params.append('lang', 'zh-jp');
-  } else {
-    params.append('lang', 'jp-zh');
-  }
-  translations.forEach((it) => params.append('translations', it));
-  const url = `/api/wenku/${props.novelId}/file/${volume.volumeId}?${params}`;
-
-  let filename = '';
-  if (mode === 'jp' || mode === 'zh') {
-    filename += 'zh';
-  } else if (mode === 'mix') {
-    filename += 'zh-jp';
-  } else {
-    filename += 'jp-zh';
-  }
-  filename += '.';
-
-  if (translationsMode === 'parallel') {
-    filename += 'B';
-  } else {
-    filename += 'Y';
-  }
-  translations.forEach((it) => (filename += it[0]));
-  filename += '.';
-
-  filename += volume.volumeId;
-
   return { ext, url, filename };
 }
 

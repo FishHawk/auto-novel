@@ -59,6 +59,7 @@ private class WenkuNovelRes {
             val lang: NovelFileLangV2,
             val translationsMode: NovelFileTranslationsMode,
             val translations: List<TranslatorId>,
+            val filename: String,
         )
     }
 }
@@ -210,7 +211,8 @@ fun Route.routeWenkuNovel() {
                 translationsMode = loc.translationsMode,
                 translations = loc.translations,
             )
-            "../../../../../../$path"
+            val encodedFilename = loc.filename.encodeURLParameter(spaceToPlus = true)
+            "../../../../../../${path}?filename=${encodedFilename}"
         }
     }
 }

@@ -13,6 +13,10 @@
 		header /*.svg Cache-Control "public, max-age=7776000"
 	}
 
+	@filename {
+		query filename=*
+	}
+
 	handle_path /api* {
 		reverse_proxy server:8081
 	}
@@ -20,11 +24,13 @@
 	handle_path /files-web* {
 		root * /data/files-web
 		file_server
+		header @filename Content-Disposition "attachment; filename=\"{http.request.uri.query.filename}\""
 	}
 
 	handle_path /files-wenku* {
 		root * /data/files-wenku
 		file_server
+		header @filename Content-Disposition "attachment; filename=\"{http.request.uri.query.filename}\""
 	}
 
 	handle_path /files-extra* {

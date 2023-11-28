@@ -3,6 +3,7 @@ import { Err, Ok, Result, runCatching } from '@/data/result';
 import { Favored } from './api_user';
 import { client } from './client';
 import { Page } from './common';
+import { TranslatorId } from '../translator/translator';
 
 export interface WenkuNovelOutlineDto {
   id: string;
@@ -124,6 +125,34 @@ const createVolume = (
 const deleteVolume = (novelId: string, volumeId: string) =>
   runCatching(client.delete(`wenku/${novelId}/volume/${volumeId}`).text());
 
+const createFileUrl = ({
+  novelId,
+  volumeId,
+  lang,
+  translationsMode,
+  translations,
+}: {
+  novelId: string;
+  volumeId: string;
+  lang: 'zh' | 'zh-jp' | 'jp-zh';
+  translationsMode: 'parallel' | 'priority';
+  translations: ('sakura' | 'baidu' | 'youdao' | 'gpt')[];
+}) => {
+  let filename = `${lang}.${translationsMode === 'parallel' ? 'B' : 'Y'}`;
+  translations.forEach((it) => (filename += it[0]));
+  filename += '.';
+  filename += volumeId;
+
+  const params = new URLSearchParams({
+    translationsMode,
+    lang,
+    filename,
+  });
+  translations.forEach((it) => params.append('translations', it));
+  const url = `/api/wenku/${novelId}/file/${volumeId}?${params}`;
+  return { url, filename };
+};
+
 export const ApiWenkuNovel = {
   listNovel,
   listVolumesUser,
@@ -135,4 +164,6 @@ export const ApiWenkuNovel = {
   updateGlossary,
   createVolume,
   deleteVolume,
+  //
+  createFileUrl,
 };

@@ -77,7 +77,12 @@ private class WebNovelRes {
         }
 
         @Resource("/file/{lang}/{type}")
-        class File(val parent: Id, val lang: NovelFileLang, val type: NovelFileType)
+        class File(
+            val parent: Id,
+            val lang: NovelFileLang,
+            val type: NovelFileType,
+            val filename: String,
+        )
     }
 }
 
@@ -290,7 +295,8 @@ fun Route.routeWebNovel() {
                 lang = loc.lang,
                 type = loc.type,
             )
-            "../../../../../../../files-web/${path}"
+            val encodedFilename = loc.filename.encodeURLParameter(spaceToPlus = true)
+            "../../../../../../../files-web/${path}?filename=${encodedFilename}"
         }
     }
 }
