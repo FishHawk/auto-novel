@@ -38,21 +38,23 @@ class KakuyomuTest : DescribeSpec({
             metadata.toc[1].chapterId.shouldBe("1177354054892870701")
             metadata.toc[1].createAt.shouldBe(Instant.parse("2019-12-10T03:00:12Z"))
         }
-        it("常规，简介折叠") {
-            // https://kakuyomu.jp/works/1177354054892870623
-            val metadata = provider.getMetadata("1177354054892870623")
-            metadata.introduction.shouldStartWith("　第５回カクヨムWEB小説コ")
-            metadata.introduction.shouldEndWith("平穏な日々を目指すのだった。")
-        }
-        it("常规，简介无折叠") {
-            // https://kakuyomu.jp/works/16817139555217983105
-            val metadata = provider.getMetadata("16817139555217983105")
-            metadata.introduction.shouldStartWith("俺はふとした時")
-            metadata.introduction.shouldEndWith("てこうなった。")
+        it("多级目录") {
+            // https://kakuyomu.jp/works/16816452218603293395
+            val metadata = provider.getMetadata("16816452218603293395")
+            metadata.toc[0].title.shouldBe("高天原の神々とまつろわぬ者たち")
+            metadata.toc[0].chapterId.shouldBeNull()
+            metadata.toc[0].createAt.shouldBeNull()
+            metadata.toc[1].title.shouldBe("第一章　人形のように美しい少女は舶来品")
+            metadata.toc[1].chapterId.shouldBeNull()
+            metadata.toc[1].createAt.shouldBeNull()
+            metadata.toc[2].title.shouldBe("第1話　陰キャ男と健気な少女の微妙な関係")
+            metadata.toc[2].chapterId.shouldBe("16816452218603528179")
+            metadata.toc[2].createAt.shouldBe(Instant.parse("2021-02-13T08:47:34Z"))
         }
         it("神奇格式，标题没了") {
             // https://kakuyomu.jp/works/1177354054891338293
             val metadata = provider.getMetadata("1177354054891338293")
+            metadata.title.shouldBe("君は死ねない灰かぶりの魔女")
         }
     }
 

@@ -6,6 +6,17 @@ import infra.model.WebNovelType
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.*
+
+private fun JsonObject.boolean(field: String) = get(field)!!.jsonPrimitive.boolean
+private fun JsonObject.array(field: String) = get(field)!!.jsonArray
+
+private fun JsonObject.string(field: String) = get(field)!!.jsonPrimitive.content
+private fun JsonObject.stringOrNull(field: String) = get(field)!!.jsonPrimitive.contentOrNull
+
+private fun JsonObject.obj(field: String) = get(field)!!.jsonObject
+private fun JsonObject.objOrNull(field: String) = get(field)!!.takeUnless { it is JsonNull }?.jsonObject
+
 
 class Kakuyomu(
     private val client: HttpClient,
@@ -77,63 +88,81 @@ class Kakuyomu(
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
         val url = "https://kakuyomu.jp/works/$novelId"
         val doc = client.get(url).document()
+        val script = doc.getElementById("__NEXT_DATA__")!!
+        val apollo = Json
+            .decodeFromString<JsonObject>(
+                script.html()
+            )["props"]!!
+            .jsonObject["pageProps"]!!
+            .jsonObject["__APOLLO_STATE__"]!!
+            .jsonObject
 
-        val infoEl = doc.selectFirst("section#work-information")!!
+        fun JsonObject.unref() = this["__ref"]!!
+            .jsonPrimitive.content
+            .let { apollo[it]!!.jsonObject }
 
-        val title = infoEl
-            .selectFirst("header > h4 > a")!!
-            .text()
+        val work = apollo["Work:$novelId"]!!.jsonObject
 
-        val author = infoEl
-            .selectFirst("header > h5 > a")!!
+        val title =
+            work.stringOrNull("alternateTitle")
+                ?: work.string("title")
+
+        val author = work
+            .obj("author")
+            .unref()
             .let {
                 WebNovelAuthor(
-                    name = it.child(0).text(),
-                    link = "https://kakuyomu.jp" + it.attr("href"),
+                    name = it.string("activityName"),
+                    link = "https://kakuyomu.jp/users/${it.string("name")}",
                 )
             }
 
-        val type = doc
-            .selectFirst("p.widget-toc-workStatus > span")!!
-            .text()
-            .let {
-                when (it) {
-                    "完結済" -> WebNovelType.已完结
-                    "連載中" -> WebNovelType.连载中
-                    else -> throw RuntimeException("无法解析的小说类型:$it")
+        val type = when (val status = work.string("serialStatus")) {
+            "COMPLETED" -> WebNovelType.已完结
+            "RUNNING" -> WebNovelType.连载中
+            else -> throw RuntimeException("无法解析的小说类型:$status")
+        }
+
+        val attentions = buildList {
+            if (work.boolean("isCruel")) add(WebNovelAttention.残酷描写)
+            if (work.boolean("isViolent")) add(WebNovelAttention.暴力描写)
+            if (work.boolean("isSexual")) add(WebNovelAttention.性描写)
+        }
+
+        val keywords = work
+            .array("tagLabels")
+            .map { it.jsonPrimitive.content }
+
+        val introduction = work.string("introduction")
+
+        val toc = work
+            .array("tableOfContents")
+            .map { it.jsonObject.unref() }
+            .flatMap { tableOfContentsChapter ->
+                val chapter = tableOfContentsChapter
+                    .objOrNull("chapter")
+                    ?.unref()
+                val episodes = tableOfContentsChapter
+                    .array("episodes")
+                    .map { it.jsonObject.unref() }
+                buildList {
+                    if (chapter != null) {
+                        add(
+                            RemoteNovelMetadata.TocItem(
+                                title = chapter.string("title"),
+                            )
+                        )
+                    }
+                    episodes.forEach {
+                        add(
+                            RemoteNovelMetadata.TocItem(
+                                title = it.string("title"),
+                                chapterId = it.string("id"),
+                                createAt = Instant.parse(it.string("publishedAt")),
+                            )
+                        )
+                    }
                 }
-            }
-
-        val attentions = doc
-            .select("ul#workMeta-attention > li")
-            .mapNotNull {
-                when (it.text()) {
-                    "残酷描写有り" -> WebNovelAttention.残酷描写
-                    "暴力描写有り" -> WebNovelAttention.暴力描写
-                    "性描写有り" -> WebNovelAttention.性描写
-                    else -> null
-                }
-            }
-
-        val keywords = doc
-            .select("ul#workMeta-tags > li")
-            .mapNotNull { it.text() }
-
-        val introduction = doc
-            .selectFirst("p#introduction")
-            ?.wholeText()
-            ?.trimEnd()
-            ?.removeSuffix("…続きを読む")
-            ?: ""
-
-        val toc = doc
-            .select("ol.widget-toc-items > li")
-            .map {
-                RemoteNovelMetadata.TocItem(
-                    title = it.selectFirst("span")!!.text(),
-                    chapterId = it.selectFirst("a")?.attr("href")?.substringAfterLast("/"),
-                    createAt = it.selectFirst("time")?.attr("datetime")?.let { Instant.parse(it) },
-                )
             }
 
         return RemoteNovelMetadata(
