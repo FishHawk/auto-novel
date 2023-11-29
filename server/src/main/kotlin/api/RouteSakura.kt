@@ -125,6 +125,8 @@ fun Route.routeSakura() {
                 val chapterId: String,
                 val jp: String,
                 val zh: String,
+                val contextJp: List<String>,
+                val contextZh: List<String>,
             )
 
             val user = call.authenticatedUser()
@@ -137,6 +139,8 @@ fun Route.routeSakura() {
                     chapterId = body.chapterId,
                     jp = body.jp,
                     zh = body.zh,
+                    contextJp = body.contextJp,
+                    contextZh = body.contextZh,
                 )
             }
         }
@@ -340,6 +344,8 @@ class SakuraApi(
         chapterId: String,
         jp: String,
         zh: String,
+        contextJp: List<String>,
+        contextZh: List<String>,
     ) {
         sakuraJobRepo.createWebIncorrectCase(
             SakuraWebIncorrectCase(
@@ -349,6 +355,8 @@ class SakuraApi(
                 uploader = user.username,
                 jp = jp,
                 zh = zh,
+                contextJp = contextJp,
+                contextZh = contextZh,
                 createAt = Clock.System.now(),
             )
         )

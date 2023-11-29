@@ -88,6 +88,8 @@ const createWebIncorrectCase = (json: {
   chapterId: string;
   jp: string;
   zh: string;
+  contextJp: string[];
+  contextZh: string[];
 }) => runCatching(client.post('sakura/incorrect-case', { json }).text());
 
 export const ApiSakura = {

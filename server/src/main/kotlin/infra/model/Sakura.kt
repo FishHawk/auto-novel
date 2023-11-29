@@ -45,6 +45,8 @@ data class SakuraWebIncorrectCase(
     val uploader: String,
     val jp: String,
     val zh: String,
+    val contextJp: List<String>,
+    val contextZh: List<String>,
     val createAt: Instant,
 )
 

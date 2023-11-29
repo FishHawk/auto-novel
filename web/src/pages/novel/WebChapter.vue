@@ -60,7 +60,7 @@ onKeyStroke(['ArrowRight'], (e) => {
 });
 
 type Paragraph =
-  | { text: string; secondary: boolean; popover?: string }
+  | { text: string; secondary: boolean; popover?: number }
   | { imageUrl: string }
   | null;
 
@@ -141,7 +141,7 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
         merged.push({
           text: style.paragraphs[i],
           secondary: style.secondary,
-          popover: style.popover === true ? chapter.paragraphs[i] : undefined,
+          popover: style.popover === true ? i : undefined,
         });
       }
     }
@@ -149,13 +149,60 @@ function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
   return merged;
 }
 
-const createWebIncorrectCase = async (jp: string, zh: string) => {
+const createWebIncorrectCase = async (
+  index: number,
+  chapter: WebNovelChapterDto
+) => {
+  const jp = chapter.paragraphs[index];
+  const zh = chapter.sakuraParagraphs!![index];
+
+  function truncateParagraphs(
+    paragraphsJp: string[],
+    paragraphsZh: string[],
+    maxLength: number
+  ) {
+    const truncatedJp: string[] = [];
+    const truncatedZh: string[] = [];
+    let currentLength = 0;
+
+    for (let i = 0; i < paragraphsJp.length; i++) {
+      const pJp = paragraphsJp[i];
+      const pZh = paragraphsZh[i];
+      if (pJp.trim().length === 0 || pJp.startsWith('<图片>')) {
+        continue;
+      }
+      if (currentLength + pJp.length > maxLength) {
+        break;
+      }
+      currentLength += pJp.length;
+      truncatedJp.push(pJp);
+      truncatedZh.push(pZh);
+    }
+    return { jp: truncatedJp, zh: truncatedZh };
+  }
+
+  const { jp: contextJpBefore, zh: contextZhBefore } = truncateParagraphs(
+    chapter.paragraphs.slice(0, index).reverse(),
+    chapter.sakuraParagraphs!.slice(0, index).reverse(),
+    512 - jp.length
+  );
+  const { jp: contextJpAfter, zh: contextZhAfter } = truncateParagraphs(
+    chapter.paragraphs.slice(index + 1, chapter.paragraphs.length),
+    chapter.sakuraParagraphs!.slice(index + 1, chapter.paragraphs.length),
+    512 - jp.length
+  );
+
+  const contextJp = [...contextJpBefore.reverse(), jp, ...contextJpAfter];
+  const contextZh = [...contextZhBefore.reverse(), zh, ...contextZhAfter];
+
   const result = await ApiSakura.createWebIncorrectCase({
     providerId,
     novelId,
     chapterId,
     jp,
     zh,
+    contextJp,
+    contextZh,
   });
   if (result.ok) {
     message.info('提交成功');
@@ -221,18 +268,20 @@ const createWebIncorrectCase = async (jp: string, zh: string) => {
           <template v-for="p in getTextList(chapter)">
             <template v-if="p && 'text' in p">
               <n-popconfirm
-                v-if="p.popover"
+                v-if="p.popover !== undefined"
                 placement="top-start"
                 positive-text="提交"
                 :negative-text="null"
-                @positive-click="createWebIncorrectCase(p.popover, p.text)"
+                @positive-click="createWebIncorrectCase(p.popover, chapter)"
               >
                 <template #trigger>
                   <n-p :class="{ secondary: p.secondary }">
                     {{ p.text }}
                   </n-p>
                 </template>
-                <span>这段话Sakura翻译不准确？请提交帮助我们改进。（人名不准确请使用术语表，不用提交）</span>
+                <span>
+                  这段话Sakura翻译不准确？请提交帮助我们改进。（人名不稳定请使用术语表，不用提交）
+                </span>
               </n-popconfirm>
 
               <n-p v-else :class="{ secondary: p.secondary }">
