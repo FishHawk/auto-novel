@@ -8,7 +8,7 @@ export type Loader<T extends Page<any>> = (
 
 <script lang="ts" setup generic="T extends Page<any>">
 import { ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { LocationQuery, useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@/data/api/common';
 import { Result, ResultState } from '@/data/result';
@@ -82,13 +82,24 @@ watch(
 );
 
 function pushPath() {
-  const query: { [key: string]: any } = { page: currentPage.value };
+  const query: LocationQuery = {};
+  for (const key in route.query) {
+    query[key] = route.query[key];
+  }
+
+  if ('page' in query) delete query['page'];
+  query['page'] = currentPage.value.toString();
+
+  if ('query' in query) delete query['query'];
   if (props.search) {
     query.query = filters.value.query;
   }
+
+  if ('selected' in query) delete query['selected'];
   if (props.options.length > 0) {
-    query.selected = filters.value.selected;
+    query.selected = filters.value.selected.map((it) => it.toString());
   }
+
   router.push({ path: route.path, query });
 }
 
