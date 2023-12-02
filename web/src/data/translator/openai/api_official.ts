@@ -10,7 +10,7 @@ export class OpenAiOfficialApi {
 
   constructor(client: KyInstance, apiKey: string) {
     this.client = client.create({
-      prefixUrl: 'https://ai.fakeopen.com/v1',
+      prefixUrl: 'https://api.openai.com/v1',
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${apiKey}`,
