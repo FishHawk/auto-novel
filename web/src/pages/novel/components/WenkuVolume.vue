@@ -4,21 +4,26 @@ import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
-import { ApiUserPersonal, PersonalVolume } from '@/data/api/api_user_personal';
+import { ApiSakura } from '@/data/api/api_sakura';
+import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { TranslatorId } from '@/data/translator/translator';
 
-const { volume, downloadToken, getParams } = defineProps<{
-  volume: PersonalVolume;
-  downloadToken: string;
+const { novelId, volume, getParams } = defineProps<{
+  novelId: string;
+  volume: VolumeJpDto;
   getParams: () => {
     accessToken: string;
     translateExpireChapter: boolean;
   };
 }>();
 
+const emits = defineEmits<{ deleted: [] }>();
+
 const message = useMessage();
+const userData = useUserDataStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
 
@@ -26,7 +31,7 @@ const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: TranslatorId) => {
   const params = getParams();
   return translateTask?.value?.startTask(
-    { type: 'personal', volumeId: volume.volumeId },
+    { type: 'wenku', novelId, volumeId: volume.volumeId },
     {
       ...params,
       translatorId,
@@ -60,7 +65,7 @@ const translatorLabels = computed(
     ]
 );
 
-const downloadFile = computed(() => {
+const file = computed(() => {
   const { mode, translationsMode, translations } =
     setting.isDownloadFormatSameAsReaderFormat
       ? readerSetting
@@ -75,67 +80,41 @@ const downloadFile = computed(() => {
     lang = 'jp-zh';
   }
 
-  const { url, filename } = ApiUserPersonal.createFileUrl({
+  const { url, filename } = ApiWenkuNovel.createFileUrl({
+    novelId,
     volumeId: volume.volumeId,
     lang,
     translationsMode,
     translations,
-    downloadToken,
   });
-
   return { url, filename };
 });
 
-async function deleteVolume(volumeId: string) {
-  const result = await ApiUserPersonal.deleteVolume(volumeId);
+const submitSakuraJob = async () => {
+  const result = await ApiSakura.createSakuraJobWenkuTranslate(
+    novelId,
+    volume.volumeId,
+    {
+      start: 0,
+      end: 65535,
+    }
+  );
   if (result.ok) {
+    message.info('排队成功');
+  } else {
+    message.error('排队失败:' + result.error.message);
+  }
+};
+
+const deleteVolume = async () => {
+  const result = await ApiWenkuNovel.deleteVolume(novelId, volume.volumeId);
+  if (result.ok) {
+    emits('deleted');
     message.info('删除成功');
   } else {
     message.error('删除失败：' + result.error.message);
   }
-}
-
-async function submitGlossary(
-  volumeId: string,
-  glossary: { [key: string]: string }
-) {
-  const result = await ApiUserPersonal.updateGlossary(volumeId, glossary);
-  if (result.ok) {
-    message.success('术语表提交成功');
-  } else {
-    message.error('术语表提交失败：' + result.error.message);
-  }
-}
-
-const submitSakuraJob = () => {
-  const { translateExpireChapter } = getParams();
-
-  const taskString = `personal/${volume.volumeId}`;
-
-  const conflictJob = setting.sakuraJobs.find((job) =>
-    job.task.startsWith(taskString)
-  );
-  if (conflictJob !== undefined) {
-    message.error('Sakura翻译任务已经存在');
-    return;
-  }
-
-  const params: { [key: string]: string } = {};
-  if (translateExpireChapter) {
-    params['expire'] = `${translateExpireChapter}`;
-  }
-  const searchParams = new URLSearchParams(params).toString();
-  const queryString = searchParams ? `?${searchParams}` : '';
-
-  setting.sakuraJobs.push({
-    task: taskString + queryString,
-    description: volume.volumeId,
-    createAt: Date.now(),
-  });
-  message.success('排队成功');
 };
-
-const showGlossaryEditor = ref(false);
 </script>
 
 <template>
@@ -154,27 +133,23 @@ const showGlossaryEditor = ref(false);
               更新{{ label }}
             </n-button>
 
-            <n-button
+            <async-button
               v-else
               text
               type="primary"
-              @click="() => submitSakuraJob()"
+              @async-click="() => submitSakuraJob()"
             >
-              私人排队{{ label }}
-            </n-button>
+              排队{{ label }}
+            </async-button>
           </template>
-
-          <n-button
-            text
-            type="primary"
-            @click="showGlossaryEditor = !showGlossaryEditor"
-          >
-            编辑术语表
-          </n-button>
+          <RouterNA to="/sakura">
+            <n-button text type="primary"> 查看队列 </n-button>
+          </RouterNA>
 
           <n-popconfirm
+            v-if="userData.asAdmin"
             :show-icon="false"
-            @positive-click="deleteVolume(volume.volumeId)"
+            @positive-click="deleteVolume()"
             :negative-text="null"
           >
             <template #trigger>
@@ -184,11 +159,8 @@ const showGlossaryEditor = ref(false);
           </n-popconfirm>
         </n-space>
       </n-space>
-      <n-a
-        :href="downloadFile.url"
-        :download="downloadFile.filename"
-        target="_blank"
-      >
+
+      <n-a :href="file.url" :download="file.filename" target="_blank">
         <n-button>
           <template #icon>
             <n-icon :component="FileDownloadFilled" />
@@ -197,22 +169,6 @@ const showGlossaryEditor = ref(false);
         </n-button>
       </n-a>
     </n-space>
-
-    <n-collapse-transition :show="showGlossaryEditor" style="margin-top: 16px">
-      <n-list bordered>
-        <n-list-item>
-          <AdvanceOption
-            title="术语表"
-            description="术语表过大可能会使得翻译质量下降（例如：百度/有道将无法从判断人名性别，导致人称代词错误）。"
-          >
-            <GlossaryEdit
-              :glossary="volume.glossary"
-              :submit="() => submitGlossary(volume.volumeId, volume.glossary)"
-            />
-          </AdvanceOption>
-        </n-list-item>
-      </n-list>
-    </n-collapse-transition>
 
     <TranslateTask
       ref="translateTask"

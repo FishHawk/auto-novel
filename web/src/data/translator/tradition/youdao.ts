@@ -3,25 +3,24 @@ import { Utf8 } from 'crypto-es/lib/core';
 import { MD5 } from 'crypto-es/lib/md5';
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { Glossary, SegmentTranslator } from '../type';
+import { BaseTranslatorConfig, Glossary, SegmentTranslator } from '../type';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';
 
-export class YoudaoTranslator implements SegmentTranslator {
-  log: (message: string) => void;
-  glossary: Glossary;
+export type YoudaoTranslatorConfig = BaseTranslatorConfig;
 
+export class YoudaoTranslator implements SegmentTranslator {
   private client: KyInstance;
+  glossary: Glossary;
+  log: (message: string) => void;
+
   private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
 
-  constructor(
-    client: KyInstance,
-    log: (message: string) => void,
-    glossary: Glossary
-  ) {
+  constructor({ client, glossary, log }: YoudaoTranslatorConfig) {
     this.client = client.create({ credentials: 'include' });
-    this.log = log;
-    this.glossaryWarpper = createGlossaryWrapper(glossary);
     this.glossary = glossary;
+    this.log = log;
+
+    this.glossaryWarpper = createGlossaryWrapper(glossary);
   }
 
   private key = 'fsdsogkndfokasodnaso';

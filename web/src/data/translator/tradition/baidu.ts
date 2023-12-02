@@ -1,26 +1,25 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { Glossary, SegmentTranslator } from '../type';
+import { BaseTranslatorConfig, Glossary, SegmentTranslator } from '../type';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';
 
-export class BaiduTranslator implements SegmentTranslator {
-  log: (message: string) => void;
-  glossary: Glossary;
+export type BaiduTranslatorConfig = BaseTranslatorConfig;
 
+export class BaiduTranslator implements SegmentTranslator {
   private client: KyInstance;
+  glossary: Glossary;
+  log: (message: string) => void;
+
   private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
 
-  constructor(
-    client: KyInstance,
-    log: (message: string) => void,
-    glossary: Glossary
-  ) {
+  constructor({ client, glossary, log }: BaiduTranslatorConfig) {
     this.client = client.create({
       prefixUrl: 'https://fanyi.baidu.com',
       credentials: 'include',
     });
-    this.log = log;
     this.glossary = glossary;
+    this.log = log;
+
     this.glossaryWarpper = createGlossaryWrapper(glossary);
   }
 

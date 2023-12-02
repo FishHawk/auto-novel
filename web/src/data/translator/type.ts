@@ -1,6 +1,14 @@
+import { KyInstance } from 'ky/distribution/types/ky';
+
 export type Glossary = { [key: string]: string };
 
 export type Segmentor = (input: string[]) => Promise<string[][]>;
+
+export interface BaseTranslatorConfig {
+  log: (message: string) => void;
+  glossary: Glossary;
+  client: KyInstance;
+}
 
 export interface SegmentTranslator {
   glossary: Glossary;

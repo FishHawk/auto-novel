@@ -35,6 +35,23 @@ const getSakuraStatus = () =>
 const createSakuraJob = (task: string) =>
   runCatching(client.post(`sakura/job`, { body: task }).text());
 
+const buildSakuraTaskQueryString = ({
+  start,
+  end,
+  expire,
+}: {
+  start: number;
+  end: number;
+  expire: boolean;
+}) => {
+  const searchParamsInit: { [key: string]: string } = {};
+  if (start > 0) searchParamsInit['start'] = start.toString();
+  if (end < 65535) searchParamsInit['end'] = end.toString();
+  if (expire) searchParamsInit['expire'] = expire.toString();
+  const searchParams = new URLSearchParams(searchParamsInit).toString();
+  return searchParams ? `?${searchParams}` : '';
+};
+
 const createSakuraJobWebTranslate = (
   providerId: string,
   novelId: string,
@@ -42,14 +59,11 @@ const createSakuraJobWebTranslate = (
     start: number;
     end: number;
   }
-) => {
-  const paramsString: { [key: string]: string } = {};
-  if (params.start > 0) paramsString['start'] = params.start.toString();
-  if (params.end < 65535) paramsString['end'] = params.end.toString();
-  const searchParams = new URLSearchParams(paramsString).toString();
-  const queryString = searchParams ? `?${searchParams}` : '';
-  return createSakuraJob(`web/${providerId}/${novelId}${queryString}`);
-};
+) =>
+  createSakuraJob(
+    `web/${providerId}/${novelId}` +
+      buildSakuraTaskQueryString({ ...params, expire: false })
+  );
 
 const createSakuraJobWenkuTranslate = (
   novelId: string,
@@ -58,14 +72,11 @@ const createSakuraJobWenkuTranslate = (
     start: number;
     end: number;
   }
-) => {
-  const paramsString: { [key: string]: string } = {};
-  if (params.start > 0) paramsString['start'] = params.start.toString();
-  if (params.end < 65535) paramsString['end'] = params.end.toString();
-  const searchParams = new URLSearchParams(paramsString).toString();
-  const queryString = searchParams ? `?${searchParams}` : '';
-  return createSakuraJob(`wenku/${novelId}/${volumeId}${queryString}`);
-};
+) =>
+  createSakuraJob(
+    `wenku/${novelId}/${volumeId}` +
+      buildSakuraTaskQueryString({ ...params, expire: false })
+  );
 
 const deleteSakuraJob = (id: string) =>
   runCatching(client.delete(`sakura/job/${id}`).text());
@@ -99,6 +110,7 @@ export const ApiSakura = {
   createSakuraJobWenkuTranslate,
   deleteSakuraJob,
   //
+  buildSakuraTaskQueryString,
   createSakuraWorker,
   deleteSakuraWorker,
   startSakuraWorker,

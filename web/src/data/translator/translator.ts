@@ -1,10 +1,13 @@
-import { KyInstance } from 'ky/distribution/types/ky';
-
 import { createSegIndexedDbCache } from './cache';
-import { OpenAiTranslator } from './openai';
-import { BaiduTranslator, YoudaoTranslator } from './tradition';
+import { OpenAiTranslator, OpenAiTranslatorConfig } from './openai';
+import { SakuraTranslator, SakuraTranslatorConfig } from './sakura';
+import {
+  BaiduTranslator,
+  BaiduTranslatorConfig,
+  YoudaoTranslator,
+  YoudaoTranslatorConfig,
+} from './tradition';
 import { Glossary, SegmentTranslator } from './type';
-import { SakuraTranslator } from './sakura/sakura';
 
 export interface SegmentCache {
   cacheKey(segIndex: number, seg: string[], glossary?: Glossary): string;
@@ -14,13 +17,11 @@ export interface SegmentCache {
 
 export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
 
-export interface TranslatorConfig {
-  client: KyInstance;
-  glossary?: Glossary;
-  accessToken?: string;
-  sakuraEndpoint?: string;
-  log: (message: string) => void;
-}
+export type TranslatorConfig =
+  | ({ id: 'baidu' } & BaiduTranslatorConfig)
+  | ({ id: 'youdao' } & YoudaoTranslatorConfig)
+  | ({ id: 'gpt' } & OpenAiTranslatorConfig)
+  | ({ id: 'sakura' } & SakuraTranslatorConfig);
 
 export class Translator {
   segTranslator: SegmentTranslator;
@@ -86,50 +87,32 @@ export class Translator {
     return segOutput;
   }
 
-  static async create(id: TranslatorId, config: TranslatorConfig) {
-    async function createSegmentTranslator(
-      id: TranslatorId,
-      config: TranslatorConfig
-    ): Promise<SegmentTranslator> {
-      if (id === 'baidu') {
-        return await new BaiduTranslator(
-          config.client,
-          config.log,
-          config.glossary ?? {}
-        ).init();
-      } else if (id === 'youdao') {
-        return await new YoudaoTranslator(
-          config.client,
-          config.log,
-          config.glossary ?? {}
-        ).init();
-      } else if (id === 'gpt') {
-        if (!config.accessToken) {
-          throw new Error('GPT翻译器需要Access Token或者Api Key');
-        }
-        return new OpenAiTranslator(
-          config.client,
-          config.log,
-          config.glossary ?? {},
-          config.accessToken
-        );
-      } else {
-        if (!config.sakuraEndpoint) {
-          throw new Error('Sakura翻译器需要输入你自己部署的服务网址');
-        }
-        return new SakuraTranslator(
-          config.client,
-          config.log,
-          config.glossary ?? {},
-          config.sakuraEndpoint
-        );
+  static async createSegmentTranslator(
+    config: TranslatorConfig
+  ): Promise<SegmentTranslator> {
+    if (config.id === 'baidu') {
+      return await new BaiduTranslator(config).init();
+    } else if (config.id === 'youdao') {
+      return await new YoudaoTranslator(config).init();
+    } else if (config.id === 'gpt') {
+      if (!config.accessTokenOrKey) {
+        throw new Error('GPT翻译器需要Access Token或者Api Key');
       }
+      return new OpenAiTranslator(config);
+    } else {
+      if (!config.endpoint) {
+        throw new Error('Sakura翻译器需要输入你自己部署的服务网址');
+      }
+      return new SakuraTranslator(config);
     }
-    const segTranslator = await createSegmentTranslator(id, config);
+  }
+
+  static async create(config: TranslatorConfig) {
+    const segTranslator = await this.createSegmentTranslator(config);
     let segCache: SegmentCache | undefined = undefined;
-    if (id === 'gpt') {
+    if (config.id === 'gpt') {
       segCache = await createSegIndexedDbCache('gpt-seg-cache');
-    } else if (id === 'sakura') {
+    } else if (config.id === 'sakura') {
       segCache = await createSegIndexedDbCache('sakura-seg-cache');
     }
     return new Translator(segTranslator, segCache);

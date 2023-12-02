@@ -2,37 +2,58 @@ import { KyInstance } from 'ky/distribution/types/ky';
 
 import { Translator, TranslatorId } from './translator';
 
-export const translateWeb = async (
-  {
-    client,
-    providerId,
-    novelId,
-    translatorId,
-    accessToken,
-    startIndex,
-    endIndex,
-    translateExpireChapter,
-    syncFromProvider,
-  }: {
-    client: KyInstance;
-    providerId: string;
-    novelId: string;
-    translatorId: TranslatorId;
-    accessToken?: string;
-    startIndex: number;
-    endIndex: number;
-    translateExpireChapter: boolean;
-    syncFromProvider: boolean;
-  },
+type BaseTranslateTaskDesc = {
+  client: KyInstance;
+  translatorId: TranslatorId;
+  accessToken: string;
+  sakuraEndpoint: string;
+  translateExpireChapter: boolean;
+  syncFromProvider: boolean;
+  startIndex: number;
+  endIndex: number;
   callback: {
     onStart: (total: number) => void;
-    onChapterSuccess: (state: {
-      [key in TranslatorId | 'jp']?: number;
-    }) => void;
+    onChapterSuccess: (state: { jp?: number; zh?: number }) => void;
     onChapterFailure: () => void;
     log: (message: any) => void;
-  }
-) => {
+  };
+};
+
+type WebTranslateTaskDesc = BaseTranslateTaskDesc & {
+  type: 'web';
+  providerId: string;
+  novelId: string;
+};
+
+type WenkuTranslateTaskDesc = BaseTranslateTaskDesc & {
+  type: 'wenku';
+  novelId: string;
+  volumeId: string;
+};
+
+type PersonalTranslateTaskDesc = BaseTranslateTaskDesc & {
+  type: 'personal';
+  volumeId: string;
+};
+
+export type TranslateTaskDesc =
+  | WebTranslateTaskDesc
+  | WenkuTranslateTaskDesc
+  | PersonalTranslateTaskDesc;
+
+const translateWeb = async ({
+  providerId,
+  novelId,
+  syncFromProvider,
+  //
+  client,
+  translatorId,
+  accessToken,
+  startIndex,
+  endIndex,
+  translateExpireChapter,
+  callback,
+}: WebTranslateTaskDesc) => {
   // Api
   const endpoint = `novel/${providerId}/${novelId}/translate/${translatorId}`;
 
@@ -118,11 +139,13 @@ export const translateWeb = async (
 
   let translator: Translator;
   try {
-    translator = await Translator.create(translatorId, {
+    translator = await Translator.create({
+      id: translatorId,
       client,
       glossary: task.glossary,
-      accessToken,
       log: (message) => callback.log('　　' + message),
+      accessTokenOrKey: accessToken ?? '',
+      endpoint: '',
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -193,7 +216,7 @@ export const translateWeb = async (
           glossaryUuid: task.glossaryUuid,
           paragraphsZh: textsZh,
         });
-        callback.onChapterSuccess({ jp, [translatorId]: zh });
+        callback.onChapterSuccess({ jp, zh });
       }
     } catch (e) {
       if (e === 'quit') {
@@ -207,29 +230,16 @@ export const translateWeb = async (
   }
 };
 
-export const translateWenku = async (
-  {
-    client,
-    novelId,
-    translatorId,
-    volumeId,
-    accessToken,
-    translateExpireChapter,
-  }: {
-    client: KyInstance;
-    novelId: string;
-    translatorId: TranslatorId;
-    volumeId: string;
-    accessToken?: string;
-    translateExpireChapter: boolean;
-  },
-  callback: {
-    onStart: (total: number) => void;
-    onChapterSuccess: (state: number) => void;
-    onChapterFailure: () => void;
-    log: (message: any) => void;
-  }
-) => {
+const translateWenku = async ({
+  novelId,
+  volumeId,
+  //
+  client,
+  translatorId,
+  accessToken,
+  translateExpireChapter,
+  callback,
+}: WenkuTranslateTaskDesc) => {
   // Api
   const endpoint = `wenku/${novelId}/translate/${translatorId}/${volumeId}`;
 
@@ -261,11 +271,13 @@ export const translateWenku = async (
 
   let translator: Translator;
   try {
-    translator = await Translator.create(translatorId, {
+    translator = await Translator.create({
+      id: translatorId,
       client: client,
       glossary: task.glossary,
-      accessToken,
       log: (message) => callback.log('　　' + message),
+      accessTokenOrKey: accessToken ?? '',
+      endpoint: '',
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -296,7 +308,7 @@ export const translateWenku = async (
         glossaryUuid: task.glossaryUuid,
         paragraphsZh: textsZh,
       });
-      callback.onChapterSuccess(state);
+      callback.onChapterSuccess({ zh: state });
     } catch (e) {
       if (e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
@@ -309,29 +321,16 @@ export const translateWenku = async (
   }
 };
 
-export const translatePersonal = async (
-  {
-    client,
-    translatorId,
-    volumeId,
-    accessToken,
-    sakuraEndpoint,
-    translateExpireChapter,
-  }: {
-    client: KyInstance;
-    translatorId: TranslatorId;
-    volumeId: string;
-    accessToken?: string;
-    sakuraEndpoint?: string;
-    translateExpireChapter: boolean;
-  },
-  callback: {
-    onStart: (total: number) => void;
-    onChapterSuccess: (state: number) => void;
-    onChapterFailure: () => void;
-    log: (message: any) => void;
-  }
-) => {
+const translatePersonal = async ({
+  volumeId,
+  sakuraEndpoint,
+  //
+  client,
+  translatorId,
+  accessToken,
+  translateExpireChapter,
+  callback,
+}: PersonalTranslateTaskDesc) => {
   // Api
   const endpoint = `personal/translate/${translatorId}/${volumeId}`;
 
@@ -363,12 +362,13 @@ export const translatePersonal = async (
 
   let translator: Translator;
   try {
-    translator = await Translator.create(translatorId, {
+    translator = await Translator.create({
+      id: translatorId,
       client: client,
       glossary: task.glossary,
-      accessToken,
-      sakuraEndpoint,
       log: (message) => callback.log('　　' + message),
+      accessTokenOrKey: accessToken ?? '',
+      endpoint: sakuraEndpoint ?? '',
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -399,7 +399,7 @@ export const translatePersonal = async (
         glossaryUuid: task.glossaryUuid,
         paragraphsZh: textsZh,
       });
-      callback.onChapterSuccess(state);
+      callback.onChapterSuccess({ zh: state });
     } catch (e) {
       if (e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
@@ -410,4 +410,10 @@ export const translatePersonal = async (
       }
     }
   }
+};
+
+export const translate = (desc: TranslateTaskDesc) => {
+  if (desc.type === 'web') return translateWeb(desc);
+  else if (desc.type === 'wenku') return translateWenku(desc);
+  else return translatePersonal(desc);
 };

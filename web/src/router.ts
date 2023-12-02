@@ -40,6 +40,11 @@ const router = createRouter({
       meta: { title: '文件翻译' },
       component: () => import('./pages/user/PersonalNovel.vue'),
     },
+    {
+      path: '/sakura-workspace',
+      meta: { title: 'Sakura工作区' },
+      component: () => import('./pages/user/SakuraWorkspace.vue'),
+    },
 
     {
       path: '/novel-list',

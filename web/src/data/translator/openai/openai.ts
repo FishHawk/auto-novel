@@ -1,9 +1,13 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { Glossary, SegmentTranslator } from '../type';
+import { BaseTranslatorConfig, Glossary, SegmentTranslator } from '../type';
 import { OpenAiError, OpenAiOfficialApi } from './api_official';
 import { OpenAiUnofficialApi } from './api_unofficial';
 import { createTokenSegmenter } from './common';
+
+export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
+  accessTokenOrKey: string;
+}
 
 export class OpenAiTranslator implements SegmentTranslator {
   log: (message: string) => void;
@@ -13,12 +17,12 @@ export class OpenAiTranslator implements SegmentTranslator {
     | (OpenAiOfficialApi & { official: true })
     | (OpenAiUnofficialApi & { official: false });
 
-  constructor(
-    client: KyInstance,
-    log: (message: string) => void,
-    glossary: Glossary,
-    accessTokenOrKey: string
-  ) {
+  constructor({
+    client,
+    glossary,
+    log,
+    accessTokenOrKey,
+  }: OpenAiTranslatorConfig) {
     if (accessTokenOrKey.startsWith('sk-')) {
       const api = new OpenAiOfficialApi(client, accessTokenOrKey) as any;
       api['official'] = true;

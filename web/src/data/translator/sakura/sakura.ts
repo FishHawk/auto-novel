@@ -1,31 +1,31 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { Glossary, SegmentTranslator } from '../type';
+import { BaseTranslatorConfig, Glossary, SegmentTranslator } from '../type';
 import { createLengthSegmentor } from '../tradition/common';
 import { parseEventStream } from '../openai/common';
 
-export class SakuraTranslator implements SegmentTranslator {
-  log: (message: string) => void;
-  glossary: Glossary;
+export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
+  endpoint: string;
+}
 
+export class SakuraTranslator implements SegmentTranslator {
   private client: KyInstance;
+  glossary: Glossary;
+  log: (message: string) => void;
+
   private endpoint: string;
 
-  constructor(
-    client: KyInstance,
-    log: (message: string) => void,
-    glossary: Glossary,
-    endpoint: string
-  ) {
+  constructor({ client, glossary, log, endpoint }: SakuraTranslatorConfig) {
     this.client = client.create({
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
     });
-    this.endpoint = endpoint;
-    this.log = log;
     this.glossary = glossary;
+    this.log = log;
+
+    this.endpoint = endpoint;
   }
 
   createSegments = createLengthSegmentor(500);
