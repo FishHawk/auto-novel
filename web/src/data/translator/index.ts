@@ -1,2 +1,2 @@
-export { translateWeb, translateWenku, translatePersonal } from './api';
+export { translate } from './api';
 export { Translator } from './translator';

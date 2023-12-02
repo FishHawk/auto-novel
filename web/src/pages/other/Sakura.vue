@@ -267,47 +267,40 @@ const createWorkerFormValue = ref({
           </n-thing>
         </n-list-item>
       </n-list>
-      <n-modal v-model:show="showCreateWorkerModal">
-        <n-card
-          style="width: min(400px, calc(100% - 16px))"
-          :bordered="false"
-          size="large"
-          role="dialog"
-          aria-modal="true"
+
+      <card-modal v-model:show="showCreateWorkerModal" title="添加Sakura翻译器">
+        <n-form
+          ref="formRef"
+          :model="createWorkerFormValue"
+          label-placement="left"
         >
-          <n-form
-            ref="formRef"
-            :model="createWorkerFormValue"
-            label-placement="left"
-          >
-            <n-form-item-row path="gpu">
-              <n-input
-                v-model:value="createWorkerFormValue.gpu"
-                placeholder="GPU"
-                :input-props="{ spellcheck: false }"
-              />
-            </n-form-item-row>
-            <n-form-item-row path="endpoint">
-              <n-input
-                v-model:value="createWorkerFormValue.endpoint"
-                placeholder="Endpoint"
-                :input-props="{ spellcheck: false }"
-              />
-            </n-form-item-row>
-          </n-form>
-          <n-button
+          <n-form-item-row path="gpu" label="名字">
+            <n-input
+              v-model:value="createWorkerFormValue.gpu"
+              placeholder="给你的翻译器起个名字"
+              :input-props="{ spellcheck: false }"
+            />
+          </n-form-item-row>
+          <n-form-item-row path="endpoint" label="链接">
+            <n-input
+              v-model:value="createWorkerFormValue.endpoint"
+              placeholder="翻译器的链接"
+              :input-props="{ spellcheck: false }"
+            />
+          </n-form-item-row>
+        </n-form>
+        <template #action>
+          <async-button
             type="primary"
-            block
-            style="margin-top: 20px"
-            @click="createSakuraWorker(createWorkerFormValue)"
+            @async-click="() => createSakuraWorker(createWorkerFormValue)"
           >
             添加
-          </n-button>
-        </n-card>
-      </n-modal>
+          </async-button>
+        </template>
+      </card-modal>
 
       <SectionHeader :title="`任务队列 [${info.jobs.length}/150]`" />
-      <n-table :bordered="false" style="margin-top: 40px">
+      <n-table :bordered="false" style="margin-top: 16px">
         <thead>
           <tr>
             <th><b>描述</b></th>

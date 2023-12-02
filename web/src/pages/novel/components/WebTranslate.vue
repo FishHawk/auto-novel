@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { useMessage } from 'naive-ui';
-import { computed, Ref, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
+import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
-import { client } from '@/data/api/client';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { TranslatorId } from '@/data/translator/translator';
@@ -26,7 +26,7 @@ const props = defineProps<{
 
 const { providerId, novelId, titleJp, titleZh, total } = props;
 
-const emits = defineEmits<{
+const emit = defineEmits<{
   'update:jp': [number];
   'update:baidu': [number];
   'update:youdao': [number];
@@ -45,96 +45,35 @@ const gptAccessTokenOptions = computed(() => {
   });
 });
 
-interface TaskDetail {
-  label: string;
-  running: boolean;
-  chapterTotal?: number;
-  chapterFinished: number;
-  chapterError: number;
-  logs: string[];
-}
-
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
-const taskDetail: Ref<TaskDetail | undefined> = ref();
 
-async function startTask(translatorId: TranslatorId) {
-  if (taskDetail.value?.running) {
-    message.info('已有任务在运行。');
-    return;
-  }
-
-  const buildLabel = () => {
-    let label = `${getTranslatorLabel(translatorId)}翻译`;
-    if (translateExpireChapter.value) label += '[翻译过期章节]';
-    if (syncFromProvider.value) label += '[强制同步]';
-    return label;
-  };
-  taskDetail.value = {
-    label: buildLabel(),
-    running: true,
-    chapterFinished: 0,
-    chapterError: 0,
-    logs: [],
-  };
-
-  let accessToken = gptAccessToken.value.trim();
-  try {
-    const obj = JSON.parse(accessToken);
-    accessToken = obj.accessToken;
-  } catch {}
-
-  const translateWeb = (await import('@/data/translator')).translateWeb;
-  await translateWeb(
+const translateTask = ref<InstanceType<typeof TranslateTask>>();
+const startTranslateTask = (translatorId: TranslatorId) =>
+  translateTask?.value?.startTask(
+    { type: 'web', providerId, novelId },
     {
-      client,
-      providerId,
-      novelId,
       translatorId,
-      accessToken,
-      startIndex: startIndex.value ?? 0,
-      endIndex: endIndex.value ?? 65536,
+      accessToken: gptAccessToken.value,
+      sakuraEndpoint: '',
       translateExpireChapter: translateExpireChapter.value,
       syncFromProvider: syncFromProvider.value,
-    },
-    {
-      onStart: (total) => {
-        taskDetail.value!.chapterTotal = total;
-      },
-      onChapterSuccess: (state) => {
-        if (state.jp !== undefined) emits('update:jp', state.jp);
-        if (state.baidu !== undefined) emits('update:baidu', state.baidu);
-        if (state.youdao !== undefined) emits('update:youdao', state.youdao);
-        if (state.gpt !== undefined) {
-          setting.addToken(accessToken);
-          emits('update:gpt', state.gpt);
-        }
-        taskDetail.value!.chapterFinished += 1;
-      },
-      onChapterFailure: () => {
-        taskDetail.value!.chapterError += 1;
-      },
-      log: (message: any) => {
-        taskDetail.value!.logs.push(`${message}`);
-      },
+      startIndex: startIndex.value ?? 0,
+      endIndex: endIndex.value ?? 65536,
     }
   );
 
-  taskDetail.value!.logs.push('\n结束');
-  taskDetail.value!.running = false;
-}
-
-interface NovelFiles {
-  label: string;
-  translatorId?: TranslatorId;
-  files: { label: string; url: string; filename: string }[];
-}
-
-function stateToFileList(): NovelFiles[] {
+const files = computed<
+  {
+    label: string;
+    translatorId?: TranslatorId;
+    files: { label: string; url: string; filename: string }[];
+  }[]
+>(() => {
   const title =
     setting.downloadFilenameType === 'jp' ? titleJp : titleZh ?? titleJp;
 
-  function createFile(
+  const createFile = (
     label: string,
     lang:
       | 'jp'
@@ -147,7 +86,7 @@ function stateToFileList(): NovelFiles[] {
       | 'mix-gpt'
       | 'mix-sakura',
     type: 'epub' | 'txt'
-  ) {
+  ) => {
     const { url, filename } = ApiWebNovel.createFileUrl({
       providerId,
       novelId,
@@ -160,7 +99,7 @@ function stateToFileList(): NovelFiles[] {
       url,
       filename,
     };
-  }
+  };
 
   return [
     {
@@ -208,7 +147,7 @@ function stateToFileList(): NovelFiles[] {
       ],
     },
   ];
-}
+});
 
 const showTranslateOptions = ref(false);
 
@@ -334,7 +273,7 @@ async function submitSakuraJob() {
   />
 
   <n-list style="background-color: #0000">
-    <n-list-item v-for="row in stateToFileList()">
+    <n-list-item v-for="row in files">
       <template #suffix>
         <template v-if="row.translatorId === 'sakura'">
           <n-space :wrap="false">
@@ -350,7 +289,7 @@ async function submitSakuraJob() {
           v-else-if="row.translatorId"
           tertiary
           size="small"
-          @click="startTask(row.translatorId)"
+          @click="startTranslateTask(row.translatorId)"
         >
           {{ getTranslatorLabel(row.translatorId) }}翻译
         </n-button>
@@ -371,14 +310,12 @@ async function submitSakuraJob() {
     </n-list-item>
   </n-list>
 
-  <TranslateTaskDetail
-    v-if="taskDetail"
-    :label="taskDetail.label"
-    :running="taskDetail.running"
-    :chapter-total="taskDetail.chapterTotal"
-    :chapter-finished="taskDetail.chapterFinished"
-    :chapter-error="taskDetail.chapterError"
-    :logs="taskDetail.logs"
+  <TranslateTask
+    ref="translateTask"
+    @update:jp="(zh) => emit('update:jp', zh)"
+    @update:baidu="(zh) => emit('update:baidu', zh)"
+    @update:youdao="(zh) => emit('update:youdao', zh)"
+    @update:gpt="(zh) => emit('update:gpt', zh)"
     style="margin-top: 20px"
   />
 </template>

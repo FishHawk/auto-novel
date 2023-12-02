@@ -6,7 +6,6 @@ export interface Setting {
   isDark: boolean;
   tocSortReverse: boolean;
   openAiAccessTokens: string[];
-  sakuraEndpoints: string[];
   downloadFilenameType: 'jp' | 'zh';
 
   isDownloadFormatSameAsReaderFormat: boolean;
@@ -15,6 +14,8 @@ export interface Setting {
     translationsMode: 'parallel' | 'priority';
     translations: TranslatorId[];
   };
+  sakuraWorkers: { id: string; endpoint: string }[];
+  sakuraJobs: { task: string; description: string; createAt: number }[];
 }
 
 export const useSettingStore = defineStore('setting', {
@@ -23,7 +24,6 @@ export const useSettingStore = defineStore('setting', {
       isDark: false,
       tocSortReverse: false,
       openAiAccessTokens: [],
-      sakuraEndpoints: [],
       downloadFilenameType: 'zh',
       isDownloadFormatSameAsReaderFormat: true,
       downloadFormat: {
@@ -31,6 +31,10 @@ export const useSettingStore = defineStore('setting', {
         translationsMode: 'priority',
         translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       },
+      sakuraWorkers: [
+        { id: '默认', endpoint: 'http://127.0.0.1:5000/api/v1/generate' },
+      ],
+      sakuraJobs: [],
     },
   actions: {
     addToken(token: string) {
@@ -44,16 +48,6 @@ export const useSettingStore = defineStore('setting', {
       this.openAiAccessTokens = this.openAiAccessTokens.filter(
         (t) => t !== token
       );
-    },
-    addSakuraEndpoint(endpoint: string) {
-      this.deleteSakuraEndpoint(endpoint);
-      this.sakuraEndpoints.unshift(endpoint);
-      if (this.sakuraEndpoints.length > 10) {
-        this.sakuraEndpoints.length == 10;
-      }
-    },
-    deleteSakuraEndpoint(endpoint: string) {
-      this.sakuraEndpoints = this.sakuraEndpoints.filter((t) => t !== endpoint);
     },
   },
   persist: true,

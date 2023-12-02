@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import ArchiveOutlined from '@vicons/material/es/ArchiveOutlined';
 import {
   UploadCustomRequestOptions,
   UploadFileInfo,
@@ -11,11 +12,9 @@ import type {
   PersonalVolumes,
 } from '@/data/api/api_user_personal';
 import { ApiUserPersonal } from '@/data/api/api_user_personal';
-import { client } from '@/data/api/client';
 import { ResultState } from '@/data/result';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import ArchiveOutlined from '@vicons/material/es/ArchiveOutlined';
 
 const message = useMessage();
 const userData = useUserDataStore();
@@ -78,23 +77,6 @@ const gptAccessTokenOptions = computed(() => {
   });
 });
 
-const sakuraEndpoint = ref('');
-const sakuraEndpointOptions = computed(() => {
-  return setting.sakuraEndpoints.map((t) => {
-    return { label: t, value: t };
-  });
-});
-
-interface TaskDetail {
-  volumeId: string;
-  label: string;
-  running: boolean;
-  chapterTotal?: number;
-  chapterFinished: number;
-  chapterError: number;
-  logs: string[];
-}
-
 const showDownloadOptions = ref(false);
 const showTranslateOptions = ref(false);
 const translateExpireChapter = ref(false);
@@ -136,29 +118,6 @@ const translationOptions = [
 function sortVolumesJp(volumes: PersonalVolume[]) {
   return volumes.sort((a, b) => a.volumeId.localeCompare(b.volumeId));
 }
-
-async function testSakura() {
-  if (sakuraEndpoint.value.trim()) {
-    const input =
-      '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
-    const Translator = (await import('@/data/translator')).Translator;
-    const translator = await Translator.create('sakura', {
-      client,
-      glossary: {},
-      sakuraEndpoint: sakuraEndpoint.value.trim(),
-      log: () => {},
-    });
-    try {
-      const result = await translator.translate([input]);
-      const output = result[0];
-      message.success(`原文：${input}\n译文：${output}`);
-    } catch (e: any) {
-      message.error(`Sakura报错：${e}`);
-    }
-  } else {
-    message.error('Sakura链接为空');
-  }
-}
 </script>
 
 <template>
@@ -193,7 +152,6 @@ async function testSakura() {
       <n-button-group style="margin-bottom: 8px">
         <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button>
         <n-button @click="toggleDownloadOptions()">下载设置</n-button>
-        <async-button @async-click="testSakura">测试Sakura</async-button>
       </n-button-group>
 
       <n-collapse-transition
@@ -257,30 +215,16 @@ async function testSakura() {
         style="margin-bottom: 16px"
       />
 
-      <div>
-        你可以使用自己的显卡，或者租用显卡来部署Sakura模型，参见
-        <n-a href="https://sakura.srpr.moe" target="_blank">
-          Sakura模型部署教程
-        </n-a>
-      </div>
-      <n-auto-complete
-        v-model:value="sakuraEndpoint"
-        :options="sakuraEndpointOptions"
-        placeholder="请输入你自己部署的Sakura实例的链接，例如http://127.0.0.1:5000/api/v1/generate"
-        :get-show="() => true"
-      />
-
       <n-list>
         <template v-for="volume of sortVolumesJp(volumes.volumes)">
           <n-list-item>
             <personal-volume
               :volume="volume"
               :download-token="volumes.downloadToken"
-              :get-options="
+              :get-params="
                 () => ({
                   translateExpireChapter,
-                  gptAccessToken,
-                  sakuraEndpoint,
+                  accessToken: gptAccessToken,
                 })
               "
             />
