@@ -80,10 +80,10 @@ const startTask = async (
 
   show.value = true;
 
-  let accessToken = params.accessToken.trim();
   try {
+    let accessToken = params.accessToken.trim();
     const obj = JSON.parse(accessToken);
-    accessToken = obj.accessToken;
+    params.accessToken = obj.accessToken;
   } catch {}
 
   await (
@@ -104,7 +104,7 @@ const startTask = async (
           } else if (params.translatorId === 'youdao') {
             emit('update:youdao', zh);
           } else if (params.translatorId === 'gpt') {
-            setting.addToken(accessToken);
+            setting.addToken(params.accessToken);
             emit('update:gpt', zh);
           } else {
             emit('update:sakura', zh);

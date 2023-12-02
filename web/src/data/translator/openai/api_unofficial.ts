@@ -9,7 +9,7 @@ export class OpenAiUnofficialApi {
 
   constructor(client: KyInstance, accessToken: string) {
     this.client = client.create({
-      prefixUrl: 'https://ai.fakeopen.com/api',
+      prefixUrl: 'https://chatgpt-proxy.lss233.com/api',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',

@@ -139,7 +139,7 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
-        <n-li>GPT现在用不了token了，不知道什么时候能修好。</n-li>
+        <n-li>GPT修好了。</n-li>
         <n-li>
           如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。
         </n-li>
