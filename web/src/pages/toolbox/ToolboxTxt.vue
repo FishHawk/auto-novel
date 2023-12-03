@@ -107,21 +107,10 @@ function copyResult() {
       </div>
     </div>
 
-    <n-modal v-model:show="showPreviewModal">
-      <n-card
-        style="width: min(600px, calc(100% - 16px))"
-        :bordered="false"
-        size="large"
-        role="dialog"
-        aria-modal="true"
-        title="预览（前100行）"
-      >
-        <n-scrollbar trigger="none" style="max-height: 400px">
-          <n-p v-for="line of content.slice(0, 100)">
-            {{ line }}
-          </n-p>
-        </n-scrollbar>
-      </n-card>
-    </n-modal>
+    <card-modal title="预览（前100行）" v-model:show="showPreviewModal">
+      <n-p v-for="line of content.slice(0, 100)">
+        {{ line }}
+      </n-p>
+    </card-modal>
   </MainLayout>
 </template>

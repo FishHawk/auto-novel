@@ -225,32 +225,27 @@ const vars = useThemeVars();
     </n-layout>
   </n-layout>
 
-  <n-modal v-model:show="showLoginModal">
-    <n-card
-      style="width: min(400px, calc(100% - 16px))"
-      :bordered="false"
+  <card-modal
+    v-model:show="showLoginModal"
+    style="width: min(400px, calc(100% - 16px))"
+  >
+    <n-tabs
+      class="card-tabs"
+      default-value="signin"
       size="large"
-      role="dialog"
-      aria-modal="true"
+      animated
+      style="margin: 0 -4px"
+      pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
     >
-      <n-tabs
-        class="card-tabs"
-        default-value="signin"
-        size="large"
-        animated
-        style="margin: 0 -4px"
-        pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
-      >
-        <n-tab-pane name="signin" tab="登录">
-          <SignInForm @signIn="onSignInSuccess" />
-        </n-tab-pane>
+      <n-tab-pane name="signin" tab="登录">
+        <SignInForm @signIn="onSignInSuccess" />
+      </n-tab-pane>
 
-        <n-tab-pane name="signup" tab="注册">
-          <SignUpForm @signUp="onSignInSuccess" />
-        </n-tab-pane>
-      </n-tabs>
-    </n-card>
-  </n-modal>
+      <n-tab-pane name="signup" tab="注册">
+        <SignUpForm @signUp="onSignInSuccess" />
+      </n-tab-pane>
+    </n-tabs>
+  </card-modal>
 </template>
 
 <style>

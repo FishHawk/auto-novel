@@ -193,25 +193,18 @@ const linkExample = [
     <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
 
-    <n-modal v-model:show="showLinkExampleModal">
-      <n-card
-        style="width: min(600px, calc(100% - 16px))"
-        :bordered="false"
-        size="large"
-        role="dialog"
-        aria-modal="true"
-      >
-        <n-scrollbar trigger="none" style="max-height: 400px">
-          <n-table :bordered="false">
-            <tr v-for="[name, link] of linkExample">
-              <td style="white-space: nowrap">
-                <b>{{ name }}</b>
-              </td>
-              <td>{{ link }}</td>
-            </tr>
-          </n-table>
-        </n-scrollbar>
-      </n-card>
-    </n-modal>
+    <card-modal v-model:show="showLinkExampleModal">
+      <n-list>
+        <n-list-item v-for="[name, link] of linkExample">
+          <n-thing>
+            <template #description>
+              <b>{{ name }}</b>
+              <br />
+              {{ link }}
+            </template>
+          </n-thing>
+        </n-list-item>
+      </n-list>
+    </card-modal>
   </MainLayout>
 </template>
