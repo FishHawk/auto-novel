@@ -4,18 +4,18 @@ import { ref } from 'vue';
 
 import { ApiAuth, SignInDto } from '@/data/api/api_auth';
 
-const emits = defineEmits<{ (e: 'signIn', user: SignInDto): void }>();
+const emit = defineEmits<{ (e: 'signIn', user: SignInDto): void }>();
 
 const message = useMessage();
 
-const formRef = ref<FormInst | null>(null);
+const formRef = ref<FormInst>();
 
 const formValue = ref({
   emailOrUsername: '',
   password: '',
 });
 
-const rules: FormRules = {
+const formRules: FormRules = {
   emailOrUsername: [
     {
       validator: (rule: FormItemRule, value: string) => value.length > 0,
@@ -32,29 +32,31 @@ const rules: FormRules = {
   ],
 };
 
-function signIn() {
-  formRef.value?.validate(async (errors) => {
-    if (errors) return;
+const signIn = async () => {
+  try {
+    await formRef.value?.validate();
+  } catch (e) {
+    return;
+  }
 
-    const userResult = await ApiAuth.signIn(
-      formValue.value.emailOrUsername,
-      formValue.value.password
-    );
+  const result = await ApiAuth.signIn(
+    formValue.value.emailOrUsername,
+    formValue.value.password
+  );
 
-    if (userResult.ok) {
-      emits('signIn', userResult.value);
-    } else {
-      message.error('登录失败:' + userResult.error.message);
-    }
-  });
-}
+  if (result.ok) {
+    emit('signIn', result.value);
+  } else {
+    message.error('登录失败:' + result.error.message);
+  }
+};
 </script>
 
 <template>
   <n-form
     ref="formRef"
     :model="formValue"
-    :rules="rules"
+    :rules="formRules"
     label-placement="left"
   >
     <n-form-item-row path="emailOrUsername">
@@ -74,10 +76,14 @@ function signIn() {
       />
     </n-form-item-row>
   </n-form>
-  <n-space>
-    <RouterNA to="/reset-password">忘记密码</RouterNA>
-  </n-space>
-  <n-button type="primary" block style="margin-top: 20px" @click="signIn()">
+
+  <RouterNA to="/reset-password">忘记密码</RouterNA>
+  <async-button
+    type="primary"
+    block
+    @async-click="signIn"
+    style="margin-top: 20px"
+  >
     登录
-  </n-button>
+  </async-button>
 </template>

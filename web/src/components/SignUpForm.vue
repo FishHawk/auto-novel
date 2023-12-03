@@ -4,11 +4,11 @@ import { ref } from 'vue';
 
 import { ApiAuth, SignInDto } from '@/data/api/api_auth';
 
-const emits = defineEmits<{ (e: 'signUp', user: SignInDto): void }>();
+const emit = defineEmits<{ (e: 'signUp', user: SignInDto): void }>();
 
 const message = useMessage();
 
-const formRef = ref<FormInst | null>(null);
+const formRef = ref<FormInst>();
 
 const formValue = ref({
   email: '',
@@ -21,7 +21,7 @@ const formValue = ref({
 const emailRegex =
   /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
 
-const rules: FormRules = {
+const formRules: FormRules = {
   email: [
     {
       validator: (rule: FormItemRule, value: string) => emailRegex.test(value),
@@ -61,30 +61,34 @@ const rules: FormRules = {
   ],
 };
 
-function signUp() {
-  formRef.value?.validate(async (errors) => {
-    if (errors) return;
+const signUp = async () => {
+  try {
+    await formRef.value?.validate();
+  } catch (e) {
+    return;
+  }
 
-    const userResult = await ApiAuth.signUp(
-      formValue.value.email,
-      formValue.value.emailCode,
-      formValue.value.username,
-      formValue.value.password
-    );
+  const result = await ApiAuth.signUp(
+    formValue.value.email,
+    formValue.value.emailCode,
+    formValue.value.username,
+    formValue.value.password
+  );
 
-    if (userResult.ok) {
-      emits('signUp', userResult.value);
-    } else {
-      message.error('注册失败:' + userResult.error.message);
-    }
-  });
-}
+  if (result.ok) {
+    emit('signUp', result.value);
+  } else {
+    message.error('注册失败:' + result.error.message);
+  }
+};
+
 const allowSendEmail = () => {
   const email = formValue.value.email;
   const allow = emailRegex.test(email);
   if (!allow) message.error('邮箱不合法');
   return allow;
 };
+
 const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
 </script>
 
@@ -92,7 +96,7 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
   <n-form
     ref="formRef"
     :model="formValue"
-    :rules="rules"
+    :rules="formRules"
     label-placement="left"
   >
     <n-form-item-row path="email">
@@ -141,5 +145,5 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
       />
     </n-form-item-row>
   </n-form>
-  <n-button type="primary" block @click="signUp()"> 注册 </n-button>
+  <async-button type="primary" block @async-click="signUp"> 注册 </async-button>
 </template>

@@ -6,7 +6,7 @@ import { ApiAuth } from '@/data/api/api_auth';
 
 const message = useMessage();
 
-const formRef = ref<FormInst | null>(null);
+const formRef = ref<FormInst>();
 
 const formValue = ref({
   emailOrUsername: '',
@@ -15,7 +15,7 @@ const formValue = ref({
   reenteredPassword: '',
 });
 
-const rules: FormRules = {
+const formRules: FormRules = {
   emailOrUsername: [
     {
       validator: (rule: FormItemRule, value: string) => value.length > 0,
@@ -47,23 +47,25 @@ const rules: FormRules = {
   ],
 };
 
-function resetPassword() {
-  formRef.value?.validate(async (errors) => {
-    if (errors) return;
+const resetPassword = async () => {
+  try {
+    await formRef.value?.validate();
+  } catch (e) {
+    return;
+  }
 
-    const userResult = await ApiAuth.resetPassword(
-      formValue.value.emailOrUsername,
-      formValue.value.resetPasswordToken,
-      formValue.value.password
-    );
+  const userResult = await ApiAuth.resetPassword(
+    formValue.value.emailOrUsername,
+    formValue.value.resetPasswordToken,
+    formValue.value.password
+  );
 
-    if (userResult.ok) {
-      message.info('密码重置成功');
-    } else {
-      message.error('密码重置失败:' + userResult.error.message);
-    }
-  });
-}
+  if (userResult.ok) {
+    message.info('密码重置成功');
+  } else {
+    message.error('密码重置失败:' + userResult.error.message);
+  }
+};
 
 const allowSendEmail = () => true;
 const sendEmail = () =>
@@ -76,7 +78,7 @@ const sendEmail = () =>
     <n-form
       ref="formRef"
       :model="formValue"
-      :rules="rules"
+      :rules="formRules"
       label-placement="left"
       style="max-width: 400px"
     >

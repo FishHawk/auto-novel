@@ -110,14 +110,12 @@ function handleUserDropdownSelect(key: string | number) {
 
 const showLoginModal = ref(false);
 
-function onSignInSuccess(profile: SignInDto): void {
+const onSignInSuccess = (profile: SignInDto) => {
   userData.setProfile(profile);
   showLoginModal.value = false;
-}
+};
 
-function navToMySpace() {
-  router.push({ path: '/account' });
-}
+const navToMySpace = () => router.push({ path: '/account' });
 
 const vars = useThemeVars();
 </script>
@@ -234,7 +232,6 @@ const vars = useThemeVars();
       default-value="signin"
       size="large"
       animated
-      style="margin: 0 -4px"
       pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
     >
       <n-tab-pane name="signin" tab="登录">
