@@ -89,7 +89,7 @@ const testSakuraWorker = async () => {
   const input =
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
   const Translator = (await import('@/data/translator')).Translator;
-  const translator = await Translator.create({
+  const translator = await Translator.createWithoutCache({
     id: 'sakura',
     client,
     glossary: {},

@@ -117,6 +117,11 @@ export class Translator {
     }
     return new Translator(segTranslator, segCache);
   }
+
+  static async createWithoutCache(config: TranslatorConfig) {
+    const segTranslator = await this.createSegmentTranslator(config);
+    return new Translator(segTranslator, undefined);
+  }
 }
 
 const filterInput = (input: string[]) =>
