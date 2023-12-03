@@ -6,6 +6,7 @@ import { parseEventStream } from '../openai/common';
 
 export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
   endpoint: string;
+  useLlamaApi: boolean;
 }
 
 export class SakuraTranslator implements SegmentTranslator {
@@ -14,8 +15,15 @@ export class SakuraTranslator implements SegmentTranslator {
   log: (message: string) => void;
 
   private endpoint: string;
+  private useLlamaApi: boolean;
 
-  constructor({ client, glossary, log, endpoint }: SakuraTranslatorConfig) {
+  constructor({
+    client,
+    glossary,
+    log,
+    endpoint,
+    useLlamaApi,
+  }: SakuraTranslatorConfig) {
     this.client = client.create({
       headers: {
         Accept: 'application/json',
@@ -26,6 +34,7 @@ export class SakuraTranslator implements SegmentTranslator {
     this.log = log;
 
     this.endpoint = endpoint;
+    this.useLlamaApi = useLlamaApi;
   }
 
   createSegments = createLengthSegmentor(500);
@@ -89,6 +98,18 @@ export class SakuraTranslator implements SegmentTranslator {
     maxNewToken: number,
     config: any
   ) {
+    if (this.useLlamaApi) {
+      return this.translatePromptWithLlamaApi(prompt, maxNewToken, config);
+    } else {
+      return this.translatePromptWithoutLlamaApi(prompt, maxNewToken, config);
+    }
+  }
+
+  private async translatePromptWithoutLlamaApi(
+    prompt: string,
+    maxNewToken: number,
+    config: any
+  ) {
     const response = this.client.post(this.endpoint, {
       json: {
         prompt,
@@ -122,6 +143,29 @@ export class SakuraTranslator implements SegmentTranslator {
     const hasDegradation = new_token >= maxNewToken;
     return { text, hasDegradation };
   }
+
+  private async translatePromptWithLlamaApi(
+    prompt: string,
+    maxNewToken: number,
+    config: any
+  ) {
+    const response = this.client.post(this.endpoint + '/completion', {
+      json: {
+        prompt,
+        n_predict: maxNewToken,
+        temperature: 0.1,
+        top_p: 0.3,
+        top_k: 40,
+        repeat_penalty: 1.0,
+        seed: -1,
+        ...config,
+      },
+      timeout: false,
+    });
+    let { content, model, truncated } =
+      await response.json<SakuraLlamaCompletionResponse>();
+    return { text: content, hasDegradation: truncated };
+  }
 }
 
 const makePrompt = (textToTranslate: string) =>
@@ -132,4 +176,10 @@ interface SakuraResultChunk {
     new_token: number;
     text: string;
   }>;
+}
+
+interface SakuraLlamaCompletionResponse {
+  content: string;
+  model: string;
+  truncated: boolean;
 }

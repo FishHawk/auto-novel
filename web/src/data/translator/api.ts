@@ -7,6 +7,7 @@ type BaseTranslateTaskDesc = {
   translatorId: TranslatorId;
   accessToken: string;
   sakuraEndpoint: string;
+  sakuraUseLlamaApi?: boolean;
   translateExpireChapter: boolean;
   syncFromProvider: boolean;
   startIndex: number;
@@ -146,6 +147,7 @@ const translateWeb = async ({
       log: (message) => callback.log('　　' + message),
       accessTokenOrKey: accessToken ?? '',
       endpoint: '',
+      useLlamaApi: false,
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -278,6 +280,7 @@ const translateWenku = async ({
       log: (message) => callback.log('　　' + message),
       accessTokenOrKey: accessToken ?? '',
       endpoint: '',
+      useLlamaApi: false,
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -324,6 +327,7 @@ const translateWenku = async ({
 const translatePersonal = async ({
   volumeId,
   sakuraEndpoint,
+  sakuraUseLlamaApi,
   //
   client,
   translatorId,
@@ -369,6 +373,7 @@ const translatePersonal = async ({
       log: (message) => callback.log('　　' + message),
       accessTokenOrKey: accessToken ?? '',
       endpoint: sakuraEndpoint ?? '',
+      useLlamaApi: sakuraUseLlamaApi ?? false,
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);

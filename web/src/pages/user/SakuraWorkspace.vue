@@ -8,12 +8,13 @@ const message = useMessage();
 const setting = useSettingStore();
 
 const showCreateWorkerModal = ref(false);
+const formRef = ref<FormInst>();
 const formValue = ref({
   id: '',
   endpoint: '',
+  useLlamaApi: false,
 });
-const formRef = ref<FormInst | null>(null);
-const rules: FormRules = {
+const formRules: FormRules = {
   id: [
     {
       validator: (rule: FormItemRule, value: string) =>
@@ -24,7 +25,11 @@ const rules: FormRules = {
   ],
 };
 
-const createSakuraWorker = async (json: { id: string; endpoint: string }) => {
+const createSakuraWorker = async (json: {
+  id: string;
+  endpoint: string;
+  useLlamaApi: boolean;
+}) => {
   const validated = await new Promise<boolean>(function (resolve, _reject) {
     formRef.value?.validate((errors) => {
       if (errors) resolve(false);
@@ -86,6 +91,7 @@ const onJobFinished = (task: string) => {
         <sakura-worker
           :id="worker.id"
           :endpoint="worker.endpoint"
+          :use-llama-api="worker.useLlamaApi ?? false"
           :get-next-job="getNextJob"
           @finished="onJobFinished"
         />
@@ -131,7 +137,7 @@ const onJobFinished = (task: string) => {
     <n-form
       ref="formRef"
       :model="formValue"
-      :rules="rules"
+      :rules="formRules"
       label-placement="left"
     >
       <n-form-item-row path="id" label="名字">
@@ -147,6 +153,9 @@ const onJobFinished = (task: string) => {
           placeholder="翻译器的链接"
           :input-props="{ spellcheck: false }"
         />
+      </n-form-item-row>
+      <n-form-item-row path="useLlamaApi" label="LlamaApi">
+        <n-switch v-model:value="formValue.useLlamaApi" />
       </n-form-item-row>
 
       <n-text depth="3" style="font-size: 12px">

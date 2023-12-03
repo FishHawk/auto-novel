@@ -54,6 +54,7 @@ const startTask = async (
     translatorId: TranslatorId;
     accessToken: string;
     sakuraEndpoint: string;
+    sakuraUseLlamaApi?: boolean;
     translateExpireChapter: boolean;
     syncFromProvider: boolean;
     startIndex: number;

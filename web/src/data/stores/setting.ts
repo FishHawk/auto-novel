@@ -14,7 +14,7 @@ export interface Setting {
     translationsMode: 'parallel' | 'priority';
     translations: TranslatorId[];
   };
-  sakuraWorkers: { id: string; endpoint: string }[];
+  sakuraWorkers: { id: string; endpoint: string; useLlamaApi?: boolean }[];
   sakuraJobs: { task: string; description: string; createAt: number }[];
 }
 

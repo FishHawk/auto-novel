@@ -7,9 +7,10 @@ import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
 import { useSettingStore } from '@/data/stores/setting';
 
-const { id, endpoint, getNextJob } = defineProps<{
+const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
   id: string;
   endpoint: string;
+  useLlamaApi: boolean;
   getNextJob: () =>
     | { task: string; description: string; createAt: number }
     | undefined;
@@ -58,6 +59,7 @@ const processTasks = async () => {
       translatorId: 'sakura',
       accessToken: '',
       sakuraEndpoint: endpoint,
+      sakuraUseLlamaApi: useLlamaApi,
       translateExpireChapter: expire === 'true',
       syncFromProvider: false,
       startIndex: 0,
@@ -94,6 +96,7 @@ const testSakuraWorker = async () => {
     client,
     glossary: {},
     endpoint,
+    useLlamaApi,
     log: () => {},
   });
   try {
@@ -121,7 +124,9 @@ const testSakuraWorker = async () => {
     <template #header>
       <n-space>
         {{ id }}
-        <n-text depth="3" style="font-size: 14px"> @{{ endpoint }} </n-text>
+        <n-text depth="3" style="font-size: 14px">
+          {{ useLlamaApi ? 'LLAMA' : 'Simple' }}@{{ endpoint }}
+        </n-text>
       </n-space>
     </template>
 
