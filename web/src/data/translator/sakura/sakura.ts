@@ -3,6 +3,7 @@ import { KyInstance } from 'ky/distribution/types/ky';
 import { BaseTranslatorConfig, Glossary, SegmentTranslator } from '../type';
 import { createLengthSegmentor } from '../tradition/common';
 import { parseEventStream } from '../openai/common';
+import { h } from 'vue';
 
 export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
   endpoint: string;
@@ -62,14 +63,18 @@ export class SakuraTranslator implements SegmentTranslator {
 
     let retry = 0;
     while (retry < 2) {
-      this.log(`分段${segInfo.index + 1}/${segInfo.size}[${retry}]`);
-
       const { text, hasDegradation } = await this.translatePrompt(
         prompt,
         maxNewToken,
         retry === 0 ? {} : { frequency_penalty: 0.2 }
       );
       const splitText = text.split('\n');
+
+      this.log(
+        `分段${segInfo.index + 1}/${segInfo.size}[${retry}] ${
+          hasDegradation ? ' 退化' : ''
+        }`
+      );
 
       if (!hasDegradation && seg.length === splitText.length) {
         return splitText;
@@ -78,7 +83,8 @@ export class SakuraTranslator implements SegmentTranslator {
       }
     }
 
-    // 进入逐句翻译模式
+    // 进入逐行翻译模式
+    this.log(`分段${segInfo.index + 1}/${segInfo.size}[逐行翻译]`);
     const resultPerLine = [];
     for (const line of seg) {
       const prompt = makePrompt(line);
