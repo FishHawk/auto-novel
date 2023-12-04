@@ -103,7 +103,7 @@ export class Translator {
       if (!config.endpoint) {
         throw new Error('Sakura翻译器需要输入你自己部署的服务网址');
       }
-      return new SakuraTranslator(config);
+      return await new SakuraTranslator(config).init();
     }
   }
 

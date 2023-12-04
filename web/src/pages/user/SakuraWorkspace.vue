@@ -12,7 +12,7 @@ const formRef = ref<FormInst>();
 const formValue = ref({
   id: '',
   endpoint: '',
-  useLlamaApi: false,
+  useLlamaApi: true,
 });
 const formRules: FormRules = {
   id: [
@@ -157,7 +157,7 @@ const onJobFinished = (task: string) => {
       </n-form-item-row>
 
       <n-text depth="3" style="font-size: 12px">
-        # 链接例子：http://127.0.0.1:5000/api/v1/generate
+        # 链接例子：http://127.0.0.1:8080
       </n-text>
     </n-form>
 

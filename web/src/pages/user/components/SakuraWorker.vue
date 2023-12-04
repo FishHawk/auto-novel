@@ -91,15 +91,15 @@ const testSakuraWorker = async () => {
   const input =
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
   const Translator = (await import('@/data/translator')).Translator;
-  const translator = await Translator.createWithoutCache({
-    id: 'sakura',
-    client,
-    glossary: {},
-    endpoint,
-    useLlamaApi,
-    log: () => {},
-  });
   try {
+    const translator = await Translator.createWithoutCache({
+      id: 'sakura',
+      client,
+      glossary: {},
+      endpoint,
+      useLlamaApi,
+      log: () => {},
+    });
     const result = await translator.translate([input]);
     const output = result[0];
     message.success(`原文：${input}\n译文：${output}`);
@@ -125,7 +125,7 @@ const testSakuraWorker = async () => {
       <n-space>
         {{ id }}
         <n-text depth="3" style="font-size: 14px">
-          {{ useLlamaApi ? 'LLAMA' : 'Simple' }}@{{ endpoint }}
+          {{ useLlamaApi ? 'LLAMA' : '旧版' }}@{{ endpoint }}
         </n-text>
       </n-space>
     </template>

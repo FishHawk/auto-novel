@@ -32,7 +32,7 @@ export const useSettingStore = defineStore('setting', {
         translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       },
       sakuraWorkers: [
-        { id: '默认', endpoint: 'http://127.0.0.1:5000/api/v1/generate' },
+        { id: '默认', endpoint: 'http://127.0.0.1:8080', useLlamaApi: true },
       ],
       sakuraJobs: [],
     },
