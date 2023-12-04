@@ -78,12 +78,7 @@ const signIn = async () => {
   </n-form>
 
   <RouterNA to="/reset-password">忘记密码</RouterNA>
-  <async-button
-    type="primary"
-    block
-    @async-click="signIn"
-    style="margin-top: 20px"
-  >
+  <n-button type="primary" block @click="signIn" style="margin-top: 20px">
     登录
-  </async-button>
+  </n-button>
 </template>

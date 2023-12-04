@@ -145,5 +145,5 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
       />
     </n-form-item-row>
   </n-form>
-  <async-button type="primary" block @async-click="signUp"> 注册 </async-button>
+  <n-button type="primary" block @click="signUp">注册</n-button>
 </template>
