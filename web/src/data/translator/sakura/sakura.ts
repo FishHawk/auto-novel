@@ -46,6 +46,9 @@ export class SakuraTranslator implements SegmentTranslator {
   createSegments = createLengthSegmentor(500);
 
   async init() {
+    if (this.api === undefined) {
+      return this;
+    }
     const result = await this.translatePrompt('test', 1, {});
     if (result.model) {
       if (result.model.includes('0.8')) {
