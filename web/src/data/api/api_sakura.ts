@@ -58,11 +58,11 @@ const createSakuraJobWebTranslate = (
   params: {
     start: number;
     end: number;
+    expire: boolean;
   }
 ) =>
   createSakuraJob(
-    `web/${providerId}/${novelId}` +
-      buildSakuraTaskQueryString({ ...params, expire: false })
+    `web/${providerId}/${novelId}` + buildSakuraTaskQueryString(params)
   );
 
 const createSakuraJobWenkuTranslate = (
@@ -71,11 +71,11 @@ const createSakuraJobWenkuTranslate = (
   params: {
     start: number;
     end: number;
+    expire: boolean;
   }
 ) =>
   createSakuraJob(
-    `wenku/${novelId}/${volumeId}` +
-      buildSakuraTaskQueryString({ ...params, expire: false })
+    `wenku/${novelId}/${volumeId}` + buildSakuraTaskQueryString(params)
   );
 
 const deleteSakuraJob = (id: string) =>

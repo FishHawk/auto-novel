@@ -183,7 +183,7 @@ class SakuraWorker(
         val (_, providerId, novelId) = taskUrl.pathSegments
         val start = taskUrl.parameters["start"]?.toIntOrNull() ?: 0
         val end = taskUrl.parameters["end"]?.toIntOrNull() ?: 65536
-        val shouldTranslateExpiredChapter = true
+        val shouldTranslateExpiredChapter = taskUrl.parameters["expire"]?.toBoolean() ?: false
 
         this.description = job.description + "\n" + "${providerId}/${novelId}"
 
@@ -296,7 +296,7 @@ class SakuraWorker(
         val (_, novelId, volumeId) = taskUrl.pathSegments
         val start = taskUrl.parameters["start"]?.toIntOrNull() ?: 0
         val end = taskUrl.parameters["end"]?.toIntOrNull() ?: 65536
-        val shouldTranslateExpiredChapter = true
+        val shouldTranslateExpiredChapter = taskUrl.parameters["expire"]?.toBoolean() ?: false
 
         this.description = job.description + "\n" + "${novelId}/${volumeId}"
 

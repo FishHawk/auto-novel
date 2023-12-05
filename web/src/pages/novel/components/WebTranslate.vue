@@ -179,6 +179,7 @@ async function submitSakuraJob() {
     {
       start: startIndex.value ?? 0,
       end: endIndex.value ?? 65535,
+      expire: translateExpireChapter.value,
     }
   );
   if (result.ok) {

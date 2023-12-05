@@ -91,12 +91,14 @@ const file = computed(() => {
 });
 
 const submitSakuraJob = async () => {
+  const { translateExpireChapter } = getParams();
   const result = await ApiSakura.createSakuraJobWenkuTranslate(
     novelId,
     volume.volumeId,
     {
       start: 0,
       end: 65535,
+      expire: translateExpireChapter,
     }
   );
   if (result.ok) {
