@@ -68,20 +68,20 @@ const onJobFinished = (task: string) => {
 
 <template>
   <user-layout>
+    <n-p depth="3"> 启动了的翻译器无法暂停或删除。等这句话没了就可以了。 </n-p>
+
     <n-p>
-      你可以部署自己的Sakura翻译器，参见
-      <n-a href="https://sakura.srpr.moe" target="_blank">
-        Sakura模型部署教程
-      </n-a>
-      。
-    </n-p>
-    <n-p depth="3">
-      启动了的翻译器无法暂停或删除。等这句话没了就可以了。
-    </n-p>
-    <n-p>
-      <n-button @click="showCreateWorkerModal = true">
-        添加Sakura翻译器
-      </n-button>
+      <n-space>
+        <n-button @click="showCreateWorkerModal = true">
+          添加Sakura翻译器
+        </n-button>
+
+        <RouterNA to="/forum/656d60530286f15e3384fcf8">
+          <n-button> 本地部署教程 </n-button>
+        </RouterNA>
+
+        <n-button> 租用显卡教程（未完成） </n-button>
+      </n-space>
     </n-p>
 
     <n-list>

@@ -139,7 +139,11 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
-        <n-li>GPT修好了。</n-li>
+        <n-li>
+          <b>
+            Sakura模型教程正式发布了，大幅简化了部署流程。租用显卡的教程还得等等。
+          </b>
+        </n-li>
         <n-li>
           如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。
         </n-li>
