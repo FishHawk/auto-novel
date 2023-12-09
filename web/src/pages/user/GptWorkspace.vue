@@ -5,11 +5,11 @@ import { ref } from 'vue';
 import {
   TranslateJob,
   UncompletedTranslateJob,
-  useSakuraWorkspaceStore,
+  useGptWorkspaceStore,
 } from '@/data/stores/workspace';
 
 const message = useMessage();
-const sakuraWorkspace = useSakuraWorkspaceStore();
+const gptWorkspace = useGptWorkspaceStore();
 
 const showCreateWorkerModal = ref(false);
 
@@ -20,21 +20,19 @@ type ProcessedJob = TranslateJob & {
 const processedJobs = ref<Map<string, ProcessedJob>>(new Map());
 
 const getNextJob = () => {
-  const job = sakuraWorkspace.jobs.find(
-    (it) => !processedJobs.value.has(it.task)
-  );
+  const job = gptWorkspace.jobs.find((it) => !processedJobs.value.has(it.task));
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);
   }
   return job;
 };
 
-const deleteSakuraJob = async (task: string) => {
+const deleteGptJob = async (task: string) => {
   if (processedJobs.value.has(task)) {
     message.error('任务被翻译器占用');
     return;
   }
-  sakuraWorkspace.deleteJob(task);
+  gptWorkspace.deleteJob(task);
 };
 
 const onProgressUpdated = (
@@ -50,8 +48,8 @@ const onProgressUpdated = (
       job.progress !== undefined &&
       job.progress.finished < job.progress.total
     ) {
-      sakuraWorkspace.addUncompletedJob(job as any);
-      sakuraWorkspace.deleteJob(task);
+      gptWorkspace.addUncompletedJob(job as any);
+      gptWorkspace.deleteJob(task);
     }
   } else {
     const job = processedJobs.value.get(task)!!;
@@ -76,24 +74,24 @@ const computePercentage = (job: ProcessedJob) => {
   }
 };
 
-const retrySakuraJob = (job: UncompletedTranslateJob): void => {
-  const success = sakuraWorkspace.addJob({
+const retryGptJob = (job: UncompletedTranslateJob): void => {
+  const success = gptWorkspace.addJob({
     task: job.task,
     description: job.description,
     createAt: Date.now(),
   });
   if (success) {
-    sakuraWorkspace.deleteUncompletedJob(job.task);
+    gptWorkspace.deleteUncompletedJob(job.task);
     message.success('排队成功');
   } else {
-    message.error('Sakura翻译任务已经存在');
+    message.error('GPT翻译任务已经存在');
   }
 };
 
 const clearCache = async () => {
   await (
     await import('@/data/translator/cache')
-  ).clearSegIndexedDbCache('sakura-seg-cache');
+  ).clearSegIndexedDbCache('gpt-seg-cache');
   message.success('缓存清除成功');
 };
 </script>
@@ -105,27 +103,17 @@ const clearCache = async () => {
     <n-p>
       <n-space>
         <n-button @click="showCreateWorkerModal = true">
-          添加Sakura翻译器
+          添加GPT翻译器
         </n-button>
 
-        <async-button @async-click="clearCache"> 删除Sakura缓存 </async-button>
-
-        <RouterNA to="/forum/656d60530286f15e3384fcf8">
-          <n-button>本地部署教程</n-button>
-        </RouterNA>
-
-        <RouterNA to="/forum/65719bf16843e12bd3a4dc98">
-          <n-button>租用显卡教程</n-button>
-        </RouterNA>
+        <async-button @async-click="clearCache"> 删除GPT缓存 </async-button>
       </n-space>
     </n-p>
 
     <n-list>
-      <n-list-item v-for="worker of sakuraWorkspace.workers" :key="worker.id">
-        <sakura-worker
-          :id="worker.id"
-          :endpoint="worker.endpoint"
-          :use-llama-api="worker.useLlamaApi ?? false"
+      <n-list-item v-for="worker of gptWorkspace.workers" :key="worker.id">
+        <gpt-worker
+          :worker="worker"
           :get-next-job="getNextJob"
           @update:progress="onProgressUpdated"
         />
@@ -133,7 +121,7 @@ const clearCache = async () => {
     </n-list>
 
     <SectionHeader title="任务队列" />
-    <n-empty v-if="sakuraWorkspace.jobs.length === 0" description="没有任务" />
+    <n-empty v-if="gptWorkspace.jobs.length === 0" description="没有任务" />
     <n-table :bordered="false" style="margin-top: 16px" v-else>
       <thead>
         <tr>
@@ -142,7 +130,7 @@ const clearCache = async () => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="job of sakuraWorkspace.jobs" :key="job.task">
+        <tr v-for="job of gptWorkspace.jobs" :key="job.task">
           <td>
             <n-text depth="3" style="font-size: 12px">{{ job.task }}</n-text>
             <br />
@@ -161,7 +149,7 @@ const clearCache = async () => {
             <async-button
               type="error"
               text
-              @async-click="() => deleteSakuraJob(job.task)"
+              @async-click="() => deleteGptJob(job.task)"
             >
               删除
             </async-button>
@@ -171,12 +159,10 @@ const clearCache = async () => {
     </n-table>
 
     <SectionHeader title="未完成任务记录">
-      <n-button @click="sakuraWorkspace.clearUncompletedJobs()">
-        清空
-      </n-button>
+      <n-button @click="gptWorkspace.clearUncompletedJobs()"> 清空 </n-button>
     </SectionHeader>
     <n-empty
-      v-if="sakuraWorkspace.uncompletedJobs.length === 0"
+      v-if="gptWorkspace.uncompletedJobs.length === 0"
       description="没有任务"
     />
     <n-table :bordered="false" style="margin-top: 16px" v-else>
@@ -187,7 +173,7 @@ const clearCache = async () => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="job of sakuraWorkspace.uncompletedJobs" :key="job.task">
+        <tr v-for="job of gptWorkspace.uncompletedJobs" :key="job.task">
           <td>
             <n-text depth="3" style="font-size: 12px">{{ job.task }}</n-text>
             <br />
@@ -201,14 +187,14 @@ const clearCache = async () => {
           <td style="white-space: nowrap">
             <n-time :time="job.createAt" type="relative" />
             <br />
-            <n-button type="primary" text @click="() => retrySakuraJob(job)">
+            <n-button type="primary" text @click="() => retryGptJob(job)">
               重新加入
             </n-button>
             <br />
             <n-button
               type="error"
               text
-              @click="() => sakuraWorkspace.deleteUncompletedJob(job.task)"
+              @click="() => gptWorkspace.deleteUncompletedJob(job.task)"
             >
               删除
             </n-button>
@@ -218,5 +204,5 @@ const clearCache = async () => {
     </n-table>
   </user-layout>
 
-  <sakura-create-worker-modal v-model:show="showCreateWorkerModal" />
+  <gpt-create-worker-modal v-model:show="showCreateWorkerModal" />
 </template>

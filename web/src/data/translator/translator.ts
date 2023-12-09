@@ -95,14 +95,8 @@ export class Translator {
     } else if (config.id === 'youdao') {
       return await new YoudaoTranslator(config).init();
     } else if (config.id === 'gpt') {
-      if (!config.accessTokenOrKey) {
-        throw new Error('GPT翻译器需要Access Token或者Api Key');
-      }
       return new OpenAiTranslator(config);
     } else {
-      if (!config.endpoint) {
-        throw new Error('Sakura翻译器需要输入你自己部署的服务网址');
-      }
       return await new SakuraTranslator(config).init();
     }
   }

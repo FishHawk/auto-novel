@@ -45,6 +45,11 @@ const router = createRouter({
       meta: { title: 'Sakura工作区' },
       component: () => import('./pages/user/SakuraWorkspace.vue'),
     },
+    {
+      path: '/gpt-workspace',
+      meta: { title: 'GPT工作区' },
+      component: () => import('./pages/user/GptWorkspace.vue'),
+    },
 
     {
       path: '/novel-list',

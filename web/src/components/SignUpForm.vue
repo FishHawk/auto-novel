@@ -98,6 +98,7 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
     :model="formValue"
     :rules="formRules"
     label-placement="left"
+    label-width="auto"
   >
     <n-form-item-row path="email">
       <n-input

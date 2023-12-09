@@ -1,36 +1,32 @@
-import { KyInstance } from 'ky/distribution/types/ky';
-
 import { BaseTranslatorConfig, Glossary, SegmentTranslator } from '../type';
-import { OpenAiError, OpenAiOfficialApi } from './api_official';
-import { OpenAiUnofficialApi } from './api_unofficial';
+import { OpenAiError, OpenAiApi } from './api';
+import { OpenAiApiWeb } from './api_web';
 import { createTokenSegmenter } from './common';
 
 export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
-  accessTokenOrKey: string;
+  type: 'web' | 'api';
+  endpoint: string;
+  key: string;
 }
 
 export class OpenAiTranslator implements SegmentTranslator {
   log: (message: string) => void;
   glossary: Glossary;
 
-  private api:
-    | (OpenAiOfficialApi & { official: true })
-    | (OpenAiUnofficialApi & { official: false });
+  private api: OpenAiApi | OpenAiApiWeb;
 
   constructor({
     client,
     glossary,
     log,
-    accessTokenOrKey,
+    type,
+    endpoint,
+    key,
   }: OpenAiTranslatorConfig) {
-    if (accessTokenOrKey.startsWith('sk-')) {
-      const api = new OpenAiOfficialApi(client, accessTokenOrKey) as any;
-      api['official'] = true;
-      this.api = api;
+    if (type === 'web') {
+      this.api = new OpenAiApiWeb(client, endpoint, key);
     } else {
-      const api = new OpenAiUnofficialApi(client, accessTokenOrKey) as any;
-      api['official'] = false;
-      this.api = api;
+      this.api = new OpenAiApi(client, endpoint, key);
     }
     this.log = log;
     this.glossary = glossary;
@@ -201,8 +197,8 @@ export class OpenAiTranslator implements SegmentTranslator {
     };
 
     const messages = buildMessages(lines, this.glossary, enableBypass);
-    if (this.api.official) {
-      return askOfficial(this.api, messages)
+    if (this.api.type === 'api') {
+      return askApi(this.api, messages)
         .then((it) => ({
           answer: parseAnswer(it.answer),
           fromHistory: false,
@@ -252,7 +248,7 @@ export class OpenAiTranslator implements SegmentTranslator {
         return { message: error };
       };
 
-      const result = await askUnofficial(this.api, messages);
+      const result = await askApiWeb(this.api, messages);
       if (typeof result === 'object') {
         return {
           answer: parseAnswer(result.answer),
@@ -293,11 +289,11 @@ export class OpenAiTranslator implements SegmentTranslator {
   }
 }
 
-function askOfficial(
-  api: OpenAiOfficialApi,
+const askApi = (
+  api: OpenAiApi,
   messages: ['user' | 'assistant', string][]
-): Promise<{ answer: string }> {
-  return api
+): Promise<{ answer: string }> =>
+  api
     .createChatCompletionsStream({
       messages: messages.map(([role, content]) => ({ content, role })),
       model: 'gpt-3.5-turbo',
@@ -310,16 +306,15 @@ function askOfficial(
         .join('');
       return { answer };
     });
-}
 
-async function askUnofficial(
-  api: OpenAiUnofficialApi,
+const askApiWeb = async (
+  api: OpenAiApiWeb,
   messages: ['user' | 'assistant', string][]
-): Promise<{ answer: string; fromHistory: boolean } | string> {
+): Promise<{ answer: string; fromHistory: boolean } | string> => {
   const chunks = await api.createConversation(
     {
       messages: messages.map(([role, message]) =>
-        OpenAiUnofficialApi.message(role, message)
+        OpenAiApiWeb.message(role, message)
       ),
       history_and_training_disabled: false,
     },
@@ -371,7 +366,7 @@ async function askUnofficial(
     }
     return 'censored';
   }
-}
+};
 
 function buildMessages(
   lines: string[],

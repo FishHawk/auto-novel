@@ -4,12 +4,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { parseEventStream } from './common';
 
-export class OpenAiUnofficialApi {
-  private client;
+export class OpenAiApiWeb {
+  type: 'web';
+  client: KyInstance;
 
-  constructor(client: KyInstance, accessToken: string) {
+  constructor(client: KyInstance, endpoint: string, accessToken: string) {
+    this.type = 'web';
     this.client = client.create({
-      prefixUrl: 'https://chatgpt-proxy.lss233.com/api',
+      prefixUrl: endpoint,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
@@ -44,7 +46,7 @@ export class OpenAiUnofficialApi {
   }
 }
 
-export namespace OpenAiUnofficialApi {
+export namespace OpenAiApiWeb {
   export const message = (
     role: 'user' | 'assistant' | 'system',
     text: string

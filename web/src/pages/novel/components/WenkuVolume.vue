@@ -9,15 +9,16 @@ import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
+import {
+  buildWenkuTranslateTask,
+  useGptWorkspaceStore,
+} from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator/translator';
 
 const { novelId, volume, getParams } = defineProps<{
   novelId: string;
   volume: VolumeJpDto;
-  getParams: () => {
-    accessToken: string;
-    translateExpireChapter: boolean;
-  };
+  getParams: () => { translateExpireChapter: boolean };
 }>();
 
 const emits = defineEmits<{ deleted: [] }>();
@@ -26,20 +27,20 @@ const message = useMessage();
 const userData = useUserDataStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
+const gptWorkspace = useGptWorkspaceStore();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
-const startTranslateTask = (translatorId: TranslatorId) => {
+const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
   const params = getParams();
   return translateTask?.value?.startTask(
     { type: 'wenku', novelId, volumeId: volume.volumeId },
     {
       ...params,
-      translatorId,
-      sakuraEndpoint: '',
       syncFromProvider: false,
       startIndex: 0,
       endIndex: 65536,
-    }
+    },
+    { id: translatorId }
   );
 };
 
@@ -108,6 +109,25 @@ const submitSakuraJob = async () => {
   }
 };
 
+const submitGptJob = () => {
+  const { translateExpireChapter } = getParams();
+  const task = buildWenkuTranslateTask(novelId, volume.volumeId, {
+    start: 0,
+    end: 65535,
+    expire: translateExpireChapter,
+  });
+  const success = gptWorkspace.addJob({
+    task,
+    description: volume.volumeId,
+    createAt: Date.now(),
+  });
+  if (success) {
+    message.success('排队成功');
+  } else {
+    message.error('排队失败：翻译任务已经存在');
+  }
+};
+
 const deleteVolume = async () => {
   const result = await ApiWenkuNovel.deleteVolume(novelId, volume.volumeId);
   if (result.ok) {
@@ -126,23 +146,32 @@ const deleteVolume = async () => {
         <n-text>{{ volume.volumeId }}</n-text>
         <n-space>
           <template v-for="{ translatorId, label } of translatorLabels">
+            <async-button
+              v-if="translatorId === 'sakura'"
+              text
+              type="primary"
+              @async-click="submitSakuraJob"
+            >
+              公用排队{{ label }}
+            </async-button>
+
             <n-button
-              v-if="translatorId !== 'sakura'"
+              v-else-if="translatorId === 'gpt'"
+              text
+              type="primary"
+              @click="submitGptJob"
+            >
+              排队{{ label }}
+            </n-button>
+
+            <n-button
+              v-else
               text
               type="primary"
               @click="startTranslateTask(translatorId)"
             >
               更新{{ label }}
             </n-button>
-
-            <async-button
-              v-else
-              text
-              type="primary"
-              @async-click="() => submitSakuraJob()"
-            >
-              排队{{ label }}
-            </async-button>
           </template>
           <RouterNA to="/sakura">
             <n-button text type="primary"> 查看队列 </n-button>

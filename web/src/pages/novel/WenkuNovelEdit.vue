@@ -245,6 +245,7 @@ function deleteVolume(index: number) {
       :model="formValue"
       :rules="rules"
       label-placement="left"
+      label-width="auto"
       style="max-width: 800px"
     >
       <n-form-item-row path="title">

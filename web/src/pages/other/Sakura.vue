@@ -273,6 +273,7 @@ const createWorkerFormValue = ref({
           ref="formRef"
           :model="createWorkerFormValue"
           label-placement="left"
+          label-width="auto"
         >
           <n-form-item-row path="gpu" label="名字">
             <n-input

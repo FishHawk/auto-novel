@@ -7,36 +7,39 @@ import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiUserPersonal, PersonalVolume } from '@/data/api/api_user_personal';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
-import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import {
+  buildPersonalTranslateTask,
+  useGptWorkspaceStore,
+  useSakuraWorkspaceStore,
+} from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator/translator';
 
 const { volume, downloadToken, getParams } = defineProps<{
   volume: PersonalVolume;
   downloadToken: string;
   getParams: () => {
-    accessToken: string;
     translateExpireChapter: boolean;
   };
 }>();
 
 const message = useMessage();
+const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
-const startTranslateTask = (translatorId: TranslatorId) => {
+const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
   const params = getParams();
   return translateTask?.value?.startTask(
     { type: 'personal', volumeId: volume.volumeId },
     {
       ...params,
-      translatorId,
-      sakuraEndpoint: '',
       syncFromProvider: false,
       startIndex: 0,
-      endIndex: 65536,
-    }
+      endIndex: 65535,
+    },
+    { id: translatorId }
   );
 };
 
@@ -109,29 +112,33 @@ async function submitGlossary(
   }
 }
 
-const submitSakuraJob = () => {
+const submitJob = (translatorId: 'sakura' | 'gpt') => {
   const { translateExpireChapter } = getParams();
 
-  const taskString = `personal/${volume.volumeId}`;
-
-  const params: { [key: string]: string } = {};
-  if (translateExpireChapter) {
-    params['expire'] = `${translateExpireChapter}`;
-  }
-  const searchParams = new URLSearchParams(params).toString();
-  const queryString = searchParams ? `?${searchParams}` : '';
-
-  const task = taskString + queryString;
-
-  const success = sakuraWorkspace.addJob({
-    task,
-    description: volume.volumeId,
-    createAt: Date.now(),
+  const task = buildPersonalTranslateTask(volume.volumeId, {
+    start: 0,
+    end: 65535,
+    expire: translateExpireChapter,
   });
+
+  let success = false;
+  if (translatorId === 'gpt') {
+    success = gptWorkspace.addJob({
+      task,
+      description: volume.volumeId,
+      createAt: Date.now(),
+    });
+  } else {
+    success = sakuraWorkspace.addJob({
+      task,
+      description: volume.volumeId,
+      createAt: Date.now(),
+    });
+  }
   if (success) {
     message.success('排队成功');
   } else {
-    message.error('Sakura翻译任务已经存在');
+    message.error('排队失败：翻译任务已经存在');
   }
 };
 
@@ -146,7 +153,7 @@ const showGlossaryEditor = ref(false);
         <n-space>
           <template v-for="{ translatorId, label } of translatorLabels">
             <n-button
-              v-if="translatorId !== 'sakura'"
+              v-if="translatorId !== 'sakura' && translatorId !== 'gpt'"
               text
               type="primary"
               @click="startTranslateTask(translatorId)"
@@ -158,9 +165,9 @@ const showGlossaryEditor = ref(false);
               v-else
               text
               type="primary"
-              @click="() => submitSakuraJob()"
+              @click="() => submitJob(translatorId)"
             >
-              私人排队{{ label }}
+              排队{{ label }}
             </n-button>
           </template>
 

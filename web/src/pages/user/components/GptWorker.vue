@@ -4,12 +4,10 @@ import { computed, ref } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
-import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import { GptWorker, useGptWorkspaceStore } from '@/data/stores/workspace';
 
-const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
-  id: string;
-  endpoint: string;
-  useLlamaApi: boolean;
+const { worker, getNextJob } = defineProps<{
+  worker: GptWorker;
   getNextJob: () =>
     | { task: string; description: string; createAt: number }
     | undefined;
@@ -26,7 +24,19 @@ const emit = defineEmits<{
 }>();
 
 const message = useMessage();
-const sakuraWorkspace = useSakuraWorkspaceStore();
+const gptWorkspace = useGptWorkspaceStore();
+
+const realEndpoint = computed(() => {
+  if (worker.endpoint.length === 0) {
+    if (worker.type === 'web') {
+      return 'https://chatgpt-proxy.lss233.com/api';
+    } else {
+      return 'https://api.openai.com/v1';
+    }
+  } else {
+    return worker.endpoint;
+  }
+});
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const currentJob = ref<{
@@ -45,7 +55,9 @@ const processTasks = async () => {
     const task = job.task;
 
     const [taskString, queryString] = task.split('?');
-    const { expire } = Object.fromEntries(new URLSearchParams(queryString));
+    const { start, end, expire } = Object.fromEntries(
+      new URLSearchParams(queryString)
+    );
 
     let desc: any;
     if (taskString.startsWith('web')) {
@@ -61,18 +73,24 @@ const processTasks = async () => {
 
     if (desc === undefined) continue;
 
+    const parseIntWithDefault = (str: string, defaultValue: number) => {
+      const num = parseInt(str, 10);
+      return isNaN(num) ? defaultValue : num;
+    };
+
     const completed = await translateTask.value!!.startTask(
       desc,
       {
         translateExpireChapter: expire === 'true',
         syncFromProvider: false,
-        startIndex: 0,
-        endIndex: 65535,
+        startIndex: parseIntWithDefault(start, 0),
+        endIndex: parseIntWithDefault(end, 65535),
       },
       {
-        id: 'sakura',
-        endpoint,
-        useLlamaApi,
+        id: 'gpt',
+        type: worker.type,
+        endpoint: realEndpoint.value,
+        key: worker.key,
       },
       {
         onProgressUpdated: (progress) => {
@@ -87,44 +105,46 @@ const processTasks = async () => {
 
     if (!completed) break;
   }
+  currentJob.value = undefined;
 };
 
-const startSakuraWorker = () => {
+const startGptWorker = () => {
   if (running.value) return;
   processTasks();
 };
-const stopSakuraWorker = () => {
+const stopGptWorker = () => {
   if (!running.value) return;
   // TODO
   message.error('还不支持');
 };
-const deleteSakuraWorker = () => {
+const deleteGptWorker = () => {
   // TODO
   if (running.value) {
     message.error('翻译器正在运行');
     return;
   }
-  sakuraWorkspace.deleteWorker(id);
+  gptWorkspace.deleteWorker(worker.id);
 };
 
-const testSakuraWorker = async () => {
+const testGptWorker = async () => {
   const input =
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
   const Translator = (await import('@/data/translator')).Translator;
   try {
     const translator = await Translator.createWithoutCache({
-      id: 'sakura',
+      id: 'gpt',
       client,
       glossary: {},
-      endpoint,
-      useLlamaApi,
+      type: worker.type,
+      endpoint: realEndpoint.value,
+      key: worker.key,
       log: () => {},
     });
     const result = await translator.translate([input]);
     const output = result[0];
     message.success(`原文：${input}\n译文：${output}`);
   } catch (e: any) {
-    message.error(`Sakura报错：${e}`);
+    message.error(`GPT报错：${e}`);
   }
 };
 </script>
@@ -136,9 +156,11 @@ const testSakuraWorker = async () => {
     </template>
 
     <template #header>
-      {{ id }}
+      {{ worker.id }}
       <n-text depth="3" style="font-size: 12px; padding-left: 2px">
-        {{ useLlamaApi ? '' : '旧版@' }}{{ endpoint }}
+        {{ worker.type === 'web' ? 'Web' : 'Api' }}-{{
+          worker.key.substring(0, 7)
+        }}@{{ realEndpoint }}
       </n-text>
     </template>
 
@@ -153,7 +175,7 @@ const testSakuraWorker = async () => {
         <async-button
           size="tiny"
           secondary
-          @async-click="() => testSakuraWorker()"
+          @async-click="() => testGptWorker()"
         >
           测试
         </async-button>
@@ -161,23 +183,18 @@ const testSakuraWorker = async () => {
           v-if="running"
           size="tiny"
           secondary
-          @click="() => stopSakuraWorker()"
+          @click="() => stopGptWorker()"
         >
           暂停
         </n-button>
-        <n-button
-          v-else
-          size="tiny"
-          secondary
-          @click="() => startSakuraWorker()"
-        >
+        <n-button v-else size="tiny" secondary @click="() => startGptWorker()">
           启动
         </n-button>
         <n-button
           size="tiny"
           secondary
           type="error"
-          @click="() => deleteSakuraWorker()"
+          @click="() => deleteGptWorker()"
         >
           删除
         </n-button>

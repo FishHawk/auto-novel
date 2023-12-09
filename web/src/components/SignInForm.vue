@@ -58,6 +58,7 @@ const signIn = async () => {
     :model="formValue"
     :rules="formRules"
     label-placement="left"
+    label-width="auto"
   >
     <n-form-item-row path="emailOrUsername">
       <n-input

@@ -44,14 +44,6 @@ function sortVolumesZh(volumes: string[]) {
 }
 const vars = useThemeVars();
 
-//
-const gptAccessToken = ref('');
-const gptAccessTokenOptions = computed(() => {
-  return setting.openAiAccessTokens.map((t) => {
-    return { label: t, value: t };
-  });
-});
-
 const showDownloadOptions = ref(false);
 const showTranslateOptions = ref(false);
 const translateExpireChapter = ref(false);
@@ -347,25 +339,13 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
           </n-list>
         </n-collapse-transition>
 
-        <n-auto-complete
-          v-model:value="gptAccessToken"
-          :options="gptAccessTokenOptions"
-          placeholder="请输入ChatGPT的Access Token或者Api Key"
-          :get-show="() => true"
-        />
-
         <n-list>
           <template v-for="volume of sortVolumesJp(metadata.volumeJp)">
             <n-list-item>
               <WenkuVolume
                 :novel-id="novelId"
                 :volume="volume"
-                :get-params="
-                  () => ({
-                    accessToken: gptAccessToken,
-                    translateExpireChapter,
-                  })
-                "
+                :get-params="() => ({ translateExpireChapter })"
                 @deleted="refreshMetadata()"
               />
             </n-list-item>

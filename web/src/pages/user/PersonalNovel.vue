@@ -5,7 +5,7 @@ import {
   UploadFileInfo,
   useMessage,
 } from 'naive-ui';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 
 import type {
   PersonalVolume,
@@ -69,13 +69,6 @@ const customRequest = ({
     }
   });
 };
-
-const gptAccessToken = ref('');
-const gptAccessTokenOptions = computed(() => {
-  return setting.openAiAccessTokens.map((t) => {
-    return { label: t, value: t };
-  });
-});
 
 const showDownloadOptions = ref(false);
 const showTranslateOptions = ref(false);
@@ -207,26 +200,13 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
         </n-list>
       </n-collapse-transition>
 
-      <n-auto-complete
-        v-model:value="gptAccessToken"
-        :options="gptAccessTokenOptions"
-        placeholder="请输入ChatGPT的Access Token或者Api Key"
-        :get-show="() => true"
-        style="margin-bottom: 16px"
-      />
-
       <n-list>
         <template v-for="volume of sortVolumesJp(volumes.volumes)">
           <n-list-item>
             <personal-volume
               :volume="volume"
               :download-token="volumes.downloadToken"
-              :get-params="
-                () => ({
-                  translateExpireChapter,
-                  accessToken: gptAccessToken,
-                })
-              "
+              :get-params="() => ({ translateExpireChapter })"
             />
           </n-list-item>
         </template>

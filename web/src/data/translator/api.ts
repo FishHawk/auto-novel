@@ -4,10 +4,6 @@ import { Translator, TranslatorId } from './translator';
 
 type BaseTranslateTaskDesc = {
   client: KyInstance;
-  translatorId: TranslatorId;
-  accessToken: string;
-  sakuraEndpoint: string;
-  sakuraUseLlamaApi?: boolean;
   translateExpireChapter: boolean;
   syncFromProvider: boolean;
   startIndex: number;
@@ -42,21 +38,28 @@ export type TranslateTaskDesc =
   | WenkuTranslateTaskDesc
   | PersonalTranslateTaskDesc;
 
-const translateWeb = async ({
-  providerId,
-  novelId,
-  syncFromProvider,
-  //
-  client,
-  translatorId,
-  accessToken,
-  startIndex,
-  endIndex,
-  translateExpireChapter,
-  callback,
-}: WebTranslateTaskDesc) => {
+export type TranslatorDesc =
+  | { id: 'baidu' }
+  | { id: 'youdao' }
+  | { id: 'gpt'; type: 'web' | 'api'; endpoint: string; key: string }
+  | { id: 'sakura'; endpoint: string; useLlamaApi: boolean };
+
+const translateWeb = async (
+  {
+    providerId,
+    novelId,
+    syncFromProvider,
+    //
+    client,
+    startIndex,
+    endIndex,
+    translateExpireChapter,
+    callback,
+  }: WebTranslateTaskDesc,
+  translatorDesc: TranslatorDesc
+) => {
   // Api
-  const endpoint = `novel/${providerId}/${novelId}/translate/${translatorId}`;
+  const endpoint = `novel/${providerId}/${novelId}/translate/${translatorDesc.id}`;
 
   interface TranslateTaskDto {
     title?: string;
@@ -141,13 +144,10 @@ const translateWeb = async ({
   let translator: Translator;
   try {
     translator = await Translator.create({
-      id: translatorId,
       client,
       glossary: task.glossary,
       log: (message) => callback.log('　　' + message),
-      accessTokenOrKey: accessToken ?? '',
-      endpoint: '',
-      useLlamaApi: false,
+      ...translatorDesc,
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -157,7 +157,7 @@ const translateWeb = async ({
   try {
     const textsSrc = encodeMetadataToTranslate(task);
     if (textsSrc.length > 0) {
-      if (translatorId === 'gpt') {
+      if (translatorDesc.id === 'gpt') {
         callback.log('目前GPT翻译目录超级不稳定，跳过');
       } else {
         callback.log('翻译元数据');
@@ -232,18 +232,19 @@ const translateWeb = async ({
   }
 };
 
-const translateWenku = async ({
-  novelId,
-  volumeId,
-  //
-  client,
-  translatorId,
-  accessToken,
-  translateExpireChapter,
-  callback,
-}: WenkuTranslateTaskDesc) => {
+const translateWenku = async (
+  {
+    novelId,
+    volumeId,
+    //
+    client,
+    translateExpireChapter,
+    callback,
+  }: WenkuTranslateTaskDesc,
+  translatorDesc: TranslatorDesc
+) => {
   // Api
-  const endpoint = `wenku/${novelId}/translate/${translatorId}/${volumeId}`;
+  const endpoint = `wenku/${novelId}/translate/${translatorDesc.id}/${volumeId}`;
 
   interface TranslateTaskDto {
     glossaryUuid?: string;
@@ -274,13 +275,10 @@ const translateWenku = async ({
   let translator: Translator;
   try {
     translator = await Translator.create({
-      id: translatorId,
       client: client,
       glossary: task.glossary,
       log: (message) => callback.log('　　' + message),
-      accessTokenOrKey: accessToken ?? '',
-      endpoint: '',
-      useLlamaApi: false,
+      ...translatorDesc,
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -324,19 +322,18 @@ const translateWenku = async ({
   }
 };
 
-const translatePersonal = async ({
-  volumeId,
-  sakuraEndpoint,
-  sakuraUseLlamaApi,
-  //
-  client,
-  translatorId,
-  accessToken,
-  translateExpireChapter,
-  callback,
-}: PersonalTranslateTaskDesc) => {
+const translatePersonal = async (
+  {
+    volumeId,
+    //
+    client,
+    translateExpireChapter,
+    callback,
+  }: PersonalTranslateTaskDesc,
+  translatorDesc: TranslatorDesc
+) => {
   // Api
-  const endpoint = `personal/translate/${translatorId}/${volumeId}`;
+  const endpoint = `personal/translate/${translatorDesc.id}/${volumeId}`;
 
   interface TranslateTaskDto {
     glossaryUuid?: string;
@@ -367,13 +364,10 @@ const translatePersonal = async ({
   let translator: Translator;
   try {
     translator = await Translator.create({
-      id: translatorId,
       client: client,
       glossary: task.glossary,
       log: (message) => callback.log('　　' + message),
-      accessTokenOrKey: accessToken ?? '',
-      endpoint: sakuraEndpoint ?? '',
-      useLlamaApi: sakuraUseLlamaApi ?? false,
+      ...translatorDesc,
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
@@ -417,8 +411,15 @@ const translatePersonal = async ({
   }
 };
 
-export const translate = (desc: TranslateTaskDesc) => {
-  if (desc.type === 'web') return translateWeb(desc);
-  else if (desc.type === 'wenku') return translateWenku(desc);
-  else return translatePersonal(desc);
+export const translate = (
+  taskDesc: TranslateTaskDesc,
+  translatorDesc: TranslatorDesc
+) => {
+  if (taskDesc.type === 'web') {
+    return translateWeb(taskDesc, translatorDesc);
+  } else if (taskDesc.type === 'wenku') {
+    return translateWenku(taskDesc, translatorDesc);
+  } else {
+    return translatePersonal(taskDesc, translatorDesc);
+  }
 };

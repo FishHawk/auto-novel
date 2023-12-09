@@ -62,6 +62,7 @@ const addFavorite = async () => {
       :model="formValue"
       :rules="formRules"
       label-placement="left"
+      label-width="auto"
     >
       <n-form-item-row label="标题" path="title">
         <n-input

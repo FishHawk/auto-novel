@@ -7,6 +7,7 @@ import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { buildWebTranslateTask, useGptWorkspaceStore } from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator/translator';
 import { getTranslatorLabel, useIsDesktop } from '@/data/util';
 
@@ -37,30 +38,22 @@ const setting = useSettingStore();
 const isDesktop = useIsDesktop(600);
 const message = useMessage();
 const userData = useUserDataStore();
-
-const gptAccessToken = ref('');
-const gptAccessTokenOptions = computed(() => {
-  return setting.openAiAccessTokens.map((t) => {
-    return { label: t, value: t };
-  });
-});
+const gptWorkspace = useGptWorkspaceStore();
 
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
-const startTranslateTask = (translatorId: TranslatorId) =>
+const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   translateTask?.value?.startTask(
     { type: 'web', providerId, novelId },
     {
-      translatorId,
-      accessToken: gptAccessToken.value,
-      sakuraEndpoint: '',
       translateExpireChapter: translateExpireChapter.value,
       syncFromProvider: syncFromProvider.value,
       startIndex: startIndex.value ?? 0,
       endIndex: endIndex.value ?? 65536,
-    }
+    },
+    { id: translatorId }
   );
 
 const files = computed<
@@ -188,6 +181,24 @@ async function submitSakuraJob() {
     message.error('排队失败:' + result.error.message);
   }
 }
+
+const submitGptJob = () => {
+  const task = buildWebTranslateTask(providerId, novelId, {
+    start: startIndex.value ?? 0,
+    end: endIndex.value ?? 65535,
+    expire: translateExpireChapter.value,
+  });
+  const success = gptWorkspace.addJob({
+    task,
+    description: titleJp,
+    createAt: Date.now(),
+  });
+  if (success) {
+    message.success('排队成功');
+  } else {
+    message.error('排队失败：翻译任务已经存在');
+  }
+};
 </script>
 
 <template>
@@ -266,13 +277,6 @@ async function submitSakuraJob() {
     </n-list>
   </n-collapse-transition>
 
-  <n-auto-complete
-    v-model:value="gptAccessToken"
-    :options="gptAccessTokenOptions"
-    placeholder="请输入ChatGPT的Access Token或者Api Key"
-    :get-show="() => true"
-  />
-
   <n-list style="background-color: #0000">
     <n-list-item v-for="row in files">
       <template #suffix>
@@ -282,9 +286,14 @@ async function submitSakuraJob() {
               <n-button tertiary size="small"> 查看 </n-button>
             </RouterNA>
             <async-button tertiary size="small" @async-click="submitSakuraJob">
-              排队
+              公用排队
             </async-button>
           </n-space>
+        </template>
+        <template v-else-if="row.translatorId === 'gpt'">
+          <n-button tertiary size="small" @click="submitGptJob">
+            排队
+          </n-button>
         </template>
         <n-button
           v-else-if="row.translatorId"

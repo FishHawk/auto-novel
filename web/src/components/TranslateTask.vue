@@ -3,8 +3,7 @@ import { LogInst, useMessage } from 'naive-ui';
 import { computed, nextTick, ref, watch } from 'vue';
 
 import { client } from '@/data/api/client';
-import { useSettingStore } from '@/data/stores/setting';
-import { TranslatorId } from '@/data/translator/translator';
+import { TranslatorDesc } from '@/data/translator/api';
 import { getTranslatorLabel } from '@/data/util';
 
 const emit = defineEmits<{
@@ -16,7 +15,6 @@ const emit = defineEmits<{
 }>();
 
 const message = useMessage();
-const setting = useSettingStore();
 
 const show = ref<boolean>(false);
 const running = ref<boolean>(false);
@@ -51,15 +49,12 @@ const startTask = async (
     | { type: 'wenku'; novelId: string; volumeId: string }
     | { type: 'personal'; volumeId: string },
   params: {
-    translatorId: TranslatorId;
-    accessToken: string;
-    sakuraEndpoint: string;
-    sakuraUseLlamaApi?: boolean;
     translateExpireChapter: boolean;
     syncFromProvider: boolean;
     startIndex: number;
     endIndex: number;
   },
+  translatorDesc: TranslatorDesc,
   callback?: {
     onProgressUpdated: (progress: {
       finished: number;
@@ -74,7 +69,7 @@ const startTask = async (
   }
 
   const buildLabel = () => {
-    let label = `${getTranslatorLabel(params.translatorId)}翻译`;
+    let label = `${getTranslatorLabel(translatorDesc.id)}翻译`;
     if (params.translateExpireChapter) label += '[翻译过期章节]';
     if (params.syncFromProvider) label += '[强制同步]';
     return label;
@@ -88,12 +83,6 @@ const startTask = async (
 
   show.value = true;
 
-  try {
-    let accessToken = params.accessToken.trim();
-    const obj = JSON.parse(accessToken);
-    params.accessToken = obj.accessToken;
-  } catch {}
-
   const onProgressUpdated = () =>
     callback?.onProgressUpdated({
       finished: chapterFinished.value,
@@ -103,41 +92,43 @@ const startTask = async (
 
   await (
     await import('@/data/translator')
-  ).translate({
-    client,
-    ...desc,
-    ...params,
-    callback: {
-      onStart: (total) => {
-        chapterTotal.value = total;
-        onProgressUpdated();
-      },
-      onChapterSuccess: ({ jp, zh }) => {
-        if (jp !== undefined) emit('update:jp', jp);
-        if (zh !== undefined) {
-          if (params.translatorId === 'baidu') {
-            emit('update:baidu', zh);
-          } else if (params.translatorId === 'youdao') {
-            emit('update:youdao', zh);
-          } else if (params.translatorId === 'gpt') {
-            setting.addToken(params.accessToken);
-            emit('update:gpt', zh);
-          } else {
-            emit('update:sakura', zh);
+  ).translate(
+    {
+      client,
+      ...desc,
+      ...params,
+      callback: {
+        onStart: (total) => {
+          chapterTotal.value = total;
+          onProgressUpdated();
+        },
+        onChapterSuccess: ({ jp, zh }) => {
+          if (jp !== undefined) emit('update:jp', jp);
+          if (zh !== undefined) {
+            if (translatorDesc.id === 'baidu') {
+              emit('update:baidu', zh);
+            } else if (translatorDesc.id === 'youdao') {
+              emit('update:youdao', zh);
+            } else if (translatorDesc.id === 'gpt') {
+              emit('update:gpt', zh);
+            } else {
+              emit('update:sakura', zh);
+            }
           }
-        }
-        chapterFinished.value += 1;
-        onProgressUpdated();
-      },
-      onChapterFailure: () => {
-        chapterError.value += 1;
-        onProgressUpdated();
-      },
-      log: (message: any) => {
-        logs.value.push(`${message}`);
+          chapterFinished.value += 1;
+          onProgressUpdated();
+        },
+        onChapterFailure: () => {
+          chapterError.value += 1;
+          onProgressUpdated();
+        },
+        log: (message: any) => {
+          logs.value.push(`${message}`);
+        },
       },
     },
-  });
+    translatorDesc
+  );
 
   logs.value.push('\n结束');
   running.value = false;

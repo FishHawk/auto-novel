@@ -142,6 +142,7 @@ const linkExample = [
         <n-li>
           <b>Sakura模型教程正式发布了，有本地部署和AutoDL两种。</b>
         </n-li>
+        <n-li>一些朋友千呼万唤的GPT中转，现在也支持了。</n-li>
         <n-li>
           如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。
         </n-li>

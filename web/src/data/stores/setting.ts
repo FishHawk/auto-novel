@@ -5,7 +5,6 @@ import { TranslatorId } from '@/data/translator/translator';
 export interface Setting {
   isDark: boolean;
   tocSortReverse: boolean;
-  openAiAccessTokens: string[];
   downloadFilenameType: 'jp' | 'zh';
 
   isDownloadFormatSameAsReaderFormat: boolean;
@@ -21,7 +20,6 @@ export const useSettingStore = defineStore('setting', {
     <Setting>{
       isDark: false,
       tocSortReverse: false,
-      openAiAccessTokens: [],
       downloadFilenameType: 'zh',
       isDownloadFormatSameAsReaderFormat: true,
       downloadFormat: {
@@ -30,19 +28,5 @@ export const useSettingStore = defineStore('setting', {
         translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       },
     },
-  actions: {
-    addToken(token: string) {
-      this.deleteToken(token);
-      this.openAiAccessTokens.unshift(token);
-      if (this.openAiAccessTokens.length > 10) {
-        this.openAiAccessTokens.length == 10;
-      }
-    },
-    deleteToken(token: string) {
-      this.openAiAccessTokens = this.openAiAccessTokens.filter(
-        (t) => t !== token
-      );
-    },
-  },
   persist: true,
 });

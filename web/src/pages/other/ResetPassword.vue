@@ -80,6 +80,7 @@ const sendEmail = () =>
       :model="formValue"
       :rules="formRules"
       label-placement="left"
+      label-width="auto"
       style="max-width: 400px"
     >
       <n-form-item-row path="emailOrUsername">

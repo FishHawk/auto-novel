@@ -5,15 +5,17 @@ import { KyInstance } from 'ky/distribution/types/ky';
 
 import { parseEventStream } from './common';
 
-export class OpenAiOfficialApi {
+export class OpenAiApi {
+  type: 'api';
   client: KyInstance;
 
-  constructor(client: KyInstance, apiKey: string) {
+  constructor(client: KyInstance, endpoint: string, key: string) {
+    this.type = 'api';
     this.client = client.create({
-      prefixUrl: 'https://api.openai.com/v1',
+      prefixUrl: endpoint,
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
       timeout: 600_000,
