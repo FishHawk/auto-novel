@@ -35,3 +35,10 @@ export async function createSegIndexedDbCache(
       db.put(storeName, { hash: cacheKey, text: output }).then(),
   };
 }
+
+export async function clearSegIndexedDbCache(
+  storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
+) {
+  const db = await openTestDB();
+  db.clear(storeName);
+}

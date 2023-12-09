@@ -121,6 +121,13 @@ const retrySakuraJob = (job: UncompletedTranslateJob): void => {
     message.error('Sakura翻译任务已经存在');
   }
 };
+
+const clearCache = async () => {
+  await (
+    await import('@/data/translator/cache')
+  ).clearSegIndexedDbCache('sakura-seg-cache');
+  message.success('缓存清除成功');
+};
 </script>
 
 <template>
@@ -132,6 +139,8 @@ const retrySakuraJob = (job: UncompletedTranslateJob): void => {
         <n-button @click="showCreateWorkerModal = true">
           添加Sakura翻译器
         </n-button>
+
+        <async-button @async-click="clearCache"> 删除Sakura缓存 </async-button>
 
         <RouterNA to="/forum/656d60530286f15e3384fcf8">
           <n-button>本地部署教程</n-button>
