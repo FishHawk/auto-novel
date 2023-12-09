@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { CloseFilled, DoneFilled } from '@vicons/material';
-import { useMessage, useThemeVars } from 'naive-ui';
+import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
-import { useSettingStore } from '@/data/stores/setting';
+import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 
 const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
   id: string;
@@ -16,11 +15,18 @@ const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
     | undefined;
 }>();
 
-const emit = defineEmits<{ finished: [string] }>();
+const emit = defineEmits<{
+  'update:progress': [
+    string,
+    (
+      | { state: 'finish' }
+      | { state: 'processed'; finished: number; error: number; total: number }
+    )
+  ];
+}>();
 
-const vars = useThemeVars();
 const message = useMessage();
-const setting = useSettingStore();
+const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const currentJob = ref<{
@@ -55,17 +61,30 @@ const processTasks = async () => {
 
     if (desc === undefined) continue;
 
-    await translateTask.value!!.startTask(desc, {
-      translatorId: 'sakura',
-      accessToken: '',
-      sakuraEndpoint: endpoint,
-      sakuraUseLlamaApi: useLlamaApi,
-      translateExpireChapter: expire === 'true',
-      syncFromProvider: false,
-      startIndex: 0,
-      endIndex: 65536,
-    });
-    emit('finished', task);
+    const completed = await translateTask.value!!.startTask(
+      desc,
+      {
+        translatorId: 'sakura',
+        accessToken: '',
+        sakuraEndpoint: endpoint,
+        sakuraUseLlamaApi: useLlamaApi,
+        translateExpireChapter: expire === 'true',
+        syncFromProvider: false,
+        startIndex: 0,
+        endIndex: 65536,
+      },
+      {
+        onProgressUpdated: (progress) => {
+          emit('update:progress', task, {
+            state: 'processed',
+            ...progress,
+          });
+        },
+      }
+    );
+    emit('update:progress', task, { state: 'finish' });
+
+    if (!completed) break;
   }
 };
 
@@ -84,7 +103,7 @@ const deleteSakuraWorker = () => {
     message.error('翻译器正在运行');
     return;
   }
-  setting.sakuraWorkers = setting.sakuraWorkers.filter((w) => w.id !== id);
+  sakuraWorkspace.deleteWorker(id);
 };
 
 const testSakuraWorker = async () => {
@@ -112,28 +131,26 @@ const testSakuraWorker = async () => {
 <template>
   <n-thing content-indented>
     <template #avatar>
-      <n-icon-wrapper
-        :size="20"
-        :border-radius="10"
-        :color="running ? undefined : vars.errorColor"
-      >
-        <n-icon :size="16" :component="running ? DoneFilled : CloseFilled" />
-      </n-icon-wrapper>
+      <n-icon-wrapper :size="12" :border-radius="0" style="margin-top: 5px" />
     </template>
 
     <template #header>
-      <n-space>
-        {{ id }}
-        <n-text depth="3" style="font-size: 14px">
-          {{ useLlamaApi ? 'LLAMA' : '旧版' }}@{{ endpoint }}
-        </n-text>
-      </n-space>
+      {{ id }}
+      <n-text depth="3" style="font-size: 12px; padding-left: 2px">
+        {{ useLlamaApi ? '' : '旧版@' }}{{ endpoint }}
+      </n-text>
+    </template>
+
+    <template #description>
+      <n-p v-if="currentJob">
+        {{ currentJob.description }}
+      </n-p>
     </template>
 
     <template #header-extra>
       <n-space :wrap="false">
         <async-button
-          size="small"
+          size="tiny"
           secondary
           @async-click="() => testSakuraWorker()"
         >
@@ -141,7 +158,7 @@ const testSakuraWorker = async () => {
         </async-button>
         <n-button
           v-if="running"
-          size="small"
+          size="tiny"
           secondary
           @click="() => stopSakuraWorker()"
         >
@@ -149,14 +166,14 @@ const testSakuraWorker = async () => {
         </n-button>
         <n-button
           v-else
-          size="small"
+          size="tiny"
           secondary
           @click="() => startSakuraWorker()"
         >
           启动
         </n-button>
         <n-button
-          size="small"
+          size="tiny"
           secondary
           type="error"
           @click="() => deleteSakuraWorker()"
@@ -165,12 +182,7 @@ const testSakuraWorker = async () => {
         </n-button>
       </n-space>
     </template>
-
-    <template #description>
-      <n-p v-if="currentJob">
-        {{ currentJob.description }}
-      </n-p>
-      <TranslateTask ref="translateTask" style="margin-top: 20px" />
-    </template>
   </n-thing>
+
+  <TranslateTask ref="translateTask" style="margin-top: 20px" />
 </template>

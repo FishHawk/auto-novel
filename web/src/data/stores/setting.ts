@@ -14,8 +14,6 @@ export interface Setting {
     translationsMode: 'parallel' | 'priority';
     translations: TranslatorId[];
   };
-  sakuraWorkers: { id: string; endpoint: string; useLlamaApi?: boolean }[];
-  sakuraJobs: { task: string; description: string; createAt: number }[];
 }
 
 export const useSettingStore = defineStore('setting', {
@@ -31,10 +29,6 @@ export const useSettingStore = defineStore('setting', {
         translationsMode: 'priority',
         translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       },
-      sakuraWorkers: [
-        { id: '默认', endpoint: 'http://127.0.0.1:8080', useLlamaApi: true },
-      ],
-      sakuraJobs: [],
     },
   actions: {
     addToken(token: string) {

@@ -59,11 +59,18 @@ const startTask = async (
     syncFromProvider: boolean;
     startIndex: number;
     endIndex: number;
+  },
+  callback?: {
+    onProgressUpdated: (progress: {
+      finished: number;
+      error: number;
+      total: number;
+    }) => void;
   }
-) => {
+): Promise<boolean> => {
   if (running.value) {
     message.info('已有任务在运行。');
-    return;
+    return false;
   }
 
   const buildLabel = () => {
@@ -87,6 +94,13 @@ const startTask = async (
     params.accessToken = obj.accessToken;
   } catch {}
 
+  const onProgressUpdated = () =>
+    callback?.onProgressUpdated({
+      finished: chapterFinished.value,
+      error: chapterError.value,
+      total: chapterTotal.value ?? 0,
+    });
+
   await (
     await import('@/data/translator')
   ).translate({
@@ -96,6 +110,7 @@ const startTask = async (
     callback: {
       onStart: (total) => {
         chapterTotal.value = total;
+        onProgressUpdated();
       },
       onChapterSuccess: ({ jp, zh }) => {
         if (jp !== undefined) emit('update:jp', jp);
@@ -112,9 +127,11 @@ const startTask = async (
           }
         }
         chapterFinished.value += 1;
+        onProgressUpdated();
       },
       onChapterFailure: () => {
         chapterError.value += 1;
+        onProgressUpdated();
       },
       log: (message: any) => {
         logs.value.push(`${message}`);
@@ -124,6 +141,8 @@ const startTask = async (
 
   logs.value.push('\n结束');
   running.value = false;
+
+  return chapterTotal.value === chapterFinished.value + chapterError.value;
 };
 
 defineExpose({ startTask });
@@ -156,9 +175,9 @@ defineExpose({ startTask });
       <n-space align="center" vertical size="large" style="flex: none">
         <n-progress type="circle" :percentage="percentage" />
         <n-text>
-          成功 {{ chapterFinished ?? '-' }}/{{ chapterTotal ?? '-' }}
+          成功 {{ chapterFinished }}/{{ chapterTotal ?? '-' }}
           <br />
-          失败 {{ chapterError ?? '-' }}/{{ chapterTotal ?? '-' }}
+          失败 {{ chapterError }}/{{ chapterTotal ?? '-' }}
         </n-text>
       </n-space>
     </div>

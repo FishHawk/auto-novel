@@ -7,6 +7,7 @@ import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiUserPersonal, PersonalVolume } from '@/data/api/api_user_personal';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
+import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator/translator';
 
 const { volume, downloadToken, getParams } = defineProps<{
@@ -19,6 +20,7 @@ const { volume, downloadToken, getParams } = defineProps<{
 }>();
 
 const message = useMessage();
+const sakuraWorkspace = useSakuraWorkspaceStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
 
@@ -112,14 +114,6 @@ const submitSakuraJob = () => {
 
   const taskString = `personal/${volume.volumeId}`;
 
-  const conflictJob = setting.sakuraJobs.find((job) =>
-    job.task.startsWith(taskString)
-  );
-  if (conflictJob !== undefined) {
-    message.error('Sakura翻译任务已经存在');
-    return;
-  }
-
   const params: { [key: string]: string } = {};
   if (translateExpireChapter) {
     params['expire'] = `${translateExpireChapter}`;
@@ -127,12 +121,18 @@ const submitSakuraJob = () => {
   const searchParams = new URLSearchParams(params).toString();
   const queryString = searchParams ? `?${searchParams}` : '';
 
-  setting.sakuraJobs.push({
-    task: taskString + queryString,
+  const task = taskString + queryString;
+
+  const success = sakuraWorkspace.addJob({
+    task,
     description: volume.volumeId,
     createAt: Date.now(),
   });
-  message.success('排队成功');
+  if (success) {
+    message.success('排队成功');
+  } else {
+    message.error('Sakura翻译任务已经存在');
+  }
 };
 
 const showGlossaryEditor = ref(false);
