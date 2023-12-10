@@ -51,8 +51,8 @@ const onProgressUpdated = (
       job.progress.finished < job.progress.total
     ) {
       sakuraWorkspace.addUncompletedJob(job as any);
-      sakuraWorkspace.deleteJob(task);
     }
+    sakuraWorkspace.deleteJob(task);
   } else {
     const job = processedJobs.value.get(task)!!;
     job.progress = {

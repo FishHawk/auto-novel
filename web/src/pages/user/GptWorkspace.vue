@@ -49,8 +49,8 @@ const onProgressUpdated = (
       job.progress.finished < job.progress.total
     ) {
       gptWorkspace.addUncompletedJob(job as any);
-      gptWorkspace.deleteJob(task);
     }
+    gptWorkspace.deleteJob(task);
   } else {
     const job = processedJobs.value.get(task)!!;
     job.progress = {
