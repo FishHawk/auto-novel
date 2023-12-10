@@ -100,7 +100,22 @@ const clearCache = async () => {
 
 <template>
   <user-layout>
-    <n-p depth="3"> 启动了的翻译器无法暂停或删除。等这句话没了就可以了。 </n-p>
+    <n-p> 使用说明： </n-p>
+    <n-ul>
+      <n-li>
+        翻译任务运行在你的浏览器里面，关闭或者刷新本页面都会停止翻译。长时间挂机的话不要把本页面放在后台，防止被浏览器杀掉。
+      </n-li>
+      <n-li>
+        启动前先在文件翻译页面点击排队添加任务，完成后回到之前的页面查看翻译结果。
+      </n-li>
+      <n-li> 启动了的翻译器无法暂停或删除。等这句话没了就可以了。 </n-li>
+      <n-li>
+        Sakura部署教程参见
+        <RouterNA to="/forum/656d60530286f15e3384fcf8"> 本地部署教程 </RouterNA>
+        和
+        <RouterNA to="/forum/65719bf16843e12bd3a4dc98"> 租用显卡教程 </RouterNA>
+      </n-li>
+    </n-ul>
 
     <n-p>
       <n-space>
@@ -109,14 +124,6 @@ const clearCache = async () => {
         </n-button>
 
         <async-button @async-click="clearCache"> 删除Sakura缓存 </async-button>
-
-        <RouterNA to="/forum/656d60530286f15e3384fcf8">
-          <n-button>本地部署教程</n-button>
-        </RouterNA>
-
-        <RouterNA to="/forum/65719bf16843e12bd3a4dc98">
-          <n-button>租用显卡教程</n-button>
-        </RouterNA>
       </n-space>
     </n-p>
 
