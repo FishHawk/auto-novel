@@ -56,6 +56,7 @@ private class UserPersonalVolumeRes {
         val translationsMode: NovelFileTranslationsMode,
         val translations: List<TranslatorId>,
         val downloadToken: String,
+        val filename: String,
     )
 }
 
@@ -171,7 +172,8 @@ fun Route.routeUserPersonalVolume() {
                 translations = loc.translations,
                 downloadToken = loc.downloadToken,
             )
-            "../../../../../$path"
+            val encodedFilename = loc.filename.encodeURLParameter(spaceToPlus = true)
+            "../../../../../$path?filename=${encodedFilename}"
         }
     }
 }
