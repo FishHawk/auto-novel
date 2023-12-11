@@ -86,7 +86,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
 
   <card-modal v-model:show="showFavoredModal" title="收藏到...">
     <n-radio-group v-model:value="selectedFavoredId">
-      <n-space vertical>
+      <n-space vertical size="large">
         <n-radio
           v-for="favored in favoredList"
           :key="favored.id"
