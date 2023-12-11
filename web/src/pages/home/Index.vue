@@ -45,9 +45,9 @@ async function loadFavorite() {
   }
 }
 watch(
-  userData,
-  (userData) => {
-    if (userData.isLoggedIn) loadFavorite();
+  () => userData.username,
+  (username) => {
+    if (username) loadFavorite();
   },
   { immediate: true }
 );

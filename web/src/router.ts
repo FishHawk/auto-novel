@@ -91,7 +91,6 @@ const router = createRouter({
       component: () => import('./pages/novel/WenkuNovelEdit.vue'),
     },
 
-
     {
       path: '/forum',
       meta: { title: '论坛' },
@@ -137,22 +136,21 @@ const router = createRouter({
     },
   ],
 
-  scrollBehavior(_to, _from, savedPosition) {
-    return { top: 0 };
-    // return new Promise((resolve, _reject) => {
-    //   if (savedPosition) {
-    //     const resizeObserver = new ResizeObserver((entries) => {
-    //       if (entries[0].target.clientHeight >= savedPosition.top) {
-    //         resolve(savedPosition);
-    //         resizeObserver.disconnect();
-    //       }
-    //     });
-    //     resizeObserver.observe(document.body);
-    //   } else {
-    //     resolve({ top: 0 });
-    //   }
-    // });
-  },
+  // scrollBehavior(_to, _from, savedPosition) {
+  //   return new Promise((resolve, _reject) => {
+  //     if (savedPosition) {
+  //       const resizeObserver = new ResizeObserver((entries) => {
+  //         if (entries[0].target.clientHeight >= savedPosition.top) {
+  //           resolve(savedPosition);
+  //           resizeObserver.disconnect();
+  //         }
+  //       });
+  //       resizeObserver.observe(document.body);
+  //     } else {
+  //       resolve({ top: 0 });
+  //     }
+  //   });
+  // },
 });
 
 router.beforeEach((to, _from) => {

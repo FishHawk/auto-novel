@@ -1,19 +1,21 @@
 <script lang="ts" setup>
-import { zhCN, dateZhCN, lightTheme, darkTheme } from 'naive-ui';
+import { darkTheme, dateZhCN, lightTheme, zhCN } from 'naive-ui';
+import { watch } from 'vue';
 
-import { updateToken } from './data/api/client';
 import { ApiAuth } from './data/api/api_auth';
-import { useUserDataStore } from './data/stores/user_data';
+import { updateToken } from './data/api/client';
 import { useSettingStore } from './data/stores/setting';
+import { useUserDataStore } from './data/stores/user_data';
 
 const setting = useSettingStore();
 const userData = useUserDataStore();
 
 // 全局注册token
-userData.$subscribe((_mutation, { info }) => updateToken(info?.token), {
-  detached: true,
-  immediate: true,
-});
+watch(
+  () => userData.token,
+  (newToken, _oldToken) => updateToken(newToken),
+  { immediate: true }
+);
 
 // 每隔24小时刷新登录状态
 if (userData.isLoggedIn) {
