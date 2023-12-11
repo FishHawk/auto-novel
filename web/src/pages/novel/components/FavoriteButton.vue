@@ -5,7 +5,7 @@ import { computed, ref } from 'vue';
 
 import { ApiUser, Favored } from '@/data/api/api_user';
 
-const { favored, favoredList, novel } = defineProps<{
+const props = defineProps<{
   favored: string | undefined;
   favoredList: Favored[];
   novel:
@@ -17,49 +17,50 @@ const emit = defineEmits<{ 'update:favored': [string | undefined] }>();
 const message = useMessage();
 
 const favoredTitle = computed(
-  () => favoredList.find((it) => it.id === favored)?.title
+  () => props.favoredList.find((it) => it.id === props.favored)?.title
 );
 
-async function favoriteNovel(favoredId: string) {
-  const result = await (novel.type === 'web'
-    ? ApiUser.favoriteWebNovel(favoredId, novel.providerId, novel.novelId)
-    : ApiUser.favoriteWenkuNovel(favoredId, novel.novelId));
+const favoriteNovel = async (favoredId: string) => {
+  const result = await (props.novel.type === 'web'
+    ? ApiUser.favoriteWebNovel(
+        favoredId,
+        props.novel.providerId,
+        props.novel.novelId
+      )
+    : ApiUser.favoriteWenkuNovel(favoredId, props.novel.novelId));
   if (result.ok) {
     emit('update:favored', favoredId);
+    message.success('收藏成功');
     showFavoredModal.value = false;
   } else {
     message.error('收藏错误：' + result.error.message);
   }
-}
+};
 
-async function unfavoriteNovel() {
-  if (favored === undefined) return;
-  const result = await (novel.type === 'web'
-    ? ApiUser.unfavoriteWebNovel(favored, novel.providerId, novel.novelId)
-    : ApiUser.unfavoriteWenkuNovel(favored, novel.novelId));
+const unfavoriteNovel = async () => {
+  if (props.favored === undefined) return;
+  const result = await (props.novel.type === 'web'
+    ? ApiUser.unfavoriteWebNovel(
+        props.favored,
+        props.novel.providerId,
+        props.novel.novelId
+      )
+    : ApiUser.unfavoriteWenkuNovel(props.favored, props.novel.novelId));
   if (result.ok) {
     emit('update:favored', undefined);
+    message.success('取消收藏成功');
     showFavoredModal.value = false;
   } else {
     message.error('取消收藏错误：' + result.error.message);
   }
-}
+};
 
 const showFavoredModal = ref(false);
-const selectedFavoredId = ref(favored ?? 'default');
-
-const requestLoginFirst = () => message.info('请先登录');
+const selectedFavoredId = ref(props.favored ?? 'default');
 </script>
 
 <template>
-  <n-button v-if="favoredList.length === 0" @click="requestLoginFirst()">
-    <template #icon>
-      <n-icon :component="FavoriteBorderFilled" />
-    </template>
-    收藏
-  </n-button>
-
-  <template v-else-if="favoredList.length === 1">
+  <template v-if="favoredList.length <= 1">
     <async-button v-if="favored" @async-click="unfavoriteNovel">
       <template #icon>
         <n-icon :component="FavoriteFilled" />

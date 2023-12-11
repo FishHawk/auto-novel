@@ -86,10 +86,9 @@ const editMode = ref(false);
         </async-button>
 
         <favorite-button
-          :favored="novel.favored"
+          v-model:favored="novel.favored"
           :favored-list="novel.favoredList"
           :novel="{ type: 'web', providerId, novelId }"
-          @update:favored="getNovel"
         />
 
         <router-link v-if="novel.wenkuId" :to="`/wenku/${novel.wenkuId}`">

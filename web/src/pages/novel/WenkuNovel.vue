@@ -178,10 +178,9 @@ function sortVolumesJp(volumes: VolumeJpDto[]) {
         </RouterNA>
 
         <favorite-button
-          :favored="metadata.favored"
+          v-model:favored="metadata.favored"
           :favored-list="metadata.favoredList"
           :novel="{ type: 'wenku', novelId }"
-          @update:favored="getMetadata"
         />
 
         <n-a
