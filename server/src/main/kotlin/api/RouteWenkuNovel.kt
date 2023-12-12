@@ -5,9 +5,9 @@ import api.model.asDto
 import api.plugins.*
 import infra.VolumeCreateException
 import infra.common.OperationHistoryRepository
-import infra.user.UserRepository
 import infra.model.*
 import infra.user.UserFavoredWenkuRepository
+import infra.user.UserRepository
 import infra.wenku.WenkuNovelFilter
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -15,7 +15,6 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
@@ -158,25 +157,27 @@ fun Route.routeWenkuNovel() {
     }
 
     // Translate
-    get<WenkuNovelRes.Id.Translate> { loc ->
-        call.tryRespond {
-            service.getTranslateTask(
-                novelId = loc.parent.novelId,
-                translatorId = loc.translatorId,
-                volumeId = loc.volumeId,
-            )
-        }
-    }
-    get<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-        call.tryRespond {
-            service.getChapterToTranslate(
-                novelId = loc.parent.parent.novelId,
-                volumeId = loc.parent.volumeId,
-                chapterId = loc.chapterId,
-            )
-        }
-    }
     authenticateDb(optional = true) {
+        get<WenkuNovelRes.Id.Translate> { loc ->
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                service.getTranslateTask(
+                    user = user,
+                    novelId = loc.parent.novelId,
+                    translatorId = loc.translatorId,
+                    volumeId = loc.volumeId,
+                )
+            }
+        }
+        get<WenkuNovelRes.Id.Translate.Chapter> { loc ->
+            call.tryRespond {
+                service.getChapterToTranslate(
+                    novelId = loc.parent.parent.novelId,
+                    volumeId = loc.parent.volumeId,
+                    chapterId = loc.chapterId,
+                )
+            }
+        }
         put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
             val user = call.authenticatedUserOrNull()
 
@@ -518,13 +519,19 @@ class WenkuNovelApi(
     )
 
     suspend fun getTranslateTask(
+        user: AuthenticatedUser?,
         novelId: String,
         translatorId: TranslatorId,
         volumeId: String,
     ): TranslateTaskDto {
         if (translatorId == TranslatorId.Sakura) {
-            throw BadRequestException("Sakura不支持浏览器翻译")
+            if (user == null) {
+                throwUnauthorized("请先登录")
+            } else {
+                user.shouldBeAtLeast(User.Role.Trusted)
+            }
         }
+
         validateVolumeId(volumeId)
 
         val novel = metadataRepo.get(novelId)

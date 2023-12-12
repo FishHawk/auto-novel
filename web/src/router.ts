@@ -40,15 +40,16 @@ const router = createRouter({
       meta: { title: '文件翻译' },
       component: () => import('./pages/user/PersonalNovel.vue'),
     },
+
     {
       path: '/sakura-workspace',
       meta: { title: 'Sakura工作区' },
-      component: () => import('./pages/user/SakuraWorkspace.vue'),
+      component: () => import('./pages/workspace/SakuraWorkspace.vue'),
     },
     {
       path: '/gpt-workspace',
       meta: { title: 'GPT工作区' },
-      component: () => import('./pages/user/GptWorkspace.vue'),
+      component: () => import('./pages/workspace/GptWorkspace.vue'),
     },
 
     {
@@ -70,6 +71,11 @@ const router = createRouter({
     {
       path: '/novel/:providerId/:novelId',
       component: () => import('./pages/novel/WebNovel.vue'),
+    },
+    {
+      path: '/novel-edit/:providerId/:novelId',
+      meta: { title: '编辑网络小说' },
+      component: () => import('./pages/novel/WebNovelEdit.vue'),
     },
     {
       path: '/novel/:providerId/:novelId/:chapterId',

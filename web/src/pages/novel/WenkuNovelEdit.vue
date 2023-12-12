@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { UploadFilled } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -7,11 +8,13 @@ import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
+import { useIsDesktop } from '@/data/util';
 import { fetchMetadata } from '@/data/util_wenku';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 const route = useRoute();
 const router = useRouter();
+const isDesktop = useIsDesktop(850);
 const message = useMessage();
 
 const novelId = route.params.id as string | undefined;
@@ -29,7 +32,7 @@ const formValue = ref({
   volumes: [] as { asin: string; title: string; cover: string }[],
 });
 
-const rules: FormRules = {
+const formRules: FormRules = {
   title: [
     {
       validator: (_rule: FormItemRule, value: string) =>
@@ -69,21 +72,23 @@ onMounted(async () => {
   if (novelId !== undefined) {
     const result = await ApiWenkuNovel.getNovel(novelId);
     if (result.ok) {
-      formValue.value.title = result.value.title;
-      formValue.value.titleZh = result.value.titleZh;
-      formValue.value.cover = result.value.cover;
-      formValue.value.authors = result.value.authors;
-      formValue.value.artists = result.value.artists;
-      formValue.value.r18 = result.value.r18;
-      formValue.value.introduction = result.value.introduction;
-      formValue.value.volumes = result.value.volumes;
+      formValue.value = {
+        title: result.value.title,
+        titleZh: result.value.titleZh,
+        cover: result.value.cover,
+        authors: result.value.authors,
+        artists: result.value.artists,
+        r18: result.value.r18,
+        introduction: result.value.introduction,
+        volumes: result.value.volumes,
+      };
     } else {
       message.error('载入失败');
     }
   }
 });
 
-async function submit() {
+const submit = async () => {
   const validated = await new Promise<boolean>(function (resolve, _reject) {
     formRef.value?.validate((errors) => {
       if (errors) resolve(false);
@@ -120,12 +125,12 @@ async function submit() {
       message.error('编辑文库失败:' + result.error.message);
     }
   }
-}
+};
 
-const url = ref('');
-async function fetchNovel() {
+const amazonUrl = ref('');
+const fetchMetadataFromAmazon = async () => {
   try {
-    const amazonMetadata = await fetchMetadata(url.value);
+    const amazonMetadata = await fetchMetadata(amazonUrl.value);
     const volumesOld = formValue.value.volumes.map((oldV) => {
       const newV = amazonMetadata.volumes.find((it) => it.asin === oldV.asin);
       if (newV === undefined) {
@@ -162,7 +167,7 @@ async function fetchNovel() {
   } catch (e) {
     message.error(`获取失败:${e}`);
   }
-}
+};
 
 const submitCurrentStep = ref(1);
 const title = computed(() => formValue.value.title);
@@ -172,7 +177,7 @@ watch(title, () => {
   similarNovels.value = null;
   submitCurrentStep.value = 1;
 });
-async function findSimilarNovels() {
+const findSimilarNovels = async () => {
   const result = await ApiWenkuNovel.listNovel({
     page: 0,
     pageSize: 6,
@@ -184,26 +189,25 @@ async function findSimilarNovels() {
   } else {
     message.error('搜索相似小说失败:' + result.error.message);
   }
-}
-function confirmNovelNotExist() {
+};
+const confirmNovelNotExist = () => {
   if (submitCurrentStep.value === 1) {
     submitCurrentStep.value = 2;
   }
-}
+};
 
-function moveVolumeUp(index: number) {
+const moveVolumeUp = (index: number) => {
   if (index > 0) {
     const temp = formValue.value.volumes[index];
     formValue.value.volumes[index] = formValue.value.volumes[index - 1];
     formValue.value.volumes[index - 1] = temp;
   }
-}
-
-function deleteVolume(index: number) {
+};
+const deleteVolume = (index: number) => {
   formValue.value.volumes = formValue.value.volumes.filter(
     (it, i) => i !== index
   );
-}
+};
 </script>
 
 <template>
@@ -231,11 +235,13 @@ function deleteVolume(index: number) {
         </n-p>
         <n-input-group>
           <n-input
-            v-model:value="url"
+            v-model:value="amazonUrl"
             placeholder="从亚马逊导入..."
             :input-props="{ spellcheck: false }"
           />
-          <n-button type="primary" @click="fetchNovel()"> 导入 </n-button>
+          <n-button type="primary" @click="fetchMetadataFromAmazon()">
+            导入
+          </n-button>
         </n-input-group>
       </div>
     </n-space>
@@ -243,51 +249,48 @@ function deleteVolume(index: number) {
     <n-form
       ref="formRef"
       :model="formValue"
-      :rules="rules"
-      label-placement="left"
+      :rules="formRules"
+      :label-placement="isDesktop ? 'left' : 'top'"
       label-width="auto"
       style="max-width: 800px"
     >
-      <n-form-item-row path="title">
+      <n-form-item-row path="title" label="日文标题">
         <n-input
           v-model:value="formValue.title"
-          placeholder="日文标题"
+          placeholder="请输入日文标题"
           maxlength="80"
           show-count
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
 
-      <n-form-item-row path="titleZh">
+      <n-form-item-row path="titleZh" label="中文标题">
         <n-input
           v-model:value="formValue.titleZh"
-          placeholder="中文标题"
+          placeholder="请输入中文标题"
           maxlength="80"
           show-count
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
 
-      <n-form-item-row path="authors">
-        <n-text style="white-space: nowrap">作者：</n-text>
+      <n-form-item-row path="authors" label="作者">
         <n-dynamic-tags v-model:value="formValue.authors" />
       </n-form-item-row>
 
-      <n-form-item-row path="artists">
-        <n-text style="white-space: nowrap">插图：</n-text>
+      <n-form-item-row path="artists" label="插图">
         <n-dynamic-tags v-model:value="formValue.artists" />
       </n-form-item-row>
 
-      <n-form-item-row path="r18">
-        <n-text style="white-space: nowrap">R18：</n-text>
+      <n-form-item-row path="r18" label="R18">
         <n-switch v-model:value="formValue.r18" />
       </n-form-item-row>
 
-      <n-form-item-row path="content">
+      <n-form-item-row path="content" label="简介">
         <n-input
           v-model:value="formValue.introduction"
           type="textarea"
-          placeholder="描述"
+          placeholder="请输入小说简介"
           :autosize="{
             minRows: 8,
             maxRows: 24,
@@ -299,6 +302,7 @@ function deleteVolume(index: number) {
       </n-form-item-row>
     </n-form>
 
+    <n-h2 prefix="bar">分卷</n-h2>
     <n-list>
       <n-list-item v-for="(volume, index) in formValue.volumes">
         <n-space :wrap="false">
@@ -328,9 +332,12 @@ function deleteVolume(index: number) {
 
     <n-divider />
 
-    <AsyncButton v-if="novelId" type="primary" :on-async-click="submit">
+    <async-button v-if="novelId" type="primary" @async-click="submit">
+      <template #icon>
+        <n-icon :component="UploadFilled" />
+      </template>
       提交
-    </AsyncButton>
+    </async-button>
 
     <n-steps
       v-else
@@ -370,13 +377,16 @@ function deleteVolume(index: number) {
       </n-step>
       <n-step title="创建小说">
         <div class="n-step-description"></div>
-        <n-button
+        <async-button
           :disabled="submitCurrentStep !== 2"
           type="primary"
-          @click="submit()"
+          @async-click="submit"
         >
+          <template #icon>
+            <n-icon :component="UploadFilled" />
+          </template>
           提交
-        </n-button>
+        </async-button>
       </n-step>
     </n-steps>
   </MainLayout>

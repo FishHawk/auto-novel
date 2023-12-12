@@ -71,6 +71,7 @@ export const useUserDataStore = defineStore('authInfo', {
     },
     isAdmin: ({ info }) => userRoleAtLeast(info, 'admin'),
     isMaintainer: ({ info }) => userRoleAtLeast(info, 'maintainer'),
+    isTrusted: ({ info }) => userRoleAtLeast(info, 'trusted'),
     asAdmin: ({ adminMode, info }) =>
       adminMode && userRoleAtLeast(info, 'admin'),
   },

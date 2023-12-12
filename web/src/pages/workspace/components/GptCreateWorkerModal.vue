@@ -103,6 +103,14 @@ const createGptWorker = async () => {
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
+
+      <n-text depth="3" style="font-size: 12px">
+        {{
+          formValue.type === 'api'
+            ? '# 链接例子：https://gpt.mnxcc.com/v1，不行试试在你的链接最后加个‘/v1’'
+            : '# 链接例子：https://chatgpt-proxy.lss233.com/api'
+        }}
+      </n-text>
     </n-form>
 
     <template #action>

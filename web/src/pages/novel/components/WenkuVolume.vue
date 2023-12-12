@@ -12,6 +12,7 @@ import { useUserDataStore } from '@/data/stores/user_data';
 import {
   buildWenkuTranslateTask,
   useGptWorkspaceStore,
+  useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator/translator';
 
@@ -28,6 +29,7 @@ const userData = useUserDataStore();
 const setting = useSettingStore();
 const readerSetting = useReaderSettingStore();
 const gptWorkspace = useGptWorkspaceStore();
+const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
@@ -91,7 +93,7 @@ const file = computed(() => {
   return { url, filename };
 });
 
-const submitSakuraJob = async () => {
+const submitPublicSakuraJob = async () => {
   const { translateExpireChapter } = getParams();
   const result = await ApiSakura.createSakuraJobWenkuTranslate(
     novelId,
@@ -109,14 +111,20 @@ const submitSakuraJob = async () => {
   }
 };
 
-const submitGptJob = () => {
+const submitJob = (id: 'gpt' | 'sakura') => {
+  if (id === 'sakura' && !userData.isTrusted) {
+    message.error('目前普通用户无法使用Sakura工作区翻译文库小说');
+    return;
+  }
+
   const { translateExpireChapter } = getParams();
   const task = buildWenkuTranslateTask(novelId, volume.volumeId, {
     start: 0,
     end: 65535,
     expire: translateExpireChapter,
   });
-  const success = gptWorkspace.addJob({
+  const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+  const success = workspace.addJob({
     task,
     description: volume.volumeId,
     createAt: Date.now(),
@@ -146,20 +154,11 @@ const deleteVolume = async () => {
         <n-text>{{ volume.volumeId }}</n-text>
         <n-space>
           <template v-for="{ translatorId, label } of translatorLabels">
-            <async-button
-              v-if="translatorId === 'sakura'"
-              text
-              type="primary"
-              @async-click="submitSakuraJob"
-            >
-              公用排队{{ label }}
-            </async-button>
-
             <n-button
-              v-else-if="translatorId === 'gpt'"
+              v-if="translatorId === 'gpt' || translatorId === 'sakura'"
               text
               type="primary"
-              @click="submitGptJob"
+              @click="() => submitJob(translatorId)"
             >
               排队{{ label }}
             </n-button>
@@ -173,9 +172,14 @@ const deleteVolume = async () => {
               更新{{ label }}
             </n-button>
           </template>
-          <RouterNA to="/sakura">
-            <n-button text type="primary"> 查看队列 </n-button>
-          </RouterNA>
+
+          <async-button
+            text
+            type="primary"
+            @async-click="submitPublicSakuraJob"
+          >
+            公用排队Sakura
+          </async-button>
 
           <n-popconfirm
             v-if="userData.asAdmin"

@@ -7,10 +7,10 @@ import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import api.plugins.authenticatedUserOrNull
 import infra.common.OperationHistoryRepository
-import infra.user.UserRepository
 import infra.model.*
 import infra.user.UserFavoredWebRepository
 import infra.user.UserReadHistoryWebRepository
+import infra.user.UserRepository
 import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelFilter
@@ -55,9 +55,6 @@ private class WebNovelRes {
 
     @Resource("/{providerId}/{novelId}")
     class Id(val parent: WebNovelRes, val providerId: String, val novelId: String) {
-        @Resource("/wenku")
-        class Wenku(val parent: Id)
-
         @Resource("/glossary")
         class Glossary(val parent: Id)
 
@@ -160,8 +157,9 @@ fun Route.routeWebNovel() {
         post<WebNovelRes.Id> { loc ->
             @Serializable
             class Body(
-                val title: String? = null,
-                val introduction: String? = null,
+                val title: String,
+                val introduction: String,
+                val wenkuId: String,
                 val toc: Map<String, String>,
             )
 
@@ -174,6 +172,7 @@ fun Route.routeWebNovel() {
                     novelId = loc.novelId,
                     title = body.title,
                     introduction = body.introduction,
+                    wenkuId = body.wenkuId,
                     toc = body.toc,
                 )
             }
@@ -187,29 +186,6 @@ fun Route.routeWebNovel() {
                     providerId = loc.parent.providerId,
                     novelId = loc.parent.novelId,
                     glossary = body,
-                )
-            }
-        }
-        put<WebNovelRes.Id.Wenku> { loc ->
-            val user = call.authenticatedUser()
-            val body = call.receive<String>()
-            call.tryRespond {
-                service.updateWenkuId(
-                    user = user,
-                    providerId = loc.parent.providerId,
-                    novelId = loc.parent.novelId,
-                    wenkuId = body,
-                )
-            }
-        }
-        delete<WebNovelRes.Id.Wenku> { loc ->
-            val user = call.authenticatedUser()
-            call.tryRespond {
-                service.updateWenkuId(
-                    user = user,
-                    providerId = loc.parent.providerId,
-                    novelId = loc.parent.novelId,
-                    wenkuId = null,
                 )
             }
         }
@@ -519,10 +495,15 @@ class WebNovelApi(
         user: AuthenticatedUser,
         providerId: String,
         novelId: String,
-        title: String?,
-        introduction: String?,
+        title: String,
+        introduction: String,
+        wenkuId: String,
         toc: Map<String, String>,
-    ): NovelDto {
+    ) {
+        if (wenkuId.isNotBlank() && wenkuMetadataRepo.get(wenkuId) == null) {
+            throwNotFound("文库版不存在")
+        }
+
         val metadata = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
 
@@ -542,11 +523,19 @@ class WebNovelApi(
             }
         }
 
-        if (title == null && introduction == null && tocZh.isEmpty()) {
-            throwBadRequest("修改为空")
-        }
+        metadataRepo.updateWenkuId(
+            providerId = providerId,
+            novelId = novelId,
+            wenkuId = wenkuId.takeIf { it.isNotBlank() },
+        )
+        metadataRepo.updateTranslation(
+            providerId = providerId,
+            novelId = novelId,
+            titleZh = title.takeIf { it.isNotBlank() },
+            introductionZh = introduction.takeIf { it.isNotBlank() },
+            tocZh = tocZh,
+        )
 
-        // Add patch
         operationHistoryRepo.create(
             operator = ObjectId(user.id),
             operation = Operation.WebEdit(
@@ -563,16 +552,6 @@ class WebNovelApi(
                 toc = tocRecord,
             )
         )
-
-        val novel = metadataRepo.updateTranslation(
-            providerId = providerId,
-            novelId = novelId,
-            titleZh = title ?: metadata.titleZh,
-            introductionZh = introduction ?: metadata.introductionZh,
-            tocZh = tocZh,
-        )
-
-        return buildNovelDto(novel!!, user)
     }
 
     suspend fun updateGlossary(
@@ -599,23 +578,6 @@ class WebNovelApi(
                 new = glossary,
             )
         )
-    }
-
-    suspend fun updateWenkuId(
-        user: AuthenticatedUser,
-        providerId: String,
-        novelId: String,
-        wenkuId: String?,
-    ) {
-        if (wenkuId != null && wenkuMetadataRepo.get(wenkuId) == null)
-            throwNotFound("文库版不存在")
-        val updateResult = metadataRepo.updateWenkuId(
-            providerId = providerId,
-            novelId = novelId,
-            wenkuId = wenkuId,
-        )
-        if (updateResult.matchedCount == 0L)
-            throwNovelNotFound()
     }
 
     // Translate
@@ -783,7 +745,7 @@ class WebNovelApi(
                 TranslatorId.Baidu -> Pair(baiduGlossaryUuid, baiduParagraphs)
                 TranslatorId.Youdao -> Pair(youdaoGlossaryUuid, youdaoParagraphs)
                 TranslatorId.Gpt -> Pair(gptGlossaryUuid, gptParagraphs)
-                else -> throw RuntimeException("不会执行到此")
+                TranslatorId.Sakura -> Pair(sakuraGlossaryUuid, sakuraParagraphs)
             }
         }
 

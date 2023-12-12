@@ -137,16 +137,18 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
       </n-upload-dragger>
     </n-upload>
 
+    <workspace-nav />
+
+    <n-button-group style="margin-bottom: 8px">
+      <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button>
+      <n-button @click="toggleDownloadOptions()">下载设置</n-button>
+    </n-button-group>
+
     <ResultView
       :result="volumesResult"
       :showEmpty="(it: any) => it.length === 0"
       v-slot="{ value: volumes }"
     >
-      <n-button-group style="margin-bottom: 8px">
-        <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button>
-        <n-button @click="toggleDownloadOptions()">下载设置</n-button>
-      </n-button-group>
-
       <n-collapse-transition
         :show="showTranslateOptions || showDownloadOptions"
         style="margin-bottom: 16px"

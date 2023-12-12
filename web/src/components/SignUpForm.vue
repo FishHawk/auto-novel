@@ -113,7 +113,7 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
         <n-input
           v-model:value="formValue.emailCode"
           placeholder="邮箱验证码"
-          :input-props="{ spellcheck: false }"
+          :input-props="{ autocomplete: 'off', spellcheck: false }"
         />
         <EmailButton
           label="发送验证码"
@@ -126,7 +126,7 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
       <n-input
         v-model:value="formValue.username"
         placeholder="用户名"
-        :input-props="{ spellcheck: false }"
+        :input-props="{ autocomplete: 'off', spellcheck: false }"
       />
     </n-form-item-row>
     <n-form-item-row path="password">
@@ -135,6 +135,7 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
         type="password"
         show-password-on="click"
         placeholder="密码"
+        :input-props="{ autocomplete: 'off' }"
       />
     </n-form-item-row>
     <n-form-item-row path="reenteredPassword">
@@ -143,6 +144,7 @@ const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
         type="password"
         show-password-on="click"
         placeholder="重复密码"
+        :input-props="{ autocomplete: 'off' }"
       />
     </n-form-item-row>
   </n-form>

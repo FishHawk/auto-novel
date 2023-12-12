@@ -7,7 +7,11 @@ import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { buildWebTranslateTask, useGptWorkspaceStore } from '@/data/stores/workspace';
+import {
+  buildWebTranslateTask,
+  useGptWorkspaceStore,
+  useSakuraWorkspaceStore,
+} from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator/translator';
 import { getTranslatorLabel, useIsDesktop } from '@/data/util';
 
@@ -39,6 +43,7 @@ const isDesktop = useIsDesktop(600);
 const message = useMessage();
 const userData = useUserDataStore();
 const gptWorkspace = useGptWorkspaceStore();
+const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
@@ -165,7 +170,7 @@ async function submitGlossary() {
   }
 }
 
-async function submitSakuraJob() {
+async function submitPublicSakuraJob() {
   const result = await ApiSakura.createSakuraJobWebTranslate(
     providerId,
     novelId,
@@ -182,13 +187,19 @@ async function submitSakuraJob() {
   }
 }
 
-const submitGptJob = () => {
+const submitJob = (id: 'gpt' | 'sakura') => {
+  if (id === 'sakura' && !userData.isTrusted) {
+    message.error('目前普通用户无法使用Sakura工作区翻译网络小说');
+    return;
+  }
+
   const task = buildWebTranslateTask(providerId, novelId, {
     start: startIndex.value ?? 0,
     end: endIndex.value ?? 65535,
     expire: translateExpireChapter.value,
   });
-  const success = gptWorkspace.addJob({
+  const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+  const success = workspace.addJob({
     task,
     description: titleJp,
     createAt: Date.now(),
@@ -206,6 +217,7 @@ const submitGptJob = () => {
     # 翻译功能需要需要安装浏览器插件，参见
     <RouterNA to="/forum/64f3d63f794cbb1321145c07">插件使用说明</RouterNA>
   </n-p>
+  <workspace-nav />
   <n-button
     @click="showTranslateOptions = !showTranslateOptions"
     style="margin-bottom: 8px"
@@ -282,17 +294,21 @@ const submitGptJob = () => {
       <template #suffix>
         <template v-if="row.translatorId === 'sakura'">
           <n-space :wrap="false">
-            <RouterNA to="/sakura">
-              <n-button tertiary size="small"> 查看 </n-button>
-            </RouterNA>
-            <async-button tertiary size="small" @async-click="submitSakuraJob">
+            <async-button
+              tertiary
+              size="small"
+              @async-click="submitPublicSakuraJob"
+            >
               公用排队
             </async-button>
+            <n-button tertiary size="small" @click="() => submitJob('sakura')">
+              Sakura排队
+            </n-button>
           </n-space>
         </template>
         <template v-else-if="row.translatorId === 'gpt'">
-          <n-button tertiary size="small" @click="submitGptJob">
-            排队
+          <n-button tertiary size="small" @click="() => submitJob('gpt')">
+            GPT排队
           </n-button>
         </template>
         <n-button

@@ -1,17 +1,17 @@
 <script lang="ts" setup>
+import { BookFilled, EditNoteFilled, SortFilled } from '@vicons/material';
+import { createReusableTemplate } from '@vueuse/core';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { EditNoteFilled, BookFilled, SortFilled } from '@vicons/material';
-import { createReusableTemplate } from '@vueuse/core';
 
-import { Ok, ResultState } from '@/data/result';
 import {
   ApiWebNovel,
   WebNovelDto,
   WebNovelTocItemDto,
 } from '@/data/api/api_web_novel';
-import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
+import { ResultState } from '@/data/result';
 import { useSettingStore } from '@/data/stores/setting';
+import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;
@@ -26,17 +26,15 @@ const novelId = route.params.novelId as string;
 
 const novelResult = ref<ResultState<WebNovelDto>>();
 
-async function getNovel() {
+const getNovel = async () => {
   novelResult.value = undefined;
   const result = await ApiWebNovel.getNovel(providerId, novelId);
   novelResult.value = result;
   if (result.ok) {
     document.title = result.value.titleJp;
   }
-}
+};
 getNovel();
-
-const editMode = ref(false);
 </script>
 
 <template>
@@ -78,12 +76,14 @@ const editMode = ref(false);
       </n-p>
 
       <n-space>
-        <async-button @async-click="async () => (editMode = !editMode)">
-          <template #icon>
-            <n-icon :component="EditNoteFilled" />
-          </template>
-          {{ editMode ? '退出编辑' : '编辑' }}
-        </async-button>
+        <RouterNA :to="`/novel-edit/${providerId}/${novelId}`">
+          <n-button>
+            <template #icon>
+              <n-icon :component="EditNoteFilled" />
+            </template>
+            编辑
+          </n-button>
+        </RouterNA>
 
         <favorite-button
           v-model:favored="novel.favored"
@@ -101,77 +101,67 @@ const editMode = ref(false);
         </router-link>
       </n-space>
 
-      <WebEdit
-        v-if="editMode"
-        :provider-id="providerId"
-        :novel-id="novelId"
-        :novel-metadata="novel"
-        @update:novel-metadata="novelResult = Ok(novel)"
-      />
+      <n-p>{{ novel.type }} / 浏览次数:{{ novel.visited }}</n-p>
 
-      <template v-else>
-        <n-p>{{ novel.type }} / 浏览次数:{{ novel.visited }}</n-p>
+      <n-p style="word-break: break-all">
+        {{ novel.introductionJp }}
+      </n-p>
+      <n-p
+        v-if="novel.introductionZh !== undefined"
+        style="word-break: break-all"
+      >
+        {{ novel.introductionZh }}
+      </n-p>
 
-        <n-p style="word-break: break-all">
-          {{ novel.introductionJp }}
-        </n-p>
-        <n-p
-          v-if="novel.introductionZh !== undefined"
-          style="word-break: break-all"
-        >
-          {{ novel.introductionZh }}
-        </n-p>
+      <n-space :size="[4, 4]">
+        <ReuseTag
+          v-for="attention of novel.attentions.sort()"
+          :tag="attention"
+          :attention="true"
+        />
+        <ReuseTag
+          v-for="keyword of novel.keywords"
+          :tag="keyword"
+          :attention="false"
+        />
+      </n-space>
 
-        <n-space :size="[4, 4]">
-          <ReuseTag
-            v-for="attention of novel.attentions.sort()"
-            :tag="attention"
-            :attention="true"
-          />
-          <ReuseTag
-            v-for="keyword of novel.keywords"
-            :tag="keyword"
-            :attention="false"
-          />
-        </n-space>
+      <section>
+        <SectionHeader title="翻译" />
+        <WebTranslate
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :title-jp="novel.titleJp"
+          :title-zh="novel.titleZh"
+          :total="novel.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
+          v-model:jp="novel.jp"
+          v-model:baidu="novel.baidu"
+          v-model:youdao="novel.youdao"
+          v-model:gpt="novel.gpt"
+          :sakura="novel.sakura"
+          :glossary="novel.glossary"
+        />
+      </section>
 
-        <section>
-          <SectionHeader title="翻译" />
-          <WebTranslate
-            :provider-id="providerId"
-            :novel-id="novelId"
-            :title-jp="novel.titleJp"
-            :title-zh="novel.titleZh"
-            :total="novel.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
-            v-model:jp="novel.jp"
-            v-model:baidu="novel.baidu"
-            v-model:youdao="novel.youdao"
-            v-model:gpt="novel.gpt"
-            :sakura="novel.sakura"
-            :glossary="novel.glossary"
-          />
-        </section>
+      <section>
+        <SectionHeader title="目录">
+          <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
+            <template #icon>
+              <n-icon :component="SortFilled" />
+            </template>
+            {{ setting.tocSortReverse ? '倒序' : '正序' }}
+          </n-button>
+        </SectionHeader>
+        <SectionWebToc
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :toc="novel.toc"
+          :reverse="setting.tocSortReverse"
+          :last-read-chapter-id="novel.lastReadChapterId"
+        />
+      </section>
 
-        <section>
-          <SectionHeader title="目录">
-            <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
-              <template #icon>
-                <n-icon :component="SortFilled" />
-              </template>
-              {{ setting.tocSortReverse ? '倒序' : '正序' }}
-            </n-button>
-          </SectionHeader>
-          <SectionWebToc
-            :provider-id="providerId"
-            :novel-id="novelId"
-            :toc="novel.toc"
-            :reverse="setting.tocSortReverse"
-            :last-read-chapter-id="novel.lastReadChapterId"
-          />
-        </section>
-
-        <CommentList :site="`web-${providerId}-${novelId}`" />
-      </template>
+      <CommentList :site="`web-${providerId}-${novelId}`" />
     </ResultView>
   </MainLayout>
 </template>

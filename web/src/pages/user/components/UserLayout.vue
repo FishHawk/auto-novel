@@ -42,8 +42,6 @@ const roleToReadableText = (role: UserRole) => {
         <n-tab name="/favorite">收藏</n-tab>
         <n-tab name="/read-history">历史</n-tab>
         <n-tab name="/personal">文件翻译</n-tab>
-        <n-tab name="/sakura-workspace">Sakura工作区</n-tab>
-        <n-tab name="/gpt-workspace">GPT工作区</n-tab>
       </n-tabs>
       <slot />
     </template>

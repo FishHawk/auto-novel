@@ -8,8 +8,8 @@ import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.result.UpdateResult
 import infra.*
 import infra.model.*
-import infra.web.providers.RemoteNovelListItem
 import infra.web.providers.Hameln
+import infra.web.providers.RemoteNovelListItem
 import infra.web.providers.Syosetu
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
@@ -350,7 +350,7 @@ class WebNovelMetadataRepository(
         titleZh: String?,
         introductionZh: String?,
         tocZh: Map<Int, String?>,
-    ): WebNovelMetadata? {
+    ) {
         val list = mutableListOf(
             setValue(WebNovelMetadata::titleZh, titleZh),
             setValue(WebNovelMetadata::introductionZh, introductionZh)
@@ -360,7 +360,7 @@ class WebNovelMetadataRepository(
         }
         list.add(setValue(WebNovelMetadata::changeAt, Clock.System.now()))
 
-        return mongo
+        mongo
             .webNovelMetadataCollection
             .findOneAndUpdate(
                 WebNovelMetadata.byId(providerId, novelId),

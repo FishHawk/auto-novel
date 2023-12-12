@@ -125,9 +125,10 @@ const updateNovel = (
   providerId: string,
   novelId: string,
   json: {
-    title?: string;
-    introduction?: string;
+    title: string;
+    introduction: string;
     toc: { [key: string]: string };
+    wenkuId?: string;
   }
 ) => {
   return runCatching(
@@ -143,14 +144,6 @@ const updateGlossary = (
   runCatching(
     client.put(`novel/${providerId}/${novelId}/glossary`, { json }).text()
   );
-
-const updateWenkuId = (providerId: string, novelId: string, wenkuId: string) =>
-  runCatching(
-    client.put(`novel/${providerId}/${novelId}/wenku`, { body: wenkuId }).text()
-  );
-
-const deleteWenkuId = (providerId: string, novelId: string) =>
-  runCatching(client.delete(`novel/${providerId}/${novelId}/wenku`).text());
 
 const createFileUrl = ({
   providerId,
@@ -189,8 +182,6 @@ export const ApiWebNovel = {
   //
   updateNovel,
   updateGlossary,
-  updateWenkuId,
-  deleteWenkuId,
   //
   createFileUrl,
 };

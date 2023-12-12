@@ -99,8 +99,10 @@ const clearCache = async () => {
 </script>
 
 <template>
-  <user-layout>
-    <n-p> 使用说明： </n-p>
+  <main-layout>
+    <n-h1>Sakura工作区</n-h1>
+
+    <n-p>使用说明：</n-p>
     <n-ul>
       <n-li>
         翻译任务运行在你的浏览器里面，关闭或者刷新本页面都会停止翻译。长时间挂机的话不要把本页面放在后台，防止被浏览器杀掉。
@@ -223,7 +225,7 @@ const clearCache = async () => {
         </tr>
       </tbody>
     </n-table>
-  </user-layout>
+  </main-layout>
 
   <sakura-create-worker-modal v-model:show="showCreateWorkerModal" />
 </template>
