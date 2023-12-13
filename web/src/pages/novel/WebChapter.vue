@@ -42,6 +42,23 @@ async function getChapter() {
 }
 getChapter();
 
+onKeyStroke(['1', '2', '3', '4'], (e) => {
+  const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
+  const translatorId = translatorIds[parseInt(e.key, 10) - 1];
+  if (setting.translationsMode === 'parallel') {
+    if (setting.translations.includes(translatorId)) {
+      setting.translations = setting.translations.filter(
+        (it) => it !== translatorId
+      );
+    } else {
+      setting.translations.push(translatorId);
+    }
+  } else {
+    setting.translations = [translatorId];
+  }
+  e.preventDefault();
+});
+
 onKeyStroke(['ArrowLeft'], (e) => {
   if (chapterResult.value?.ok && chapterResult.value.value.prevId) {
     const prevId = chapterResult.value.value.prevId;
