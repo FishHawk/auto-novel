@@ -109,6 +109,7 @@ function handleUserDropdownSelect(key: string | number) {
 }
 
 const showLoginModal = ref(false);
+const showMenuModal = ref(false);
 
 const onSignInSuccess = (profile: SignInDto) => {
   userData.setProfile(profile);
@@ -127,12 +128,17 @@ const vars = useThemeVars();
         class="container"
         style="display: flex; align-items: center; height: 50px"
       >
-        <n-popover v-if="!isDesktop" trigger="click" :width="280">
-          <template #trigger>
-            <n-icon size="24"> <MenuFilled /> </n-icon>
-          </template>
-          <n-menu :value="path" :options="collapsedMenuOptions" />
-        </n-popover>
+        <n-button
+          v-if="!isDesktop"
+          text
+          style="font-size: 24px"
+          @click="showMenuModal = true"
+        >
+          <n-icon>
+            <n-icon size="24" :component="MenuFilled" />
+          </n-icon>
+        </n-button>
+
         <router-link v-if="isDesktop" to="/">
           <n-icon
             size="30"
@@ -222,6 +228,17 @@ const vars = useThemeVars();
       </n-layout>
     </n-layout>
   </n-layout>
+
+  <n-drawer
+    v-if="!isDesktop"
+    v-model:show="showMenuModal"
+    placement="left"
+    :theme-overrides="{ bodyPadding: '0px' }"
+  >
+    <n-drawer-content :native-scrollbar="false" max-width="600">
+      <n-menu :value="path" :options="collapsedMenuOptions" />
+    </n-drawer-content>
+  </n-drawer>
 
   <card-modal
     v-model:show="showLoginModal"
