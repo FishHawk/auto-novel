@@ -61,4 +61,10 @@ li {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.float {
+  position: fixed;
+  right: 40px;
+  bottom: 20px;
+  box-shadow: rgb(0 0 0 / 40%) 2px 2px 8px 0px;
+}
 </style>

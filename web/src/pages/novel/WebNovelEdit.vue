@@ -81,6 +81,17 @@ const submit = async () => {
       :label-placement="isDesktop ? 'left' : 'top'"
       label-width="auto"
     >
+      <n-form-item path="wenkuId" label="文库链接">
+        <n-input-group>
+          <n-input-group-label>wenku/</n-input-group-label>
+          <n-input
+            v-model:value="formValue.wenkuId"
+            placeholder="文库版ID"
+            :input-props="{ spellcheck: false }"
+          />
+        </n-input-group>
+      </n-form-item>
+
       <n-form-item label="日文标题">
         {{ novel?.titleJp }}
       </n-form-item>
@@ -103,17 +114,6 @@ const submit = async () => {
           :autosize="{ minRows: 3, maxRows: 10 }"
           type="textarea"
         />
-      </n-form-item>
-
-      <n-form-item path="wenkuId" label="文库链接">
-        <n-input-group>
-          <n-input-group-label>wenku/</n-input-group-label>
-          <n-input
-            v-model:value="formValue.wenkuId"
-            placeholder="文库版ID"
-            :input-props="{ spellcheck: false }"
-          />
-        </n-input-group>
       </n-form-item>
     </n-form>
 
@@ -142,7 +142,13 @@ const submit = async () => {
 
     <n-divider />
 
-    <async-button type="primary" @async-click="submit">
+    <async-button
+      round
+      size="large"
+      type="primary"
+      class="float"
+      @async-click="submit"
+    >
       <template #icon>
         <n-icon :component="UploadFilled" />
       </template>

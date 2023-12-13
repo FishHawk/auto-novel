@@ -332,7 +332,14 @@ const deleteVolume = (index: number) => {
 
     <n-divider />
 
-    <async-button v-if="novelId" type="primary" @async-click="submit">
+    <async-button
+      v-if="novelId"
+      round
+      size="large"
+      type="primary"
+      class="float"
+      @async-click="submit"
+    >
       <template #icon>
         <n-icon :component="UploadFilled" />
       </template>
