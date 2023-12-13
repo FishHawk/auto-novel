@@ -1,13 +1,7 @@
 <script lang="ts" setup>
-import {
-  ThemeCommonVars,
-  backTopDark,
-  darkTheme,
-  dateZhCN,
-  lightTheme,
-  zhCN,
-} from 'naive-ui';
-import { watch } from 'vue';
+import { darkTheme, dateZhCN, lightTheme, zhCN } from 'naive-ui';
+import { onMounted, onUnmounted, watch } from 'vue';
+import { share } from 'pinia-shared-state';
 
 import { ApiAuth } from './data/api/api_auth';
 import { updateToken } from './data/api/client';
