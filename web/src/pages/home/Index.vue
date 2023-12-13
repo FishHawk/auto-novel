@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useThemeVars } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -18,9 +19,10 @@ import qqUrl from '@/images/qq.png';
 const isDesktop = useIsDesktop(900);
 const userData = useUserDataStore();
 const router = useRouter();
+const vars = useThemeVars();
 
 const url = ref('');
-function query(url: string) {
+const query = (url: string) => {
   if (url.length === 0) return;
   const parseResult = parseUrl(url);
   if (parseResult !== undefined) {
@@ -29,10 +31,10 @@ function query(url: string) {
   } else {
     router.push({ path: `/novel-list`, query: { query: url } });
   }
-}
+};
 
 const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
-async function loadFavorite() {
+const loadFavorite = async () => {
   const result = await ApiUser.listFavoredWebNovel('default', {
     page: 0,
     pageSize: 8,
@@ -43,7 +45,7 @@ async function loadFavorite() {
   } else {
     favoriteList.value = result;
   }
-}
+};
 watch(
   () => userData.username,
   (username) => {
@@ -53,7 +55,7 @@ watch(
 );
 
 const mostVisitedWeb = ref<ResultState<WebNovelOutlineDto[]>>();
-async function loadWeb() {
+const loadWeb = async () => {
   const result = await ApiWebNovel.listNovel({
     page: 0,
     pageSize: 8,
@@ -65,11 +67,11 @@ async function loadWeb() {
   } else {
     mostVisitedWeb.value = result;
   }
-}
+};
 loadWeb();
 
 const latestUpdateWenku = ref<ResultState<WenkuNovelOutlineDto[]>>();
-async function loadWenku() {
+const loadWenku = async () => {
   const result = await ApiWenkuNovel.listNovel({
     page: 0,
     pageSize: 12,
@@ -80,7 +82,7 @@ async function loadWenku() {
   } else {
     latestUpdateWenku.value = result;
   }
-}
+};
 loadWenku();
 
 const showLinkExampleModal = ref(false);
@@ -126,6 +128,7 @@ const linkExample = [
               placeholder="请输入小说链接，或者输入标题搜索本站缓存..."
               :input-props="{ spellcheck: false }"
               @keyup.enter="query(url)"
+              :style="{ 'background-color': vars.bodyColor }"
             />
             <n-button size="large" type="primary" @click="query(url)">
               搜索

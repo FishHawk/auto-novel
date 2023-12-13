@@ -289,7 +289,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     </n-list>
   </n-collapse-transition>
 
-  <n-list style="background-color: #0000">
+  <n-list>
     <n-list-item v-for="row in files">
       <template #suffix>
         <template v-if="row.translatorId === 'sakura'">

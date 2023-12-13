@@ -215,8 +215,8 @@ const vars = useThemeVars();
 
     <n-layout :native-scrollbar="false" style="height: calc(100vh - 51px)">
       <slot name="full-width" />
-      <n-layout class="container" style="padding-bottom: 48px" has-sider>
-        <n-layout-content>
+      <n-layout class="container" has-sider>
+        <n-layout-content style="padding-bottom: 48px; min-height: 100vh">
           <slot />
         </n-layout-content>
         <n-layout-sider
@@ -229,12 +229,7 @@ const vars = useThemeVars();
     </n-layout>
   </n-layout>
 
-  <n-drawer
-    v-if="!isDesktop"
-    v-model:show="showMenuModal"
-    placement="left"
-    :theme-overrides="{ bodyPadding: '0px' }"
-  >
+  <n-drawer v-if="!isDesktop" v-model:show="showMenuModal" placement="left">
     <n-drawer-content :native-scrollbar="false" max-width="600">
       <n-menu :value="path" :options="collapsedMenuOptions" />
     </n-drawer-content>

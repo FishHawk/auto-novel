@@ -176,11 +176,7 @@ const showAddModal = ref(false);
       />
     </div>
 
-    <n-drawer
-      v-model:show="showListModal"
-      placement="right"
-      :theme-overrides="{ bodyPadding: '0px' }"
-    >
+    <n-drawer v-model:show="showListModal" placement="right">
       <n-drawer-content :native-scrollbar="false" max-width="600">
         <n-menu :value="currentMenuKey" :options="menuOptions" />
       </n-drawer-content>

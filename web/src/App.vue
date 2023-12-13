@@ -1,5 +1,12 @@
 <script lang="ts" setup>
-import { darkTheme, dateZhCN, lightTheme, zhCN } from 'naive-ui';
+import {
+  ThemeCommonVars,
+  backTopDark,
+  darkTheme,
+  dateZhCN,
+  lightTheme,
+  zhCN,
+} from 'naive-ui';
 import { watch } from 'vue';
 
 import { ApiAuth } from './data/api/api_auth';
@@ -36,6 +43,10 @@ if (userData.isLoggedIn) {
     :locale="zhCN"
     :date-locale="dateZhCN"
     inline-theme-disabled
+    :theme-overrides="{
+      Drawer: { bodyPadding: '0px' },
+      List: { color: '#0000' },
+    }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <router-view :key="$route.path" />
