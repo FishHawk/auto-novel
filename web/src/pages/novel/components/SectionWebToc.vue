@@ -67,8 +67,12 @@ const vars = useThemeVars();
         <span style="flex: 1 1 0">{{ item.titleJp }}</span>
         <n-text depth="3" style="flex: 1 1 0">{{ item.titleZh }}</n-text>
         <n-text depth="3" style="width: 155px; text-align: right">
-          <template v-if="item.createAt">
-            <n-time :time="item.createAt * 1000" format="yyyy-MM-dd HH:mm" />
+          <template v-if="item.index !== undefined">
+            <n-time
+              v-if="item.createAt"
+              :time="item.createAt * 1000"
+              format="yyyy-MM-dd HH:mm"
+            />
             [{{ item.index }}]
           </template>
         </n-text>
@@ -79,10 +83,14 @@ const vars = useThemeVars();
         <br />
         <n-text depth="3">
           {{ item.titleZh }}
-          <template v-if="item.createAt">
+          <template v-if="item.index !== undefined">
             <br />
-            <n-time :time="item.createAt * 1000" format="yyyy-MM-dd HH:mm" />
             [{{ item.index }}]
+            <n-time
+              v-if="item.createAt"
+              :time="item.createAt * 1000"
+              format="yyyy-MM-dd HH:mm"
+            />
           </template>
         </n-text>
       </div>
