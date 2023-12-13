@@ -134,9 +134,7 @@ const vars = useThemeVars();
           style="font-size: 24px"
           @click="showMenuModal = true"
         >
-          <n-icon>
-            <n-icon size="24" :component="MenuFilled" />
-          </n-icon>
+          <n-icon size="24" :component="MenuFilled" />
         </n-button>
 
         <router-link v-if="isDesktop" to="/">

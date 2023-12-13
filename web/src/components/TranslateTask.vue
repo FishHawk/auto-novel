@@ -32,7 +32,7 @@ const expandLog = ref(false);
 watch(logs, () => {
   if (enableAutoScroll.value) {
     nextTick(() => {
-      logInstRef.value?.scrollTo({ position: 'bottom', slient: true });
+      logInstRef.value?.scrollTo({ silent: true, position: 'bottom' });
     });
   }
 });
