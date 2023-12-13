@@ -80,7 +80,7 @@ export class SakuraTranslator implements SegmentTranslator {
     seg: string[],
     segInfo: { index: number; size: number }
   ): Promise<string[]> {
-    const maxNewToken = 1024;
+    const maxNewToken = 1000;
     const prompt = this.makePrompt(seg.join('\n'));
 
     let retry = 0;
@@ -127,7 +127,7 @@ export class SakuraTranslator implements SegmentTranslator {
     config: any
   ) {
     if (this.api) {
-      const { content, model, truncated } = await this.api.createCompletion(
+      const { content, model, stopped_limit } = await this.api.createCompletion(
         {
           prompt,
           n_predict: maxNewToken,
@@ -141,7 +141,7 @@ export class SakuraTranslator implements SegmentTranslator {
           timeout: false,
         }
       );
-      return { text: content, model, hasDegradation: truncated };
+      return { text: content, model, hasDegradation: stopped_limit };
     } else {
       const response = this.client.post(this.endpoint, {
         json: {

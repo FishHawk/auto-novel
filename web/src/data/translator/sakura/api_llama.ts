@@ -33,5 +33,7 @@ interface LlamaCompletion {
 interface LlamaCompletionResponse {
   content: string;
   model: string;
+  stopped_eos: boolean;
+  stopped_limit: boolean;
   truncated: boolean;
 }
