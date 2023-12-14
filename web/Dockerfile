@@ -1,8 +1,8 @@
-FROM node:19.0-slim AS builder
+FROM node:21-slim AS builder
 COPY . /web
 WORKDIR /web
 ENV NODE_ENV=production
-RUN npm install; \
+RUN npm ci; \
     npm run build
 
 FROM caddy:2.7.4
