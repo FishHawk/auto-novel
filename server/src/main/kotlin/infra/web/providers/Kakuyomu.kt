@@ -6,7 +6,10 @@ import infra.model.WebNovelType
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.datetime.Instant
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
+import kotlin.io.path.Path
+import kotlin.io.path.writeText
 
 private fun JsonObject.boolean(field: String) = get(field)!!.jsonPrimitive.boolean
 private fun JsonObject.array(field: String) = get(field)!!.jsonArray
@@ -143,7 +146,7 @@ class Kakuyomu(
                     .objOrNull("chapter")
                     ?.unref()
                 val episodes = tableOfContentsChapter
-                    .array("episodes")
+                    .array("episodeUnions")
                     .map { it.jsonObject.unref() }
                 buildList {
                     if (chapter != null) {
