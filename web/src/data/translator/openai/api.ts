@@ -8,8 +8,14 @@ import { parseEventStream } from './common';
 export class OpenAiApi {
   type: 'api';
   client: KyInstance;
+  model: OpenAiApi.SupportedModel;
 
-  constructor(client: KyInstance, endpoint: string, key: string) {
+  constructor(
+    client: KyInstance,
+    endpoint: string,
+    key: string,
+    model: OpenAiApi.SupportedModel
+  ) {
     this.type = 'api';
     this.client = client.create({
       prefixUrl: endpoint,
@@ -20,6 +26,7 @@ export class OpenAiApi {
       },
       timeout: 600_000,
     });
+    this.model = model;
   }
 
   createChatCompletionsStream = (
@@ -27,7 +34,7 @@ export class OpenAiApi {
     options?: Options
   ): Promise<Generator<ChatCompletionChunk>> =>
     this.client
-      .post('chat/completions', { json, ...options })
+      .post('v1/chat/completions', { json, ...options })
       .text()
       .then(parseEventStream<ChatCompletionChunk>)
       .catch(OpenAiError.handle);
@@ -37,9 +44,15 @@ export class OpenAiApi {
     options?: Options
   ): Promise<ChatCompletion> =>
     this.client
-      .post('chat/completions', { json, ...options })
+      .post('v1/chat/completions', { json, ...options })
       .json<ChatCompletion>()
       .catch(OpenAiError.handle);
+}
+
+export namespace OpenAiApi {
+  export type SupportedModel = 'gpt-3.5-turbo' | 'gpt-4';
+  export const isSupportedModel = (model: string): model is SupportedModel =>
+    model === 'gpt-3.5-turbo' || model === 'gpt-4';
 }
 
 export interface ChatCompletionChunk {

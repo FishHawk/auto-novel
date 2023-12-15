@@ -7,6 +7,7 @@ import { client } from '@/data/api/client';
 import { GptWorker, useGptWorkspaceStore } from '@/data/stores/workspace';
 
 import { parseTask } from './parse_task';
+import { TranslatorDesc } from '@/data/translator/api';
 
 const { worker, getNextJob } = defineProps<{
   worker: GptWorker;
@@ -28,16 +29,25 @@ const emit = defineEmits<{
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
 
-const realEndpoint = computed(() => {
-  if (worker.endpoint.length === 0) {
-    if (worker.type === 'web') {
-      return 'https://chatgpt-proxy.lss233.com/api';
+const translatorDesc = computed<TranslatorDesc & { id: 'gpt' }>(() => {
+  const endpoint = (() => {
+    if (worker.endpoint.length === 0) {
+      if (worker.type === 'web') {
+        return 'https://chatgpt-proxy.lss233.com/api';
+      } else {
+        return 'https://api.openai.com';
+      }
     } else {
-      return 'https://api.openai.com/v1';
+      return worker.endpoint;
     }
-  } else {
-    return worker.endpoint;
-  }
+  })();
+  return {
+    id: 'gpt',
+    type: worker.type,
+    model: worker.model ?? 'gpt-3.5',
+    endpoint,
+    key: worker.key,
+  };
 });
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
@@ -59,12 +69,7 @@ const processTasks = async () => {
     const completed = await translateTask.value!!.startTask(
       desc,
       params,
-      {
-        id: 'gpt',
-        type: worker.type,
-        endpoint: realEndpoint.value,
-        key: worker.key,
-      },
+      translatorDesc.value,
       {
         onProgressUpdated: (progress) => {
           emit('update:progress', job.task, {
@@ -105,13 +110,10 @@ const testGptWorker = async () => {
   const Translator = (await import('@/data/translator')).Translator;
   try {
     const translator = await Translator.createWithoutCache({
-      id: 'gpt',
       client,
       glossary: {},
-      type: worker.type,
-      endpoint: realEndpoint.value,
-      key: worker.key,
       log: () => {},
+      ...translatorDesc.value,
     });
     const result = await translator.translate([input]);
     const output = result[0];
@@ -131,9 +133,11 @@ const testGptWorker = async () => {
     <template #header>
       {{ worker.id }}
       <n-text depth="3" style="font-size: 12px; padding-left: 2px">
-        {{ worker.type === 'web' ? 'Web' : 'Api' }}-{{
-          worker.key.substring(0, 7)
-        }}@{{ realEndpoint }}
+        {{
+          `${translatorDesc.type}-${
+            translatorDesc.model
+          }[${worker.key.substring(0, 7)}]@${translatorDesc.endpoint}`
+        }}
       </n-text>
     </template>
 

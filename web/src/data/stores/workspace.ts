@@ -1,3 +1,4 @@
+import { useLocalStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
 
 export interface TranslateJob {
@@ -74,7 +75,8 @@ export const useSakuraWorkspaceStore = defineStore('sakura-workspace', {
 export interface GptWorker {
   id: string;
   endpoint: string;
-  type: 'api' | 'web';
+  type: 'web' | 'api';
+  model?: 'gpt-3.5' | 'gpt-4';
   key: string;
 }
 

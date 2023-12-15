@@ -7,8 +7,14 @@ import { parseEventStream } from './common';
 export class OpenAiApiWeb {
   type: 'web';
   client: KyInstance;
+  model: OpenAiApiWeb.SupportedModel;
 
-  constructor(client: KyInstance, endpoint: string, accessToken: string) {
+  constructor(
+    client: KyInstance,
+    endpoint: string,
+    accessToken: string,
+    model: OpenAiApiWeb.SupportedModel
+  ) {
     this.type = 'web';
     this.client = client.create({
       prefixUrl: endpoint,
@@ -18,10 +24,11 @@ export class OpenAiApiWeb {
       },
       timeout: 100_000,
     });
+    this.model = model;
   }
 
   async createConversation(
-    body: Conversation.Params,
+    json: Conversation.Params,
     options?: Options
   ): Promise<Generator<Conversation.Chunk>> {
     const text = await this.client
@@ -29,8 +36,8 @@ export class OpenAiApiWeb {
         json: {
           action: 'next',
           parent_message_id: uuidv4(),
-          model: 'text-davinci-002-render-sha',
-          ...body,
+          model: this.model,
+          ...json,
         },
         headers: { accept: 'text/event-stream' },
         ...options,
@@ -47,6 +54,10 @@ export class OpenAiApiWeb {
 }
 
 export namespace OpenAiApiWeb {
+  export type SupportedModel = 'text-davinci-002-render-sha';
+  export const isSupportedModel = (model: string): model is SupportedModel =>
+    model === 'text-davinci-002-render-sha';
+
   export const message = (
     role: 'user' | 'assistant' | 'system',
     text: string

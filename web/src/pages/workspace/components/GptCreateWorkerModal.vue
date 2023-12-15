@@ -10,6 +10,7 @@ const formRef = ref<FormInst>();
 const formValue = ref<GptWorker>({
   id: '',
   type: 'web',
+  model: 'gpt-3.5',
   endpoint: '',
   key: '',
 });
@@ -87,6 +88,16 @@ const createGptWorker = async () => {
           </n-space>
         </n-radio-group>
       </n-form-item-row>
+      <n-form-item-row path="model" label="模型">
+        <n-radio-group v-model:value="formValue.model" name="model">
+          <n-space>
+            <n-radio value="gpt-3.5">GPT-3.5</n-radio>
+            <n-radio :disabled="formValue.type === 'web'" value="gpt-4"
+              >GPT-4</n-radio
+            >
+          </n-space>
+        </n-radio-group>
+      </n-form-item-row>
       <n-form-item-row path="endpoint" label="链接">
         <n-input
           v-model:value="formValue.endpoint"
@@ -106,9 +117,9 @@ const createGptWorker = async () => {
 
       <n-text depth="3" style="font-size: 12px">
         {{
-          formValue.type === 'api'
-            ? '# 链接例子：https://gpt.mnxcc.com/v1，不行试试在你的链接最后加个‘/v1’'
-            : '# 链接例子：https://chatgpt-proxy.lss233.com/api'
+          formValue.type === 'web'
+            ? '# 链接例子：https://chatgpt-proxy.lss233.com/api'
+            : '# 链接例子：https://gpt.mnxcc.com，后面不要加‘/v1’'
         }}
       </n-text>
     </n-form>

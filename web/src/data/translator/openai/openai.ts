@@ -5,6 +5,7 @@ import { createTokenSegmenter } from './common';
 
 export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
   type: 'web' | 'api';
+  model: 'gpt-3.5' | 'gpt-4';
   endpoint: string;
   key: string;
 }
@@ -20,13 +21,24 @@ export class OpenAiTranslator implements SegmentTranslator {
     glossary,
     log,
     type,
+    model,
     endpoint,
     key,
   }: OpenAiTranslatorConfig) {
     if (type === 'web') {
-      this.api = new OpenAiApiWeb(client, endpoint, key);
+      this.api = new OpenAiApiWeb(
+        client,
+        endpoint,
+        key,
+        'text-davinci-002-render-sha'
+      );
     } else {
-      this.api = new OpenAiApi(client, endpoint, key);
+      this.api = new OpenAiApi(
+        client,
+        endpoint,
+        key,
+        model === 'gpt-3.5' ? 'gpt-3.5-turbo' : 'gpt-4'
+      );
     }
     this.log = log;
     this.glossary = glossary;
@@ -296,7 +308,7 @@ const askApi = (
   api
     .createChatCompletionsStream({
       messages: messages.map(([role, content]) => ({ content, role })),
-      model: 'gpt-3.5-turbo',
+      model: api.model,
       stream: true,
     })
     .then((completionStream) => {

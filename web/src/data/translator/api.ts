@@ -1,6 +1,6 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { Translator, TranslatorId } from './translator';
+import { Translator } from './translator';
 
 type BaseTranslateTaskDesc = {
   client: KyInstance;
@@ -41,7 +41,13 @@ export type TranslateTaskDesc =
 export type TranslatorDesc =
   | { id: 'baidu' }
   | { id: 'youdao' }
-  | { id: 'gpt'; type: 'web' | 'api'; endpoint: string; key: string }
+  | {
+      id: 'gpt';
+      type: 'web' | 'api';
+      model: 'gpt-3.5' | 'gpt-4';
+      endpoint: string;
+      key: string;
+    }
   | { id: 'sakura'; endpoint: string; useLlamaApi: boolean };
 
 const translateWeb = async (
