@@ -6,6 +6,8 @@ import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 
+import { parseTask } from './parse_task';
+
 const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
   id: string;
   endpoint: string;
@@ -42,33 +44,11 @@ const processTasks = async () => {
     currentJob.value = job;
 
     if (job === undefined) break;
-    const task = job.task;
-
-    const [taskString, queryString] = task.split('?');
-    const { expire } = Object.fromEntries(new URLSearchParams(queryString));
-
-    let desc: any;
-    if (taskString.startsWith('web')) {
-      const [type, providerId, novelId] = taskString.split('/');
-      desc = { type, providerId, novelId };
-    } else if (taskString.startsWith('wenku')) {
-      const [type, novelId, volumeId] = taskString.split('/');
-      desc = { type, novelId, volumeId };
-    } else if (taskString.startsWith('personal')) {
-      const [type, volumeId] = taskString.split('/');
-      desc = { type, volumeId };
-    }
-
-    if (desc === undefined) continue;
+    const { desc, params } = parseTask(job.task);
 
     const completed = await translateTask.value!!.startTask(
       desc,
-      {
-        translateExpireChapter: expire === 'true',
-        syncFromProvider: false,
-        startIndex: 0,
-        endIndex: 65535,
-      },
+      params,
       {
         id: 'sakura',
         endpoint,
@@ -76,14 +56,14 @@ const processTasks = async () => {
       },
       {
         onProgressUpdated: (progress) => {
-          emit('update:progress', task, {
+          emit('update:progress', job.task, {
             state: 'processed',
             ...progress,
           });
         },
       }
     );
-    emit('update:progress', task, { state: 'finish' });
+    emit('update:progress', job.task, { state: 'finish' });
 
     if (!completed) break;
   }

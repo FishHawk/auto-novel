@@ -6,6 +6,8 @@ import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
 import { GptWorker, useGptWorkspaceStore } from '@/data/stores/workspace';
 
+import { parseTask } from './parse_task';
+
 const { worker, getNextJob } = defineProps<{
   worker: GptWorker;
   getNextJob: () =>
@@ -52,40 +54,11 @@ const processTasks = async () => {
     currentJob.value = job;
 
     if (job === undefined) break;
-    const task = job.task;
-
-    const [taskString, queryString] = task.split('?');
-    const { start, end, expire } = Object.fromEntries(
-      new URLSearchParams(queryString)
-    );
-
-    let desc: any;
-    if (taskString.startsWith('web')) {
-      const [type, providerId, novelId] = taskString.split('/');
-      desc = { type, providerId, novelId };
-    } else if (taskString.startsWith('wenku')) {
-      const [type, novelId, volumeId] = taskString.split('/');
-      desc = { type, novelId, volumeId };
-    } else if (taskString.startsWith('personal')) {
-      const [type, volumeId] = taskString.split('/');
-      desc = { type, volumeId };
-    }
-
-    if (desc === undefined) continue;
-
-    const parseIntWithDefault = (str: string, defaultValue: number) => {
-      const num = parseInt(str, 10);
-      return isNaN(num) ? defaultValue : num;
-    };
+    const { desc, params } = parseTask(job.task);
 
     const completed = await translateTask.value!!.startTask(
       desc,
-      {
-        translateExpireChapter: expire === 'true',
-        syncFromProvider: false,
-        startIndex: parseIntWithDefault(start, 0),
-        endIndex: parseIntWithDefault(end, 65535),
-      },
+      params,
       {
         id: 'gpt',
         type: worker.type,
@@ -94,14 +67,14 @@ const processTasks = async () => {
       },
       {
         onProgressUpdated: (progress) => {
-          emit('update:progress', task, {
+          emit('update:progress', job.task, {
             state: 'processed',
             ...progress,
           });
         },
       }
     );
-    emit('update:progress', task, { state: 'finish' });
+    emit('update:progress', job.task, { state: 'finish' });
 
     if (!completed) break;
   }
