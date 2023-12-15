@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@types/diff": "^5.0.3",
-    "@types/markdown-it-anchor": "^7.0.0",
     "@types/uuid": "^9.0.2",
     "@vicons/material": "^0.12.0",
     "@vitejs/plugin-vue": "^4.5.2",
