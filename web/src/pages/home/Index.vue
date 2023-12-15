@@ -198,15 +198,13 @@ const linkExample = [
     <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
 
-    <card-modal v-model:show="showLinkExampleModal">
+    <card-modal title="链接示例" v-model:show="showLinkExampleModal">
       <n-list>
         <n-list-item v-for="[name, link] of linkExample">
           <n-thing>
-            <template #description>
-              <b>{{ name }}</b>
-              <br />
-              {{ link }}
-            </template>
+            <b>{{ name }}</b>
+            <br />
+            {{ link }}
           </n-thing>
         </n-list-item>
       </n-list>
