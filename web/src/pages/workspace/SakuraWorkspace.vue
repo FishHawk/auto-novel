@@ -102,6 +102,17 @@ const clearCache = async () => {
   <main-layout>
     <n-h1>Sakura工作区</n-h1>
 
+    <n-p>
+      当前启动器版本：
+      <n-a
+        href="https://books.fishhawk.top/files-extra/sakura-launcher.v0.0.2.zip"
+        download
+      >
+        Sakura启动器v0.0.2
+      </n-a>
+      ，本地部署的朋友注意更新。
+    </n-p>
+
     <n-p>使用说明：</n-p>
     <n-ul>
       <n-li>
