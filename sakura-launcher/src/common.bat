@@ -60,7 +60,7 @@ echo 模型路径：%model.path%
 echo.
 echo 准备启动Sakura服务器...
 @echo on
-.\llama\server.exe -m .\%model.name%.gguf -c 1024 -ngl %ngl% -a %model.name% --host 127.0.0.1
+.\llama\server.exe -m .\%model.name%.gguf -c 2048 -ngl %ngl% -a %model.name% --host 127.0.0.1
 @echo off
 
 goto quit
