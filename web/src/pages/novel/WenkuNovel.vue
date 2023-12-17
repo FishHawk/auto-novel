@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { EditNoteFilled } from '@vicons/material';
+import { createReusableTemplate } from '@vueuse/core';
 import { useMessage, useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
@@ -8,6 +9,11 @@ import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
 import { ResultState } from '@/data/result';
 import { useSettingStore } from '@/data/stores/setting';
 import coverPlaceholder from '@/images/cover_placeholder.png';
+
+const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
+  label: string;
+  tags: string[];
+}>();
 
 const setting = useSettingStore();
 const message = useMessage();
@@ -85,6 +91,23 @@ const translationOptions = [
 </script>
 
 <template>
+  <DefineTagGroup v-slot="{ label, tags }">
+    <tr v-if="tags.length > 0">
+      <td nowrap="nowrap" style="vertical-align: top; padding-right: 12px">
+        <n-tag :bordered="false" size="small">
+          {{ label }}
+        </n-tag>
+      </td>
+      <td>
+        <n-space :size="[4, 4]">
+          <n-tag v-for="tag of tags" :bordered="false" size="small">
+            {{ tag }}
+          </n-tag>
+        </n-space>
+      </td>
+    </tr>
+  </DefineTagGroup>
+
   <MainLayout>
     <template v-slot:full-width>
       <div
@@ -132,13 +155,11 @@ const translationOptions = [
                 </n-h1>
 
                 <table style="border-spacing: 0px 8px">
-                  <TagGroup
-                    v-if="novelMetadataResult.value.authors.length > 0"
+                  <ReuseTagGroup
                     label="作者"
                     :tags="novelMetadataResult.value.authors"
                   />
-                  <TagGroup
-                    v-if="novelMetadataResult.value.artists.length > 0"
+                  <ReuseTagGroup
                     label="插图"
                     :tags="novelMetadataResult.value.artists"
                   />
