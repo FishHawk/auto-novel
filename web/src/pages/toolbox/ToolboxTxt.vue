@@ -65,7 +65,7 @@ function copyResult() {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>TXT工具箱</n-h1>
 
     <n-space align="center">
@@ -106,11 +106,11 @@ function copyResult() {
         </n-card>
       </div>
     </div>
+  </div>
 
-    <card-modal title="预览（前100行）" v-model:show="showPreviewModal">
-      <n-p v-for="line of content.slice(0, 100)">
-        {{ line }}
-      </n-p>
-    </card-modal>
-  </MainLayout>
+  <card-modal title="预览（前100行）" v-model:show="showPreviewModal">
+    <n-p v-for="line of content.slice(0, 100)">
+      {{ line }}
+    </n-p>
+  </card-modal>
 </template>

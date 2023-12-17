@@ -72,7 +72,7 @@ const submit = async () => {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>编辑网络小说</n-h1>
 
     <n-form
@@ -154,5 +154,5 @@ const submit = async () => {
       </template>
       提交
     </async-button>
-  </MainLayout>
+  </div>
 </template>

@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
-import { NConfigProvider, darkTheme, lightTheme, useMessage } from 'naive-ui';
+import { useMessage } from 'naive-ui';
 import { ref, shallowRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { ResultState } from '@/data/result';
@@ -11,7 +12,6 @@ import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { TranslatorId } from '@/data/translator/translator';
 import { buildWebChapterUrl } from '@/data/util_web';
-import { ApiSakura } from '@/data/api/api_sakura';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
@@ -244,86 +244,77 @@ const createWebIncorrectCase = async (
     </n-button>
   </DefineChapterLink>
 
-  <n-config-provider
-    :theme="setting.theme.isDark ? darkTheme : lightTheme"
-    :theme-overrides="{
-      common: { bodyColor: setting.theme.bodyColor },
-    }"
-  >
-    <n-global-style />
+  <reader-setting-modal v-model:show="showModal" />
 
-    <ReaderSettingDialog v-model:show="showModal" />
+  <div class="content">
+    <ResultView
+      :result="chapterResult"
+      :showEmpty="() => false"
+      v-slot="{ value: chapter }"
+    >
+      <n-h2 style="text-align: center">
+        <n-a :href="buildWebChapterUrl(providerId, novelId, chapterId)">{{
+          chapter.titleJp
+        }}</n-a>
+        <br />
+        <n-text depth="3">{{ chapter.titleZh }}</n-text>
+      </n-h2>
 
-    <div class="content">
-      <ResultView
-        :result="chapterResult"
-        :showEmpty="() => false"
-        v-slot="{ value: chapter }"
-      >
-        <n-h2 style="text-align: center">
-          <n-a :href="buildWebChapterUrl(providerId, novelId, chapterId)">{{
-            chapter.titleJp
-          }}</n-a>
-          <br />
-          <n-text depth="3">{{ chapter.titleZh }}</n-text>
-        </n-h2>
+      <n-space align="center" justify="space-between" style="width: 100%">
+        <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
+        <RouterNA :to="`/novel/${providerId}/${novelId}`">
+          <n-button quaternary type="primary">目录</n-button>
+        </RouterNA>
+        <n-button quaternary type="primary" @click="showModal = true">
+          设置
+        </n-button>
+        <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+      </n-space>
 
-        <n-space align="center" justify="space-between" style="width: 100%">
-          <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-          <RouterNA :to="`/novel/${providerId}/${novelId}`">
-            <n-button quaternary type="primary">目录</n-button>
-          </RouterNA>
-          <n-button quaternary type="primary" @click="showModal = true">
-            设置
-          </n-button>
-          <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
-        </n-space>
+      <n-divider />
 
-        <n-divider />
+      <div id="chapter-content">
+        <template v-for="p in getTextList(chapter)">
+          <template v-if="p && 'text' in p">
+            <n-popconfirm
+              v-if="p.popover !== undefined"
+              placement="top-start"
+              positive-text="提交"
+              :negative-text="null"
+              @positive-click="createWebIncorrectCase(p.popover, chapter)"
+            >
+              <template #trigger>
+                <n-p :class="{ secondary: p.secondary }">
+                  {{ p.text }}
+                </n-p>
+              </template>
+              <span>
+                这段话Sakura翻译不准确？请提交帮助我们改进。（人名不稳定请使用术语表，不用提交）
+              </span>
+            </n-popconfirm>
 
-        <div id="chapter-content">
-          <template v-for="p in getTextList(chapter)">
-            <template v-if="p && 'text' in p">
-              <n-popconfirm
-                v-if="p.popover !== undefined"
-                placement="top-start"
-                positive-text="提交"
-                :negative-text="null"
-                @positive-click="createWebIncorrectCase(p.popover, chapter)"
-              >
-                <template #trigger>
-                  <n-p :class="{ secondary: p.secondary }">
-                    {{ p.text }}
-                  </n-p>
-                </template>
-                <span>
-                  这段话Sakura翻译不准确？请提交帮助我们改进。（人名不稳定请使用术语表，不用提交）
-                </span>
-              </n-popconfirm>
-
-              <n-p v-else :class="{ secondary: p.secondary }">
-                {{ p.text }}
-              </n-p>
-            </template>
-            <br v-else-if="!p" />
-            <img
-              v-else
-              :src="p.imageUrl"
-              :alt="p.imageUrl"
-              style="max-width: 100%; object-fit: scale-down"
-            />
+            <n-p v-else :class="{ secondary: p.secondary }">
+              {{ p.text }}
+            </n-p>
           </template>
-        </div>
+          <br v-else-if="!p" />
+          <img
+            v-else
+            :src="p.imageUrl"
+            :alt="p.imageUrl"
+            style="max-width: 100%; object-fit: scale-down"
+          />
+        </template>
+      </div>
 
-        <n-divider />
+      <n-divider />
 
-        <n-space align="center" justify="space-between" style="width: 100%">
-          <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-          <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
-        </n-space>
-      </ResultView>
-    </div>
-  </n-config-provider>
+      <n-space align="center" justify="space-between" style="width: 100%">
+        <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
+        <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+      </n-space>
+    </ResultView>
+  </div>
 </template>
 
 <style scoped>

@@ -65,7 +65,7 @@ watch(type, () => {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>操作历史</n-h1>
 
     <RouterNA to="/admin/web-toc-merge-history">合并历史</RouterNA>
@@ -140,5 +140,5 @@ watch(type, () => {
       :page-count="pageNumber"
       :page-slot="7"
     />
-  </MainLayout>
+  </div>
 </template>

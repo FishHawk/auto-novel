@@ -1,5 +1,5 @@
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>工具箱</n-h1>
     <n-grid :x-gap="12" :y-gap="12" cols="2">
       <n-grid-item>
@@ -10,5 +10,5 @@
         </RouterNA>
       </n-grid-item>
     </n-grid>
-  </MainLayout>
+  </div>
 </template>

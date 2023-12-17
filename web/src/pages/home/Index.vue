@@ -99,45 +99,43 @@ const linkExample = [
 </script>
 
 <template>
-  <MainLayout>
-    <template v-slot:full-width>
-      <div
-        :style="{
-          background: `rgba(0, 0, 0, .15) url(${bannerUrl})`,
-          'background-blend-mode': 'darken',
-          width: '100%',
-          'padding-top': '60px',
-          'padding-bottom': '104px',
-        }"
+  <div
+    :style="{
+      background: `rgba(0, 0, 0, .15) url(${bannerUrl})`,
+      'background-blend-mode': 'darken',
+      width: '100%',
+      'padding-top': '60px',
+      'padding-bottom': '104px',
+    }"
+  >
+    <div class="layout-content" style="max-width: 800px">
+      <n-h1
+        style="
+          text-align: center;
+          font-size: 3.2em;
+          color: white;
+          filter: drop-shadow(0.05em 0.05em black);
+        "
       >
-        <div class="container" style="max-width: 800px">
-          <n-h1
-            style="
-              text-align: center;
-              font-size: 3.2em;
-              color: white;
-              filter: drop-shadow(0.05em 0.05em black);
-            "
-          >
-            轻小说机翻机器人
-          </n-h1>
-          <n-input-group>
-            <n-input
-              v-model:value="url"
-              size="large"
-              placeholder="请输入小说链接，或者输入标题搜索本站缓存..."
-              :input-props="{ spellcheck: false }"
-              @keyup.enter="query(url)"
-              :style="{ 'background-color': vars.bodyColor }"
-            />
-            <n-button size="large" type="primary" @click="query(url)">
-              搜索
-            </n-button>
-          </n-input-group>
-        </div>
-      </div>
-    </template>
+        轻小说机翻机器人
+      </n-h1>
+      <n-input-group>
+        <n-input
+          v-model:value="url"
+          size="large"
+          placeholder="请输入小说链接，或者输入标题搜索本站缓存..."
+          :input-props="{ spellcheck: false }"
+          @keyup.enter="query(url)"
+          :style="{ 'background-color': vars.bodyColor }"
+        />
+        <n-button size="large" type="primary" @click="query(url)">
+          搜索
+        </n-button>
+      </n-input-group>
+    </div>
+  </div>
 
+  <div class="layout-content">
     <n-space :wrap="false" align="center" style="margin-top: 8px">
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
@@ -197,17 +195,17 @@ const linkExample = [
     </SectionHeader>
     <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
+  </div>
 
-    <card-modal title="链接示例" v-model:show="showLinkExampleModal">
-      <n-list>
-        <n-list-item v-for="[name, link] of linkExample">
-          <n-thing>
-            <b>{{ name }}</b>
-            <br />
-            {{ link }}
-          </n-thing>
-        </n-list-item>
-      </n-list>
-    </card-modal>
-  </MainLayout>
+  <card-modal title="链接示例" v-model:show="showLinkExampleModal">
+    <n-list>
+      <n-list-item v-for="[name, link] of linkExample">
+        <n-thing>
+          <b>{{ name }}</b>
+          <br />
+          {{ link }}
+        </n-thing>
+      </n-list-item>
+    </n-list>
+  </card-modal>
 </template>

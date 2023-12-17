@@ -10,6 +10,7 @@ const userData = useUserDataStore();
 
 const path = route.path;
 const handleUpdateValue = (path: string) => {
+  console.log(path);
   router.push({ path });
 };
 
@@ -24,7 +25,7 @@ const roleToReadableText = (role: UserRole) => {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <template v-if="userData.isLoggedIn">
       <n-h1>
         @{{ userData.username }}
@@ -43,8 +44,8 @@ const roleToReadableText = (role: UserRole) => {
         <n-tab name="/read-history">历史</n-tab>
         <n-tab name="/personal">文件翻译</n-tab>
       </n-tabs>
-      <slot />
+      <router-view />
     </template>
     <n-result v-else status="error" title="未登录" />
-  </MainLayout>
+  </div>
 </template>

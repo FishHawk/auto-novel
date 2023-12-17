@@ -114,107 +114,105 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
 </script>
 
 <template>
-  <UserLayout>
-    <n-upload
-      multiple
-      directory-dnd
-      :max="5"
-      :custom-request="customRequest"
-      @finish="onFinish"
-      @before-upload="beforeUpload"
-      style="margin-bottom: 32px"
+  <n-upload
+    multiple
+    directory-dnd
+    :max="5"
+    :custom-request="customRequest"
+    @finish="onFinish"
+    @before-upload="beforeUpload"
+    style="margin-bottom: 32px"
+  >
+    <n-upload-dragger>
+      <div style="margin-bottom: 12px">
+        <n-icon size="48" :depth="3" :component="ArchiveOutlined" />
+      </div>
+      <n-text style="font-size: 16px">
+        点击或者拖动文件到该区域来上传文件
+      </n-text>
+      <n-p depth="3" style="margin: 8px 0 0 0">
+        支持TXT/EPUB文件，这里上传的文件是不公开的
+      </n-p>
+    </n-upload-dragger>
+  </n-upload>
+
+  <workspace-nav />
+
+  <n-button-group style="margin-bottom: 8px">
+    <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button>
+    <n-button @click="toggleDownloadOptions()">下载设置</n-button>
+  </n-button-group>
+
+  <ResultView
+    :result="volumesResult"
+    :showEmpty="(it: any) => it.length === 0"
+    v-slot="{ value: volumes }"
+  >
+    <n-collapse-transition
+      :show="showTranslateOptions || showDownloadOptions"
+      style="margin-bottom: 16px"
     >
-      <n-upload-dragger>
-        <div style="margin-bottom: 12px">
-          <n-icon size="48" :depth="3" :component="ArchiveOutlined" />
-        </div>
-        <n-text style="font-size: 16px">
-          点击或者拖动文件到该区域来上传文件
-        </n-text>
-        <n-p depth="3" style="margin: 8px 0 0 0">
-          支持TXT/EPUB文件，这里上传的文件是不公开的
-        </n-p>
-      </n-upload-dragger>
-    </n-upload>
-
-    <workspace-nav />
-
-    <n-button-group style="margin-bottom: 8px">
-      <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button>
-      <n-button @click="toggleDownloadOptions()">下载设置</n-button>
-    </n-button-group>
-
-    <ResultView
-      :result="volumesResult"
-      :showEmpty="(it: any) => it.length === 0"
-      v-slot="{ value: volumes }"
-    >
-      <n-collapse-transition
-        :show="showTranslateOptions || showDownloadOptions"
-        style="margin-bottom: 16px"
-      >
-        <n-list v-if="showTranslateOptions" bordered>
-          <n-list-item>
-            <AdvanceOptionSwitch
-              title="翻译过期章节"
-              description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
-              v-model:value="translateExpireChapter"
-            />
-          </n-list-item>
-        </n-list>
-
-        <n-list v-if="showDownloadOptions" bordered>
-          <n-list-item>
-            <AdvanceOptionSwitch
-              title="下载文件格式与阅读设置一致"
-              description="使用在线章节的阅读设置作为下载文件的格式，启用时会禁止下面的自定义设置。"
-              v-model:value="setting.isDownloadFormatSameAsReaderFormat"
-            />
-          </n-list-item>
-
-          <n-list-item>
-            <AdvanceOptionRadio
-              title="自定义下载文件语言"
-              description="设置下载文件的语言。注意部分Epub阅读器不支持自定义字体颜色，日文段落会被强制使用黑色字体。"
-              v-model:value="setting.downloadFormat.mode"
-              :disabled="setting.isDownloadFormatSameAsReaderFormat"
-              :options="modeOptions"
-            />
-          </n-list-item>
-
-          <n-list-item>
-            <AdvanceOptionRadio
-              title="自定义下载文件翻译"
-              description="设置下载文件使用的翻译。注意右侧选中的翻译的顺序，优先模式顺序代表优先级，并列模式顺序代表翻译的排列顺序。"
-              v-model:value="setting.downloadFormat.translationsMode"
-              :disabled="setting.isDownloadFormatSameAsReaderFormat"
-              :options="translationModeOptions"
-            >
-              <n-transfer
-                v-model:value="setting.downloadFormat.translations"
-                :options="translationOptions"
-                :disabled="setting.isDownloadFormatSameAsReaderFormat"
-                size="small"
-                style="height: 190px; margin-top: 8px; font-size: 12px"
-              />
-            </AdvanceOptionRadio>
-          </n-list-item>
-        </n-list>
-      </n-collapse-transition>
-
-      <n-list>
-        <template v-for="volume of sortVolumesJp(volumes.volumes)">
-          <n-list-item>
-            <personal-volume
-              :volume="volume"
-              :download-token="volumes.downloadToken"
-              :get-params="() => ({ translateExpireChapter })"
-            />
-          </n-list-item>
-        </template>
+      <n-list v-if="showTranslateOptions" bordered>
+        <n-list-item>
+          <AdvanceOptionSwitch
+            title="翻译过期章节"
+            description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
+            v-model:value="translateExpireChapter"
+          />
+        </n-list-item>
       </n-list>
-    </ResultView>
-  </UserLayout>
+
+      <n-list v-if="showDownloadOptions" bordered>
+        <n-list-item>
+          <AdvanceOptionSwitch
+            title="下载文件格式与阅读设置一致"
+            description="使用在线章节的阅读设置作为下载文件的格式，启用时会禁止下面的自定义设置。"
+            v-model:value="setting.isDownloadFormatSameAsReaderFormat"
+          />
+        </n-list-item>
+
+        <n-list-item>
+          <AdvanceOptionRadio
+            title="自定义下载文件语言"
+            description="设置下载文件的语言。注意部分Epub阅读器不支持自定义字体颜色，日文段落会被强制使用黑色字体。"
+            v-model:value="setting.downloadFormat.mode"
+            :disabled="setting.isDownloadFormatSameAsReaderFormat"
+            :options="modeOptions"
+          />
+        </n-list-item>
+
+        <n-list-item>
+          <AdvanceOptionRadio
+            title="自定义下载文件翻译"
+            description="设置下载文件使用的翻译。注意右侧选中的翻译的顺序，优先模式顺序代表优先级，并列模式顺序代表翻译的排列顺序。"
+            v-model:value="setting.downloadFormat.translationsMode"
+            :disabled="setting.isDownloadFormatSameAsReaderFormat"
+            :options="translationModeOptions"
+          >
+            <n-transfer
+              v-model:value="setting.downloadFormat.translations"
+              :options="translationOptions"
+              :disabled="setting.isDownloadFormatSameAsReaderFormat"
+              size="small"
+              style="height: 190px; margin-top: 8px; font-size: 12px"
+            />
+          </AdvanceOptionRadio>
+        </n-list-item>
+      </n-list>
+    </n-collapse-transition>
+
+    <n-list>
+      <template v-for="volume of sortVolumesJp(volumes.volumes)">
+        <n-list-item>
+          <personal-volume
+            :volume="volume"
+            :download-token="volumes.downloadToken"
+            :get-params="() => ({ translateExpireChapter })"
+          />
+        </n-list-item>
+      </template>
+    </n-list>
+  </ResultView>
 </template>
 
 <style scoped>

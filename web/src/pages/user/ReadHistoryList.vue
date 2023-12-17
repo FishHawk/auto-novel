@@ -10,9 +10,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, _selected) =>
 </script>
 
 <template>
-  <UserLayout>
-    <NovelList :search="false" :options="[]" :loader="loader" v-slot="{ page }">
-      <NovelListWeb :items="page.items" simple />
-    </NovelList>
-  </UserLayout>
+  <NovelList :search="false" :options="[]" :loader="loader" v-slot="{ page }">
+    <NovelListWeb :items="page.items" simple />
+  </NovelList>
 </template>

@@ -96,7 +96,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>论坛</n-h1>
     <RouterNA to="/forum-edit">发布文章</RouterNA>
     <n-pagination
@@ -170,7 +170,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
       :page-slot="7"
       style="margin-top: 20px"
     />
-  </MainLayout>
+  </div>
 </template>
 
 <style scoped>

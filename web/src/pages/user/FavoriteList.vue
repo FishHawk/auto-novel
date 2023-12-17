@@ -148,43 +148,38 @@ const showAddModal = ref(false);
 </script>
 
 <template>
-  <UserLayout>
-    <div style="display: flex">
-      <div style="flex: auto">
-        <n-button
-          v-if="!isDesktop"
-          @click="showListModal = true"
-          style="margin-bottom: 8px"
-        >
-          收藏夹列表
-        </n-button>
-        <NovelList
-          :search="false"
-          :options="options"
-          :loader="loader"
-          v-slot="{ page }"
-        >
-          <NovelListWeb v-if="page.type === 'web'" :items="page.items" simple />
-          <NovelListWenku v-if="page.type === 'wenku'" :items="page.items" />
-        </NovelList>
-      </div>
-      <n-menu
-        v-if="isDesktop"
-        :value="currentMenuKey"
-        :options="menuOptions"
-        style="flex: none; width: 250px"
-      />
+  <div style="display: flex">
+    <div style="flex: auto">
+      <n-button
+        v-if="!isDesktop"
+        @click="showListModal = true"
+        style="margin-bottom: 8px"
+      >
+        收藏夹列表
+      </n-button>
+      <NovelList
+        :search="false"
+        :options="options"
+        :loader="loader"
+        v-slot="{ page }"
+      >
+        <NovelListWeb v-if="page.type === 'web'" :items="page.items" simple />
+        <NovelListWenku v-if="page.type === 'wenku'" :items="page.items" />
+      </NovelList>
     </div>
-
-    <n-drawer v-model:show="showListModal" placement="right">
-      <n-drawer-content :native-scrollbar="false" max-width="600">
-        <n-menu :value="currentMenuKey" :options="menuOptions" />
-      </n-drawer-content>
-    </n-drawer>
-
-    <favorite-add-modal
-      v-model:show="showAddModal"
-      @created="loadFavoredList"
+    <n-menu
+      v-if="isDesktop"
+      :value="currentMenuKey"
+      :options="menuOptions"
+      style="flex: none; width: 250px"
     />
-  </UserLayout>
+  </div>
+
+  <n-drawer v-model:show="showListModal" placement="right">
+    <n-drawer-content :native-scrollbar="false" max-width="600">
+      <n-menu :value="currentMenuKey" :options="menuOptions" />
+    </n-drawer-content>
+  </n-drawer>
+
+  <favorite-add-modal v-model:show="showAddModal" @created="loadFavoredList" />
 </template>

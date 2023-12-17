@@ -22,7 +22,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <ResultView
       :result="articleResult"
       :showEmpty="(it: Article) => false"
@@ -48,5 +48,5 @@ onMounted(async () => {
         <CommentList :site="`article-${articleId}`" :locked="article.locked" />
       </section>
     </ResultView>
-  </MainLayout>
+  </div>
 </template>

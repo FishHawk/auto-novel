@@ -3,10 +3,14 @@ import { useRoute } from 'vue-router';
 
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { Page } from '@/data/api/common';
+import { useIsDesktop } from '@/data/util';
 
 import { Loader } from './components/NovelList.vue';
+import { menuOptions } from './components/menu';
 
+const isDesktop = useIsDesktop(850);
 const route = useRoute();
+
 const providerId = route.params.providerId as string;
 const typeId = route.params.typeId as string;
 
@@ -147,15 +151,23 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (_page, _query, selected) => {
 </script>
 
 <template>
-  <WebLayout>
-    <n-h1>{{ descriptior.title }}</n-h1>
-    <NovelList
-      :search="descriptior.search"
-      :options="descriptior.options"
-      :loader="loader"
-      v-slot="{ page }"
-    >
-      <NovelListWeb :items="page.items" />
-    </NovelList>
-  </WebLayout>
+  <div style="display: flex" class="layout-content">
+    <div style="flex: auto">
+      <n-h1>{{ descriptior.title }}</n-h1>
+      <NovelList
+        :search="descriptior.search"
+        :options="descriptior.options"
+        :loader="loader"
+        v-slot="{ page }"
+      >
+        <NovelListWeb :items="page.items" />
+      </NovelList>
+    </div>
+    <n-menu
+      v-if="isDesktop"
+      style="flex: none; width: 250px; margin-left: 12px"
+      :value="route.path"
+      :options="menuOptions"
+    />
+  </div>
 </template>

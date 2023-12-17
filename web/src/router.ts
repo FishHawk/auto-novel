@@ -4,141 +4,162 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/',
-      meta: { title: '首页' },
-      component: () => import('./pages/home/Index.vue'),
+      path: '/*',
+      component: () => import('./layouts/ReaderLayout.vue'),
+      children: [
+        {
+          path: '/novel/:providerId/:novelId/:chapterId',
+          component: () => import('./pages/reader/WebChapter.vue'),
+        },
+      ],
     },
 
     {
-      path: '/sakura',
-      meta: { title: 'Sakura状态' },
-      component: () => import('./pages/other/Sakura.vue'),
-    },
-    {
-      path: '/reset-password',
-      meta: { title: '重置密码' },
-      component: () => import('./pages/other/ResetPassword.vue'),
-    },
+      path: '/*',
+      component: () => import('./layouts/MainLayout.vue'),
+      children: [
+        {
+          path: '/',
+          meta: { title: '首页' },
+          component: () => import('./pages/home/Index.vue'),
+        },
 
-    {
-      path: '/account',
-      meta: { title: '账号中心' },
-      component: () => import('./pages/user/AccountCenter.vue'),
-    },
-    {
-      path: '/favorite',
-      meta: { title: '我的收藏' },
-      component: () => import('./pages/user/FavoriteList.vue'),
-    },
-    {
-      path: '/read-history',
-      meta: { title: '阅读历史' },
-      component: () => import('./pages/user/ReadHistoryList.vue'),
-    },
-    {
-      path: '/personal',
-      meta: { title: '文件翻译' },
-      component: () => import('./pages/user/PersonalNovel.vue'),
-    },
+        {
+          path: '/reset-password',
+          meta: { title: '重置密码' },
+          component: () => import('./pages/other/ResetPassword.vue'),
+        },
 
-    {
-      path: '/sakura-workspace',
-      meta: { title: 'Sakura工作区' },
-      component: () => import('./pages/workspace/SakuraWorkspace.vue'),
-    },
-    {
-      path: '/gpt-workspace',
-      meta: { title: 'GPT工作区' },
-      component: () => import('./pages/workspace/GptWorkspace.vue'),
-    },
+        {
+          path: '/*',
+          component: () => import('./layouts/UserLayout.vue'),
+          children: [
+            {
+              path: '/account',
+              meta: { title: '账号中心' },
+              component: () => import('./pages/user/AccountCenter.vue'),
+            },
+            {
+              path: '/favorite',
+              meta: { title: '我的收藏' },
+              component: () => import('./pages/user/FavoriteList.vue'),
+            },
+            {
+              path: '/read-history',
+              meta: { title: '阅读历史' },
+              component: () => import('./pages/user/ReadHistoryList.vue'),
+            },
+            {
+              path: '/personal',
+              meta: { title: '文件翻译' },
+              component: () => import('./pages/user/PersonalNovel.vue'),
+            },
+          ],
+        },
 
-    {
-      path: '/novel-list',
-      meta: { title: '网络小说' },
-      component: () => import('./pages/list/WebNovelList.vue'),
-    },
-    {
-      path: '/wenku-list',
-      meta: { title: '文库小说' },
-      component: () => import('./pages/list/WenkuNovelList.vue'),
-    },
-    {
-      path: '/novel-rank/:providerId/:typeId',
-      meta: { title: '排行榜' },
-      component: () => import('./pages/list/WebNovelRank.vue'),
-    },
+        {
+          path: '/sakura',
+          meta: { title: 'Sakura状态' },
+          component: () =>
+            import('./pages/workspace/SakuraWorkspacePublic.vue'),
+        },
+        {
+          path: '/sakura-workspace',
+          meta: { title: 'Sakura工作区' },
+          component: () => import('./pages/workspace/SakuraWorkspace.vue'),
+        },
+        {
+          path: '/gpt-workspace',
+          meta: { title: 'GPT工作区' },
+          component: () => import('./pages/workspace/GptWorkspace.vue'),
+        },
 
-    {
-      path: '/novel/:providerId/:novelId',
-      component: () => import('./pages/novel/WebNovel.vue'),
-    },
-    {
-      path: '/novel-edit/:providerId/:novelId',
-      meta: { title: '编辑网络小说' },
-      component: () => import('./pages/novel/WebNovelEdit.vue'),
-    },
-    {
-      path: '/novel/:providerId/:novelId/:chapterId',
-      component: () => import('./pages/novel/WebChapter.vue'),
-    },
+        {
+          path: '/novel-list',
+          meta: { title: '网络小说' },
+          component: () => import('./pages/list/WebNovelList.vue'),
+        },
+        {
+          path: '/novel-rank/:providerId/:typeId',
+          meta: { title: '排行榜' },
+          component: () => import('./pages/list/WebNovelRank.vue'),
+        },
 
-    {
-      path: '/wenku/:novelId',
-      component: () => import('./pages/novel/WenkuNovel.vue'),
-    },
-    {
-      path: '/wenku-edit',
-      meta: { title: '新建文库小说' },
-      component: () => import('./pages/novel/WenkuNovelEdit.vue'),
-    },
-    {
-      path: '/wenku-edit/:id',
-      meta: { title: '编辑文库小说' },
-      component: () => import('./pages/novel/WenkuNovelEdit.vue'),
-    },
+        {
+          path: '/wenku-list',
+          meta: { title: '文库小说' },
+          component: () => import('./pages/list/WenkuNovelList.vue'),
+        },
 
-    {
-      path: '/forum',
-      meta: { title: '论坛' },
-      component: () => import('./pages/forum/Forum.vue'),
-    },
-    {
-      path: '/forum/:id',
-      component: () => import('./pages/forum/ForumArticle.vue'),
-    },
-    {
-      path: '/forum-edit',
-      meta: { title: '发布文章' },
-      component: () => import('./pages/forum/ForumArticleEdit.vue'),
-    },
-    {
-      path: '/forum-edit/:id',
-      meta: { title: '编辑文章' },
-      component: () => import('./pages/forum/ForumArticleEdit.vue'),
-    },
+        {
+          path: '/novel/:providerId/:novelId',
+          component: () => import('./pages/novel/WebNovel.vue'),
+        },
+        {
+          path: '/novel-edit/:providerId/:novelId',
+          meta: { title: '编辑网络小说' },
+          component: () => import('./pages/novel/WebNovelEdit.vue'),
+        },
 
-    {
-      path: '/toolbox',
-      meta: { title: '工具箱' },
-      component: () => import('./pages/toolbox/Toolbox.vue'),
-    },
-    {
-      path: '/toolbox/txt',
-      meta: { title: 'TXT工具箱' },
-      component: () => import('./pages/toolbox/ToolboxTxt.vue'),
-    },
+        {
+          path: '/wenku/:novelId',
+          component: () => import('./pages/novel/WenkuNovel.vue'),
+        },
+        {
+          path: '/wenku-edit',
+          meta: { title: '新建文库小说' },
+          component: () => import('./pages/novel/WenkuNovelEdit.vue'),
+        },
+        {
+          path: '/wenku-edit/:id',
+          meta: { title: '编辑文库小说' },
+          component: () => import('./pages/novel/WenkuNovelEdit.vue'),
+        },
 
-    {
-      path: '/admin',
-      component: () => import('./pages/admin/AdminOperationHistory.vue'),
-    },
-    {
-      path: '/admin/user',
-      component: () => import('./pages/admin/AdminUserManagement.vue'),
-    },
-    {
-      path: '/admin/web-toc-merge-history',
-      component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
+        {
+          path: '/forum',
+          meta: { title: '论坛' },
+          component: () => import('./pages/forum/Forum.vue'),
+        },
+        {
+          path: '/forum/:id',
+          component: () => import('./pages/forum/ForumArticle.vue'),
+        },
+        {
+          path: '/forum-edit',
+          meta: { title: '发布文章' },
+          component: () => import('./pages/forum/ForumArticleEdit.vue'),
+        },
+        {
+          path: '/forum-edit/:id',
+          meta: { title: '编辑文章' },
+          component: () => import('./pages/forum/ForumArticleEdit.vue'),
+        },
+
+        {
+          path: '/toolbox',
+          meta: { title: '工具箱' },
+          component: () => import('./pages/toolbox/Toolbox.vue'),
+        },
+        {
+          path: '/toolbox/txt',
+          meta: { title: 'TXT工具箱' },
+          component: () => import('./pages/toolbox/ToolboxTxt.vue'),
+        },
+
+        {
+          path: '/admin',
+          component: () => import('./pages/admin/AdminOperationHistory.vue'),
+        },
+        {
+          path: '/admin/user',
+          component: () => import('./pages/admin/AdminUserManagement.vue'),
+        },
+        {
+          path: '/admin/web-toc-merge-history',
+          component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
+        },
+      ],
     },
   ],
 

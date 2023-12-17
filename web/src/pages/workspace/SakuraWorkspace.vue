@@ -99,7 +99,7 @@ const clearCache = async () => {
 </script>
 
 <template>
-  <main-layout>
+  <div class="layout-content">
     <n-h1>Sakura工作区</n-h1>
 
     <n-p>
@@ -236,7 +236,7 @@ const clearCache = async () => {
         </tr>
       </tbody>
     </n-table>
-  </main-layout>
+  </div>
 
   <sakura-create-worker-modal v-model:show="showCreateWorkerModal" />
 </template>

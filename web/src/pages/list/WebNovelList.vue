@@ -1,10 +1,16 @@
 <script lang="ts" setup>
+import { useRoute } from 'vue-router';
+
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { Page } from '@/data/api/common';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { useIsDesktop } from '@/data/util';
 
 import { Loader } from './components/NovelList.vue';
+import { menuOptions } from './components/menu';
 
+const isDesktop = useIsDesktop(850);
+const route = useRoute();
 const userData = useUserDataStore();
 
 const oldAssOptions = userData.isOldAss
@@ -85,16 +91,24 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
 </script>
 
 <template>
-  <WebLayout>
-    <n-h1>网络小说</n-h1>
-    <n-text depth="3" style="font-size: 12px">
-      # 搜索语法参见
-      <RouterNA to="/forum/64f3d63f794cbb1321145c07#如何搜索网络小说">
-        如何搜索网络小说
-      </RouterNA>
-    </n-text>
-    <NovelList search :options="options" :loader="loader" v-slot="{ page }">
-      <NovelListWeb :items="page.items" />
-    </NovelList>
-  </WebLayout>
+  <div style="display: flex" class="layout-content">
+    <div style="flex: auto">
+      <n-h1>网络小说</n-h1>
+      <n-text depth="3" style="font-size: 12px">
+        # 搜索语法参见
+        <RouterNA to="/forum/64f3d63f794cbb1321145c07#如何搜索网络小说">
+          如何搜索网络小说
+        </RouterNA>
+      </n-text>
+      <NovelList search :options="options" :loader="loader" v-slot="{ page }">
+        <NovelListWeb :items="page.items" />
+      </NovelList>
+    </div>
+    <n-menu
+      v-if="isDesktop"
+      style="flex: none; width: 250px; margin-left: 12px"
+      :value="route.path"
+      :options="menuOptions"
+    />
+  </div>
 </template>

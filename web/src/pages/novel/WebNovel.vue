@@ -141,7 +141,7 @@ getNovel();
     </component>
   </DefineTocItemMobile>
 
-  <MainLayout>
+  <div class="layout-content">
     <ResultView
       :result="novelResult"
       :showEmpty="() => false"
@@ -281,7 +281,7 @@ getNovel();
 
       <CommentList :site="`web-${providerId}-${novelId}`" />
     </ResultView>
-  </MainLayout>
+  </div>
 </template>
 
 <style scoped>

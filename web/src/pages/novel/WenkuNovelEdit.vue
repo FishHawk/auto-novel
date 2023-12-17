@@ -211,7 +211,7 @@ const deleteVolume = (index: number) => {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>{{ novelId === undefined ? '新建' : '编辑' }}文库小说</n-h1>
 
     <n-space style="margin-bottom: 24px" :wrap="false">
@@ -396,5 +396,5 @@ const deleteVolume = (index: number) => {
         </async-button>
       </n-step>
     </n-steps>
-  </MainLayout>
+  </div>
 </template>

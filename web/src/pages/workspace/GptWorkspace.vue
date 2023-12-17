@@ -97,7 +97,7 @@ const clearCache = async () => {
 </script>
 
 <template>
-  <main-layout>
+  <div class="layout-content">
     <n-h1>GPT工作区</n-h1>
 
     <n-p>使用说明：</n-p>
@@ -214,7 +214,7 @@ const clearCache = async () => {
         </tr>
       </tbody>
     </n-table>
-  </main-layout>
+  </div>
 
   <gpt-create-worker-modal v-model:show="showCreateWorkerModal" />
 </template>

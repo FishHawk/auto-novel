@@ -44,7 +44,7 @@ watch(userRole, () => {
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>用户管理</n-h1>
 
     <n-p>
@@ -89,5 +89,5 @@ watch(userRole, () => {
       :page-count="pageNumber"
       :page-slot="7"
     />
-  </MainLayout>
+  </div>
 </template>

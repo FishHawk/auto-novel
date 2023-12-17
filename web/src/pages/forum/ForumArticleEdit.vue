@@ -12,14 +12,12 @@ const message = useMessage();
 
 const articleId = route.params.id as string | undefined;
 
-const formRef = ref<FormInst | null>(null);
-
+const formRef = ref<FormInst>();
 const formValue = ref({
   title: '',
   content: '',
 });
-
-const rules: FormRules = {
+const formRules: FormRules = {
   title: [
     {
       validator: (_rule: FormItemRule, value: string) =>
@@ -108,12 +106,12 @@ const formatExample: [string, string][] = [
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>{{ articleId === undefined ? '发布' : '编辑' }}文章</n-h1>
     <n-form
       ref="formRef"
       :model="formValue"
-      :rules="rules"
+      :rules="formRules"
       label-placement="left"
       label-width="auto"
       style="max-width: 800px"
@@ -174,5 +172,5 @@ const formatExample: [string, string][] = [
         </tbody>
       </n-table>
     </section>
-  </MainLayout>
+  </div>
 </template>

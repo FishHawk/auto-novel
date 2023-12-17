@@ -108,73 +108,72 @@ const translationOptions = [
     </tr>
   </DefineTagGroup>
 
-  <MainLayout>
-    <template v-slot:full-width>
-      <div
-        v-if="novelMetadataResult?.ok"
-        :style="{
-          background:
-            `linear-gradient(color-mix(in srgb, ${vars.bodyColor} 40%, transparent), ${vars.bodyColor}), ` +
-            `url(${novelMetadataResult.value.cover})`,
-        }"
-        style="
-          width: 100%;
-          clip: rect(0, auto, auto, 0);
-          background-size: cover;
-          background-position: center 15%;
-        "
-      >
-        <div style="width: 100%; height: 100%; backdrop-filter: blur(4px)">
-          <n-layout class="container" style="background-color: transparent">
-            <n-space
-              :wrap="false"
-              style="padding-top: 40px; padding-bottom: 20px; min-height: 260px"
-            >
-              <n-card size="small" style="width: 160px">
-                <template #cover>
-                  <img
-                    :src="
-                      novelMetadataResult.value.cover
-                        ? novelMetadataResult.value.cover
-                        : coverPlaceholder
-                    "
-                    alt="cover"
-                  />
-                </template>
-              </n-card>
-              <div>
-                <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
-                  {{
-                    novelMetadataResult.value.titleZh
-                      ? novelMetadataResult.value.titleZh
-                      : novelMetadataResult.value.title
-                  }}
-                  <n-text v-if="novelMetadataResult.value.r18" depth="3">
-                    [成人]
-                  </n-text>
-                </n-h1>
+  <div
+    v-if="novelMetadataResult?.ok"
+    :style="{
+      background:
+        `linear-gradient(color-mix(in srgb, ${vars.bodyColor} 40%, transparent), ${vars.bodyColor}), ` +
+        `url(${novelMetadataResult.value.cover})`,
+    }"
+    style="
+      width: 100%;
+      clip: rect(0, auto, auto, 0);
+      background-size: cover;
+      background-position: center 15%;
+    "
+  >
+    <div style="width: 100%; height: 100%; backdrop-filter: blur(4px)">
+      <div class="layout-content">
+        <n-space
+          :wrap="false"
+          style="padding-top: 40px; padding-bottom: 20px; min-height: 260px"
+        >
+          <n-card size="small" style="width: 160px">
+            <template #cover>
+              <img
+                :src="
+                  novelMetadataResult.value.cover
+                    ? novelMetadataResult.value.cover
+                    : coverPlaceholder
+                "
+                alt="cover"
+              />
+            </template>
+          </n-card>
+          <div>
+            <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
+              {{
+                novelMetadataResult.value.titleZh
+                  ? novelMetadataResult.value.titleZh
+                  : novelMetadataResult.value.title
+              }}
+              <n-text v-if="novelMetadataResult.value.r18" depth="3">
+                [成人]
+              </n-text>
+            </n-h1>
 
-                <table style="border-spacing: 0px 8px">
-                  <ReuseTagGroup
-                    label="作者"
-                    :tags="novelMetadataResult.value.authors"
-                  />
-                  <ReuseTagGroup
-                    label="插图"
-                    :tags="novelMetadataResult.value.artists"
-                  />
-                </table>
-              </div>
-            </n-space>
-          </n-layout>
-        </div>
+            <table style="border-spacing: 0px 8px">
+              <ReuseTagGroup
+                label="作者"
+                :tags="novelMetadataResult.value.authors"
+              />
+              <ReuseTagGroup
+                label="插图"
+                :tags="novelMetadataResult.value.artists"
+              />
+            </table>
+          </div>
+        </n-space>
       </div>
-    </template>
+    </div>
+  </div>
 
+  <div class="layout-content">
     <ResultView
       :result="novelMetadataResult"
       :showEmpty="() => false"
       v-slot="{ value: metadata }"
+      class="layout-content"
     >
       <n-space>
         <RouterNA :to="`/wenku-edit/${novelId}`">
@@ -346,5 +345,5 @@ const translationOptions = [
 
       <CommentList :site="`wenku-${novelId}`" />
     </ResultView>
-  </MainLayout>
+  </div>
 </template>

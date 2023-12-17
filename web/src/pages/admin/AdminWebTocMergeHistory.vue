@@ -69,7 +69,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>网页目录合并历史</n-h1>
     <n-pagination
       v-if="pageNumber > 1"
@@ -115,5 +115,5 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
       :page-count="pageNumber"
       :page-slot="7"
     />
-  </MainLayout>
+  </div>
 </template>

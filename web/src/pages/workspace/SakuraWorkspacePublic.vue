@@ -155,7 +155,7 @@ const createWorkerFormValue = ref({
     </tr>
   </DefineJob>
 
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>Sakura状态</n-h1>
     <ResultView
       :result="sakuraStatus"
@@ -319,5 +319,5 @@ const createWorkerFormValue = ref({
         </tbody>
       </n-table>
     </ResultView>
-  </MainLayout>
+  </div>
 </template>

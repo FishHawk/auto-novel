@@ -1,14 +1,10 @@
 <script lang="ts" setup>
-import { darkTheme, dateZhCN, lightTheme, zhCN } from 'naive-ui';
-import { onMounted, onUnmounted, watch } from 'vue';
-import { share } from 'pinia-shared-state';
+import { watch } from 'vue';
 
-import { ApiAuth } from './data/api/api_auth';
-import { updateToken } from './data/api/client';
-import { useSettingStore } from './data/stores/setting';
-import { useUserDataStore } from './data/stores/user_data';
+import { ApiAuth } from '@/data/api/api_auth';
+import { updateToken } from '@/data/api/client';
+import { useUserDataStore } from '@/data/stores/user_data';
 
-const setting = useSettingStore();
 const userData = useUserDataStore();
 
 // 全局注册token
@@ -32,20 +28,7 @@ if (userData.isLoggedIn) {
 </script>
 
 <template>
-  <n-config-provider
-    :theme="setting.isDark ? darkTheme : lightTheme"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
-    inline-theme-disabled
-    :theme-overrides="{
-      Drawer: { bodyPadding: '0px' },
-      List: { color: '#0000' },
-    }"
-  >
-    <n-message-provider container-style="white-space: pre-wrap">
-      <router-view :key="$route.path" />
-    </n-message-provider>
-  </n-config-provider>
+  <router-view :key="$route.path" />
 </template>
 
 <style>

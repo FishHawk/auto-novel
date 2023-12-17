@@ -69,14 +69,14 @@ defineEmits<{
   >
     <n-space vertical size="large" style="width: 100%">
       <ReuseOption label="语言">
-        <ReaderSettingDialogSelect
+        <reader-setting-modal-select
           :desktop="isDesktop"
           v-model:value="setting.mode"
           :options="modeOptions"
         />
       </ReuseOption>
       <ReuseOption label="翻译">
-        <ReaderSettingDialogSelect
+        <reader-setting-modal-select
           :desktop="isDesktop"
           v-model:value="setting.translationsMode"
           :options="translationModeOptions"
@@ -88,7 +88,7 @@ defineEmits<{
         />
       </ReuseOption>
       <ReuseOption label="字体">
-        <ReaderSettingDialogSelect
+        <reader-setting-modal-select
           :desktop="isDesktop"
           v-model:value="setting.fontSize"
           :options="fontSizeOptions"

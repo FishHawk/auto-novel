@@ -73,7 +73,7 @@ const sendEmail = () =>
 </script>
 
 <template>
-  <MainLayout>
+  <div class="layout-content">
     <n-h1>重置密码</n-h1>
     <n-form
       ref="formRef"
@@ -123,5 +123,5 @@ const sendEmail = () =>
       </n-form-item-row>
     </n-form>
     <n-button type="primary" @click="resetPassword()"> 重置密码 </n-button>
-  </MainLayout>
+  </div>
 </template>
