@@ -65,80 +65,74 @@ watch(type, () => {
 </script>
 
 <template>
-  <div class="layout-content">
-    <n-h1>操作历史</n-h1>
+  <n-p>
+    <n-radio-group v-model:value="type" name="operation-type">
+      <n-space>
+        <n-radio
+          v-for="option in typeOptions"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.label }}
+        </n-radio>
+      </n-space>
+    </n-radio-group>
+  </n-p>
 
-    <RouterNA to="/admin/web-toc-merge-history">合并历史</RouterNA>
+  <n-pagination
+    v-if="pageNumber > 1"
+    v-model:page="currentPage"
+    :page-count="pageNumber"
+    :page-slot="7"
+  />
+  <n-divider />
 
-    <n-p>
-      <n-radio-group v-model:value="type" name="operation-type">
+  <ResultView
+    :result="historiesResult"
+    :showEmpty="(it: Page<any>) => it.items.length === 0 "
+    v-slot="{ value }"
+  >
+    <n-list>
+      <n-list-item v-for="item in value.items">
+        <operation-web-edit
+          v-if="item.operation.type === 'web-edit'"
+          :op="item.operation"
+        />
+        <operation-web-edit-glossary
+          v-else-if="item.operation.type === 'web-edit-glossary'"
+          :op="item.operation"
+        />
+        <operation-wenku-edit
+          v-else-if="item.operation.type === 'wenku-edit'"
+          :op="item.operation"
+        />
+        <operation-wenku-edit-glossary
+          v-else-if="item.operation.type === 'wenku-edit-glossary'"
+          :op="item.operation"
+        />
+        <operation-wenku-upload
+          v-else-if="item.operation.type === 'wenku-upload'"
+          :op="item.operation"
+        />
         <n-space>
-          <n-radio
-            v-for="option in typeOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </n-radio>
+          <n-text>
+            于<n-time :time="item.createAt * 1000" type="relative" /> 由{{
+              item.operator.username
+            }}执行
+          </n-text>
+          <n-button type="error" text @click="deleteHistory(item.id)">
+            删除
+          </n-button>
         </n-space>
-      </n-radio-group>
-    </n-p>
+      </n-list-item>
+    </n-list>
+  </ResultView>
 
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-    />
-    <n-divider />
-
-    <ResultView
-      :result="historiesResult"
-      :showEmpty="(it: Page<any>) => it.items.length === 0 "
-      v-slot="{ value }"
-    >
-      <n-list>
-        <n-list-item v-for="item in value.items">
-          <operation-web-edit
-            v-if="item.operation.type === 'web-edit'"
-            :op="item.operation"
-          />
-          <operation-web-edit-glossary
-            v-else-if="item.operation.type === 'web-edit-glossary'"
-            :op="item.operation"
-          />
-          <operation-wenku-edit
-            v-else-if="item.operation.type === 'wenku-edit'"
-            :op="item.operation"
-          />
-          <operation-wenku-edit-glossary
-            v-else-if="item.operation.type === 'wenku-edit-glossary'"
-            :op="item.operation"
-          />
-          <operation-wenku-upload
-            v-else-if="item.operation.type === 'wenku-upload'"
-            :op="item.operation"
-          />
-          <n-space>
-            <n-text>
-              于<n-time :time="item.createAt * 1000" type="relative" /> 由{{
-                item.operator.username
-              }}执行
-            </n-text>
-            <n-button type="error" text @click="deleteHistory(item.id)">
-              删除
-            </n-button>
-          </n-space>
-        </n-list-item>
-      </n-list>
-    </ResultView>
-
-    <n-divider />
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-    />
-  </div>
+  <n-divider />
+  <n-pagination
+    v-if="pageNumber > 1"
+    v-model:page="currentPage"
+    :page-count="pageNumber"
+    :page-slot="7"
+  />
 </template>

@@ -69,51 +69,48 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
 </script>
 
 <template>
-  <div class="layout-content">
-    <n-h1>网页目录合并历史</n-h1>
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-    />
-    <n-divider />
-    <div v-if="novelPage?.ok">
-      <div v-for="item in novelPage.value.items">
-        <n-p>
-          <RouterNA :to="`/novel/${item.providerId}/${item.novelId}`">
-            {{ `${item.providerId}/${item.novelId}` }}
-          </RouterNA>
-          <br />
-          {{ item.reason }}
-        </n-p>
-        <table>
-          <tr>
-            <th>旧目录</th>
-            <th>新目录</th>
-          </tr>
-          <tr v-for="t of diffToc(item)">
-            <td :style="{ color: t.same ? 'grey' : 'red' }">
-              {{ t.oldV?.titleJp }}
-              <br />
-              {{ t.oldV?.chapterId }}
-            </td>
-            <td :style="{ color: t.same ? 'grey' : 'red' }">
-              {{ t.newV?.titleJp }}
-              <br />
-              {{ t.newV?.chapterId }}
-            </td>
-          </tr>
-          <n-button @click="deleteDetail(item.id)">删除</n-button>
-        </table>
-        <n-divider />
-      </div>
+  <n-pagination
+    v-if="pageNumber > 1"
+    v-model:page="currentPage"
+    :page-count="pageNumber"
+    :page-slot="7"
+  />
+  <n-divider />
+  <div v-if="novelPage?.ok">
+    <div v-for="item in novelPage.value.items">
+      <n-p>
+        <RouterNA :to="`/novel/${item.providerId}/${item.novelId}`">
+          {{ `${item.providerId}/${item.novelId}` }}
+        </RouterNA>
+        <br />
+        {{ item.reason }}
+      </n-p>
+      <table>
+        <tr>
+          <th>旧目录</th>
+          <th>新目录</th>
+        </tr>
+        <tr v-for="t of diffToc(item)">
+          <td :style="{ color: t.same ? 'grey' : 'red' }">
+            {{ t.oldV?.titleJp }}
+            <br />
+            {{ t.oldV?.chapterId }}
+          </td>
+          <td :style="{ color: t.same ? 'grey' : 'red' }">
+            {{ t.newV?.titleJp }}
+            <br />
+            {{ t.newV?.chapterId }}
+          </td>
+        </tr>
+        <n-button @click="deleteDetail(item.id)">删除</n-button>
+      </table>
+      <n-divider />
     </div>
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-    />
   </div>
+  <n-pagination
+    v-if="pageNumber > 1"
+    v-model:page="currentPage"
+    :page-count="pageNumber"
+    :page-slot="7"
+  />
 </template>

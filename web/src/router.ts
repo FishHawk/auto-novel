@@ -149,15 +149,23 @@ const router = createRouter({
 
         {
           path: '/admin',
-          component: () => import('./pages/admin/AdminOperationHistory.vue'),
-        },
-        {
-          path: '/admin/user',
-          component: () => import('./pages/admin/AdminUserManagement.vue'),
-        },
-        {
-          path: '/admin/web-toc-merge-history',
-          component: () => import('./pages/admin/AdminWebTocMergeHistory.vue'),
+          component: () => import('./layouts/AdminLayout.vue'),
+          children: [
+            {
+              path: 'user',
+              component: () => import('./pages/admin/AdminUserManagement.vue'),
+            },
+            {
+              path: 'operation',
+              component: () =>
+                import('./pages/admin/AdminOperationHistory.vue'),
+            },
+            {
+              path: 'web-toc-merge-history',
+              component: () =>
+                import('./pages/admin/AdminWebTocMergeHistory.vue'),
+            },
+          ],
         },
       ],
     },

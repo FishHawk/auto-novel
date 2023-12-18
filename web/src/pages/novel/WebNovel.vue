@@ -60,7 +60,6 @@ const getNovel = async () => {
     }
     toc.value = novelToc;
 
-    console.log(novel);
     if (novel.lastReadChapterId) {
       lastReadChapter.value = novelToc.find(
         (it) => it.chapterId === novel.lastReadChapterId

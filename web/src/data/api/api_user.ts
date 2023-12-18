@@ -16,7 +16,7 @@ export interface UserOutline {
   id: string;
   email: string;
   username: boolean;
-  role: string;
+  role: UserRole;
   createAt: number;
 }
 

@@ -9,10 +9,7 @@ const route = useRoute();
 const userData = useUserDataStore();
 
 const path = route.path;
-const handleUpdateValue = (path: string) => {
-  console.log(path);
-  router.push({ path });
-};
+const handleUpdateValue = (path: string) => router.push({ path });
 
 const roleToReadableText = (role: UserRole) => {
   if (role === 'normal') return '普通用户';

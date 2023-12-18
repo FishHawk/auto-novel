@@ -41,53 +41,68 @@ watch(userRole, () => {
   if (currentPage.value === 1) loadPage(1);
   else currentPage.value = 1;
 });
+
+const roleToReadableText = (role: UserRole) => {
+  if (role === 'normal') return '普通用户';
+  else if (role === 'trusted') return '信任用户';
+  else if (role === 'maintainer') return '维护者';
+  else if (role === 'admin') return '管理员';
+  else if (role === 'banned') return '封禁用户';
+  else return '未知';
+};
 </script>
 
 <template>
-  <div class="layout-content">
-    <n-h1>用户管理</n-h1>
+  <n-p>
+    <n-radio-group v-model:value="userRole" name="user-role">
+      <n-space>
+        <n-radio
+          v-for="option in userRoleOptions"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.label }}
+        </n-radio>
+      </n-space>
+    </n-radio-group>
+  </n-p>
 
-    <n-p>
-      <n-radio-group v-model:value="userRole" name="user-role">
-        <n-space>
-          <n-radio
-            v-for="option in userRoleOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </n-radio>
-        </n-space>
-      </n-radio-group>
-    </n-p>
+  <n-pagination
+    v-if="pageNumber > 1"
+    v-model:page="currentPage"
+    :page-count="pageNumber"
+    :page-slot="7"
+  />
+  <n-divider />
 
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-    />
-    <n-divider />
+  <ResultView
+    :result="userResult"
+    :showEmpty="(it: Page<any>) => it.items.length === 0 "
+    v-slot="{ value }"
+  >
+    <n-table :bordered="false">
+      <thead>
+        <tr>
+          <th><b>用户名</b></th>
+          <th><b>邮箱</b></th>
+          <th><b>操作</b></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="user in value.items" :key="user.id">
+          <td>{{ roleToReadableText(user.role) }}-{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </n-table>
+  </ResultView>
 
-    <ResultView
-      :result="userResult"
-      :showEmpty="(it: Page<any>) => it.items.length === 0 "
-      v-slot="{ value }"
-    >
-      <n-list>
-        <n-list-item v-for="item in value.items">
-          <n-p>{{ item.username }}-{{ item.role }}</n-p>
-          <n-p>{{ item.id }}</n-p>
-        </n-list-item>
-      </n-list>
-    </ResultView>
-
-    <n-divider />
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-    />
-  </div>
+  <n-divider />
+  <n-pagination
+    v-if="pageNumber > 1"
+    v-model:page="currentPage"
+    :page-count="pageNumber"
+    :page-slot="7"
+  />
 </template>

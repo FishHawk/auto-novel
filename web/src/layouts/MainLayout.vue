@@ -17,15 +17,9 @@ import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsDesktop } from '@/data/util';
 
-withDefaults(
-  defineProps<{
-    sideMenuOptions: MenuOption[];
-  }>(),
-  { sideMenuOptions: () => [] }
-);
-
 const isDesktop = useIsDesktop(850);
 const setting = useSettingStore();
+const route = useRoute();
 const router = useRouter();
 const userData = useUserDataStore();
 
@@ -59,8 +53,8 @@ const topMenuOptions = computed(() => {
   ];
 });
 
-const path = useRoute().path;
-function getTopMenuOptionKey() {
+const path = route.path;
+const getTopMenuOptionKey = () => {
   if (path.startsWith('/forum')) {
     return '/forum';
   } else if (path.startsWith('/favorite')) {
@@ -74,7 +68,7 @@ function getTopMenuOptionKey() {
   } else {
     return path;
   }
-}
+};
 
 const collapsedMenuOptions = computed(() => {
   const signed = userData.info !== undefined;
@@ -101,17 +95,17 @@ const collapsedMenuOptions = computed(() => {
 const userDropdownOptions = computed(() => {
   return [
     { label: '管理员模式', key: 'admin', show: userData.isAdmin },
-    menuOption('网站管理', '/admin', userData.asAdmin),
+    menuOption('控制台', '/admin/user', userData.isAdmin),
     dropdownOption('退出登录', 'signOut', LogOutFilled),
   ];
 });
-function handleUserDropdownSelect(key: string | number) {
+const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'signOut') {
     userData.deleteProfile();
   } else if (key === 'admin') {
     userData.toggleAdminMode();
   }
-}
+};
 
 const showLoginModal = ref(false);
 const showMenuModal = ref(false);
@@ -159,33 +153,7 @@ const vars = useThemeVars();
                 :color="vars.primaryColor"
                 style="margin-right: 8px; margin-bottom: 8px"
               >
-                <svg
-                  version="1.0"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="512.000000pt"
-                  height="512.000000pt"
-                  viewBox="0 0 512.000000 512.000000"
-                  preserveAspectRatio="xMidYMid meet"
-                >
-                  <g
-                    transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
-                    stroke="none"
-                  >
-                    <path
-                      d="M1438 4566 c-65 -34 -120 -64 -123 -67 -2 -3 96 -199 219 -435 l224
--429 -614 -3 -614 -2 0 -400 0 -400 -185 0 -185 0 0 -750 0 -750 185 0 185 0
-0 -400 0 -400 2030 0 2030 0 0 400 0 400 185 0 185 0 0 750 0 750 -185 0 -185
-0 -2 398 -3 397 -614 3 c-534 2 -612 4 -607 17 3 8 104 204 225 435 l219 420
--124 64 -124 63 -19 -31 c-10 -17 -128 -241 -261 -499 l-243 -467 -481 2 -481
-3 -245 470 c-135 259 -252 482 -260 497 l-15 27 -117 -63z m349 -1669 c203
--106 213 -388 18 -498 -187 -105 -416 29 -414 241 1 118 50 199 150 249 59 30
-70 32 139 29 43 -3 89 -12 107 -21z m1789 -5 c98 -50 162 -169 151 -279 -23
--224 -292 -330 -461 -182 -62 55 -88 108 -94 192 -8 119 44 213 150 267 58 29
-69 31 138 27 50 -2 89 -11 116 -25z m-126 -1372 l0 -280 -890 0 -890 0 0 280
-0 280 890 0 890 0 0 -280z"
-                    />
-                  </g>
-                </svg>
+                <robot-svg />
               </n-icon>
             </router-link>
             <div v-if="isDesktop">
