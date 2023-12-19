@@ -1,6 +1,6 @@
 import { customAlphabet } from 'nanoid';
 
-import { Glossary, Segmentor } from '../type';
+import { Glossary, Segmentor } from './type';
 
 export const createGlossaryWrapper = (glossary: Glossary) => {
   const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 4);

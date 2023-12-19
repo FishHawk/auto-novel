@@ -3,20 +3,13 @@
 import { HTTPError, Options } from 'ky';
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { parseEventStream } from './common';
+import { parseEventStream, safeJson } from './util';
 
-export class OpenAiApi {
-  type: 'api';
+export class OpenAi {
+  id: 'openai' = 'openai';
   client: KyInstance;
-  model: OpenAiApi.SupportedModel;
 
-  constructor(
-    client: KyInstance,
-    endpoint: string,
-    key: string,
-    model: OpenAiApi.SupportedModel
-  ) {
-    this.type = 'api';
+  constructor(client: KyInstance, endpoint: string, key: string) {
     this.client = client.create({
       prefixUrl: endpoint,
       headers: {
@@ -26,7 +19,6 @@ export class OpenAiApi {
       },
       timeout: 600_000,
     });
-    this.model = model;
   }
 
   createChatCompletionsStream = (
@@ -36,26 +28,18 @@ export class OpenAiApi {
     this.client
       .post('v1/chat/completions', { json, ...options })
       .text()
-      .then(parseEventStream<ChatCompletionChunk>)
-      .catch(OpenAiError.handle);
+      .then(parseEventStream<ChatCompletionChunk>);
 
   createChatCompletions = (
     json: ChatCompletion.Params & { stream?: false },
-    options?: Options
+    options?: Options,
   ): Promise<ChatCompletion> =>
     this.client
       .post('v1/chat/completions', { json, ...options })
-      .json<ChatCompletion>()
-      .catch(OpenAiError.handle);
+      .json<ChatCompletion>();
 }
 
-export namespace OpenAiApi {
-  export type SupportedModel = 'gpt-3.5-turbo' | 'gpt-4';
-  export const isSupportedModel = (model: string): model is SupportedModel =>
-    model === 'gpt-3.5-turbo' || model === 'gpt-4';
-}
-
-export interface ChatCompletionChunk {
+interface ChatCompletionChunk {
   id: string;
   choices: Array<{
     delta: {
@@ -71,8 +55,9 @@ export interface ChatCompletionChunk {
   }>;
 }
 
-export interface ChatCompletion {
+interface ChatCompletion {
   id: string;
+  model: string;
   choices: Array<{
     /**
      * The reason the model stopped generating tokens. This will be `stop` if the model
@@ -90,7 +75,7 @@ export interface ChatCompletion {
   }>;
 }
 
-export namespace ChatCompletion {
+namespace ChatCompletion {
   export interface Params {
     messages: Array<{
       content: string;
@@ -217,14 +202,6 @@ export namespace ChatCompletion {
     user?: string;
   }
 }
-
-export const safeJson = (text: string) => {
-  try {
-    return JSON.parse(text);
-  } catch (err) {
-    return undefined;
-  }
-};
 
 export class OpenAiError extends Error {
   readonly status: number | undefined;

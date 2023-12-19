@@ -1,71 +1,37 @@
 import { KyInstance } from 'ky/distribution/types/ky';
 
-import { BaseTranslatorConfig, Glossary, SegmentTranslator } from '../type';
-import { createGlossaryWrapper, createLengthSegmentor } from './common';
+export class Baidu {
+  id: 'baidu' = 'baidu';
+  client: KyInstance;
 
-export type BaiduTranslatorConfig = BaseTranslatorConfig;
+  token: string = '';
+  gtk: string = '';
 
-export class BaiduTranslator implements SegmentTranslator {
-  private client: KyInstance;
-  glossary: Glossary;
-  log: (message: string) => void;
-
-  private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
-
-  constructor({ client, glossary, log }: BaiduTranslatorConfig) {
+  constructor(client: KyInstance) {
     this.client = client.create({
       prefixUrl: 'https://fanyi.baidu.com',
       credentials: 'include',
     });
-    this.glossary = glossary;
-    this.log = log;
-
-    this.glossaryWarpper = createGlossaryWrapper(glossary);
   }
 
-  private token = '';
-  private gtk = '';
+  refreshGtkAndToken = () =>
+    this.client
+      .get('')
+      .text()
+      .then((html) => {
+        const match = (pattern: RegExp) => {
+          const res = html.match(pattern);
+          return res ? res[1] : null;
+        };
+        this.token = match(/token: '(.*?)',/) ?? '';
+        this.gtk =
+          match(/window\.gtk = "(.*?)";/) ?? // Desktop
+          match(/gtk: '(.*?)'/) ?? // Mobile
+          '';
+      });
 
-  async init() {
-    await this.loadMainPage();
-    await this.loadMainPage();
-    if (this.token === '') throw Error('无法获取token');
-    if (this.gtk === '') throw Error('无法获取gtk');
-    return this;
-  }
-
-  private async loadMainPage() {
-    const html = await this.client.get('').text();
-
-    const match = (pattern: RegExp) => {
-      const res = html.match(pattern);
-      if (res) return res[1];
-      else return null;
-    };
-
-    this.token = match(/token: '(.*?)',/) ?? '';
-    this.gtk =
-      match(/window\.gtk = "(.*?)";/) ?? // Desktop
-      match(/gtk: '(.*?)'/) ?? // Mobile
-      '';
-  }
-
-  createSegments = createLengthSegmentor(3500);
-
-  async translate(
-    seg: string[],
-    _segInfo: { index: number; size: number }
-  ): Promise<string[]> {
-    return this.glossaryWarpper(seg, (seg) => this.translateInner(seg));
-  }
-
-  async translateInner(input: string[]): Promise<string[]> {
-    // 开头的空格似乎会导致998错误
-    const newInput = input.slice();
-    newInput[0] = newInput[0].trimStart();
-    const query = newInput.join('\n');
-
-    const json: any = await this.client
+  v2transapi = (query: string) =>
+    this.client
       .post('v2transapi', {
         body: new URLSearchParams({
           from: 'jp',
@@ -77,23 +43,19 @@ export class BaiduTranslator implements SegmentTranslator {
           domain: 'common',
         }),
       })
-      .json();
-
-    if ('error' in json) {
-      throw Error(`百度翻译错误：${json.error}: ${json.msg}`);
-    } else if ('errno' in json) {
-      if (json.errno == 1000) {
-        throw Error(
-          `百度翻译错误：${json.errno}: ${json.errmsg}，可能是因为输入为空`
-        );
-      } else {
-        throw Error(`百度翻译错误：${json.errno}: ${json.errmsg}`);
-      }
-    } else {
-      return json.trans_result.data.map((item: any) => item.dst);
-    }
-  }
+      .json<V2transapiResponse>();
 }
+
+type V2transapiResponse =
+  | {
+      trans_result: {
+        data: {
+          dst: string;
+        }[];
+      };
+    }
+  | { error: number; msg: string }
+  | { errno: number; errmsg: string };
 
 const sign = function (r: string, gtk: string) {
   r = b(r);

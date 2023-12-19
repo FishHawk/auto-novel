@@ -1,7 +1,8 @@
 import { Options } from 'ky';
 import { KyInstance } from 'ky/distribution/types/ky';
 
-export class LlamaApi {
+export class Llamacpp {
+  id: 'llamacpp' = 'llamacpp';
   client: KyInstance;
 
   constructor(client: KyInstance, endpoint: string) {
@@ -23,11 +24,12 @@ export class LlamaApi {
 
 interface LlamaCompletion {
   prompt: string;
+  n_predict: number;
   temperature: number;
   top_k: number;
   top_p: number;
   repeat_penalty: number;
-  frequency_penalty: number;
+  frequency_penalty?: number;
 }
 
 interface LlamaCompletionResponse {

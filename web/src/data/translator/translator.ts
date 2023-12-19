@@ -1,12 +1,8 @@
 import { createSegIndexedDbCache } from './cache';
-import { OpenAiTranslator, OpenAiTranslatorConfig } from './openai';
-import { SakuraTranslator, SakuraTranslatorConfig } from './sakura';
-import {
-  BaiduTranslator,
-  BaiduTranslatorConfig,
-  YoudaoTranslator,
-  YoudaoTranslatorConfig,
-} from './tradition';
+import { BaiduTranslator, BaiduTranslatorConfig } from './translator_baidu';
+import { OpenAiTranslator, OpenAiTranslatorConfig } from './translator_openai';
+import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
+import { YoudaoTranslator, YoudaoTranslatorConfig } from './translator_youdao';
 import { Glossary, SegmentTranslator } from './type';
 
 export interface SegmentCache {
