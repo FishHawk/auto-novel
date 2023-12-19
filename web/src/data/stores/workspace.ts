@@ -44,6 +44,7 @@ export const useSakuraWorkspaceStore = defineStore('sakura-workspace', {
     deleteWorker(id: string) {
       this.workers = this.workers.filter((w) => w.id !== id);
     },
+
     addJob(job: TranslateJob) {
       const conflictJob = this.jobs.find((it) => it.task === job.task);
       if (conflictJob !== undefined) {
@@ -56,16 +57,35 @@ export const useSakuraWorkspaceStore = defineStore('sakura-workspace', {
     deleteJob(task: string) {
       this.jobs = this.jobs.filter((j) => j.task !== task);
     },
+
     addUncompletedJob(job: UncompletedTranslateJob) {
-      this.deleteUncompletedJob(job.task);
+      this.deleteUncompletedJob(job);
       this.uncompletedJobs.push(job);
     },
-    deleteUncompletedJob(task: string) {
+    deleteUncompletedJob(job: UncompletedTranslateJob) {
       this.uncompletedJobs = this.uncompletedJobs.filter(
-        (j) => j.task !== task
+        (j) => j.task !== job.task
       );
     },
-    clearUncompletedJobs() {
+    retryUncompletedJob(job: UncompletedTranslateJob) {
+      this.addJob({
+        task: job.task,
+        description: job.description,
+        createAt: Date.now(),
+      });
+      this.deleteUncompletedJob(job);
+    },
+    retryAllUncompletedJobs() {
+      for (const job of this.uncompletedJobs) {
+        this.addJob({
+          task: job.task,
+          description: job.description,
+          createAt: Date.now(),
+        });
+      }
+      this.deleteAllUncompletedJobs();
+    },
+    deleteAllUncompletedJobs() {
       this.uncompletedJobs = [];
     },
   },
@@ -100,6 +120,7 @@ export const useGptWorkspaceStore = defineStore('gpt-workspace', {
     deleteWorker(id: string) {
       this.workers = this.workers.filter((w) => w.id !== id);
     },
+
     addJob(job: TranslateJob) {
       const conflictJob = this.jobs.find((it) => it.task === job.task);
       if (conflictJob !== undefined) {
@@ -112,16 +133,35 @@ export const useGptWorkspaceStore = defineStore('gpt-workspace', {
     deleteJob(task: string) {
       this.jobs = this.jobs.filter((j) => j.task !== task);
     },
+
     addUncompletedJob(job: UncompletedTranslateJob) {
-      this.deleteUncompletedJob(job.task);
+      this.deleteUncompletedJob(job);
       this.uncompletedJobs.push(job);
     },
-    deleteUncompletedJob(task: string) {
+    deleteUncompletedJob(job: UncompletedTranslateJob) {
       this.uncompletedJobs = this.uncompletedJobs.filter(
-        (j) => j.task !== task
+        (j) => j.task !== job.task
       );
     },
-    clearUncompletedJobs() {
+    retryUncompletedJob(job: UncompletedTranslateJob) {
+      this.addJob({
+        task: job.task,
+        description: job.description,
+        createAt: Date.now(),
+      });
+      this.deleteUncompletedJob(job);
+    },
+    retryAllUncompletedJobs() {
+      for (const job of this.uncompletedJobs) {
+        this.addJob({
+          task: job.task,
+          description: job.description,
+          createAt: Date.now(),
+        });
+      }
+      this.deleteAllUncompletedJobs();
+    },
+    deleteAllUncompletedJobs() {
       this.uncompletedJobs = [];
     },
   },

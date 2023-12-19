@@ -6,7 +6,7 @@ import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 
-import { parseTask } from './parse_task';
+import { parseTask } from './util';
 
 const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
   id: string;

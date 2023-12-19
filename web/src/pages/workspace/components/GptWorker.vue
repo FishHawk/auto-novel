@@ -5,9 +5,9 @@ import { computed, ref } from 'vue';
 import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
 import { GptWorker, useGptWorkspaceStore } from '@/data/stores/workspace';
-
-import { parseTask } from './parse_task';
 import { TranslatorDesc } from '@/data/translator/api';
+
+import { parseTask } from './util';
 
 const { worker, getNextJob } = defineProps<{
   worker: GptWorker;

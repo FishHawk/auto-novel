@@ -2,11 +2,9 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import {
-  TranslateJob,
-  UncompletedTranslateJob,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
+import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
+
+import { computePercentage } from './components/util';
 
 const message = useMessage();
 const sakuraWorkspace = useSakuraWorkspaceStore();
@@ -29,7 +27,7 @@ const getNextJob = () => {
   return job;
 };
 
-const deleteSakuraJob = async (task: string) => {
+const deleteJob = async (task: string) => {
   if (processedJobs.value.has(task)) {
     message.error('任务被翻译器占用');
     return;
@@ -47,7 +45,7 @@ const onProgressUpdated = (
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
     if (
-      job.progress !== undefined &&
+      job.progress === undefined ||
       job.progress.finished < job.progress.total
     ) {
       sakuraWorkspace.addUncompletedJob(job as any);
@@ -60,33 +58,6 @@ const onProgressUpdated = (
       error: state.error,
       total: state.total,
     };
-  }
-};
-
-const computePercentage = (job: ProcessedJob) => {
-  if (job.progress) {
-    const { finished, error, total } = job.progress;
-    if (total === 0) {
-      return 100;
-    } else {
-      return Math.round((1000 * (finished + error)) / total) / 10;
-    }
-  } else {
-    return 0;
-  }
-};
-
-const retrySakuraJob = (job: UncompletedTranslateJob): void => {
-  const success = sakuraWorkspace.addJob({
-    task: job.task,
-    description: job.description,
-    createAt: Date.now(),
-  });
-  if (success) {
-    sakuraWorkspace.deleteUncompletedJob(job.task);
-    message.success('排队成功');
-  } else {
-    message.error('Sakura翻译任务已经存在');
   }
 };
 
@@ -170,7 +141,9 @@ const clearCache = async () => {
             <template v-if="processedJobs.has(job.task)">
               <br />
               <n-progress
-                :percentage="computePercentage(processedJobs.get(job.task)!!)"
+                :percentage="
+                  computePercentage(processedJobs.get(job.task)?.progress)
+                "
                 style="max-width: 600px"
               />
             </template>
@@ -181,7 +154,7 @@ const clearCache = async () => {
             <async-button
               type="error"
               text
-              @async-click="() => deleteSakuraJob(job.task)"
+              @async-click="() => deleteJob(job.task)"
             >
               删除
             </async-button>
@@ -191,9 +164,14 @@ const clearCache = async () => {
     </n-table>
 
     <SectionHeader title="未完成任务记录">
-      <n-button @click="sakuraWorkspace.clearUncompletedJobs()">
-        清空
-      </n-button>
+      <n-space :wrap="false">
+        <n-button @click="sakuraWorkspace.retryAllUncompletedJobs()">
+          全部重试
+        </n-button>
+        <n-button @click="sakuraWorkspace.deleteAllUncompletedJobs()">
+          清空
+        </n-button>
+      </n-space>
     </SectionHeader>
     <n-empty
       v-if="sakuraWorkspace.uncompletedJobs.length === 0"
@@ -221,14 +199,18 @@ const clearCache = async () => {
           <td style="white-space: nowrap">
             <n-time :time="job.createAt" type="relative" />
             <br />
-            <n-button type="primary" text @click="() => retrySakuraJob(job)">
+            <n-button
+              type="primary"
+              text
+              @click="() => sakuraWorkspace.retryUncompletedJob(job)"
+            >
               重新加入
             </n-button>
             <br />
             <n-button
               type="error"
               text
-              @click="() => sakuraWorkspace.deleteUncompletedJob(job.task)"
+              @click="() => sakuraWorkspace.deleteUncompletedJob(job)"
             >
               删除
             </n-button>

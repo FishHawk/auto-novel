@@ -32,3 +32,23 @@ export const parseTask = (task: string) => {
 
   return { desc, params };
 };
+
+export const computePercentage = (
+  progress:
+    | {
+        finished: number;
+        error: number;
+        total: number;
+      }
+    | undefined
+) => {
+  if (progress === undefined) {
+    return 0;
+  }
+  const { finished, error, total } = progress;
+  if (total === 0) {
+    return 100;
+  } else {
+    return Math.round((1000 * (finished + error)) / total) / 10;
+  }
+};

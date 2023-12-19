@@ -2,11 +2,9 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import {
-  TranslateJob,
-  UncompletedTranslateJob,
-  useGptWorkspaceStore,
-} from '@/data/stores/workspace';
+import { TranslateJob, useGptWorkspaceStore } from '@/data/stores/workspace';
+
+import { computePercentage } from './components/util';
 
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
@@ -27,7 +25,7 @@ const getNextJob = () => {
   return job;
 };
 
-const deleteGptJob = async (task: string) => {
+const deleteJob = async (task: string) => {
   if (processedJobs.value.has(task)) {
     message.error('任务被翻译器占用');
     return;
@@ -45,7 +43,7 @@ const onProgressUpdated = (
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
     if (
-      job.progress !== undefined &&
+      job.progress === undefined ||
       job.progress.finished < job.progress.total
     ) {
       gptWorkspace.addUncompletedJob(job as any);
@@ -58,33 +56,6 @@ const onProgressUpdated = (
       error: state.error,
       total: state.total,
     };
-  }
-};
-
-const computePercentage = (job: ProcessedJob) => {
-  if (job.progress) {
-    const { finished, error, total } = job.progress;
-    if (total === 0) {
-      return 100;
-    } else {
-      return Math.round((1000 * (finished + error)) / total) / 10;
-    }
-  } else {
-    return 0;
-  }
-};
-
-const retryGptJob = (job: UncompletedTranslateJob): void => {
-  const success = gptWorkspace.addJob({
-    task: job.task,
-    description: job.description,
-    createAt: Date.now(),
-  });
-  if (success) {
-    gptWorkspace.deleteUncompletedJob(job.task);
-    message.success('排队成功');
-  } else {
-    message.error('GPT翻译任务已经存在');
   }
 };
 
@@ -150,7 +121,9 @@ const clearCache = async () => {
             <template v-if="processedJobs.has(job.task)">
               <br />
               <n-progress
-                :percentage="computePercentage(processedJobs.get(job.task)!!)"
+                :percentage="
+                  computePercentage(processedJobs.get(job.task)?.progress)
+                "
                 style="max-width: 600px"
               />
             </template>
@@ -161,7 +134,7 @@ const clearCache = async () => {
             <async-button
               type="error"
               text
-              @async-click="() => deleteGptJob(job.task)"
+              @async-click="() => deleteJob(job.task)"
             >
               删除
             </async-button>
@@ -171,7 +144,14 @@ const clearCache = async () => {
     </n-table>
 
     <SectionHeader title="未完成任务记录">
-      <n-button @click="gptWorkspace.clearUncompletedJobs()"> 清空 </n-button>
+      <n-space :wrap="false">
+        <n-button @click="gptWorkspace.retryAllUncompletedJobs()">
+          全部重试
+        </n-button>
+        <n-button @click="gptWorkspace.deleteAllUncompletedJobs()">
+          清空
+        </n-button>
+      </n-space>
     </SectionHeader>
     <n-empty
       v-if="gptWorkspace.uncompletedJobs.length === 0"
@@ -199,14 +179,18 @@ const clearCache = async () => {
           <td style="white-space: nowrap">
             <n-time :time="job.createAt" type="relative" />
             <br />
-            <n-button type="primary" text @click="() => retryGptJob(job)">
+            <n-button
+              type="primary"
+              text
+              @click="() => gptWorkspace.retryUncompletedJob(job)"
+            >
               重新加入
             </n-button>
             <br />
             <n-button
               type="error"
               text
-              @click="() => gptWorkspace.deleteUncompletedJob(job.task)"
+              @click="() => gptWorkspace.deleteUncompletedJob(job)"
             >
               删除
             </n-button>
