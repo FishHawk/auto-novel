@@ -99,7 +99,7 @@ getNovel();
       :is="item.chapterId ? NA : NText"
       :href="`/novel/${providerId}/${novelId}/${item.chapterId}`"
       class="toc"
-      style="width: 100; display: flex; padding: 6px"
+      style="width: 100%; display: flex; padding: 6px"
     >
       <span style="flex: 1 1 0">{{ item.titleJp }}</span>
       <n-text depth="3" style="flex: 1 1 0">{{ item.titleZh }}</n-text>
@@ -121,7 +121,7 @@ getNovel();
       :is="item.chapterId ? NA : NText"
       :href="`/novel/${providerId}/${novelId}/${item.chapterId}`"
       class="toc"
-      style="width: 100; padding: 6px"
+      style="width: 100%; display: block; padding: 6px"
     >
       {{ item.titleJp }}
       <br />
