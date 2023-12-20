@@ -72,14 +72,16 @@ class SakuraWorkerManager(
 
     init {
         scope.launch {
-            delay(10.seconds.toJavaDuration())
+            delay(15.seconds.toJavaDuration())
             val servers = mongo
                 .sakuraServerCollection
                 .find()
                 .toList()
             servers.forEach {
                 addWorker(it)
-                delay(1.seconds.toJavaDuration())
+                if (it.isActive) {
+                    delay(1.seconds.toJavaDuration())
+                }
             }
         }
     }

@@ -27,11 +27,11 @@ import java.io.File
 val appModule = module {
     // Data Source
     single {
-        val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017"
+        val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.9.202:27017"
         DataSourceMongo(mongodbUrl)
     }
     single {
-        val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
+        val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.9.202"
         DataSourceElasticSearch(url)
     }
     single {
