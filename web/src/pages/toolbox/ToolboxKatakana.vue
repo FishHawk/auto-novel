@@ -3,10 +3,12 @@ import { useMessage } from 'naive-ui';
 import { computed } from 'vue';
 import { ref } from 'vue';
 
+import { getFullTextFromEpubFile } from '@/data/epub/epub';
+
 const message = useMessage();
 
 const showPreviewModal = ref(false);
-const inputElRef = ref<HTMLInputElement | null>(null);
+const inputElRef = ref<HTMLInputElement>();
 
 const katakanaThredhold = ref(10);
 const katakanaCounter = computed(() => {
@@ -30,18 +32,28 @@ const katakanas = computed(() => {
   );
 });
 
-function openOpenFileDialog() {
-  inputElRef.value?.click();
-}
+const openOpenFileDialog = () => inputElRef.value?.click();
 
 const filename = ref<string | null>(null);
 const content = ref<string>('');
 
-function loadTxtFile() {
+const loadFile = () => {
   const selectedFile = inputElRef.value?.files?.[0];
   if (!selectedFile) {
     message.error('没有选中文件');
-  } else {
+    return;
+  }
+
+  if (selectedFile.name.endsWith('.epub')) {
+    getFullTextFromEpubFile(selectedFile)
+      .then((text) => {
+        filename.value = selectedFile?.name;
+        content.value = text;
+      })
+      .catch((err) => {
+        message.error('文件读取失败:' + err);
+      });
+  } else if (selectedFile.name.endsWith('.txt')) {
     const reader = new FileReader();
     reader.onload = (res) => {
       content.value = res.target?.result as string;
@@ -51,32 +63,35 @@ function loadTxtFile() {
       message.error('文件读取失败:' + err);
     };
     reader.readAsText(selectedFile);
+  } else {
+    message.error('文件类型不合法，只能选择TXT和EPUB文件');
+    return;
   }
-}
+};
 
-function copyResult() {
+const copyResult = () => {
   const obj = Object.fromEntries(
     Array.from(katakanas.value).map(([key, value]) => [key, value.toString()])
   );
   const jsonString = JSON.stringify(obj, null, 2);
   navigator.clipboard.writeText(jsonString);
   message.info('已经将结果复制到剪切板');
-}
+};
 </script>
 
 <template>
   <div class="layout-content">
-    <n-h1>TXT工具箱</n-h1>
+    <n-h1>TXT/EPUB片假名统计</n-h1>
 
     <n-space align="center">
-      <n-button @click="openOpenFileDialog()"> 打开TXT文件 </n-button>
+      <n-button @click="openOpenFileDialog()">打开文件</n-button>
       <n-button v-if="filename" @click="showPreviewModal = true">预览</n-button>
       <n-p>{{ filename }}</n-p>
       <input
         ref="inputElRef"
         type="file"
-        accept=".txt"
-        @change="loadTxtFile"
+        accept=".txt,.epub"
+        @change="loadFile"
         style="width: 0; height: 0"
       />
     </n-space>
@@ -109,7 +124,7 @@ function copyResult() {
   </div>
 
   <card-modal title="预览（前100行）" v-model:show="showPreviewModal">
-    <n-p v-for="line of content.slice(0, 100)">
+    <n-p v-for="line of content.split('\n').slice(0, 100)">
       {{ line }}
     </n-p>
   </card-modal>
