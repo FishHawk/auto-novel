@@ -134,9 +134,9 @@ const testGptWorker = async () => {
       {{ worker.id }}
       <n-text depth="3" style="font-size: 12px; padding-left: 2px">
         {{
-          `${translatorDesc.type}-${
-            translatorDesc.model
-          }[${worker.key.substring(0, 7)}]@${translatorDesc.endpoint}`
+          `${translatorDesc.type}-${translatorDesc.model}[${worker.key.slice(
+            -4
+          )}]@${translatorDesc.endpoint}`
         }}
       </n-text>
     </template>
