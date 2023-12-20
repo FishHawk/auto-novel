@@ -3,6 +3,8 @@ import { useMessage } from 'naive-ui';
 import { computed } from 'vue';
 import { ref } from 'vue';
 
+import { Epub } from '@/data/epub/epub';
+
 const message = useMessage();
 
 const showPreviewModal = ref(false);
@@ -37,11 +39,21 @@ function openOpenFileDialog() {
 const filename = ref<string | null>(null);
 const content = ref<string>('');
 
-function loadTxtFile() {
+function loadTxtEpubFile() {
   const selectedFile = inputElRef.value?.files?.[0];
   if (!selectedFile) {
     message.error('没有选中文件');
-  } else {
+    return;
+  }
+
+  // NOTE(kuriko): We only support epub & txt, so hardcoded here.
+  if (selectedFile.name.endsWith(".epub")) {
+    let epub = new Epub(selectedFile);
+    epub.getFullContent().then((full_text) => {
+      filename.value = selectedFile?.name;
+      content.value = full_text;
+    });
+  } else if (selectedFile.name.endsWith(".txt")) {
     const reader = new FileReader();
     reader.onload = (res) => {
       content.value = res.target?.result as string;
@@ -50,7 +62,11 @@ function loadTxtFile() {
     reader.onerror = (err) => {
       message.error('文件读取失败:' + err);
     };
+
     reader.readAsText(selectedFile);
+  } else {
+    message.error('错误的文件类型，请选择 .txt 或 .epub 文件');
+    return;
   }
 }
 
@@ -66,17 +82,17 @@ function copyResult() {
 
 <template>
   <div class="layout-content">
-    <n-h1>TXT工具箱</n-h1>
+    <n-h1>TXT/EPUB 工具箱</n-h1>
 
     <n-space align="center">
-      <n-button @click="openOpenFileDialog()"> 打开TXT文件 </n-button>
+      <n-button @click="openOpenFileDialog()"> 打开 TXT/EPUB 文件 </n-button>
       <n-button v-if="filename" @click="showPreviewModal = true">预览</n-button>
       <n-p>{{ filename }}</n-p>
       <input
         ref="inputElRef"
         type="file"
-        accept=".txt"
-        @change="loadTxtFile"
+        accept=".txt,.epub"
+        @change="loadTxtEpubFile"
         style="width: 0; height: 0"
       />
     </n-space>
@@ -109,7 +125,7 @@ function copyResult() {
   </div>
 
   <card-modal title="预览（前100行）" v-model:show="showPreviewModal">
-    <n-p v-for="line of content.slice(0, 100)">
+    <n-p v-for="line of content.split('\n').slice(0, 100)">
       {{ line }}
     </n-p>
   </card-modal>

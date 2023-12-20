@@ -142,9 +142,9 @@ const router = createRouter({
           component: () => import('./pages/toolbox/Toolbox.vue'),
         },
         {
-          path: '/toolbox/txt',
-          meta: { title: 'TXT工具箱' },
-          component: () => import('./pages/toolbox/ToolboxTxt.vue'),
+          path: '/toolbox/txtepub',
+          meta: { title: 'TXT/EPUB 工具箱' },
+          component: () => import('./pages/toolbox/ToolboxTxtEpub.vue'),
         },
 
         {
