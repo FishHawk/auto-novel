@@ -67,6 +67,7 @@ const processTasks = async () => {
 
     if (!completed) break;
   }
+  currentJob.value = undefined;
 };
 
 const startSakuraWorker = () => {
