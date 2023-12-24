@@ -1,6 +1,8 @@
+.vscode
+.idea/
+
 # Server
 server/.gradle/
-server/.idea/
 server/build/
 server/data/
 

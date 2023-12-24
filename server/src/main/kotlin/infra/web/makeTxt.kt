@@ -1,6 +1,8 @@
 package infra.web
 
-import infra.model.*
+import infra.model.TranslatorId
+import infra.model.WebNovelMetadata
+import infra.model.WebNovelTocItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedWriter
@@ -11,16 +13,17 @@ import kotlin.io.path.notExists
 
 suspend fun makeTxtFile(
     filePath: Path,
-    lang: NovelFileLang,
     metadata: WebNovelMetadata,
-    chapters: Map<String, WebNovelChapter>,
+    chapters: Map<String, ChapterWriteData>,
+    jp: Boolean,
+    zh: Boolean,
 ) {
     withContext(Dispatchers.IO) {
         if (filePath.notExists()) {
             filePath.createFile()
         }
         filePath.bufferedWriter().use {
-            with(TxtWriter(lang)) {
+            with(TxtWriter(jp, zh)) {
                 it.writeNovel(metadata, chapters)
             }
         }
@@ -28,11 +31,9 @@ suspend fun makeTxtFile(
 }
 
 private class TxtWriter(
-    private val lang: NovelFileLang,
+    private val jp: Boolean,
+    private val zh: Boolean,
 ) {
-    private val jp = lang != NovelFileLang.ZH_BAIDU && lang != NovelFileLang.ZH_YOUDAO
-    private val zh = lang != NovelFileLang.JP
-
     private fun BufferedWriter.writeTitle(novel: WebNovelMetadata) {
         if (jp) write(novel.titleJp + "\n")
         if (zh) write(novel.titleZh + "\n")
@@ -68,134 +69,13 @@ private class TxtWriter(
         write("该章节缺失。\n\n")
     }
 
-    private fun BufferedWriter.writeFallbackTranslate() {
-        write("选择的翻译不存在，使用备用翻译。\n\n")
-    }
-
-    private fun BufferedWriter.writeJpParagraphs(
-        jpParagraphs: List<String>?,
-    ) {
-        if (jpParagraphs == null) {
-            writeMissingChapter()
-        } else {
-            jpParagraphs.forEach { write(it + "\n") }
-        }
-    }
-
-    private fun BufferedWriter.writeZhParagraphs(
-        primaryParagraphs: List<String>?,
-        fallbackParagraphs: List<String>?
-    ) {
-        val isFallback = primaryParagraphs == null
-        val paragraphs = primaryParagraphs ?: fallbackParagraphs
-
-        if (paragraphs == null) {
-            writeMissingChapter()
-        } else {
-            if (isFallback) {
-                writeFallbackTranslate()
-            }
-            paragraphs.forEach { write(it + "\n") }
-        }
-    }
-
-    private fun BufferedWriter.writeMixParagraphs(
-        jpParagraphs: List<String>,
-        primaryParagraphs: List<String>?,
-        fallbackParagraphs: List<String>?
-    ) {
-        val isFallback = primaryParagraphs == null
-        val paragraphs = primaryParagraphs ?: fallbackParagraphs
-
-        if (paragraphs == null) {
-            writeMissingChapter()
-        } else {
-            if (isFallback) {
-                writeFallbackTranslate()
-            }
-            jpParagraphs.zip(paragraphs).forEach { (tZh, tJp) ->
-                if (tZh.isNotBlank()) {
-                    write(tJp + "\n")
-                    write(tZh + "\n")
-                } else {
-                    write(tZh + "\n")
-                }
-            }
-        }
-    }
-
-    private fun BufferedWriter.writeThreeParagraph(
-        pJp: List<String>,
-        pZh1: List<String>?,
-        pZh2: List<String>?,
-    ) {
-        if (pZh1 == null || pZh2 == null) {
-            writeMissingChapter()
-        } else {
-            for (i in pJp.indices) {
-                val tJp = pJp[i]
-                if (tJp.isNotBlank()) {
-                    write(tJp + "\n")
-                    write(pZh1[i] + "\n")
-                    write(pZh2[i] + "\n")
-                } else {
-                    write(tJp + "\n")
-                }
-            }
-        }
-    }
-
-    private fun BufferedWriter.writeChapter(
-        chapter: WebNovelChapter,
-    ) {
-        val fallbackParagraphs =
-            chapter.sakuraParagraphs
-                ?: chapter.gptParagraphs
-                ?: chapter.youdaoParagraphs
-                ?: chapter.baiduParagraphs
-        when (lang) {
-            NovelFileLang.JP -> writeJpParagraphs(chapter.paragraphs)
-
-            NovelFileLang.ZH_BAIDU -> writeZhParagraphs(chapter.baiduParagraphs, fallbackParagraphs)
-            NovelFileLang.ZH_YOUDAO -> writeZhParagraphs(chapter.youdaoParagraphs, fallbackParagraphs)
-            NovelFileLang.ZH_GPT -> writeZhParagraphs(chapter.gptParagraphs, fallbackParagraphs)
-            NovelFileLang.ZH_SAKURA -> writeZhParagraphs(chapter.sakuraParagraphs, fallbackParagraphs)
-
-            NovelFileLang.MIX_BAIDU -> writeMixParagraphs(
-                chapter.paragraphs,
-                chapter.baiduParagraphs,
-                fallbackParagraphs,
-            )
-
-            NovelFileLang.MIX_YOUDAO -> writeMixParagraphs(
-                chapter.paragraphs,
-                chapter.youdaoParagraphs,
-                fallbackParagraphs,
-            )
-
-            NovelFileLang.MIX_GPT -> writeMixParagraphs(
-                chapter.paragraphs,
-                chapter.gptParagraphs,
-                fallbackParagraphs,
-            )
-
-            NovelFileLang.MIX_SAKURA -> writeMixParagraphs(
-                chapter.paragraphs,
-                chapter.sakuraParagraphs,
-                fallbackParagraphs,
-            )
-
-            NovelFileLang.MIX_ALL -> writeThreeParagraph(
-                chapter.paragraphs,
-                chapter.youdaoParagraphs,
-                chapter.baiduParagraphs,
-            )
-        }
+    private fun BufferedWriter.writeMissingTranslation(translation: TranslatorId) {
+        write("${translation}翻译缺失。\n\n")
     }
 
     fun BufferedWriter.writeNovel(
         novel: WebNovelMetadata,
-        chapters: Map<String, WebNovelChapter>,
+        chapters: Map<String, ChapterWriteData>,
     ) {
         writeTitle(novel)
         write("\n")
@@ -214,7 +94,19 @@ private class TxtWriter(
                 if (chapter == null) {
                     writeMissingChapter()
                 } else {
-                    writeChapter(chapter)
+                    chapter.missingTranslations.forEach {
+                        writeMissingTranslation(it)
+                    }
+
+                    for (i in chapter.jpParagraphs.indices) {
+                        if (chapter.jpParagraphs[i].isBlank()) {
+                            write(chapter.jpParagraphs[i] + "\n")
+                        } else {
+                            chapter.paragraphs.forEach {
+                                write(it.paragraphs[i] + "\n")
+                            }
+                        }
+                    }
                 }
                 write("\n\n\n")
             }

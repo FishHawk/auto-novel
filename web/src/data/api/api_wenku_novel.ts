@@ -138,14 +138,16 @@ const createFileUrl = ({
   translationsMode: 'parallel' | 'priority';
   translations: ('sakura' | 'baidu' | 'youdao' | 'gpt')[];
 }) => {
-  let filename = `${lang}.${translationsMode === 'parallel' ? 'B' : 'Y'}`;
-  translations.forEach((it) => (filename += it[0]));
-  filename += '.';
-  filename += volumeId;
+  const filename = [
+    lang,
+    (translationsMode === 'parallel' ? 'B' : 'Y') +
+      translations.map((it) => it[0]).join(''),
+    volumeId,
+  ].join('.');
 
   const params = new URLSearchParams({
-    translationsMode,
     lang,
+    translationsMode,
     filename,
   });
   translations.forEach((it) => params.append('translations', it));

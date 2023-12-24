@@ -212,22 +212,19 @@ getNovel();
         />
       </n-space>
 
-      <section>
-        <SectionHeader title="翻译" />
-        <WebTranslate
-          :provider-id="providerId"
-          :novel-id="novelId"
-          :title-jp="novel.titleJp"
-          :title-zh="novel.titleZh"
-          :total="toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
-          v-model:jp="novel.jp"
-          v-model:baidu="novel.baidu"
-          v-model:youdao="novel.youdao"
-          v-model:gpt="novel.gpt"
-          :sakura="novel.sakura"
-          :glossary="novel.glossary"
-        />
-      </section>
+      <WebTranslate
+        :provider-id="providerId"
+        :novel-id="novelId"
+        :title-jp="novel.titleJp"
+        :title-zh="novel.titleZh"
+        :total="toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
+        v-model:jp="novel.jp"
+        v-model:baidu="novel.baidu"
+        v-model:youdao="novel.youdao"
+        v-model:gpt="novel.gpt"
+        :sakura="novel.sakura"
+        :glossary="novel.glossary"
+      />
 
       <section>
         <SectionHeader title="目录">

@@ -149,27 +149,36 @@ const createFileUrl = ({
   providerId,
   novelId,
   lang,
+  translationsMode,
+  translations,
   type,
   title,
 }: {
   providerId: string;
   novelId: string;
-  lang:
-    | 'jp'
-    | 'zh-baidu'
-    | 'zh-youdao'
-    | 'zh-gpt'
-    | 'zh-sakura'
-    | 'mix-baidu'
-    | 'mix-youdao'
-    | 'mix-gpt'
-    | 'mix-sakura';
+  lang: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';
+  translationsMode: 'parallel' | 'priority';
+  translations: ('sakura' | 'baidu' | 'youdao' | 'gpt')[];
   type: 'epub' | 'txt';
   title: string;
 }) => {
-  const validTitle = title.replace(/[\/|\\:*?"<>]/g, '');
-  const filename = `${providerId}.${novelId}.${lang}.${validTitle}.${type}`;
-  const url = `/api/novel/${providerId}/${novelId}/file/${lang}/${type}?filename=${filename}`;
+  const filename = [
+    lang,
+    (translationsMode === 'parallel' ? 'B' : 'Y') +
+      translations.map((it) => it[0]).join(''),
+    title.replace(/[\/|\\:*?"<>]/g, ''),
+    type,
+  ].join('.');
+
+  const params = new URLSearchParams({
+    lang,
+    translationsMode,
+    type,
+    filename,
+  });
+  translations.forEach((it) => params.append('translations', it));
+
+  const url = `/api/novel/${providerId}/${novelId}/file?${params}`;
   return { url, filename };
 };
 

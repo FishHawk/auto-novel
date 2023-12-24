@@ -85,25 +85,21 @@ fun main() {
 }
 
 val appModule = module {
+    fun envOrNull(name: String) =
+        System.getenv(name)
+
+    fun env(name: String) =
+        System.getenv(name)
+            ?: throw RuntimeException("缺少环境变量:${name}")
+
     // Data Source
+    single { DataSourceMongo(env("MONGODB_URL")) }
+    single { DataSourceElasticSearch(env("ELASTIC_SEARCH_DB_URL")) }
+    single { createRedisDataSource(env("REDIS_URL")) }
     single {
-        val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.1.110:27017"
-        DataSourceMongo(mongodbUrl)
-    }
-    single {
-        val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.1.110"
-        DataSourceElasticSearch(url)
-    }
-    single {
-        val url = System.getenv("REDIS_URL") ?: "192.168.1.110:6379"
-        createRedisDataSource(url)
-    }
-    single {
-        val httpProxy: String? = System.getenv("HTTPS_PROXY")
-        val pixivPhpsessid: String? = System.getenv("PIXIV_COOKIE_PHPSESSID")
         DataSourceWebNovelProvider(
-            httpsProxy = httpProxy,
-            pixivPhpsessid = pixivPhpsessid,
+            httpsProxy = envOrNull("HTTPS_PROXY"),
+            pixivPhpsessid = envOrNull("PIXIV_COOKIE_PHPSESSID"),
         )
     }
     singleOf(::DataSourceFileSystem)
@@ -130,12 +126,7 @@ val appModule = module {
     singleOf(::WenkuNovelVolumeRepository)
 
     // Api
-    single {
-        val secret = System.getenv("JWT_SECRET")!!
-        AuthApi(secret, get())
-    } withOptions {
-        createdAtStart()
-    }
+    single { AuthApi(env("JWT_SECRET"), get()) } withOptions { createdAtStart() }
     singleOf(::ArticleApi) { createdAtStart() }
     singleOf(::CommentApi) { createdAtStart() }
     singleOf(::OperationHistoryApi) { createdAtStart() }

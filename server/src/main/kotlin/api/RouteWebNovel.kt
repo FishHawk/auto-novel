@@ -33,7 +33,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
-import java.nio.file.Path
 
 @Resource("/novel")
 private class WebNovelRes {
@@ -73,10 +72,12 @@ private class WebNovelRes {
             class Chapter(val parent: Translate, val chapterId: String)
         }
 
-        @Resource("/file/{lang}/{type}")
+        @Resource("/file")
         class File(
             val parent: Id,
-            val lang: NovelFileLang,
+            val lang: NovelFileLangV2,
+            val translationsMode: NovelFileTranslationsMode,
+            val translations: kotlin.collections.List<TranslatorId>,
             val type: NovelFileType,
             val filename: String,
         )
@@ -269,6 +270,8 @@ fun Route.routeWebNovel() {
                 providerId = loc.parent.providerId,
                 novelId = loc.parent.novelId,
                 lang = loc.lang,
+                translationsMode = loc.translationsMode,
+                translations = loc.translations,
                 type = loc.type,
             )
             val encodedFilename = loc.filename.encodeURLParameter(spaceToPlus = true)
@@ -806,13 +809,18 @@ class WebNovelApi(
     suspend fun updateFile(
         providerId: String,
         novelId: String,
-        lang: NovelFileLang,
+        lang: NovelFileLangV2,
+        translationsMode: NovelFileTranslationsMode,
+        translations: List<TranslatorId>,
         type: NovelFileType,
-    ): Path {
+    ): String {
+        println("123124")
         return fileRepo.makeFile(
             providerId = providerId,
             novelId = novelId,
             lang = lang,
+            translationsMode = translationsMode,
+            translations = translations.distinct(),
             type = type,
         ) ?: throwNovelNotFound()
     }
