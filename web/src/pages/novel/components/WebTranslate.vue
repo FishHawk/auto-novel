@@ -57,7 +57,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
     { id: translatorId }
   );
 
-const file = computed(() => {
+const files = computed(() => {
   const title =
     setting.downloadFilenameType === 'jp' ? titleJp : titleZh ?? titleJp;
 
@@ -75,25 +75,29 @@ const file = computed(() => {
     lang = 'jp-zh';
   }
 
-  const epub = ApiWebNovel.createFileUrl({
-    providerId,
-    novelId,
-    lang,
-    translationsMode,
-    translations,
-    type: 'epub',
-    title,
+  const createFileUrl = (
+    label: string,
+    type: 'epub' | 'txt',
+    isJp: boolean
+  ) => ({
+    label,
+    ...ApiWebNovel.createFileUrl({
+      providerId,
+      novelId,
+      lang: isJp ? 'jp' : lang,
+      translationsMode,
+      translations,
+      type,
+      title,
+    }),
   });
-  const txt = ApiWebNovel.createFileUrl({
-    providerId,
-    novelId,
-    lang,
-    translationsMode,
-    translations,
-    type: 'txt',
-    title,
-  });
-  return { epub, txt };
+
+  return [
+    createFileUrl('EPUB', 'epub', false),
+    createFileUrl('TXT', 'txt', false),
+    createFileUrl('日文EPUB', 'epub', true),
+    createFileUrl('日文TXT', 'txt', true),
+  ];
 });
 
 const submitGlossary = async () => {
@@ -184,31 +188,20 @@ const translatorLabels = computed(
   />
 
   <n-p>
-    <n-button-group>
+    <n-space>
       <n-button
+        v-for="file of files"
         tag="a"
-        :href="file.epub.url"
-        :download="file.epub.filename"
+        :href="file.url"
+        :download="file.filename"
         target="_blank"
       >
         <template #icon>
           <n-icon :component="FileDownloadFilled" />
         </template>
-        下载EPUB
+        下载{{ file.label }}
       </n-button>
-
-      <n-button
-        tag="a"
-        :href="file.txt.url"
-        :download="file.txt.filename"
-        target="_blank"
-      >
-        <template #icon>
-          <n-icon :component="FileDownloadFilled" />
-        </template>
-        下载TXT
-      </n-button>
-    </n-button-group>
+    </n-space>
   </n-p>
 
   <n-p>
