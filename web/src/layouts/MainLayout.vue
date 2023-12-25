@@ -94,16 +94,15 @@ const collapsedMenuOptions = computed(() => {
 
 const userDropdownOptions = computed(() => {
   return [
-    { label: '管理员模式', key: 'admin', show: userData.isAdmin },
-    menuOption('控制台', '/admin/user', userData.isAdmin),
+    menuOption('工作区-GPT', '/gpt-workspace'),
+    menuOption('工作区-Sakura', '/sakura-workspace'),
+    menuOption('公用工作区-Sakura', '/sakura'),
     dropdownOption('退出登录', 'signOut', LogOutFilled),
   ];
 });
 const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'signOut') {
     userData.deleteProfile();
-  } else if (key === 'admin') {
-    userData.toggleAdminMode();
   }
 };
 

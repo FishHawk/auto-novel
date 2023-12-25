@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { useSettingStore } from '@/data/stores/setting';
+import { useUserDataStore } from '@/data/stores/user_data';
 
 const setting = useSettingStore();
+const userData = useUserDataStore();
 </script>
 
 <template>
@@ -14,4 +16,10 @@ const setting = useSettingStore();
       只有一个主题选项太奇怪了？因为我还没想好放什么
     </n-text>
   </n-p>
+  <n-space v-if="userData.isAdmin">
+    <n-button tag="a" href="/admin/user">控制台</n-button>
+    <n-button @click="userData.toggleAdminMode()">
+      管理员模式-{{ userData.asAdmin }}
+    </n-button>
+  </n-space>
 </template>
