@@ -164,11 +164,15 @@ const createFileUrl = ({
 }) => {
   const filename = [
     lang,
-    (translationsMode === 'parallel' ? 'B' : 'Y') +
-      translations.map((it) => it[0]).join(''),
+    lang === 'jp'
+      ? ''
+      : (translationsMode === 'parallel' ? 'B' : 'Y') +
+        translations.map((it) => it[0]).join(''),
     title.replace(/[\/|\\:*?"<>]/g, ''),
     type,
-  ].join('.');
+  ]
+    .filter(Boolean)
+    .join('.');
 
   const params = new URLSearchParams({
     lang,

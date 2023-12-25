@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FileDownloadFilled } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
@@ -66,6 +65,8 @@ const files = computed(() => {
       ? readerSetting
       : setting.downloadFormat;
 
+  const type = setting.downloadFormat.type;
+
   let lang: 'zh' | 'zh-jp' | 'jp-zh';
   if (mode === 'jp' || mode === 'zh') {
     lang = 'zh';
@@ -75,29 +76,26 @@ const files = computed(() => {
     lang = 'jp-zh';
   }
 
-  const createFileUrl = (
-    label: string,
-    type: 'epub' | 'txt',
-    isJp: boolean
-  ) => ({
-    label,
-    ...ApiWebNovel.createFileUrl({
+  return {
+    jp: ApiWebNovel.createFileUrl({
       providerId,
       novelId,
-      lang: isJp ? 'jp' : lang,
+      lang: 'jp',
+      translationsMode,
+      translations: [],
+      type,
+      title,
+    }),
+    zh: ApiWebNovel.createFileUrl({
+      providerId,
+      novelId,
+      lang,
       translationsMode,
       translations,
       type,
       title,
     }),
-  });
-
-  return [
-    createFileUrl('EPUB', 'epub', false),
-    createFileUrl('TXT', 'txt', false),
-    createFileUrl('日文EPUB', 'epub', true),
-    createFileUrl('日文TXT', 'txt', true),
-  ];
+  };
 });
 
 const submitGlossary = async () => {
@@ -156,27 +154,12 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   }
 };
 
-const translatorLabels = computed(
-  () =>
-    <{ label: string; translatorId: TranslatorId }[]>[
-      {
-        label: `百度(${props.baidu}/${total})`,
-        translatorId: 'baidu',
-      },
-      {
-        label: `有道(${props.youdao}/${total})`,
-        translatorId: 'youdao',
-      },
-      {
-        label: `GPT3(${props.gpt}/${total})`,
-        translatorId: 'gpt',
-      },
-      {
-        label: `Sakura(${props.sakura}/${total})`,
-        translatorId: 'sakura',
-      },
-    ]
-);
+const translatorLabels = computed(() => ({
+  baidu: `百度(${props.baidu}/${total})`,
+  youdao: `有道(${props.youdao}/${total})`,
+  gpt: `GPT3(${props.gpt}/${total})`,
+  sakura: `Sakura(${props.sakura}/${total})`,
+}));
 </script>
 
 <template>
@@ -185,44 +168,74 @@ const translatorLabels = computed(
     type="web"
     :glossary="glossary"
     :submit="submitGlossary"
-  />
+  >
+    <n-button
+      tag="a"
+      :href="files.zh.url"
+      :download="files.zh.filename"
+      target="_blank"
+    >
+      下载机翻
+    </n-button>
+    <n-button
+      tag="a"
+      :href="files.jp.url"
+      :download="files.jp.filename"
+      target="_blank"
+    >
+      下载日文
+    </n-button>
+  </advance-options>
 
-  <n-p>
-    <n-space>
-      <n-button
-        v-for="file of files"
-        tag="a"
-        :href="file.url"
-        :download="file.filename"
-        target="_blank"
-      >
-        <template #icon>
-          <n-icon :component="FileDownloadFilled" />
-        </template>
-        下载{{ file.label }}
-      </n-button>
-    </n-space>
-  </n-p>
-
-  <n-p>
-    <n-space>
-      <template v-for="{ translatorId, label } of translatorLabels">
+  <n-list>
+    <n-list-item
+      v-for="translatorId of (['baidu', 'youdao', 'gpt', 'sakura'] as TranslatorId[])"
+    >
+      {{ translatorLabels[translatorId] }}
+      <template #suffix>
         <n-button
-          v-if="translatorId === 'gpt' || translatorId === 'sakura'"
+          v-if="translatorId === 'baidu'"
+          size="small"
+          tertiary
+          @click="startTranslateTask(translatorId)"
+        >
+          更新百度
+        </n-button>
+        <n-button
+          v-if="translatorId === 'youdao'"
+          size="small"
+          tertiary
+          @click="startTranslateTask(translatorId)"
+        >
+          更新有道
+        </n-button>
+        <n-button
+          v-if="translatorId === 'gpt'"
+          size="small"
+          tertiary
           @click="() => submitJob(translatorId)"
         >
-          排队{{ label }}
+          排队GPT
         </n-button>
-        <n-button v-else @click="startTranslateTask(translatorId)">
-          更新{{ label }}
-        </n-button>
+        <n-space v-if="translatorId === 'sakura'" :wrap="false">
+          <async-button
+            size="small"
+            tertiary
+            @async-click="submitPublicSakuraJob"
+          >
+            公用排队
+          </async-button>
+          <n-button
+            size="small"
+            tertiary
+            @click="() => submitJob(translatorId)"
+          >
+            排队Sakura
+          </n-button>
+        </n-space>
       </template>
-
-      <async-button @async-click="submitPublicSakuraJob">
-        公用排队Sakura
-      </async-button>
-    </n-space>
-  </n-p>
+    </n-list-item>
+  </n-list>
 
   <TranslateTask
     ref="translateTask"

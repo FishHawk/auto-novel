@@ -12,6 +12,7 @@ export interface Setting {
     mode: 'jp' | 'zh' | 'mix' | 'mix-reverse';
     translationsMode: 'parallel' | 'priority';
     translations: TranslatorId[];
+    type: 'epub' | 'txt';
   };
 }
 
@@ -26,6 +27,7 @@ export const useSettingStore = defineStore('setting', {
         mode: 'mix',
         translationsMode: 'priority',
         translations: ['sakura', 'gpt', 'youdao', 'baidu'],
+        type: 'epub',
       },
     },
   persist: true,

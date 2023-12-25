@@ -47,17 +47,32 @@ const toggleDownloadOptions = () => {
   }
 };
 
-const tryUseChineseTitleAsFilename = ref(setting.downloadFilenameType === 'zh');
+// 翻译设置
 const translateExpireChapter = ref(false);
 const syncFromProvider = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
 
+defineExpose({
+  getTranslationOptions: () => ({
+    translateExpireChapter: translateExpireChapter.value,
+    syncFromProvider: syncFromProvider.value,
+    startIndex: startIndex.value ?? 0,
+    endIndex: endIndex.value ?? 65536,
+  }),
+});
+
+// 下载设置
+const tryUseChineseTitleAsFilename = ref(setting.downloadFilenameType === 'zh');
 watch(
   tryUseChineseTitleAsFilename,
   (it) => (setting.downloadFilenameType = it ? 'zh' : 'jp')
 );
 
+const typeOptions = [
+  { value: 'epub', label: 'EPUB' },
+  { value: 'txt', label: 'TXT' },
+];
 const modeOptions = [
   { value: 'zh', label: '中文' },
   { value: 'mix', label: '中文/日文' },
@@ -73,15 +88,6 @@ const translationOptions = [
   { label: '有道', value: 'youdao' },
   { label: '百度', value: 'baidu' },
 ];
-
-defineExpose({
-  getTranslationOptions: () => ({
-    translateExpireChapter: translateExpireChapter.value,
-    syncFromProvider: syncFromProvider.value,
-    startIndex: startIndex.value ?? 0,
-    endIndex: endIndex.value ?? 65536,
-  }),
-});
 </script>
 
 <template>
@@ -94,6 +100,7 @@ defineExpose({
   <n-button-group style="margin-bottom: 8px">
     <n-button @click="toggleTranslateOptions()">翻译设置</n-button>
     <n-button @click="toggleDownloadOptions()">下载设置</n-button>
+    <slot />
   </n-button-group>
 
   <n-collapse-transition
@@ -101,14 +108,6 @@ defineExpose({
     style="margin-bottom: 16px"
   >
     <n-list v-if="showTranslateOptions" bordered>
-      <n-list-item v-if="type === 'web'">
-        <AdvanceOptionSwitch
-          title="中文文件名"
-          description="如果小说标题已经被翻译，则使用翻译后的中文标题作为下载的文件名。"
-          v-model:value="tryUseChineseTitleAsFilename"
-        />
-      </n-list-item>
-
       <n-list-item>
         <AdvanceOptionSwitch
           title="翻译过期章节"
@@ -160,6 +159,14 @@ defineExpose({
     </n-list>
 
     <n-list v-if="showDownloadOptions" bordered>
+      <n-list-item v-if="type === 'web'">
+        <AdvanceOptionSwitch
+          title="中文文件名"
+          description="如果小说标题已经被翻译，则使用翻译后的中文标题作为下载的文件名。"
+          v-model:value="tryUseChineseTitleAsFilename"
+        />
+      </n-list-item>
+
       <n-list-item>
         <AdvanceOptionSwitch
           title="下载文件格式与阅读设置一致"
@@ -171,7 +178,7 @@ defineExpose({
       <n-list-item>
         <AdvanceOptionRadio
           title="自定义下载文件语言"
-          description="设置下载文件的语言。注意部分Epub阅读器不支持自定义字体颜色，日文段落会被强制使用黑色字体。"
+          description="设置下载文件的语言。注意部分EPUB阅读器不支持自定义字体颜色，日文段落会被强制使用黑色字体。"
           v-model:value="setting.downloadFormat.mode"
           :disabled="setting.isDownloadFormatSameAsReaderFormat"
           :options="modeOptions"
@@ -194,6 +201,16 @@ defineExpose({
             style="height: 190px; margin-top: 8px; font-size: 12px"
           />
         </AdvanceOptionRadio>
+      </n-list-item>
+
+      <n-list-item v-if="type === 'web'">
+        <AdvanceOptionRadio
+          title="自定义下载文件类型"
+          description="设置下载文件的类型。"
+          v-model:value="setting.downloadFormat.type"
+          :disabled="false"
+          :options="typeOptions"
+        />
       </n-list-item>
     </n-list>
   </n-collapse-transition>

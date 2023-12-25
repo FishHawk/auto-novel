@@ -212,6 +212,7 @@ getNovel();
         />
       </n-space>
 
+      <section-header title="翻译" />
       <WebTranslate
         :provider-id="providerId"
         :novel-id="novelId"
