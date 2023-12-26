@@ -140,6 +140,7 @@ const linkExample = [
       <img v-if="isDesktop" :src="qqUrl" width="120" />
 
       <n-ul>
+        <n-li>最近命犯太岁，服务器不是停电就是断网，各位活用下载功能吧。</n-li>
         <n-li>
           如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。
         </n-li>

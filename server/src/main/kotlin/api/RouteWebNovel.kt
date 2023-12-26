@@ -77,7 +77,7 @@ private class WebNovelRes {
             val parent: Id,
             val lang: NovelFileLangV2,
             val translationsMode: NovelFileTranslationsMode,
-            val translations: kotlin.collections.List<TranslatorId>,
+            val translations: kotlin.collections.List<TranslatorId> = emptyList(),
             val type: NovelFileType,
             val filename: String,
         )
