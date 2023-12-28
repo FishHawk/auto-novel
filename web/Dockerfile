@@ -2,7 +2,7 @@ FROM node:21-slim AS builder
 COPY . /web
 WORKDIR /web
 ENV NODE_ENV=production
-RUN npm ci; \
+RUN npm ci --no-audit --maxsockets 1; \
     npm run build
 
 FROM caddy:2.7.4
