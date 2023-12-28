@@ -36,29 +36,20 @@ interface AmazonMetadata {
 async function getProductWithAdultCheck(asin: string) {
   const url = `https://www.amazon.co.jp/dp/${asin}`;
 
-  function parseHtml(html: string) {
-    const parser = new DOMParser();
-    return parser.parseFromString(html, 'text/html');
-  }
-  function isAgeConfirm(text: string) {
-    return ['年龄确认', '年齢確認'].some((word) => text.includes(word));
-  }
+  const parseHtml = (html: string) =>
+    new DOMParser().parseFromString(html, 'text/html');
 
-  const htmlWithoutCookies = await ky.get(url).text();
-  if (!isAgeConfirm(htmlWithoutCookies)) {
-    return {
-      r18: false,
-      doc: parseHtml(htmlWithoutCookies),
-    };
-  }
+  try {
+    const html = await ky.get(url, { redirect: 'error' }).text();
+    return { r18: false, doc: parseHtml(html) };
+  } catch (e: any) {}
 
-  const htmlWithCookies = await ky.get(url, { credentials: 'include' }).text();
-  if (!isAgeConfirm(htmlWithCookies)) {
-    return {
-      r18: true,
-      doc: parseHtml(htmlWithCookies),
-    };
-  }
+  try {
+    const html = await ky
+      .get(url, { redirect: 'error', credentials: 'include' })
+      .text();
+    return { r18: true, doc: parseHtml(html) };
+  } catch (e: any) {}
 
   throw Error('触发年龄限制，请按说明使用插件公开亚马逊Cookies');
 }
