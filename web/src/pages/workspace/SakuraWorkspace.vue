@@ -62,9 +62,9 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () => {
-  await (
-    await import('@/data/translator/cache')
-  ).clearSegIndexedDbCache('sakura-seg-cache');
+  await import('@/data/translator')
+    .then((it) => it.createSegIndexedDbCache('sakura-seg-cache'))
+    .then((it) => it.clear());
   message.success('缓存清除成功');
 };
 </script>

@@ -1,19 +1,24 @@
+import { TranslateTaskDesc } from '@/data/translator/api';
+
 export const parseTask = (task: string) => {
   const [taskString, queryString] = task.split('?');
   const { start, end, expire } = Object.fromEntries(
     new URLSearchParams(queryString)
   );
 
-  let desc: any;
-  if (taskString.startsWith('web')) {
+  let desc: TranslateTaskDesc;
+  if (taskString.startsWith('web/')) {
     const [type, providerId, novelId] = taskString.split('/');
-    desc = { type, providerId, novelId };
-  } else if (taskString.startsWith('wenku')) {
+    desc = { type: type as any, providerId, novelId };
+  } else if (taskString.startsWith('wenku/')) {
     const [type, novelId, volumeId] = taskString.split('/');
-    desc = { type, novelId, volumeId };
-  } else if (taskString.startsWith('personal')) {
+    desc = { type: type as any, novelId, volumeId };
+  } else if (taskString.startsWith('personal/')) {
     const [type, volumeId] = taskString.split('/');
-    desc = { type, volumeId };
+    desc = { type: type as any, volumeId };
+  } else if (taskString.startsWith('personal2/')) {
+    const [type, volumeId] = taskString.split('/');
+    desc = { type: type as any, volumeId };
   } else {
     throw 'quit';
   }

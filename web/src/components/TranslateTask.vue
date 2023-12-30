@@ -2,8 +2,11 @@
 import { LogInst, useMessage } from 'naive-ui';
 import { computed, nextTick, ref, watch } from 'vue';
 
-import { client } from '@/data/api/client';
-import { TranslatorDesc } from '@/data/translator/api';
+import {
+  TranslateTaskDesc,
+  TranslateTaskParams,
+  TranslatorDesc,
+} from '@/data/translator/api';
 import { getTranslatorLabel } from '@/data/util';
 
 const emit = defineEmits<{
@@ -44,16 +47,8 @@ const percentage = computed(() => {
 });
 
 const startTask = async (
-  desc:
-    | { type: 'web'; providerId: string; novelId: string }
-    | { type: 'wenku'; novelId: string; volumeId: string }
-    | { type: 'personal'; volumeId: string },
-  params: {
-    translateExpireChapter: boolean;
-    syncFromProvider: boolean;
-    startIndex: number;
-    endIndex: number;
-  },
+  desc: TranslateTaskDesc,
+  params: TranslateTaskParams,
   translatorDesc: TranslatorDesc,
   callback?: {
     onProgressUpdated: (progress: {
@@ -93,38 +88,35 @@ const startTask = async (
   await (
     await import('@/data/translator')
   ).translate(
+    desc,
+    params,
     {
-      client,
-      ...desc,
-      ...params,
-      callback: {
-        onStart: (total) => {
-          chapterTotal.value = total;
-          onProgressUpdated();
-        },
-        onChapterSuccess: ({ jp, zh }) => {
-          if (jp !== undefined) emit('update:jp', jp);
-          if (zh !== undefined) {
-            if (translatorDesc.id === 'baidu') {
-              emit('update:baidu', zh);
-            } else if (translatorDesc.id === 'youdao') {
-              emit('update:youdao', zh);
-            } else if (translatorDesc.id === 'gpt') {
-              emit('update:gpt', zh);
-            } else {
-              emit('update:sakura', zh);
-            }
+      onStart: (total) => {
+        chapterTotal.value = total;
+        onProgressUpdated();
+      },
+      onChapterSuccess: ({ jp, zh }) => {
+        if (jp !== undefined) emit('update:jp', jp);
+        if (zh !== undefined) {
+          if (translatorDesc.id === 'baidu') {
+            emit('update:baidu', zh);
+          } else if (translatorDesc.id === 'youdao') {
+            emit('update:youdao', zh);
+          } else if (translatorDesc.id === 'gpt') {
+            emit('update:gpt', zh);
+          } else {
+            emit('update:sakura', zh);
           }
-          chapterFinished.value += 1;
-          onProgressUpdated();
-        },
-        onChapterFailure: () => {
-          chapterError.value += 1;
-          onProgressUpdated();
-        },
-        log: (message: any) => {
-          logs.value.push(`${message}`);
-        },
+        }
+        chapterFinished.value += 1;
+        onProgressUpdated();
+      },
+      onChapterFailure: () => {
+        chapterError.value += 1;
+        onProgressUpdated();
+      },
+      log: (message: any) => {
+        logs.value.push(`${message}`);
       },
     },
     translatorDesc

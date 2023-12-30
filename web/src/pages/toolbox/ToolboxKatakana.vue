@@ -3,7 +3,7 @@ import { useMessage } from 'naive-ui';
 import { computed } from 'vue';
 import { ref } from 'vue';
 
-import { getFullTextFromEpubFile } from '@/data/epub/epub';
+import { Epub } from '@/data/epub/epub';
 
 const message = useMessage();
 
@@ -45,6 +45,16 @@ const loadFile = () => {
   }
 
   if (selectedFile.name.endsWith('.epub')) {
+    const getFullTextFromEpubFile = async (file: File) => {
+      const fullContent: string[] = [];
+      await Epub.forEachXHtmlFile(file, (_path, doc) => {
+        Array.from(doc.getElementsByClassName('rt')).forEach((node) =>
+          node.parentNode!!.removeChild(node)
+        );
+        fullContent.push(doc.textContent ?? '');
+      });
+      return fullContent.join('\n');
+    };
     getFullTextFromEpubFile(selectedFile)
       .then((text) => {
         filename.value = selectedFile?.name;

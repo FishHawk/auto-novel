@@ -8,7 +8,7 @@ import { ApiUserPersonal, PersonalVolume } from '@/data/api/api_user_personal';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
 import {
-  buildPersonalTranslateTask,
+  buildPersonalLegacyTranslateTask,
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
@@ -115,7 +115,7 @@ async function submitGlossary(
 const submitJob = (translatorId: 'sakura' | 'gpt') => {
   const { translateExpireChapter } = getParams();
 
-  const task = buildPersonalTranslateTask(volume.volumeId, {
+  const task = buildPersonalLegacyTranslateTask(volume.volumeId, {
     start: 0,
     end: 65535,
     expire: translateExpireChapter,

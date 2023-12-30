@@ -1,11 +1,10 @@
 import { MD5 } from 'crypto-es/lib/md5';
 import { openDB } from 'idb';
 
-import { SegmentCache } from './translator';
-import { Glossary } from './type';
+import { Glossary } from '../type';
 
-function openTestDB() {
-  return openDB('test', 3, {
+const openTestDB = () =>
+  openDB('test', 3, {
     upgrade(db, _oldVersion, _newVersion, _transaction, _event) {
       try {
         db.createObjectStore('gpt-seg-cache', { keyPath: 'hash' });
@@ -15,11 +14,17 @@ function openTestDB() {
       } catch (e) {}
     },
   });
+
+export interface SegmentCache {
+  cacheKey(segIndex: number, seg: string[], glossary?: Glossary): string;
+  get(cacheKey: string): Promise<string[] | null>;
+  save(cacheKey: string, output: string[]): Promise<void>;
+  clear(): Promise<void>;
 }
 
-export async function createSegIndexedDbCache(
+export const createSegIndexedDbCache = async (
   storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
-) {
+) => {
   const db = await openTestDB();
   return <SegmentCache>{
     cacheKey: (
@@ -33,12 +38,6 @@ export async function createSegIndexedDbCache(
 
     save: (cacheKey: string, output: string[]): Promise<void> =>
       db.put(storeName, { hash: cacheKey, text: output }).then(),
+    clear: () => db.clear(storeName),
   };
-}
-
-export async function clearSegIndexedDbCache(
-  storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
-) {
-  const db = await openTestDB();
-  db.clear(storeName);
-}
+};

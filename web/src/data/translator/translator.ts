@@ -1,15 +1,9 @@
-import { createSegIndexedDbCache } from './cache';
+import { SegmentCache, createSegIndexedDbCache } from './db/segment_cache';
 import { BaiduTranslator, BaiduTranslatorConfig } from './translator_baidu';
 import { OpenAiTranslator, OpenAiTranslatorConfig } from './translator_openai';
 import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
 import { YoudaoTranslator, YoudaoTranslatorConfig } from './translator_youdao';
-import { Glossary, SegmentTranslator } from './type';
-
-export interface SegmentCache {
-  cacheKey(segIndex: number, seg: string[], glossary?: Glossary): string;
-  get(cacheKey: string): Promise<string[] | null>;
-  save(cacheKey: string, output: string[]): Promise<void>;
-}
+import { SegmentTranslator } from './type';
 
 export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
 

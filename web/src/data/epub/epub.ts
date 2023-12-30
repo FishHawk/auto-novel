@@ -1,66 +1,90 @@
-import * as zip from '@zip.js/zip.js';
+import {
+  BlobReader,
+  BlobWriter,
+  TextWriter,
+  ZipReader,
+  ZipWriter,
+} from '@zip.js/zip.js';
 
 const forEachXHtmlFile = async (
   file: File,
-  callback: (path: string, doc: HTMLHtmlElement) => void
+  callback: (path: string, doc: Document) => void
 ) => {
   // TODO: 修改成解析opf的方式
-  const reader = new zip.ZipReader(new zip.BlobReader(file));
-  const entries = (await reader.getEntries()).sort((a, b) =>
-    a.filename.localeCompare(b.filename)
+  const reader = new ZipReader(new BlobReader(file));
+  const entries = new Map(
+    (await reader.getEntries()).map((obj) => [obj.filename, obj])
   );
-
-  const options: zip.EntryGetDataOptions = {
-    checkSignature: true,
-    useWebWorkers: true,
-    useCompressionStream: true,
+  const readFileAsXHtml = async (filename: string) => {
+    const entry = entries.get(filename);
+    if (entry === undefined) throw Error('EPUB格式不合法');
+    const text = await entry.getData!(new TextWriter());
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'application/xhtml+xml');
+    return doc;
   };
 
-  for (const entry of entries) {
-    // full path inside zip, E.g. item/xhtml/p-titlepage.xhtml
-    const filename = entry.filename;
-    const isXHtml = ['.xhtml', '.html', '.htm'].some((ext) =>
-      filename.endsWith(ext)
-    );
+  const xmlContainer = await readFileAsXHtml('META-INF/container.xml');
+  const opfPath = xmlContainer
+    .getElementsByTagName('rootfile')
+    .item(0)!!
+    .getAttribute('full-path')!!;
+  const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/') + 1);
 
-    if (isXHtml) {
-      const data = await entry.getData!(new zip.BlobWriter(), options);
-      const html = await data.text();
-      const doc = document.createElement('html');
-      doc.innerHTML = html;
-      callback(filename, doc);
-    }
+  const opf = await readFileAsXHtml(opfPath);
+  for (const xhtmlPath of Array.from(
+    opf.querySelectorAll("manifest > item[media-type='application/xhtml+xml']")
+  ).map((it) => opfDir + it.getAttribute('href'))) {
+    const doc = await readFileAsXHtml(xhtmlPath);
+    callback(xhtmlPath, doc);
   }
-  reader.close();
+  await reader.close();
 };
 
-export const getFullTextFromEpubFile = async (file: File) => {
-  const fullContent: string[] = [];
-  await forEachXHtmlFile(file, (path, doc) => {
-    const text = extractTextFromXHtml(doc);
-    fullContent.push(text.join('\n'));
-  });
-  console.log(fullContent.join('\n'));
-  return fullContent.join('\n');
+const modify = async (
+  file: File,
+  callback: (path: string, blobIn: Blob) => Promise<Blob>
+) => {
+  // 准备读Epub
+  const reader = new ZipReader(new BlobReader(file));
+  const entries = (await reader.getEntries())
+    .filter((it) => !it.directory)
+    .sort((e1, e2) => {
+      const pathToNumber = (path: string) => {
+        if (path === 'mimetype') return 3;
+        else if (path === 'META-INF/container.xml') return 2;
+        else if (path.endsWith('opf')) return 1;
+        else return 0;
+      };
+      const n1 = pathToNumber(e1.filename);
+      const n2 = pathToNumber(e2.filename);
+      if (n1 === n2) {
+        return e1.filename.localeCompare(e2.filename);
+      } else {
+        return n2 - n1;
+      }
+    });
+
+  // 准备写Epub
+  const zipBlobWriter = new BlobWriter();
+  const writer = new ZipWriter(zipBlobWriter);
+
+  // 遍历所有文件并修改
+  for (const entry of entries) {
+    const path = entry.filename;
+    const blobIn = await entry.getData!(new BlobWriter());
+    const blobOut = await callback(path, blobIn);
+    await writer.add(path, new BlobReader(blobOut));
+  }
+
+  await reader.close();
+  await writer.close();
+
+  const zipBlob = await zipBlobWriter.getData();
+  return zipBlob;
 };
 
-const extractTextFromXHtml = (html: HTMLHtmlElement) => {
-  //FIXME(kuriko): find a better way to extract text from html
-  //  Maybe use html-to-text package instead
-  const ret: Array<string> = [];
-  html.querySelectorAll('h1,h2,h3,h4,h5,h6,p,title').forEach((el) => {
-    let html = el.innerHTML;
-    html.replaceAll(/<rt>>/gm, '(');
-    html.replaceAll(/<\/rt>>/gm, ')');
-    el.innerHTML = html;
-    let text = el.textContent || null;
-
-    if (text && text.length > 0) {
-      ret.push(text);
-    } else if (text == null) {
-      console.debug('Invalid node: ', el);
-    }
-  });
-
-  return ret;
+export const Epub = {
+  forEachXHtmlFile,
+  modify,
 };

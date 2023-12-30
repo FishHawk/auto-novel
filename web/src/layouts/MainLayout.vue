@@ -48,6 +48,7 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
+    menuOption('文件翻译', '/personal'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
@@ -78,6 +79,7 @@ const collapsedMenuOptions = computed(() => {
     menuOption('阅读历史', '/read-history', signed),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
+    menuOption('文件翻译', '/personal'),
     {
       label: '排行',
       children: [

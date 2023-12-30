@@ -1,42 +1,49 @@
-import { KyInstance } from 'ky/distribution/types/ky';
+import { client } from '@/data/api/client';
 
+import { ChapterTranslation, PersonalVolumesManager } from './db/personal';
 import { Translator } from './translator';
 
-type BaseTranslateTaskDesc = {
-  client: KyInstance;
-  translateExpireChapter: boolean;
-  syncFromProvider: boolean;
-  startIndex: number;
-  endIndex: number;
-  callback: {
-    onStart: (total: number) => void;
-    onChapterSuccess: (state: { jp?: number; zh?: number }) => void;
-    onChapterFailure: () => void;
-    log: (message: any) => void;
-  };
-};
-
-type WebTranslateTaskDesc = BaseTranslateTaskDesc & {
+type WebTranslateTaskDesc = {
   type: 'web';
   providerId: string;
   novelId: string;
 };
 
-type WenkuTranslateTaskDesc = BaseTranslateTaskDesc & {
+type WenkuTranslateTaskDesc = {
   type: 'wenku';
   novelId: string;
   volumeId: string;
 };
 
-type PersonalTranslateTaskDesc = BaseTranslateTaskDesc & {
+type PersonalLegacyTranslateTaskDesc = {
   type: 'personal';
+  volumeId: string;
+};
+
+type PersonalTranslateTaskDesc = {
+  type: 'personal2';
   volumeId: string;
 };
 
 export type TranslateTaskDesc =
   | WebTranslateTaskDesc
   | WenkuTranslateTaskDesc
+  | PersonalLegacyTranslateTaskDesc
   | PersonalTranslateTaskDesc;
+
+export type TranslateTaskParams = {
+  translateExpireChapter: boolean;
+  syncFromProvider: boolean;
+  startIndex: number;
+  endIndex: number;
+};
+
+export type TranslateTaskCallback = {
+  onStart: (total: number) => void;
+  onChapterSuccess: (state: { jp?: number; zh?: number }) => void;
+  onChapterFailure: () => void;
+  log: (message: any) => void;
+};
 
 export type TranslatorDesc =
   | { id: 'baidu' }
@@ -51,17 +58,15 @@ export type TranslatorDesc =
   | { id: 'sakura'; endpoint: string; useLlamaApi: boolean };
 
 const translateWeb = async (
+  { providerId, novelId }: WebTranslateTaskDesc,
   {
-    providerId,
-    novelId,
     syncFromProvider,
     //
-    client,
     startIndex,
     endIndex,
     translateExpireChapter,
-    callback,
-  }: WebTranslateTaskDesc,
+  }: TranslateTaskParams,
+  callback: TranslateTaskCallback,
   translatorDesc: TranslatorDesc
 ) => {
   // Api
@@ -239,14 +244,9 @@ const translateWeb = async (
 };
 
 const translateWenku = async (
-  {
-    novelId,
-    volumeId,
-    //
-    client,
-    translateExpireChapter,
-    callback,
-  }: WenkuTranslateTaskDesc,
+  { novelId, volumeId }: WenkuTranslateTaskDesc,
+  { translateExpireChapter }: TranslateTaskParams,
+  callback: TranslateTaskCallback,
   translatorDesc: TranslatorDesc
 ) => {
   // Api
@@ -281,7 +281,92 @@ const translateWenku = async (
   let translator: Translator;
   try {
     translator = await Translator.create({
-      client: client,
+      client,
+      glossary: task.glossary,
+      log: (message) => callback.log('　　' + message),
+      ...translatorDesc,
+    });
+  } catch (e: any) {
+    callback.log(`发生错误，无法创建翻译器：${e}`);
+    return;
+  }
+
+  const chapters = (
+    translateExpireChapter
+      ? task.untranslatedChapters.concat(task.expiredChapters)
+      : task.untranslatedChapters
+  ).sort((a, b) => a.localeCompare(b));
+
+  callback.onStart(chapters.length);
+  if (chapters.length === 0) {
+    callback.log(`没有需要更新的章节`);
+  }
+
+  for (const chapterId of chapters) {
+    try {
+      callback.log(`\n获取章节 ${volumeId}/${chapterId}`);
+      const textsJp = await getChapterToTranslate(chapterId);
+
+      callback.log(`翻译章节 ${volumeId}/${chapterId}`);
+      const textsZh = await translator.translate(textsJp);
+
+      callback.log(`上传章节 ${volumeId}/${chapterId}`);
+      const state = await updateChapterTranslation(chapterId, {
+        glossaryUuid: task.glossaryUuid,
+        paragraphsZh: textsZh,
+      });
+      callback.onChapterSuccess({ zh: state });
+    } catch (e) {
+      if (e === 'quit') {
+        callback.log(`发生错误，结束翻译任务`);
+        return;
+      } else {
+        callback.log(`发生错误，跳过：${e}`);
+        callback.onChapterFailure();
+      }
+    }
+  }
+};
+
+const translatePersonalLegacy = async (
+  { volumeId }: PersonalLegacyTranslateTaskDesc,
+  { translateExpireChapter }: TranslateTaskParams,
+  callback: TranslateTaskCallback,
+  translatorDesc: TranslatorDesc
+) => {
+  // Api
+  const endpoint = `personal/translate/${translatorDesc.id}/${volumeId}`;
+
+  interface TranslateTaskDto {
+    glossaryUuid?: string;
+    glossary: { [key: string]: string };
+    untranslatedChapters: string[];
+    expiredChapters: string;
+  }
+  const getTranslateTask = () => client.get(endpoint).json<TranslateTaskDto>();
+
+  const getChapterToTranslate = (chapterId: string) =>
+    client.get(`${endpoint}/${chapterId}`).json<string[]>();
+
+  const updateChapterTranslation = (
+    chapterId: string,
+    json: { glossaryUuid: string | undefined; paragraphsZh: string[] }
+  ) => client.put(`${endpoint}/${chapterId}`, { json }).json<number>();
+
+  // Task
+  let task: TranslateTaskDto;
+  try {
+    callback.log(`获取未翻译章节 ${volumeId}`);
+    task = await getTranslateTask();
+  } catch (e: any) {
+    callback.log(`发生错误，结束翻译任务：${e}`);
+    return;
+  }
+
+  let translator: Translator;
+  try {
+    translator = await Translator.create({
+      client,
       glossary: task.glossary,
       log: (message) => callback.log('　　' + message),
       ...translatorDesc,
@@ -329,36 +414,32 @@ const translateWenku = async (
 };
 
 const translatePersonal = async (
-  {
-    volumeId,
-    //
-    client,
-    translateExpireChapter,
-    callback,
-  }: PersonalTranslateTaskDesc,
+  { volumeId }: PersonalTranslateTaskDesc,
+  { translateExpireChapter }: TranslateTaskParams,
+  callback: TranslateTaskCallback,
   translatorDesc: TranslatorDesc
 ) => {
   // Api
-  const endpoint = `personal/translate/${translatorDesc.id}/${volumeId}`;
 
-  interface TranslateTaskDto {
-    glossaryUuid?: string;
-    glossary: { [key: string]: string };
-    untranslatedChapters: string[];
-    expiredChapters: string;
-  }
-  const getTranslateTask = () => client.get(endpoint).json<TranslateTaskDto>();
+  const getTranslateTask = () =>
+    PersonalVolumesManager.getTranslateTask(volumeId, translatorDesc.id);
 
   const getChapterToTranslate = (chapterId: string) =>
-    client.get(`${endpoint}/${chapterId}`).json<string[]>();
+    PersonalVolumesManager.getChapterToTranslate(volumeId, chapterId);
 
   const updateChapterTranslation = (
     chapterId: string,
-    json: { glossaryUuid: string | undefined; paragraphsZh: string[] }
-  ) => client.put(`${endpoint}/${chapterId}`, { json }).json<number>();
+    json: ChapterTranslation
+  ) =>
+    PersonalVolumesManager.updateChapterTranslation(
+      volumeId,
+      chapterId,
+      translatorDesc.id,
+      json
+    );
 
   // Task
-  let task: TranslateTaskDto;
+  let task: Awaited<ReturnType<typeof getTranslateTask>>;
   try {
     callback.log(`获取未翻译章节 ${volumeId}`);
     task = await getTranslateTask();
@@ -370,7 +451,7 @@ const translatePersonal = async (
   let translator: Translator;
   try {
     translator = await Translator.create({
-      client: client,
+      client,
       glossary: task.glossary,
       log: (message) => callback.log('　　' + message),
       ...translatorDesc,
@@ -401,8 +482,9 @@ const translatePersonal = async (
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await updateChapterTranslation(chapterId, {
-        glossaryUuid: task.glossaryUuid,
-        paragraphsZh: textsZh,
+        glossaryId: task.glossaryUuid,
+        glossary: task.glossary,
+        paragraphs: textsZh,
       });
       callback.onChapterSuccess({ zh: state });
     } catch (e) {
@@ -419,13 +501,27 @@ const translatePersonal = async (
 
 export const translate = (
   taskDesc: TranslateTaskDesc,
+  taskParams: TranslateTaskParams,
+  taskCallback: TranslateTaskCallback,
   translatorDesc: TranslatorDesc
 ) => {
   if (taskDesc.type === 'web') {
-    return translateWeb(taskDesc, translatorDesc);
+    return translateWeb(taskDesc, taskParams, taskCallback, translatorDesc);
   } else if (taskDesc.type === 'wenku') {
-    return translateWenku(taskDesc, translatorDesc);
+    return translateWenku(taskDesc, taskParams, taskCallback, translatorDesc);
+  } else if (taskDesc.type === 'personal') {
+    return translatePersonalLegacy(
+      taskDesc,
+      taskParams,
+      taskCallback,
+      translatorDesc
+    );
   } else {
-    return translatePersonal(taskDesc, translatorDesc);
+    return translatePersonal(
+      taskDesc,
+      taskParams,
+      taskCallback,
+      translatorDesc
+    );
   }
 };

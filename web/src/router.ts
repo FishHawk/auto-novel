@@ -50,8 +50,8 @@ const router = createRouter({
               component: () => import('./pages/user/ReadHistoryList.vue'),
             },
             {
-              path: '/personal',
-              meta: { title: '文件翻译' },
+              path: '/personal-legacy',
+              meta: { title: '文件翻译（旧版）' },
               component: () => import('./pages/user/PersonalNovel.vue'),
             },
           ],
@@ -89,6 +89,12 @@ const router = createRouter({
           path: '/wenku-list',
           meta: { title: '文库小说' },
           component: () => import('./pages/list/WenkuNovelList.vue'),
+        },
+
+        {
+          path: '/personal',
+          meta: { title: '文件翻译' },
+          component: () => import('./pages/novel/PersonalVolumes.vue'),
         },
 
         {

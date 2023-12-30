@@ -1,24 +1,11 @@
 <script lang="ts" setup>
-import { FileDownloadFilled } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
-import TranslateTask from '@/components/TranslateTask.vue';
-import { ApiSakura } from '@/data/api/api_sakura';
-import { ApiWebNovel } from '@/data/api/api_web_novel';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import {
-  buildWebTranslateTask,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
-import { TranslatorId } from '@/data/translator/translator';
-import { useIsDesktop } from '@/data/util';
 
 defineProps<{
-  type: 'web' | 'wenku';
+  type: 'web' | 'wenku' | 'personal';
   glossary: { [key: string]: string };
   submit: () => Promise<void>;
 }>();
@@ -148,7 +135,7 @@ const translationOptions = [
         </AdvanceOption>
       </n-list-item>
 
-      <n-list-item>
+      <n-list-item v-if="type === 'web' || type === 'wenku'">
         <AdvanceOption
           title="术语表"
           description="术语表过大可能会使得翻译质量下降，此外，出于安全起见，Sakura只会使用日语长度超过两个字的术语。"

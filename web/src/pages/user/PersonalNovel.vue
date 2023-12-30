@@ -1,10 +1,4 @@
 <script lang="ts" setup>
-import ArchiveOutlined from '@vicons/material/es/ArchiveOutlined';
-import {
-  UploadCustomRequestOptions,
-  UploadFileInfo,
-  useMessage,
-} from 'naive-ui';
 import { ref } from 'vue';
 
 import type {
@@ -16,7 +10,6 @@ import { ResultState } from '@/data/result';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 
-const message = useMessage();
 const userData = useUserDataStore();
 const setting = useSettingStore();
 
@@ -29,46 +22,6 @@ async function loadVolume() {
   }
 }
 loadVolume();
-
-function onFinish(_: { file: UploadFileInfo; event?: ProgressEvent }) {
-  loadVolume();
-}
-
-function beforeUpload({ file }: { file: UploadFileInfo }) {
-  if (!userData.isLoggedIn) {
-    message.info('请先登录');
-    return false;
-  }
-  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error('文件大小不能超过40MB');
-    return false;
-  }
-}
-
-const customRequest = ({
-  file,
-  onFinish,
-  onError,
-  onProgress,
-}: UploadCustomRequestOptions) => {
-  if (userData.token === undefined) {
-    onError();
-    return;
-  }
-  ApiUserPersonal.createVolume(
-    file.name,
-    file.file as File,
-    userData.token,
-    (p) => onProgress({ percent: p })
-  ).then((result) => {
-    if (result.ok) {
-      onFinish();
-    } else {
-      message.error(`上传失败:${result.error.message}`);
-      onError();
-    }
-  });
-};
 
 const showDownloadOptions = ref(false);
 const showTranslateOptions = ref(false);
@@ -114,27 +67,11 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
 </script>
 
 <template>
-  <n-upload
-    multiple
-    directory-dnd
-    :max="5"
-    :custom-request="customRequest"
-    @finish="onFinish"
-    @before-upload="beforeUpload"
-    style="margin-bottom: 32px"
-  >
-    <n-upload-dragger>
-      <div style="margin-bottom: 12px">
-        <n-icon size="48" :depth="3" :component="ArchiveOutlined" />
-      </div>
-      <n-text style="font-size: 16px">
-        点击或者拖动文件到该区域来上传文件
-      </n-text>
-      <n-p depth="3" style="margin: 8px 0 0 0">
-        支持TXT/EPUB文件，这里上传的文件是不公开的
-      </n-p>
-    </n-upload-dragger>
-  </n-upload>
+  <n-p>
+    旧版文件翻译之后会逐步废弃，目前已经关闭上传功能，请使用新的本地版
+    <router-n-a to="/personal">文件翻译</router-n-a>
+    。
+  </n-p>
 
   <workspace-nav />
 
@@ -204,7 +141,7 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
     <n-list>
       <template v-for="volume of sortVolumesJp(volumes.volumes)">
         <n-list-item>
-          <personal-volume
+          <personal-volume-legacy
             :volume="volume"
             :download-token="volumes.downloadToken"
             :get-params="() => ({ translateExpireChapter })"
