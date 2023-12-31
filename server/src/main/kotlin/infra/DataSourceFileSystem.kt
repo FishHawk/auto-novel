@@ -378,21 +378,21 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
                                     NovelFileLangV2.Jp -> throw RuntimeException("文库小说不允许日语下载")
                                     NovelFileLangV2.Zh -> {
                                         zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}<p>")
+                                            el.before("<p>${lines[index]}</p>")
                                         }
                                         el.remove()
                                     }
 
                                     NovelFileLangV2.JpZh -> {
                                         zhLinesList.asReversed().forEach { lines ->
-                                            el.after("<p>${lines[index]}<p>")
+                                            el.after("<p>${lines[index]}</p>")
                                         }
                                         el.attr("style", "opacity:0.4;")
                                     }
 
                                     NovelFileLangV2.ZhJp -> {
                                         zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}<p>")
+                                            el.before("<p>${lines[index]}</p>")
                                         }
                                         el.attr("style", "opacity:0.4;")
                                     }
