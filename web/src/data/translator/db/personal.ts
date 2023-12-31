@@ -254,7 +254,7 @@ const makeTranslationVolumeFile = async ({
         const combinedLinesList = zhLinesList;
         if (lang === 'jp-zh') {
           combinedLinesList.unshift(jpLines);
-        } else {
+        } else if (lang === 'zh-jp') {
           combinedLinesList.push(jpLines);
         }
         for (let i = 0; i < combinedLinesList[0].length; i++) {
