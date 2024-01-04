@@ -196,7 +196,11 @@ const vars = useThemeVars();
           </div>
         </n-layout-header>
 
-        <n-layout :native-scrollbar="false" style="height: calc(100vh - 51px)">
+        <n-layout
+          :native-scrollbar="false"
+          :scrollbar-props="{ trigger: 'none' }"
+          style="height: calc(100vh - 51px)"
+        >
           <n-layout-content style="padding-bottom: 48px">
             <router-view />
           </n-layout-content>
@@ -204,7 +208,11 @@ const vars = useThemeVars();
       </n-layout>
 
       <n-drawer v-if="!isDesktop" v-model:show="showMenuModal" placement="left">
-        <n-drawer-content :native-scrollbar="false" max-width="600">
+        <n-drawer-content
+          max-width="600"
+          :native-scrollbar="false"
+          :scrollbar-props="{ trigger: 'none' }"
+        >
           <n-menu :value="path" :options="collapsedMenuOptions" />
         </n-drawer-content>
       </n-drawer>

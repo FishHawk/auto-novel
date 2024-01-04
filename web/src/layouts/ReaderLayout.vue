@@ -24,7 +24,11 @@ const readerSetting = useReaderSettingStore();
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <n-global-style />
-      <n-layout :native-scrollbar="false" style="height: 100vh">
+      <n-layout
+        :native-scrollbar="false"
+        :scrollbar-props="{ trigger: 'none' }"
+        style="height: 100vh"
+      >
         <router-view :key="$route.path" />
       </n-layout>
     </n-message-provider>

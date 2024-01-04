@@ -286,7 +286,7 @@ const createWebIncorrectCase = async (
     <n-button
       :disabled="!chapterId"
       quaternary
-      type="primary"
+      :type="chapterId ? 'primary' : 'default'"
       @click=" () => navToChapter(chapterId!!)"
     >
       <component :is="$slots.default!" />
@@ -303,7 +303,15 @@ const createWebIncorrectCase = async (
   <div
     ref="placeholderRef"
     class="content"
-    :style="isDesktop ? { padding: '0 90px' } : {}"
+    :style="
+      isDesktop
+        ? {
+            'padding-top': '0',
+            'padding-left': '90px',
+            'padding-right': '90px',
+          }
+        : {}
+    "
   >
     <ResultView
       :result="chapterResult"
@@ -334,7 +342,12 @@ const createWebIncorrectCase = async (
           <n-text depth="3">{{ chapter.titleZh }}</n-text>
         </n-h4>
 
-        <n-space align="center" justify="space-between" style="width: 100%">
+        <n-space
+          align="center"
+          justify="space-between"
+          :wrap="false"
+          style="width: 100%"
+        >
           <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
           <n-button
             quaternary
