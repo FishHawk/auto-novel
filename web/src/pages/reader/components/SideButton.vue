@@ -1,0 +1,15 @@
+<script lang="ts" setup>
+import { Component } from 'vue';
+
+defineProps<{ icon: Component; text: string }>();
+</script>
+
+<template>
+  <n-button style="height: 64px">
+    <div>
+      <n-icon size="24" :component="icon" />
+      <br />
+      {{ text }}
+    </div>
+  </n-button>
+</template>

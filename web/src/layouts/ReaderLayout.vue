@@ -1,5 +1,11 @@
 <script lang="ts" setup>
-import { NConfigProvider, darkTheme, dateZhCN, lightTheme, zhCN } from 'naive-ui';
+import {
+  NConfigProvider,
+  darkTheme,
+  dateZhCN,
+  lightTheme,
+  zhCN,
+} from 'naive-ui';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 
@@ -18,7 +24,9 @@ const readerSetting = useReaderSettingStore();
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <n-global-style />
-      <router-view :key="$route.path" />
+      <n-layout :native-scrollbar="false" style="height: 100vh">
+        <router-view :key="$route.path" />
+      </n-layout>
     </n-message-provider>
   </n-config-provider>
 </template>

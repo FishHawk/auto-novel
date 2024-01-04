@@ -1,46 +1,98 @@
 <script lang="ts" setup>
+import {
+  FormatListBulletedOutlined,
+  LibraryBooksOutlined,
+  TuneOutlined,
+} from '@vicons/material';
 import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
 import { useMessage } from 'naive-ui';
-import { ref, shallowRef } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { getScrollParent } from 'seemly';
+import { computed, ref, shallowRef, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { ResultState } from '@/data/result';
+import { Ok, ResultState } from '@/data/result';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { TranslatorId } from '@/data/translator/translator';
+import { useIsDesktop } from '@/data/util';
 import { buildWebChapterUrl } from '@/data/util_web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
 }>();
 
+const isDesktop = useIsDesktop(800);
 const userData = useUserDataStore();
 const setting = useReaderSettingStore();
 const route = useRoute();
-const router = useRouter();
 const message = useMessage();
 
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
-const chapterId = route.params.chapterId as string;
 
-const showModal = ref(false);
+const showCatalogModal = ref(false);
+const showSettingModal = ref(false);
 
+const currentChapterId = ref(route.params.chapterId as string);
+const chapters = new Map<string, WebNovelChapterDto>();
 const chapterResult = shallowRef<ResultState<WebNovelChapterDto>>();
-async function getChapter() {
-  const result = await ApiWebNovel.getChapter(providerId, novelId, chapterId);
-  chapterResult.value = result;
-  if (result.ok) {
-    document.title = result.value.titleJp;
-    if (userData.isLoggedIn) {
-      ApiUser.updateReadHistoryWeb(providerId, novelId, chapterId);
+
+const loadChapter = async (chapterId: string) => {
+  const chapterStored = chapters.get(chapterId);
+  if (chapterStored === undefined) {
+    const result = await ApiWebNovel.getChapter(providerId, novelId, chapterId);
+    if (result.ok) {
+      chapters.set(chapterId, result.value);
     }
+    return result;
+  } else {
+    return Ok(chapterStored);
   }
-}
-getChapter();
+};
+
+const navToChapter = async (targetChapterId: string) => {
+  currentChapterId.value = targetChapterId;
+};
+
+const placeholderRef = ref<HTMLElement>();
+watch(
+  currentChapterId,
+  async (chapterId, oldChapterId) => {
+    const result = await loadChapter(chapterId);
+    if (placeholderRef.value) {
+      getScrollParent(placeholderRef.value)?.scrollTo({
+        top: 0,
+        behavior: 'instant',
+      });
+    }
+
+    if (oldChapterId !== chapterId) {
+      window.history.pushState(
+        {},
+        document.title,
+        `/novel/${providerId}/${novelId}/${chapterId}`
+      );
+    }
+    if (result.ok) {
+      document.title = result.value.titleJp;
+      chapterResult.value = result;
+      if (userData.isLoggedIn) {
+        ApiUser.updateReadHistoryWeb(providerId, novelId, chapterId);
+      }
+      if (chapters.size > 1 && result.value.nextId) {
+        loadChapter(result.value.nextId);
+      }
+    }
+  },
+  { immediate: true }
+);
+
+const url = computed(() =>
+  buildWebChapterUrl(providerId, novelId, route.params.chapterId as string)
+);
 
 onKeyStroke(['1', '2', '3', '4'], (e) => {
   const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
@@ -61,19 +113,19 @@ onKeyStroke(['1', '2', '3', '4'], (e) => {
 
 onKeyStroke(['ArrowLeft'], (e) => {
   if (chapterResult.value?.ok && chapterResult.value.value.prevId) {
-    const prevId = chapterResult.value.value.prevId;
-    const prevUrl = `/novel/${providerId}/${novelId}/${prevId}`;
-    router.push(prevUrl);
+    navToChapter(chapterResult.value.value.prevId);
     e.preventDefault();
   }
 });
 onKeyStroke(['ArrowRight'], (e) => {
   if (chapterResult.value?.ok && chapterResult.value.value.nextId) {
-    const nextId = chapterResult.value.value.nextId;
-    const nextUrl = `/novel/${providerId}/${novelId}/${nextId}`;
-    router.push(nextUrl);
+    navToChapter(chapterResult.value.value.nextId);
     e.preventDefault();
   }
+});
+onKeyStroke(['Enter'], (e) => {
+  showCatalogModal.value = !showCatalogModal.value;
+  e.preventDefault();
 });
 
 type Paragraph =
@@ -215,7 +267,7 @@ const createWebIncorrectCase = async (
   const result = await ApiSakura.createWebIncorrectCase({
     providerId,
     novelId,
-    chapterId,
+    chapterId: route.params.chapterId as string,
     jp,
     zh,
     contextJp,
@@ -231,45 +283,76 @@ const createWebIncorrectCase = async (
 
 <template>
   <DefineChapterLink v-slot="{ $slots, id: chapterId }">
-    <RouterNA
-      v-if="chapterId"
-      :to="`/novel/${providerId}/${novelId}/${chapterId}`"
+    <n-button
+      :disabled="!chapterId"
+      quaternary
+      type="primary"
+      @click=" () => navToChapter(chapterId!!)"
     >
-      <n-button quaternary type="primary">
-        <component :is="$slots.default!" />
-      </n-button>
-    </RouterNA>
-    <n-button v-else disabled quaternary>
       <component :is="$slots.default!" />
     </n-button>
   </DefineChapterLink>
 
-  <reader-setting-modal v-model:show="showModal" />
+  <reader-setting-modal v-model:show="showSettingModal" />
+  <catalog-modal
+    v-model:show="showCatalogModal"
+    :chapterId="currentChapterId"
+    @nav="navToChapter"
+  />
 
-  <div class="content">
+  <div
+    ref="placeholderRef"
+    class="content"
+    :style="isDesktop ? { padding: '0 90px' } : {}"
+  >
     <ResultView
       :result="chapterResult"
       :showEmpty="() => false"
       v-slot="{ value: chapter }"
     >
-      <n-h2 style="text-align: center">
-        <n-a :href="buildWebChapterUrl(providerId, novelId, chapterId)">{{
-          chapter.titleJp
-        }}</n-a>
-        <br />
-        <n-text depth="3">{{ chapter.titleZh }}</n-text>
-      </n-h2>
-
-      <n-space align="center" justify="space-between" style="width: 100%">
+      <n-space
+        v-if="isDesktop"
+        align="center"
+        justify="space-between"
+        :wrap="false"
+        style="width: 100%; margin-top: 20px"
+      >
         <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-        <RouterNA :to="`/novel/${providerId}/${novelId}`">
-          <n-button quaternary type="primary">目录</n-button>
-        </RouterNA>
-        <n-button quaternary type="primary" @click="showModal = true">
-          设置
-        </n-button>
+
+        <n-h4 style="text-align: center; margin: 0">
+          <n-a :href="url">{{ chapter.titleJp }}</n-a>
+          <br />
+          <n-text depth="3">{{ chapter.titleZh }}</n-text>
+        </n-h4>
         <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
       </n-space>
+
+      <template v-else>
+        <n-h4 style="text-align: center">
+          <n-a :href="url">{{ chapter.titleJp }}</n-a>
+          <br />
+          <n-text depth="3">{{ chapter.titleZh }}</n-text>
+        </n-h4>
+
+        <n-space align="center" justify="space-between" style="width: 100%">
+          <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
+          <n-button
+            quaternary
+            type="primary"
+            tag="a"
+            :href="`/novel/${providerId}/${novelId}`"
+          >
+            详情
+          </n-button>
+          <n-button quaternary type="primary" @click="showCatalogModal = true">
+            目录
+          </n-button>
+          <n-button quaternary type="primary" @click="showSettingModal = true">
+            设置
+          </n-button>
+          <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+        </n-space>
+      </template>
 
       <n-divider />
 
@@ -312,6 +395,30 @@ const createWebIncorrectCase = async (
       <n-space align="center" justify="space-between" style="width: 100%">
         <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
         <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+      </n-space>
+
+      <n-space
+        v-if="isDesktop"
+        size="large"
+        vertical
+        style="position: fixed; right: 20px; bottom: 20px"
+      >
+        <side-button
+          tag="a"
+          :href="`/novel/${providerId}/${novelId}`"
+          text="详情"
+          :icon="LibraryBooksOutlined"
+        />
+        <side-button
+          text="目录"
+          :icon="FormatListBulletedOutlined"
+          @click="showCatalogModal = true"
+        />
+        <side-button
+          text="设置"
+          :icon="TuneOutlined"
+          @click="showSettingModal = true"
+        />
       </n-space>
     </ResultView>
   </div>

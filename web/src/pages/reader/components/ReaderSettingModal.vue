@@ -63,7 +63,7 @@ defineEmits<{
   </DefineOption>
 
   <card-modal
-    title="阅读设置"
+    title="设置"
     :show="show"
     @update:show="$emit('update:show', $event)"
   >
