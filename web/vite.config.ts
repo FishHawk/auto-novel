@@ -1,12 +1,12 @@
-import { ProxyOptions, loadEnv } from 'vite';
-import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import AutoImport from 'unplugin-auto-import/vite';
-import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import wasm from 'vite-plugin-wasm';
+import Components from 'unplugin-vue-components/vite';
+import { ProxyOptions, loadEnv } from 'vite';
 import topLevelAwait from 'vite-plugin-top-level-await';
+import wasm from 'vite-plugin-wasm';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), 'LOCAL');

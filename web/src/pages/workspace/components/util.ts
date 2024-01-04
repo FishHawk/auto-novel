@@ -3,7 +3,7 @@ import { TranslateTaskDesc } from '@/data/translator/api';
 export const parseTask = (task: string) => {
   const [taskString, queryString] = task.split('?');
   const { start, end, expire } = Object.fromEntries(
-    new URLSearchParams(queryString)
+    new URLSearchParams(queryString) as any
   );
 
   let desc: TranslateTaskDesc;
