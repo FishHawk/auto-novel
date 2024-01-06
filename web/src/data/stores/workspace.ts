@@ -57,6 +57,11 @@ export const useSakuraWorkspaceStore = defineStore('sakura-workspace', {
     deleteJob(task: string) {
       this.jobs = this.jobs.filter((j) => j.task !== task);
     },
+    topJob(job: TranslateJob) {
+      this.jobs.sort((a, b) => {
+        return a.task == job.task ? -1 : b.task == job.task ? 1 : 0;
+      });
+    },
 
     addUncompletedJob(job: UncompletedTranslateJob) {
       this.deleteUncompletedJob(job);
@@ -132,6 +137,11 @@ export const useGptWorkspaceStore = defineStore('gpt-workspace', {
     },
     deleteJob(task: string) {
       this.jobs = this.jobs.filter((j) => j.task !== task);
+    },
+    topJob(job: TranslateJob) {
+      this.jobs.sort((a, b) => {
+        return a.task == job.task ? -1 : b.task == job.task ? 1 : 0;
+      });
     },
 
     addUncompletedJob(job: UncompletedTranslateJob) {

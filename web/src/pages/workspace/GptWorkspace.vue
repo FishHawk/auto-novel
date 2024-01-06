@@ -25,7 +25,7 @@ const getNextJob = () => {
   return job;
 };
 
-const deleteJob = async (task: string) => {
+const deleteJob = (task: string) => {
   if (processedJobs.value.has(task)) {
     message.error('任务被翻译器占用');
     return;
@@ -131,13 +131,21 @@ const clearCache = async () => {
           <td style="white-space: nowrap">
             <n-time :time="job.createAt" type="relative" />
             <br />
-            <async-button
+            <n-button
+              type="primary"
+              text
+              @click="() => gptWorkspace.topJob(job)"
+            >
+              置顶
+            </n-button>
+            <n-button
               type="error"
               text
-              @async-click="() => deleteJob(job.task)"
+              @click="() => deleteJob(job.task)"
+              style="margin-left: 8px"
             >
               删除
-            </async-button>
+            </n-button>
           </td>
         </tr>
       </tbody>
