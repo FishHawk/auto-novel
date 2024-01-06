@@ -47,8 +47,19 @@ const modify = async (
 ) => {
   // 准备读Epub
   const reader = new ZipReader(new BlobReader(file));
+  const entriesFilenameSet = new Set<string>();
   const entries = (await reader.getEntries())
     .filter((it) => !it.directory)
+    // 如果文件名重复，则保留后压缩的文件
+    .reverse()
+    .filter((it) => {
+      if (entriesFilenameSet.has(it.filename)) {
+        return false;
+      } else {
+        entriesFilenameSet.add(it.filename);
+        return true;
+      }
+    })
     .sort((e1, e2) => {
       const pathToNumber = (path: string) => {
         if (path === 'mimetype') return 3;
