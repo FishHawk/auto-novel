@@ -39,7 +39,6 @@ const roleToReadableText = (role: UserRole) => {
         <n-tab name="/account">帐号</n-tab>
         <n-tab name="/favorite">收藏</n-tab>
         <n-tab name="/read-history">历史</n-tab>
-        <n-tab name="/personal-legacy">文件翻译（旧版）</n-tab>
       </n-tabs>
       <router-view />
     </template>
