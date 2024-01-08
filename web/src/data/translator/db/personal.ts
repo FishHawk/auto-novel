@@ -342,11 +342,11 @@ const epubParserV1: EpubParser = {
           });
           el.parentNode!!.removeChild(el);
         } else if (lang === 'jp-zh') {
-          zhLinesList.reverse().forEach((lines) => {
+          zhLinesList.forEach((lines) => {
             const p = document.createElement('p');
             const t = document.createTextNode(lines[index]);
             p.appendChild(t);
-            el.parentNode!!.insertBefore(p, el);
+            el.parentNode!!.insertBefore(p, el.nextSibling);
           });
           el.setAttribute('style', 'opacity:0.4;');
         } else {
