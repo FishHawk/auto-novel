@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 defineProps<{
   value: string;
-  disabled: boolean;
   options: { label: string; value: string }[];
 }>();
 defineEmits(['update:value']);
@@ -9,11 +8,7 @@ defineEmits(['update:value']);
 
 <template>
   <AdvanceOption>
-    <n-radio-group
-      :value="value"
-      @update:value="$emit('update:value', $event)"
-      :disabled="disabled"
-    >
+    <n-radio-group :value="value" @update:value="$emit('update:value', $event)">
       <n-radio
         v-for="option in options"
         :key="option.value"

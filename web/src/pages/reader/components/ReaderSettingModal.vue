@@ -13,8 +13,8 @@ const isDesktop = useIsDesktop(600);
 const modeOptions = [
   { value: 'jp', label: '日文' },
   { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中文/日文' },
-  { value: 'mix-reverse', label: '日文/中文' },
+  { value: 'mix', label: '中日' },
+  { value: 'mix-reverse', label: '日中' },
 ];
 const translationModeOptions = [
   { label: '优先', value: 'priority' },

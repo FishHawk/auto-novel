@@ -6,8 +6,6 @@ export interface Setting {
   isDark: boolean;
   tocSortReverse: boolean;
   downloadFilenameType: 'jp' | 'zh';
-
-  isDownloadFormatSameAsReaderFormat: boolean;
   downloadFormat: {
     mode: 'jp' | 'zh' | 'mix' | 'mix-reverse';
     translationsMode: 'parallel' | 'priority';
@@ -22,7 +20,6 @@ export const useSettingStore = defineStore('setting', {
       isDark: false,
       tocSortReverse: false,
       downloadFilenameType: 'zh',
-      isDownloadFormatSameAsReaderFormat: true,
       downloadFormat: {
         mode: 'mix',
         translationsMode: 'priority',

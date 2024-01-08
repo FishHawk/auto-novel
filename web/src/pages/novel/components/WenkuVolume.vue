@@ -6,7 +6,6 @@ import { computed, ref } from 'vue';
 import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import {
@@ -27,7 +26,6 @@ const emits = defineEmits<{ deleted: [] }>();
 const message = useMessage();
 const userData = useUserDataStore();
 const setting = useSettingStore();
-const readerSetting = useReaderSettingStore();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
@@ -69,10 +67,7 @@ const translatorLabels = computed(
 );
 
 const file = computed(() => {
-  const { mode, translationsMode, translations } =
-    setting.isDownloadFormatSameAsReaderFormat
-      ? readerSetting
-      : setting.downloadFormat;
+  const { mode, translationsMode, translations } = setting.downloadFormat;
 
   let lang: 'zh' | 'zh-jp' | 'jp-zh';
   if (mode === 'jp' || mode === 'zh') {

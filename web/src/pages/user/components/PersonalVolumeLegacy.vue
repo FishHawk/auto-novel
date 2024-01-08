@@ -5,7 +5,6 @@ import { computed, ref } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiUserPersonal, PersonalVolume } from '@/data/api/api_user_personal';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
 import {
   buildPersonalLegacyTranslateTask,
@@ -26,7 +25,6 @@ const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const setting = useSettingStore();
-const readerSetting = useReaderSettingStore();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
@@ -66,10 +64,7 @@ const translatorLabels = computed(
 );
 
 const downloadFile = computed(() => {
-  const { mode, translationsMode, translations } =
-    setting.isDownloadFormatSameAsReaderFormat
-      ? readerSetting
-      : setting.downloadFormat;
+  const { mode, translationsMode, translations } = setting.downloadFormat;
 
   let lang: 'zh' | 'zh-jp' | 'jp-zh';
   if (mode === 'jp' || mode === 'zh') {

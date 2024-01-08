@@ -5,7 +5,6 @@ import { computed, ref } from 'vue';
 import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import {
@@ -41,7 +40,6 @@ const emit = defineEmits<{
 }>();
 
 const setting = useSettingStore();
-const readerSetting = useReaderSettingStore();
 const message = useMessage();
 const userData = useUserDataStore();
 const gptWorkspace = useGptWorkspaceStore();
@@ -60,10 +58,7 @@ const files = computed(() => {
   const title =
     setting.downloadFilenameType === 'jp' ? titleJp : titleZh ?? titleJp;
 
-  const { mode, translationsMode, translations } =
-    setting.isDownloadFormatSameAsReaderFormat
-      ? readerSetting
-      : setting.downloadFormat;
+  const { mode, translationsMode, translations } = setting.downloadFormat;
 
   const type = setting.downloadFormat.type;
 

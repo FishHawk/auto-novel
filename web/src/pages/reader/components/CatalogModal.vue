@@ -81,11 +81,6 @@ const currentKey = computed(() => {
         :items="toc"
         :default-scroll-key="currentKey"
       >
-        <!-- :default-scroll-index="
-        toc.find((it) => it.chapterId === chapterId)?.index ?? 0
-      " -->
-
-        <!-- v-for="item in setting.tocSortReverse ? toc.slice().reverse() : toc" -->
         <template #default="{ item }">
           <div
             :key="item.index"

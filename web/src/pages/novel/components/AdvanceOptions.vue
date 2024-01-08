@@ -155,19 +155,10 @@ const translationOptions = [
       </n-list-item>
 
       <n-list-item>
-        <AdvanceOptionSwitch
-          title="下载文件格式与阅读设置一致"
-          description="使用在线章节的阅读设置作为下载文件的格式，启用时会禁止下面的自定义设置。"
-          v-model:value="setting.isDownloadFormatSameAsReaderFormat"
-        />
-      </n-list-item>
-
-      <n-list-item>
         <AdvanceOptionRadio
           title="自定义下载文件语言"
           description="设置下载文件的语言。注意部分EPUB阅读器不支持自定义字体颜色，日文段落会被强制使用黑色字体。"
           v-model:value="setting.downloadFormat.mode"
-          :disabled="setting.isDownloadFormatSameAsReaderFormat"
           :options="modeOptions"
         />
       </n-list-item>
@@ -177,13 +168,11 @@ const translationOptions = [
           title="自定义下载文件翻译"
           description="设置下载文件使用的翻译。注意右侧选中的翻译的顺序，优先模式顺序代表优先级，并列模式顺序代表翻译的排列顺序。"
           v-model:value="setting.downloadFormat.translationsMode"
-          :disabled="setting.isDownloadFormatSameAsReaderFormat"
           :options="translationModeOptions"
         >
           <n-transfer
             v-model:value="setting.downloadFormat.translations"
             :options="translationOptions"
-            :disabled="setting.isDownloadFormatSameAsReaderFormat"
             size="small"
             style="height: 190px; margin-top: 8px; font-size: 12px"
           />
@@ -195,7 +184,6 @@ const translationOptions = [
           title="自定义下载文件类型"
           description="设置下载文件的类型。"
           v-model:value="setting.downloadFormat.type"
-          :disabled="false"
           :options="typeOptions"
         />
       </n-list-item>
