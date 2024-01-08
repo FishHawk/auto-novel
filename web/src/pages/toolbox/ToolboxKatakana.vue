@@ -51,7 +51,7 @@ const loadFile = () => {
         Array.from(doc.getElementsByClassName('rt')).forEach((node) =>
           node.parentNode!!.removeChild(node)
         );
-        fullContent.push(doc.textContent ?? '');
+        fullContent.push(doc.body.textContent ?? '');
       });
       return fullContent.join('\n');
     };
