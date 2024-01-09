@@ -146,13 +146,13 @@ getNovel();
       :showEmpty="() => false"
       v-slot="{ value: novel }"
     >
-      <n-h1 prefix="bar" style="font-size: 22px">
+      <n-h3 prefix="bar">
         <n-a :href="buildWebNovelUrl(providerId, novelId)">{{
           novel.titleJp
         }}</n-a>
         <br />
         <n-text depth="3">{{ novel.titleZh }}</n-text>
-      </n-h1>
+      </n-h3>
 
       <n-p v-if="novel.authors.length > 0">
         作者：
