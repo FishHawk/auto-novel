@@ -203,13 +203,13 @@ const submitGlossary = async (glossary: { [key: string]: string }) => {
       <SectionHeader title="中文章节" />
       <UploadButton type="zh" :novelId="novelId" @uploadFinished="getNovel()" />
       <n-ul>
-        <n-li v-for="fileName in metadata.volumeZh">
+        <n-li v-for="volumeId in metadata.volumeZh">
           <n-a
-            :href="`/files-wenku/${novelId}/${fileName}`"
+            :href="`/files-wenku/${novelId}/${encodeURIComponent(volumeId)}`"
             target="_blank"
-            :download="fileName"
+            :download="volumeId"
           >
-            {{ fileName }}
+            {{ volumeId }}
           </n-a>
         </n-li>
       </n-ul>
