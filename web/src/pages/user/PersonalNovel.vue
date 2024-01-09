@@ -24,25 +24,9 @@ async function loadVolume() {
 loadVolume();
 
 const showDownloadOptions = ref(false);
-const showTranslateOptions = ref(false);
-const translateExpireChapter = ref(false);
-
-function toggleTranslateOptions() {
-  if (showTranslateOptions.value) {
-    showTranslateOptions.value = false;
-  } else {
-    showTranslateOptions.value = true;
-    showDownloadOptions.value = false;
-  }
-}
 
 function toggleDownloadOptions() {
-  if (showDownloadOptions.value) {
-    showDownloadOptions.value = false;
-  } else {
-    showDownloadOptions.value = true;
-    showTranslateOptions.value = false;
-  }
+  showDownloadOptions.value = !showDownloadOptions.value;
 }
 
 const modeOptions = [
@@ -68,17 +52,16 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
 
 <template>
   <n-p>
-    旧版文件翻译之后会逐步废弃，目前已经关闭上传功能，请使用新的本地版
+    旧版文件翻译正在逐步废弃，请使用新的本地版
     <router-n-a to="/personal">文件翻译</router-n-a>
     。
   </n-p>
 
   <workspace-nav />
 
-  <n-button-group style="margin-bottom: 8px">
-    <n-button @click="toggleTranslateOptions()"> 翻译设置 </n-button>
-    <n-button @click="toggleDownloadOptions()">下载设置</n-button>
-  </n-button-group>
+  <n-button @click="toggleDownloadOptions()" style="margin-bottom: 8px">
+    下载设置
+  </n-button>
 
   <ResultView
     :result="volumesResult"
@@ -86,20 +69,10 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
     v-slot="{ value: volumes }"
   >
     <n-collapse-transition
-      :show="showTranslateOptions || showDownloadOptions"
+      :show="showDownloadOptions"
       style="margin-bottom: 16px"
     >
-      <n-list v-if="showTranslateOptions" bordered>
-        <n-list-item>
-          <AdvanceOptionSwitch
-            title="翻译过期章节"
-            description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
-            v-model:value="translateExpireChapter"
-          />
-        </n-list-item>
-      </n-list>
-
-      <n-list v-if="showDownloadOptions" bordered>
+      <n-list bordered>
         <n-list-item>
           <AdvanceOptionRadio
             title="自定义下载文件语言"
@@ -133,44 +106,9 @@ function sortVolumesJp(volumes: PersonalVolume[]) {
           <personal-volume-legacy
             :volume="volume"
             :download-token="volumes.downloadToken"
-            :get-params="() => ({ translateExpireChapter })"
           />
         </n-list-item>
       </template>
     </n-list>
   </ResultView>
 </template>
-
-<style scoped>
-.flex-container {
-  display: flex;
-  flex-direction: row;
-}
-.flex-item-left {
-  padding: 16px;
-  overflow-y: auto;
-}
-.flex-item-right {
-  padding: 16px;
-  overflow-y: auto;
-}
-
-@media not (max-width: 800px) {
-  .flex-item-left {
-    flex: 0 0 600px;
-    height: calc(100vh - 32px);
-    box-shadow: 0 0 4px -1px rgba(0, 0, 0, 0.2), 0 0 5px 0 rgba(0, 0, 0, 0.14),
-      0 0 10px 0 rgba(0, 0, 0, 0.12);
-  }
-  .flex-item-right {
-    flex: 1 0 600px;
-    height: calc(100vh - 32px);
-  }
-}
-
-@media (max-width: 800px) {
-  .flex-container {
-    flex-direction: column;
-  }
-}
-</style>

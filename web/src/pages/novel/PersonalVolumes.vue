@@ -89,9 +89,9 @@ const deleteAllVolumes = () => {
 
     <n-p>
       <b>
-        这是全新的文件翻译版块，所有操作均在浏览器内完成，无需注册或登录。即使服务器发生故障，系统仍能正常运行。
-        <br />
-        旧版文件翻译仍可继续使用，但将逐步弃用。目前已无法上传新文件。
+        这是全新的文件翻译版块，
+        <router-n-a to="/personal-legacy"> 旧版文件翻译 </router-n-a>
+        仍可继续使用，但将逐步弃用。
         <br />
         该板块处于测试阶段，难免遇到问题，欢迎反馈。
       </b>
@@ -114,7 +114,7 @@ const deleteAllVolumes = () => {
           点击或者拖动文件到该区域来加载文件
         </n-text>
         <n-p depth="3" style="margin: 8px 0 0 0">
-          支持TXT/EPUB文件，文件将保存在你的浏览器数据里面
+          支持TXT/EPUB文件，文件和翻译进度将保存在你的浏览器里面
         </n-p>
       </n-upload-dragger>
     </n-upload>
