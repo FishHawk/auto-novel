@@ -10,7 +10,6 @@ const forEachXHtmlFile = async (
   file: File,
   callback: (path: string, doc: Document) => void
 ) => {
-  // TODO: 修改成解析opf的方式
   const reader = new ZipReader(new BlobReader(file));
   const entries = new Map(
     (await reader.getEntries()).map((obj) => [obj.filename, obj])

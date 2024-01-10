@@ -18,7 +18,7 @@ export const parseTask = (task: string) => {
     desc = { type: type as any, volumeId };
   } else if (taskString.startsWith('personal2/')) {
     const [type, volumeId] = taskString.split('/');
-    desc = { type: type as any, volumeId };
+    desc = { type: 'personal', volumeId };
   } else {
     throw 'quit';
   }

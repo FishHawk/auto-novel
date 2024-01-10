@@ -4,6 +4,7 @@
   "name": "轻小说机翻机器人",
   "description": "解除浏览器跨域限制，以启用网页端的机翻功能",
   "permissions": [
+    "<all_urls>",
     "*://*.fishhawk.top/*",
     "*://*.baidu.com/*",
     "*://*.youdao.com/*",

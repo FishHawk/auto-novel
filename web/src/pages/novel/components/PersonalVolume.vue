@@ -31,7 +31,7 @@ const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
   const params = props.getParams();
   return translateTask?.value?.startTask(
-    { type: 'personal2', volumeId: props.volume.volumeId },
+    { type: 'personal', volumeId: props.volume.volumeId },
     {
       ...params,
       syncFromProvider: false,

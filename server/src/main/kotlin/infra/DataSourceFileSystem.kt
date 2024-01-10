@@ -232,21 +232,6 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
         }
 
     //
-    private fun volumeGlossaryPath() =
-        volumesDir / "$volumeId.unpack" / "glossary.json"
-
-    suspend fun getVolumeGlossary() =
-        getGlossary(path = volumeGlossaryPath())
-
-    suspend fun setVolumeGlossary(
-        glossaryUuid: String,
-        glossary: Map<String, String>,
-    ) = setGlossary(
-        path = volumeGlossaryPath(),
-        glossaryUuid = glossaryUuid,
-        glossary = glossary,
-    )
-
     private fun chapterGlossaryPath(translatorId: TranslatorId, chapterId: String) =
         volumesDir / "$volumeId.unpack" / "${translatorId.serialName()}.g" / chapterId
 

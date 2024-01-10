@@ -215,15 +215,6 @@ export const buildWenkuTranslateTask = (
   }
 ) => `wenku/${novelId}/${volumeId}` + buildTaskQueryString(params);
 
-export const buildPersonalLegacyTranslateTask = (
-  volumeId: string,
-  params: {
-    start: number;
-    end: number;
-    expire: boolean;
-  }
-) => `personal/${volumeId}` + buildTaskQueryString(params);
-
 export const buildPersonalTranslateTask = (
   volumeId: string,
   params: {
@@ -231,4 +222,4 @@ export const buildPersonalTranslateTask = (
     end: number;
     expire: boolean;
   }
-) => `personal2/${volumeId}` + buildTaskQueryString(params);
+) => `personal/${volumeId}` + buildTaskQueryString(params);
