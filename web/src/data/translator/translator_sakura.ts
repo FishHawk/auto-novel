@@ -1,5 +1,3 @@
-import { MD5 } from 'crypto-es/lib/md5';
-
 import { Llamacpp } from './api/llamacpp';
 import { OpenAi } from './api/openai';
 import { createLengthSegmentor } from './common';
@@ -16,7 +14,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   private api: Llamacpp | OpenAi;
   version: '0.8' | '0.9' = '0.8';
-  fingerprint?: string;
+  distance8Q4?: number;
 
   constructor({
     client,
@@ -45,11 +43,12 @@ export class SakuraTranslator implements SegmentTranslator {
       model = await SakuraOpenai.detectModel(this.api);
     }
     this.version = model.version;
-    this.fingerprint = model.fingerprint;
+    this.distance8Q4 = model.distance8Q4;
     return this;
   }
 
-  allowUpload = () => this.fingerprint === '96f7571a10dea473812b766f0e42d92e';
+  allowUpload = () =>
+    this.distance8Q4 === undefined ? false : this.distance8Q4 < 0.01;
 
   async translate(
     seg: string[],
@@ -135,7 +134,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
 interface SakuraModel {
   version: '0.8' | '0.9';
-  fingerprint?: string;
+  distance8Q4?: number;
 }
 
 namespace SakuraLlamacpp {
@@ -153,7 +152,7 @@ namespace SakuraLlamacpp {
         {
           prompt: makePrompt('国境の長いトンネルを抜けると雪国であった', '0.8'),
           n_predict: 20,
-          n_probs: 2,
+          n_probs: 1,
           seed: 0,
         },
         {
@@ -169,12 +168,36 @@ namespace SakuraLlamacpp {
           return { version };
         }
 
-        const fingerprint = MD5(
-          completion.completion_probabilities
-            .map((it) => `${it.probs[1].tok_str}:${it.probs[1].prob}`)
-            .join('/')
-        ).toString();
-        return { version, fingerprint };
+        const fingerprintVector8Q4 = [
+          0.4115177392959595, 0.6806630492210388, 0.8027622103691101,
+          0.36451900005340576, 0.8880155682563782, 0.5641778707504272,
+          0.4389311969280243, 0.3928905129432678, 0.7579050660133362,
+          0.9564539194107056, 1, 1,
+        ];
+
+        const fingerprintVector = completion.completion_probabilities.map(
+          (it) => it.probs[0].prob
+        );
+
+        const calculateDistance = (a: number[], b: number[]) => {
+          if (a.length !== b.length) {
+            return Infinity;
+          }
+          let d = 0;
+          for (let i = 0; i < a.length; i++) {
+            const numA = a[i];
+            const numB = b.at(i) ?? 0;
+            d += Math.abs(numA - numB) ** 2;
+          }
+          return d;
+        };
+
+        const distance8Q4 = calculateDistance(
+          fingerprintVector8Q4,
+          fingerprintVector
+        );
+
+        return { version, distance8Q4 };
       });
 
   export const translateText = (

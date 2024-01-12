@@ -111,10 +111,8 @@ const testSakuraWorker = async () => {
         `原文：${input}`,
         `译文：${output}`,
         `版本：${segTranslator.version}`,
-        `${
-          segTranslator.allowUpload()
-            ? '允许上传'
-            : `禁止上传:${segTranslator.fingerprint ?? '未知指纹'}`
+        `${segTranslator.allowUpload() ? '允许上传' : '禁止上传'} D8Q4:${
+          segTranslator.distance8Q4 ?? '未知'
         }`,
       ].join('\n')
     );
