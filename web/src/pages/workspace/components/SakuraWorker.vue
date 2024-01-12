@@ -7,6 +7,7 @@ import { client } from '@/data/api/client';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 
 import { parseTask } from './util';
+import { SakuraTranslator } from '@/data/translator/translator_sakura';
 
 const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
   id: string;
@@ -103,7 +104,20 @@ const testSakuraWorker = async () => {
     });
     const result = await translator.translate([input]);
     const output = result[0];
-    message.success(`原文：${input}\n译文：${output}`);
+
+    const segTranslator = translator.segTranslator as any as SakuraTranslator;
+    message.success(
+      [
+        `原文：${input}`,
+        `译文：${output}`,
+        `版本：${segTranslator.version}`,
+        `${
+          segTranslator.allowUpload()
+            ? '允许上传'
+            : `禁止上传:${segTranslator.fingerprint ?? '未知指纹'}`
+        }`,
+      ].join('\n')
+    );
   } catch (e: any) {
     message.error(`Sakura报错：${e}`);
   }

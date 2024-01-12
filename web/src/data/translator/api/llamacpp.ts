@@ -24,15 +24,24 @@ export class Llamacpp {
 
 interface LlamaCompletion {
   prompt: string;
-  n_predict: number;
-  temperature: number;
-  top_k: number;
-  top_p: number;
-  repeat_penalty: number;
+  n_predict?: number;
+  temperature?: number;
+  top_k?: number;
+  top_p?: number;
+  repeat_penalty?: number;
   frequency_penalty?: number;
+  n_probs?: number;
+  seed?: number;
 }
 
 interface LlamaCompletionResponse {
+  completion_probabilities?: Array<{
+    content: string;
+    probs: Array<{
+      prob: number;
+      tok_str: string;
+    }>;
+  }>;
   content: string;
   model: string;
   stopped_eos: boolean;
