@@ -164,7 +164,10 @@ namespace SakuraLlamacpp {
           ? '0.9'
           : '0.8';
 
-        if (!completion.completion_probabilities) {
+        if (
+          completion.completion_probabilities === undefined ||
+          completion.completion_probabilities.length === 0
+        ) {
           return { version };
         }
 
