@@ -318,7 +318,7 @@ interface EpubParser {
 
 const epubParserV1: EpubParser = {
   extractText: (doc: Document) => {
-    Array.from(doc.getElementsByClassName('rt')).forEach((node) =>
+    Array.from(doc.getElementsByTagName('rt')).forEach((node) =>
       node.parentNode!!.removeChild(node)
     );
     return Array.from(doc.body.getElementsByTagName('p'))
