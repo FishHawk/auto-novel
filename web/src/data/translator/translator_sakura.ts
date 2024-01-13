@@ -296,9 +296,14 @@ namespace SakuraOpenai {
       const version: '0.8' | '0.9' = completion.model.includes('0.9')
         ? '0.9'
         : '0.8';
-      const allowUpload = completion.model.includes('0.8-Q4');
       // TODO: 等待sakura支持返回概率
-      return { version, distance8Q4: allowUpload ? 0 : Infinity };
+      return {
+        version,
+        distance: {
+          v8q4: completion.model.includes('0.8-Q4') ? 0 : Infinity,
+          v8q5: completion.model.includes('0.8-Q5') ? 0 : Infinity,
+        },
+      };
     });
 
   export const translateText = (
