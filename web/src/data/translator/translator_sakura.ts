@@ -13,8 +13,7 @@ export class SakuraTranslator implements SegmentTranslator {
   log: (message: string) => void;
 
   private api: Llamacpp | OpenAi;
-  version: '0.8' | '0.9' = '0.8';
-  distance8Q4?: number;
+  model: SakuraModel = { version: '0.8' };
 
   constructor({
     client,
@@ -42,13 +41,19 @@ export class SakuraTranslator implements SegmentTranslator {
     } else {
       model = await SakuraOpenai.detectModel(this.api);
     }
-    this.version = model.version;
-    this.distance8Q4 = model.distance8Q4;
+    this.model = model;
     return this;
   }
 
-  allowUpload = () =>
-    this.distance8Q4 === undefined ? false : this.distance8Q4 < 0.01;
+  allowUpload = () => {
+    if (this.model.distance === undefined) {
+      return false;
+    } else {
+      return [this.model.distance.v8q4, this.model.distance.v8q5].some(
+        (d) => d < 0.01
+      );
+    }
+  };
 
   async translate(
     seg: string[],
@@ -116,7 +121,7 @@ export class SakuraTranslator implements SegmentTranslator {
     if (this.api.id === 'llamacpp') {
       return SakuraLlamacpp.translateText(
         this.api,
-        this.version,
+        this.model.version,
         text,
         maxNewToken,
         tryFixDegradation
@@ -134,7 +139,10 @@ export class SakuraTranslator implements SegmentTranslator {
 
 interface SakuraModel {
   version: '0.8' | '0.9';
-  distance8Q4?: number;
+  distance?: {
+    v8q4: number;
+    v8q5: number;
+  };
 }
 
 namespace SakuraLlamacpp {
@@ -171,12 +179,20 @@ namespace SakuraLlamacpp {
           return { version };
         }
 
-        const fingerprintVector8Q4 = [
-          0.4115177392959595, 0.6806630492210388, 0.8027622103691101,
-          0.36451900005340576, 0.8880155682563782, 0.5641778707504272,
-          0.4389311969280243, 0.3928905129432678, 0.7579050660133362,
-          0.9564539194107056, 1, 1,
-        ];
+        const fingerprintVectorKnown = {
+          v8q4: [
+            0.4115177392959595, 0.6806630492210388, 0.8027622103691101,
+            0.36451900005340576, 0.8880155682563782, 0.5641778707504272,
+            0.4389311969280243, 0.3928905129432678, 0.7579050660133362,
+            0.9564539194107056, 1, 1,
+          ],
+          v8q5: [
+            0.4395886957645416, 0.6967197060585022, 0.9305418729782104,
+            0.5735085606575012, 0.5760149955749512, 1, 0.45953643321990967,
+            0.9667923450469971, 0.22573211789131165, 0.23779834806919098, 1,
+            0.3153495490550995, 0.3401365280151367, 1, 1,
+          ],
+        };
 
         const fingerprintVector = completion.completion_probabilities.map(
           (it) => it.probs[0].prob
@@ -195,12 +211,18 @@ namespace SakuraLlamacpp {
           return d;
         };
 
-        const distance8Q4 = calculateDistance(
-          fingerprintVector8Q4,
-          fingerprintVector
-        );
+        const distance = {
+          v8q4: calculateDistance(
+            fingerprintVectorKnown.v8q4,
+            fingerprintVector
+          ),
+          v8q5: calculateDistance(
+            fingerprintVectorKnown.v8q5,
+            fingerprintVector
+          ),
+        };
 
-        return { version, distance8Q4 };
+        return { version, distance };
       });
 
   export const translateText = (

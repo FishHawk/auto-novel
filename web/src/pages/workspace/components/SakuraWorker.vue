@@ -106,13 +106,16 @@ const testSakuraWorker = async () => {
     const output = result[0];
 
     const segTranslator = translator.segTranslator as any as SakuraTranslator;
+    const distance = segTranslator.model.distance;
     message.success(
       [
         `原文：${input}`,
         `译文：${output}`,
-        `版本：${segTranslator.version}`,
-        `${segTranslator.allowUpload() ? '允许上传' : '禁止上传'} D8Q4:${
-          segTranslator.distance8Q4 ?? '未知'
+        `版本：${segTranslator.model.version} ${
+          segTranslator.allowUpload() ? '允许上传' : '禁止上传'
+        }`,
+        `距离： V8Q4:${distance?.v8q4 ?? '未知'} V8Q5:${
+          distance?.v8q5 ?? '未知'
         }`,
       ].join('\n')
     );
