@@ -6,7 +6,6 @@ import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
-import { useUserDataStore } from '@/data/stores/user_data';
 import {
   buildWebTranslateTask,
   useGptWorkspaceStore,
@@ -41,7 +40,6 @@ const emit = defineEmits<{
 
 const setting = useSettingStore();
 const message = useMessage();
-const userData = useUserDataStore();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
@@ -125,11 +123,6 @@ const submitPublicSakuraJob = async () => {
 };
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  if (id === 'sakura' && !userData.isTrusted) {
-    message.error('目前普通用户无法使用Sakura工作区翻译网络小说');
-    return;
-  }
-
   const options = advanceOptions.value!!.getTranslationOptions();
   const task = buildWebTranslateTask(providerId, novelId, {
     start: options.startIndex,

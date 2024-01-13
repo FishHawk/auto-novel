@@ -157,48 +157,41 @@ fun Route.routeWenkuNovel() {
     }
 
     // Translate
-    authenticateDb(optional = true) {
-        get<WenkuNovelRes.Id.Translate> { loc ->
-            val user = call.authenticatedUserOrNull()
-            call.tryRespond {
-                service.getTranslateTask(
-                    user = user,
-                    novelId = loc.parent.novelId,
-                    translatorId = loc.translatorId,
-                    volumeId = loc.volumeId,
-                )
-            }
-        }
-        get<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-            call.tryRespond {
-                service.getChapterToTranslate(
-                    novelId = loc.parent.parent.novelId,
-                    volumeId = loc.parent.volumeId,
-                    chapterId = loc.chapterId,
-                )
-            }
-        }
-        put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-            val user = call.authenticatedUserOrNull()
-
-            @Serializable
-            class Body(
-                val glossaryUuid: String? = null,
-                val paragraphsZh: List<String>,
+    get<WenkuNovelRes.Id.Translate> { loc ->
+        call.tryRespond {
+            service.getTranslateTask(
+                novelId = loc.parent.novelId,
+                translatorId = loc.translatorId,
+                volumeId = loc.volumeId,
             )
+        }
+    }
+    get<WenkuNovelRes.Id.Translate.Chapter> { loc ->
+        call.tryRespond {
+            service.getChapterToTranslate(
+                novelId = loc.parent.parent.novelId,
+                volumeId = loc.parent.volumeId,
+                chapterId = loc.chapterId,
+            )
+        }
+    }
+    put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
+        @Serializable
+        class Body(
+            val glossaryUuid: String? = null,
+            val paragraphsZh: List<String>,
+        )
 
-            val body = call.receive<Body>()
-            call.tryRespond {
-                service.updateChapterTranslation(
-                    user = user,
-                    novelId = loc.parent.parent.novelId,
-                    translatorId = loc.parent.translatorId,
-                    volumeId = loc.parent.volumeId,
-                    chapterId = loc.chapterId,
-                    glossaryUuid = body.glossaryUuid,
-                    paragraphsZh = body.paragraphsZh,
-                )
-            }
+        val body = call.receive<Body>()
+        call.tryRespond {
+            service.updateChapterTranslation(
+                novelId = loc.parent.parent.novelId,
+                translatorId = loc.parent.translatorId,
+                volumeId = loc.parent.volumeId,
+                chapterId = loc.chapterId,
+                glossaryUuid = body.glossaryUuid,
+                paragraphsZh = body.paragraphsZh,
+            )
         }
     }
 
@@ -519,19 +512,10 @@ class WenkuNovelApi(
     )
 
     suspend fun getTranslateTask(
-        user: AuthenticatedUser?,
         novelId: String,
         translatorId: TranslatorId,
         volumeId: String,
     ): TranslateTaskDto {
-        if (translatorId == TranslatorId.Sakura) {
-            if (user == null) {
-                throwUnauthorized("请先登录")
-            } else {
-                user.shouldBeAtLeast(User.Role.Trusted)
-            }
-        }
-
         validateVolumeId(volumeId)
 
         val novel = metadataRepo.get(novelId)
@@ -573,7 +557,6 @@ class WenkuNovelApi(
     }
 
     suspend fun updateChapterTranslation(
-        user: AuthenticatedUser?,
         novelId: String,
         translatorId: TranslatorId,
         volumeId: String,
@@ -581,14 +564,6 @@ class WenkuNovelApi(
         glossaryUuid: String?,
         paragraphsZh: List<String>,
     ): Int {
-        if (translatorId == TranslatorId.Sakura) {
-            if (user == null) {
-                throwUnauthorized("请先登录")
-            } else {
-                user.shouldBeAtLeast(User.Role.Trusted)
-            }
-        }
-
         validateVolumeId(volumeId)
 
         val novel = metadataRepo.get(novelId)

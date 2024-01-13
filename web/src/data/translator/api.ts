@@ -2,6 +2,7 @@ import { client } from '@/data/api/client';
 
 import { ChapterTranslation, PersonalVolumesManager } from './db/personal';
 import { Translator } from './translator';
+import { SakuraTranslator } from './translator_sakura';
 
 type WebTranslateTaskDesc = {
   type: 'web';
@@ -159,6 +160,14 @@ const translateWeb = async (
     return;
   }
 
+  if (
+    translator.segTranslator instanceof SakuraTranslator &&
+    !translator.segTranslator.allowUpload()
+  ) {
+    callback.log('发生错误，当前Sakura版本不允许上传翻译');
+    return;
+  }
+
   try {
     const textsSrc = encodeMetadataToTranslate(task);
     if (textsSrc.length > 0) {
@@ -282,6 +291,14 @@ const translateWenku = async (
     });
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
+    return;
+  }
+
+  if (
+    translator.segTranslator instanceof SakuraTranslator &&
+    !translator.segTranslator.allowUpload()
+  ) {
+    callback.log('发生错误，当前Sakura版本不允许上传翻译');
     return;
   }
 

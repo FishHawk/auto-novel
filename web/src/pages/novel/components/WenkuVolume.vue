@@ -107,11 +107,6 @@ const submitPublicSakuraJob = async () => {
 };
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  if (id === 'sakura' && !userData.isTrusted) {
-    message.error('目前普通用户无法使用Sakura工作区翻译文库小说');
-    return;
-  }
-
   const { translateExpireChapter } = getParams();
   const task = buildWenkuTranslateTask(novelId, volume.volumeId, {
     start: 0,

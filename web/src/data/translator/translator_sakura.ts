@@ -146,7 +146,7 @@ namespace SakuraLlamacpp {
     }
   };
 
-  export const detectModel = async (api: Llamacpp): Promise<SakuraModel> =>
+  export const detectModel = (api: Llamacpp): Promise<SakuraModel> =>
     api
       .createCompletion(
         {
@@ -209,8 +209,8 @@ namespace SakuraLlamacpp {
     text: string,
     maxNewToken: number,
     tryFixDegradation: boolean
-  ) => {
-    return api
+  ) =>
+    api
       .createCompletion(
         {
           prompt: makePrompt(text, version),
@@ -230,7 +230,6 @@ namespace SakuraLlamacpp {
         model,
         hasDegradation: stopped_limit,
       }));
-  };
 }
 
 namespace SakuraOpenai {
@@ -268,10 +267,17 @@ namespace SakuraOpenai {
       }
     );
 
-  export const detectModel = async (api: OpenAi): Promise<SakuraModel> => {
-    // TODO: sakura官方暂不支持返回概率
-    return { version: '0.8' };
-  };
+  export const detectModel = (api: OpenAi): Promise<SakuraModel> =>
+    createChatCompletions(api, '国境の長いトンネルを抜けると雪国であった', {
+      max_tokens: 20,
+    }).then((completion) => {
+      const version: '0.8' | '0.9' = completion.model.includes('0.9')
+        ? '0.9'
+        : '0.8';
+      const allowUpload = completion.model.includes('0.8-Q4');
+      // TODO: 等待sakura支持返回概率
+      return { version, distance8Q4: allowUpload ? 0 : Infinity };
+    });
 
   export const translateText = (
     api: OpenAi,
