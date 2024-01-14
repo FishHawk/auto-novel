@@ -103,7 +103,7 @@ const clearCache = async () => {
         </b>
       </n-li>
       <n-li>
-        <b>本地部署的朋友得把使用的llamacpp升级到b1848</b>
+        <b>本地部署的朋友得把使用的llamacpp升级到b1810</b>
       </n-li>
     </n-ul>
 

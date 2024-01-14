@@ -107,8 +107,11 @@ export class SakuraTranslator implements SegmentTranslator {
         maxNewToken,
         true
       );
-      if (hasDegradation) resultPerLine.push(line);
-      else resultPerLine.push(text);
+      if (hasDegradation) {
+        throw Error('发生单行退化，Sakura翻译器可能存在异常');
+      } else {
+        resultPerLine.push(text);
+      }
     }
     return resultPerLine;
   }
