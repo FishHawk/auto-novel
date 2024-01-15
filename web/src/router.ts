@@ -49,11 +49,6 @@ const router = createRouter({
               meta: { title: '阅读历史' },
               component: () => import('./pages/user/ReadHistoryList.vue'),
             },
-            {
-              path: '/personal-legacy',
-              meta: { title: '文件翻译（旧版）' },
-              component: () => import('./pages/user/PersonalNovel.vue'),
-            },
           ],
         },
 

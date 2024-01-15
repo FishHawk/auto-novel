@@ -8,21 +8,11 @@ import {
 import { ref } from 'vue';
 
 import AdvanceOptions from './components/AdvanceOptions.vue';
+import { Volume } from './components/PersonalVolume.vue';
 
 const message = useMessage();
 
 const advanceOptions = ref<InstanceType<typeof AdvanceOptions>>();
-
-interface Volume {
-  volumeId: string;
-  createAt: number;
-  total: number;
-  baidu: number;
-  youdao: number;
-  gpt: number;
-  sakura: number;
-  glossary: { [key: string]: string };
-}
 
 const volumes = ref<Volume[]>([]);
 
@@ -86,16 +76,6 @@ const deleteAllVolumes = () => {
 <template>
   <div class="layout-content">
     <n-h1>文件翻译</n-h1>
-
-    <n-p>
-      <b>
-        这是全新的文件翻译版块，
-        <router-n-a to="/personal-legacy"> 旧版文件翻译 </router-n-a>
-        仍可继续使用，但将逐步弃用。
-        <br />
-        该板块处于测试阶段，难免遇到问题，欢迎反馈。
-      </b>
-    </n-p>
 
     <n-upload
       multiple
