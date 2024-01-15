@@ -47,11 +47,11 @@ export class Translator {
     let cacheKey: string | null = null;
     if (this.segCache) {
       try {
-        cacheKey = this.segCache.cacheKey(
-          segInfo.index,
-          seg,
-          this.segTranslator.glossary
-        );
+        let extra: any = { glossary: this.segTranslator.glossary };
+        if (this.segTranslator instanceof SakuraTranslator) {
+          extra.model = this.segTranslator.model;
+        }
+        cacheKey = this.segCache.cacheKey(segInfo.index, seg, extra);
         const cachedSegOutput = await this.segCache.get(cacheKey);
         if (cachedSegOutput && cachedSegOutput.length === seg.length) {
           this.segTranslator.log(
