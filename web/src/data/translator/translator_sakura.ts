@@ -59,13 +59,20 @@ export class SakuraTranslator implements SegmentTranslator {
     seg: string[],
     segInfo: { index: number; size: number }
   ): Promise<string[]> {
-    const newSeg = seg.map((text) => {
-      for (const wordJp in this.glossary) {
-        const wordZh = this.glossary[wordJp];
-        text = text.replaceAll(wordJp, wordZh);
-      }
-      return text;
-    });
+    const newSeg = seg
+      .map((text) =>
+        // 全角数字转换成半角数字
+        text.replace(/[\uff10-\uff19]/g, (ch) =>
+          String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+        )
+      )
+      .map((text) => {
+        for (const wordJp in this.glossary) {
+          const wordZh = this.glossary[wordJp];
+          text = text.replaceAll(wordJp, wordZh);
+        }
+        return text;
+      });
     return this.translateInner(newSeg, segInfo);
   }
 
