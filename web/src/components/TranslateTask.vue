@@ -28,17 +28,21 @@ const chapterFinished = ref<number>(0);
 const chapterError = ref<number>(0);
 const logs = ref<string[]>([]);
 
-const logInstRef = ref<LogInst | null>(null);
+const logInstRef = ref<LogInst>();
 const enableAutoScroll = ref(true);
 const expandLog = ref(false);
 
-watch(logs, () => {
-  if (enableAutoScroll.value) {
-    nextTick(() => {
-      logInstRef.value?.scrollTo({ silent: true, position: 'bottom' });
-    });
-  }
-});
+watch(
+  logs,
+  () => {
+    if (enableAutoScroll.value) {
+      nextTick(() => {
+        logInstRef.value?.scrollTo({ silent: true, position: 'bottom' });
+      });
+    }
+  },
+  { deep: true }
+);
 
 const percentage = computed(() => {
   const processed = chapterFinished.value + chapterError.value;
