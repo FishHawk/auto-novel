@@ -370,7 +370,10 @@ const createWebIncorrectCase = async (
       <n-divider />
 
       <div id="chapter-content">
-        <template v-for="p in getTextList(chapter)">
+        <template
+          v-for="(p, index) in getTextList(chapter)"
+          :key="currentChapterId + index"
+        >
           <template v-if="p && 'text' in p">
             <n-popconfirm
               v-if="p.popover !== undefined"
