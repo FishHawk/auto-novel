@@ -210,7 +210,6 @@ fun Route.routeWebNovel() {
             val toc: Map<String, String>,
         )
 
-        val user = call.authenticatedUserOrNull()
         val body = call.receive<Body>()
         call.tryRespond {
             service.updateMetadataTranslation(
@@ -223,7 +222,6 @@ fun Route.routeWebNovel() {
         }
     }
     post<WebNovelRes.Id.Translate.CheckChapter> { loc ->
-        val user = call.authenticatedUserOrNull()
         call.tryRespond {
             service.checkIfChapterNeedTranslate(
                 providerId = loc.parent.parent.providerId,
@@ -241,7 +239,6 @@ fun Route.routeWebNovel() {
             val paragraphsZh: List<String>,
         )
 
-        val user = call.authenticatedUserOrNull()
         val body = call.receive<Body>()
         call.tryRespond {
             service.updateChapterTranslation(

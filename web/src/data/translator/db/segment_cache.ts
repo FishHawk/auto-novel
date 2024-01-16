@@ -16,7 +16,7 @@ const openTestDB = () =>
   });
 
 export interface SegmentCache {
-  cacheKey(segIndex: number, seg: string[], glossary?: Glossary): string;
+  cacheKey(segIndex: number, seg: string[], extra?: any): string;
   get(cacheKey: string): Promise<string[] | null>;
   save(cacheKey: string, output: string[]): Promise<void>;
   clear(): Promise<void>;
@@ -27,11 +27,8 @@ export const createSegIndexedDbCache = async (
 ) => {
   const db = await openTestDB();
   return <SegmentCache>{
-    cacheKey: (
-      _segIndex: number,
-      seg: string[],
-      glossary?: Glossary | undefined
-    ): string => MD5(JSON.stringify({ seg, glossary })).toString(),
+    cacheKey: (_segIndex: number, seg: string[], extra?: any): string =>
+      MD5(JSON.stringify({ seg, extra })).toString(),
 
     get: (cacheKey: string): Promise<string[] | null> =>
       db.get(storeName, cacheKey).then((it) => it?.text),

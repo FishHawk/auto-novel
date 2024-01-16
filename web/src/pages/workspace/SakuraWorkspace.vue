@@ -107,6 +107,15 @@ const clearCache = async () => {
       </n-li>
     </n-ul>
 
+    <n-p style="color: red; font-size: 16px">
+      1月18日星期四起，网站会开放sakura0.9版本上传，并禁止0.8版本上传。
+      旧的0.8版本翻译会和术语表变化一样，直接过期。 0.9/0.8的翻译质量对比参见
+      <n-a href="https://github.com/FishHawk/sakura-test" target="_blank">
+        对比报告
+      </n-a>
+      。如果不满意，请提前备份小说。
+    </n-p>
+
     <n-p>
       <n-space>
         <n-button @click="showCreateWorkerModal = true">

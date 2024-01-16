@@ -8,21 +8,11 @@ import {
 import { ref } from 'vue';
 
 import AdvanceOptions from './components/AdvanceOptions.vue';
+import { Volume } from './components/PersonalVolume.vue';
 
 const message = useMessage();
 
 const advanceOptions = ref<InstanceType<typeof AdvanceOptions>>();
-
-interface Volume {
-  volumeId: string;
-  createAt: number;
-  total: number;
-  baidu: number;
-  youdao: number;
-  gpt: number;
-  sakura: number;
-  glossary: { [key: string]: string };
-}
 
 const volumes = ref<Volume[]>([]);
 
@@ -87,14 +77,13 @@ const deleteAllVolumes = () => {
   <div class="layout-content">
     <n-h1>文件翻译</n-h1>
 
-    <n-p>
-      <b>
-        这是全新的文件翻译版块，
-        <router-n-a to="/personal-legacy"> 旧版文件翻译 </router-n-a>
-        仍可继续使用，但将逐步弃用。
-        <br />
-        该板块处于测试阶段，难免遇到问题，欢迎反馈。
-      </b>
+    <n-p style="color: red; font-size: 16px">
+      1月18日星期四起，网站会开放sakura0.9版本上传，并禁止0.8版本上传。
+      旧的0.8版本翻译会和术语表变化一样，直接过期。 0.9/0.8的翻译质量对比参见
+      <n-a href="https://github.com/FishHawk/sakura-test" target="_blank">
+        对比报告
+      </n-a>
+      。如果不满意，请提前备份小说。
     </n-p>
 
     <n-upload

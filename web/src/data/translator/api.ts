@@ -37,7 +37,7 @@ export type TranslateTaskCallback = {
   onStart: (total: number) => void;
   onChapterSuccess: (state: { jp?: number; zh?: number }) => void;
   onChapterFailure: () => void;
-  log: (message: any) => void;
+  log: (message: string, detail?: string[]) => void;
 };
 
 export type TranslatorDesc =
@@ -152,7 +152,7 @@ const translateWeb = async (
     translator = await Translator.create({
       client,
       glossary: task.glossary,
-      log: (message) => callback.log('　　' + message),
+      log: (message, detail) => callback.log('　　' + message, detail),
       ...translatorDesc,
     });
   } catch (e: any) {

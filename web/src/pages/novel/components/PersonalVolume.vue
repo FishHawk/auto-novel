@@ -4,7 +4,6 @@ import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
-import { PersonalVolume } from '@/data/api/api_user_personal';
 import { useSettingStore } from '@/data/stores/setting';
 import {
   buildPersonalTranslateTask,
@@ -13,8 +12,19 @@ import {
 } from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator/translator';
 
+export interface Volume {
+  volumeId: string;
+  createAt: number;
+  total: number;
+  baidu: number;
+  youdao: number;
+  gpt: number;
+  sakura: number;
+  glossary: { [key: string]: string };
+}
+
 const props = defineProps<{
-  volume: PersonalVolume;
+  volume: Volume;
   getParams: () => {
     translateExpireChapter: boolean;
   };

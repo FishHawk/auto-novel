@@ -5,7 +5,7 @@ export type Glossary = { [key: string]: string };
 export type Segmentor = (input: string[]) => Promise<string[][]>;
 
 export interface BaseTranslatorConfig {
-  log: (message: string) => void;
+  log: (message: string, detail?: string[]) => void;
   glossary: Glossary;
   client: KyInstance;
 }
@@ -17,5 +17,5 @@ export interface SegmentTranslator {
     seg: string[],
     segInfo: { index: number; size: number }
   ) => Promise<string[]>;
-  log: (message: string) => void;
+  log: (message: string, detail?: string[]) => void;
 }
