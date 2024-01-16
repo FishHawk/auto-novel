@@ -67,9 +67,9 @@ export class SakuraTranslator implements SegmentTranslator {
         )
       )
       .map((text) => {
-        const wordJpArray = Object.keys(this.glossary)
-          .filter((it) => it.length > 2)
-          .sort((a, b) => b.length - a.length);
+        const wordJpArray = Object.keys(this.glossary).sort(
+          (a, b) => b.length - a.length
+        );
         for (const wordJp of wordJpArray) {
           const wordZh = this.glossary[wordJp];
           text = text.replaceAll(wordJp, wordZh);
