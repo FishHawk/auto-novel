@@ -10,7 +10,7 @@ export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
 
 export class SakuraTranslator implements SegmentTranslator {
   glossary: Glossary;
-  log: (message: string) => void;
+  log: (message: string, detail?: string[]) => void;
 
   private api: Llamacpp | OpenAi;
   model: SakuraModel = { version: '0.8' };
@@ -98,7 +98,8 @@ export class SakuraTranslator implements SegmentTranslator {
       this.log(
         `分段${segInfo.index + 1}/${segInfo.size}[${retry}] ${
           hasDegradation ? ' 退化' : ''
-        }`
+        }`,
+        [seg.join('\n'), text]
       );
 
       if (!hasDegradation && seg.length === splitText.length) {

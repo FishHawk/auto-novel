@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { LogInst, useMessage } from 'naive-ui';
+import { ScrollbarInst, useMessage } from 'naive-ui';
 import { computed, nextTick, ref, watch } from 'vue';
 
 import {
@@ -8,6 +8,8 @@ import {
   TranslatorDesc,
 } from '@/data/translator/api';
 import { getTranslatorLabel } from '@/data/util';
+
+type LogLine = { message: string; detail?: string[] };
 
 const emit = defineEmits<{
   'update:jp': [number];
@@ -26,18 +28,21 @@ const label = ref('');
 const chapterTotal = ref<number>();
 const chapterFinished = ref<number>(0);
 const chapterError = ref<number>(0);
-const logs = ref<string[]>([]);
+const logs = ref<LogLine[]>([]);
 
-const logInstRef = ref<LogInst>();
+const logRef = ref<ScrollbarInst>();
 const enableAutoScroll = ref(true);
 const expandLog = ref(false);
+
+const pushLog = (message: any, detail?: string[]) =>
+  logs.value.push({ message, detail });
 
 watch(
   logs,
   () => {
     if (enableAutoScroll.value) {
       nextTick(() => {
-        logInstRef.value?.scrollTo({ silent: true, position: 'bottom' });
+        logRef.value?.scrollTo({ top: Number.MAX_SAFE_INTEGER });
       });
     }
   },
@@ -119,20 +124,28 @@ const startTask = async (
         chapterError.value += 1;
         onProgressUpdated();
       },
-      log: (message: any) => {
-        logs.value.push(`${message}`);
+      log: (message: string, detail?: string[]) => {
+        logs.value.push({ message: `${message}`, detail });
       },
     },
     translatorDesc
   );
 
-  logs.value.push('\n结束');
+  pushLog('\n结束');
+  logs.value.push();
   running.value = false;
 
   return chapterTotal.value === chapterFinished.value + chapterError.value;
 };
 
 defineExpose({ startTask });
+
+const showLogDetailModal = ref(false);
+const selectedLogDetail = ref([] as string[]);
+const showDetail = (detail: string[]) => {
+  selectedLogDetail.value = detail;
+  showLogDetailModal.value = true;
+};
 </script>
 
 <template>
@@ -153,12 +166,18 @@ defineExpose({ startTask });
       </n-space>
     </template>
     <div style="display: flex">
-      <n-log
-        ref="logInstRef"
-        :rows="expandLog ? 30 : 10"
-        :lines="logs"
-        style="flex: auto; margin-right: 20px"
-      />
+      <n-scrollbar
+        ref="logRef"
+        style="flex: auto; margin-right: 20px; white-space: pre-wrap"
+        :style="{ height: expandLog ? '540px' : '180px' }"
+      >
+        <div v-for="log of logs">
+          {{ log.message }}
+          <span v-if="log.detail !== undefined" @click="showDetail(log.detail)">
+            [详细]
+          </span>
+        </div>
+      </n-scrollbar>
       <n-space align="center" vertical size="large" style="flex: none">
         <n-progress type="circle" :percentage="percentage" />
         <n-text>
@@ -169,4 +188,10 @@ defineExpose({ startTask });
       </n-space>
     </div>
   </n-card>
+
+  <card-modal title="日志详情" v-model:show="showLogDetailModal">
+    <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
+      {{ line }}
+    </n-p>
+  </card-modal>
 </template>
