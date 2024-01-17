@@ -91,7 +91,7 @@ watch(
 );
 
 const url = computed(() =>
-  buildWebChapterUrl(providerId, novelId, route.params.chapterId as string)
+  buildWebChapterUrl(providerId, novelId, currentChapterId.value)
 );
 
 onKeyStroke(['1', '2', '3', '4'], (e) => {
