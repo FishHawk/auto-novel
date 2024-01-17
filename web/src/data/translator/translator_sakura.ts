@@ -46,10 +46,66 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   allowUpload = () => {
-    if (this.model.distance === undefined) {
+    if (this.model.fingerprint === undefined) {
       return false;
+    } else if (this.model.fingerprint === 'placeholder-allow') {
+      return true;
     } else {
-      return [this.model.distance.v9q4].some((d) => d < 0.01);
+      const fingerprint = this.model.fingerprint;
+      const fingerprintKnownList = [
+        // V9Q4
+        [
+          0.43284669518470764, 0.4130252003669739, 0.04670359566807747,
+          0.026198342442512512, 0.018005838617682457, 0.017726685851812363,
+          0.013591521419584751, 0.0112677663564682, 0.010921093635261059,
+          0.009713421575725079,
+        ],
+        // V9Q4 awq
+        [
+          0.4408239424228668, 0.42726120352745056, 0.04197537526488304,
+          0.029075490310788155, 0.013842009007930756, 0.01270214095711708,
+          0.008798516355454922, 0.008730045519769192, 0.008395601995289326,
+          0.008395601995289326,
+        ],
+        // V9bQ4
+        [
+          0.4376196265220642, 0.40473198890686035, 0.046124767512083054,
+          0.042326465249061584, 0.014513801783323288, 0.013741392642259598,
+          0.012511679902672768, 0.010453899390995502, 0.009444311261177063,
+          0.008532224223017693,
+        ],
+        // V9bQ4 awq
+        [
+          0.5258093476295471, 0.35578039288520813, 0.039606813341379166,
+          0.023650309070944786, 0.010912824422121048, 0.009858915582299232,
+          0.00970606692135334, 0.009118006564676762, 0.008173327893018723,
+          0.007383986376225948,
+        ],
+        // V9Q5
+        [
+          0.47926297783851624, 0.3850986361503601, 0.048578787595033646,
+          0.025202343240380287, 0.015049006789922714, 0.011538472957909107,
+          0.010755039751529694, 0.009199273772537708, 0.007807321380823851,
+          0.007508228067308664,
+        ],
+      ];
+
+      const calculateDistance = (a: number[], b: number[]) => {
+        let d = 0;
+        for (let i = 0; i < a.length; i++) {
+          const numA = a[i];
+          const numB = b.at(i) ?? 0;
+          d += Math.abs(numA - numB) ** 2;
+        }
+        return d;
+      };
+      return fingerprintKnownList
+        .map((known) => {
+          const distance = calculateDistance(known, fingerprint);
+          console.log(distance);
+          return distance;
+        })
+        .some((it) => it < 0.00001);
     }
   };
 
@@ -151,9 +207,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
 interface SakuraModel {
   version: '0.8' | '0.9';
-  distance?: {
-    v9q4: number;
-  };
+  fingerprint?: number[] | 'placeholder-allow';
 }
 
 namespace SakuraLlamacpp {
@@ -170,8 +224,10 @@ namespace SakuraLlamacpp {
       .createCompletion(
         {
           prompt: makePrompt('国境の長いトンネルを抜けると雪国であった', '0.9'),
-          n_predict: 20,
-          n_probs: 1,
+          temperature: 1,
+          top_p: 1,
+          n_predict: 1,
+          n_probs: 10,
           seed: 0,
         },
         {
@@ -185,44 +241,17 @@ namespace SakuraLlamacpp {
 
         if (
           completion.completion_probabilities === undefined ||
-          completion.completion_probabilities.length === 0
+          completion.completion_probabilities.length === 0 ||
+          version === '0.8'
         ) {
           return { version };
         }
 
-        const fingerprintVectorKnown = {
-          v9q4: [
-            0.48827865719795227, 1, 1, 0.8033697009086609, 0.6872135400772095,
-            1, 0.734160304069519, 0.1770634949207306, 0.39328014850616455,
-            0.9504808783531189, 0.8134298324584961, 0.5873062014579773, 1, 1,
-          ],
-        };
-
-        const fingerprintVector = completion.completion_probabilities.map(
-          (it) => it.probs[0].prob
+        const fingerprint = completion.completion_probabilities[0].probs.map(
+          (it) => it.prob
         );
 
-        const calculateDistance = (a: number[], b: number[]) => {
-          if (a.length !== b.length) {
-            return Infinity;
-          }
-          let d = 0;
-          for (let i = 0; i < a.length; i++) {
-            const numA = a[i];
-            const numB = b.at(i) ?? 0;
-            d += Math.abs(numA - numB) ** 2;
-          }
-          return d;
-        };
-
-        const distance = {
-          v9q4: calculateDistance(
-            fingerprintVectorKnown.v9q4,
-            fingerprintVector
-          ),
-        };
-
-        return { version, distance };
+        return { version, fingerprint };
       });
 
   export const translateText = (
@@ -297,11 +326,12 @@ namespace SakuraOpenai {
         ? '0.9'
         : '0.8';
       // TODO: 等待sakura支持返回概率
+      const allow = ['0.9-Q4', '0.9-Q5', '0.9-Q6', '0.9-Q8'].some((it) =>
+        completion.model.includes(it)
+      );
       return {
         version,
-        distance: {
-          v9q4: completion.model.includes('0.9-Q4') ? 0 : Infinity,
-        },
+        fingerprint: allow ? 'placeholder-allow' : undefined,
       };
     });
 

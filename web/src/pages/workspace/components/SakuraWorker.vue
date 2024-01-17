@@ -106,7 +106,8 @@ const testSakuraWorker = async () => {
     const output = result[0];
 
     const segTranslator = translator.segTranslator as any as SakuraTranslator;
-    const distance = segTranslator.model.distance;
+    console.log('模型指纹');
+    console.log(segTranslator.model.fingerprint);
     message.success(
       [
         `原文：${input}`,
@@ -114,7 +115,6 @@ const testSakuraWorker = async () => {
         `版本：${segTranslator.model.version} ${
           segTranslator.allowUpload() ? '允许上传' : '禁止上传'
         }`,
-        `距离： V9Q4:${distance?.v9q4 ?? '未知'}`,
       ].join('\n')
     );
   } catch (e: any) {
