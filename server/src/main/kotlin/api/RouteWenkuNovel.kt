@@ -180,6 +180,7 @@ fun Route.routeWenkuNovel() {
         class Body(
             val glossaryUuid: String? = null,
             val paragraphsZh: List<String>,
+            val sakuraVersion: String? = null,
         )
 
         val body = call.receive<Body>()
@@ -191,6 +192,7 @@ fun Route.routeWenkuNovel() {
                 chapterId = loc.chapterId,
                 glossaryUuid = body.glossaryUuid,
                 paragraphsZh = body.paragraphsZh,
+                sakuraVersion = body.sakuraVersion,
             )
         }
     }
@@ -528,10 +530,14 @@ class WenkuNovelApi(
         volume.listChapter().forEach {
             if (!volume.translationExist(translatorId, it)) {
                 untranslatedChapterIds.add(it)
-            } else if (
-                volume.getChapterGlossary(translatorId, it)?.uuid != novel.glossaryUuid
-            ) {
-                expiredChapterIds.add(it)
+            } else {
+                val chapterGlossary = volume.getChapterGlossary(translatorId, it)
+                if (
+                    chapterGlossary?.uuid != novel.glossaryUuid ||
+                    (translatorId == TranslatorId.Sakura && chapterGlossary?.sakuraVersion != "0.9")
+                ) {
+                    expiredChapterIds.add(it)
+                }
             }
         }
         return TranslateTaskDto(
@@ -563,7 +569,12 @@ class WenkuNovelApi(
         chapterId: String,
         glossaryUuid: String?,
         paragraphsZh: List<String>,
+        sakuraVersion: String?,
     ): Int {
+        if (translatorId == TranslatorId.Sakura && sakuraVersion != "0.9") {
+            throwBadRequest("旧版本Sakura不再允许上传")
+        }
+
         validateVolumeId(volumeId)
 
         val novel = metadataRepo.get(novelId)
@@ -586,14 +597,13 @@ class WenkuNovelApi(
             chapterId = chapterId,
             lines = paragraphsZh,
         )
-        if (glossaryUuid != null) {
-            volume.setChapterGlossary(
-                translatorId = translatorId,
-                chapterId = chapterId,
-                glossaryUuid = glossaryUuid,
-                glossary = novel.glossary,
-            )
-        }
+        volume.setChapterGlossary(
+            translatorId = translatorId,
+            chapterId = chapterId,
+            glossaryUuid = glossaryUuid,
+            glossary = novel.glossary,
+            sakuraVersion = sakuraVersion?.takeIf { translatorId == TranslatorId.Sakura }
+        )
 
         return volume.listTranslation(
             translatorId = translatorId,

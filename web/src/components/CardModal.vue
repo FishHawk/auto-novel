@@ -14,9 +14,9 @@
     </n-scrollbar>
 
     <template #action v-if="$slots.action">
-      <n-space justify="end">
+      <n-flex justify="end">
         <slot name="action" />
-      </n-space>
+      </n-flex>
     </template>
   </n-modal>
 </template>

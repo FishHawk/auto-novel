@@ -380,14 +380,13 @@ class SakuraWorker(
                 chapterId = chapterId,
                 lines = sakuraParagraphs,
             )
-            if (novel.glossaryUuid != null) {
-                volume.setChapterGlossary(
-                    translatorId = TranslatorId.Sakura,
-                    chapterId = chapterId,
-                    glossaryUuid = novel.glossaryUuid,
-                    glossary = novel.glossary,
-                )
-            }
+            volume.setChapterGlossary(
+                translatorId = TranslatorId.Sakura,
+                chapterId = chapterId,
+                glossaryUuid = novel.glossaryUuid,
+                glossary = novel.glossary,
+                sakuraVersion = "0.9",
+            )
 
             finished += 1
         }

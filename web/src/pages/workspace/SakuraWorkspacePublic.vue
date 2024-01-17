@@ -157,6 +157,7 @@ const createWorkerFormValue = ref({
 
   <div class="layout-content">
     <n-h1>Sakura状态</n-h1>
+    <n-p>由于Sakura版本更新，暂停一段时间。</n-p>
     <ResultView
       :result="sakuraStatus"
       :showEmpty="(it: SakuraStatus) => false"

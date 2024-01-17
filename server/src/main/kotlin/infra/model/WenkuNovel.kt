@@ -64,6 +64,7 @@ data class WenkuNovelVolumeJp(
 
 @Serializable
 data class WenkuChapterGlossary(
-    val uuid: String,
+    val uuid: String?,
     val glossary: Map<String, String>,
+    val sakuraVersion: String?,
 )

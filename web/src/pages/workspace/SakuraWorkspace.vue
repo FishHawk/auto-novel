@@ -73,17 +73,6 @@ const clearCache = async () => {
   <div class="layout-content">
     <n-h1>Sakura工作区</n-h1>
 
-    <n-p>
-      当前启动器版本：
-      <n-a
-        href="https://books.fishhawk.top/files-extra/sakura-launcher.v0.0.2.zip"
-        download
-      >
-        Sakura启动器v0.0.2
-      </n-a>
-      ，本地部署的朋友注意更新。
-    </n-p>
-
     <n-p>使用说明：</n-p>
     <n-ul>
       <n-li>
@@ -98,23 +87,26 @@ const clearCache = async () => {
         。
       </n-li>
       <n-li>
-        <b>
-          当前只允许0.8-Q4/Q5模型上传翻译结果，如果你想尝试其他版本，请自行下载日文EPUB/TXT，放到文件翻译里进行翻译。
-        </b>
+        本地部署的朋友注意更新，启动器版本：
+        <n-a
+          href="https://books.fishhawk.top/files-extra/sakura-launcher.v0.0.2.zip"
+          download
+        >
+          Sakura启动器v0.0.2
+        </n-a>
+        ，llamacpp版本：b1810。
       </n-li>
       <n-li>
-        <b>本地部署的朋友得把使用的llamacpp升级到b1810</b>
+        如果你想直接翻译网络小说/文库小说，请注意使用的模型版本。现在允许上传的版本：
+        <n-a
+          href="https://huggingface.co/SakuraLLM/Sakura-13B-LNovel-v0.9-GGUF/blob/main/sakura-13b-lnovel-v0.9-Q4KM_awq4bit.gguf"
+          target="_blank"
+        >
+          v0.9-Q4KM_awq4bit
+        </n-a>
+        。
       </n-li>
     </n-ul>
-
-    <n-p style="color: red; font-size: 16px">
-      1月18日星期四起，网站会开放sakura0.9版本上传，并禁止0.8版本上传。
-      旧的0.8版本翻译会和术语表变化一样，直接过期。 0.9/0.8的翻译质量对比参见
-      <n-a href="https://github.com/FishHawk/sakura-test" target="_blank">
-        对比报告
-      </n-a>
-      。如果不满意，请提前备份小说。
-    </n-p>
 
     <n-p>
       <n-space>

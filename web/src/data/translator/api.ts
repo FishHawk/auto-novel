@@ -105,7 +105,9 @@ const translateWeb = async (
     }
   ) =>
     client
-      .put(`${endpoint}/chapter/${chapterId}`, { json })
+      .put(`${endpoint}/chapter/${chapterId}`, {
+        json: { ...json, sakuraVersion: '0.9' },
+      })
       .json<{ jp: number; zh: number }>();
 
   const encodeMetadataToTranslate = (metadata: TranslateTaskDto) => {
@@ -269,7 +271,12 @@ const translateWenku = async (
   const updateChapterTranslation = (
     chapterId: string,
     json: { glossaryUuid: string | undefined; paragraphsZh: string[] }
-  ) => client.put(`${endpoint}/${chapterId}`, { json }).json<number>();
+  ) =>
+    client
+      .put(`${endpoint}/${chapterId}`, {
+        json: { ...json, sakuraVersion: '0.9' },
+      })
+      .json<number>();
 
   // Task
   let task: TranslateTaskDto;

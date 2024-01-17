@@ -140,6 +140,7 @@ data class WebNovelChapter(
     val gptGlossary: Map<String, String?> = emptyMap(),
     val gptParagraphs: List<String>? = null,
 
+    val sakuraVersion: String? = null,
     val sakuraGlossaryUuid: String? = null,
     val sakuraGlossary: Map<String, String>? = emptyMap(),
     val sakuraParagraphs: List<String>? = null,
@@ -167,4 +168,5 @@ data class WebNovelChapterTranslationState(
     val chapterId: String,
     val glossaryUuid: String?,
     val translated: Boolean,
+    val sakuraVersion: String? = null,
 )

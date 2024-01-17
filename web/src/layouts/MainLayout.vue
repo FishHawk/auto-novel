@@ -135,39 +135,36 @@ const vars = useThemeVars();
     <n-message-provider container-style="white-space: pre-wrap">
       <n-layout style="overflow-x: overlay">
         <n-layout-header bordered>
-          <div
-            class="layout-content"
-            style="display: flex; align-items: center; height: 50px"
-          >
-            <n-button
-              v-if="!isDesktop"
-              text
-              style="font-size: 24px"
-              @click="showMenuModal = true"
-            >
-              <n-icon size="24" :component="MenuFilled" />
-            </n-button>
+          <n-flex class="layout-content" align="center" style="height: 50px">
+            <template v-if="isDesktop">
+              <router-link to="/">
+                <n-icon
+                  size="30"
+                  :color="vars.primaryColor"
+                  style="margin-right: 8px; margin-bottom: 8px"
+                >
+                  <robot-svg />
+                </n-icon>
+              </router-link>
+              <div>
+                <n-menu
+                  :value="getTopMenuOptionKey()"
+                  mode="horizontal"
+                  :options="topMenuOptions"
+                />
+              </div>
+            </template>
 
-            <router-link v-if="isDesktop" to="/">
-              <n-icon
-                size="30"
-                :color="vars.primaryColor"
-                style="margin-right: 8px; margin-bottom: 8px"
-              >
-                <robot-svg />
-              </n-icon>
-            </router-link>
-            <div v-if="isDesktop">
-              <n-menu
-                :value="getTopMenuOptionKey()"
-                mode="horizontal"
-                :options="topMenuOptions"
-              />
-            </div>
+            <n-icon
+              v-else
+              size="24"
+              :component="MenuFilled"
+              @click="showMenuModal = true"
+            />
 
             <div style="flex: 1"></div>
 
-            <n-space v-if="userData.username">
+            <template v-if="userData.username">
               <router-link v-if="isDesktop" to="/read-history">
                 <n-button quaternary>历史</n-button>
               </router-link>
@@ -183,7 +180,7 @@ const vars = useThemeVars();
                   @{{ userData.username }}
                 </n-button>
               </n-dropdown>
-            </n-space>
+            </template>
 
             <n-button
               v-else
@@ -193,7 +190,7 @@ const vars = useThemeVars();
             >
               登录/注册
             </n-button>
-          </div>
+          </n-flex>
         </n-layout-header>
 
         <n-layout

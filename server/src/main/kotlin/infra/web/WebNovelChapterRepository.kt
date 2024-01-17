@@ -26,6 +26,7 @@ class WebNovelChapterRepository(
             .aggregate<WebNovelChapterTranslationState>(
                 match(WebNovelChapter.byNovelId(providerId, novelId)),
                 project(
+                    WebNovelChapterTranslationState::sakuraVersion from WebNovelChapter::sakuraVersion,
                     WebNovelChapterTranslationState::chapterId from WebNovelChapter::chapterId,
                     WebNovelChapterTranslationState::glossaryUuid from glossaryUuidProperty,
                     WebNovelChapterTranslationState::translated from cond(paragraphsZhProperty, true, false),
@@ -134,6 +135,7 @@ class WebNovelChapterRepository(
             )
 
             TranslatorId.Sakura -> combine(
+                setValue(WebNovelChapter::sakuraVersion, "0.9"),
                 setValue(WebNovelChapter::sakuraGlossaryUuid, glossary?.id),
                 setValue(WebNovelChapter::sakuraGlossary, glossary?.map ?: emptyMap()),
                 setValue(WebNovelChapter::sakuraParagraphs, paragraphsZh)

@@ -49,9 +49,7 @@ export class SakuraTranslator implements SegmentTranslator {
     if (this.model.distance === undefined) {
       return false;
     } else {
-      return [this.model.distance.v8q4, this.model.distance.v8q5].some(
-        (d) => d < 0.01
-      );
+      return [this.model.distance.v9q4].some((d) => d < 0.01);
     }
   };
 
@@ -93,7 +91,7 @@ export class SakuraTranslator implements SegmentTranslator {
         maxNewToken,
         retry > 0
       );
-      const splitText = text.split('\n');
+      const splitText = text.replaceAll('<|im_end|>', '').split('\n');
 
       this.log(
         `分段${segInfo.index + 1}/${segInfo.size}[${retry}] ${
@@ -121,7 +119,7 @@ export class SakuraTranslator implements SegmentTranslator {
       if (hasDegradation) {
         throw Error('发生单行退化，Sakura翻译器可能存在异常');
       } else {
-        resultPerLine.push(text);
+        resultPerLine.push(text.replaceAll('<|im_end|>', ''));
       }
     }
     return resultPerLine;
@@ -154,8 +152,7 @@ export class SakuraTranslator implements SegmentTranslator {
 interface SakuraModel {
   version: '0.8' | '0.9';
   distance?: {
-    v8q4: number;
-    v8q5: number;
+    v9q4: number;
   };
 }
 
@@ -172,7 +169,7 @@ namespace SakuraLlamacpp {
     api
       .createCompletion(
         {
-          prompt: makePrompt('国境の長いトンネルを抜けると雪国であった', '0.8'),
+          prompt: makePrompt('国境の長いトンネルを抜けると雪国であった', '0.9'),
           n_predict: 20,
           n_probs: 1,
           seed: 0,
@@ -194,17 +191,10 @@ namespace SakuraLlamacpp {
         }
 
         const fingerprintVectorKnown = {
-          v8q4: [
-            0.4115177392959595, 0.6806630492210388, 0.8027622103691101,
-            0.36451900005340576, 0.8880155682563782, 0.5641778707504272,
-            0.4389311969280243, 0.3928905129432678, 0.7579050660133362,
-            0.9564539194107056, 1, 1,
-          ],
-          v8q5: [
-            0.4395886957645416, 0.6967197060585022, 0.9305418729782104,
-            0.5735085606575012, 0.5760149955749512, 1, 0.45953643321990967,
-            0.9667923450469971, 0.22573211789131165, 0.23779834806919098, 1,
-            0.3153495490550995, 0.3401365280151367, 1, 1,
+          v9q4: [
+            0.48827865719795227, 1, 1, 0.8033697009086609, 0.6872135400772095,
+            1, 0.734160304069519, 0.1770634949207306, 0.39328014850616455,
+            0.9504808783531189, 0.8134298324584961, 0.5873062014579773, 1, 1,
           ],
         };
 
@@ -226,12 +216,8 @@ namespace SakuraLlamacpp {
         };
 
         const distance = {
-          v8q4: calculateDistance(
-            fingerprintVectorKnown.v8q4,
-            fingerprintVector
-          ),
-          v8q5: calculateDistance(
-            fingerprintVectorKnown.v8q5,
+          v9q4: calculateDistance(
+            fingerprintVectorKnown.v9q4,
             fingerprintVector
           ),
         };
@@ -314,8 +300,7 @@ namespace SakuraOpenai {
       return {
         version,
         distance: {
-          v8q4: completion.model.includes('0.8-Q4') ? 0 : Infinity,
-          v8q5: completion.model.includes('0.8-Q5') ? 0 : Infinity,
+          v9q4: completion.model.includes('0.9-Q4') ? 0 : Infinity,
         },
       };
     });

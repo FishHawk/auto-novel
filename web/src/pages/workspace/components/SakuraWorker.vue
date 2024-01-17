@@ -114,9 +114,7 @@ const testSakuraWorker = async () => {
         `版本：${segTranslator.model.version} ${
           segTranslator.allowUpload() ? '允许上传' : '禁止上传'
         }`,
-        `距离： V8Q4:${distance?.v8q4 ?? '未知'} V8Q5:${
-          distance?.v8q5 ?? '未知'
-        }`,
+        `距离： V9Q4:${distance?.v9q4 ?? '未知'}`,
       ].join('\n')
     );
   } catch (e: any) {
@@ -145,7 +143,7 @@ const testSakuraWorker = async () => {
     </template>
 
     <template #header-extra>
-      <n-space :wrap="false">
+      <n-flex :wrap="false">
         <async-button
           size="tiny"
           secondary
@@ -177,7 +175,7 @@ const testSakuraWorker = async () => {
         >
           删除
         </n-button>
-      </n-space>
+      </n-flex>
     </template>
   </n-thing>
 

@@ -3,9 +3,10 @@ package infra
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
 import infra.common.SakuraJobRepository
-import infra.user.UserRepository
 import infra.model.*
+import infra.user.UserRepository
 import infra.web.DataSourceWebNovelProvider
+import infra.wenku.WenkuNovelMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
@@ -21,6 +22,8 @@ import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.litote.kmongo.coroutine.projection
+import org.litote.kmongo.eq
+import org.litote.kmongo.id.toId
 import java.io.File
 
 
@@ -35,7 +38,7 @@ val appModule = module {
         DataSourceElasticSearch(url)
     }
     single {
-        val url = System.getenv("REDIS_URL") ?: "192.168.1.110:6379"
+        val url = System.getenv("REDIS_URL") ?: "192.168.9.202:6379"
         createRedisDataSource(url)
     }
     single {
@@ -49,6 +52,7 @@ val appModule = module {
 
     singleOf(::UserRepository)
     singleOf(::SakuraJobRepository)
+    singleOf(::WenkuNovelMetadataRepository)
 }
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
@@ -65,9 +69,22 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     private val sjRepo by inject<SakuraJobRepository>()
     private val userRepo by inject<UserRepository>()
+    private val wenkuRepo by inject<WenkuNovelMetadataRepository>()
 
     init {
         describe("test") {
+            suspend fun test(id: String) {
+                mongo
+                    .userFavoredWenkuCollection
+                    .find(UserFavoredWenkuNovelModel::novelId eq ObjectId(id).toId())
+                    .toList()
+                    .apply { println(size) }
+                    .forEach {
+                        println("${it.userId}")
+                    }
+                wenkuRepo.delete(id)
+            }
+            test("65a2701ef9f4eb64961d7881")
         }
         describe("build es index") {
             @Serializable

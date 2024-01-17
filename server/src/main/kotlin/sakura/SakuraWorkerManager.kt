@@ -72,6 +72,7 @@ class SakuraWorkerManager(
 
     init {
         scope.launch {
+            return@launch
             delay(15.seconds.toJavaDuration())
             val servers = mongo
                 .sakuraServerCollection
@@ -91,6 +92,7 @@ class SakuraWorkerManager(
         gpu: String,
         endpoint: String,
     ) {
+        throw RuntimeException("暂停使用")
         val server = SakuraServer(
             id = ObjectId(),
             username = username,
@@ -107,14 +109,17 @@ class SakuraWorkerManager(
     }
 
     suspend fun startWorker(id: String) {
+        throw RuntimeException("暂停使用")
         _workers[id]?.start()
     }
 
     suspend fun stopWorker(id: String) {
+        throw RuntimeException("暂停使用")
         _workers[id]?.stop()
     }
 
     suspend fun deleteWorker(id: String) {
+        throw RuntimeException("暂停使用")
         mongo
             .sakuraServerCollection
             .deleteOneById(ObjectId(id))

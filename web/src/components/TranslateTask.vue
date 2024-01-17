@@ -165,10 +165,10 @@ const showDetail = (detail: string[]) => {
         </n-button>
       </n-space>
     </template>
-    <div style="display: flex">
+    <n-flex :wrap="false">
       <n-scrollbar
         ref="logRef"
-        style="flex: auto; margin-right: 20px; white-space: pre-wrap"
+        style="flex: auto; white-space: pre-wrap"
         :style="{ height: expandLog ? '540px' : '180px' }"
       >
         <div v-for="log of logs">
@@ -186,7 +186,7 @@ const showDetail = (detail: string[]) => {
           失败 {{ chapterError }}/{{ chapterTotal ?? '-' }}
         </n-text>
       </n-space>
-    </div>
+    </n-flex>
   </n-card>
 
   <card-modal title="日志详情" v-model:show="showLogDetailModal">

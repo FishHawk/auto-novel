@@ -248,8 +248,9 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
     suspend fun setChapterGlossary(
         translatorId: TranslatorId,
         chapterId: String,
-        glossaryUuid: String,
+        glossaryUuid: String?,
         glossary: Map<String, String>,
+        sakuraVersion: String?,
     ) = setGlossary(
         path = chapterGlossaryPath(
             translatorId = translatorId,
@@ -257,6 +258,7 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
         ),
         glossaryUuid = glossaryUuid,
         glossary = glossary,
+        sakuraVersion = sakuraVersion,
     )
 
     //
@@ -420,14 +422,21 @@ private suspend fun getGlossary(path: Path) =
 
 private suspend fun setGlossary(
     path: Path,
-    glossaryUuid: String,
+    glossaryUuid: String?,
     glossary: Map<String, String>,
+    sakuraVersion: String?,
 ) = withContext(Dispatchers.IO) {
     if (path.parent.notExists()) {
         path.parent.createDirectories()
     }
     path.writeText(
-        Json.encodeToString(WenkuChapterGlossary(glossaryUuid, glossary))
+        Json.encodeToString(
+            WenkuChapterGlossary(
+                uuid = glossaryUuid,
+                glossary = glossary,
+                sakuraVersion = sakuraVersion
+            )
+        )
     )
 }
 

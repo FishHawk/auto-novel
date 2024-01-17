@@ -82,20 +82,20 @@ const createGptWorker = async () => {
       </n-form-item-row>
       <n-form-item-row path="type" label="类型">
         <n-radio-group v-model:value="formValue.type" name="type">
-          <n-space>
+          <n-flex>
             <n-radio value="web">Web</n-radio>
             <n-radio value="api">Api</n-radio>
-          </n-space>
+          </n-flex>
         </n-radio-group>
       </n-form-item-row>
       <n-form-item-row path="model" label="模型">
         <n-radio-group v-model:value="formValue.model" name="model">
-          <n-space>
+          <n-flex>
             <n-radio value="gpt-3.5">GPT-3.5</n-radio>
-            <n-radio :disabled="formValue.type === 'web'" value="gpt-4"
-              >GPT-4</n-radio
-            >
-          </n-space>
+            <n-radio :disabled="formValue.type === 'web'" value="gpt-4">
+              GPT-4
+            </n-radio>
+          </n-flex>
         </n-radio-group>
       </n-form-item-row>
       <n-form-item-row path="endpoint" label="链接">

@@ -148,7 +148,7 @@ const testGptWorker = async () => {
     </template>
 
     <template #header-extra>
-      <n-space :wrap="false">
+      <n-flex :wrap="false">
         <async-button
           size="tiny"
           secondary
@@ -175,7 +175,7 @@ const testGptWorker = async () => {
         >
           删除
         </n-button>
-      </n-space>
+      </n-flex>
     </template>
   </n-thing>
 

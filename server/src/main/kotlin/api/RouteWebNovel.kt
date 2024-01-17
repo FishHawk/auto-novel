@@ -237,6 +237,7 @@ fun Route.routeWebNovel() {
         class Body(
             val glossaryUuid: String? = null,
             val paragraphsZh: List<String>,
+            val sakuraVersion: String? = null,
         )
 
         val body = call.receive<Body>()
@@ -248,6 +249,7 @@ fun Route.routeWebNovel() {
                 chapterId = loc.chapterId,
                 glossaryUuid = body.glossaryUuid,
                 paragraphsZh = body.paragraphsZh,
+                sakuraVersion = body.sakuraVersion,
             )
         }
     }
@@ -630,10 +632,13 @@ class WebNovelApi(
                 }
                 val chapterState = if (chapterTranslationOutline?.translated != true) {
                     TranslateTaskDto.ChapterState.Untranslated
-                } else if (chapterTranslationOutline.glossaryUuid == novel.glossaryUuid) {
-                    TranslateTaskDto.ChapterState.Translated
-                } else {
+                } else if (
+                    chapterTranslationOutline.glossaryUuid != novel.glossaryUuid ||
+                    (translatorId == TranslatorId.Sakura && chapterTranslationOutline.sakuraVersion != "0.9")
+                ) {
                     TranslateTaskDto.ChapterState.TranslatedAndExpired
+                } else {
+                    TranslateTaskDto.ChapterState.Translated
                 }
                 TranslateTaskDto.ChapterIdWithState(
                     id = chapterId,
@@ -733,7 +738,12 @@ class WebNovelApi(
         translatorId: TranslatorId,
         glossaryUuid: String?,
         paragraphsZh: List<String>,
+        sakuraVersion: String?,
     ): TranslateStateDto {
+        if (translatorId == TranslatorId.Sakura && sakuraVersion != "0.9") {
+            throwBadRequest("旧版本Sakura不再允许上传")
+        }
+
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         if (glossaryUuid != novel.glossaryUuid) {
@@ -766,7 +776,6 @@ class WebNovelApi(
         translations: List<TranslatorId>,
         type: NovelFileType,
     ): String {
-        println("123124")
         return fileRepo.makeFile(
             providerId = providerId,
             novelId = novelId,
