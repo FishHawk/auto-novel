@@ -99,13 +99,13 @@ export class SakuraTranslator implements SegmentTranslator {
         }
         return d;
       };
-      return fingerprintKnownList
-        .map((known) => {
-          const distance = calculateDistance(known, fingerprint);
-          console.log(distance);
-          return distance;
-        })
-        .some((it) => it < 0.00001);
+
+      const distanceList = fingerprintKnownList.map((known) => {
+        const distance = calculateDistance(known, fingerprint);
+        console.log(distance);
+        return distance;
+      });
+      return distanceList.some((it) => it < 0.001);
     }
   };
 
