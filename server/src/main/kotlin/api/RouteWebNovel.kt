@@ -720,7 +720,8 @@ class WebNovelApi(
 
         return if (
             translated != null &&
-            oldGlossaryUuid == novel.glossaryUuid
+            oldGlossaryUuid == novel.glossaryUuid &&
+            (translatorId != TranslatorId.Sakura || chapter.sakuraVersion == "0.9")
         ) {
             emptyList()
         } else {
