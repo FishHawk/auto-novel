@@ -293,7 +293,7 @@ const translateWenku = async (
     translator = await Translator.create({
       client,
       glossary: task.glossary,
-      log: (message) => callback.log('　　' + message),
+      log: (message, detail) => callback.log('　　' + message, detail),
       ...translatorDesc,
     });
   } catch (e: any) {
@@ -386,7 +386,7 @@ const translatePersonal = async (
     translator = await Translator.create({
       client,
       glossary: task.glossary,
-      log: (message) => callback.log('　　' + message),
+      log: (message, detail) => callback.log('　　' + message, detail),
       ...translatorDesc,
     });
   } catch (e: any) {
