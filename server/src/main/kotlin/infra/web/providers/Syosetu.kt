@@ -91,20 +91,19 @@ class Syosetu(
         }
 
         val doc = client.get("https://yomou.syosetu.com/rank/$path").document()
-        return doc.select("div.ranking_inbox > div.ranking_list").map { item ->
-            val novelId = item.selectFirst("a.tl")!!
-                .attr("href")
+
+        return doc.select("div.p-ranklist-item").map { item ->
+            val elTitle = item.selectFirst("div.p-ranklist-item__title > a")!!
+            val title = elTitle.text()
+            val novelId = elTitle.attr("href")
                 .removeSuffix("/")
                 .substringAfterLast("/")
 
-            val title = item.selectFirst("a.tl")!!.text()
-
-            val tbody = item.selectFirst("tbody")!!
-
+            val elKeyword = item.selectFirst("div.p-ranklist-item__keyword")!!
             val attentions = mutableListOf<WebNovelAttention>()
             val keywords = mutableListOf<String>()
-            tbody
-                .select("td.keyword > a")
+            elKeyword
+                .getElementsByTag("a")
                 .map { it.text() }
                 .forEach {
                     when (it) {
@@ -114,12 +113,10 @@ class Syosetu(
                     }
                 }
 
-            val left = tbody
-                .selectFirst("td.left")!!
-                .text()
-                .split(" ", limit = 2)
-            val genre = tbody.child(2).text()
-            val extra = (left + listOf(genre)).joinToString(" / ")
+            val elPoints = item.selectFirst("div.p-ranklist-item__points")!!
+            val elInfomation = item.selectFirst("div.p-ranklist-item__infomation")!!
+            val extra = (listOf(elPoints) + elInfomation.getElementsByClass("p-ranklist-item__separator"))
+                .joinToString(" / ") { it.text() }
 
             RemoteNovelListItem(
                 novelId = novelId,
