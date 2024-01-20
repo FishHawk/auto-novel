@@ -6,7 +6,6 @@ import {
   darkTheme,
   dateZhCN,
   lightTheme,
-  useThemeVars,
   zhCN,
 } from 'naive-ui';
 import { Component, computed, h, ref } from 'vue';
@@ -117,8 +116,6 @@ const onSignInSuccess = (profile: SignInDto) => {
 };
 
 const navToMySpace = () => router.push({ path: '/account' });
-
-const vars = useThemeVars();
 </script>
 
 <template>
@@ -138,13 +135,7 @@ const vars = useThemeVars();
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isDesktop">
               <router-link to="/">
-                <n-icon
-                  size="30"
-                  :color="vars.primaryColor"
-                  style="margin-right: 8px; margin-bottom: 8px"
-                >
-                  <robot-svg />
-                </n-icon>
+                <robot-icon style="margin-right: 8px; margin-bottom: 8px" />
               </router-link>
               <div>
                 <n-menu

@@ -105,6 +105,11 @@ const qqLink =
 
 const telegramLink = 'https://t.me/+Mphy0wV4LYZkNTI1';
 const githubLink = 'https://github.com/FishHawk/auto-novel';
+
+const notifications = [
+  '1月26日下午网站会暂停几个小时。',
+  '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。',
+];
 </script>
 
 <template>
@@ -113,15 +118,15 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
       background: `rgba(0, 0, 0, .15) url(${bannerUrl})`,
       'background-blend-mode': 'darken',
       width: '100%',
-      'padding-top': '60px',
-      'padding-bottom': '104px',
+      'padding-top': '20px',
+      'padding-bottom': '50px',
     }"
   >
     <div class="layout-content" style="max-width: 800px">
       <n-h1
         style="
           text-align: center;
-          font-size: 3.2em;
+          font-size: 3em;
           color: white;
           filter: drop-shadow(0.05em 0.05em black);
         "
@@ -145,27 +150,26 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
   </div>
 
   <div class="layout-content">
-    <n-ul style="margin-top: 24px">
-      <n-li>1月26日下午网站会暂停几个小时。</n-li>
-      <n-li>
-        如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。
-      </n-li>
-      <n-li>
-        <n-flex>
-          <n-button text type="primary" @click="showHowToUseModal = true">
-            使用说明
-          </n-button>
-          /
-          <n-button text type="primary" @click="showQQModal = true">
-            QQ群
-          </n-button>
-          /
-          <n-a :href="telegramLink" target="_blank">Telegram</n-a>
-          /
-          <n-a :href="githubLink" target="_blank">Github</n-a>
-        </n-flex>
-      </n-li>
-    </n-ul>
+    <n-card embedded style="margin-top: 24px">
+      <n-flex>
+        <n-button text type="primary" @click="showHowToUseModal = true">
+          使用说明
+        </n-button>
+        /
+        <n-button text type="primary" @click="showQQModal = true">
+          QQ群
+        </n-button>
+        /
+        <n-a :href="telegramLink" target="_blank">Telegram</n-a>
+        /
+        <n-a :href="githubLink" target="_blank">Github</n-a>
+      </n-flex>
+      <n-p
+        v-for="n of notifications"
+        style="margin-top: 0.5em; margin-bottom: 0em"
+        >{{ n }}</n-p
+      >
+    </n-card>
 
     <template v-if="userData.isLoggedIn">
       <SectionHeader title="我的收藏">
