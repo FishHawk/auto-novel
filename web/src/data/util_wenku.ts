@@ -83,7 +83,8 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
         ?.getElementsByTagName('span')?.[0]
         ?.innerHTML?.replaceAll('<br>', '\n') ?? '';
 
-    const cover = doc.getElementById('landingImage')!.getAttribute('src')!;
+    const cover = doc.getElementById('landingImage')!.getAttribute('src')!
+        .replace("m.media-amazon.com", "images-cn.ssl-images-amazon.cn");
 
     return {
       title,
@@ -181,7 +182,8 @@ async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
         const title = prettyTitle(
           it.getElementsByTagName('h2')[0].textContent!
         );
-        const cover = it.getElementsByTagName('img')[0].getAttribute('src')!;
+        const cover = it.getElementsByTagName('img')[0].getAttribute('src')!
+            .replace("m.media-amazon.com", "images-cn.ssl-images-amazon.cn");
         return { asin, title, cover };
       });
   }
