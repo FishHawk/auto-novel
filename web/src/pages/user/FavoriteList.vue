@@ -175,7 +175,7 @@ const showAddModal = ref(false);
     />
   </div>
 
-  <n-drawer v-model:show="showListModal" placement="right">
+  <n-drawer v-model:show="showListModal" :auto-focus="false" placement="right">
     <n-drawer-content
       max-width="600"
       :native-scrollbar="false"

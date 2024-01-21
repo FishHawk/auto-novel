@@ -180,13 +180,13 @@ const notifications = [
       <n-divider />
     </template>
 
-    <SectionHeader title="最多点击-网络小说">
+    <SectionHeader title="网络小说-最多点击">
       <RouterNA to="/novel-list">更多</RouterNA>
     </SectionHeader>
     <PanelWebNovel :list-result="mostVisitedWeb" />
     <n-divider />
 
-    <SectionHeader title="最新更新-文库小说" style="margin-bottom: 20px">
+    <SectionHeader title="文库小说-最新更新" style="margin-bottom: 20px">
       <RouterNA to="/wenku-list">更多</RouterNA>
     </SectionHeader>
     <PanelWenkuNovel :list-result="latestUpdateWenku" />

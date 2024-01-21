@@ -1,5 +1,6 @@
 <template>
   <n-modal
+    :auto-focus="false"
     preset="card"
     :bordered="false"
     :closable="$attrs.title !== undefined || $slots.header !== undefined"

@@ -69,6 +69,23 @@ const getTopMenuOptionKey = () => {
     return path;
   }
 };
+const getSideMenuOptionKey = () => {
+  if (path.startsWith('/forum')) {
+    return '/forum';
+  } else if (path.startsWith('/favorite')) {
+    return '/favorite';
+  } else if (path.startsWith('/wenku')) {
+    return '/wenku-list';
+  } else if (path.startsWith('/novel-rank')) {
+    return path;
+  } else if (path.startsWith('/novel')) {
+    return '/novel-list';
+  } else if (path.startsWith('/toolbox')) {
+    return '/toolbox';
+  } else {
+    return path;
+  }
+};
 
 const collapsedMenuOptions = computed(() => {
   const signed = userData.info !== undefined;
@@ -76,18 +93,19 @@ const collapsedMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('我的收藏', '/favorite', signed),
     menuOption('阅读历史', '/read-history', signed),
-    menuOption('网络小说', '/novel-list'),
-    menuOption('文库小说', '/wenku-list'),
-    menuOption('文件翻译', '/personal'),
     {
-      label: '排行',
+      type: 'group',
+      label: '网络小说',
       children: [
+        menuOption('网络小说', '/novel-list'),
         menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),
         menuOption('成为小说家：综合', '/novel-rank/syosetu/2'),
         menuOption('成为小说家：异世界转移/转生', '/novel-rank/syosetu/3'),
         menuOption('Kakuyomu：流派', '/novel-rank/kakuyomu/1'),
       ],
     },
+    menuOption('文库小说', '/wenku-list'),
+    menuOption('文件翻译', '/personal'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
@@ -195,13 +213,21 @@ const navToMySpace = () => router.push({ path: '/account' });
         </n-layout>
       </n-layout>
 
-      <n-drawer v-if="!isDesktop" v-model:show="showMenuModal" placement="left">
+      <n-drawer
+        v-if="!isDesktop"
+        v-model:show="showMenuModal"
+        :auto-focus="false"
+        placement="left"
+      >
         <n-drawer-content
           max-width="600"
           :native-scrollbar="false"
           :scrollbar-props="{ trigger: 'none' }"
         >
-          <n-menu :value="path" :options="collapsedMenuOptions" />
+          <n-menu
+            :value="getSideMenuOptionKey()"
+            :options="collapsedMenuOptions"
+          />
         </n-drawer-content>
       </n-drawer>
 
