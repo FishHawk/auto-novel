@@ -211,6 +211,9 @@ const createWebIncorrectCase = async (
 </template>
 
 <style scoped>
+#chapter-content {
+  min-height: 60vh;
+}
 #chapter-content p {
   font-size: v-bind('setting.fontSize');
   color: v-bind("setting.theme.isDark ? 'white' : 'black'");

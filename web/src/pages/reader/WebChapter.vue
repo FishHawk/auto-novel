@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
-import { useMessage } from 'naive-ui';
 import { getScrollParent } from 'seemly';
 import { computed, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -8,24 +7,18 @@ import { useRoute } from 'vue-router';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { Ok, ResultState } from '@/data/result';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsDesktop } from '@/data/util';
 import { buildWebChapterUrl } from '@/data/util_web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
 }>();
 
-const isDesktop = useIsDesktop(800);
 const userData = useUserDataStore();
-const setting = useReaderSettingStore();
 const route = useRoute();
-const message = useMessage();
 
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
-
 
 const currentChapterId = ref(route.params.chapterId as string);
 const chapters = new Map<string, WebNovelChapterDto>();

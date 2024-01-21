@@ -68,14 +68,14 @@ const onGlobalClick = (event: MouseEvent) => {
     placement="bottom"
     :auto-focus="false"
   >
-    <n-flex :size="0" style="width: 100%">
+    <n-flex :size="0" style="width: 100%; margin-top: 4px; margin-bottom: 4px">
       <side-button
         quaternary
         :disable="!chapter.prevId"
         text="上一话"
         :icon="ArrowBackIosOutlined"
         @click="emit('nav', chapter.prevId!!)"
-        style="flex: auto"
+        style="flex: 1"
       />
       <side-button
         quaternary
@@ -83,21 +83,21 @@ const onGlobalClick = (event: MouseEvent) => {
         :href="`/novel/${providerId}/${novelId}`"
         text="详情"
         :icon="LibraryBooksOutlined"
-        style="flex: auto"
+        style="flex: 1"
       />
       <side-button
         quaternary
         text="目录"
         :icon="FormatListBulletedOutlined"
         @click="showCatalogModal = true"
-        style="flex: auto"
+        style="flex: 1"
       />
       <side-button
         quaternary
         text="设置"
         :icon="TuneOutlined"
         @click="showSettingModal = true"
-        style="flex: auto"
+        style="flex: 1"
       />
       <side-button
         quaternary
@@ -105,7 +105,7 @@ const onGlobalClick = (event: MouseEvent) => {
         text="下一话"
         :icon="ArrowForwardIosOutlined"
         @click="emit('nav', chapter.nextId!!)"
-        style="flex: auto"
+        style="flex: 1"
       />
     </n-flex>
   </n-drawer>

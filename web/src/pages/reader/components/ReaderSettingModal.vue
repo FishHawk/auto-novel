@@ -2,6 +2,7 @@
 import { createReusableTemplate } from '@vueuse/core';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { TranslatorId } from '@/data/translator/translator';
 import { useIsDesktop } from '@/data/util';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
@@ -9,6 +10,7 @@ const [DefineOption, ReuseOption] = createReusableTemplate<{
 }>();
 
 const isDesktop = useIsDesktop(600);
+const setting = useReaderSettingStore();
 
 const modeOptions = [
   { value: 'jp', label: '日文' },
@@ -20,7 +22,7 @@ const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
 ];
-const translationOptions = [
+const translationOptions = <{ label: string; value: TranslatorId }[]>[
   { label: 'Sakura', value: 'sakura' },
   { label: 'GPT3', value: 'gpt' },
   { label: '有道', value: 'youdao' },
@@ -43,79 +45,110 @@ const themeOptions = [
   { isDark: true, bodyColor: '#272727' },
 ];
 
-const setting = useReaderSettingStore();
+const toggleTranslator = (id: TranslatorId) => {
+  if (setting.translations.includes(id)) {
+    setting.translations = setting.translations.filter((it) => it !== id);
+  } else {
+    setting.translations.push(id);
+  }
+};
 
-defineProps<{
-  show: boolean;
-}>();
-
-defineEmits<{
-  (e: 'update:show', show: boolean): void;
-}>();
+const calculateTranslatorOrderLabel = (id: TranslatorId) => {
+  const index = setting.translations.indexOf(id);
+  if (index < 0) {
+    return '[x]';
+  } else {
+    return `[${index + 1}]`;
+  }
+};
 </script>
 
 <template>
-  <DefineOption v-slot="{ $slots, label }">
-    <tr>
-      <td nowrap="nowrap" style="padding-right: 12px">{{ label }}</td>
-      <td style="width: 100%"><component :is="$slots.default!" /></td>
-    </tr>
-  </DefineOption>
+  <card-modal title="设置">
+    <DefineOption v-slot="{ $slots, label }">
+      <n-flex :wrap="false" align="baseline">
+        <n-text depth="3" style="white-space: nowrap; font-size: 12px">
+          {{ label }}
+        </n-text>
+        <component :is="$slots.default!" />
+      </n-flex>
+    </DefineOption>
 
-  <card-modal
-    title="设置"
-    :show="show"
-    @update:show="$emit('update:show', $event)"
-  >
     <n-space vertical size="large" style="width: 100%">
       <ReuseOption label="语言">
-        <reader-setting-modal-select
-          :desktop="isDesktop"
-          v-model:value="setting.mode"
-          :options="modeOptions"
-        />
+        <n-radio-group v-model:value="setting.mode">
+          <n-radio-button
+            v-for="option in modeOptions"
+            :key="option.value"
+            :value="option.value"
+            :label="option.label"
+          />
+        </n-radio-group>
       </ReuseOption>
       <ReuseOption label="翻译">
-        <reader-setting-modal-select
-          :desktop="isDesktop"
-          v-model:value="setting.translationsMode"
-          :options="translationModeOptions"
-        />
-        <n-transfer
-          v-model:value="setting.translations"
-          :options="translationOptions"
-          style="height: 190px; margin-top: 8px"
-        />
+        <n-flex>
+          <n-radio-group v-model:value="setting.translationsMode">
+            <n-radio-button
+              v-for="option in translationModeOptions"
+              :key="option.value"
+              :value="option.value"
+              :label="option.label"
+            />
+          </n-radio-group>
+          <n-button-group>
+            <n-button
+              v-for="option in translationOptions"
+              :focusable="false"
+              ghost
+              :type="
+                setting.translations.includes(option.value)
+                  ? 'primary'
+                  : 'default'
+              "
+              :value="option.value"
+              @click="toggleTranslator(option.value)"
+              :style="isDesktop ? {} : { height: '48px' }"
+            >
+              {{ option.label }}
+              <br v-if="!isDesktop" />
+              {{ calculateTranslatorOrderLabel(option.value) }}
+            </n-button>
+          </n-button-group>
+        </n-flex>
       </ReuseOption>
       <ReuseOption label="字体">
-        <reader-setting-modal-select
-          :desktop="isDesktop"
-          v-model:value="setting.fontSize"
-          :options="fontSizeOptions"
-        />
+        <n-radio-group v-model:value="setting.fontSize">
+          <n-radio-button
+            v-for="option in fontSizeOptions"
+            :key="option.value"
+            :value="option.value"
+            :label="option.label"
+          />
+        </n-radio-group>
       </ReuseOption>
       <ReuseOption label="主题">
-        <n-space>
+        <n-flex>
           <n-radio
             v-for="theme of themeOptions"
             :checked="theme.bodyColor == setting.theme.bodyColor"
             @update:checked="setting.theme = theme"
           >
             <n-tag
+              :round="!isDesktop"
               :color="{
                 color: theme.bodyColor,
                 textColor: theme.isDark ? 'white' : 'black',
               }"
               :style="{
-                width: isDesktop ? '7em' : '1.7em',
+                width: isDesktop ? '5.5em' : '2em',
               }"
             >
-              {{ isDesktop ? theme.bodyColor : 'A' }}
+              {{ isDesktop ? theme.bodyColor : '#' }}
             </n-tag>
           </n-radio>
-        </n-space>
+        </n-flex>
       </ReuseOption>
-      <ReuseOption label="主文本透明度">
+      <ReuseOption label="主透明度">
         <n-slider
           v-model:value="setting.mixZhOpacity"
           :max="1"
@@ -124,7 +157,7 @@ defineEmits<{
           :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
         />
       </ReuseOption>
-      <ReuseOption label="辅文本透明度">
+      <ReuseOption label="辅透明度">
         <n-slider
           v-model:value="setting.mixJpOpacity"
           :max="1"

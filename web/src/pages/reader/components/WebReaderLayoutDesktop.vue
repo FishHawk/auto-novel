@@ -78,7 +78,12 @@ onKeyStroke(['Enter'], (e) => {
   <n-flex
     size="large"
     vertical
-    style="position: fixed; right: 20px; bottom: 20px"
+    style="
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translate(0%, -50%);
+    "
   >
     <side-button
       tag="a"
