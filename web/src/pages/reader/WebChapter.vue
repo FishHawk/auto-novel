@@ -1,22 +1,15 @@
 <script lang="ts" setup>
-import {
-  FormatListBulletedOutlined,
-  LibraryBooksOutlined,
-  TuneOutlined,
-} from '@vicons/material';
-import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
+import { createReusableTemplate } from '@vueuse/core';
 import { useMessage } from 'naive-ui';
 import { getScrollParent } from 'seemly';
 import { computed, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { Ok, ResultState } from '@/data/result';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { TranslatorId } from '@/data/translator/translator';
 import { useIsDesktop } from '@/data/util';
 import { buildWebChapterUrl } from '@/data/util_web';
 
@@ -33,8 +26,6 @@ const message = useMessage();
 const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
 
-const showCatalogModal = ref(false);
-const showSettingModal = ref(false);
 
 const currentChapterId = ref(route.params.chapterId as string);
 const chapters = new Map<string, WebNovelChapterDto>();
@@ -90,195 +81,24 @@ watch(
   { immediate: true }
 );
 
+const isMobile = (() => {
+  const a = navigator.userAgent || navigator.vendor || (window as any).opera;
+  if (
+    /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(
+      a
+    ) ||
+    /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(
+      a.substr(0, 4)
+    )
+  ) {
+    return true;
+  }
+  return false;
+})();
+
 const url = computed(() =>
   buildWebChapterUrl(providerId, novelId, currentChapterId.value)
 );
-
-onKeyStroke(['1', '2', '3', '4'], (e) => {
-  const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
-  const translatorId = translatorIds[parseInt(e.key, 10) - 1];
-  if (setting.translationsMode === 'parallel') {
-    if (setting.translations.includes(translatorId)) {
-      setting.translations = setting.translations.filter(
-        (it) => it !== translatorId
-      );
-    } else {
-      setting.translations.push(translatorId);
-    }
-  } else {
-    setting.translations = [translatorId];
-  }
-  e.preventDefault();
-});
-
-onKeyStroke(['ArrowLeft'], (e) => {
-  if (chapterResult.value?.ok && chapterResult.value.value.prevId) {
-    navToChapter(chapterResult.value.value.prevId);
-    e.preventDefault();
-  }
-});
-onKeyStroke(['ArrowRight'], (e) => {
-  if (chapterResult.value?.ok && chapterResult.value.value.nextId) {
-    navToChapter(chapterResult.value.value.nextId);
-    e.preventDefault();
-  }
-});
-onKeyStroke(['Enter'], (e) => {
-  showCatalogModal.value = !showCatalogModal.value;
-  e.preventDefault();
-});
-
-type Paragraph =
-  | { text: string; secondary: boolean; popover?: number }
-  | { imageUrl: string }
-  | null;
-
-function getTextList(chapter: WebNovelChapterDto): Paragraph[] {
-  const merged: Paragraph[] = [];
-  const styles: {
-    paragraphs: string[];
-    secondary: boolean;
-    popover?: boolean;
-  }[] = [];
-
-  if (setting.mode === 'jp') {
-    styles.push({ paragraphs: chapter.paragraphs, secondary: false });
-  } else {
-    if (setting.mode === 'mix-reverse') {
-      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
-    }
-
-    function paragraphsWithLabel(
-      t: TranslatorId
-    ): [string, string[] | undefined] {
-      if (t === 'youdao') {
-        return ['有道', chapter.youdaoParagraphs];
-      } else if (t === 'baidu') {
-        return ['百度', chapter.baiduParagraphs];
-      } else if (t === 'gpt') {
-        return ['GPT3', chapter.gptParagraphs];
-      } else {
-        return ['Sakura', chapter.sakuraParagraphs];
-      }
-    }
-    if (setting.translationsMode === 'priority') {
-      let hasAnyTranslation = false;
-      for (const t of setting.translations) {
-        const [label, paragraphs] = paragraphsWithLabel(t);
-        if (paragraphs) {
-          hasAnyTranslation = true;
-          styles.push({
-            paragraphs,
-            secondary: false,
-            popover: t === 'sakura',
-          });
-          break;
-        } else {
-          merged.push({ text: label + '翻译不存在', secondary: true });
-        }
-      }
-      if (!hasAnyTranslation) {
-        return merged;
-      }
-    } else {
-      for (const t of setting.translations) {
-        const [label, paragraphs] = paragraphsWithLabel(t);
-        if (paragraphs) {
-          styles.push({
-            paragraphs,
-            secondary: false,
-            popover: t === 'sakura',
-          });
-        } else {
-          merged.push({ text: label + '翻译不存在', secondary: true });
-        }
-      }
-    }
-
-    if (setting.mode === 'mix') {
-      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
-    }
-  }
-
-  for (let i = 0; i < chapter.paragraphs.length; i++) {
-    if (chapter.paragraphs[i].trim().length === 0) {
-      merged.push(null);
-    } else if (chapter.paragraphs[i].startsWith('<图片>')) {
-      merged.push({ imageUrl: chapter.paragraphs[i].slice(4) });
-    } else {
-      for (const style of styles) {
-        merged.push({
-          text: style.paragraphs[i],
-          secondary: style.secondary,
-          popover: style.popover === true ? i : undefined,
-        });
-      }
-    }
-  }
-  return merged;
-}
-
-const createWebIncorrectCase = async (
-  index: number,
-  chapter: WebNovelChapterDto
-) => {
-  const jp = chapter.paragraphs[index];
-  const zh = chapter.sakuraParagraphs!![index];
-
-  function truncateParagraphs(
-    paragraphsJp: string[],
-    paragraphsZh: string[],
-    maxLength: number
-  ) {
-    const truncatedJp: string[] = [];
-    const truncatedZh: string[] = [];
-    let currentLength = 0;
-
-    for (let i = 0; i < paragraphsJp.length; i++) {
-      const pJp = paragraphsJp[i];
-      const pZh = paragraphsZh[i];
-      if (pJp.trim().length === 0 || pJp.startsWith('<图片>')) {
-        continue;
-      }
-      if (currentLength + pJp.length > maxLength) {
-        break;
-      }
-      currentLength += pJp.length;
-      truncatedJp.push(pJp);
-      truncatedZh.push(pZh);
-    }
-    return { jp: truncatedJp, zh: truncatedZh };
-  }
-
-  const { jp: contextJpBefore, zh: contextZhBefore } = truncateParagraphs(
-    chapter.paragraphs.slice(0, index).reverse(),
-    chapter.sakuraParagraphs!.slice(0, index).reverse(),
-    512 - jp.length
-  );
-  const { jp: contextJpAfter, zh: contextZhAfter } = truncateParagraphs(
-    chapter.paragraphs.slice(index + 1, chapter.paragraphs.length),
-    chapter.sakuraParagraphs!.slice(index + 1, chapter.paragraphs.length),
-    512 - jp.length
-  );
-
-  const contextJp = [...contextJpBefore.reverse(), jp, ...contextJpAfter];
-  const contextZh = [...contextZhBefore.reverse(), zh, ...contextZhAfter];
-
-  const result = await ApiSakura.createWebIncorrectCase({
-    providerId,
-    novelId,
-    chapterId: route.params.chapterId as string,
-    jp,
-    zh,
-    contextJp,
-    contextZh,
-  });
-  if (result.ok) {
-    message.info('提交成功');
-  } else {
-    message.error('提交失败:' + result.error.message);
-  }
-};
 </script>
 
 <template>
@@ -287,168 +107,77 @@ const createWebIncorrectCase = async (
       :disabled="!chapterId"
       quaternary
       :type="chapterId ? 'primary' : 'default'"
-      @click=" () => navToChapter(chapterId!!)"
+      @click="() => navToChapter(chapterId!!)"
     >
       <component :is="$slots.default!" />
     </n-button>
   </DefineChapterLink>
 
-  <reader-setting-modal v-model:show="showSettingModal" />
-  <catalog-modal
-    v-model:show="showCatalogModal"
-    :chapterId="currentChapterId"
-    @nav="navToChapter"
-  />
-
-  <div
-    ref="placeholderRef"
-    class="content"
-    :style="
-      isDesktop
-        ? {
-            'padding-top': '0',
-            'padding-left': '90px',
-            'padding-right': '90px',
-          }
-        : {}
-    "
-  >
+  <div ref="placeholderRef" class="content">
     <ResultView
       :result="chapterResult"
       :showEmpty="() => false"
       v-slot="{ value: chapter }"
     >
-      <n-space
-        v-if="isDesktop"
+      <n-flex
         align="center"
         justify="space-between"
         :wrap="false"
         style="width: 100%; margin-top: 20px"
       >
         <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-
         <n-h4 style="text-align: center; margin: 0">
           <n-a :href="url">{{ chapter.titleJp }}</n-a>
           <br />
           <n-text depth="3">{{ chapter.titleZh }}</n-text>
         </n-h4>
         <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
-      </n-space>
-
-      <template v-else>
-        <n-h4 style="text-align: center">
-          <n-a :href="url">{{ chapter.titleJp }}</n-a>
-          <br />
-          <n-text depth="3">{{ chapter.titleZh }}</n-text>
-        </n-h4>
-
-        <n-space
-          align="center"
-          justify="space-between"
-          :wrap="false"
-          style="width: 100%"
-        >
-          <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-          <n-button
-            quaternary
-            type="primary"
-            tag="a"
-            :href="`/novel/${providerId}/${novelId}`"
-          >
-            详情
-          </n-button>
-          <n-button quaternary type="primary" @click="showCatalogModal = true">
-            目录
-          </n-button>
-          <n-button quaternary type="primary" @click="showSettingModal = true">
-            设置
-          </n-button>
-          <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
-        </n-space>
-      </template>
+      </n-flex>
 
       <n-divider />
 
-      <div id="chapter-content">
-        <template
-          v-for="(p, index) in getTextList(chapter)"
-          :key="currentChapterId + index"
-        >
-          <template v-if="p && 'text' in p">
-            <n-popconfirm
-              v-if="p.popover !== undefined"
-              placement="top-start"
-              positive-text="提交"
-              :negative-text="null"
-              @positive-click="createWebIncorrectCase(p.popover, chapter)"
-            >
-              <template #trigger>
-                <n-p :class="{ secondary: p.secondary }">
-                  {{ p.text }}
-                </n-p>
-              </template>
-              <span>
-                这段话Sakura翻译不准确？请提交帮助我们改进。（人名不稳定请使用术语表，不用提交）
-              </span>
-            </n-popconfirm>
-
-            <n-p v-else :class="{ secondary: p.secondary }">
-              {{ p.text }}
-            </n-p>
-          </template>
-          <br v-else-if="!p" />
-          <img
-            v-else
-            :src="p.imageUrl"
-            :alt="p.imageUrl"
-            style="max-width: 100%; object-fit: scale-down"
-          />
-        </template>
-      </div>
+      <web-reader-layout-mobile
+        v-if="isMobile"
+        :provider-id="providerId"
+        :novel-id="novelId"
+        :chapter-id="currentChapterId"
+        :chapter="chapter"
+        @nav="navToChapter"
+      >
+        <web-reader-content
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :chapter-id="currentChapterId"
+          :chapter="chapter"
+        />
+      </web-reader-layout-mobile>
+      <web-reader-layout-desktop
+        v-else
+        :provider-id="providerId"
+        :novel-id="novelId"
+        :chapter-id="currentChapterId"
+        :chapter="chapter"
+        @nav="navToChapter"
+      >
+        <web-reader-content
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :chapter-id="currentChapterId"
+          :chapter="chapter"
+        />
+      </web-reader-layout-desktop>
 
       <n-divider />
 
-      <n-space align="center" justify="space-between" style="width: 100%">
+      <n-flex align="center" justify="space-between" style="width: 100%">
         <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
         <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
-      </n-space>
-
-      <n-space
-        v-if="isDesktop"
-        size="large"
-        vertical
-        style="position: fixed; right: 20px; bottom: 20px"
-      >
-        <side-button
-          tag="a"
-          :href="`/novel/${providerId}/${novelId}`"
-          text="详情"
-          :icon="LibraryBooksOutlined"
-        />
-        <side-button
-          text="目录"
-          :icon="FormatListBulletedOutlined"
-          @click="showCatalogModal = true"
-        />
-        <side-button
-          text="设置"
-          :icon="TuneOutlined"
-          @click="showSettingModal = true"
-        />
-      </n-space>
+      </n-flex>
     </ResultView>
   </div>
 </template>
 
 <style scoped>
-#chapter-content p {
-  font-size: v-bind('setting.fontSize');
-  color: v-bind("setting.theme.isDark ? 'white' : 'black'");
-  opacity: v-bind('setting.mixZhOpacity');
-}
-#chapter-content .secondary {
-  opacity: v-bind('setting.mixJpOpacity');
-}
 .content {
   max-width: 800px;
   margin: 0 auto;
