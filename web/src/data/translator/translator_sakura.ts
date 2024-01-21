@@ -142,18 +142,22 @@ export class SakuraTranslator implements SegmentTranslator {
 
     let retry = 0;
     while (retry < 2) {
-      const { text, hasDegradation } = await this.translatePrompt(
+      const { text, hasDegradation, extra } = await this.translatePrompt(
         concatedSeg,
         maxNewToken,
         retry > 0
       );
       const splitText = text.replaceAll('<|im_end|>', '').split('\n');
 
+      const detail = [seg.join('\n'), text];
+      if (extra !== undefined) {
+        detail.push(JSON.stringify(extra, null, 2));
+      }
       this.log(
         `分段${segInfo.index + 1}/${segInfo.size}[${retry}] ${
           hasDegradation ? ' 退化' : ''
         }`,
-        [seg.join('\n'), text]
+        detail
       );
 
       if (!hasDegradation && seg.length === splitText.length) {
@@ -276,10 +280,13 @@ namespace SakuraLlamacpp {
           timeout: false,
         }
       )
-      .then(({ content, model, stopped_limit }) => ({
+      .then(({ prompt, generation_settings, content, stopped_limit }) => ({
         text: content,
-        model,
         hasDegradation: stopped_limit,
+        extra: {
+          prompt,
+          generation_settings,
+        },
       }));
 }
 
@@ -346,7 +353,7 @@ namespace SakuraOpenai {
       frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
     }).then((completion) => ({
       text: completion.choices[0].message.content!!,
-      model: completion.model,
       hasDegradation: completion.choices[0].finish_reason !== 'stop',
+      extra: undefined,
     }));
 }

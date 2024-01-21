@@ -44,6 +44,8 @@ interface LlamaCompletionResponse {
   }>;
   content: string;
   model: string;
+  prompt: string;
+  generation_settings: object;
   stopped_eos: boolean;
   stopped_limit: boolean;
   truncated: boolean;
