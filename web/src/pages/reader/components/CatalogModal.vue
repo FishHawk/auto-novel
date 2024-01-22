@@ -55,6 +55,13 @@ const currentKey = computed(() => {
       ?.key;
   }
 });
+
+const onTocItemClick = (chapterId: string | undefined) => {
+  if (chapterId !== undefined) {
+    emit('nav', chapterId);
+    emit('update:show', false);
+  }
+};
 </script>
 
 <template>
@@ -90,11 +97,7 @@ const currentKey = computed(() => {
           <div
             :key="item.index"
             style="width: 100%"
-            @click="
-              () => {
-                if (item.chapterId) emit('nav', item.chapterId);
-              }
-            "
+            @click="() => onTocItemClick(item.chapterId)"
           >
             <div style="padding-top: 12px">
               <n-text
