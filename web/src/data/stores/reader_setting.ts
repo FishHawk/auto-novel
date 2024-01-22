@@ -7,7 +7,7 @@ export interface ReaderSetting {
   translationsMode: 'parallel' | 'priority';
   translations: TranslatorId[];
   fontSize: '14px' | '16px' | '18px' | '20px';
-  theme: { isDark: boolean; bodyColor: string };
+  theme: { isDark: boolean; bodyColor: string; fontColor?: string };
   mixJpOpacity: number;
   mixZhOpacity: number;
 }

@@ -216,7 +216,9 @@ const createWebIncorrectCase = async (
 }
 #chapter-content p {
   font-size: v-bind('setting.fontSize');
-  color: v-bind("setting.theme.isDark ? 'white' : 'black'");
+  color: v-bind(
+    "setting.theme.fontColor ?? (setting.theme.isDark ? 'white' : 'black')"
+  );
   opacity: v-bind('setting.mixZhOpacity');
 }
 #chapter-content .secondary {

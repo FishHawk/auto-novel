@@ -4,6 +4,7 @@ import { createReusableTemplate } from '@vueuse/core';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator/translator';
 import { useIsDesktop } from '@/data/util';
+import { ref } from 'vue';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
   label: string;
@@ -60,6 +61,19 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
   } else {
     return `[${index + 1}]`;
   }
+};
+
+const showCustomThemeControls = ref(false);
+const setCustomBodyColor = (color: string) => {
+  setting.theme.bodyColor = color;
+  const r = parseInt(color.substring(1, 3), 16);
+  const g = parseInt(color.substring(3, 5), 16);
+  const b = parseInt(color.substring(5, 7), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  setting.theme.isDark = brightness < 120;
+};
+const setCustomFontColor = (color: string) => {
+  setting.theme.fontColor = color;
 };
 </script>
 
@@ -127,25 +141,57 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
         </n-radio-group>
       </ReuseOption>
       <ReuseOption label="主题">
-        <n-flex>
-          <n-radio
-            v-for="theme of themeOptions"
-            :checked="theme.bodyColor == setting.theme.bodyColor"
-            @update:checked="setting.theme = theme"
-          >
-            <n-tag
-              :round="!isDesktop"
-              :color="{
-                color: theme.bodyColor,
-                textColor: theme.isDark ? 'white' : 'black',
-              }"
-              :style="{
-                width: isDesktop ? '5.5em' : '2em',
-              }"
+        <n-flex size="large" vertical>
+          <n-flex>
+            <n-radio
+              v-for="theme of themeOptions"
+              :checked="theme.bodyColor == setting.theme.bodyColor"
+              @update:checked="setting.theme = { ...theme }"
             >
-              {{ isDesktop ? theme.bodyColor : '#' }}
-            </n-tag>
-          </n-radio>
+              <n-tag
+                :round="!isDesktop"
+                :color="{
+                  color: theme.bodyColor,
+                  textColor: theme.isDark ? 'white' : 'black',
+                }"
+                :style="{
+                  width: isDesktop ? '5.5em' : '2em',
+                }"
+              >
+                {{ isDesktop ? theme.bodyColor : '#' }}
+              </n-tag>
+            </n-radio>
+            <n-button
+              type="primary"
+              text
+              @click="showCustomThemeControls = !showCustomThemeControls"
+            >
+              自定义
+            </n-button>
+          </n-flex>
+          <n-flex v-if="showCustomThemeControls" align="center">
+            <n-color-picker
+              :modes="['hex']"
+              :show-alpha="false"
+              :default-value="setting.theme.bodyColor"
+              :on-complete="setCustomBodyColor"
+              style="width: 8em"
+            >
+              <template #label="color">背景：{{ color }}</template>
+            </n-color-picker>
+            <n-color-picker
+              :modes="['hex']"
+              :show-alpha="false"
+              :default-value="
+                setting.theme.fontColor ??
+                (setting.theme.isDark ? '#FFFFFF' : '#000000')
+              "
+              :on-complete="setCustomFontColor"
+              style="width: 8em"
+            >
+              <template #label="color">文字：{{ color }}</template>
+            </n-color-picker>
+          </n-flex>
         </n-flex>
       </ReuseOption>
       <ReuseOption label="主透明度">
