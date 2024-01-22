@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { TranslatorId } from '@/data/translator/translator';
 
 defineProps<{
   type: 'web' | 'wenku' | 'personal';
@@ -62,19 +63,37 @@ const typeOptions = [
 ];
 const modeOptions = [
   { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中文/日文' },
-  { value: 'mix-reverse', label: '日文/中文' },
+  { value: 'mix', label: '中日' },
+  { value: 'mix-reverse', label: '日中' },
 ];
 const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
 ];
-const translationOptions = [
+const translationOptions: { label: string; value: TranslatorId }[] = [
   { label: 'Sakura', value: 'sakura' },
   { label: 'GPT3', value: 'gpt' },
   { label: '有道', value: 'youdao' },
   { label: '百度', value: 'baidu' },
 ];
+
+const toggleTranslator = (id: TranslatorId) => {
+  if (setting.downloadFormat.translations.includes(id)) {
+    setting.downloadFormat.translations =
+      setting.downloadFormat.translations.filter((it) => it !== id);
+  } else {
+    setting.downloadFormat.translations.push(id);
+  }
+};
+
+const calculateTranslatorOrderLabel = (id: TranslatorId) => {
+  const index = setting.downloadFormat.translations.indexOf(id);
+  if (index < 0) {
+    return '[x]';
+  } else {
+    return `[${index + 1}]`;
+  }
+};
 </script>
 
 <template>
@@ -96,19 +115,33 @@ const translationOptions = [
   >
     <n-list v-if="showTranslateOptions" bordered>
       <n-list-item>
-        <AdvanceOptionSwitch
+        <AdvanceOption
           title="翻译过期章节"
           description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
-          v-model:value="translateExpireChapter"
-        />
+        >
+          <template #suffix>
+            <n-switch
+              :rubber-band="false"
+              size="small"
+              v-model:value="translateExpireChapter"
+            />
+          </template>
+        </AdvanceOption>
       </n-list-item>
 
       <n-list-item v-if="type === 'web' && userData.passWeek">
-        <AdvanceOptionSwitch
+        <AdvanceOption
           title="与源站同步"
           description="在启动翻译任务时，同步已缓存章节。如果缓存章节与源站不匹配，会删除章节，包含现有的翻译。慎用，不要抱着试试的心情用这个功能，用之前请确保你知道自己在干什么。一次性设定，默认关闭。"
-          v-model:value="syncFromProvider"
-        />
+        >
+          <template #suffix>
+            <n-switch
+              :rubber-band="false"
+              size="small"
+              v-model:value="syncFromProvider"
+            />
+          </template>
+        </AdvanceOption>
       </n-list-item>
 
       <n-list-item v-if="type === 'web'">
@@ -147,45 +180,91 @@ const translationOptions = [
 
     <n-list v-if="showDownloadOptions" bordered>
       <n-list-item v-if="type === 'web'">
-        <AdvanceOptionSwitch
+        <AdvanceOption
           title="中文文件名"
           description="如果小说标题已经被翻译，则使用翻译后的中文标题作为下载的文件名。"
-          v-model:value="tryUseChineseTitleAsFilename"
-        />
-      </n-list-item>
-
-      <n-list-item>
-        <AdvanceOptionRadio
-          title="自定义下载文件语言"
-          description="设置下载文件的语言。注意部分EPUB阅读器不支持自定义字体颜色，日文段落会被强制使用黑色字体。"
-          v-model:value="setting.downloadFormat.mode"
-          :options="modeOptions"
-        />
-      </n-list-item>
-
-      <n-list-item>
-        <AdvanceOptionRadio
-          title="自定义下载文件翻译"
-          description="设置下载文件使用的翻译。注意右侧选中的翻译的顺序，优先模式顺序代表优先级，并列模式顺序代表翻译的排列顺序。"
-          v-model:value="setting.downloadFormat.translationsMode"
-          :options="translationModeOptions"
         >
-          <n-transfer
-            v-model:value="setting.downloadFormat.translations"
-            :options="translationOptions"
+          <template #suffix>
+            <n-switch
+              :rubber-band="false"
+              size="small"
+              v-model:value="tryUseChineseTitleAsFilename"
+            />
+          </template>
+        </AdvanceOption>
+      </n-list-item>
+
+      <n-list-item>
+        <AdvanceOption
+          title="下载文件语言"
+          description="设置下载文件的语言。注意部分EPUB阅读器不支持半透明字体，日文段落无法正确显示为半透明字体。"
+        >
+          <n-radio-group
+            v-model:value="setting.downloadFormat.mode"
             size="small"
-            style="height: 190px; margin-top: 8px; font-size: 12px"
-          />
-        </AdvanceOptionRadio>
+          >
+            <n-radio-button
+              v-for="option in modeOptions"
+              :key="option.value"
+              :value="option.value"
+              :label="option.label"
+            />
+          </n-radio-group>
+        </AdvanceOption>
+      </n-list-item>
+
+      <n-list-item>
+        <AdvanceOption
+          title="下载文件翻译"
+          description="设置下载文件使用的翻译。注意选中的翻译顺序，优先模式下顺序代表优先级，并列模式下顺序代表翻译的排列顺序。"
+        >
+          <n-flex>
+            <n-radio-group
+              v-model:value="setting.downloadFormat.translationsMode"
+              size="small"
+            >
+              <n-radio-button
+                v-for="option in translationModeOptions"
+                :key="option.value"
+                :value="option.value"
+                :label="option.label"
+              />
+            </n-radio-group>
+            <n-button-group size="small">
+              <n-button
+                v-for="option in translationOptions"
+                :focusable="false"
+                ghost
+                :type="
+                  setting.downloadFormat.translations.includes(option.value)
+                    ? 'primary'
+                    : 'default'
+                "
+                :value="option.value"
+                @click="toggleTranslator(option.value)"
+              >
+                {{ option.label }}
+                {{ calculateTranslatorOrderLabel(option.value) }}
+              </n-button>
+            </n-button-group>
+          </n-flex>
+        </AdvanceOption>
       </n-list-item>
 
       <n-list-item v-if="type === 'web'">
-        <AdvanceOptionRadio
-          title="自定义下载文件类型"
-          description="设置下载文件的类型。"
-          v-model:value="setting.downloadFormat.type"
-          :options="typeOptions"
-        />
+        <AdvanceOption title="下载文件类型" description="设置下载文件的类型。">
+          <n-radio-group
+            v-model:value="setting.downloadFormat.type"
+            size="small"
+          >
+            <n-radio-button
+              v-for="option in typeOptions"
+              :key="option.value"
+              :value="option.value"
+              :label="option.label"
+            />
+          </n-radio-group>
+        </AdvanceOption>
       </n-list-item>
     </n-list>
   </n-collapse-transition>

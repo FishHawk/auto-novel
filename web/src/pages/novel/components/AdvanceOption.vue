@@ -6,21 +6,17 @@ withDefaults(defineProps<{ title: string; description: string }>(), {
 </script>
 
 <template>
-  <n-space justify="space-between" :wrap="false">
+  <n-flex align="center" justify="space-between" :wrap="false">
     <div>
-      <n-text>
-        <b>{{ title }}</b>
-      </n-text>
+      <b>{{ title }}</b>
       <br />
       <n-text style="font-size: 12px">
         {{ description }}
       </n-text>
-      <div style="margin-top: 4px">
+      <div v-if="$slots.default" style="margin-top: 8px">
         <slot />
       </div>
     </div>
-    <n-space align="center" style="height: 100%">
-      <slot name="suffix" />
-    </n-space>
-  </n-space>
+    <slot name="suffix" />
+  </n-flex>
 </template>

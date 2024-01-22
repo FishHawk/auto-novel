@@ -23,7 +23,7 @@ const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
 ];
-const translationOptions = <{ label: string; value: TranslatorId }[]>[
+const translationOptions: { label: string; value: TranslatorId }[] = [
   { label: 'Sakura', value: 'sakura' },
   { label: 'GPT3', value: 'gpt' },
   { label: '有道', value: 'youdao' },
