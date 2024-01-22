@@ -58,7 +58,11 @@ const currentKey = computed(() => {
 </script>
 
 <template>
-  <card-modal :show="show" @update:show="$emit('update:show', $event)">
+  <card-modal
+    :show="show"
+    @update:show="$emit('update:show', $event)"
+    style="min-height: 30vh"
+  >
     <template #header>
       目录
       <n-text
@@ -76,10 +80,11 @@ const currentKey = computed(() => {
       v-slot="{ value: toc }"
     >
       <n-virtual-list
-        style="max-height: 60vh"
-        :item-size="56"
+        :item-size="57"
+        item-resizable
         :items="toc"
         :default-scroll-key="currentKey"
+        style="max-height: 60vh"
       >
         <template #default="{ item }">
           <div
