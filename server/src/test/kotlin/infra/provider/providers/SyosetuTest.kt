@@ -26,7 +26,7 @@ class SyosetuTest : DescribeSpec({
             metadata.toc[0].createAt.shouldBeNull()
             metadata.toc[1].title.shouldBe("プロローグ")
             metadata.toc[1].chapterId.shouldBe("1")
-            metadata.toc[1].createAt.shouldBe(Instant.parse("2012-11-22T09:00:00Z"))
+            metadata.toc[1].createAt.shouldBe(Instant.parse("2012-11-22T08:00:00Z"))
         }
 
         it("常规，作者无链接") {

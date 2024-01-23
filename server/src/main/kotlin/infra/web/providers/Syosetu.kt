@@ -10,6 +10,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.jsoup.nodes.Document
 
 class Syosetu(
     private val client: HttpClient,
@@ -200,7 +201,15 @@ class Syosetu(
                 )
             )
         } else {
-            doc1
+            val totalPages = doc1
+                .getElementsByClass("novelview_pager-last")
+                .first()
+                ?.attr("href")
+                ?.substringAfterLast("/?p=")
+                ?.toInt()
+                ?: 1
+
+            fun parseToc(doc: Document) = doc
                 .selectFirst("div.index_box")!!
                 .children()
                 .map { child ->
@@ -219,6 +228,17 @@ class Syosetu(
                         title = child.text(),
                     )
                 }
+
+            val tocFirstPage = parseToc(doc1)
+            val tocRemainingPages =
+                (2..totalPages)
+                    .map { page ->
+                        val url = "https://ncode.syosetu.com/$novelId/?p=${page}"
+                        val doc = client.get(url).document()
+                        return@map parseToc(doc)
+                    }
+                    .flatten()
+            tocFirstPage + tocRemainingPages
         }
         return RemoteNovelMetadata(
             title = title,

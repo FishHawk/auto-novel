@@ -1,5 +1,9 @@
 package infra
 
+import infra.web.providers.Alphapolis
+import infra.web.providers.Hameln
+import infra.web.providers.Pixiv
+import infra.web.providers.Syosetu
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
@@ -11,6 +15,10 @@ import kotlinx.serialization.json.Json
 val client = HttpClient(Java) {
     install(HttpCookies) {
         default {
+            Alphapolis.addCookies(this)
+            Hameln.addCookies(this)
+            Pixiv.addCookies(this, phpsessid = "dummy")
+            Syosetu.addCookies(this)
         }
     }
     install(ContentNegotiation) {
