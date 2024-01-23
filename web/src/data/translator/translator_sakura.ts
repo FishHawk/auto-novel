@@ -333,9 +333,16 @@ namespace SakuraOpenai {
         ? '0.9'
         : '0.8';
       // TODO: 等待sakura支持返回概率
-      const allow = ['0.9-Q4', '0.9-Q5', '0.9-Q6', '0.9-Q8'].some((it) =>
-        completion.model.includes(it)
-      );
+      const allow = [
+        '0.9-Q4',
+        '0.9-Q5',
+        '0.9-Q6',
+        '0.9-Q8',
+        '0.9b-Q4',
+        '0.9b-Q5',
+        '0.9b-Q6',
+        '0.9b-Q8',
+      ].some((it) => completion.model.includes(it));
       return {
         version,
         fingerprint: allow ? 'placeholder-allow' : undefined,
