@@ -8,13 +8,14 @@ import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { Ok, ResultState } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { checkIsMobile } from '@/data/util';
+import { checkIsMobile, useIsWideScreen } from '@/data/util';
 import { buildWebChapterUrl } from '@/data/util_web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   id: string | undefined;
 }>();
 
+const isWideScreen = useIsWideScreen(600);
 const userData = useUserDataStore();
 const route = useRoute();
 const isMobile = checkIsMobile();
@@ -101,6 +102,7 @@ const url = computed(() =>
       v-slot="{ value: chapter }"
     >
       <n-flex
+        v-if="isWideScreen"
         align="center"
         justify="space-between"
         :wrap="false"
@@ -114,6 +116,23 @@ const url = computed(() =>
         </n-h4>
         <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
       </n-flex>
+
+      <div v-else style="margin-top: 20px">
+        <n-h4 style="text-align: center; margin: 0">
+          <n-a :href="url">{{ chapter.titleJp }}</n-a>
+          <br />
+          <n-text depth="3">{{ chapter.titleZh }}</n-text>
+        </n-h4>
+        <n-flex
+          align="center"
+          justify="space-between"
+          :wrap="false"
+          style="width: 100%"
+        >
+          <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
+          <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+        </n-flex>
+      </div>
 
       <n-divider />
 
