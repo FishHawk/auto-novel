@@ -1,6 +1,9 @@
 .vscode
 .idea/
 
+# Sakura launcher
+sakura-launcher/build/
+
 # Server
 server/.gradle/
 server/build/
