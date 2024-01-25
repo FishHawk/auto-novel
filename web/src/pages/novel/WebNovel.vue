@@ -12,7 +12,7 @@ import {
 } from '@/data/api/api_web_novel';
 import { Result, mapOk } from '@/data/result';
 import { useSettingStore } from '@/data/stores/setting';
-import { useIsDesktop } from '@/data/util';
+import { useIsWideScreen } from '@/data/util';
 import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
 
 type ReadableTocItem = WebNovelTocItemDto & {
@@ -34,7 +34,7 @@ const [DefineTocItemMobile, ReuseTocItemMobile] = createReusableTemplate<{
 }>();
 
 const setting = useSettingStore();
-const isDesktop = useIsDesktop(600);
+const isWideScreen = useIsWideScreen(600);
 const vars = useThemeVars();
 
 const route = useRoute();
@@ -247,11 +247,11 @@ getNovel();
           >
             <b style="padding-left: 6px">上次读到:</b>
             <component
-              :is="isDesktop ? ReuseTocItemDesktop : ReuseTocItemMobile"
+              :is="isWideScreen ? ReuseTocItemDesktop : ReuseTocItemMobile"
               :item="lastReadChapter"
             />
           </n-card>
-          <template v-if="isDesktop">
+          <template v-if="isWideScreen">
             <n-list-item
               v-for="tocItem in setting.tocSortReverse
                 ? toc.slice().reverse()

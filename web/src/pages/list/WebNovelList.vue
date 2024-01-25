@@ -4,12 +4,12 @@ import { useRoute } from 'vue-router';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { Page } from '@/data/api/common';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsDesktop } from '@/data/util';
+import { useIsWideScreen } from '@/data/util';
 
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
 
-const isDesktop = useIsDesktop(850);
+const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 const userData = useUserDataStore();
 
@@ -105,7 +105,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
       </NovelList>
     </div>
     <n-menu
-      v-if="isDesktop"
+      v-if="isWideScreen"
       style="flex: none; width: 250px; margin-left: 12px"
       :value="route.path"
       :options="menuOptions"

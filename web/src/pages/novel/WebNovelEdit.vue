@@ -5,11 +5,11 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { ApiWebNovel, WebNovelDto } from '@/data/api/api_web_novel';
-import { useIsDesktop } from '@/data/util';
+import { useIsWideScreen } from '@/data/util';
 
 const route = useRoute();
 const router = useRouter();
-const isDesktop = useIsDesktop(850);
+const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
 const providerId = route.params.providerId as string;
@@ -78,7 +78,7 @@ const submit = async () => {
     <n-form
       ref="formRef"
       :model="formValue"
-      :label-placement="isDesktop ? 'left' : 'top'"
+      :label-placement="isWideScreen ? 'left' : 'top'"
       label-width="auto"
     >
       <n-form-item path="wenkuId" label="文库链接">
@@ -124,13 +124,13 @@ const submit = async () => {
           {{ token.jp }}
           <br />
           <n-input
-            v-if="!isDesktop"
+            v-if="!isWideScreen"
             v-model:value="token.zh"
             :placeholder="token.jp"
             :input-props="{ spellcheck: false }"
           />
         </td>
-        <td v-if="isDesktop" style="padding: 4px">
+        <td v-if="isWideScreen" style="padding: 4px">
           <n-input
             v-model:value="token.zh"
             :placeholder="token.jp"

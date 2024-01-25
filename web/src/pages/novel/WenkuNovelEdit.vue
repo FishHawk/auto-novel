@@ -8,13 +8,13 @@ import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
-import { useIsDesktop } from '@/data/util';
+import { useIsWideScreen } from '@/data/util';
 import { fetchMetadata } from '@/data/util_wenku';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 const route = useRoute();
 const router = useRouter();
-const isDesktop = useIsDesktop(850);
+const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
 const novelId = route.params.id as string | undefined;
@@ -250,7 +250,7 @@ const deleteVolume = (index: number) => {
       ref="formRef"
       :model="formValue"
       :rules="formRules"
-      :label-placement="isDesktop ? 'left' : 'top'"
+      :label-placement="isWideScreen ? 'left' : 'top'"
       label-width="auto"
       style="max-width: 800px"
     >

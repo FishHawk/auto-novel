@@ -3,14 +3,14 @@ import { createReusableTemplate } from '@vueuse/core';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator/translator';
-import { useIsDesktop } from '@/data/util';
+import { useIsWideScreen } from '@/data/util';
 import { ref } from 'vue';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
   label: string;
 }>();
 
-const isDesktop = useIsDesktop(600);
+const isWideScreen = useIsWideScreen(600);
 const setting = useReaderSettingStore();
 
 const modeOptions = [
@@ -121,10 +121,10 @@ const setCustomFontColor = (color: string) => {
               "
               :value="option.value"
               @click="toggleTranslator(option.value)"
-              :style="isDesktop ? {} : { height: '48px' }"
+              :style="isWideScreen ? {} : { height: '48px' }"
             >
               {{ option.label }}
-              <br v-if="!isDesktop" />
+              <br v-if="!isWideScreen" />
               {{ calculateTranslatorOrderLabel(option.value) }}
             </n-button>
           </n-button-group>
@@ -149,16 +149,16 @@ const setCustomFontColor = (color: string) => {
               @update:checked="setting.theme = { ...theme }"
             >
               <n-tag
-                :round="!isDesktop"
+                :round="!isWideScreen"
                 :color="{
                   color: theme.bodyColor,
                   textColor: theme.isDark ? 'white' : 'black',
                 }"
                 :style="{
-                  width: isDesktop ? '5.5em' : '2em',
+                  width: isWideScreen ? '5.5em' : '2em',
                 }"
               >
-                {{ isDesktop ? theme.bodyColor : '#' }}
+                {{ isWideScreen ? theme.bodyColor : '#' }}
               </n-tag>
             </n-radio>
             <n-button

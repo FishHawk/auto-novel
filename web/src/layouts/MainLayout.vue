@@ -14,9 +14,9 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { SignInDto } from '@/data/api/api_auth';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsDesktop } from '@/data/util';
+import { useIsWideScreen } from '@/data/util';
 
-const isDesktop = useIsDesktop(850);
+const isWideScreen = useIsWideScreen(850);
 const setting = useSettingStore();
 const route = useRoute();
 const router = useRouter();
@@ -151,7 +151,7 @@ const navToMySpace = () => router.push({ path: '/account' });
       <n-layout style="overflow-x: overlay">
         <n-layout-header bordered>
           <n-flex class="layout-content" align="center" style="height: 50px">
-            <template v-if="isDesktop">
+            <template v-if="isWideScreen">
               <router-link to="/">
                 <robot-icon style="margin-right: 8px; margin-bottom: 8px" />
               </router-link>
@@ -174,10 +174,10 @@ const navToMySpace = () => router.push({ path: '/account' });
             <div style="flex: 1"></div>
 
             <template v-if="userData.username">
-              <router-link v-if="isDesktop" to="/read-history">
+              <router-link v-if="isWideScreen" to="/read-history">
                 <n-button quaternary>历史</n-button>
               </router-link>
-              <router-link v-if="isDesktop" to="/favorite">
+              <router-link v-if="isWideScreen" to="/favorite">
                 <n-button quaternary>收藏</n-button>
               </router-link>
               <n-dropdown
@@ -214,7 +214,7 @@ const navToMySpace = () => router.push({ path: '/account' });
       </n-layout>
 
       <n-drawer
-        v-if="!isDesktop"
+        v-if="!isWideScreen"
         v-model:show="showMenuModal"
         :auto-focus="false"
         placement="left"

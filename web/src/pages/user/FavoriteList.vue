@@ -7,13 +7,13 @@ import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
 import { Page } from '@/data/api/common';
 import { mapOk } from '@/data/result';
-import { useIsDesktop } from '@/data/util';
+import { useIsWideScreen } from '@/data/util';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
 import { Loader } from '../list/components/NovelList.vue';
 import { ApiUser, FavoredList } from '@/data/api/api_user';
 
-const isDesktop = useIsDesktop(600);
+const isWideScreen = useIsWideScreen(600);
 
 const route = useRoute();
 const router = useRouter();
@@ -151,7 +151,7 @@ const showAddModal = ref(false);
   <div style="display: flex">
     <div style="flex: auto">
       <n-button
-        v-if="!isDesktop"
+        v-if="!isWideScreen"
         @click="showListModal = true"
         style="margin-bottom: 8px"
       >
@@ -168,7 +168,7 @@ const showAddModal = ref(false);
       </NovelList>
     </div>
     <n-menu
-      v-if="isDesktop"
+      v-if="isWideScreen"
       :value="currentMenuKey"
       :options="menuOptions"
       style="flex: none; width: 250px"
