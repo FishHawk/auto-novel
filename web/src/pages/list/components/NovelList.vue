@@ -17,7 +17,7 @@ const route = useRoute();
 const router = useRouter();
 
 const props = defineProps<{
-  search: boolean;
+  search?: { suggestions: string[]; tags: string[] };
   options: { label: string; tags: string[] }[];
   loader: Loader<T>;
 }>();
@@ -91,7 +91,7 @@ function pushPath() {
   query['page'] = currentPage.value.toString();
 
   if ('query' in query) delete query['query'];
-  if (props.search) {
+  if (props.search !== undefined) {
     query.query = filters.value.query;
   }
 

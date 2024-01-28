@@ -8,10 +8,13 @@ import { useIsWideScreen } from '@/data/util';
 
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
+import { computed, watch } from 'vue';
+import { useWebSearchHistoryStore } from '@/data/stores/search_history';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 const userData = useUserDataStore();
+const searchHistory = useWebSearchHistoryStore();
 
 const oldAssOptions = userData.isOldAss
   ? [
@@ -88,6 +91,28 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
     });
   }
 };
+
+const search = computed(() => {
+  return {
+    suggestions: searchHistory.queries,
+    tags: searchHistory.tags
+      .sort((a, b) => Math.log2(b.used) - Math.log2(a.used))
+      .map((it) => it.tag)
+      .slice(0, 8),
+  };
+});
+
+watch(
+  route,
+  async (route) => {
+    let query = '';
+    if (typeof route.query.query === 'string') {
+      query = route.query.query;
+    }
+    searchHistory.addHistory(query);
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -100,7 +125,12 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
           如何搜索网络小说
         </RouterNA>
       </n-text>
-      <NovelList search :options="options" :loader="loader" v-slot="{ page }">
+      <NovelList
+        :search="search"
+        :options="options"
+        :loader="loader"
+        v-slot="{ page }"
+      >
         <NovelListWeb :items="page.items" />
       </NovelList>
     </div>

@@ -155,7 +155,14 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (_page, _query, selected) => {
     <div style="flex: auto">
       <n-h1>{{ descriptior.title }}</n-h1>
       <NovelList
-        :search="descriptior.search"
+        :search="
+          descriptior.search
+            ? {
+                suggestions: [],
+                tags: [],
+              }
+            : undefined
+        "
         :options="descriptior.options"
         :loader="loader"
         v-slot="{ page }"

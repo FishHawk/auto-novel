@@ -1,4 +1,3 @@
-import { useLocalStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
 
 export interface TranslateJob {

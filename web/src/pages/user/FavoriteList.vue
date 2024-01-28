@@ -157,12 +157,7 @@ const showAddModal = ref(false);
       >
         收藏夹列表
       </n-button>
-      <NovelList
-        :search="false"
-        :options="options"
-        :loader="loader"
-        v-slot="{ page }"
-      >
+      <NovelList :options="options" :loader="loader" v-slot="{ page }">
         <NovelListWeb v-if="page.type === 'web'" :items="page.items" simple />
         <NovelListWenku v-if="page.type === 'wenku'" :items="page.items" />
       </NovelList>

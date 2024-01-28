@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-import { SearchFilled } from '@vicons/material';
-
 type Filter = { query: string; selected: number[] };
 
 const props = defineProps<{
-  search: boolean;
+  search: { suggestions: string[]; tags: string[] } | undefined;
   options: { label: string; tags: string[] }[];
   filters: Filter;
 }>();
@@ -19,43 +17,54 @@ function select(optionIndex: number, index: number) {
 </script>
 
 <template>
-  <table v-if="search || options.length >= 0" style="border-spacing: 0px 8px">
-    <tr v-if="search">
-      <td nowrap="nowrap" style="vertical-align: center; padding-right: 20px">
-        <n-text depth="3">搜索</n-text>
-      </td>
-      <td>
-        <n-input
-          v-model:value="filters.query"
-          :placeholder="`中/日文标题或作者`"
-          style="max-width: 400px"
-          :input-props="{ spellcheck: false }"
-          @keyup.enter="emits('userInput')"
+  <n-flex
+    v-if="search !== undefined || options.length >= 0"
+    size="large"
+    vertical
+    style="width: 100%; margin-top: 8px"
+  >
+    <n-flex
+      v-if="search !== undefined"
+      size="large"
+      align="baseline"
+      :wrap="false"
+    >
+      <n-text style="white-space: nowrap" depth="3">搜索</n-text>
+      <input-with-suggestion
+        v-model:value="filters.query"
+        :suggestions="search.suggestions"
+        :tags="search.tags"
+        :placeholder="`中/日文标题或作者`"
+        style="flex: 0 1 400px; margin-right: 8px"
+        :input-props="{ spellcheck: false }"
+        @keyup.enter="emits('userInput')"
+        @select="
+          (query: string) => {
+            filters.query = query;
+            emits('userInput');
+          }
+        "
+      />
+    </n-flex>
+    <n-flex
+      v-for="(option, optionIndex) in options"
+      size="large"
+      align="baseline"
+      :wrap="false"
+    >
+      <n-text style="white-space: nowrap" depth="3">{{ option.label }}</n-text>
+      <n-flex size="large">
+        <n-button
+          v-for="(tag, index) in option.tags"
+          text
+          :type="
+            index === filters.selected[optionIndex] ? 'primary' : 'default'
+          "
+          @click="select(optionIndex, index)"
         >
-          <template #suffix>
-            <n-icon :component="SearchFilled" />
-          </template>
-        </n-input>
-      </td>
-    </tr>
-    <tr v-for="(option, optionIndex) in options">
-      <td nowrap="nowrap" style="vertical-align: top; padding-right: 20px">
-        <n-text depth="3">{{ option.label }}</n-text>
-      </td>
-      <td>
-        <n-space :size="[16, 4]">
-          <n-button
-            v-for="(tag, index) in option.tags"
-            text
-            :type="
-              index === filters.selected[optionIndex] ? 'primary' : 'default'
-            "
-            @click="select(optionIndex, index)"
-          >
-            {{ tag }}
-          </n-button>
-        </n-space>
-      </td>
-    </tr>
-  </table>
+          {{ tag }}
+        </n-button>
+      </n-flex>
+    </n-flex>
+  </n-flex>
 </template>

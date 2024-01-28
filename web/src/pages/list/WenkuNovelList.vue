@@ -43,7 +43,10 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
     <n-h1>文库小说</n-h1>
     <RouterNA to="/wenku-edit">新建文库小说</RouterNA>
     <NovelList
-      :search="true"
+      :search="{
+        suggestions: [],
+        tags: [],
+      }"
       :options="options"
       :loader="loader"
       v-slot="{ page }"
