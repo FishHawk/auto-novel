@@ -99,33 +99,12 @@ const clearCache = async () => {
       <n-li>
         如果你想直接翻译网络小说/文库小说，请注意使用的模型版本。现在允许上传的版本：
         <n-a
-          href="https://huggingface.co/SakuraLLM/Sakura-13B-LNovel-v0.9-GGUF/blob/main/sakura-13b-lnovel-v0.9-Q4KM_awq4bit.gguf"
-          target="_blank"
-        >
-          v0.9-Q4KM_awq4bit
-        </n-a>
-        /
-        <n-a
-          href="https://huggingface.co/SakuraLLM/Sakura-13B-LNovel-v0.9-GGUF/blob/main/sakura-13b-lnovel-v0.9-Q4_K_M.gguf"
-          target="_blank"
-        >
-          v0.9-Q4_K_M
-        </n-a>
-        /
-        <n-a
-          href="https://huggingface.co/SakuraLLM/Sakura-13B-LNovel-v0.9b-GGUF/blob/main/sakura-13b-lnovel-v0.9-Q4KM_awq4bit.gguf"
-          target="_blank"
-        >
-          v0.9b-Q4KM_awq4bit
-        </n-a>
-        /
-        <n-a
-          href="https://huggingface.co/SakuraLLM/Sakura-13B-LNovel-v0.9b-GGUF/blob/main/sakura-13b-lnovel-v0.9-Q4_K_M.gguf"
+          href="https://huggingface.co/SakuraLLM/Sakura-13B-LNovel-v0.9b-GGUF/blob/main/sakura-13b-lnovel-v0.9b-Q4_K_M.gguf"
           target="_blank"
         >
           v0.9b-Q4_K_M
         </n-a>
-        。
+        ，注意AWQ量化版本目前有bug。
       </n-li>
     </n-ul>
 
