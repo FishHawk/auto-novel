@@ -80,7 +80,7 @@ const scrollToCommentList = () => {
           </n-card>
           <n-divider style="margin: 4px 0" />
 
-          <n-scrollbar trigger="none" style="flex: auto">
+          <n-scrollbar trigger="none" :size="24" style="flex: auto">
             <n-list style="background-color: #0000; padding-bottom: 48px">
               <n-list-item
                 v-for="tocItem in setting.tocSortReverse

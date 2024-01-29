@@ -21,7 +21,7 @@ const readerSetting = useReaderSettingStore();
     :theme-overrides="{
       common: {
         bodyColor: readerSetting.theme.bodyColor,
-        scrollbarWidth: '8px',
+        scrollbarWidth: '6px',
       },
     }"
   >
