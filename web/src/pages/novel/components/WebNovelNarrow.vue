@@ -6,6 +6,7 @@ import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 
 import { WebNovelVM } from './common';
+import { ref } from 'vue';
 
 defineProps<{
   providerId: string;
@@ -15,6 +16,11 @@ defineProps<{
 
 const setting = useSettingStore();
 const vars = useThemeVars();
+
+const commentListRef = ref<HTMLElement>();
+const scrollToCommentList = () => {
+  commentListRef.value?.scrollIntoView({ behavior: 'instant' });
+};
 </script>
 
 <template>
@@ -22,6 +28,7 @@ const vars = useThemeVars();
     :provider-id="providerId"
     :novel-id="novelId"
     :novel="novel"
+    @comment-click="scrollToCommentList()"
   />
   <section-header title="翻译" />
   <WebTranslate
@@ -38,47 +45,46 @@ const vars = useThemeVars();
     :glossary="novel.glossary"
   />
 
-  <section>
-    <SectionHeader title="目录">
-      <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
-        <template #icon>
-          <n-icon :component="SortFilled" />
-        </template>
-        {{ setting.tocSortReverse ? '倒序' : '正序' }}
-      </n-button>
-    </SectionHeader>
+  <section-header title="目录">
+    <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
+      <template #icon>
+        <n-icon :component="SortFilled" />
+      </template>
+      {{ setting.tocSortReverse ? '倒序' : '正序' }}
+    </n-button>
+  </section-header>
 
-    <n-list style="background-color: #0000">
-      <n-card
-        v-if="novel.lastReadChapter"
-        :bordered="false"
-        embedded
-        style="margin-bottom: 8px"
-        content-style="padding: 6px 0px 0px;"
-      >
-        <b style="padding-left: 6px">上次读到:</b>
-        <web-novel-toc-item
-          :provider-id="providerId"
-          :novel-id="novelId"
-          :toc-item="novel.lastReadChapter"
-        />
-      </n-card>
-      <n-list-item
-        v-for="tocItem in setting.tocSortReverse
-          ? novel.toc.slice().reverse()
-          : novel.toc"
-        :key="tocItem.index"
-        style="padding: 0px"
-      >
-        <web-novel-toc-item
-          :provider-id="providerId"
-          :novel-id="novelId"
-          :toc-item="tocItem"
-        />
-      </n-list-item>
-    </n-list>
-  </section>
+  <n-list style="background-color: #0000">
+    <n-card
+      v-if="novel.lastReadChapter"
+      :bordered="false"
+      embedded
+      style="margin-bottom: 8px"
+      content-style="padding: 6px 0px 0px;"
+    >
+      <b style="padding-left: 6px">上次读到:</b>
+      <web-novel-toc-item
+        :provider-id="providerId"
+        :novel-id="novelId"
+        :toc-item="novel.lastReadChapter"
+      />
+    </n-card>
+    <n-list-item
+      v-for="tocItem in setting.tocSortReverse
+        ? novel.toc.slice().reverse()
+        : novel.toc"
+      :key="tocItem.index"
+      style="padding: 0px"
+    >
+      <web-novel-toc-item
+        :provider-id="providerId"
+        :novel-id="novelId"
+        :toc-item="tocItem"
+      />
+    </n-list-item>
+  </n-list>
 
+  <div ref="commentListRef"></div>
   <CommentList :site="`web-${providerId}-${novelId}`" />
 </template>
 

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { SortFilled } from '@vicons/material';
 import { useThemeVars } from 'naive-ui';
+import { ref } from 'vue';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
@@ -15,6 +16,11 @@ defineProps<{
 
 const setting = useSettingStore();
 const vars = useThemeVars();
+
+const commentListRef = ref<HTMLElement>();
+const scrollToCommentList = () => {
+  commentListRef.value?.scrollIntoView({ behavior: 'instant' });
+};
 </script>
 
 <template>
@@ -24,6 +30,7 @@ const vars = useThemeVars();
         :provider-id="providerId"
         :novel-id="novelId"
         :novel="novel"
+        @comment-click="scrollToCommentList()"
       />
 
       <section-header title="翻译" />
@@ -41,6 +48,7 @@ const vars = useThemeVars();
         :glossary="novel.glossary"
       />
 
+      <div ref="commentListRef"></div>
       <CommentList :site="`web-${providerId}-${novelId}`" />
     </div>
     <div style="flex: 0 0 350px">

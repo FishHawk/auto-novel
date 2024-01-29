@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { BookFilled, EditNoteFilled } from '@vicons/material';
+import { BookFilled, CommentFilled, EditNoteFilled } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
 
 import { buildWebNovelUrl } from '@/data/util_web';
@@ -10,6 +10,10 @@ defineProps<{
   providerId: string;
   novelId: string;
   novel: WebNovelVM;
+}>();
+
+const emit = defineEmits<{
+  commentClick: [];
 }>();
 </script>
 
@@ -51,6 +55,13 @@ defineProps<{
         文库
       </n-button>
     </router-link>
+
+    <n-button @click="emit('commentClick')">
+      <template #icon>
+        <n-icon :component="CommentFilled" />
+      </template>
+      评论
+    </n-button>
   </n-flex>
 
   <n-p>{{ novel.type }} / 浏览次数:{{ novel.visited }}</n-p>
