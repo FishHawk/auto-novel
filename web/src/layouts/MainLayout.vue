@@ -143,6 +143,7 @@ const navToMySpace = () => router.push({ path: '/account' });
     :date-locale="dateZhCN"
     inline-theme-disabled
     :theme-overrides="{
+      common: { scrollbarWidth: '8px' },
       Drawer: { bodyPadding: '0px' },
       List: { color: '#0000' },
     }"

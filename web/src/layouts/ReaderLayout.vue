@@ -19,7 +19,10 @@ const readerSetting = useReaderSettingStore();
     :date-locale="dateZhCN"
     inline-theme-disabled
     :theme-overrides="{
-      common: { bodyColor: readerSetting.theme.bodyColor },
+      common: {
+        bodyColor: readerSetting.theme.bodyColor,
+        scrollbarWidth: '8px',
+      },
     }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
