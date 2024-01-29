@@ -87,7 +87,7 @@ const onTocItemClick = (chapterId: string | undefined) => {
       v-slot="{ value: toc }"
     >
       <n-virtual-list
-        :item-size="57"
+        :item-size="20"
         item-resizable
         :items="toc"
         :default-scroll-key="currentKey"
