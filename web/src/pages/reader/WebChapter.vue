@@ -181,14 +181,8 @@ const url = computed(() =>
 .content {
   max-width: 800px;
   margin: 0 auto;
-  padding-left: 24px;
-  padding-right: 24px;
+  padding-left: v-bind("isMobile? '12px' : '24px'");
+  padding-right: v-bind("isMobile? '12px' : '84px'");
   padding-bottom: 48px;
-}
-@media only screen and (max-width: 600px) {
-  .content {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
 }
 </style>

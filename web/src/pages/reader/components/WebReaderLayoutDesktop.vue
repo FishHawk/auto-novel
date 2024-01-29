@@ -63,9 +63,34 @@ onKeyStroke(['Enter'], (e) => {
 </script>
 
 <template>
-  <div style="padding-right: 60px">
+  <n-flex :wrap="false">
     <slot />
-  </div>
+
+    <div>
+      <n-flex
+        size="large"
+        vertical
+        style="margin-left: 20px; position: fixed; bottom: 20px"
+      >
+        <side-button
+          tag="a"
+          :href="`/novel/${providerId}/${novelId}`"
+          text="详情"
+          :icon="LibraryBooksOutlined"
+        />
+        <side-button
+          text="目录"
+          :icon="FormatListBulletedOutlined"
+          @click="showCatalogModal = true"
+        />
+        <side-button
+          text="设置"
+          :icon="TuneOutlined"
+          @click="showSettingModal = true"
+        />
+      </n-flex>
+    </div>
+  </n-flex>
 
   <reader-setting-modal v-model:show="showSettingModal" />
 
@@ -74,32 +99,4 @@ onKeyStroke(['Enter'], (e) => {
     :chapter-id="chapterId"
     @nav="(chapterId: string) => emit('nav', chapterId)"
   />
-
-  <n-flex
-    size="large"
-    vertical
-    style="
-      position: fixed;
-      right: 20px;
-      top: 50%;
-      transform: translate(0%, -50%);
-    "
-  >
-    <side-button
-      tag="a"
-      :href="`/novel/${providerId}/${novelId}`"
-      text="详情"
-      :icon="LibraryBooksOutlined"
-    />
-    <side-button
-      text="目录"
-      :icon="FormatListBulletedOutlined"
-      @click="showCatalogModal = true"
-    />
-    <side-button
-      text="设置"
-      :icon="TuneOutlined"
-      @click="showSettingModal = true"
-    />
-  </n-flex>
 </template>
