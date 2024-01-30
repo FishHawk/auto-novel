@@ -228,7 +228,7 @@ const deleteVolume = (volumeId: string) =>
 </script>
 
 <template>
-  <n-flex vertical :size="0">
+  <n-flex vertical :size="0" v-bind="$attrs">
     <section-header title="文件列表">
       <n-flex :wrap="false">
         <n-upload
@@ -263,7 +263,6 @@ const deleteVolume = (volumeId: string) =>
     </n-flex>
 
     <n-divider style="margin-bottom: 4px" />
-    <n-scrollbar trigger="none" :size="24" style="flex: auto"> </n-scrollbar>
 
     <n-empty
       v-if="sortedVolumes.length === 0"
@@ -271,60 +270,62 @@ const deleteVolume = (volumeId: string) =>
       style="margin-top: 20px"
     />
 
-    <n-list>
-      <n-list-item v-for="volume of sortedVolumes">
-        {{ volume.volumeId }}
-        <br />
-        <n-text depth="3">
-          <n-time :time="volume.createAt" type="relative" /> / 总计{{
-            volume.total
-          }}
-          / 完成{{ volume.finished }} / 过期{{ volume.expired }}
-        </n-text>
-        <br />
-        <n-flex style="margin-top: 4px">
-          <n-button
-            text
-            type="primary"
-            @click="() => queueVolume(volume.volumeId)"
-          >
-            排队
-          </n-button>
+    <n-scrollbar trigger="none" :size="24" style="flex: auto">
+      <n-list style="padding-bottom: 48px">
+        <n-list-item v-for="volume of sortedVolumes">
+          {{ volume.volumeId }}
+          <br />
+          <n-text depth="3">
+            <n-time :time="volume.createAt" type="relative" /> / 总计{{
+              volume.total
+            }}
+            / 完成{{ volume.finished }} / 过期{{ volume.expired }}
+          </n-text>
+          <br />
+          <n-flex style="margin-top: 4px">
+            <n-button
+              text
+              type="primary"
+              @click="() => queueVolume(volume.volumeId)"
+            >
+              排队
+            </n-button>
 
-          <n-button
-            text
-            type="primary"
-            @click="() => downloadVolume(volume.volumeId)"
-          >
-            下载
-          </n-button>
+            <n-button
+              text
+              type="primary"
+              @click="() => downloadVolume(volume.volumeId)"
+            >
+              下载
+            </n-button>
 
-          <n-button
-            text
-            type="primary"
-            @click="
-              () => {
-                selectedVolumeToEditGlossary = volume;
-                showGlossaryModal = true;
-              }
-            "
-          >
-            编辑术语表
-          </n-button>
+            <n-button
+              text
+              type="primary"
+              @click="
+                () => {
+                  selectedVolumeToEditGlossary = volume;
+                  showGlossaryModal = true;
+                }
+              "
+            >
+              编辑术语表
+            </n-button>
 
-          <n-popconfirm
-            :show-icon="false"
-            @positive-click="deleteVolume(volume.volumeId)"
-            :negative-text="null"
-          >
-            <template #trigger>
-              <n-button text type="error"> 删除 </n-button>
-            </template>
-            确定删除{{ volume.volumeId }}吗？
-          </n-popconfirm>
-        </n-flex>
-      </n-list-item>
-    </n-list>
+            <n-popconfirm
+              :show-icon="false"
+              @positive-click="deleteVolume(volume.volumeId)"
+              :negative-text="null"
+            >
+              <template #trigger>
+                <n-button text type="error"> 删除 </n-button>
+              </template>
+              确定删除{{ volume.volumeId }}吗？
+            </n-popconfirm>
+          </n-flex>
+        </n-list-item>
+      </n-list>
+    </n-scrollbar>
   </n-flex>
 
   <card-modal title="编辑术语表" v-model:show="showGlossaryModal">

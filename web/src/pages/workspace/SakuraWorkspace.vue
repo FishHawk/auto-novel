@@ -244,9 +244,15 @@ const clearCache = async () => {
       <n-divider vertical style="height: calc(100vh - 50px); flex: 0 0 1px" />
 
       <div style="flex: 0 0 350px">
-        <div :wrap="false" style="position: fixed; top: 50; width: 350px">
-          <local-volume-list type="sakura" />
-        </div>
+        <local-volume-list
+          type="sakura"
+          style="
+            position: fixed;
+            top: 50;
+            width: 350px;
+            height: calc(100vh - 50px);
+          "
+        />
       </div>
     </n-flex>
   </div>
