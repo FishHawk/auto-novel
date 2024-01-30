@@ -173,7 +173,15 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
           title="术语表"
           description="术语表过大可能会使得翻译质量下降，此外，出于安全起见，Sakura只会使用日语长度超过两个字的术语。"
         >
-          <GlossaryEdit :glossary="glossary" :submit="submit" />
+          <glossary-edit :glossary="glossary" />
+          <async-button
+            type="primary"
+            secondary
+            size="small"
+            :on-async-click="submit"
+          >
+            提交
+          </async-button>
         </AdvanceOption>
       </n-list-item>
     </n-list>

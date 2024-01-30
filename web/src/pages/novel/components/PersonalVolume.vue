@@ -219,10 +219,17 @@ const showGlossaryEditor = ref(false);
             title="术语表"
             description="术语表过大可能会使得翻译质量下降（例如：百度/有道将无法从判断人名性别，导致人称代词错误）。"
           >
-            <GlossaryEdit
-              :glossary="volume.glossary"
-              :submit="() => submitGlossary(volume.volumeId, volume.glossary)"
-            />
+            <glossary-edit :glossary="volume.glossary" />
+            <n-button
+              type="primary"
+              secondary
+              size="small"
+              :on-async-click="
+                () => submitGlossary(volume.volumeId, volume.glossary)
+              "
+            >
+              提交
+            </n-button>
           </AdvanceOption>
         </n-list-item>
       </n-list>

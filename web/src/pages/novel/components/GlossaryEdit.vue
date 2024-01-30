@@ -4,7 +4,6 @@ import { ref } from 'vue';
 
 const { glossary } = defineProps<{
   glossary: { [key: string]: string };
-  submit: () => Promise<void>;
 }>();
 
 const message = useMessage();
@@ -83,17 +82,6 @@ function importGlossary() {
         />
         <n-button size="small" @click="addTerm()">添加</n-button>
       </n-input-group>
-    </n-p>
-
-    <n-p>
-      <AsyncButton
-        type="primary"
-        secondary
-        size="small"
-        :on-async-click="submit"
-      >
-        提交
-      </AsyncButton>
     </n-p>
 
     <n-p>
