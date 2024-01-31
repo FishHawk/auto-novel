@@ -34,9 +34,9 @@ const getNovel = async () => {
     return <WebNovelVM>{
       ...novel,
       toc: novelToc,
-      lastReadChapter: novelToc.find(
-        (it) => it.chapterId === novel.lastReadChapterId
-      ),
+      lastReadChapter: novel.lastReadChapterId
+        ? novelToc.find((it) => it.chapterId === novel.lastReadChapterId)
+        : undefined,
     };
   });
   novelResult.value = newResult;
