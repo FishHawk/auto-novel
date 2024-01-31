@@ -108,7 +108,6 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
 
 const notifications = [
   '1月20日晚10点网站出现恶性bug，如果你能看到这行字，说明你没有问题。',
-  '1月26日下午网站会暂停几个小时。',
   '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。',
 ];
 </script>
