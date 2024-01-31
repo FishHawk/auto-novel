@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { ErrorOutlineFilled } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
@@ -176,29 +177,28 @@ const createWebIncorrectCase = async (
 <template>
   <div id="chapter-content">
     <template v-for="(p, index) in paragraphs" :key="chapterId + index">
-      <template v-if="p && 'text' in p">
+      <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">
+        {{ p.text }}
         <n-popconfirm
           v-if="p.popover !== undefined"
+          :show-icon="false"
           placement="top-start"
           positive-text="提交"
           :negative-text="null"
           @positive-click="createWebIncorrectCase(p.popover, chapter)"
         >
           <template #trigger>
-            <n-p
-              :class="{ secondary: p.secondary }"
+            <n-button
+              text
+              style="opacity: 0.5"
               @click="(e: MouseEvent) => e.stopPropagation()"
             >
-              {{ p.text }}
-            </n-p>
+              <n-icon :component="ErrorOutlineFilled" />
+            </n-button>
           </template>
-          <span> 这段话Sakura翻译不准确？请提交帮助我们改进。 </span>
+          这段话翻得不准确？
         </n-popconfirm>
-
-        <n-p v-else :class="{ secondary: p.secondary }">
-          {{ p.text }}
-        </n-p>
-      </template>
+      </n-p>
       <br v-else-if="!p" />
       <img
         v-else
@@ -212,7 +212,7 @@ const createWebIncorrectCase = async (
 
 <style scoped>
 #chapter-content {
-  min-height: 60vh;
+  min-height: 65vh;
 }
 #chapter-content p {
   font-size: v-bind('setting.fontSize');

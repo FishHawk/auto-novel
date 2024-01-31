@@ -64,9 +64,11 @@ onKeyStroke(['Enter'], (e) => {
 
 <template>
   <n-flex :wrap="false">
-    <slot />
+    <div style="flex: auto">
+      <slot />
+    </div>
 
-    <div>
+    <div style="flex: 0 0 0">
       <n-flex
         size="large"
         vertical
