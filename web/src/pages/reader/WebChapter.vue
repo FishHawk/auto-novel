@@ -86,8 +86,8 @@ const url = computed(() =>
   <DefineChapterLink v-slot="{ $slots, id: chapterId }">
     <n-button
       :disabled="!chapterId"
-      :focusable="false"
       quaternary
+      ghost
       :type="chapterId ? 'primary' : 'default'"
       @click="() => navToChapter(chapterId!!)"
     >
