@@ -22,6 +22,22 @@ export default defineConfig(({ command, mode }) => {
     proxyOptions = {
       target: 'https://books.fishhawk.top',
       changeOrigin: true,
+      bypass(req, _res, _options) {
+        if (
+          req.url &&
+          req.url.includes('/translate/') &&
+          req.method === 'PUT'
+        ) {
+          if (req.url.includes('/chapter/')) {
+            console.log('检测到网络小说章节翻译请求，已拦截');
+            return false;
+          }
+          if (req.url.includes('/wenku/')) {
+            console.log('检测到文库小说章节翻译请求，已拦截');
+            return false;
+          }
+        }
+      },
     };
 
   return {
