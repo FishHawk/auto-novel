@@ -224,9 +224,7 @@ const showGlossaryEditor = ref(false);
               type="primary"
               secondary
               size="small"
-              :on-async-click="
-                () => submitGlossary(volume.volumeId, volume.glossary)
-              "
+              @click="() => submitGlossary(volume.volumeId, volume.glossary)"
             >
               提交
             </n-button>
