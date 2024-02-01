@@ -21,7 +21,7 @@ const { novelId, volume, getParams } = defineProps<{
   getParams: () => { translateExpireChapter: boolean };
 }>();
 
-const emits = defineEmits<{ deleted: [] }>();
+const emit = defineEmits<{ delete: [] }>();
 
 const message = useMessage();
 const userData = useUserDataStore();
@@ -125,16 +125,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     message.error('排队失败：翻译任务已经存在');
   }
 };
-
-const deleteVolume = async () => {
-  const result = await ApiWenkuNovel.deleteVolume(novelId, volume.volumeId);
-  if (result.ok) {
-    emits('deleted');
-    message.info('删除成功');
-  } else {
-    message.error('删除失败：' + result.error.message);
-  }
-};
 </script>
 
 <template>
@@ -172,15 +162,15 @@ const deleteVolume = async () => {
           </async-button>
 
           <n-popconfirm
-            v-if="userData.asAdmin"
+            v-if="userData.isMaintainer"
             :show-icon="false"
-            @positive-click="deleteVolume()"
+            @positive-click="emit('delete')"
             :negative-text="null"
           >
             <template #trigger>
               <n-button text type="error"> 删除 </n-button>
             </template>
-            真的要删除{{ volume.volumeId }}吗？
+            真的要删除《{{ volume.volumeId }}》吗？
           </n-popconfirm>
         </n-space>
       </n-space>

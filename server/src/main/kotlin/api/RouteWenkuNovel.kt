@@ -493,7 +493,7 @@ class WenkuNovelApi(
         novelId: String,
         volumeId: String,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(User.Role.Maintainer)
 
         validateNovelId(novelId)
         validateVolumeId(volumeId)

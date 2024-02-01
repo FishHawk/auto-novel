@@ -105,7 +105,10 @@ const createVolume = (
 
     let xhr = new XMLHttpRequest();
 
-    xhr.open('POST', `/api/wenku/${novelId}/volume/${volumeId}`);
+    xhr.open(
+      'POST',
+      `/api/wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`
+    );
 
     xhr.setRequestHeader('Authorization', 'Bearer ' + token);
     xhr.onload = function () {
@@ -123,7 +126,11 @@ const createVolume = (
   });
 
 const deleteVolume = (novelId: string, volumeId: string) =>
-  runCatching(client.delete(`wenku/${novelId}/volume/${volumeId}`).text());
+  runCatching(
+    client
+      .delete(`wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`)
+      .text()
+  );
 
 const createFileUrl = ({
   novelId,

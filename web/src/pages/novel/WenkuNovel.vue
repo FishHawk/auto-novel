@@ -7,6 +7,7 @@ import { useRoute } from 'vue-router';
 
 import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
 import { ResultState } from '@/data/result';
+import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 import AdvanceOptions from './components/AdvanceOptions.vue';
@@ -17,6 +18,7 @@ const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
 }>();
 
 const message = useMessage();
+const userData = useUserDataStore();
 const vars = useThemeVars();
 const route = useRoute();
 
@@ -49,6 +51,17 @@ const submitGlossary = async (glossary: { [key: string]: string }) => {
     message.success('术语表提交成功');
   } else {
     message.error('术语表提交失败：' + result.error.message);
+  }
+};
+
+const deleteVolume = async (volumeId: string) => {
+  console.log(encodeURIComponent(volumeId));
+  const result = await ApiWenkuNovel.deleteVolume(novelId, volumeId);
+  if (result.ok) {
+    getNovel();
+    message.info('删除成功');
+  } else {
+    message.error('删除失败：' + result.error.message);
   }
 };
 </script>
@@ -203,7 +216,7 @@ const submitGlossary = async (glossary: { [key: string]: string }) => {
       <SectionHeader title="中文章节" />
       <UploadButton type="zh" :novelId="novelId" @uploadFinished="getNovel()" />
       <n-ul>
-        <n-li v-for="volumeId in metadata.volumeZh">
+        <n-li v-for="volumeId in metadata.volumeZh" :key="volumeId">
           <n-a
             :href="`/files-wenku/${novelId}/${encodeURIComponent(volumeId)}`"
             target="_blank"
@@ -211,6 +224,20 @@ const submitGlossary = async (glossary: { [key: string]: string }) => {
           >
             {{ volumeId }}
           </n-a>
+
+          <n-popconfirm
+            v-if="userData.isMaintainer"
+            :show-icon="false"
+            @positive-click="deleteVolume(volumeId)"
+            :negative-text="null"
+          >
+            <template #trigger>
+              <n-button text type="error" style="margin-left: 16px">
+                删除
+              </n-button>
+            </template>
+            真的要删除《{{ volumeId }}》吗？
+          </n-popconfirm>
         </n-li>
       </n-ul>
 
@@ -225,16 +252,14 @@ const submitGlossary = async (glossary: { [key: string]: string }) => {
       />
 
       <n-list>
-        <template v-for="volume of metadata.volumeJp">
-          <n-list-item>
-            <WenkuVolume
-              :novel-id="novelId"
-              :volume="volume"
-              :get-params="() => advanceOptions!!.getTranslationOptions()"
-              @deleted="getNovel()"
-            />
-          </n-list-item>
-        </template>
+        <n-list-item v-for="volume of metadata.volumeJp" :key="volume.volumeId">
+          <WenkuVolume
+            :novel-id="novelId"
+            :volume="volume"
+            :get-params="() => advanceOptions!!.getTranslationOptions()"
+            @delete="deleteVolume(volume.volumeId)"
+          />
+        </n-list-item>
       </n-list>
 
       <CommentList :site="`wenku-${novelId}`" />

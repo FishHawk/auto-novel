@@ -144,11 +144,23 @@ class DataSourceFileSystem {
         volumesDir: Path,
         volumeId: String,
     ) = withContext(Dispatchers.IO) {
+        val trashDir = volumesDir.parent / "trash"
+
+        if (trashDir.notExists()) {
+            trashDir.createDirectories()
+        }
+
         val volumePath = volumesDir / volumeId
         val unpackPath = volumesDir / "$volumeId.unpack"
-        volumePath.deleteIfExists()
+
+        val volumeTrashPath = trashDir / "${volumesDir.fileName}.${volumeId}"
+        val unpackTrashPath = trashDir / "${volumesDir.fileName}.${volumeId}.unpack"
+
+        if (volumePath.exists()) {
+            volumePath.moveTo(volumeTrashPath)
+        }
         if (unpackPath.exists()) {
-            unpackPath.deleteRecursively()
+            unpackPath.moveTo(unpackTrashPath)
         }
     }
 
