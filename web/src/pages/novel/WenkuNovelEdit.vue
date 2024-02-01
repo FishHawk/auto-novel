@@ -293,6 +293,14 @@ const deleteVolume = (index: number) => {
         />
       </n-form-item-row>
 
+      <n-form-item-row path="cover" label="封面链接">
+        <n-input
+          v-model:value="formValue.cover"
+          placeholder="请输入封面链接"
+          :input-props="{ spellcheck: false }"
+        />
+      </n-form-item-row>
+
       <n-form-item-row path="authors" label="作者">
         <n-dynamic-tags v-model:value="formValue.authors" />
       </n-form-item-row>
@@ -324,28 +332,32 @@ const deleteVolume = (index: number) => {
     <n-h2 prefix="bar">分卷</n-h2>
     <n-list>
       <n-list-item v-for="(volume, index) in formValue.volumes">
-        <n-space :wrap="false">
+        <n-flex :wrap="false">
           <n-card size="small" style="width: 100px">
             <template #cover>
               <img :src="volume.cover" alt="cover" />
             </template>
           </n-card>
-          <n-space vertical>
-            <n-p>ASIN: {{ volume.asin }}</n-p>
+          <n-flex vertical style="flex: auto">
+            <n-text>ASIN: {{ volume.asin }}</n-text>
             <n-input
               v-model:value="volume.title"
               placeholder="日文标题"
-              show-count
               :input-props="{ spellcheck: false }"
             />
-            <n-space>
+            <n-input
+              v-model:value="volume.cover"
+              placeholder="封面链接"
+              :input-props="{ spellcheck: false }"
+            />
+            <n-flex>
               <n-button @click="deleteVolume(index)"> 删除 </n-button>
               <n-button v-if="index > 0" @click="moveVolumeUp(index)">
                 上移
               </n-button>
-            </n-space>
-          </n-space>
-        </n-space>
+            </n-flex>
+          </n-flex>
+        </n-flex>
       </n-list-item>
     </n-list>
 
