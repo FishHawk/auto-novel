@@ -39,8 +39,8 @@ dependencies:
     specifier: ^8.0.0
     version: 8.0.0
   ky:
-    specifier: ^0.32.2
-    version: 0.32.2
+    specifier: ^1.2.0
+    version: 1.2.0
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
@@ -1419,9 +1419,9 @@ packages:
     resolution: {integrity: sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==}
     dev: false
 
-  /ky@0.32.2:
-    resolution: {integrity: sha512-eBJeF6IXNwX5rksdwBrE2rIJrU2d84GoTvdM7OmmTIwUVXEMd72wIwvT+nyhrqtv7AzbSNsWz7yRsHgVhj1uog==}
-    engines: {node: '>=14.16'}
+  /ky@1.2.0:
+    resolution: {integrity: sha512-dnPW+T78MuJ9tLAiF/apJV7bP7RRRCARXQxsCmsWiKLXqGtMBOgDVOFRYzCAfNe/OrRyFyor5ESgvvC+QWEqOA==}
+    engines: {node: '>=18'}
     dev: false
 
   /linkify-it@5.0.0:

@@ -85,7 +85,15 @@ const translateWeb = async (
     toc: { [key: string]: string };
   }
 
-  const getTranslateTask = () => client.get(endpoint).json<TranslateTaskDto>();
+  const getTranslateTask = () =>
+    client
+      .get(endpoint, {
+        retry: {
+          limit: 3,
+          delay: (attemptCount: number) => 2 * 2 ** (attemptCount - 1) * 1000,
+        },
+      })
+      .json<TranslateTaskDto>();
 
   const updateMetadataTranslation = (json: MetadataUpdateBody) =>
     client.post(`${endpoint}/metadata`, { json }).text();

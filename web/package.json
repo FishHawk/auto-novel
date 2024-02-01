@@ -24,7 +24,7 @@
     "crypto-es": "^2.1.0",
     "diff": "^5.1.0",
     "idb": "^8.0.0",
-    "ky": "^0.32.2",
+    "ky": "^1.2.0",
     "lodash-es": "^4.17.21",
     "markdown-it": "^14.0.0",
     "markdown-it-anchor": "^8.6.7",
