@@ -34,7 +34,16 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     message.info('请先登录');
     return false;
   }
-  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
+  if (
+    file.file &&
+    ['jp', 'zh', 'zh-jp', 'jp-zh'].some((prefix) =>
+      file.file!!.name.startsWith(prefix)
+    )
+  ) {
+    message.error('不要上传本网站上生成的机翻文件');
+    return false;
+  }
+  if (file.file && file.file.size > 1024 * 1024 * 40) {
     message.error('文件大小不能超过40MB');
     return false;
   }
