@@ -53,25 +53,30 @@ const router = createRouter({
         },
 
         {
-          path: '/personal',
-          meta: { title: '文件翻译' },
-          component: () => import('./pages/workspace/Workspace.vue'),
-        },
-        {
-          path: '/sakura',
-          meta: { title: 'Sakura状态' },
-          component: () =>
-            import('./pages/workspace/SakuraWorkspacePublic.vue'),
-        },
-        {
-          path: '/sakura-workspace',
-          meta: { title: 'Sakura工作区' },
-          component: () => import('./pages/workspace/SakuraWorkspace.vue'),
-        },
-        {
-          path: '/gpt-workspace',
-          meta: { title: 'GPT工作区' },
-          component: () => import('./pages/workspace/GptWorkspace.vue'),
+          path: '/workspace',
+          children: [
+            {
+              path: '',
+              meta: { title: '文件翻译' },
+              component: () => import('./pages/workspace/Workspace.vue'),
+            },
+            {
+              path: 'sakura-public',
+              meta: { title: '公用Sakura' },
+              component: () =>
+                import('./pages/workspace/SakuraWorkspacePublic.vue'),
+            },
+            {
+              path: 'sakura',
+              meta: { title: 'Sakura工作区' },
+              component: () => import('./pages/workspace/SakuraWorkspace.vue'),
+            },
+            {
+              path: 'gpt',
+              meta: { title: 'GPT工作区' },
+              component: () => import('./pages/workspace/GptWorkspace.vue'),
+            },
+          ],
         },
 
         {
@@ -166,6 +171,16 @@ const router = createRouter({
                 import('./pages/admin/AdminWebTocMergeHistory.vue'),
             },
           ],
+        },
+
+        // 兼容旧路由
+        { path: '/personal', redirect: '/workspace' },
+        { path: '/sakura-workspace', redirect: '/workspace/sakura' },
+
+        // 404
+        {
+          path: '/:pathMatch(.*)',
+          component: () => import('./pages/other/NotFound.vue'),
         },
       ],
     },

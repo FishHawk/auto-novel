@@ -47,7 +47,7 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
-    menuOption('文件翻译', '/personal'),
+    menuOption('文件翻译', '/workspace'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
@@ -57,20 +57,14 @@ const path = route.path;
 const getTopMenuOptionKey = () => {
   if (path.startsWith('/forum')) {
     return '/forum';
-  } else if (path.startsWith('/favorite')) {
-    return '/favorite';
   } else if (path.startsWith('/wenku')) {
     return '/wenku-list';
   } else if (path.startsWith('/novel')) {
     return '/novel-list';
+  } else if (path.startsWith('/workspace')) {
+    return '/workspace';
   } else if (path.startsWith('/toolbox')) {
     return '/toolbox';
-  } else if (
-    path.startsWith('/sakura-workspace') ||
-    path.startsWith('/gpt-workspace') ||
-    path.startsWith('/sakura')
-  ) {
-    return '/personal';
   } else {
     return path;
   }
@@ -78,8 +72,6 @@ const getTopMenuOptionKey = () => {
 const getSideMenuOptionKey = () => {
   if (path.startsWith('/forum')) {
     return '/forum';
-  } else if (path.startsWith('/favorite')) {
-    return '/favorite';
   } else if (path.startsWith('/wenku')) {
     return '/wenku-list';
   } else if (path.startsWith('/novel-rank')) {
@@ -111,19 +103,14 @@ const collapsedMenuOptions = computed(() => {
       ],
     },
     menuOption('文库小说', '/wenku-list'),
-    menuOption('文件翻译', '/personal'),
+    menuOption('文件翻译', '/workspace'),
     menuOption('论坛', '/forum'),
     menuOption('工具箱', '/toolbox'),
   ];
 });
 
 const userDropdownOptions = computed(() => {
-  return [
-    menuOption('工作区-GPT', '/gpt-workspace'),
-    menuOption('工作区-Sakura', '/sakura-workspace'),
-    menuOption('公用工作区-Sakura', '/sakura'),
-    dropdownOption('退出登录', 'signOut', LogOutFilled),
-  ];
+  return [dropdownOption('退出登录', 'signOut', LogOutFilled)];
 });
 const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'signOut') {
