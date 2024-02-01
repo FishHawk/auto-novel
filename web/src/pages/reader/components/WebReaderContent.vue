@@ -63,7 +63,7 @@ const paragraphs = computed(() => {
           styles.push({
             paragraphs,
             secondary: false,
-            popover: t === 'sakura',
+            popover: setting.enableSakuraReportButton && t === 'sakura',
           });
           break;
         } else {
@@ -80,7 +80,7 @@ const paragraphs = computed(() => {
           styles.push({
             paragraphs,
             secondary: false,
-            popover: t === 'sakura',
+            popover: setting.enableSakuraReportButton && t === 'sakura',
           });
         } else {
           merged.push({ text: label + '翻译不存在', secondary: true });

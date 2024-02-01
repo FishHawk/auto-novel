@@ -8,6 +8,7 @@ import { ref } from 'vue';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
   label: string;
+  align: 'baseline' | 'center';
 }>();
 
 const isWideScreen = useIsWideScreen(600);
@@ -79,8 +80,8 @@ const setCustomFontColor = (color: string) => {
 
 <template>
   <card-modal title="设置">
-    <DefineOption v-slot="{ $slots, label }">
-      <n-flex :wrap="false" align="baseline">
+    <DefineOption v-slot="{ $slots, label, align }">
+      <n-flex :wrap="false" :align="align">
         <n-text depth="3" style="white-space: nowrap; font-size: 12px">
           {{ label }}
         </n-text>
@@ -89,7 +90,7 @@ const setCustomFontColor = (color: string) => {
     </DefineOption>
 
     <n-space vertical size="large" style="width: 100%">
-      <ReuseOption label="语言">
+      <ReuseOption label="语言" align="baseline">
         <n-radio-group v-model:value="setting.mode">
           <n-radio-button
             v-for="option in modeOptions"
@@ -99,7 +100,7 @@ const setCustomFontColor = (color: string) => {
           />
         </n-radio-group>
       </ReuseOption>
-      <ReuseOption label="翻译">
+      <ReuseOption label="翻译" align="baseline">
         <n-flex>
           <n-radio-group v-model:value="setting.translationsMode">
             <n-radio-button
@@ -130,7 +131,7 @@ const setCustomFontColor = (color: string) => {
           </n-button-group>
         </n-flex>
       </ReuseOption>
-      <ReuseOption label="字体">
+      <ReuseOption label="字体" align="baseline">
         <n-radio-group v-model:value="setting.fontSize">
           <n-radio-button
             v-for="option in fontSizeOptions"
@@ -140,7 +141,7 @@ const setCustomFontColor = (color: string) => {
           />
         </n-radio-group>
       </ReuseOption>
-      <ReuseOption label="主题">
+      <ReuseOption label="主题" align="baseline">
         <n-flex size="large" vertical>
           <n-flex>
             <n-radio
@@ -194,7 +195,14 @@ const setCustomFontColor = (color: string) => {
           </n-flex>
         </n-flex>
       </ReuseOption>
-      <ReuseOption label="主透明度">
+      <ReuseOption label="Sakura报错按钮" align="center">
+        <n-switch
+          v-model:value="setting.enableSakuraReportButton"
+          size="small"
+        />
+      </ReuseOption>
+
+      <ReuseOption label="主透明度" align="center">
         <n-slider
           v-model:value="setting.mixZhOpacity"
           :max="1"
@@ -203,7 +211,7 @@ const setCustomFontColor = (color: string) => {
           :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
         />
       </ReuseOption>
-      <ReuseOption label="辅透明度">
+      <ReuseOption label="辅透明度" align="center">
         <n-slider
           v-model:value="setting.mixJpOpacity"
           :max="1"
