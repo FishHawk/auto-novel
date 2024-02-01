@@ -65,6 +65,12 @@ const getTopMenuOptionKey = () => {
     return '/novel-list';
   } else if (path.startsWith('/toolbox')) {
     return '/toolbox';
+  } else if (
+    path.startsWith('/sakura-workspace') ||
+    path.startsWith('/gpt-workspace') ||
+    path.startsWith('/sakura')
+  ) {
+    return '/personal';
   } else {
     return path;
   }

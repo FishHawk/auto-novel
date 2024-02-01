@@ -53,6 +53,11 @@ const router = createRouter({
         },
 
         {
+          path: '/personal',
+          meta: { title: '文件翻译' },
+          component: () => import('./pages/workspace/Workspace.vue'),
+        },
+        {
           path: '/sakura',
           meta: { title: 'Sakura状态' },
           component: () =>
@@ -84,12 +89,6 @@ const router = createRouter({
           path: '/wenku-list',
           meta: { title: '文库小说' },
           component: () => import('./pages/list/WenkuNovelList.vue'),
-        },
-
-        {
-          path: '/personal',
-          meta: { title: '文件翻译' },
-          component: () => import('./pages/novel/PersonalVolumes.vue'),
         },
 
         {

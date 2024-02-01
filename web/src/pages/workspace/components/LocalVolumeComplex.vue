@@ -23,12 +23,7 @@ export interface Volume {
   glossary: { [key: string]: string };
 }
 
-const props = defineProps<{
-  volume: Volume;
-  getParams: () => {
-    translateExpireChapter: boolean;
-  };
-}>();
+const props = defineProps<{ volume: Volume }>();
 
 const emit = defineEmits<{ requireRefresh: [] }>();
 
@@ -39,11 +34,10 @@ const setting = useSettingStore();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
-  const params = props.getParams();
   return translateTask?.value?.startTask(
     { type: 'personal', volumeId: props.volume.volumeId },
     {
-      ...params,
+      translateExpireChapter: true,
       syncFromProvider: false,
       startIndex: 0,
       endIndex: 65535,
@@ -126,12 +120,10 @@ const submitGlossary = (
     .then(() => {});
 
 const submitJob = (translatorId: 'sakura' | 'gpt') => {
-  const { translateExpireChapter } = props.getParams();
-
   const task = buildPersonalTranslateTask(props.volume.volumeId, {
     start: 0,
     end: 65535,
-    expire: translateExpireChapter,
+    expire: true,
   });
 
   let success = false;
@@ -160,10 +152,10 @@ const showGlossaryEditor = ref(false);
 
 <template>
   <div>
-    <n-space align="center" justify="space-between" :wrap="false">
-      <n-space vertical>
+    <n-flex align="center" justify="space-between" :wrap="false">
+      <n-flex vertical>
         <n-text>{{ volume.volumeId }}</n-text>
-        <n-space>
+        <n-flex>
           <template v-for="{ translatorId, label } of translatorLabels">
             <n-button
               v-if="translatorId !== 'sakura' && translatorId !== 'gpt'"
@@ -202,35 +194,26 @@ const showGlossaryEditor = ref(false);
             </template>
             真的要删除{{ volume.volumeId }}吗？
           </n-popconfirm>
-        </n-space>
-      </n-space>
+        </n-flex>
+      </n-flex>
       <async-button @async-click="downloadFile">
         <template #icon>
           <n-icon :component="FileDownloadFilled" />
         </template>
         下载
       </async-button>
-    </n-space>
+    </n-flex>
 
     <n-collapse-transition :show="showGlossaryEditor" style="margin-top: 16px">
-      <n-list bordered>
-        <n-list-item>
-          <AdvanceOption
-            title="术语表"
-            description="术语表过大可能会使得翻译质量下降（例如：百度/有道将无法从判断人名性别，导致人称代词错误）。"
-          >
-            <glossary-edit :glossary="volume.glossary" />
-            <n-button
-              type="primary"
-              secondary
-              size="small"
-              @click="() => submitGlossary(volume.volumeId, volume.glossary)"
-            >
-              提交
-            </n-button>
-          </AdvanceOption>
-        </n-list-item>
-      </n-list>
+      <glossary-edit :glossary="volume.glossary" />
+      <n-button
+        type="primary"
+        secondary
+        size="small"
+        @click="() => submitGlossary(volume.volumeId, volume.glossary)"
+      >
+        提交
+      </n-button>
     </n-collapse-transition>
 
     <TranslateTask
