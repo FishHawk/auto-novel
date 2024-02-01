@@ -20,7 +20,7 @@ const setting = useSettingStore();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
-const volumes = ref<Volume[]>([]);
+const volumes = ref<Volume[]>();
 
 interface Volume {
   volumeId: string;
@@ -115,7 +115,7 @@ const handleSelect = (key: string) => {
 };
 
 const queueAllVolumes = () => {
-  volumes.value.forEach((volume) => {
+  volumes.value?.forEach((volume) => {
     queueVolume(volume.volumeId);
   });
 };
@@ -144,9 +144,9 @@ const orderOptions = [
 
 const sortedVolumes = computed(() => {
   if (order.value === 'byId') {
-    return volumes.value.sort((a, b) => a.volumeId.localeCompare(b.volumeId));
+    return volumes.value?.sort((a, b) => a.volumeId.localeCompare(b.volumeId));
   } else {
-    return volumes.value.sort((a, b) => b.createAt - a.createAt);
+    return volumes.value?.sort((a, b) => b.createAt - a.createAt);
   }
 });
 
@@ -264,15 +264,17 @@ const deleteVolume = (volumeId: string) =>
 
     <n-divider style="margin-bottom: 4px" />
 
+    <n-spin v-if="sortedVolumes === undefined" style="margin-top: 20px" />
+
     <n-empty
-      v-if="sortedVolumes.length === 0"
+      v-else-if="sortedVolumes.length === 0"
       description="没有文件"
       style="margin-top: 20px"
     />
 
-    <n-scrollbar trigger="none" :size="24" style="flex: auto">
+    <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
       <n-list style="padding-bottom: 48px">
-        <n-list-item v-for="volume of sortedVolumes">
+        <n-list-item v-for="volume of sortedVolumes ?? []">
           {{ volume.volumeId }}
           <br />
           <n-text depth="3">
