@@ -214,6 +214,25 @@ const deleteVolume = (index: number) => {
   <div class="layout-content">
     <n-h1>{{ novelId === undefined ? '新建' : '编辑' }}文库小说</n-h1>
 
+    <n-card
+      v-if="novelId === undefined"
+      embedded
+      :bordered="false"
+      style="margin-bottom: 20px"
+    >
+      <b style="color: red">创建文库小说之前一定要看！！</b>
+      <n-ul>
+        <n-li>
+          文库小说只允许已经发行单行本的小说，原则上以亚马逊上可以买到为准。
+        </n-li>
+        <n-li> 系列小说请使用系列标题，不要用"xxx(1)"作为页面标题。 </n-li>
+        <n-li> 请确定文库小说列表里面没有这本，不要重复创建。 </n-li>
+        <n-li>
+          请正常填写中文标题，没有公认的标题可以尝试自行翻译，禁止复制日文标题作为中文标题。
+        </n-li>
+      </n-ul>
+    </n-card>
+
     <n-space style="margin-bottom: 24px" :wrap="false">
       <div>
         <img
