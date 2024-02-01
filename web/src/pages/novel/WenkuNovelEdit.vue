@@ -178,10 +178,14 @@ watch(title, () => {
   submitCurrentStep.value = 1;
 });
 const findSimilarNovels = async () => {
+  const query = title.value.split(
+    /[^\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\u3400-\u4dbf]/,
+    2
+  )[0];
   const result = await ApiWenkuNovel.listNovel({
     page: 0,
     pageSize: 6,
-    query: title.value,
+    query,
     level: 0,
   });
   if (result.ok) {
