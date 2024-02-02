@@ -9,7 +9,7 @@ import {
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
 import { useIsWideScreen } from '@/data/util';
-import { fetchMetadata } from '@/data/util_wenku';
+import { fetchMetadata, prettyCover } from '@/data/util_wenku';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 const route = useRoute();
@@ -75,12 +75,16 @@ onMounted(async () => {
       formValue.value = {
         title: result.value.title,
         titleZh: result.value.titleZh,
-        cover: result.value.cover,
+        cover: prettyCover(result.value.cover),
         authors: result.value.authors,
         artists: result.value.artists,
         r18: result.value.r18,
         introduction: result.value.introduction,
-        volumes: result.value.volumes,
+        volumes: result.value.volumes.map(({ asin, title, cover }) => ({
+          asin,
+          title,
+          cover: prettyCover(cover),
+        })),
       };
     } else {
       message.error('载入失败');

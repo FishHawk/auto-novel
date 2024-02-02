@@ -1,16 +1,21 @@
 import ky from 'ky';
 
-function extractAsin(url: string) {
+const extractAsin = (url: string) => {
   const asinRegex = /(?:[/dp/]|$)([A-Z0-9]{10})/g;
   return asinRegex.exec(url)?.[1];
-}
+};
 
-function prettyTitle(title: string) {
-  return title
+const prettyTitle = (title: string) =>
+  title
     .replace(/(【[^【】]*】)/g, '')
     .replace(/(\([^()]*\))/g, '')
     .trim();
-}
+
+export const prettyCover = (cover: string) =>
+  cover
+    .replace('_PJku-sticker-v7,TopRight,0,-50.', '')
+    .replace('m.media-amazon.com', 'images-cn.ssl-images-amazon.cn')
+    .replace(/\.[SXY0-9_]+\.jpg$/, '.jpg');
 
 async function getHtml(url: string) {
   const html = await ky.get(url, { credentials: 'include' }).text();
@@ -83,8 +88,9 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
         ?.getElementsByTagName('span')?.[0]
         ?.innerHTML?.replaceAll('<br>', '\n') ?? '';
 
-    const cover = doc.getElementById('landingImage')!.getAttribute('src')!
-        .replace("m.media-amazon.com", "images-cn.ssl-images-amazon.cn");
+    const cover = prettyCover(
+      doc.getElementById('landingImage')!.getAttribute('src')!
+    );
 
     return {
       title,
@@ -148,10 +154,9 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
       )[0]!;
       const asin = extractAsin(titleLink.getAttribute('href')!)!;
       const title = prettyTitle(titleLink.textContent!);
-      const cover = it
-        .getElementsByTagName('img')[0]
-        .getAttribute('src')!
-        .replace('_PJku-sticker-v7,TopRight,0,-50.', '');
+      const cover = prettyCover(
+        it.getElementsByTagName('img')[0].getAttribute('src')!
+      );
       return { asin, title, cover };
     });
 
@@ -182,8 +187,9 @@ async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
         const title = prettyTitle(
           it.getElementsByTagName('h2')[0].textContent!
         );
-        const cover = it.getElementsByTagName('img')[0].getAttribute('src')!
-            .replace("m.media-amazon.com", "images-cn.ssl-images-amazon.cn");
+        const cover = prettyCover(
+          it.getElementsByTagName('img')[0].getAttribute('src')!
+        );
         return { asin, title, cover };
       });
   }
