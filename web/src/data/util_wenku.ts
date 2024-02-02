@@ -15,7 +15,7 @@ export const prettyCover = (cover: string) =>
   cover
     .replace('_PJku-sticker-v7,TopRight,0,-50.', '')
     .replace('m.media-amazon.com', 'images-cn.ssl-images-amazon.cn')
-    .replace(/\.[SXY0-9_]+\.jpg$/, '.jpg');
+    .replace(/\.[A-Z0-9_]+\.jpg$/, '.jpg');
 
 async function getHtml(url: string) {
   const html = await ky.get(url, { credentials: 'include' }).text();
