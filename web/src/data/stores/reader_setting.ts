@@ -6,7 +6,7 @@ export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'mix' | 'mix-reverse';
   translationsMode: 'parallel' | 'priority';
   translations: TranslatorId[];
-  fontSize: '14px' | '16px' | '18px' | '20px';
+  fontSize: string;
   theme: { isDark: boolean; bodyColor: string; fontColor?: string };
   enableSakuraReportButton: boolean;
   mixJpOpacity: number;

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
+import { ref } from 'vue';
+import { PlusFilled, MinusFilled } from '@vicons/material';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator/translator';
 import { useIsWideScreen } from '@/data/util';
-import { ref } from 'vue';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
   label: string;
@@ -30,12 +31,15 @@ const translationOptions: { label: string; value: TranslatorId }[] = [
   { label: '有道', value: 'youdao' },
   { label: '百度', value: 'baidu' },
 ];
-const fontSizeOptions = [
-  { value: '14px', label: '14px' },
-  { value: '16px', label: '16px' },
-  { value: '18px', label: '18px' },
-  { value: '20px', label: '20px' },
-];
+const toggleFontSize = (delta: 1 | -1) => {
+  const fontSizeOptions = ['14px', '16px', '18px', '20px', '30px', '40px'];
+  const index = fontSizeOptions.indexOf(setting.fontSize);
+  const nextIndex = Math.min(
+    Math.max(index + delta, 0),
+    fontSizeOptions.length - 1
+  );
+  setting.fontSize = fontSizeOptions[nextIndex];
+};
 const themeOptions = [
   { isDark: false, bodyColor: '#FFFFFF' },
   { isDark: false, bodyColor: '#FFF2E2' },
@@ -132,14 +136,23 @@ const setCustomFontColor = (color: string) => {
         </n-flex>
       </ReuseOption>
       <ReuseOption label="字体" align="baseline">
-        <n-radio-group v-model:value="setting.fontSize">
-          <n-radio-button
-            v-for="option in fontSizeOptions"
-            :key="option.value"
-            :value="option.value"
-            :label="option.label"
-          />
-        </n-radio-group>
+        <n-input-group>
+          <n-button
+            :disabled="setting.fontSize === '14px'"
+            @click="toggleFontSize(-1)"
+          >
+            <n-icon :component="MinusFilled" />
+          </n-button>
+          <n-input-group-label>
+            {{ setting.fontSize }}
+          </n-input-group-label>
+          <n-button
+            :disabled="setting.fontSize === '40px'"
+            @click="toggleFontSize(1)"
+          >
+            <n-icon :component="PlusFilled" />
+          </n-button>
+        </n-input-group>
       </ReuseOption>
       <ReuseOption label="主题" align="baseline">
         <n-flex size="large" vertical>
