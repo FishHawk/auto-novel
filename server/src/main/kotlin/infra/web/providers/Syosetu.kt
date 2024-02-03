@@ -68,6 +68,7 @@ class Syosetu(
     override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
         val genreFilter = options["genre"] ?: return emptyPage()
         val rangeFilter = options["range"] ?: return emptyPage()
+        val page = options["page"]?.toIntOrNull()?.plus(1) ?: 1
 
         val rangeId = rangeIds[rangeFilter] ?: return emptyPage()
         val path = when (options["type"]) {
@@ -89,45 +90,52 @@ class Syosetu(
             else -> return emptyPage()
         }
 
-        val doc = client.get("https://yomou.syosetu.com/rank/$path").document()
+        val doc = client.get("https://yomou.syosetu.com/rank/$path/?p=${page}").document()
 
-        val novels = doc.select("div.p-ranklist-item").map { item ->
-            val elTitle = item.selectFirst("div.p-ranklist-item__title > a")!!
-            val title = elTitle.text()
-            val novelId = elTitle.attr("href")
-                .removeSuffix("/")
-                .substringAfterLast("/")
+        val pageNumber = doc
+            .getElementsByClass("c-pager")
+            .first()!!
+            .childrenSize() - 2
 
-            val elKeyword = item.selectFirst("div.p-ranklist-item__keyword")!!
-            val attentions = mutableListOf<WebNovelAttention>()
-            val keywords = mutableListOf<String>()
-            elKeyword
-                .getElementsByTag("a")
-                .map { it.text() }
-                .forEach {
-                    when (it) {
-                        "R15" -> attentions.add(WebNovelAttention.R15)
-                        "残酷な描写あり" -> attentions.add(WebNovelAttention.残酷描写)
-                        else -> keywords.add(it)
+        val items = doc
+            .getElementsByClass("p-ranklist-item")
+            .map { item ->
+                val elTitle = item.selectFirst("div.p-ranklist-item__title > a")!!
+                val title = elTitle.text()
+                val novelId = elTitle.attr("href")
+                    .removeSuffix("/")
+                    .substringAfterLast("/")
+
+                val elKeyword = item.selectFirst("div.p-ranklist-item__keyword")!!
+                val attentions = mutableListOf<WebNovelAttention>()
+                val keywords = mutableListOf<String>()
+                elKeyword
+                    .getElementsByTag("a")
+                    .map { it.text() }
+                    .forEach {
+                        when (it) {
+                            "R15" -> attentions.add(WebNovelAttention.R15)
+                            "残酷な描写あり" -> attentions.add(WebNovelAttention.残酷描写)
+                            else -> keywords.add(it)
+                        }
                     }
-                }
 
-            val elPoints = item.selectFirst("div.p-ranklist-item__points")!!
-            val elInfomation = item.selectFirst("div.p-ranklist-item__infomation")!!
-            val extra = (listOf(elPoints) + elInfomation.getElementsByClass("p-ranklist-item__separator"))
-                .joinToString(" / ") { it.text() }
+                val elPoints = item.selectFirst("div.p-ranklist-item__points")!!
+                val elInfomation = item.selectFirst("div.p-ranklist-item__infomation")!!
+                val extra = (listOf(elPoints) + elInfomation.getElementsByClass("p-ranklist-item__separator"))
+                    .joinToString(" / ") { it.text() }
 
-            RemoteNovelListItem(
-                novelId = novelId,
-                title = title,
-                attentions = attentions,
-                keywords = keywords,
-                extra = extra,
-            )
-        }
+                RemoteNovelListItem(
+                    novelId = novelId,
+                    title = title,
+                    attentions = attentions,
+                    keywords = keywords,
+                    extra = extra,
+                )
+            }
         return Page(
-            items = novels,
-            pageNumber = 1,
+            items = items,
+            pageNumber = pageNumber.toLong(),
         )
     }
 

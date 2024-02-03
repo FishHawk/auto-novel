@@ -125,28 +125,27 @@ const descriptiors: { [key: string]: Descriptor } = {
 
 const descriptior = descriptiors[providerId][typeId];
 
-const loader: Loader<Page<WebNovelOutlineDto>> = (_page, _query, selected) => {
-  function optionNth(n: number): string {
-    return descriptior.options[n].tags[selected[n]];
-  }
+const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
+  const optionNth = (n: number): string =>
+    descriptior.options[n].tags[selected[n]];
 
-  let options = {};
+  let filters = {};
   if (providerId == 'syosetu') {
     const types: { [key: string]: string } = {
       '1': '流派',
       '2': '综合',
       '3': '异世界转生/转移',
     };
-    const type = types[typeId];
-    const genre = optionNth(0);
-    const range = optionNth(1);
-    options = { type, genre, range };
+    filters = {
+      type: types[typeId],
+      genre: optionNth(0),
+      range: optionNth(1),
+      page,
+    };
   } else if (providerId == 'kakuyomu') {
-    const genre = optionNth(0);
-    const range = optionNth(1);
-    options = { genre, range };
+    filters = { genre: optionNth(0), range: optionNth(1) };
   }
-  return ApiWebNovel.listRank(providerId, options);
+  return ApiWebNovel.listRank(providerId, filters);
 };
 </script>
 
