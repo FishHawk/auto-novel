@@ -2,8 +2,11 @@ package infra.user
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
-import infra.*
-import infra.model.*
+import infra.DataSourceMongo
+import infra.DataSourceRedis
+import infra.model.Page
+import infra.model.User
+import infra.model.UserFavored
 import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.datetime.Clock
 import org.bson.types.ObjectId
@@ -33,8 +36,9 @@ class UserRepository(
             .countDocuments()
 
         return Page(
-            total = total,
             items = users,
+            total = total,
+            pageSize = pageSize,
         )
     }
 

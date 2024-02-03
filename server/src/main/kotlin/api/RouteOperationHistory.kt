@@ -2,10 +2,7 @@ package api
 
 import api.plugins.*
 import infra.common.OperationHistoryRepository
-import infra.model.Operation
-import infra.model.User
-import infra.model.UserOutline
-import infra.model.WebNovelTocItem
+import infra.model.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.resources.*
@@ -89,14 +86,14 @@ class OperationHistoryApi(
         page: Int,
         pageSize: Int,
         type: String,
-    ): PageDto<OperationHistoryDto> {
+    ): Page<OperationHistoryDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
         return operationHistoryRepo.list(
             page = page,
             pageSize = pageSize,
             type = type,
-        ).asDto(pageSize) {
+        ).map {
             OperationHistoryDto(
                 id = it.id.toHexString(),
                 operator = it.operator,
@@ -128,7 +125,7 @@ class OperationHistoryApi(
     suspend fun listTocMergeHistory(
         page: Int,
         pageSize: Int,
-    ): PageDto<TocMergeHistoryDto> {
+    ): Page<TocMergeHistoryDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
 
@@ -142,7 +139,7 @@ class OperationHistoryApi(
         return operationHistoryRepo.listMergeHistory(
             page = page,
             pageSize = pageSize,
-        ).asDto(pageSize) {
+        ).map {
             TocMergeHistoryDto(
                 id = it.id.toHexString(),
                 providerId = it.providerId,

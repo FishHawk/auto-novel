@@ -1,8 +1,6 @@
 package infra.web.providers
 
-import infra.model.WebNovelAttention
-import infra.model.WebNovelAuthor
-import infra.model.WebNovelType
+import infra.model.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.serialization.json.*
@@ -14,8 +12,8 @@ class Novelism(
         const val id = "novelism"
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
-        return emptyList()
+    override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
+        return emptyPage()
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {

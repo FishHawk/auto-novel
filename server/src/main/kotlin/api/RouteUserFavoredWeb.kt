@@ -7,6 +7,7 @@ import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import infra.user.UserRepository
 import infra.model.FavoredNovelListSort
+import infra.model.Page
 import infra.model.UserFavored
 import infra.user.UserFavoredWebRepository
 import infra.web.WebNovelMetadataRepository
@@ -184,7 +185,7 @@ class UserFavoredWebApi(
         page: Int,
         pageSize: Int,
         sort: FavoredNovelListSort,
-    ): PageDto<WebNovelOutlineDto> {
+    ): Page<WebNovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
         return favoredRepo
@@ -195,7 +196,7 @@ class UserFavoredWebApi(
                 pageSize = pageSize,
                 sort = sort,
             )
-            .asDto(pageSize) { it.asDto() }
+            .map { it.asDto() }
     }
 
     suspend fun updateFavoredNovel(

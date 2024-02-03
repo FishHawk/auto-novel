@@ -90,7 +90,11 @@ class WenkuNovelMetadataRepository(
             }
             ?: emptyList()
         val total = response.total
-        return Page(items = items, total = total)
+        return Page(
+            items = items,
+            total = total,
+            pageSize = pageSize,
+        )
     }
 
     suspend fun exist(novelId: String): Boolean {

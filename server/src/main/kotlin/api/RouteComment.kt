@@ -1,8 +1,12 @@
 package api
 
-import api.plugins.*
+import api.plugins.AuthenticatedUser
+import api.plugins.RateLimitNames
+import api.plugins.authenticateDb
+import api.plugins.authenticatedUser
 import infra.common.ArticleRepository
 import infra.common.CommentRepository
+import infra.model.Page
 import infra.model.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -89,7 +93,7 @@ class CommentApi(
         pageSize: Int,
         reverse: Boolean,
         replyPageSize: Int,
-    ): PageDto<CommentDto> {
+    ): Page<CommentDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
         validatePageSize(replyPageSize, max = 20)
@@ -101,7 +105,7 @@ class CommentApi(
                 pageSize = pageSize,
                 reverse = reverse,
             )
-            .asDto(pageSize) {
+            .map {
                 val replies = if (parentId == null && it.numReplies > 0) {
                     commentRepo.listComment(
                         site = postId,

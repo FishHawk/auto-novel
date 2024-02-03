@@ -61,8 +61,9 @@ class OperationHistoryRepository(
             emptyPage()
         } else {
             Page(
-                total = doc.total.toLong(),
                 items = doc.items,
+                total = doc.total.toLong(),
+                pageSize = pageSize,
             )
         }
     }
@@ -103,7 +104,11 @@ class OperationHistoryRepository(
             .skip(page * pageSize)
             .limit(pageSize)
             .toList()
-        return Page(items = items, total = total)
+        return Page(
+            items = items,
+            total = total,
+            pageSize = pageSize,
+        )
     }
 
     suspend fun deleteMergeHistory(id: String) {

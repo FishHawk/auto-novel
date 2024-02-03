@@ -2,6 +2,7 @@ package api
 
 import api.plugins.*
 import infra.common.ArticleRepository
+import infra.model.Page
 import infra.model.User
 import infra.model.UserOutline
 import io.ktor.resources.*
@@ -138,7 +139,7 @@ class ArticleApi(
     suspend fun listArticle(
         page: Int,
         pageSize: Int,
-    ): PageDto<ArticleOutlineDto> {
+    ): Page<ArticleOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
         return articleRepo
@@ -146,7 +147,7 @@ class ArticleApi(
                 page = page,
                 pageSize = pageSize,
             )
-            .asDto(pageSize) {
+            .map {
                 ArticleOutlineDto(
                     id = it.id.toHexString(),
                     title = it.title,

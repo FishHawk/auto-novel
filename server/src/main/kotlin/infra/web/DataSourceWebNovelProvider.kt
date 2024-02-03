@@ -1,5 +1,6 @@
 package infra.web
 
+import infra.model.Page
 import infra.web.providers.*
 import io.ktor.client.*
 import io.ktor.client.engine.*
@@ -43,7 +44,7 @@ class DataSourceWebNovelProvider(
         Syosetu.id to Syosetu(client),
     )
 
-    suspend fun listRank(providerId: String, options: Map<String, String>): Result<List<RemoteNovelListItem>> {
+    suspend fun listRank(providerId: String, options: Map<String, String>): Result<Page<RemoteNovelListItem>> {
         return runCatching {
             providers[providerId]!!.getRank(options)
         }

@@ -66,8 +66,9 @@ class ArticleRepository(
             emptyPage()
         } else {
             Page(
-                total = doc.total.toLong(),
                 items = doc.items,
+                total = doc.total.toLong(),
+                pageSize = pageSize,
             )
         }
     }

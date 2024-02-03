@@ -1,15 +1,10 @@
 package infra.web.providers
 
-import infra.model.WebNovelAttention
-import infra.model.WebNovelAuthor
-import infra.model.WebNovelType
+import infra.model.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.datetime.Instant
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
-import kotlin.io.path.Path
-import kotlin.io.path.writeText
 
 private fun JsonObject.boolean(field: String) = get(field)!!.jsonPrimitive.boolean
 private fun JsonObject.array(field: String) = get(field)!!.jsonArray
@@ -50,12 +45,12 @@ class Kakuyomu(
         )
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
-        val genre = genreIds[options["genre"]] ?: return emptyList()
-        val range = rangeIds[options["range"]] ?: return emptyList()
+    override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
+        val genre = genreIds[options["genre"]] ?: return emptyPage()
+        val range = rangeIds[options["range"]] ?: return emptyPage()
         val url = "https://kakuyomu.jp/rankings/${genre}/${range}"
         val doc = client.get(url).document()
-        return doc.select("div.widget-media-genresWorkList-right > div.widget-work").map { workCard ->
+        val items = doc.select("div.widget-media-genresWorkList-right > div.widget-work").map { workCard ->
             val a = workCard.selectFirst("a.bookWalker-work-title")!!
             val novelId = a.attr("href").removePrefix("/works/")
             val title = a.text()
@@ -86,6 +81,10 @@ class Kakuyomu(
                 extra = extra,
             )
         }
+        return Page(
+            items = items,
+            pageNumber = 1L,
+        )
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {

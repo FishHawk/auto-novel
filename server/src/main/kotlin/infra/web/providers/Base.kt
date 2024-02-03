@@ -1,9 +1,9 @@
 package infra.web.providers
 
+import infra.model.Page
 import infra.model.WebNovelAttention
 import infra.model.WebNovelAuthor
 import infra.model.WebNovelType
-import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import kotlinx.datetime.Instant
@@ -43,7 +43,7 @@ data class RemoteNovelListItem(
 )
 
 interface WebNovelProvider {
-    suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem>
+    suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem>
     suspend fun getMetadata(novelId: String): RemoteNovelMetadata
     suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
 }

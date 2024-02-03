@@ -12,6 +12,18 @@ import kotlinx.datetime.Instant
 class SyosetuTest : DescribeSpec({
     val provider = Syosetu(client)
 
+    describe("getRank") {
+        it("常规") {
+            val rank = provider.getRank(
+                mapOf(
+                    "type" to "流派",
+                    "genre" to "恋爱：异世界",
+                    "range" to "总计",
+                )
+            )
+        }
+    }
+
     describe("getMetadata") {
         it("常规") {
             // https://ncode.syosetu.com/n9669bk

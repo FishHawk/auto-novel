@@ -37,7 +37,7 @@ class WebNovelMetadataRepository(
     suspend fun listRank(
         providerId: String,
         options: Map<String, String>,
-    ): Result<List<WebNovelMetadataOutline>> {
+    ): Result<Page<WebNovelMetadataOutline>> {
         return provider
             .listRank(providerId, options)
             .map { rank ->
@@ -183,7 +183,11 @@ class WebNovelMetadataRepository(
             }
             ?: emptyList()
         val total = response.total
-        return Page(items = items, total = total)
+        return Page(
+            items = items,
+            total = total,
+            pageSize = pageSize,
+        )
     }
 
     suspend fun get(

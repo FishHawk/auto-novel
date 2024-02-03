@@ -1,8 +1,6 @@
 package infra.web.providers
 
-import infra.model.WebNovelAttention
-import infra.model.WebNovelAuthor
-import infra.model.WebNovelType
+import infra.model.*
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
@@ -37,8 +35,8 @@ class Pixiv(
         }
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
-        TODO("Not yet implemented")
+    override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
+        return emptyPage()
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {

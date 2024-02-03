@@ -3,9 +3,10 @@ package api
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import infra.user.UserRepository
+import infra.model.Page
 import infra.model.User
 import infra.model.UserFavored
+import infra.user.UserRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.resources.*
@@ -70,13 +71,13 @@ class UserApi(
         page: Int,
         pageSize: Int,
         role: User.Role,
-    ): PageDto<UserOutlineDto> {
+    ): Page<UserOutlineDto> {
         user.shouldBeAtLeast(User.Role.Admin)
         return userRepo.listUser(
             page = page,
             pageSize = pageSize,
             role = role,
-        ).asDto(pageSize) {
+        ).map {
             UserOutlineDto(
                 id = it.id.toHexString(),
                 email = it.email,

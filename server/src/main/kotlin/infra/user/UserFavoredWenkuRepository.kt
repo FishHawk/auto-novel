@@ -97,6 +97,7 @@ class UserFavoredWenkuRepository(
                         cover = it.cover,
                     )
                 },
+                pageSize = pageSize,
             )
         }
     }

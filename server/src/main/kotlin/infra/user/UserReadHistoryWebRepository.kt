@@ -56,8 +56,9 @@ class UserReadHistoryWebRepository(
             emptyPage()
         } else {
             Page(
-                total = doc.total.toLong(),
                 items = doc.items.map { it.toOutline() },
+                total = doc.total.toLong(),
+                pageSize = pageSize,
             )
         }
     }

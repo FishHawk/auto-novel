@@ -1,8 +1,6 @@
 package infra.web.providers
 
-import infra.model.WebNovelAttention
-import infra.model.WebNovelAuthor
-import infra.model.WebNovelType
+import infra.model.*
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
@@ -67,33 +65,33 @@ class Syosetu(
         )
     }
 
-    override suspend fun getRank(options: Map<String, String>): List<RemoteNovelListItem> {
-        val genreFilter = options["genre"] ?: return emptyList()
-        val rangeFilter = options["range"] ?: return emptyList()
+    override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
+        val genreFilter = options["genre"] ?: return emptyPage()
+        val rangeFilter = options["range"] ?: return emptyPage()
 
-        val rangeId = rangeIds[rangeFilter] ?: return emptyList()
+        val rangeId = rangeIds[rangeFilter] ?: return emptyPage()
         val path = when (options["type"]) {
             "流派" -> {
-                val genreId = genreIdsV1[genreFilter] ?: return emptyList()
+                val genreId = genreIdsV1[genreFilter] ?: return emptyPage()
                 "genrelist/type/${rangeId}_${genreId}"
             }
 
             "综合" -> {
-                val genreId = genreIdsV2[genreFilter] ?: return emptyList()
+                val genreId = genreIdsV2[genreFilter] ?: return emptyPage()
                 "list/type/${rangeId}_${genreId}"
             }
 
             "异世界转生/转移" -> {
-                val genreId = genreIdsV3[genreFilter] ?: return emptyList()
+                val genreId = genreIdsV3[genreFilter] ?: return emptyPage()
                 "isekailist/type/${rangeId}_${genreId}"
             }
 
-            else -> return emptyList()
+            else -> return emptyPage()
         }
 
         val doc = client.get("https://yomou.syosetu.com/rank/$path").document()
 
-        return doc.select("div.p-ranklist-item").map { item ->
+        val novels = doc.select("div.p-ranklist-item").map { item ->
             val elTitle = item.selectFirst("div.p-ranklist-item__title > a")!!
             val title = elTitle.text()
             val novelId = elTitle.attr("href")
@@ -127,6 +125,10 @@ class Syosetu(
                 extra = extra,
             )
         }
+        return Page(
+            items = novels,
+            pageNumber = 1,
+        )
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {

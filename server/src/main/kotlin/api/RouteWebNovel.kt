@@ -291,7 +291,7 @@ class WebNovelApi(
         filterSort: WebNovelFilter.Sort,
         page: Int,
         pageSize: Int,
-    ): PageDto<WebNovelOutlineDto> {
+    ): Page<WebNovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
 
@@ -312,20 +312,17 @@ class WebNovelApi(
                 page = page,
                 pageSize = pageSize,
             )
-            .asDto(pageSize) { it.asDto() }
+            .map { it.asDto() }
     }
 
     suspend fun listRank(
         providerId: String,
         options: Map<String, String>,
-    ): PageDto<WebNovelOutlineDto> {
-        val items = metadataRepo
+    ): Page<WebNovelOutlineDto> {
+        return metadataRepo
             .listRank(providerId, options)
             .getOrElse { throwInternalServerError("从源站获取失败:" + it.message) }
-        return PageDto(
-            items = items.map { it.asDto() },
-            pageNumber = 1,
-        )
+            .map { it.asDto() }
     }
 
     // Get

@@ -226,7 +226,7 @@ class WenkuNovelApi(
         page: Int,
         pageSize: Int,
         filterLevel: WenkuNovelFilter.Level,
-    ): PageDto<WenkuNovelOutlineDto> {
+    ): Page<WenkuNovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
 
@@ -243,7 +243,7 @@ class WenkuNovelApi(
                 pageSize = pageSize,
                 filterLevel = filterLevelAllowed,
             )
-            .asDto(pageSize) { it.asDto() }
+            .map { it.asDto() }
     }
 
     private fun throwNovelNotFound(): Nothing =
