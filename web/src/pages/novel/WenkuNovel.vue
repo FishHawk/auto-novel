@@ -104,18 +104,16 @@ const deleteVolume = async (volumeId: string) => {
           :wrap="false"
           style="padding-top: 40px; padding-bottom: 20px; min-height: 260px"
         >
-          <n-card size="small" style="width: 160px">
-            <template #cover>
-              <img
-                :src="
-                  novelMetadataResult.value.cover
-                    ? novelMetadataResult.value.cover
-                    : coverPlaceholder
-                "
-                alt="cover"
-              />
-            </template>
-          </n-card>
+          <n-image
+            width="160"
+            :src="
+              novelMetadataResult.value.cover
+                ? novelMetadataResult.value.cover
+                : coverPlaceholder
+            "
+            alt="cover"
+            style="border-radius: 2px"
+          />
           <div>
             <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
               {{
@@ -187,29 +185,18 @@ const deleteVolume = async (volumeId: string) => {
       <SectionHeader v-if="metadata.volumes.length" title="各卷封面" />
       <div v-if="metadata.volumes.length">
         <n-scrollbar x-scrollable>
-          <div style="white-space: nowrap">
-            <n-card
-              v-for="volume of metadata.volumes"
-              size="small"
-              header-style="padding: 8px;"
-              :bordered="false"
-              :wrap="false"
-              style="
-                display: inline-block;
-                width: 100px;
-                margin: 4px;
-                padding-bottom: 12px;
-              "
-            >
-              <template #cover>
-                <img
-                  :src="volume.cover"
-                  alt="cover"
-                  style="aspect-ratio: 1 / 1.5; object-fit: cover"
-                />
-              </template>
-            </n-card>
-          </div>
+          <n-image-group show-toolbar-tooltip>
+            <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
+              <n-image
+                v-for="volume of metadata.volumes"
+                width="104"
+                :src="volume.cover"
+                :alt="volume.asin"
+                lazy
+                style="border-radius: 2px"
+              />
+            </n-flex>
+          </n-image-group>
         </n-scrollbar>
       </div>
 
