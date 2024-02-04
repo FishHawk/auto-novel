@@ -24,14 +24,14 @@ class Novelup(
 
         val infoEl = doc.selectFirst("div#section_episode_info_table > div.content_wrapper > table")!!
 
-        val title = infoEl
-            .selectFirst("th:containsOwn(作品名)")!!
+        fun row(label: String) = infoEl
+            .selectFirst("th:containsOwn(${label})")!!
             .nextElementSibling()!!
+
+        val title = row("作品名")
             .text()
 
-        val author = infoEl
-            .selectFirst("th:containsOwn(作者名)")!!
-            .nextElementSibling()!!
+        val author = row("作者名")
             .selectFirst("a")!!
             .let {
                 WebNovelAuthor(
@@ -53,9 +53,7 @@ class Novelup(
                 }
             }
 
-        val attentions = infoEl
-            .selectFirst("th:containsOwn(セルフレイティング)")!!
-            .nextElementSibling()!!
+        val attentions = row("セルフレイティング")
             .textNodes()
             .mapNotNull {
                 when (it.text().trim()) {
@@ -66,11 +64,20 @@ class Novelup(
                 }
             }
 
-        val keywords = infoEl
-            .selectFirst("th:containsOwn(タグ)")!!
-            .nextElementSibling()!!
+        val keywords = row("タグ")
             .children()
             .map { it.text() }
+
+        val points = row("応援ポイント")
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
+
+        val totalCharacters = row("文字数")
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
+
 
         val introduction = doc
             .selectFirst("div.novel_synopsis")!!
@@ -111,6 +118,8 @@ class Novelup(
             type = type,
             attentions = attentions,
             keywords = keywords,
+            points = points,
+            totalCharacters = totalCharacters,
             introduction = introduction,
             toc = toc,
         )

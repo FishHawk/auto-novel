@@ -37,6 +37,8 @@ export interface WebNovelDto {
   type: string;
   attentions: string[];
   keywords: string[];
+  points?: number;
+  totalCharacters?: number;
   introductionJp: string;
   introductionZh?: string;
   glossary: { [key: string]: string };

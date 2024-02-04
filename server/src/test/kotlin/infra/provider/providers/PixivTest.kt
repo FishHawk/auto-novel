@@ -2,6 +2,7 @@ package infra.provider.providers
 
 import infra.client
 import infra.web.providers.Pixiv
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
@@ -31,7 +32,6 @@ class PixivTest : DescribeSpec({
         it("常规，好友限定") {
             // https://www.pixiv.net/novel/series/642636
             val metadata = provider.getMetadata("642636")
-            println(metadata.toc)
         }
         it("常规，目录很多页") {
             // https://www.pixiv.net/novel/series/870363
@@ -47,6 +47,12 @@ class PixivTest : DescribeSpec({
             metadata.authors.first().link.shouldBe("https://www.pixiv.net/users/60498514")
             metadata.toc[0].title.shouldBe("无名")
             metadata.toc[0].chapterId.shouldBe("19776346")
+        }
+        it("短篇，但存在系列") {
+            // https://www.pixiv.net/novel/show.php?id=18304868
+            shouldThrow<RuntimeException> {
+                provider.getMetadata("s18304868")
+            }
         }
     }
 

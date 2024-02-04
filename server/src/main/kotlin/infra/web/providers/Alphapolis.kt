@@ -38,7 +38,12 @@ class Alphapolis(
         val doc = client.get(getMetadataUrl(novelId)).document()
 
         val infoEl = doc.selectFirst("div.content-info > div.content-statuses")!!
+        val tableEl = doc.selectFirst("div.content-info > table.detail")!!
         val mainEl = doc.selectFirst("div.content-main")!!
+
+        fun row(label: String) = tableEl
+            .selectFirst("th:containsOwn(${label})")!!
+            .nextElementSibling()!!
 
         val title = mainEl
             .selectFirst("h1.title")!!
@@ -75,6 +80,17 @@ class Alphapolis(
                     else -> null
                 }
             }
+
+        val points = row("累計ポイント")
+            .text()
+            .substringBefore("pt")
+            .filter { it.isDigit() }
+            .toInt()
+
+        val totalCharacters = row("文字数")
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
 
         val introduction = mainEl
             .selectFirst("div.abstract")!!
@@ -122,6 +138,8 @@ class Alphapolis(
             type = type,
             attentions = attention?.let { listOf(it) } ?: emptyList(),
             keywords = emptyList(),
+            points = points,
+            totalCharacters = totalCharacters,
             introduction = introduction,
             toc = toc,
         )

@@ -38,15 +38,16 @@ class Hameln(
             ).awaitAll()
         }
 
-        fun qTable(str: String) = "td:matches(^$str\$)"
-        val title = doc2
-            .selectFirst(qTable("タイトル"))!!
+        val mainEl = doc2.getElementById("main")!!
+
+        fun row(label: String) = mainEl
+            .selectFirst("td:containsOwn(${label})")!!
             .nextElementSibling()!!
+
+        val title = row("タイトル")
             .text()
 
-        val author = doc2
-            .selectFirst(qTable("作者"))!!
-            .nextElementSibling()!!
+        val author = row("作者")
             .let { el ->
                 WebNovelAuthor(
                     name = el.text(),
@@ -54,9 +55,7 @@ class Hameln(
                 )
             }
 
-        val type = doc2
-            .selectFirst(qTable("話数"))!!
-            .nextElementSibling()!!
+        val type = row("話数")
             .text()
             .let {
                 when {
@@ -70,11 +69,8 @@ class Hameln(
 
         val attentions = mutableSetOf<WebNovelAttention>()
         val keywords = mutableListOf<String>()
-        listOf(
-            doc2.selectFirst(qTable("タグ")),
-            doc2.selectFirst(qTable("必須タグ"))
-        )
-            .flatMap { it!!.nextElementSibling()!!.select("a") }
+        listOf("タグ", "必須タグ")
+            .flatMap { row(it).select("a") }
             .map { it.text() }
             .forEach {
                 when (it) {
@@ -84,9 +80,18 @@ class Hameln(
                     else -> keywords.add(it)
                 }
             }
-        val introduction = doc2
-            .selectFirst(qTable("あらすじ"))!!
-            .nextElementSibling()!!
+
+        val points = row("総合評価")
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
+
+        val totalCharacters = row("合計文字数")
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
+
+        val introduction = row("あらすじ")
             .text()
 
         val toc = if (doc1.selectFirst("span[itemprop=name]") != null) {
@@ -122,6 +127,8 @@ class Hameln(
             type = type,
             attentions = attentions.toList(),
             keywords = keywords,
+            points = points,
+            totalCharacters = totalCharacters,
             introduction = introduction,
             toc = toc,
         )

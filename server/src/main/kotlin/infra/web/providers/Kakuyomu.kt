@@ -6,16 +6,6 @@ import io.ktor.client.request.*
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.*
 
-private fun JsonObject.boolean(field: String) = get(field)!!.jsonPrimitive.boolean
-private fun JsonObject.array(field: String) = get(field)!!.jsonArray
-
-private fun JsonObject.string(field: String) = get(field)!!.jsonPrimitive.content
-private fun JsonObject.stringOrNull(field: String) = get(field)!!.jsonPrimitive.contentOrNull
-
-private fun JsonObject.obj(field: String) = get(field)!!.jsonObject
-private fun JsonObject.objOrNull(field: String) = get(field)!!.takeUnless { it is JsonNull }?.jsonObject
-
-
 class Kakuyomu(
     private val client: HttpClient,
 ) : WebNovelProvider {
@@ -135,6 +125,9 @@ class Kakuyomu(
             .array("tagLabels")
             .map { it.jsonPrimitive.content }
 
+        val points = work.int("totalReviewPoint")
+        val totalCharacters = work.int("totalCharacterCount")
+
         val introduction = work.string("introduction")
 
         val toc = work
@@ -173,6 +166,8 @@ class Kakuyomu(
             type = type,
             attentions = attentions,
             keywords = keywords,
+            points = points,
+            totalCharacters = totalCharacters,
             introduction = introduction,
             toc = toc,
         )

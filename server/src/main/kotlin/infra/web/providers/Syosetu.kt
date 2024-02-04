@@ -153,9 +153,14 @@ class Syosetu(
             .selectFirst("h1")!!
             .text()
 
-        val author = doc2
-            .selectFirst("th:containsOwn(作者名)")!!
-            .nextElementSibling()!!
+        val infodataEl = doc2.getElementById("infodata")!!
+        val preInfoEl = infodataEl.getElementById("pre_info")!!
+
+        fun row(label: String) = infodataEl
+            .selectFirst("th:containsOwn(${label})")
+            ?.nextElementSibling()
+
+        val author = row("作者名")!!
             .let { el ->
                 WebNovelAuthor(
                     name = el.text(),
@@ -163,8 +168,9 @@ class Syosetu(
                 )
             }
 
-        val type = (doc2.selectFirst("div#pre_info > span#noveltype_notend")
-            ?: doc2.selectFirst("div#pre_info > span#noveltype")!!
+        val type = (
+                preInfoEl.selectFirst("#noveltype_notend")
+                    ?: preInfoEl.selectFirst("#noveltype")!!
                 )
             .text()
             .let {
@@ -178,9 +184,7 @@ class Syosetu(
 
         val attentions = mutableSetOf<WebNovelAttention>()
         val keywords = mutableListOf<String>()
-        doc2
-            .selectFirst("th:containsOwn(キーワード)")
-            ?.nextElementSibling()
+        row("キーワード")
             ?.text()
             ?.split(" ")
             ?.forEach {
@@ -190,17 +194,25 @@ class Syosetu(
                     else -> keywords.add(it)
                 }
             }
-        doc2
-            .selectFirst("div#pre_info > span#age_limit")
+        preInfoEl
+            .selectFirst("#age_limit")
             ?.text()
             ?.let {
                 if (it == "R18") attentions.add(WebNovelAttention.R18)
                 else throw RuntimeException("无法解析的小说标签:$it")
             }
 
-        val introduction = doc2
-            .selectFirst("th:containsOwn(あらすじ)")!!
-            .nextElementSibling()!!
+        val points = row("総合評価")!!
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
+
+        val totalCharacters = row("文字数")!!
+            .text()
+            .filter { it.isDigit() }
+            .toInt()
+
+        val introduction = row("あらすじ")!!
             .text()
 
         val toc = if (doc1.selectFirst("div.index_box") == null) {
@@ -256,6 +268,8 @@ class Syosetu(
             type = type,
             attentions = attentions.toList(),
             keywords = keywords,
+            points = points,
+            totalCharacters = totalCharacters,
             introduction = introduction,
             toc = toc,
         )

@@ -8,7 +8,7 @@ import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.text.SimpleDateFormat
@@ -20,6 +20,8 @@ data class RemoteNovelMetadata(
     val type: WebNovelType,
     val attentions: List<WebNovelAttention>,
     val keywords: List<String>,
+    val points: Int?,
+    val totalCharacters: Int,
     val introduction: String,
     val toc: List<TocItem>,
 ) {
@@ -48,13 +50,24 @@ interface WebNovelProvider {
     suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter
 }
 
-fun parseJapanDateString(pattern: String, dateString: String): Instant {
-    return SimpleDateFormat(pattern)
+suspend fun HttpResponse.document(): Document = Jsoup.parse(body<String>())
+suspend fun HttpResponse.json(): JsonObject = body()
+
+// Datetime util
+fun parseJapanDateString(pattern: String, dateString: String): Instant =
+    SimpleDateFormat(pattern)
         .apply { timeZone = TimeZone.getTimeZone("Asia/Tokyo") }
         .parse(dateString)
         .toInstant()
         .toKotlinInstant()
-}
 
-suspend fun HttpResponse.document(): Document = Jsoup.parse(body<String>())
-suspend fun HttpResponse.json(): JsonObject = body()
+// Json util
+fun JsonObject.boolean(field: String) = get(field)!!.jsonPrimitive.boolean
+fun JsonObject.int(field: String) = get(field)!!.jsonPrimitive.int
+fun JsonObject.array(field: String) = get(field)!!.jsonArray
+
+fun JsonObject.string(field: String) = get(field)!!.jsonPrimitive.content
+fun JsonObject.stringOrNull(field: String) = get(field)!!.jsonPrimitive.contentOrNull
+
+fun JsonObject.obj(field: String) = get(field)!!.jsonObject
+fun JsonObject.objOrNull(field: String) = get(field)!!.takeUnless { it is JsonNull }?.jsonObject

@@ -215,6 +215,8 @@ class WebNovelMetadataRepository(
                     type = remote.type,
                     keywords = remote.keywords,
                     attentions = remote.attentions,
+                    points = remote.points,
+                    totalCharacters = remote.totalCharacters,
                     introductionJp = remote.introduction,
                     toc = remote.toc.map { WebNovelTocItem(it.title, null, it.chapterId, it.createAt) },
                 )
@@ -297,6 +299,8 @@ class WebNovelMetadataRepository(
             setValue(WebNovelMetadata::type, remote.type),
             setValue(WebNovelMetadata::attentions, remote.attentions),
             setValue(WebNovelMetadata::keywords, remote.keywords),
+            setValue(WebNovelMetadata::points, remote.points),
+            setValue(WebNovelMetadata::totalCharacters, remote.totalCharacters),
             setValue(WebNovelMetadata::introductionJp, remote.introductionJp),
             setValue(WebNovelMetadata::toc, merged.toc),
             setValue(WebNovelMetadata::syncAt, now),

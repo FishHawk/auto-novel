@@ -73,6 +73,8 @@ class WebNovelMetadata(
     val type: WebNovelType = WebNovelType.连载中,
     val attentions: List<WebNovelAttention> = emptyList(),
     val keywords: List<String> = emptyList(),
+    val points: Int?,
+    val totalCharacters: Int? = null,
     val introductionJp: String,
     val introductionZh: String? = null,
     val glossaryUuid: String? = null,

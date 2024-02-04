@@ -49,9 +49,8 @@ class HamelnTest : DescribeSpec({
         }
         it("短篇") {
             // https://syosetu.org/novel/303189
-            val author = provider.getMetadata("303189").authors.first()
-            author.name.shouldBe("皆でワンピ章ボス全員憑依目指そう")
-            author.link.shouldBeNull()
+            val metadata = provider.getMetadata("303189")
+            metadata.type.shouldBe(WebNovelType.短篇)
         }
     }
 

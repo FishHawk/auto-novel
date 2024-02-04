@@ -55,7 +55,6 @@ const submitGlossary = async (glossary: { [key: string]: string }) => {
 };
 
 const deleteVolume = async (volumeId: string) => {
-  console.log(encodeURIComponent(volumeId));
   const result = await ApiWenkuNovel.deleteVolume(novelId, volumeId);
   if (result.ok) {
     getNovel();

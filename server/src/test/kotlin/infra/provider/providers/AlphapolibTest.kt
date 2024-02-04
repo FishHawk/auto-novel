@@ -24,11 +24,11 @@ class AlphapolibTest : DescribeSpec({
         }
         it("折叠") {
             // https://www.alphapolis.co.jp/novel/761693105/571330821
-            val metadata = provider.getMetadata("761693105-571330821")
+            provider.getMetadata("761693105-571330821")
         }
         it("R18") {
             // https://www.alphapolis.co.jp/novel/770037297/275621537
-            val metadata = provider.getMetadata("770037297-275621537")
+            provider.getMetadata("770037297-275621537")
         }
     }
 

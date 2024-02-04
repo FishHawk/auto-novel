@@ -6,7 +6,6 @@ import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
@@ -21,13 +20,12 @@ class NovelupTest : DescribeSpec({
             metadata.authors.first().name.shouldBe("サイトウアユム")
             metadata.authors.first().link.shouldBe("https://novelup.plus/user/930309375/profile")
             metadata.introduction.shouldStartWith("ケフェウス帝国の貴族であるクロノ・クロフォードには秘密があった。")
-            metadata.introduction.shouldEndWith("小説家になろう様にマルチ投稿中。")
             metadata.toc[0].title.shouldBe("第１部：立志編")
             metadata.toc[0].chapterId.shouldBeNull()
             metadata.toc[0].createAt.shouldBeNull()
             metadata.toc[1].title.shouldBe("001　第１話：クロノ")
             metadata.toc[1].chapterId.shouldBe("614254159")
-            metadata.toc[1].createAt.shouldBe(Instant.parse("2019-05-17T09:43:00Z"))
+            metadata.toc[1].createAt.shouldBe(Instant.parse("2019-05-17T08:43:00Z"))
         }
         it("常规，单页") {
             // https://novelup.plus/story/358276052

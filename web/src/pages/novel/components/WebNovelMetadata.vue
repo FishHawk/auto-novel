@@ -5,8 +5,9 @@ import { NA, NText } from 'naive-ui';
 import { buildWebNovelUrl } from '@/data/util_web';
 
 import { WebNovelVM } from './common';
+import { computed } from 'vue';
 
-defineProps<{
+const props = defineProps<{
   providerId: string;
   novelId: string;
   novel: WebNovelVM;
@@ -15,6 +16,30 @@ defineProps<{
 const emit = defineEmits<{
   commentClick: [];
 }>();
+
+const labels = computed(() => {
+  const readableNumber = (num: number | undefined) => {
+    if (num === undefined) return undefined;
+    if (num < 1000) return num.toString();
+    else return (num / 1000).toFixed(1).toString() + 'k';
+  };
+
+  const withPointDeco = (str: string | undefined) => {
+    if (str === undefined) return undefined;
+    if (props.providerId === 'kakuyomu') return '★' + str;
+    else return str + ' PT';
+  };
+
+  const labels = [
+    props.novel.type,
+    withPointDeco(readableNumber(props.novel.points)),
+    readableNumber(props.novel.totalCharacters) + ' 字',
+    readableNumber(props.novel.visited) + ' 浏览',
+  ]
+    .filter(Boolean)
+    .join(' / ');
+  return labels;
+});
 </script>
 
 <template>
@@ -64,7 +89,7 @@ const emit = defineEmits<{
     </n-button>
   </n-flex>
 
-  <n-p>{{ novel.type }} / 浏览次数:{{ novel.visited }}</n-p>
+  <n-p>{{ labels }}</n-p>
 
   <n-p style="word-break: break-all">
     {{ novel.introductionJp }}

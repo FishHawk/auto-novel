@@ -6,7 +6,10 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class Pixiv(
     private val client: HttpClient,
@@ -44,30 +47,47 @@ class Pixiv(
             val chapterId = novelId.removePrefix("s")
             val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"
             val doc = get(url).document()
-            val jsonRaw = doc.selectFirst("meta#meta-preload-data")!!.attr("content")
-            val obj = Json.parseToJsonElement(jsonRaw).jsonObject["novel"]!!.jsonObject[chapterId]!!.jsonObject
-            assert(obj["seriesNavData"] != null)
 
-            val title = obj["title"]!!.jsonPrimitive.content
+            val jsonRaw = doc
+                .selectFirst("meta#meta-preload-data")!!
+                .attr("content")
+
+            val obj = Json
+                .parseToJsonElement(jsonRaw)
+                .jsonObject
+                .obj("novel")
+                .obj(chapterId)
+
+            if (obj.objOrNull("seriesNavData") != null) {
+                throw RuntimeException("小说存在系列")
+            }
+
+            val title = obj
+                .string("title")
 
             val author = WebNovelAuthor(
-                name = obj["userName"]!!.jsonPrimitive.content,
-                link = "https://www.pixiv.net/users/" + obj["userId"]!!.jsonPrimitive.content
+                name = obj.string("userName"),
+                link = "https://www.pixiv.net/users/" + obj.string("userId"),
             )
 
-            val keywords = obj["tags"]!!.jsonObject["tags"]!!.jsonArray
-                .map { it.jsonObject["tag"]!!.jsonPrimitive.content }
+            val keywords = obj
+                .obj("tags")
+                .array("tags")
+                .map { it.jsonObject.string("tag") }
                 .filter { it != "R-18" }
 
-            val attentions = obj["xRestrict"]!!.jsonPrimitive.int
+            val attentions = obj
+                .int("xRestrict")
                 .let {
-                    when (it) {
-                        0 -> emptyList()
-                        else -> listOf(WebNovelAttention.R18)
-                    }
+                    if (it == 0) emptyList()
+                    else listOf(WebNovelAttention.R18)
                 }
 
-            val introduction = obj["description"]!!.jsonPrimitive.content
+            val totalCharacters = obj
+                .int("characterCount")
+
+            val introduction = obj
+                .string("description")
                 .replace("<br />", "\n")
 
             return RemoteNovelMetadata(
@@ -76,6 +96,8 @@ class Pixiv(
                 type = WebNovelType.短篇,
                 keywords = keywords,
                 attentions = attentions,
+                points = null,
+                totalCharacters = totalCharacters,
                 introduction = introduction,
                 toc = listOf(
                     RemoteNovelMetadata.TocItem(
@@ -85,28 +107,40 @@ class Pixiv(
                 ),
             )
         } else {
-            val obj1 = get("https://www.pixiv.net/ajax/novel/series/$novelId").json()["body"]!!.jsonObject
-            val title = obj1["title"]!!.jsonPrimitive.content
+            val obj1 = get("https://www.pixiv.net/ajax/novel/series/$novelId")
+                .json()
+                .obj("body")
+
+            val title = obj1
+                .string("title")
+
             val author = WebNovelAuthor(
-                name = obj1["userName"]!!.jsonPrimitive.content,
-                link = "https://www.pixiv.net/users/" + obj1["userId"]!!.jsonPrimitive.content,
+                name = obj1.string("userName"),
+                link = "https://www.pixiv.net/users/" + obj1.string("userId"),
             )
 
-            val keywords = obj1["tags"]!!.jsonArray
+            val keywords = obj1
+                .array("tags")
                 .map { it.jsonPrimitive.content }
 
-            val attentions = obj1["xRestrict"]!!.jsonPrimitive.int
+            val attentions = obj1
+                .int("xRestrict")
                 .let {
-                    when (it) {
-                        0 -> emptyList()
-                        else -> listOf(WebNovelAttention.R18)
-                    }
+                    if (it == 0) emptyList()
+                    else listOf(WebNovelAttention.R18)
                 }
 
-            val introduction = obj1["caption"]!!.jsonPrimitive.content
+            val totalCharacters = obj1
+                .int("publishedTotalCharacterCount")
 
-            val obj2 = get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles").json()
-            val toc = obj2["body"]!!.jsonArray
+            val introduction = obj1
+                .string("caption")
+
+            val arr2 = get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles")
+                .json()
+                .array("body")
+
+            val toc = arr2
                 .map { it.jsonObject }
                 .filter { it["available"]!!.jsonPrimitive.boolean }
                 .map {
@@ -122,6 +156,8 @@ class Pixiv(
                 type = WebNovelType.连载中,
                 keywords = keywords,
                 attentions = attentions,
+                points = null,
+                totalCharacters = totalCharacters,
                 introduction = introduction,
                 toc = toc,
             )
