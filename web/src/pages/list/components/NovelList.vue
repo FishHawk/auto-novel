@@ -12,6 +12,7 @@ import { LocationQuery, useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@/data/api/common';
 import { Result, ResultState } from '@/data/result';
+import { onKeyStroke } from '@vueuse/core';
 
 const route = useRoute();
 const router = useRouter();
@@ -108,6 +109,19 @@ function detectUserInput() {
   currentPage.value = 1;
   pushPath();
 }
+
+onKeyStroke(['ArrowLeft'], (e) => {
+  if (currentPage.value > 1) {
+    currentPage.value = currentPage.value - 1;
+    e.preventDefault();
+  }
+});
+onKeyStroke(['ArrowRight'], (e) => {
+  if (currentPage.value < pageNumber.value) {
+    currentPage.value = currentPage.value + 1;
+    e.preventDefault();
+  }
+});
 </script>
 
 <template>
