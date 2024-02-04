@@ -59,15 +59,6 @@ describe('provider', () => {
     ]);
   });
 
-  it('novelism', () => {
-    test_parse_url('novelism', [
-      [
-        'https://novelism.jp/novel/2m0xulekSsCxfixwam8d7g',
-        '2m0xulekSsCxfixwam8d7g',
-      ],
-    ]);
-  });
-
   it('unmatch', () => {
     const benches = ['https://www.google.com/', 'https://books.fishhawk.top/'];
     for (const url of benches) {

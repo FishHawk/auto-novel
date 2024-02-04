@@ -35,7 +35,6 @@ const options = [
       'Hameln',
       'Pixiv',
       'Alphapolis',
-      'Novelism',
     ],
   },
   {
@@ -65,7 +64,6 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
     Hameln: 'hameln',
     Pixiv: 'pixiv',
     Alphapolis: 'alphapolis',
-    Novelism: 'novelism',
   };
   if (userData.isOldAss) {
     return ApiWebNovel.listNovel({

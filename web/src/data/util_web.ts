@@ -104,9 +104,10 @@ const alphapolis: Provider = {
   },
 };
 
+// 弃用，为了兼容以前的小说暂时保留
 const novelism: Provider = {
   parseUrl(url: string): string | undefined {
-    return /novelism\.jp\/novel\/([^\/]+)/.exec(url)?.[1];
+    return undefined;
   },
   buildNovelUrl(novelId: string): string {
     return `https://novelism.jp/novel/${novelId}`;

@@ -38,7 +38,6 @@ class DataSourceWebNovelProvider(
         Alphapolis.id to Alphapolis(client),
         Hameln.id to Hameln(client),
         Kakuyomu.id to Kakuyomu(client),
-        Novelism.id to Novelism(client),
         Novelup.id to Novelup(client),
         Pixiv.id to Pixiv(client),
         Syosetu.id to Syosetu(client),

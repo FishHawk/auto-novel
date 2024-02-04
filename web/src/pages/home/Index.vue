@@ -96,7 +96,6 @@ const linkExample = [
     'https://www.pixiv.net/novel/series/9406879 <br/> https://www.pixiv.net/novel/show.php?id=18304868',
   ],
   ['Alphapolis', 'https://www.alphapolis.co.jp/novel/638978238/525733370'],
-  ['Novelism', 'https://novelism.jp/novel/2m0xulekSsCxfixwam8d7g'],
 ];
 
 const showQQModal = ref(false);
@@ -109,6 +108,7 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
 const notifications = [
   '1月20日晚10点网站出现恶性bug，如果你能看到这行字，说明你没有问题。',
   '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。',
+  '由于使用人数过少，网站决定弃用Novelism小说源。如果你有需求，请在反馈帖说下。',
 ];
 </script>
 
