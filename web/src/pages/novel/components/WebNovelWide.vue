@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { SortFilled } from '@vicons/material';
-import { useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
@@ -15,7 +14,6 @@ defineProps<{
 }>();
 
 const setting = useSettingStore();
-const vars = useThemeVars();
 
 const commentListRef = ref<HTMLElement>();
 const scrollToCommentList = () => {
@@ -102,9 +100,3 @@ const scrollToCommentList = () => {
     </div>
   </n-flex>
 </template>
-
-<style scoped>
-.toc:visited {
-  color: color-mix(in srgb, v-bind('vars.primaryColor') 50%, red);
-}
-</style>
