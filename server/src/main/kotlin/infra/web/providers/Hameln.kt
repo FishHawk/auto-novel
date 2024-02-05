@@ -41,7 +41,7 @@ class Hameln(
         val mainEl = doc2.getElementById("main")!!
 
         fun row(label: String) = mainEl
-            .selectFirst("td:containsOwn(${label})")!!
+            .selectFirst("td:matches(^$label\$)")!!
             .nextElementSibling()!!
 
         val title = row("タイトル")
