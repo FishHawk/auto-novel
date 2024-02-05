@@ -23,7 +23,11 @@ const commentPage = ref<ResultState<Page<Comment1>>>();
 const currentPage = ref(1);
 
 async function loadComments(page: number) {
-  const result = await ApiComment.listComment({ site, page: page - 1, pageSize: 10 });
+  const result = await ApiComment.listComment({
+    site,
+    page: page - 1,
+    pageSize: 10,
+  });
   if (result.ok) {
     commentPage.value = Ok({
       ...result.value,
@@ -55,14 +59,14 @@ function toggleInput() {
 </script>
 
 <template>
-  <SectionHeader title="评论">
-    <n-button v-if="!locked" @click="toggleInput()">
+  <section-header title="评论">
+    <n-button v-if="!locked" round @click="toggleInput()">
       <template #icon>
         <n-icon :component="CommentFilled" />
       </template>
       发表评论
     </n-button>
-  </SectionHeader>
+  </section-header>
 
   <n-p v-if="locked">评论区已锁定，不能再回复。</n-p>
 

@@ -111,6 +111,7 @@ const deleteVolume = async (volumeId: string) => {
                 : coverPlaceholder
             "
             alt="cover"
+            show-toolbar-tooltip
             style="border-radius: 2px"
           />
           <div>
@@ -148,9 +149,9 @@ const deleteVolume = async (volumeId: string) => {
       v-slot="{ value: metadata }"
       class="layout-content"
     >
-      <n-space>
+      <n-flex>
         <RouterNA :to="`/wenku-edit/${novelId}`">
-          <n-button>
+          <n-button round>
             <template #icon>
               <n-icon :component="EditNoteFilled" />
             </template>
@@ -164,13 +165,15 @@ const deleteVolume = async (volumeId: string) => {
           :novel="{ type: 'wenku', novelId }"
         />
 
-        <n-a
+        <n-button
+          round
+          tag="a"
           :href="`https://www.amazon.co.jp/s?k=${metadata.title}&rh=n%3A465392`"
           target="_blank"
         >
-          <n-button>在亚马逊搜索</n-button>
-        </n-a>
-      </n-space>
+          在亚马逊搜索
+        </n-button>
+      </n-flex>
 
       <n-p>原名：{{ metadata.title }}</n-p>
       <n-p v-html="metadata.introduction.replace(/\n/g, '<br />')" />
@@ -181,8 +184,8 @@ const deleteVolume = async (volumeId: string) => {
         </n-tag>
       </n-space>
 
-      <SectionHeader v-if="metadata.volumes.length" title="各卷封面" />
-      <div v-if="metadata.volumes.length">
+      <template v-if="metadata.volumes.length">
+        <section-header title="各卷封面" />
         <n-scrollbar x-scrollable>
           <n-image-group show-toolbar-tooltip>
             <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
@@ -197,10 +200,15 @@ const deleteVolume = async (volumeId: string) => {
             </n-flex>
           </n-image-group>
         </n-scrollbar>
-      </div>
+      </template>
 
-      <SectionHeader title="中文章节" />
-      <UploadButton type="zh" :novelId="novelId" @uploadFinished="getNovel()" />
+      <section-header title="中文章节">
+        <upload-button
+          type="zh"
+          :novelId="novelId"
+          @uploadFinished="getNovel()"
+        />
+      </section-header>
       <n-ul>
         <n-li v-for="volumeId in metadata.volumeZh" :key="volumeId">
           <n-a
@@ -227,8 +235,13 @@ const deleteVolume = async (volumeId: string) => {
         </n-li>
       </n-ul>
 
-      <SectionHeader title="日文章节" />
-      <UploadButton type="jp" :novelId="novelId" @uploadFinished="getNovel()" />
+      <section-header title="日文章节">
+        <upload-button
+          type="jp"
+          :novelId="novelId"
+          @uploadFinished="getNovel()"
+        />
+      </section-header>
 
       <advance-options
         ref="advanceOptions"

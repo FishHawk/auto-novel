@@ -57,14 +57,14 @@ const labels = computed(() => {
   </n-p>
 
   <n-flex>
-    <RouterNA :to="`/novel-edit/${providerId}/${novelId}`">
-      <n-button>
+    <router-link :to="`/novel-edit/${providerId}/${novelId}`">
+      <n-button round>
         <template #icon>
           <n-icon :component="EditNoteFilled" />
         </template>
         编辑
       </n-button>
-    </RouterNA>
+    </router-link>
 
     <favorite-button
       v-model:favored="novel.favored"
@@ -73,7 +73,7 @@ const labels = computed(() => {
     />
 
     <router-link v-if="novel.wenkuId" :to="`/wenku/${novel.wenkuId}`">
-      <n-button>
+      <n-button round>
         <template #icon>
           <n-icon :component="BookFilled" />
         </template>

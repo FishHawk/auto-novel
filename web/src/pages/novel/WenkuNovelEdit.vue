@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { UploadFilled } from '@vicons/material';
+import { UploadFilled, LinkFilled } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -241,18 +241,12 @@ const deleteVolume = (index: number) => {
       </n-ul>
     </n-card>
 
-    <n-space style="margin-bottom: 24px" :wrap="false">
-      <div>
-        <img
-          :src="formValue.cover ? formValue.cover : coverPlaceholder"
-          alt="cover"
-          style="width: 160px"
-        />
-        <br />
-        <n-text depth="3" style="font-size: 12px">
-          * 暂不支持上传封面。
-        </n-text>
-      </div>
+    <n-flex style="margin-bottom: 24px" :wrap="false">
+      <n-image
+        width="160"
+        :src="formValue.cover ? formValue.cover : coverPlaceholder"
+        alt="cover"
+      />
 
       <div style="max-width: 530px">
         <n-p>
@@ -271,7 +265,7 @@ const deleteVolume = (index: number) => {
           </n-button>
         </n-input-group>
       </div>
-    </n-space>
+    </n-flex>
 
     <n-form
       ref="formRef"
@@ -338,36 +332,43 @@ const deleteVolume = (index: number) => {
     </n-form>
 
     <n-h2 prefix="bar">分卷</n-h2>
-    <n-list>
-      <n-list-item v-for="(volume, index) in formValue.volumes">
-        <n-flex :wrap="false">
-          <n-card size="small" style="width: 100px">
-            <template #cover>
-              <img :src="volume.cover" alt="cover" />
-            </template>
-          </n-card>
-          <n-flex vertical style="flex: auto">
-            <n-text>ASIN: {{ volume.asin }}</n-text>
-            <n-input
-              v-model:value="volume.title"
-              placeholder="日文标题"
-              :input-props="{ spellcheck: false }"
+    <n-image-group show-toolbar-tooltip>
+      <n-list>
+        <n-list-item v-for="(volume, index) in formValue.volumes">
+          <n-flex :wrap="false">
+            <n-image
+              width="104"
+              :src="volume.cover"
+              :alt="volume.asin"
+              lazy
+              style="border-radius: 2px"
             />
-            <n-input
-              v-model:value="volume.cover"
-              placeholder="封面链接"
-              :input-props="{ spellcheck: false }"
-            />
-            <n-flex>
-              <n-button @click="deleteVolume(index)"> 删除 </n-button>
-              <n-button v-if="index > 0" @click="moveVolumeUp(index)">
-                上移
-              </n-button>
+
+            <n-flex vertical style="flex: auto">
+              <n-a :href="`https://www.amazon.co.jp/-/zh/dp/${volume.asin}`">
+                ASIN: {{ volume.asin }}
+              </n-a>
+              <n-input
+                v-model:value="volume.title"
+                placeholder="日文标题"
+                :input-props="{ spellcheck: false }"
+              />
+              <n-input
+                v-model:value="volume.cover"
+                placeholder="封面链接"
+                :input-props="{ spellcheck: false }"
+              />
+              <n-flex>
+                <n-button round @click="deleteVolume(index)"> 删除 </n-button>
+                <n-button v-if="index > 0" round @click="moveVolumeUp(index)">
+                  上移
+                </n-button>
+              </n-flex>
             </n-flex>
           </n-flex>
-        </n-flex>
-      </n-list-item>
-    </n-list>
+        </n-list-item>
+      </n-list>
+    </n-image-group>
 
     <n-divider />
 

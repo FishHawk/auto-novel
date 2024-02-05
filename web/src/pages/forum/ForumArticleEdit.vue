@@ -144,33 +144,31 @@ const formatExample: [string, string][] = [
 
     <n-divider />
 
-    <section v-if="formValue.content.trim()">
-      <SectionHeader title="预览" />
-      <Markdown :source="formValue.content" />
-    </section>
+    <template v-if="formValue.content.trim()">
+      <section-header title="预览" />
+      <markdown :source="formValue.content" />
+    </template>
 
-    <section>
-      <SectionHeader title="格式帮助" />
-      <n-table :bordered="false">
-        <thead>
-          <tr>
-            <th><b>格式</b></th>
-            <th><b>原文</b></th>
-            <th><b>预览</b></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="[name, code] of formatExample">
-            <td>
-              <b>{{ name }}</b>
-            </td>
-            <td style="white-space: pre-wrap">{{ code }}</td>
-            <td>
-              <Markdown :source="code" />
-            </td>
-          </tr>
-        </tbody>
-      </n-table>
-    </section>
+    <section-header title="格式帮助" />
+    <n-table :bordered="false">
+      <thead>
+        <tr>
+          <th><b>格式</b></th>
+          <th><b>原文</b></th>
+          <th><b>预览</b></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="[name, code] of formatExample">
+          <td>
+            <b>{{ name }}</b>
+          </td>
+          <td style="white-space: pre-wrap">{{ code }}</td>
+          <td>
+            <Markdown :source="code" />
+          </td>
+        </tr>
+      </tbody>
+    </n-table>
   </div>
 </template>

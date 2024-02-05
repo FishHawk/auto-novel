@@ -175,14 +175,18 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         </n-space>
       </n-space>
 
-      <n-a :href="file.url" :download="file.filename" target="_blank">
-        <n-button>
-          <template #icon>
-            <n-icon :component="FileDownloadFilled" />
-          </template>
-          下载
-        </n-button>
-      </n-a>
+      <n-button
+        round
+        tag="a"
+        :href="file.url"
+        :download="file.filename"
+        target="_blank"
+      >
+        <template #icon>
+          <n-icon :component="FileDownloadFilled" />
+        </template>
+        下载
+      </n-button>
     </n-space>
 
     <TranslateTask

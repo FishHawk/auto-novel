@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { ReadMoreOutlined } from '@vicons/material';
 import { useThemeVars } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -172,22 +173,43 @@ const notifications = [
     </n-card>
 
     <template v-if="userData.isLoggedIn">
-      <SectionHeader title="我的收藏">
-        <RouterNA to="/favorite">更多</RouterNA>
-      </SectionHeader>
+      <section-header title="我的收藏">
+        <router-link to="/favorite">
+          <n-button round>
+            <template #icon>
+              <n-icon :component="ReadMoreOutlined" />
+            </template>
+            更多
+          </n-button>
+        </router-link>
+      </section-header>
       <PanelWebNovel :list-result="favoriteList" />
       <n-divider />
     </template>
 
-    <SectionHeader title="网络小说-最多点击">
-      <RouterNA to="/novel-list">更多</RouterNA>
-    </SectionHeader>
+    <section-header title="网络小说-最多点击">
+      <router-link to="/novel-list">
+        <n-button round>
+          <template #icon>
+            <n-icon :component="ReadMoreOutlined" />
+          </template>
+          更多
+        </n-button>
+      </router-link>
+    </section-header>
     <PanelWebNovel :list-result="mostVisitedWeb" />
     <n-divider />
 
-    <SectionHeader title="文库小说-最新更新" style="margin-bottom: 20px">
-      <RouterNA to="/wenku-list">更多</RouterNA>
-    </SectionHeader>
+    <section-header title="文库小说-最新更新">
+      <router-link to="/wenku-list">
+        <n-button round>
+          <template #icon>
+            <n-icon :component="ReadMoreOutlined" />
+          </template>
+          更多
+        </n-button>
+      </router-link>
+    </section-header>
     <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
   </div>

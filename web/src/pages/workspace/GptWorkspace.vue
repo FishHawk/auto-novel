@@ -1,4 +1,9 @@
 <script lang="ts" setup>
+import {
+  DeleteOutlined,
+  RefreshOutlined,
+  PlusOutlined,
+} from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
@@ -81,15 +86,20 @@ const clearCache = async () => {
           <n-li> AccessToken有效期为90天，过期请重新获取。 </n-li>
         </n-ul>
 
-        <n-p>
-          <n-space>
-            <n-button @click="showCreateWorkerModal = true">
-              添加GPT翻译器
-            </n-button>
-
-            <async-button @async-click="clearCache"> 删除GPT缓存 </async-button>
-          </n-space>
-        </n-p>
+        <section-header title="翻译器">
+          <n-button round @click="showCreateWorkerModal = true">
+            <template #icon>
+              <n-icon :component="PlusOutlined" />
+            </template>
+            添加翻译器
+          </n-button>
+          <async-button @async-click="clearCache">
+            <template #icon>
+              <n-icon :component="DeleteOutlined" />
+            </template>
+            清空缓存
+          </async-button>
+        </section-header>
 
         <n-list>
           <n-list-item v-for="worker of gptWorkspace.workers" :key="worker.id">
@@ -101,7 +111,7 @@ const clearCache = async () => {
           </n-list-item>
         </n-list>
 
-        <SectionHeader title="任务队列" />
+        <section-header title="任务队列" />
         <n-empty v-if="gptWorkspace.jobs.length === 0" description="没有任务" />
         <n-table :bordered="false" style="margin-top: 16px" v-else>
           <thead>
@@ -151,16 +161,21 @@ const clearCache = async () => {
           </tbody>
         </n-table>
 
-        <SectionHeader title="未完成任务记录">
-          <n-space :wrap="false">
-            <n-button @click="gptWorkspace.retryAllUncompletedJobs()">
-              全部重试
-            </n-button>
-            <n-button @click="gptWorkspace.deleteAllUncompletedJobs()">
-              清空
-            </n-button>
-          </n-space>
-        </SectionHeader>
+        <section-header title="未完成任务记录">
+          <n-button round @click="gptWorkspace.retryAllUncompletedJobs()">
+            <template #icon>
+              <n-icon :component="RefreshOutlined" />
+            </template>
+            全部重试
+          </n-button>
+          <n-button round @click="gptWorkspace.deleteAllUncompletedJobs()">
+            <template #icon>
+              <n-icon :component="DeleteOutlined" />
+            </template>
+            清空记录
+          </n-button>
+        </section-header>
+
         <n-empty
           v-if="gptWorkspace.uncompletedJobs.length === 0"
           description="没有任务"

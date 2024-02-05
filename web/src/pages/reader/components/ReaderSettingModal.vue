@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
 import { ref } from 'vue';
-import { PlusFilled, MinusFilled } from '@vicons/material';
+import { PlusOutlined, MinusOutlined } from '@vicons/material';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator/translator';
@@ -141,7 +141,7 @@ const setCustomFontColor = (color: string) => {
             :disabled="setting.fontSize === '14px'"
             @click="toggleFontSize(-1)"
           >
-            <n-icon :component="MinusFilled" />
+            <n-icon :component="MinusOutlined" />
           </n-button>
           <n-input-group-label>
             {{ setting.fontSize }}
@@ -150,7 +150,7 @@ const setCustomFontColor = (color: string) => {
             :disabled="setting.fontSize === '40px'"
             @click="toggleFontSize(1)"
           >
-            <n-icon :component="PlusFilled" />
+            <n-icon :component="PlusOutlined" />
           </n-button>
         </n-input-group>
       </ReuseOption>

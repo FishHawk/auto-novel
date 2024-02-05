@@ -3,10 +3,15 @@ defineProps<{ title: string }>();
 </script>
 
 <template>
-  <header>
-    <n-space align="baseline" justify="space-between" style="width: 100">
-      <n-h2 prefix="bar">{{ title }}</n-h2>
+  <n-flex
+    align="baseline"
+    justify="space-between"
+    :wrap="false"
+    style="width: 100"
+  >
+    <n-h2 prefix="bar">{{ title }}</n-h2>
+    <n-flex :wrap="false">
       <slot />
-    </n-space>
-  </header>
+    </n-flex>
+  </n-flex>
 </template>

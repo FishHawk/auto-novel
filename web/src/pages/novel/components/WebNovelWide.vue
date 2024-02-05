@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { SortFilled } from '@vicons/material';
+import { SortOutlined } from '@vicons/material';
 import { ref } from 'vue';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
@@ -54,14 +54,17 @@ const scrollToCommentList = () => {
         <n-divider vertical style="height: calc(100vh - 50px); flex: 0 0 1px" />
 
         <n-flex vertical style="height: calc(100vh - 50px); flex: auto">
-          <SectionHeader title="目录">
-            <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
+          <section-header title="目录">
+            <n-button
+              round
+              @click="setting.tocSortReverse = !setting.tocSortReverse"
+            >
               <template #icon>
-                <n-icon :component="SortFilled" />
+                <n-icon :component="SortOutlined" />
               </template>
               {{ setting.tocSortReverse ? '倒序' : '正序' }}
             </n-button>
-          </SectionHeader>
+          </section-header>
 
           <n-card
             v-if="novel.lastReadChapter"

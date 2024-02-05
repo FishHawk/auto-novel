@@ -156,7 +156,7 @@ const createWorkerFormValue = ref({
   </DefineJob>
 
   <div class="layout-content">
-    <n-h1>公用  Sakura工作区</n-h1>
+    <n-h1>公用 Sakura工作区</n-h1>
     <n-p>由于Sakura版本更新，暂停一段时间。</n-p>
     <ResultView
       :result="sakuraStatus"
@@ -301,7 +301,7 @@ const createWorkerFormValue = ref({
         </template>
       </card-modal>
 
-      <SectionHeader :title="`任务队列 [${info.jobs.length}/50]`" />
+      <section-header :title="`任务队列 [${info.jobs.length}/50]`" />
       <n-table :bordered="false" style="margin-top: 16px">
         <thead>
           <tr>

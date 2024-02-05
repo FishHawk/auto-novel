@@ -4,7 +4,7 @@ import {
   UploadFileInfo,
   useMessage,
 } from 'naive-ui';
-import { UploadFilled } from '@vicons/material';
+import { PlusOutlined } from '@vicons/material';
 
 import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
@@ -84,8 +84,10 @@ const customRequest = ({
     @finish="onFinish"
     @before-upload="beforeUpload"
   >
-    <n-button>
-      <template #icon><n-icon :component="UploadFilled" /></template>
+    <n-button round>
+      <template #icon>
+        <n-icon :component="PlusOutlined" />
+      </template>
       上传章节
     </n-button>
   </n-upload>

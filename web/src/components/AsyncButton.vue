@@ -27,7 +27,7 @@ async function onClick() {
 </script>
 
 <template>
-  <n-button @click="onClick()">
+  <n-button round @click="onClick()">
     <template #icon>
       <slot name="icon" />
     </template>

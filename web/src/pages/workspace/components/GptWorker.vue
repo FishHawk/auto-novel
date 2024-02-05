@@ -158,16 +158,24 @@ const testGptWorker = async () => {
         </async-button>
         <n-button
           v-if="running"
+          round
           size="tiny"
           secondary
           @click="() => stopGptWorker()"
         >
           暂停
         </n-button>
-        <n-button v-else size="tiny" secondary @click="() => startGptWorker()">
+        <n-button
+          v-else
+          round
+          size="tiny"
+          secondary
+          @click="() => startGptWorker()"
+        >
           启动
         </n-button>
         <n-button
+          round
           size="tiny"
           secondary
           type="error"

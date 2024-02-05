@@ -153,6 +153,7 @@ const testSakuraWorker = async () => {
         </async-button>
         <n-button
           v-if="running"
+          round
           size="tiny"
           secondary
           @click="() => stopSakuraWorker()"
@@ -161,6 +162,7 @@ const testSakuraWorker = async () => {
         </n-button>
         <n-button
           v-else
+          round
           size="tiny"
           secondary
           @click="() => startSakuraWorker()"
@@ -168,6 +170,7 @@ const testSakuraWorker = async () => {
           启动
         </n-button>
         <n-button
+          round
           size="tiny"
           secondary
           type="error"
