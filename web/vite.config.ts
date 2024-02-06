@@ -53,17 +53,12 @@ export default defineConfig(({ command, mode }) => {
           manualChunks(id) {
             if (id.includes('tiktoken')) {
               return 'tiktoken';
-            } else if (
-              id.includes('data/translator') ||
-              id.includes('crypto') ||
-              id.includes('uuid') ||
-              id.includes('nanoid')
-            ) {
-              return 'translator';
-            } else if (id.includes('web/src') || id.includes('naive')) {
-              return 'chunk1';
+            } else if (id.includes('web/src')) {
+              return 'chunk';
+            } else if (id.includes('naive')) {
+              return 'naive';
             } else if (id.includes('node_module')) {
-              return 'chunk2';
+              return 'dep';
             }
           },
         },

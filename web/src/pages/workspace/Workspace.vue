@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 import { PlusOutlined } from '@vicons/material';
 import {
-  UploadCustomRequestOptions,
-  UploadFileInfo,
-  useMessage,
+UploadCustomRequestOptions,
+UploadFileInfo,
+useMessage,
 } from 'naive-ui';
 import { ref } from 'vue';
 
 import { useSettingStore } from '@/data/stores/setting';
+import { PersonalVolumesManager, TranslatorId } from '@/data/translator';
 
 import { Volume } from './components/LocalVolumeComplex.vue';
-import { TranslatorId } from '@/data/translator/translator';
 
 const message = useMessage();
 const setting = useSettingStore();
@@ -18,22 +18,20 @@ const setting = useSettingStore();
 const volumes = ref<Volume[]>([]);
 
 const loadVolumes = () => {
-  import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.listVolumes())
-    .then((rawVolumes) => {
-      volumes.value = rawVolumes.map((it) => {
-        return {
-          volumeId: it.id,
-          createAt: it.createAt,
-          total: it.toc.length,
-          baidu: it.toc.filter((it) => it.baidu).length,
-          youdao: it.toc.filter((it) => it.youdao).length,
-          gpt: it.toc.filter((it) => it.gpt).length,
-          sakura: it.toc.filter((it) => it.sakura).length,
-          glossary: it.glossary,
-        };
-      });
+  PersonalVolumesManager.listVolumes().then((rawVolumes) => {
+    volumes.value = rawVolumes.map((it) => {
+      return {
+        volumeId: it.id,
+        createAt: it.createAt,
+        total: it.toc.length,
+        baidu: it.toc.filter((it) => it.baidu).length,
+        youdao: it.toc.filter((it) => it.youdao).length,
+        gpt: it.toc.filter((it) => it.gpt).length,
+        sakura: it.toc.filter((it) => it.sakura).length,
+        glossary: it.glossary,
+      };
     });
+  });
 };
 loadVolumes();
 
@@ -53,8 +51,7 @@ const customRequest = ({
   onFinish,
   onError,
 }: UploadCustomRequestOptions) => {
-  import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.saveVolume(file.file!!))
+  PersonalVolumesManager.saveVolume(file.file!!)
     .then(onFinish)
     .catch((error) => {
       message.error(`上传失败:${error}`);
@@ -64,8 +61,7 @@ const customRequest = ({
 
 const showClearModal = ref(false);
 const deleteAllVolumes = () => {
-  return import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.deleteVolumesDb())
+  return PersonalVolumesManager.deleteVolumesDb()
     .then(loadVolumes)
     .then(() => (showClearModal.value = false))
     .catch((error) => {

@@ -10,7 +10,7 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { TranslatorId } from '@/data/translator/translator';
+import { PersonalVolumesManager, TranslatorId } from '@/data/translator';
 
 export interface Volume {
   volumeId: string;
@@ -81,14 +81,13 @@ const downloadFile = async () => {
   }
 
   try {
-    const { filename, blob } = await import('@/data/translator').then((it) =>
-      it.PersonalVolumesManager.makeTranslationVolumeFile({
+    const { filename, blob } =
+      await PersonalVolumesManager.makeTranslationVolumeFile({
         volumeId: props.volume.volumeId,
         lang,
         translationsMode,
         translations,
-      })
-    );
+      });
 
     const el = document.createElement('a');
     el.href = URL.createObjectURL(blob);
@@ -101,8 +100,7 @@ const downloadFile = async () => {
 };
 
 const deleteVolume = (volumeId: string) =>
-  import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.deleteVolume(volumeId))
+  PersonalVolumesManager.deleteVolume(volumeId)
     .then(() => message.info('删除成功'))
     .then(() => emit('requireRefresh'))
     .catch((error) => message.error(`删除失败：${error}`));
@@ -111,10 +109,7 @@ const submitGlossary = (
   volumeId: string,
   glossary: { [key: string]: string }
 ) =>
-  import('@/data/translator')
-    .then((it) =>
-      it.PersonalVolumesManager.updateGlossary(volumeId, toRaw(glossary))
-    )
+  PersonalVolumesManager.updateGlossary(volumeId, toRaw(glossary))
     .then(() => message.success('术语表提交成功'))
     .catch((error) => message.error(`术语表提交失败：${error}`))
     .then(() => {});

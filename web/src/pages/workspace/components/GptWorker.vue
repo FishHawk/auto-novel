@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
 import { GptWorker, useGptWorkspaceStore } from '@/data/stores/workspace';
+import { Translator } from '@/data/translator';
 import { TranslatorDesc } from '@/data/translator/api';
 
 import { parseTask } from './util';
@@ -107,7 +108,6 @@ const deleteGptWorker = () => {
 const testGptWorker = async () => {
   const input =
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
-  const Translator = (await import('@/data/translator')).Translator;
   try {
     const translator = await Translator.createWithoutCache({
       client,

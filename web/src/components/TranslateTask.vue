@@ -6,6 +6,7 @@ import {
   TranslateTaskDesc,
   TranslateTaskParams,
   TranslatorDesc,
+  translate,
 } from '@/data/translator/api';
 import { getTranslatorLabel } from '@/data/util';
 
@@ -94,9 +95,7 @@ const startTask = async (
       total: chapterTotal.value ?? 0,
     });
 
-  await (
-    await import('@/data/translator')
-  ).translate(
+  await translate(
     desc,
     params,
     {

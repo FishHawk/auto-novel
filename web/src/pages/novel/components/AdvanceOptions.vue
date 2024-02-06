@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { TranslatorId } from '@/data/translator/translator';
+import { TranslatorId } from '@/data/translator';
 
 defineProps<{
   type: 'web' | 'wenku' | 'personal';

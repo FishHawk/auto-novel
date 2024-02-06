@@ -5,9 +5,10 @@ import { computed, ref } from 'vue';
 import TranslateTask from '@/components/TranslateTask.vue';
 import { client } from '@/data/api/client';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import { Translator } from '@/data/translator';
+import { SakuraTranslator } from '@/data/translator/translator_sakura';
 
 import { parseTask } from './util';
-import { SakuraTranslator } from '@/data/translator/translator_sakura';
 
 const { id, endpoint, useLlamaApi, getNextJob } = defineProps<{
   id: string;
@@ -92,7 +93,6 @@ const deleteSakuraWorker = () => {
 const testSakuraWorker = async () => {
   const input =
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
-  const Translator = (await import('@/data/translator')).Translator;
   try {
     const translator = await Translator.createWithoutCache({
       id: 'sakura',

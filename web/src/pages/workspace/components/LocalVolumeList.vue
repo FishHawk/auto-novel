@@ -5,6 +5,7 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
+import { PersonalVolumesManager } from '@/data/translator';
 import { MoreVertFilled, PlusOutlined } from '@vicons/material';
 import {
   UploadCustomRequestOptions,
@@ -32,39 +33,37 @@ interface Volume {
 }
 
 const loadVolumes = () => {
-  import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.listVolumes())
-    .then((rawVolumes) => {
-      volumes.value = rawVolumes.map((rawVolume) => {
-        return {
-          volumeId: rawVolume.id,
-          createAt: rawVolume.createAt,
-          total: rawVolume.toc.length,
-          finished: rawVolume.toc.filter((it) => {
-            let chapterGlossaryId: string | undefined;
-            if (props.type === 'gpt') {
-              chapterGlossaryId = it.gpt;
-            } else {
-              chapterGlossaryId = it.sakura;
-            }
-            return chapterGlossaryId === rawVolume.glossaryId;
-          }).length,
-          expired: rawVolume.toc.filter((it) => {
-            let chapterGlossaryId: string | undefined;
-            if (props.type === 'gpt') {
-              chapterGlossaryId = it.gpt;
-            } else {
-              chapterGlossaryId = it.sakura;
-            }
-            return (
-              chapterGlossaryId !== undefined &&
-              chapterGlossaryId !== rawVolume.glossaryId
-            );
-          }).length,
-          glossary: rawVolume.glossary,
-        };
-      });
+  PersonalVolumesManager.listVolumes().then((rawVolumes) => {
+    volumes.value = rawVolumes.map((rawVolume) => {
+      return {
+        volumeId: rawVolume.id,
+        createAt: rawVolume.createAt,
+        total: rawVolume.toc.length,
+        finished: rawVolume.toc.filter((it) => {
+          let chapterGlossaryId: string | undefined;
+          if (props.type === 'gpt') {
+            chapterGlossaryId = it.gpt;
+          } else {
+            chapterGlossaryId = it.sakura;
+          }
+          return chapterGlossaryId === rawVolume.glossaryId;
+        }).length,
+        expired: rawVolume.toc.filter((it) => {
+          let chapterGlossaryId: string | undefined;
+          if (props.type === 'gpt') {
+            chapterGlossaryId = it.gpt;
+          } else {
+            chapterGlossaryId = it.sakura;
+          }
+          return (
+            chapterGlossaryId !== undefined &&
+            chapterGlossaryId !== rawVolume.glossaryId
+          );
+        }).length,
+        glossary: rawVolume.glossary,
+      };
     });
+  });
 };
 loadVolumes();
 
@@ -86,8 +85,7 @@ const customRequest = ({
   onFinish,
   onError,
 }: UploadCustomRequestOptions) => {
-  import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.saveVolume(file.file!!))
+  PersonalVolumesManager.saveVolume(file.file!!)
     .then(() => queueVolume(file.file!!.name))
     .then(onFinish)
     .catch((error) => {
@@ -122,8 +120,7 @@ const queueAllVolumes = () => {
 
 const showClearModal = ref(false);
 const deleteAllVolumes = () =>
-  import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.deleteVolumesDb())
+  PersonalVolumesManager.deleteVolumesDb()
     .then(loadVolumes)
     .then(() => (showClearModal.value = false))
     .catch((error) => {
@@ -186,14 +183,13 @@ const downloadVolume = async (volumeId: string) => {
   }
 
   try {
-    const { filename, blob } = await import('@/data/translator').then((it) =>
-      it.PersonalVolumesManager.makeTranslationVolumeFile({
+    const { filename, blob } =
+      await PersonalVolumesManager.makeTranslationVolumeFile({
         volumeId,
         lang,
         translationsMode: 'priority',
         translations: [props.type],
-      })
-    );
+      });
 
     const el = document.createElement('a');
     el.href = URL.createObjectURL(blob);
@@ -211,17 +207,13 @@ const submitGlossary = (
   volumeId: string,
   glossary: { [key: string]: string }
 ) =>
-  import('@/data/translator')
-    .then((it) =>
-      it.PersonalVolumesManager.updateGlossary(volumeId, toRaw(glossary))
-    )
+  PersonalVolumesManager.updateGlossary(volumeId, toRaw(glossary))
     .then(() => message.success('术语表提交成功'))
     .catch((error) => message.error(`术语表提交失败：${error}`))
     .then(() => {});
 
 const deleteVolume = (volumeId: string) =>
-  import('@/data/translator')
-    .then((it) => it.PersonalVolumesManager.deleteVolume(volumeId))
+  PersonalVolumesManager.deleteVolume(volumeId)
     .then(() => message.info('删除成功'))
     .then(() => loadVolumes())
     .catch((error) => message.error(`删除失败：${error}`));

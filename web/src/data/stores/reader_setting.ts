@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { TranslatorId } from '@/data/translator/translator';
+import { TranslatorId } from '@/data/translator';
 
 export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'mix' | 'mix-reverse';

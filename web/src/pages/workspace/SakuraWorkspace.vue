@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import {
-  DeleteOutlined,
-  RefreshOutlined,
-  PlusOutlined,
+DeleteOutlined,
+PlusOutlined,
+RefreshOutlined,
 } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import { createSegIndexedDbCache } from '@/data/translator';
 
 import { computePercentage } from './components/util';
 
@@ -67,9 +68,8 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () => {
-  await import('@/data/translator')
-    .then((it) => it.createSegIndexedDbCache('sakura-seg-cache'))
-    .then((it) => it.clear());
+  const cache = await createSegIndexedDbCache('sakura-seg-cache');
+  await cache.clear();
   message.success('缓存清除成功');
 };
 </script>

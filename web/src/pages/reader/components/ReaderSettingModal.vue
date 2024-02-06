@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { PlusOutlined, MinusOutlined } from '@vicons/material';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { TranslatorId } from '@/data/translator/translator';
+import { TranslatorId } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{

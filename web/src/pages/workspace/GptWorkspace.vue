@@ -10,6 +10,7 @@ import { ref } from 'vue';
 import { TranslateJob, useGptWorkspaceStore } from '@/data/stores/workspace';
 
 import { computePercentage } from './components/util';
+import { createSegIndexedDbCache } from '@/data/translator';
 
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
@@ -65,9 +66,8 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () => {
-  await import('@/data/translator')
-    .then((it) => it.createSegIndexedDbCache('gpt-seg-cache'))
-    .then((it) => it.clear());
+  const cache = await createSegIndexedDbCache('gpt-seg-cache');
+  await cache.clear();
   message.success('缓存清除成功');
 };
 </script>

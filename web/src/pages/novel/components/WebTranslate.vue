@@ -11,7 +11,7 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { TranslatorId } from '@/data/translator/translator';
+import { TranslatorId } from '@/data/translator';
 
 import AdvanceOptions from './AdvanceOptions.vue';
 

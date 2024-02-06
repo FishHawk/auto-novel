@@ -9,7 +9,7 @@ import { ref } from 'vue';
 
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { TranslatorId } from '@/data/translator/translator';
+import { TranslatorId } from '@/data/translator';
 
 const props = defineProps<{
   providerId: string;

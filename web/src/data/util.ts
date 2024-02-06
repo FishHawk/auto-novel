@@ -1,7 +1,7 @@
 import { useWindowSize } from '@vueuse/core';
 import { computed } from 'vue';
 
-import { TranslatorId } from '@/data/translator/translator';
+import { TranslatorId } from '@/data/translator';
 
 export const useIsWideScreen = (limit: number) => {
   const { width } = useWindowSize();
