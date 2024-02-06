@@ -85,7 +85,29 @@ const saveVolume = withDb(async (db, file: File) => {
   }
 
   if (id.endsWith('.txt')) {
-    const jpLines = (await file.text()).split('\n');
+    const buffer = await file.arrayBuffer();
+
+    const tryDecode = async (label: string) => {
+      const decoder = new TextDecoder(label, { fatal: true });
+      try {
+        const decoded = decoder.decode(buffer);
+        return decoded;
+      } catch (e) {
+        if (e instanceof TypeError) return undefined;
+        throw e;
+      }
+    };
+
+    let content: string | undefined;
+    for (const label of ['utf-8', 'gbk']) {
+      content = await tryDecode(label);
+      if (content !== undefined) break;
+    }
+    if (content === undefined) {
+      throw '未知编码';
+    }
+
+    const jpLines = content.split('\n');
     const chunkSize = 1000;
     for (let i = 0; i < jpLines.length; i += chunkSize) {
       const paragraphs = jpLines.slice(i, i + chunkSize);
