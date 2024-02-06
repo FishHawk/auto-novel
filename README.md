@@ -17,11 +17,11 @@
   - [Hameln](https://syosetu.org/)
   - [Pixiv](https://www.pixiv.net/)
   - [Alphapolis](https://www.alphapolis.co.jp/)
-  - [Novelism](https://novelism.jp/)
 - 生成多种机翻，支持的翻译器有：
   - 百度
   - 有道
-  - [GPT3.5](https://chat.openai.com/)
+  - GPT3.5 [Web](https://chat.openai.com/)/Api
+  - GPT4 Api
   - [Sakura](https://huggingface.co/sakuraumi/Sakura-13B-Galgame)
 - 支持术语表。
 - 支持多种格式，包括日文、中文以及中日对比。
