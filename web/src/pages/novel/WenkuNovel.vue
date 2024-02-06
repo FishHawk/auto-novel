@@ -195,13 +195,13 @@ const deleteVolume = async (volumeId: string) => {
         </n-scrollbar>
       </template>
 
-      <section-header title="中文章节">
-        <upload-button
-          type="zh"
-          :novel-id="novelId"
-          @upload-finished="getNovel()"
-        />
-      </section-header>
+      <section-header title="中文章节" />
+      <upload-button
+        type="zh"
+        :novel-id="novelId"
+        @upload-finished="getNovel()"
+      />
+
       <n-ul>
         <n-li v-for="volumeId in metadata.volumeZh" :key="volumeId">
           <n-a
@@ -228,13 +228,12 @@ const deleteVolume = async (volumeId: string) => {
         </n-li>
       </n-ul>
 
-      <section-header title="日文章节">
-        <upload-button
-          type="jp"
-          :novel-id="novelId"
-          @upload-finished="getNovel()"
-        />
-      </section-header>
+      <section-header title="日文章节" />
+      <upload-button
+        type="jp"
+        :novel-id="novelId"
+        @upload-finished="getNovel()"
+      />
 
       <advance-options
         ref="advanceOptions"
