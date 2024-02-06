@@ -17,6 +17,7 @@ declare -a arr=(
     "llama-$VERSION-bin-win-avx-x64.zip"
     "llama-$VERSION-bin-win-avx2-x64.zip"
     "llama-$VERSION-bin-win-avx512-x64.zip"
+    "llama-$VERSION-bin-win-vulkan-x64.zip"
 )
 
 for i in "${arr[@]}"
@@ -40,3 +41,4 @@ pack "sakura-launcher-cublas12-$VERSION" 2 3
 pack "sakura-launcher-avx-$VERSION" 4
 pack "sakura-launcher-avx2-$VERSION" 5
 pack "sakura-launcher-avx512-$VERSION" 6
+pack "sakura-launcher-vulkan-$VERSION" 7
