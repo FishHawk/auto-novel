@@ -91,6 +91,7 @@ const onTocItemClick = (chapterId: string | undefined) => {
         item-resizable
         :items="toc"
         :default-scroll-key="currentKey"
+        :scrollbar-props="{ trigger: 'none' }"
         style="max-height: 60vh"
       >
         <template #default="{ item }">
