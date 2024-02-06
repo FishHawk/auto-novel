@@ -58,12 +58,7 @@ const labels = computed(() => {
 
   <n-flex>
     <router-link :to="`/novel-edit/${providerId}/${novelId}`">
-      <n-button round>
-        <template #icon>
-          <n-icon :component="EditNoteFilled" />
-        </template>
-        编辑
-      </n-button>
+      <c-button label="编辑" :icon="EditNoteFilled" />
     </router-link>
 
     <favorite-button
@@ -73,20 +68,14 @@ const labels = computed(() => {
     />
 
     <router-link v-if="novel.wenkuId" :to="`/wenku/${novel.wenkuId}`">
-      <n-button round>
-        <template #icon>
-          <n-icon :component="BookFilled" />
-        </template>
-        文库
-      </n-button>
+      <c-button label="文库" :icon="BookFilled" />
     </router-link>
 
-    <n-button @click="emit('commentClick')">
-      <template #icon>
-        <n-icon :component="CommentFilled" />
-      </template>
-      评论
-    </n-button>
+    <c-button
+      label="评论"
+      :icon="CommentFilled"
+      @click="emit('commentClick')"
+    />
   </n-flex>
 
   <n-p>{{ labels }}</n-p>

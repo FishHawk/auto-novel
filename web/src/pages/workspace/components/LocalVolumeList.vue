@@ -239,12 +239,7 @@ const deleteVolume = (volumeId: string) =>
           @finish="loadVolumes"
           @before-upload="beforeUpload"
         >
-          <n-button round>
-            <template #icon>
-              <n-icon :component="PlusOutlined" />
-            </template>
-            添加文件
-          </n-button>
+          <c-button label="添加文件" :icon="PlusOutlined" />
         </n-upload>
         <n-dropdown trigger="click" :options="options" @select="handleSelect">
           <n-button circle>
@@ -330,7 +325,7 @@ const deleteVolume = (volumeId: string) =>
     </n-scrollbar>
   </n-flex>
 
-  <card-modal title="编辑术语表" v-model:show="showGlossaryModal">
+  <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
     <n-p>{{ selectedVolumeToEditGlossary?.volumeId }} </n-p>
     <glossary-edit
       v-if="selectedVolumeToEditGlossary !== undefined"
@@ -351,19 +346,16 @@ const deleteVolume = (volumeId: string) =>
       </n-button>
       <n-button @click="showGlossaryModal = false"> 取消 </n-button>
     </template>
-  </card-modal>
+  </c-modal>
 
-  <card-modal title="清空所有文件" v-model:show="showClearModal">
+  <c-modal title="清空所有文件" v-model:show="showClearModal">
     <n-p>
       这将清空你的浏览器里面保存的所有EPUB/TXT文件，包括已经翻译的章节和术语表，无法恢复。
       你确定吗？
     </n-p>
 
     <template #action>
-      <async-button type="primary" @async-click="deleteAllVolumes">
-        确定
-      </async-button>
-      <n-button @click="showClearModal = false"> 取消 </n-button>
+      <c-button label="确定" async type="primary" @click="deleteAllVolumes" />
     </template>
-  </card-modal>
+  </c-modal>
 </template>

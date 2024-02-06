@@ -142,17 +142,15 @@ const submit = async () => {
 
     <n-divider />
 
-    <async-button
-      round
+    <c-button
+      label="提交"
+      :icon="UploadFilled"
+      async
+      require-login
       size="large"
       type="primary"
       class="float"
-      @async-click="submit"
-    >
-      <template #icon>
-        <n-icon :component="UploadFilled" />
-      </template>
-      提交
-    </async-button>
+      @click="submit"
+    />
   </div>
 </template>

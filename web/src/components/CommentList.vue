@@ -1,15 +1,10 @@
 <script lang="ts" setup>
 import { CommentFilled } from '@vicons/material';
-import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
 import { ApiComment, Comment1 } from '@/data/api/api_comment';
 import { Page } from '@/data/api/common';
 import { Ok, ResultState } from '@/data/result';
-import { useUserDataStore } from '@/data/stores/user_data';
-
-const userData = useUserDataStore();
-const message = useMessage();
 
 const { site } = withDefaults(
   defineProps<{
@@ -49,23 +44,17 @@ function onReplied() {
 }
 
 const showInput = ref(false);
-function toggleInput() {
-  if (!userData.isLoggedIn) {
-    message.info('请先登录');
-    return;
-  }
-  showInput.value = !showInput.value;
-}
 </script>
 
 <template>
   <section-header title="评论">
-    <n-button v-if="!locked" round @click="toggleInput()">
-      <template #icon>
-        <n-icon :component="CommentFilled" />
-      </template>
-      发表评论
-    </n-button>
+    <c-button
+      v-if="!locked"
+      label="发表评论"
+      :icon="CommentFilled"
+      require-login
+      @click="showInput = !showInput"
+    />
   </section-header>
 
   <n-p v-if="locked">评论区已锁定，不能再回复。</n-p>

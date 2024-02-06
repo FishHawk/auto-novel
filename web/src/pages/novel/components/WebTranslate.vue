@@ -206,13 +206,14 @@ const translatorLabels = computed(() => ({
           排队GPT
         </n-button>
         <n-space v-if="translatorId === 'sakura'" :wrap="false">
-          <async-button
+          <c-button
+            label="公用排队"
+            async
+            require-login
             size="small"
             tertiary
-            @async-click="submitPublicSakuraJob"
-          >
-            公用排队
-          </async-button>
+            @click="submitPublicSakuraJob"
+          />
           <n-button
             size="small"
             tertiary

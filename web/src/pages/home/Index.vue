@@ -175,12 +175,7 @@ const notifications = [
     <template v-if="userData.isLoggedIn">
       <section-header title="我的收藏">
         <router-link to="/favorite">
-          <n-button round>
-            <template #icon>
-              <n-icon :component="ReadMoreOutlined" />
-            </template>
-            更多
-          </n-button>
+          <c-button label="更多" :icon="ReadMoreOutlined" />
         </router-link>
       </section-header>
       <PanelWebNovel :list-result="favoriteList" />
@@ -189,12 +184,7 @@ const notifications = [
 
     <section-header title="网络小说-最多点击">
       <router-link to="/novel-list">
-        <n-button round>
-          <template #icon>
-            <n-icon :component="ReadMoreOutlined" />
-          </template>
-          更多
-        </n-button>
+        <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>
     <PanelWebNovel :list-result="mostVisitedWeb" />
@@ -202,19 +192,14 @@ const notifications = [
 
     <section-header title="文库小说-最新更新">
       <router-link to="/wenku-list">
-        <n-button round>
-          <template #icon>
-            <n-icon :component="ReadMoreOutlined" />
-          </template>
-          更多
-        </n-button>
+        <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>
     <PanelWenkuNovel :list-result="latestUpdateWenku" />
     <n-divider />
   </div>
 
-  <card-modal title="使用说明" v-model:show="showHowToUseModal">
+  <c-modal title="使用说明" v-model:show="showHowToUseModal">
     <n-p>
       将小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。更高级的用法，例如生成机翻、高级搜索等，参见
       <RouterNA to="/forum/64f3d63f794cbb1321145c07">使用教程</RouterNA>
@@ -228,9 +213,9 @@ const notifications = [
       <br />
       <span v-html="link" />
     </n-p>
-  </card-modal>
+  </c-modal>
 
-  <card-modal title="QQ群" v-model:show="showQQModal">
+  <c-modal title="QQ群" v-model:show="showQQModal">
     <n-p>
       交流群：
       <n-a :href="qqLink" target="_blank">819513328</n-a>
@@ -238,5 +223,5 @@ const notifications = [
       <br />
       <n-qr-code :size="150" :value="qqLink" />
     </n-p>
-  </card-modal>
+  </c-modal>
 </template>

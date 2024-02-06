@@ -86,11 +86,11 @@ const clearCache = async () => {
           <n-li> 启动了的翻译器无法暂停或删除。等这句话没了就可以了。 </n-li>
           <n-li>
             Sakura部署教程参见
-            <RouterNA to="/forum/656d60530286f15e3384fcf8">
+            <RouterNA to="/forum/656d60530286f15e3384fcf8" target="_blank">
               本地部署教程
             </RouterNA>
             和
-            <RouterNA to="/forum/65719bf16843e12bd3a4dc98">
+            <RouterNA to="/forum/65719bf16843e12bd3a4dc98" target="_blank">
               租用显卡教程
             </RouterNA>
             。
@@ -108,18 +108,17 @@ const clearCache = async () => {
         </n-ul>
 
         <section-header title="翻译器">
-          <n-button round @click="showCreateWorkerModal = true">
-            <template #icon>
-              <n-icon :component="PlusOutlined" />
-            </template>
-            添加翻译器
-          </n-button>
-          <async-button @async-click="clearCache">
-            <template #icon>
-              <n-icon :component="DeleteOutlined" />
-            </template>
-            清空缓存
-          </async-button>
+          <c-button
+            label="添加翻译器"
+            :icon="PlusOutlined"
+            @click="showCreateWorkerModal = true"
+          />
+          <c-button
+            label="清空缓存"
+            :icon="DeleteOutlined"
+            async
+            @click="clearCache"
+          />
         </section-header>
 
         <n-list>
@@ -191,18 +190,16 @@ const clearCache = async () => {
         </n-table>
 
         <section-header title="未完成任务记录">
-          <n-button round @click="sakuraWorkspace.retryAllUncompletedJobs()">
-            <template #icon>
-              <n-icon :component="RefreshOutlined" />
-            </template>
-            全部重试
-          </n-button>
-          <n-button round @click="sakuraWorkspace.deleteAllUncompletedJobs()">
-            <template #icon>
-              <n-icon :component="DeleteOutlined" />
-            </template>
-            清空记录
-          </n-button>
+          <c-button
+            label="全部重试"
+            :icon="RefreshOutlined"
+            @click="sakuraWorkspace.retryAllUncompletedJobs()"
+          />
+          <c-button
+            label="清空记录"
+            :icon="DeleteOutlined"
+            @click="sakuraWorkspace.deleteAllUncompletedJobs()"
+          />
         </section-header>
 
         <n-empty

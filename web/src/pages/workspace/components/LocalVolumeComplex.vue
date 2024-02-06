@@ -196,12 +196,12 @@ const showGlossaryEditor = ref(false);
           </n-popconfirm>
         </n-flex>
       </n-flex>
-      <async-button @async-click="downloadFile">
-        <template #icon>
-          <n-icon :component="FileDownloadFilled" />
-        </template>
-        下载
-      </async-button>
+      <c-button
+        label="下载"
+        :icon="FileDownloadFilled"
+        async
+        @click="downloadFile"
+      />
     </n-flex>
 
     <n-collapse-transition :show="showGlossaryEditor" style="margin-top: 16px">

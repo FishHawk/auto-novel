@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { LockFilled, PushPinFilled } from '@vicons/material';
+import { LockFilled, PlusOutlined, PushPinFilled } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -98,15 +98,21 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
 <template>
   <div class="layout-content">
     <n-h1>论坛</n-h1>
-    <RouterNA to="/forum-edit">发布文章</RouterNA>
+
+    <router-link to="/forum-edit">
+      <c-button
+        label="发布文章"
+        :icon="PlusOutlined"
+        style="margin-bottom: 16px"
+      />
+    </router-link>
+
     <n-pagination
       v-if="pageNumber > 1"
       v-model:page="currentPage"
       :page-count="pageNumber"
       :page-slot="7"
-      style="margin-top: 20px"
     />
-    <n-divider />
     <ResultView
       :result="articlePageResult"
       :showEmpty="(it: Page<ArticleOutline>) => it.items.length === 0"

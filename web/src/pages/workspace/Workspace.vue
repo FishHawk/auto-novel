@@ -122,15 +122,10 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
           @finish="loadVolumes"
           @before-upload="beforeUpload"
         >
-          <n-button round>
-            <template #icon>
-              <n-icon :component="PlusOutlined" />
-            </template>
-            添加文件
-          </n-button>
+          <c-button label="添加文件" :icon="PlusOutlined" />
         </n-upload>
 
-        <n-button round @click="showClearModal = true">清空文件</n-button>
+        <c-button label="清空文件" @click="showClearModal = true" />
       </n-flex>
     </n-flex>
 
@@ -198,17 +193,14 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
     </n-list>
   </div>
 
-  <card-modal title="清空所有文件" v-model:show="showClearModal">
+  <c-modal title="清空所有文件" v-model:show="showClearModal">
     <n-p>
       这将清空你的浏览器里面保存的所有EPUB/TXT文件，包括已经翻译的章节和术语表，无法恢复。
       你确定吗？
     </n-p>
 
     <template #action>
-      <async-button type="primary" @async-click="deleteAllVolumes">
-        确定
-      </async-button>
-      <n-button @click="showClearModal = false"> 取消 </n-button>
+      <c-button label="确定" async type="primary" @click="deleteAllVolumes" />
     </template>
-  </card-modal>
+  </c-modal>
 </template>

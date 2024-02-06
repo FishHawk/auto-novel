@@ -52,7 +52,7 @@ const addFavorite = async () => {
 </script>
 
 <template>
-  <card-modal
+  <c-modal
     title="新建收藏夹"
     :show="show"
     @update:show="emit('update:show', $event)"
@@ -82,9 +82,13 @@ const addFavorite = async () => {
     </n-form>
 
     <template #action>
-      <async-button type="primary" @async-click="addFavorite">
-        确定
-      </async-button>
+      <c-button
+        label="确定"
+        async
+        require-login
+        type="primary"
+        @click="addFavorite"
+      />
     </template>
-  </card-modal>
+  </c-modal>
 </template>

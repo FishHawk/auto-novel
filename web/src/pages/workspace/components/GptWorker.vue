@@ -149,40 +149,36 @@ const testGptWorker = async () => {
 
     <template #header-extra>
       <n-flex :wrap="false">
-        <async-button
+        <c-button
+          label="测试"
+          async
           size="tiny"
           secondary
-          @async-click="() => testGptWorker()"
-        >
-          测试
-        </async-button>
-        <n-button
+          @click="testGptWorker"
+        />
+
+        <c-button
           v-if="running"
-          round
+          label="暂停"
           size="tiny"
           secondary
-          @click="() => stopGptWorker()"
-        >
-          暂停
-        </n-button>
-        <n-button
+          @click="stopGptWorker"
+        />
+        <c-button
           v-else
-          round
+          label="启动"
           size="tiny"
           secondary
-          @click="() => startGptWorker()"
-        >
-          启动
-        </n-button>
-        <n-button
-          round
+          @click="startGptWorker"
+        />
+
+        <c-button
+          label="删除"
           size="tiny"
           secondary
           type="error"
-          @click="() => deleteGptWorker()"
-        >
-          删除
-        </n-button>
+          @click="deleteGptWorker"
+        />
       </n-flex>
     </template>
   </n-thing>

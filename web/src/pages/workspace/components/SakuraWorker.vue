@@ -144,40 +144,36 @@ const testSakuraWorker = async () => {
 
     <template #header-extra>
       <n-flex :wrap="false">
-        <async-button
+        <c-button
+          label="测试"
+          async
           size="tiny"
           secondary
-          @async-click="() => testSakuraWorker()"
-        >
-          测试
-        </async-button>
-        <n-button
+          @click="testSakuraWorker"
+        />
+
+        <c-button
           v-if="running"
-          round
+          label="暂停"
           size="tiny"
           secondary
-          @click="() => stopSakuraWorker()"
-        >
-          暂停
-        </n-button>
-        <n-button
+          @click="stopSakuraWorker"
+        />
+        <c-button
           v-else
-          round
+          label="启动"
           size="tiny"
           secondary
-          @click="() => startSakuraWorker()"
-        >
-          启动
-        </n-button>
-        <n-button
-          round
+          @click="startSakuraWorker"
+        />
+
+        <c-button
+          label="删除"
           size="tiny"
           secondary
           type="error"
-          @click="() => deleteSakuraWorker()"
-        >
-          删除
-        </n-button>
+          @click="deleteSakuraWorker"
+        />
       </n-flex>
     </template>
   </n-thing>

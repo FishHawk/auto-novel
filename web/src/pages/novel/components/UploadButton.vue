@@ -84,11 +84,6 @@ const customRequest = ({
     @finish="onFinish"
     @before-upload="beforeUpload"
   >
-    <n-button round>
-      <template #icon>
-        <n-icon :component="PlusOutlined" />
-      </template>
-      上传章节
-    </n-button>
+    <c-button label="上传章节" :icon="PlusOutlined" />
   </n-upload>
 </template>

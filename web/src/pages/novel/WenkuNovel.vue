@@ -150,14 +150,9 @@ const deleteVolume = async (volumeId: string) => {
       class="layout-content"
     >
       <n-flex>
-        <RouterNA :to="`/wenku-edit/${novelId}`">
-          <n-button round>
-            <template #icon>
-              <n-icon :component="EditNoteFilled" />
-            </template>
-            编辑
-          </n-button>
-        </RouterNA>
+        <router-link :to="`/wenku-edit/${novelId}`">
+          <c-button label="编辑" :icon="EditNoteFilled" />
+        </router-link>
 
         <favorite-button
           v-model:favored="metadata.favored"
@@ -165,14 +160,12 @@ const deleteVolume = async (volumeId: string) => {
           :novel="{ type: 'wenku', novelId }"
         />
 
-        <n-button
-          round
+        <c-button
+          label="在亚马逊搜索"
           tag="a"
           :href="`https://www.amazon.co.jp/s?k=${metadata.title}&rh=n%3A465392`"
           target="_blank"
-        >
-          在亚马逊搜索
-        </n-button>
+        />
       </n-flex>
 
       <n-p>原名：{{ metadata.title }}</n-p>

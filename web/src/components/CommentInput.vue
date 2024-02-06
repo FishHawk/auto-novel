@@ -22,11 +22,6 @@ const userData = useUserDataStore();
 const content = ref('');
 
 async function reply() {
-  if (!userData.isLoggedIn) {
-    message.info('请先登录');
-    return;
-  }
-
   if (content.value.length === 0) {
     message.info('回复内容不能为空');
   } else {
@@ -60,7 +55,13 @@ async function reply() {
     style="margin-top: 10px"
     :input-props="{ spellcheck: false }"
   />
-  <n-button type="primary" @click="reply()" style="margin-top: 10px">
-    发布
-  </n-button>
+  <c-button
+    label="发布"
+    async
+    require-login
+    :round="false"
+    type="primary"
+    @click="reply()"
+    style="margin-top: 10px"
+  />
 </template>

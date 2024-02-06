@@ -153,13 +153,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
             </n-button>
           </template>
 
-          <async-button
+          <c-button
+            label="公用排队Sakura"
+            async
+            require-login
             text
             type="primary"
-            @async-click="submitPublicSakuraJob"
-          >
-            公用排队Sakura
-          </async-button>
+            @click="submitPublicSakuraJob"
+          />
 
           <n-popconfirm
             v-if="userData.isMaintainer"
@@ -175,18 +176,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         </n-space>
       </n-space>
 
-      <n-button
-        round
+      <c-button
+        label="下载"
+        :icon="FileDownloadFilled"
         tag="a"
         :href="file.url"
         :download="file.filename"
         target="_blank"
-      >
-        <template #icon>
-          <n-icon :component="FileDownloadFilled" />
-        </template>
-        下载
-      </n-button>
+      />
     </n-space>
 
     <TranslateTask

@@ -65,7 +65,7 @@ const onTocItemClick = (chapterId: string | undefined) => {
 </script>
 
 <template>
-  <card-modal
+  <c-modal
     :show="show"
     @update:show="$emit('update:show', $event)"
     style="min-height: 30vh"
@@ -120,5 +120,5 @@ const onTocItemClick = (chapterId: string | undefined) => {
         </template>
       </n-virtual-list>
     </ResultView>
-  </card-modal>
+  </c-modal>
 </template>

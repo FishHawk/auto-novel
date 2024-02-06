@@ -102,7 +102,7 @@ const deleteFavorite = async () => {
     </n-space>
   </router-link>
 
-  <card-modal v-model:show="showEditModal" title="编辑收藏夹">
+  <c-modal v-model:show="showEditModal" title="编辑收藏夹">
     <n-form
       ref="formRef"
       :model="formValue"
@@ -120,20 +120,27 @@ const deleteFavorite = async () => {
     </n-form>
 
     <template #action>
-      <async-button type="primary" @async-click="updateFavorite">
-        确定
-      </async-button>
+      <c-button
+        label="确定"
+        async
+        require-login
+        type="primary"
+        @click="updateFavorite"
+      />
     </template>
-  </card-modal>
+  </c-modal>
 
-  <card-modal v-model:show="showDeleteModal" title="删除收藏夹">
+  <c-modal v-model:show="showDeleteModal" title="删除收藏夹">
     {{ `确定删除收藏夹<${title}>吗？` }}
 
     <template #action>
-      <async-button type="primary" @async-click="deleteFavorite">
-        确定
-      </async-button>
-      <n-button @click="showDeleteModal = false"> 取消 </n-button>
+      <c-button
+        label="确定"
+        async
+        require-login
+        type="primary"
+        @click="deleteFavorite"
+      />
     </template>
-  </card-modal>
+  </c-modal>
 </template>

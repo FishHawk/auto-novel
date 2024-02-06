@@ -13,12 +13,12 @@ defineProps<{ listResult: ResultState<WenkuNovelOutlineDto[]> }>();
   >
     <n-grid :x-gap="12" :y-gap="12" cols="3 600:6">
       <n-grid-item v-for="item in list">
-        <RouterNA :to="`/wenku/${item.id}`">
+        <router-link :to="`/wenku/${item.id}`">
           <ImageCard
             :src="item.cover"
             :title="item.titleZh ? item.titleZh : item.title"
           />
-        </RouterNA>
+        </router-link>
       </n-grid-item>
     </n-grid>
   </ResultView>

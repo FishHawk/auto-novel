@@ -140,7 +140,7 @@ const formatExample: [string, string][] = [
         />
       </n-form-item-row>
     </n-form>
-    <AsyncButton type="primary" :on-async-click="submit">提交</AsyncButton>
+    <c-button label="提交" async require-login type="primary" @click="submit" />
 
     <n-divider />
 

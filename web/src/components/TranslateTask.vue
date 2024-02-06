@@ -189,9 +189,9 @@ const showDetail = (detail: string[]) => {
     </n-flex>
   </n-card>
 
-  <card-modal title="日志详情" v-model:show="showLogDetailModal">
+  <c-modal title="日志详情" v-model:show="showLogDetailModal">
     <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
       {{ line }}
     </n-p>
-  </card-modal>
+  </c-modal>
 </template>

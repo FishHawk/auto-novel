@@ -94,10 +94,8 @@ const copyResult = () => {
     <n-h1>TXT/EPUB片假名统计</n-h1>
 
     <n-space align="center">
-      <n-button round @click="openOpenFileDialog()">打开文件</n-button>
-      <n-button v-if="filename" round @click="showPreviewModal = true">
-        预览
-      </n-button>
+      <c-button label="打开文件" @click="openOpenFileDialog()" />
+      <c-button v-if="filename" label="预览" @click="showPreviewModal = true" />
       <n-p>{{ filename }}</n-p>
       <input
         ref="inputElRef"
@@ -116,7 +114,7 @@ const copyResult = () => {
           片假名次数阈值
           <n-input-number v-model:value="katakanaThredhold" clearable />
         </n-p>
-        <n-button round @click="copyResult()">复制结果</n-button>
+        <c-button label="复制结果" @click="copyResult()" />
       </div>
       <div style="flex: 50%">
         <n-card :title="`片假名统计结果(${katakanas.size}个)`">
@@ -135,9 +133,9 @@ const copyResult = () => {
     </div>
   </div>
 
-  <card-modal title="预览（前100行）" v-model:show="showPreviewModal">
+  <c-modal title="预览（前100行）" v-model:show="showPreviewModal">
     <n-p v-for="line of content.split('\n').slice(0, 100)">
       {{ line }}
     </n-p>
-  </card-modal>
+  </c-modal>
 </template>

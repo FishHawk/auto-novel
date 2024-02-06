@@ -47,20 +47,12 @@ function onReplied() {
   }
 }
 
-const userData = useUserDataStore();
 const showInput = ref(false);
-function toggleInput() {
-  if (!userData.isLoggedIn) {
-    message.info('请先登录');
-    return;
-  }
-  showInput.value = !showInput.value;
-}
 </script>
 
 <template>
   <DefineCommentContent v-slot="{ comment, reply }">
-    <n-space align="center">
+    <n-flex align="center">
       <n-text>
         <b>{{ comment.user.username }}</b>
       </n-text>
@@ -68,20 +60,17 @@ function toggleInput() {
         <n-time :time="comment.createAt * 1000" type="relative" />
       </n-text>
 
-      <n-button
+      <c-button
         v-if="reply"
+        label="回复"
+        :icon="CommentFilled"
+        require-login
         quaternary
         type="tertiary"
         size="tiny"
-        @click="toggleInput()"
-        style="margin-top: 2px"
-      >
-        <template #icon>
-          <n-icon :component="CommentFilled" />
-        </template>
-        回复
-      </n-button>
-    </n-space>
+        @click="showInput = !showInput"
+      />
+    </n-flex>
     <n-card embedded :bordered="false" size="small">
       <n-p style="white-space: pre-wrap">{{ comment.content }}</n-p>
     </n-card>

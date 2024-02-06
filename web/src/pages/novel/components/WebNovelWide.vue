@@ -55,15 +55,11 @@ const scrollToCommentList = () => {
 
         <n-flex vertical style="height: calc(100vh - 50px); flex: auto">
           <section-header title="目录">
-            <n-button
-              round
+            <c-button
+              :label="setting.tocSortReverse ? '倒序' : '正序'"
+              :icon="SortOutlined"
               @click="setting.tocSortReverse = !setting.tocSortReverse"
-            >
-              <template #icon>
-                <n-icon :component="SortOutlined" />
-              </template>
-              {{ setting.tocSortReverse ? '倒序' : '正序' }}
-            </n-button>
+            />
           </section-header>
 
           <n-card

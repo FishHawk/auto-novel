@@ -359,10 +359,12 @@ const deleteVolume = (index: number) => {
                 :input-props="{ spellcheck: false }"
               />
               <n-flex>
-                <n-button round @click="deleteVolume(index)"> 删除 </n-button>
-                <n-button v-if="index > 0" round @click="moveVolumeUp(index)">
-                  上移
-                </n-button>
+                <c-button label="删除" @click="deleteVolume(index)" />
+                <c-button
+                  v-if="index > 0"
+                  label="上移"
+                  @click="moveVolumeUp(index)"
+                />
               </n-flex>
             </n-flex>
           </n-flex>
@@ -372,19 +374,17 @@ const deleteVolume = (index: number) => {
 
     <n-divider />
 
-    <async-button
+    <c-button
       v-if="novelId"
-      round
+      label="提交"
+      :icon="UploadFilled"
+      async
+      require-login
       size="large"
       type="primary"
       class="float"
-      @async-click="submit"
-    >
-      <template #icon>
-        <n-icon :component="UploadFilled" />
-      </template>
-      提交
-    </async-button>
+      @click="submit"
+    />
 
     <n-steps
       v-else
@@ -402,12 +402,12 @@ const deleteVolume = (index: number) => {
             <span v-else-if="similarNovels.length === 0"> 没有相似的小说 </span>
             <n-grid v-else :x-gap="12" :y-gap="12" cols="3 600:6">
               <n-grid-item v-for="item in similarNovels">
-                <RouterNA :to="`/wenku/${item.id}`">
+                <router-link :to="`/wenku/${item.id}`">
                   <ImageCard
                     :src="item.cover"
                     :title="item.titleZh ? item.titleZh : item.title"
                   />
-                </RouterNA>
+                </router-link>
               </n-grid-item>
             </n-grid>
           </n-p>
@@ -424,16 +424,15 @@ const deleteVolume = (index: number) => {
       </n-step>
       <n-step title="创建小说">
         <div class="n-step-description"></div>
-        <async-button
-          :disabled="submitCurrentStep !== 2"
+        <c-button
+          label="提交"
+          :icon="UploadFilled"
+          async
+          require-login
           type="primary"
-          @async-click="submit"
-        >
-          <template #icon>
-            <n-icon :component="UploadFilled" />
-          </template>
-          提交
-        </async-button>
+          :disabled="submitCurrentStep !== 2"
+          @click="submit"
+        />
       </n-step>
     </n-steps>
   </div>

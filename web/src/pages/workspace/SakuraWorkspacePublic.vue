@@ -143,14 +143,15 @@ const createWorkerFormValue = ref({
         于<n-time :time="job.createAt * 1000" type="relative" />
         <br />
         由{{ job.submitter }}提交
-        <async-button
+        <c-button
           v-if="userData.asAdmin || userData.username === job.submitter"
+          label="删除"
+          async
+          require-login
           type="error"
           text
-          @async-click="() => deleteJob(job.id)"
-        >
-          删除
-        </async-button>
+          @click="deleteJob(job.id)"
+        />
       </td>
     </tr>
   </DefineJob>
@@ -227,30 +228,33 @@ const createWorkerFormValue = ref({
                 v-if="userData.asAdmin || userData.username === worker.username"
                 :wrap="false"
               >
-                <async-button
+                <c-button
                   v-if="worker.active"
+                  label="暂停"
+                  async
+                  require-login
                   size="small"
                   secondary
-                  @async-click="() => stopSakuraWorker(worker.id)"
-                >
-                  暂停
-                </async-button>
-                <async-button
+                  @click="stopSakuraWorker(worker.id)"
+                />
+                <c-button
                   v-else
+                  label="启动"
+                  async
+                  require-login
                   size="small"
                   secondary
-                  @async-click="() => startSakuraWorker(worker.id)"
-                >
-                  启动
-                </async-button>
-                <async-button
+                  @click="startSakuraWorker(worker.id)"
+                />
+                <c-button
+                  label="删除"
+                  async
+                  require-login
                   size="small"
                   secondary
                   type="error"
-                  @async-click="() => deleteSakuraWorker(worker.id)"
-                >
-                  删除
-                </async-button>
+                  @click="deleteSakuraWorker(worker.id)"
+                />
               </n-space>
               <template v-else>
                 {{ worker.active ? '工作中' : '已暂停' }}
@@ -269,7 +273,7 @@ const createWorkerFormValue = ref({
         </n-list-item>
       </n-list>
 
-      <card-modal v-model:show="showCreateWorkerModal" title="添加Sakura翻译器">
+      <c-modal v-model:show="showCreateWorkerModal" title="添加Sakura翻译器">
         <n-form
           ref="formRef"
           :model="createWorkerFormValue"
@@ -292,14 +296,15 @@ const createWorkerFormValue = ref({
           </n-form-item-row>
         </n-form>
         <template #action>
-          <async-button
+          <c-button
+            label="添加"
+            async
+            require-login
             type="primary"
-            @async-click="() => createSakuraWorker(createWorkerFormValue)"
-          >
-            添加
-          </async-button>
+            @click="createSakuraWorker(createWorkerFormValue)"
+          />
         </template>
-      </card-modal>
+      </c-modal>
 
       <section-header :title="`任务队列 [${info.jobs.length}/50]`" />
       <n-table :bordered="false" style="margin-top: 16px">

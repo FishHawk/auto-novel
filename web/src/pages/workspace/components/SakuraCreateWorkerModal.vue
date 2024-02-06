@@ -52,7 +52,7 @@ const createSakuraWorker = async () => {
 </script>
 
 <template>
-  <card-modal title="添加Sakura翻译器">
+  <c-modal title="添加Sakura翻译器">
     <n-form
       ref="formRef"
       :model="formValue"
@@ -84,9 +84,7 @@ const createSakuraWorker = async () => {
     </n-form>
 
     <template #action>
-      <async-button type="primary" @async-click="() => createSakuraWorker()">
-        添加
-      </async-button>
+      <c-button label="添加" async type="primary" @click="createSakuraWorker" />
     </template>
-  </card-modal>
+  </c-modal>
 </template>

@@ -225,7 +225,7 @@ const navToMySpace = () => router.push({ path: '/account' });
         </n-drawer-content>
       </n-drawer>
 
-      <card-modal
+      <c-modal
         v-model:show="showLoginModal"
         style="width: min(400px, calc(100% - 16px))"
       >
@@ -244,7 +244,7 @@ const navToMySpace = () => router.push({ path: '/account' });
             <SignUpForm @signUp="onSignInSuccess" />
           </n-tab-pane>
         </n-tabs>
-      </card-modal>
+      </c-modal>
     </n-message-provider>
   </n-config-provider>
 </template>

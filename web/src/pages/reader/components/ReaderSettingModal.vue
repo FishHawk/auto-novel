@@ -83,7 +83,7 @@ const setCustomFontColor = (color: string) => {
 </script>
 
 <template>
-  <card-modal title="设置">
+  <c-modal title="设置">
     <DefineOption v-slot="{ $slots, label, align }">
       <n-flex :wrap="false" :align="align">
         <n-text depth="3" style="white-space: nowrap; font-size: 12px">
@@ -237,7 +237,7 @@ const setCustomFontColor = (color: string) => {
         # 左/右方向键跳转章节，数字键1～4切换翻译
       </n-text>
     </n-space>
-  </card-modal>
+  </c-modal>
 </template>
 
 <style>

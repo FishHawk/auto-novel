@@ -65,7 +65,7 @@ const createGptWorker = async () => {
 </script>
 
 <template>
-  <card-modal title="添加GPT翻译器">
+  <c-modal title="添加GPT翻译器">
     <n-form
       ref="formRef"
       :model="formValue"
@@ -125,9 +125,7 @@ const createGptWorker = async () => {
     </n-form>
 
     <template #action>
-      <async-button type="primary" @async-click="() => createGptWorker()">
-        添加
-      </async-button>
+      <c-button label="添加" async type="primary" @click="createGptWorker" />
     </template>
-  </card-modal>
+  </c-modal>
 </template>

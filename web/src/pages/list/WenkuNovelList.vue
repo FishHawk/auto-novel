@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { PlusOutlined } from '@vicons/material';
+
 import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
@@ -41,7 +43,15 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
 <template>
   <div class="layout-content">
     <n-h1>文库小说</n-h1>
-    <RouterNA to="/wenku-edit">新建文库小说</RouterNA>
+
+    <router-link to="/wenku-edit">
+      <c-button
+        label="新建小说"
+        :icon="PlusOutlined"
+        style="margin-bottom: 8px"
+      />
+    </router-link>
+
     <NovelList
       :search="{
         suggestions: [],

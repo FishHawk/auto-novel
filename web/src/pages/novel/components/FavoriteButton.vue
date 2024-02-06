@@ -61,32 +61,36 @@ const selectedFavoredId = ref(props.favored ?? 'default');
 
 <template>
   <template v-if="favoredList.length <= 1">
-    <async-button v-if="favored" @async-click="unfavoriteNovel">
-      <template #icon>
-        <n-icon :component="FavoriteFilled" />
-      </template>
-      已收藏
-    </async-button>
-    <async-button v-else @async-click="() => favoriteNovel(favoredList[0].id)">
-      <template #icon>
-        <n-icon :component="FavoriteBorderFilled" />
-      </template>
-      收藏
-    </async-button>
+    <c-button
+      v-if="favored"
+      label="已收藏"
+      :icon="FavoriteFilled"
+      async
+      require-login
+      @click="unfavoriteNovel"
+    />
+    <c-button
+      v-else
+      label="收藏"
+      :icon="FavoriteBorderFilled"
+      async
+      require-login
+      @click="favoriteNovel(favoredList[0].id)"
+    />
   </template>
 
   <template v-else>
-    <n-button @click="() => (showFavoredModal = true)">
-      <template #icon>
-        <n-icon :component="favored ? FavoriteFilled : FavoriteBorderFilled" />
-      </template>
-      {{ favored ? '已收藏:' + favoredTitle : '收藏' }}
-    </n-button>
+    <c-button
+      :label="favored ? '已收藏:' + favoredTitle : '收藏'"
+      :icon="favored ? FavoriteFilled : FavoriteBorderFilled"
+      require-login
+      @click="showFavoredModal = true"
+    />
   </template>
 
-  <card-modal v-model:show="showFavoredModal" title="收藏到...">
+  <c-modal v-model:show="showFavoredModal" title="收藏到...">
     <n-radio-group v-model:value="selectedFavoredId">
-      <n-space vertical size="large">
+      <n-flex vertical size="large">
         <n-radio
           v-for="favored in favoredList"
           :key="favored.id"
@@ -95,20 +99,20 @@ const selectedFavoredId = ref(props.favored ?? 'default');
           {{ favored.title }}
         </n-radio>
         <n-radio key="deleted" value="deleted"> 取消收藏 </n-radio>
-      </n-space>
+      </n-flex>
     </n-radio-group>
     <template #action>
-      <async-button
+      <c-button
+        label="确定"
+        async
+        require-login
         type="primary"
-        @async-click="
-          () =>
-            selectedFavoredId === 'deleted'
-              ? unfavoriteNovel()
-              : favoriteNovel(selectedFavoredId)
+        @click="
+          selectedFavoredId === 'deleted'
+            ? unfavoriteNovel()
+            : favoriteNovel(selectedFavoredId)
         "
-      >
-        确定
-      </async-button>
+      />
     </template>
-  </card-modal>
+  </c-modal>
 </template>
