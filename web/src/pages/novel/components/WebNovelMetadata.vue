@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { BookOutlined, CommentOutlined, EditNoteOutlined } from '@vicons/material';
+import {
+  BookOutlined,
+  CommentOutlined,
+  EditNoteOutlined,
+} from '@vicons/material';
 import { NA, NText } from 'naive-ui';
 
 import { buildWebNovelUrl } from '@/data/util_web';
@@ -19,13 +23,13 @@ const emit = defineEmits<{
 
 const labels = computed(() => {
   const readableNumber = (num: number | undefined) => {
-    if (num === undefined) return undefined;
+    if (typeof num !== 'number') return undefined;
     if (num < 1000) return num.toString();
     else return (num / 1000).toFixed(1).toString() + 'k';
   };
 
   const withPointDeco = (str: string | undefined) => {
-    if (str === undefined) return undefined;
+    if (typeof str !== 'string') return undefined;
     if (props.providerId === 'kakuyomu') return '★' + str;
     else return str + ' PT';
   };
