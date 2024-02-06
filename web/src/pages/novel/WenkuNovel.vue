@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { EditNoteOutlined } from '@vicons/material';
+import { EditNoteOutlined, PlusOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
-import { useMessage, useThemeVars } from 'naive-ui';
+import { UploadInst, useMessage, useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -198,8 +198,8 @@ const deleteVolume = async (volumeId: string) => {
       <section-header title="中文章节">
         <upload-button
           type="zh"
-          :novelId="novelId"
-          @uploadFinished="getNovel()"
+          :novel-id="novelId"
+          @upload-finished="getNovel()"
         />
       </section-header>
       <n-ul>
@@ -231,8 +231,8 @@ const deleteVolume = async (volumeId: string) => {
       <section-header title="日文章节">
         <upload-button
           type="jp"
-          :novelId="novelId"
-          @uploadFinished="getNovel()"
+          :novel-id="novelId"
+          @upload-finished="getNovel()"
         />
       </section-header>
 
