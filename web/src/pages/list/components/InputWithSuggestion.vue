@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { SearchFilled } from '@vicons/material';
+import { SearchOutlined } from '@vicons/material';
 import { DropdownOption, NFlex, NTag } from 'naive-ui';
 import { computed, h } from 'vue';
 
@@ -83,7 +83,7 @@ const options = computed(() => {
       @update:value="(it: string) => emit('update:value', it)"
     >
       <template #suffix>
-        <n-icon :component="SearchFilled" />
+        <n-icon :component="SearchOutlined" />
       </template>
     </n-input>
   </n-dropdown>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { LockFilled, PlusOutlined, PushPinFilled } from '@vicons/material';
+import { LockOutlined, PlusOutlined, PushPinOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -132,13 +132,13 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
                 <n-icon
                   v-if="article.pinned"
                   size="15"
-                  :component="PushPinFilled"
+                  :component="PushPinOutlined"
                   style="vertical-align: middle; margin-bottom: 4px"
                 />
                 <n-icon
                   v-if="article.locked"
                   size="15"
-                  :component="LockFilled"
+                  :component="LockOutlined"
                   style="vertical-align: middle; margin-bottom: 4px"
                 />
                 <RouterNA :to="`/forum/${article.id}`">

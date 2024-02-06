@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { FileDownloadFilled } from '@vicons/material';
+import { FileDownloadOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
@@ -178,7 +178,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 
       <c-button
         label="下载"
-        :icon="FileDownloadFilled"
+        :icon="FileDownloadOutlined"
         tag="a"
         :href="file.url"
         :download="file.filename"

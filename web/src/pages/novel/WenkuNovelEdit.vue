@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { UploadFilled, LinkFilled } from '@vicons/material';
+import { UploadOutlined, LinkOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -377,7 +377,7 @@ const deleteVolume = (index: number) => {
     <c-button
       v-if="novelId"
       label="提交"
-      :icon="UploadFilled"
+      :icon="UploadOutlined"
       async
       require-login
       size="large"
@@ -426,7 +426,7 @@ const deleteVolume = (index: number) => {
         <div class="n-step-description"></div>
         <c-button
           label="提交"
-          :icon="UploadFilled"
+          :icon="UploadOutlined"
           async
           require-login
           type="primary"

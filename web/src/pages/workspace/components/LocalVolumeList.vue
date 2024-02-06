@@ -6,7 +6,7 @@ import {
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
 import { PersonalVolumesManager } from '@/data/translator';
-import { MoreVertFilled, PlusOutlined } from '@vicons/material';
+import { MoreVertOutlined, PlusOutlined } from '@vicons/material';
 import {
   UploadCustomRequestOptions,
   UploadFileInfo,
@@ -235,7 +235,7 @@ const deleteVolume = (volumeId: string) =>
         </n-upload>
         <n-dropdown trigger="click" :options="options" @select="handleSelect">
           <n-button circle>
-            <n-icon :component="MoreVertFilled" />
+            <n-icon :component="MoreVertOutlined" />
           </n-button>
         </n-dropdown>
       </n-flex>

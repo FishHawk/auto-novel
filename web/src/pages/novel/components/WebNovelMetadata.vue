@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { BookFilled, CommentFilled, EditNoteFilled } from '@vicons/material';
+import { BookOutlined, CommentOutlined, EditNoteOutlined } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
 
 import { buildWebNovelUrl } from '@/data/util_web';
@@ -58,7 +58,7 @@ const labels = computed(() => {
 
   <n-flex>
     <router-link :to="`/novel-edit/${providerId}/${novelId}`">
-      <c-button label="编辑" :icon="EditNoteFilled" />
+      <c-button label="编辑" :icon="EditNoteOutlined" />
     </router-link>
 
     <favorite-button
@@ -68,12 +68,12 @@ const labels = computed(() => {
     />
 
     <router-link v-if="novel.wenkuId" :to="`/wenku/${novel.wenkuId}`">
-      <c-button label="文库" :icon="BookFilled" />
+      <c-button label="文库" :icon="BookOutlined" />
     </router-link>
 
     <c-button
       label="评论"
-      :icon="CommentFilled"
+      :icon="CommentOutlined"
       @click="emit('commentClick')"
     />
   </n-flex>

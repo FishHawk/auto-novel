@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { SortFilled } from '@vicons/material';
+import { SortOutlined } from '@vicons/material';
 
 import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
@@ -46,7 +46,7 @@ const scrollToCommentList = () => {
   <section-header title="目录">
     <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
       <template #icon>
-        <n-icon :component="SortFilled" />
+        <n-icon :component="SortOutlined" />
       </template>
       {{ setting.tocSortReverse ? '倒序' : '正序' }}
     </n-button>

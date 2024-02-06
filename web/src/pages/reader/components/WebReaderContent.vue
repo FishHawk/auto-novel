@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ErrorOutlineFilled } from '@vicons/material';
+import { ErrorOutlineOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
@@ -193,7 +193,7 @@ const createWebIncorrectCase = async (
               style="opacity: 0.5"
               @click="(e: MouseEvent) => e.stopPropagation()"
             >
-              <n-icon :component="ErrorOutlineFilled" />
+              <n-icon :component="ErrorOutlineOutlined" />
             </n-button>
           </template>
           这段话翻得不准确？

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { MoreVertFilled } from '@vicons/material';
+import { MoreVertOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
@@ -95,7 +95,7 @@ const deleteFavorite = async () => {
       <n-dropdown trigger="hover" :options="options" @select="onSelect">
         <n-button quaternary circle>
           <template #icon>
-            <n-icon :component="MoreVertFilled" />
+            <n-icon :component="MoreVertOutlined" />
           </template>
         </n-button>
       </n-dropdown>

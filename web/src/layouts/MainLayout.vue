@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { LogOutFilled, MenuFilled } from '@vicons/material';
+import { LogOutOutlined, MenuOutlined } from '@vicons/material';
 import {
   MenuOption,
   NIcon,
@@ -110,7 +110,7 @@ const collapsedMenuOptions = computed(() => {
 });
 
 const userDropdownOptions = computed(() => {
-  return [dropdownOption('退出登录', 'signOut', LogOutFilled)];
+  return [dropdownOption('退出登录', 'signOut', LogOutOutlined)];
 });
 const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'signOut') {
@@ -161,7 +161,7 @@ const navToMySpace = () => router.push({ path: '/account' });
             <n-icon
               v-else
               size="24"
-              :component="MenuFilled"
+              :component="MenuOutlined"
               @click="showMenuModal = true"
             />
 

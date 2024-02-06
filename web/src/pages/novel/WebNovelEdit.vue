@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { UploadFilled } from '@vicons/material';
+import { UploadOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -144,7 +144,7 @@ const submit = async () => {
 
     <c-button
       label="提交"
-      :icon="UploadFilled"
+      :icon="UploadOutlined"
       async
       require-login
       size="large"

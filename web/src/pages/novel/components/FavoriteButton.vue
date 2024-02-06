@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { FavoriteBorderFilled, FavoriteFilled } from '@vicons/material';
+import { FavoriteBorderOutlined, FavoriteOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
@@ -64,7 +64,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
     <c-button
       v-if="favored"
       label="已收藏"
-      :icon="FavoriteFilled"
+      :icon="FavoriteOutlined"
       async
       require-login
       @click="unfavoriteNovel"
@@ -72,7 +72,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
     <c-button
       v-else
       label="收藏"
-      :icon="FavoriteBorderFilled"
+      :icon="FavoriteBorderOutlined"
       async
       require-login
       @click="favoriteNovel(favoredList[0].id)"
@@ -82,7 +82,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
   <template v-else>
     <c-button
       :label="favored ? '已收藏:' + favoredTitle : '收藏'"
-      :icon="favored ? FavoriteFilled : FavoriteBorderFilled"
+      :icon="favored ? FavoriteOutlined : FavoriteBorderOutlined"
       require-login
       @click="showFavoredModal = true"
     />

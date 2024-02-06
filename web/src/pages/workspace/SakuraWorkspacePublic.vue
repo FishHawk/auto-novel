@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { CloseFilled, DoneFilled } from '@vicons/material';
+import { CloseOutlined, DoneOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 import { useMessage, useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
@@ -200,7 +200,7 @@ const createWorkerFormValue = ref({
               >
                 <n-icon
                   :size="16"
-                  :component="worker.active ? DoneFilled : CloseFilled"
+                  :component="worker.active ? DoneOutlined : CloseOutlined"
                 />
               </n-icon-wrapper>
             </template>

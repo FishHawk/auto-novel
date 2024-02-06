@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { FileDownloadFilled } from '@vicons/material';
+import { FileDownloadOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
@@ -193,7 +193,7 @@ const showGlossaryEditor = ref(false);
       </n-flex>
       <c-button
         label="下载"
-        :icon="FileDownloadFilled"
+        :icon="FileDownloadOutlined"
         async
         @click="downloadFile"
       />

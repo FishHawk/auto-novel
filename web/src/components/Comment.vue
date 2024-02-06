@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { CommentFilled } from '@vicons/material';
+import { CommentOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
@@ -63,7 +63,7 @@ const showInput = ref(false);
       <c-button
         v-if="reply"
         label="回复"
-        :icon="CommentFilled"
+        :icon="CommentOutlined"
         require-login
         quaternary
         type="tertiary"

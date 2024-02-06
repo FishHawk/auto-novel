@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { EditNoteFilled } from '@vicons/material';
+import { EditNoteOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 import { useMessage, useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
@@ -151,7 +151,7 @@ const deleteVolume = async (volumeId: string) => {
     >
       <n-flex>
         <router-link :to="`/wenku-edit/${novelId}`">
-          <c-button label="编辑" :icon="EditNoteFilled" />
+          <c-button label="编辑" :icon="EditNoteOutlined" />
         </router-link>
 
         <favorite-button

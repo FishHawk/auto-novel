@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { CommentFilled } from '@vicons/material';
+import { CommentOutlined } from '@vicons/material';
 import { ref, watch } from 'vue';
 
 import { ApiComment, Comment1 } from '@/data/api/api_comment';
@@ -51,7 +51,7 @@ const showInput = ref(false);
     <c-button
       v-if="!locked"
       label="发表评论"
-      :icon="CommentFilled"
+      :icon="CommentOutlined"
       require-login
       @click="showInput = !showInput"
     />
