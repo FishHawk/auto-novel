@@ -15,6 +15,7 @@ import infra.web.WebNovelChapterRepository
 import infra.web.WebNovelFileRepository
 import infra.web.WebNovelFilter
 import infra.web.WebNovelMetadataRepository
+import infra.web.providers.NovelIdShouldBeReplacedException
 import infra.web.providers.Syosetu
 import infra.wenku.WenkuNovelMetadataRepository
 import io.ktor.http.*
@@ -431,7 +432,13 @@ class WebNovelApi(
     ): NovelDto {
         validateId(providerId, novelId)
         val novel = metadataRepo.getNovelAndSave(providerId, novelId)
-            .getOrElse { throwInternalServerError("从源站获取失败:" + it.message) }
+            .getOrElse {
+                if (it is NovelIdShouldBeReplacedException) {
+                    throwBadRequest(it.message!!)
+                } else {
+                    throwInternalServerError("从源站获取失败:" + it.message)
+                }
+            }
         val dto = buildNovelDto(novel, user)
         if (user != null) {
             metadataRepo.increaseVisited(

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { Result, mapOk } from '@/data/result';
@@ -11,6 +11,7 @@ import { ReadableTocItem, WebNovelVM } from './components/common';
 
 const isWideScreen = useIsWideScreen(750);
 const vars = useThemeVars();
+const router = useRouter();
 
 const route = useRoute();
 const providerId = route.params.providerId as string;
@@ -21,6 +22,15 @@ const novelResult = ref<Result<WebNovelVM>>();
 const getNovel = async () => {
   novelResult.value = undefined;
   const result = await ApiWebNovel.getNovel(providerId, novelId);
+
+  if (!result.ok) {
+    const message = result.error.message;
+    if (message.includes('小说ID不合适，应当使用：')) {
+      const targetNovelPath = message.split('小说ID不合适，应当使用：')[1];
+      router.push(`/novel${targetNovelPath}`);
+    }
+  }
+
   const newResult = mapOk(result, (novel) => {
     const novelToc = novel.toc as ReadableTocItem[];
     let order = 0;

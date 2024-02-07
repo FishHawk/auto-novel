@@ -71,3 +71,10 @@ fun JsonObject.stringOrNull(field: String) = get(field)!!.jsonPrimitive.contentO
 
 fun JsonObject.obj(field: String) = get(field)!!.jsonObject
 fun JsonObject.objOrNull(field: String) = get(field)!!.takeUnless { it is JsonNull }?.jsonObject
+
+// Exception
+class NovelIdShouldBeReplacedException(
+    providerId: String,
+    targetNovelId: String,
+) : Exception("小说ID不合适，应当使用：/${providerId}/${targetNovelId}")
+

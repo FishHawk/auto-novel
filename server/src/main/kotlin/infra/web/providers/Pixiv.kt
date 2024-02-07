@@ -48,18 +48,19 @@ class Pixiv(
             val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"
             val doc = get(url).document()
 
-            val jsonRaw = doc
+
+            val obj = doc
                 .selectFirst("meta#meta-preload-data")!!
                 .attr("content")
-
-            val obj = Json
-                .parseToJsonElement(jsonRaw)
+                .let { Json.parseToJsonElement(it) }
                 .jsonObject
                 .obj("novel")
                 .obj(chapterId)
 
-            if (obj.objOrNull("seriesNavData") != null) {
-                throw RuntimeException("小说存在系列")
+            val seriesData = obj.objOrNull("seriesNavData")
+            if (seriesData != null) {
+                val targetNovelId = seriesData.int("seriesId").toString()
+                throw NovelIdShouldBeReplacedException(id, targetNovelId)
             }
 
             val title = obj

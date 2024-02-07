@@ -1,6 +1,7 @@
 package infra.provider.providers
 
 import infra.client
+import infra.web.providers.NovelIdShouldBeReplacedException
 import infra.web.providers.Pixiv
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
@@ -50,7 +51,7 @@ class PixivTest : DescribeSpec({
         }
         it("短篇，但存在系列") {
             // https://www.pixiv.net/novel/show.php?id=18304868
-            shouldThrow<RuntimeException> {
+            shouldThrow<NovelIdShouldBeReplacedException> {
                 provider.getMetadata("s18304868")
             }
         }
