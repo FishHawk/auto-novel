@@ -5,6 +5,7 @@ import infra.web.providers.NovelIdShouldBeReplacedException
 import infra.web.providers.Pixiv
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 
 class PixivTest : DescribeSpec({
@@ -25,6 +26,11 @@ class PixivTest : DescribeSpec({
             metadata.toc[0].chapterId.shouldBe("18304868")
             metadata.toc[1].title.shouldBe("女装→メス堕ち→TSF")
             metadata.toc[1].chapterId.shouldBe("18457702")
+        }
+        it("常规，章节标签合并") {
+            // https://www.pixiv.net/novel/series/898392
+            val metadata = provider.getMetadata("898392")
+            metadata.keywords.shouldNotBeEmpty()
         }
         it("常规，非R18") {
             // https://www.pixiv.net/novel/series/10539710

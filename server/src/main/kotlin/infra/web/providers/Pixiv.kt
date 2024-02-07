@@ -7,7 +7,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -120,10 +119,6 @@ class Pixiv(
                 link = "https://www.pixiv.net/users/" + obj1.string("userId"),
             )
 
-            val keywords = obj1
-                .array("tags")
-                .map { it.jsonPrimitive.content }
-
             val attentions = obj1
                 .int("xRestrict")
                 .let {
@@ -137,17 +132,71 @@ class Pixiv(
             val introduction = obj1
                 .string("caption")
 
+            val toc = mutableListOf<RemoteNovelMetadata.TocItem>()
+            val keywords = mutableListOf<String>()
+
+            obj1
+                .array("tags")
+                .forEach { keywords.add(it.jsonPrimitive.content) }
+
+            if (keywords.isEmpty()) {
+                val arr1 =
+                    get("https://www.pixiv.net/ajax/novel/series_content/${novelId}?limit=30&last_order=0&order_by=asc")
+                        .json()
+                        .obj("body")
+                        .obj("page")
+                        .array("seriesContents")
+
+                val keywordsBuffer = mutableSetOf<String>()
+                arr1
+                    .map { it.jsonObject }
+                    .forEach { seriesContent ->
+                        if (seriesContent.containsKey("title")) {
+                            keywordsBuffer.addAll(
+                                seriesContent
+                                    .array("tags")
+                                    .map { it.jsonPrimitive.content }
+                            )
+                            toc.add(
+                                RemoteNovelMetadata.TocItem(
+                                    title = seriesContent.string("title"),
+                                    chapterId = seriesContent.string("id"),
+                                )
+                            )
+                        }
+                    }
+                keywords.addAll(keywordsBuffer)
+
+                if (arr1.size < 30) {
+                    // 只有一页
+                    return RemoteNovelMetadata(
+                        title = title,
+                        authors = listOf(author),
+                        type = WebNovelType.连载中,
+                        keywords = keywords,
+                        attentions = attentions,
+                        points = null,
+                        totalCharacters = totalCharacters,
+                        introduction = introduction,
+                        toc = toc,
+                    )
+                }
+            }
+
+            toc.clear()
             val arr2 = get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles")
                 .json()
                 .array("body")
 
-            val toc = arr2
+            arr2
                 .map { it.jsonObject }
-                .filter { it["available"]!!.jsonPrimitive.boolean }
-                .map {
-                    RemoteNovelMetadata.TocItem(
-                        title = it["title"]!!.jsonPrimitive.content,
-                        chapterId = it["id"]!!.jsonPrimitive.content,
+                .filter { it.boolean("available") }
+                .forEach {
+                    toc.add(
+                        RemoteNovelMetadata.TocItem(
+                            title = it.string("title"),
+                            chapterId = it.string("id"),
+                        )
                     )
                 }
 
