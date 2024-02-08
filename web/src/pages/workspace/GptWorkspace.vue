@@ -112,53 +112,18 @@ const clearCache = async () => {
 
         <section-header title="任务队列" />
         <n-empty v-if="gptWorkspace.jobs.length === 0" description="没有任务" />
-        <n-table :bordered="false" style="margin-top: 16px" v-else>
-          <thead>
-            <tr>
-              <th><b>描述</b></th>
-              <th><b>信息</b></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="job of gptWorkspace.jobs" :key="job.task">
-              <td>
-                <n-text depth="3" style="font-size: 12px">{{
-                  job.task
-                }}</n-text>
-                <br />
-                {{ job.description }}
-                <template v-if="processedJobs.has(job.task)">
-                  <br />
-                  <n-progress
-                    :percentage="
-                      computePercentage(processedJobs.get(job.task)?.progress)
-                    "
-                    style="max-width: 600px"
-                  />
-                </template>
-              </td>
-              <td style="white-space: nowrap">
-                <n-time :time="job.createAt" type="relative" />
-                <br />
-                <n-button
-                  type="primary"
-                  text
-                  @click="() => gptWorkspace.topJob(job)"
-                >
-                  置顶
-                </n-button>
-                <n-button
-                  type="error"
-                  text
-                  @click="() => deleteJob(job.task)"
-                  style="margin-left: 8px"
-                >
-                  删除
-                </n-button>
-              </td>
-            </tr>
-          </tbody>
-        </n-table>
+        <n-list>
+          <n-list-item v-for="job of gptWorkspace.jobs" :key="job.task">
+            <job-queue
+              :job="job"
+              :percentage="
+                computePercentage(processedJobs.get(job.task)?.progress)
+              "
+              @top-job="gptWorkspace.topJob(job)"
+              @delete-job="deleteJob(job.task)"
+            />
+          </n-list-item>
+        </n-list>
 
         <section-header title="未完成任务记录">
           <c-button
@@ -177,49 +142,18 @@ const clearCache = async () => {
           v-if="gptWorkspace.uncompletedJobs.length === 0"
           description="没有任务"
         />
-        <n-table :bordered="false" style="margin-top: 16px" v-else>
-          <thead>
-            <tr>
-              <th><b>描述</b></th>
-              <th><b>信息</b></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="job of gptWorkspace.uncompletedJobs" :key="job.task">
-              <td>
-                <n-text depth="3" style="font-size: 12px">{{
-                  job.task
-                }}</n-text>
-                <br />
-                {{ job.description }}
-                <template v-if="job.progress">
-                  <br />
-                  总共 {{ job.progress?.total }} / 成功
-                  {{ job.progress?.finished }} / 失败 {{ job.progress?.error }}
-                </template>
-              </td>
-              <td style="white-space: nowrap">
-                <n-time :time="job.createAt" type="relative" />
-                <br />
-                <n-button
-                  type="primary"
-                  text
-                  @click="() => gptWorkspace.retryUncompletedJob(job)"
-                >
-                  重新加入
-                </n-button>
-                <br />
-                <n-button
-                  type="error"
-                  text
-                  @click="() => gptWorkspace.deleteUncompletedJob(job)"
-                >
-                  删除
-                </n-button>
-              </td>
-            </tr>
-          </tbody>
-        </n-table>
+        <n-list>
+          <n-list-item
+            v-for="job of gptWorkspace.uncompletedJobs"
+            :key="job.task"
+          >
+            <job-uncompleted
+              :job="job"
+              @retry-job="gptWorkspace.retryUncompletedJob(job)"
+              @delete-job="gptWorkspace.deleteUncompletedJob(job)"
+            />
+          </n-list-item>
+        </n-list>
       </div>
 
       <n-divider vertical style="height: calc(100vh - 50px); flex: 0 0 1px" />

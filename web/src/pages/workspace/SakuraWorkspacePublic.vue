@@ -178,12 +178,11 @@ const createWorkerFormValue = ref({
         >
           只显示我添加的 Worker
         </n-checkbox>
-        <n-button
+        <c-button
           v-if="userData.isMaintainer"
+          label="添加 Worker"
           @click="showCreateWorkerModal = true"
-        >
-          添加 Worker
-        </n-button>
+        />
       </n-space>
 
       <n-list>

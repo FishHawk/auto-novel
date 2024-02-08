@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { PlusOutlined } from '@vicons/material';
+import { DeleteOutlined, PlusOutlined } from '@vicons/material';
 import {
-UploadCustomRequestOptions,
-UploadFileInfo,
-useMessage,
+  UploadCustomRequestOptions,
+  UploadFileInfo,
+  useMessage,
 } from 'naive-ui';
 import { ref } from 'vue';
 
@@ -121,7 +121,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
           <c-button label="添加文件" :icon="PlusOutlined" />
         </n-upload>
 
-        <c-button label="清空文件" @click="showClearModal = true" />
+        <c-button
+          label="清空文件"
+          :icon="DeleteOutlined"
+          @click="showClearModal = true"
+        />
       </n-flex>
     </n-flex>
 

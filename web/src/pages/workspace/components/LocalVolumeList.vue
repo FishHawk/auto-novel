@@ -272,34 +272,30 @@ const deleteVolume = (volumeId: string) =>
           </n-text>
           <br />
           <n-flex style="margin-top: 4px">
-            <n-button
-              text
-              type="primary"
-              @click="() => queueVolume(volume.volumeId)"
-            >
-              排队
-            </n-button>
+            <c-button
+              label="排队"
+              size="tiny"
+              secondary
+              @click="queueVolume(volume.volumeId)"
+            />
+            <c-button
+              label="下载"
+              size="tiny"
+              secondary
+              @click="downloadVolume(volume.volumeId)"
+            />
 
-            <n-button
-              text
-              type="primary"
-              @click="() => downloadVolume(volume.volumeId)"
-            >
-              下载
-            </n-button>
-
-            <n-button
-              text
-              type="primary"
+            <c-button
+              label="术语表"
+              size="tiny"
+              secondary
               @click="
                 () => {
                   selectedVolumeToEditGlossary = volume;
                   showGlossaryModal = true;
                 }
               "
-            >
-              编辑术语表
-            </n-button>
+            />
 
             <n-popconfirm
               :show-icon="false"
@@ -307,7 +303,7 @@ const deleteVolume = (volumeId: string) =>
               :negative-text="null"
             >
               <template #trigger>
-                <n-button text type="error"> 删除 </n-button>
+                <c-button label="删除" type="error" size="tiny" secondary />
               </template>
               确定删除{{ volume.volumeId }}吗？
             </n-popconfirm>
@@ -318,25 +314,22 @@ const deleteVolume = (volumeId: string) =>
   </n-flex>
 
   <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
-    <n-p>{{ selectedVolumeToEditGlossary?.volumeId }} </n-p>
+    <n-p>{{ selectedVolumeToEditGlossary?.volumeId }}</n-p>
     <glossary-edit
       v-if="selectedVolumeToEditGlossary !== undefined"
       :glossary="selectedVolumeToEditGlossary.glossary"
     />
     <template #action>
-      <n-button
+      <c-button
+        label="提交"
         type="primary"
         @click="
-        () =>
           submitGlossary(
             selectedVolumeToEditGlossary!!.volumeId,
             selectedVolumeToEditGlossary!!.glossary
           )
-      "
-      >
-        提交
-      </n-button>
-      <n-button @click="showGlossaryModal = false"> 取消 </n-button>
+        "
+      />
     </template>
   </c-modal>
 

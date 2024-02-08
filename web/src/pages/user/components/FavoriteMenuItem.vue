@@ -94,9 +94,7 @@ const deleteFavorite = async () => {
       {{ title }}
       <n-dropdown trigger="hover" :options="options" @select="onSelect">
         <n-button quaternary circle>
-          <template #icon>
-            <n-icon :component="MoreVertOutlined" />
-          </template>
+          <n-icon :component="MoreVertOutlined" />
         </n-button>
       </n-dropdown>
     </n-space>

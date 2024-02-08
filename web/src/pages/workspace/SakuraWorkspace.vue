@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import {
-DeleteOutlined,
-PlusOutlined,
-RefreshOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  RefreshOutlined,
 } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
@@ -141,53 +141,18 @@ const clearCache = async () => {
           v-if="sakuraWorkspace.jobs.length === 0"
           description="没有任务"
         />
-        <n-table :bordered="false" style="margin-top: 16px" v-else>
-          <thead>
-            <tr>
-              <th><b>描述</b></th>
-              <th><b>信息</b></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="job of sakuraWorkspace.jobs" :key="job.task">
-              <td>
-                <n-text depth="3" style="font-size: 12px">{{
-                  job.task
-                }}</n-text>
-                <br />
-                {{ job.description }}
-                <template v-if="processedJobs.has(job.task)">
-                  <br />
-                  <n-progress
-                    :percentage="
-                      computePercentage(processedJobs.get(job.task)?.progress)
-                    "
-                    style="max-width: 600px"
-                  />
-                </template>
-              </td>
-              <td style="white-space: nowrap">
-                <n-time :time="job.createAt" type="relative" />
-                <br />
-                <n-button
-                  type="primary"
-                  text
-                  @click="() => sakuraWorkspace.topJob(job)"
-                >
-                  置顶
-                </n-button>
-                <n-button
-                  type="error"
-                  text
-                  @click="deleteJob(job.task)"
-                  style="margin-left: 8px"
-                >
-                  删除
-                </n-button>
-              </td>
-            </tr>
-          </tbody>
-        </n-table>
+        <n-list>
+          <n-list-item v-for="job of sakuraWorkspace.jobs" :key="job.task">
+            <job-queue
+              :job="job"
+              :percentage="
+                computePercentage(processedJobs.get(job.task)?.progress)
+              "
+              @top-job="sakuraWorkspace.topJob(job)"
+              @delete-job="deleteJob(job.task)"
+            />
+          </n-list-item>
+        </n-list>
 
         <section-header title="未完成任务记录">
           <c-button
@@ -206,49 +171,18 @@ const clearCache = async () => {
           v-if="sakuraWorkspace.uncompletedJobs.length === 0"
           description="没有任务"
         />
-        <n-table :bordered="false" style="margin-top: 16px" v-else>
-          <thead>
-            <tr>
-              <th><b>描述</b></th>
-              <th><b>信息</b></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="job of sakuraWorkspace.uncompletedJobs" :key="job.task">
-              <td>
-                <n-text depth="3" style="font-size: 12px">{{
-                  job.task
-                }}</n-text>
-                <br />
-                {{ job.description }}
-                <template v-if="job.progress">
-                  <br />
-                  总共 {{ job.progress?.total }} / 成功
-                  {{ job.progress?.finished }} / 失败 {{ job.progress?.error }}
-                </template>
-              </td>
-              <td style="white-space: nowrap">
-                <n-time :time="job.createAt" type="relative" />
-                <br />
-                <n-button
-                  type="primary"
-                  text
-                  @click="() => sakuraWorkspace.retryUncompletedJob(job)"
-                >
-                  重新加入
-                </n-button>
-                <br />
-                <n-button
-                  type="error"
-                  text
-                  @click="() => sakuraWorkspace.deleteUncompletedJob(job)"
-                >
-                  删除
-                </n-button>
-              </td>
-            </tr>
-          </tbody>
-        </n-table>
+        <n-list>
+          <n-list-item
+            v-for="job of sakuraWorkspace.uncompletedJobs"
+            :key="job.task"
+          >
+            <job-uncompleted
+              :job="job"
+              @retry-job="sakuraWorkspace.retryUncompletedJob(job)"
+              @delete-job="sakuraWorkspace.deleteUncompletedJob(job)"
+            />
+          </n-list-item>
+        </n-list>
       </div>
 
       <n-divider vertical style="height: calc(100vh - 50px); flex: 0 0 1px" />

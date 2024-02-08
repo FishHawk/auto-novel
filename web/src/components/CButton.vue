@@ -4,7 +4,7 @@ import { Component, ref } from 'vue';
 
 import { useUserDataStore } from '@/data/stores/user_data';
 
-type Props = { label: string; icon?: Component; requireLogin?: boolean } & (
+type Props = { label?: string; icon?: Component; requireLogin?: boolean } & (
   | { async: true; onClick: () => Promise<any> }
   | { async?: false; onClick?: () => void }
 );

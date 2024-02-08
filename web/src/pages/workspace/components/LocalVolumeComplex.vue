@@ -111,8 +111,7 @@ const submitGlossary = (
 ) =>
   PersonalVolumesManager.updateGlossary(volumeId, toRaw(glossary))
     .then(() => message.success('术语表提交成功'))
-    .catch((error) => message.error(`术语表提交失败：${error}`))
-    .then(() => {});
+    .catch((error) => message.error(`术语表提交失败：${error}`));
 
 const submitJob = (translatorId: 'sakura' | 'gpt') => {
   const task = buildPersonalTranslateTask(props.volume.volumeId, {
@@ -152,32 +151,28 @@ const showGlossaryEditor = ref(false);
         <n-text>{{ volume.volumeId }}</n-text>
         <n-flex>
           <template v-for="{ translatorId, label } of translatorLabels">
-            <n-button
+            <c-button
               v-if="translatorId !== 'sakura' && translatorId !== 'gpt'"
-              text
-              type="primary"
+              :label="`更新${label}`"
+              size="tiny"
+              secondary
               @click="startTranslateTask(translatorId)"
-            >
-              更新{{ label }}
-            </n-button>
-
-            <n-button
+            />
+            <c-button
               v-else
-              text
-              type="primary"
-              @click="() => submitJob(translatorId)"
-            >
-              排队{{ label }}
-            </n-button>
+              :label="`排队${label}`"
+              size="tiny"
+              secondary
+              @click="submitJob(translatorId)"
+            />
           </template>
 
-          <n-button
-            text
-            type="primary"
+          <c-button
+            label="术语表"
+            size="tiny"
+            secondary
             @click="showGlossaryEditor = !showGlossaryEditor"
-          >
-            编辑术语表
-          </n-button>
+          />
 
           <n-popconfirm
             :show-icon="false"
@@ -185,7 +180,7 @@ const showGlossaryEditor = ref(false);
             :negative-text="null"
           >
             <template #trigger>
-              <n-button text type="error"> 删除 </n-button>
+              <c-button label="删除" type="error" size="tiny" secondary />
             </template>
             真的要删除{{ volume.volumeId }}吗？
           </n-popconfirm>
@@ -201,14 +196,14 @@ const showGlossaryEditor = ref(false);
 
     <n-collapse-transition :show="showGlossaryEditor" style="margin-top: 16px">
       <glossary-edit :glossary="volume.glossary" />
-      <n-button
+      <c-button
+        label="提交"
+        async
         type="primary"
         secondary
         size="small"
-        @click="() => submitGlossary(volume.volumeId, volume.glossary)"
-      >
-        提交
-      </n-button>
+        @click="submitGlossary(volume.volumeId, volume.glossary)"
+      />
     </n-collapse-transition>
 
     <TranslateTask

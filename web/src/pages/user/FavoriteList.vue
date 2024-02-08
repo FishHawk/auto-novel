@@ -150,13 +150,12 @@ const showAddModal = ref(false);
 <template>
   <div style="display: flex">
     <div style="flex: auto">
-      <n-button
+      <c-button
         v-if="!isWideScreen"
+        label="收藏夹列表"
         @click="showListModal = true"
         style="margin-bottom: 8px"
-      >
-        收藏夹列表
-      </n-button>
+      />
       <NovelList :options="options" :loader="loader" v-slot="{ page }">
         <NovelListWeb v-if="page.type === 'web'" :items="page.items" simple />
         <NovelListWenku v-if="page.type === 'wenku'" :items="page.items" />

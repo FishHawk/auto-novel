@@ -155,14 +155,18 @@ const showDetail = (detail: string[]) => {
     :bordered="false"
   >
     <template #header-extra>
-      <n-space align="center">
-        <n-button size="small" @click="enableAutoScroll = !enableAutoScroll">
-          {{ enableAutoScroll ? '暂停滚动' : '自动滚动' }}
-        </n-button>
-        <n-button size="small" @click="expandLog = !expandLog">
-          {{ expandLog ? '收起日志' : '展开日志' }}
-        </n-button>
-      </n-space>
+      <n-flex align="center">
+        <c-button
+          :label="enableAutoScroll ? '暂停滚动' : '自动滚动'"
+          size="small"
+          @click="enableAutoScroll = !enableAutoScroll"
+        />
+        <c-button
+          :label="expandLog ? '收起日志' : '展开日志'"
+          size="small"
+          @click="expandLog = !expandLog"
+        />
+      </n-flex>
     </template>
     <n-flex :wrap="false">
       <n-scrollbar
