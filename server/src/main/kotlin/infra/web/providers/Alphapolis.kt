@@ -37,19 +37,26 @@ class Alphapolis(
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
         val doc = client.get(getMetadataUrl(novelId)).document()
 
-        val infoEl = doc.selectFirst("div.content-info > div.content-statuses")!!
-        val tableEl = doc.selectFirst("div.content-info > table.detail")!!
-        val mainEl = doc.selectFirst("div.content-main")!!
+        val contentInfoEl = doc
+            .getElementById("sidebar")!!
+            .selectFirst(".content-info")!!
+
+        val contentMainEl = doc
+            .getElementById("main")!!
+            .selectFirst(".content-main")!!
+
+        val infoEl = contentInfoEl.selectFirst(".content-statuses")!!
+        val tableEl = contentInfoEl.selectFirst("table.detail")!!
 
         fun row(label: String) = tableEl
             .selectFirst("th:containsOwn(${label})")!!
             .nextElementSibling()!!
 
-        val title = mainEl
+        val title = contentMainEl
             .selectFirst("h1.title")!!
             .text()
 
-        val author = mainEl
+        val author = contentMainEl
             .selectFirst("div.author")!!
             .selectFirst("a")!!
             .let {
@@ -81,6 +88,10 @@ class Alphapolis(
                 }
             }
 
+        val keywords = contentMainEl
+            .select(".content-tags > .tag")
+            .map { it.text() }
+
         val points = row("累計ポイント")
             .text()
             .substringBefore("pt")
@@ -92,7 +103,7 @@ class Alphapolis(
             .filter { it.isDigit() }
             .toInt()
 
-        val introduction = mainEl
+        val introduction = contentMainEl
             .selectFirst("div.abstract")!!
             .text()
 
@@ -137,7 +148,7 @@ class Alphapolis(
             authors = listOf(author),
             type = type,
             attentions = attention?.let { listOf(it) } ?: emptyList(),
-            keywords = emptyList(),
+            keywords = keywords,
             points = points,
             totalCharacters = totalCharacters,
             introduction = introduction,
