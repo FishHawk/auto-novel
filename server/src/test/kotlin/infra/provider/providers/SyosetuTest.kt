@@ -40,7 +40,6 @@ class SyosetuTest : DescribeSpec({
             metadata.toc[1].chapterId.shouldBe("1")
             metadata.toc[1].createAt.shouldBe(Instant.parse("2012-11-22T08:00:00Z"))
         }
-
         it("常规，作者无链接") {
             // https://ncode.syosetu.com/n0123fj
             val metadata = provider.getMetadata("n0123fj")
@@ -55,6 +54,11 @@ class SyosetuTest : DescribeSpec({
             // https://ncode.syosetu.com/n5305eg
             val metadata = provider.getMetadata("n5305eg")
             metadata.title.shouldBe("【web版】エロいスキルで異世界無双")
+        }
+        it("常规，検索除外中です") {
+            // https://ncode.syosetu.com/n8539hm
+            val metadata = provider.getMetadata("n8539hm")
+            metadata.points.shouldBeNull()
         }
         it("短篇") {
             // https://ncode.syosetu.com/n0916hw

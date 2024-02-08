@@ -202,10 +202,10 @@ class Syosetu(
                 else throw RuntimeException("无法解析的小说标签:$it")
             }
 
-        val points = row("総合評価")!!
-            .text()
-            .filter { it.isDigit() }
-            .toInt()
+        val points = row("総合評価")
+            ?.text()
+            ?.filter { it.isDigit() }
+            ?.toInt()
 
         val totalCharacters = row("文字数")!!
             .text()
