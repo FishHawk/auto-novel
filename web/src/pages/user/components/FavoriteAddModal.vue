@@ -73,10 +73,10 @@ const addFavorite = async () => {
       </n-form-item-row>
       <n-form-item-row label="类型">
         <n-radio-group v-model:value="type" name="type">
-          <n-space>
+          <n-flex>
             <n-radio value="web"> 网页小说 </n-radio>
             <n-radio value="wenku"> 文库小说 </n-radio>
-          </n-space>
+          </n-flex>
         </n-radio-group>
       </n-form-item-row>
     </n-form>

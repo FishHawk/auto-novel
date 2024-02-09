@@ -157,22 +157,20 @@ const translatorLabels = computed(() => ({
     :glossary="glossary"
     :submit="submitGlossary"
   >
-    <n-button
+    <c-button
+      label="下载机翻"
       tag="a"
       :href="files.zh.url"
       :download="files.zh.filename"
       target="_blank"
-    >
-      下载机翻
-    </n-button>
-    <n-button
+    />
+    <c-button
+      label="下载日文"
       tag="a"
       :href="files.jp.url"
       :download="files.jp.filename"
       target="_blank"
-    >
-      下载日文
-    </n-button>
+    />
   </advance-options>
 
   <n-list>
@@ -181,31 +179,28 @@ const translatorLabels = computed(() => ({
     >
       {{ translatorLabels[translatorId] }}
       <template #suffix>
-        <n-button
+        <c-button
           v-if="translatorId === 'baidu'"
+          label="更新百度"
           size="small"
           tertiary
           @click="startTranslateTask(translatorId)"
-        >
-          更新百度
-        </n-button>
-        <n-button
+        />
+        <c-button
           v-if="translatorId === 'youdao'"
+          label="更新有道"
           size="small"
           tertiary
           @click="startTranslateTask(translatorId)"
-        >
-          更新有道
-        </n-button>
-        <n-button
+        />
+        <c-button
           v-if="translatorId === 'gpt'"
+          label="排队GPT"
           size="small"
           tertiary
           @click="() => submitJob(translatorId)"
-        >
-          排队GPT
-        </n-button>
-        <n-space v-if="translatorId === 'sakura'" :wrap="false">
+        />
+        <n-flex v-if="translatorId === 'sakura'" :wrap="false">
           <c-button
             label="公用排队"
             async
@@ -214,14 +209,13 @@ const translatorLabels = computed(() => ({
             tertiary
             @click="submitPublicSakuraJob"
           />
-          <n-button
+          <c-button
+            label="排队Sakura"
             size="small"
             tertiary
-            @click="() => submitJob(translatorId)"
-          >
-            排队Sakura
-          </n-button>
-        </n-space>
+            @click="submitJob(translatorId)"
+          />
+        </n-flex>
       </template>
     </n-list-item>
   </n-list>

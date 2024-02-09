@@ -12,6 +12,7 @@ import { checkIsMobile, useIsWideScreen } from '@/data/util';
 import { buildWebChapterUrl } from '@/data/util_web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
+  label: string;
   id: string | undefined;
 }>();
 
@@ -83,16 +84,15 @@ const url = computed(() =>
 </script>
 
 <template>
-  <DefineChapterLink v-slot="{ $slots, id: chapterId }">
-    <n-button
+  <DefineChapterLink v-slot="{ id: chapterId, label }">
+    <c-button
       :disabled="!chapterId"
+      :lable="label"
       quaternary
       ghost
       :type="chapterId ? 'primary' : 'default'"
-      @click="() => navToChapter(chapterId!!)"
-    >
-      <component :is="$slots.default!" />
-    </n-button>
+      @click="navToChapter(chapterId!!)"
+    />
   </DefineChapterLink>
 
   <div ref="placeholderRef" class="content">
@@ -108,13 +108,13 @@ const url = computed(() =>
         :wrap="false"
         style="width: 100%; margin-top: 20px"
       >
-        <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
+        <ReuseChapterLink :id="chapter.prevId" label="上一章" />
         <n-h4 style="text-align: center; margin: 0">
           <n-a :href="url">{{ chapter.titleJp }}</n-a>
           <br />
           <n-text depth="3">{{ chapter.titleZh }}</n-text>
         </n-h4>
-        <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+        <ReuseChapterLink :id="chapter.nextId" label="下一章" />
       </n-flex>
 
       <div v-else style="margin-top: 20px">
@@ -129,8 +129,8 @@ const url = computed(() =>
           :wrap="false"
           style="width: 100%"
         >
-          <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-          <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+          <ReuseChapterLink :id="chapter.prevId" label="上一章" />
+          <ReuseChapterLink :id="chapter.nextId" label="下一章" />
         </n-flex>
       </div>
 
@@ -168,8 +168,8 @@ const url = computed(() =>
       <n-divider />
 
       <n-flex align="center" justify="space-between" style="width: 100%">
-        <ReuseChapterLink :id="chapter.prevId">上一章</ReuseChapterLink>
-        <ReuseChapterLink :id="chapter.nextId">下一章</ReuseChapterLink>
+        <ReuseChapterLink :id="chapter.prevId" label="上一章" />
+        <ReuseChapterLink :id="chapter.nextId" label="下一章" />
       </n-flex>
     </ResultView>
   </div>

@@ -44,12 +44,11 @@ const scrollToCommentList = () => {
   />
 
   <section-header title="目录">
-    <n-button @click="setting.tocSortReverse = !setting.tocSortReverse">
-      <template #icon>
-        <n-icon :component="SortOutlined" />
-      </template>
-      {{ setting.tocSortReverse ? '倒序' : '正序' }}
-    </n-button>
+    <c-button
+      :label="setting.tocSortReverse ? '倒序' : '正序'"
+      :icon="SortOutlined"
+      @click="setting.tocSortReverse = !setting.tocSortReverse"
+    />
   </section-header>
 
   <n-list style="background-color: #0000">

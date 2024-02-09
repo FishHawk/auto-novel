@@ -109,9 +109,7 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
 const notifications = [
   '1月20日晚10点网站出现恶性bug，如果你能看到这行字，说明你没有问题。',
   '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。',
-  '由于使用人数过少，网站决定弃用Novelism小说源。如果你有需求，请在反馈帖说下。',
-  'Pixiv请优先使用系列链接，使用存在系列的章节链接会拒绝访问。',
-  'Sakura启动器发布vulkan版本了，A卡和核显的朋友可以试试。'
+  'Sakura启动器发布vulkan版本了，A卡和核显的朋友可以试试。',
 ];
 </script>
 

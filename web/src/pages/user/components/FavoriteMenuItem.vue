@@ -90,14 +90,14 @@ const deleteFavorite = async () => {
 
 <template>
   <router-link :to="href">
-    <n-space align="center" justify="space-between">
+    <n-flex align="center" justify="space-between">
       {{ title }}
       <n-dropdown trigger="hover" :options="options" @select="onSelect">
         <n-button quaternary circle>
           <n-icon :component="MoreVertOutlined" />
         </n-button>
       </n-dropdown>
-    </n-space>
+    </n-flex>
   </router-link>
 
   <c-modal v-model:show="showEditModal" title="编辑收藏夹">
