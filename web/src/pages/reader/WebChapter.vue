@@ -147,7 +147,6 @@ const url = computed(() =>
         <web-reader-content
           :provider-id="providerId"
           :novel-id="novelId"
-          :chapter-id="currentChapterId"
           :chapter="chapter"
         />
       </web-reader-layout-mobile>
@@ -162,7 +161,6 @@ const url = computed(() =>
         <web-reader-content
           :provider-id="providerId"
           :novel-id="novelId"
-          :chapter-id="currentChapterId"
           :chapter="chapter"
         />
       </web-reader-layout-desktop>
