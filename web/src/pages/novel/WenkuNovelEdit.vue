@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { UploadOutlined, LinkOutlined } from '@vicons/material';
+import { UploadOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -8,6 +8,7 @@ import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/data/util';
 import { fetchMetadata, prettyCover } from '@/data/util_wenku';
 import coverPlaceholder from '@/images/cover_placeholder.png';
@@ -16,6 +17,7 @@ const route = useRoute();
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
+const userData = useUserDataStore();
 
 const novelId = route.params.id as string | undefined;
 
@@ -216,6 +218,19 @@ const deleteVolume = (index: number) => {
     (it, i) => i !== index
   );
 };
+
+const markAsDuplicate = () => {
+  formValue.value = {
+    title: '重复，待删除',
+    titleZh: '重复，待删除',
+    cover: '',
+    authors: [],
+    artists: [],
+    r18: formValue.value.r18,
+    introduction: '',
+    volumes: [],
+  };
+};
 </script>
 
 <template>
@@ -269,6 +284,14 @@ const deleteVolume = (index: number) => {
             导入
           </n-button>
         </n-input-group>
+        <n-p v-if="userData.isMaintainer">
+          <c-button
+            type="error"
+            secondary
+            label="标记重复"
+            @click="markAsDuplicate"
+          />
+        </n-p>
       </div>
     </n-flex>
 
