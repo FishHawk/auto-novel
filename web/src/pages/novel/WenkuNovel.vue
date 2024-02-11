@@ -11,12 +11,14 @@ import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 import AdvanceOptions from './components/AdvanceOptions.vue';
+import { useIsWideScreen } from '@/data/util';
 
 const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   label: string;
   tags: string[];
 }>();
 
+const isWideScreen = useIsWideScreen(600);
 const message = useMessage();
 const userData = useUserDataStore();
 const vars = useThemeVars();
@@ -67,20 +69,16 @@ const deleteVolume = async (volumeId: string) => {
 
 <template>
   <DefineTagGroup v-slot="{ label, tags }">
-    <tr v-if="tags.length > 0">
-      <td nowrap="nowrap" style="vertical-align: top; padding-right: 12px">
-        <n-tag :bordered="false" size="small">
-          {{ label }}
+    <n-flex v-if="tags.length > 0" :warp="false">
+      <n-tag :bordered="false" size="small">
+        {{ label }}
+      </n-tag>
+      <n-flex :size="[4, 4]">
+        <n-tag v-for="tag of tags" :bordered="false" size="small">
+          {{ tag }}
         </n-tag>
-      </td>
-      <td>
-        <n-space :size="[4, 4]">
-          <n-tag v-for="tag of tags" :bordered="false" size="small">
-            {{ tag }}
-          </n-tag>
-        </n-space>
-      </td>
-    </tr>
+      </n-flex>
+    </n-flex>
   </DefineTagGroup>
 
   <div
@@ -97,47 +95,50 @@ const deleteVolume = async (volumeId: string) => {
       background-position: center 15%;
     "
   >
-    <div style="width: 100%; height: 100%; backdrop-filter: blur(4px)">
+    <div style="width: 100%; height: 100%; backdrop-filter: blur(8px)">
       <div class="layout-content">
-        <n-space
-          :wrap="false"
-          style="padding-top: 40px; padding-bottom: 20px; min-height: 260px"
-        >
-          <n-image
-            width="160"
-            :src="
-              novelMetadataResult.value.cover
-                ? novelMetadataResult.value.cover
-                : coverPlaceholder
-            "
-            alt="cover"
-            show-toolbar-tooltip
-            style="border-radius: 2px"
-          />
+        <n-flex :wrap="false" style="padding-top: 20px; padding-bottom: 21px">
           <div>
-            <n-h1 prefix="bar" style="font-size: 22px; font-weight: 900">
-              {{
-                novelMetadataResult.value.titleZh
-                  ? novelMetadataResult.value.titleZh
-                  : novelMetadataResult.value.title
-              }}
-              <n-text v-if="novelMetadataResult.value.r18" depth="3">
-                [成人]
-              </n-text>
-            </n-h1>
-
-            <table style="border-spacing: 0px 8px">
-              <ReuseTagGroup
-                label="作者"
-                :tags="novelMetadataResult.value.authors"
-              />
-              <ReuseTagGroup
-                label="插图"
-                :tags="novelMetadataResult.value.artists"
-              />
-            </table>
+            <n-image
+              width="160"
+              :src="
+                novelMetadataResult.value.cover
+                  ? novelMetadataResult.value.cover
+                  : coverPlaceholder
+              "
+              alt="cover"
+              show-toolbar-tooltip
+              style="border-radius: 2px"
+            />
           </div>
-        </n-space>
+          <n-flex vertical>
+            <n-h2
+              prefix="bar"
+              style="margin: 8px 0"
+              :style="{ 'font-size': isWideScreen ? '22px' : '18px' }"
+            >
+              <b>
+                {{
+                  novelMetadataResult.value.titleZh
+                    ? novelMetadataResult.value.titleZh
+                    : novelMetadataResult.value.title
+                }}
+                <n-text v-if="novelMetadataResult.value.r18" depth="3">
+                  [成人]
+                </n-text>
+              </b>
+            </n-h2>
+
+            <ReuseTagGroup
+              label="作者"
+              :tags="novelMetadataResult.value.authors"
+            />
+            <ReuseTagGroup
+              label="插图"
+              :tags="novelMetadataResult.value.artists"
+            />
+          </n-flex>
+        </n-flex>
       </div>
     </div>
   </div>

@@ -242,6 +242,7 @@ const deleteVolume = (index: number) => {
         <n-li>
           请不要创建空的文库页，尤其是不要创建文库页再去寻找资源，最后发现资源用不了。
         </n-li>
+        <n-li>如果你搜不了R18，就不要创建R18页面，因为创建了也看不了。</n-li>
       </n-ul>
     </n-card>
 

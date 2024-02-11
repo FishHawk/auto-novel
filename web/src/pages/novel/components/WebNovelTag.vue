@@ -8,11 +8,8 @@ defineProps<{
 </script>
 
 <template>
-  <router-link
-    :to="`/novel-list?query=${tag}\$`"
-    style="color: rgb(51, 54, 57)"
-  >
-    <n-tag :bordered="false" size="small">
+  <router-link :to="`/novel-list?query=${tag}\$`">
+    <n-tag :bordered="false" size="small" style="cursor: pointer">
       <template v-if="attention">
         <b>{{ tag }}</b>
       </template>

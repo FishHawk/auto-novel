@@ -104,8 +104,16 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
   <workspace-nav />
 
   <n-button-group style="margin-bottom: 8px">
-    <n-button @click="toggleTranslateOptions()">翻译设置</n-button>
-    <n-button @click="toggleDownloadOptions()">下载设置</n-button>
+    <c-button
+      label="翻译设置"
+      :round="false"
+      @click="toggleTranslateOptions()"
+    />
+    <c-button
+      label="下载设置"
+      :round="false"
+      @click="toggleDownloadOptions()"
+    />
     <slot />
   </n-button-group>
 

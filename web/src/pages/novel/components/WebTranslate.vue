@@ -159,6 +159,7 @@ const translatorLabels = computed(() => ({
   >
     <c-button
       label="下载机翻"
+      :round="false"
       tag="a"
       :href="files.zh.url"
       :download="files.zh.filename"
@@ -166,6 +167,7 @@ const translatorLabels = computed(() => ({
     />
     <c-button
       label="下载日文"
+      :round="false"
       tag="a"
       :href="files.jp.url"
       :download="files.jp.filename"

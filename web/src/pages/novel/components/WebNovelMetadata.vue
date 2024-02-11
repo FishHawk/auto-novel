@@ -82,6 +82,8 @@ const labels = computed(() => {
     />
   </n-flex>
 
+  <n-divider />
+
   <n-p>{{ labels }}</n-p>
 
   <n-p style="word-break: break-all">
