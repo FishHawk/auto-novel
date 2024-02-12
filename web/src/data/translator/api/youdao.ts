@@ -2,7 +2,6 @@ import { AES } from 'crypto-es/lib/aes';
 import { Utf8 } from 'crypto-es/lib/core';
 import { MD5 } from 'crypto-es/lib/md5';
 import { KyInstance } from 'ky/distribution/types/ky';
-import { safeJson } from './util';
 
 export class Youdao {
   id: 'youdao' = 'youdao';
@@ -55,8 +54,7 @@ export class Youdao {
         },
       })
       .text()
-      .then(decode)
-      .then(safeJson);
+      .then(decode);
 }
 
 const getBaseBody = (key: string) => {

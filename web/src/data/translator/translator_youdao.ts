@@ -1,6 +1,7 @@
 import { BaseTranslatorConfig, Glossary, SegmentTranslator } from './type';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';
 import { Youdao } from './api/youdao';
+import { safeJson } from './api/util';
 
 export type YoudaoTranslatorConfig = BaseTranslatorConfig;
 
@@ -41,16 +42,22 @@ export class YoudaoTranslator implements SegmentTranslator {
   }
 
   async translateInner(seg: string[]): Promise<string[]> {
-    const json = await this.api.webtranslate(seg.join('\n'));
-    if (json === undefined) {
-      this.log(`　错误：${json}`);
-      this.log('　目前有道翻译在有些环境下有问题，可能是因为广告屏蔽插件');
+    const decoded = await this.api.webtranslate(seg.join('\n'));
+    const decodedJson = safeJson(decoded);
+
+    if (decodedJson === undefined) {
+      this.log(`　错误：${decoded}`);
       throw 'quit';
     } else {
-      const result = json['translateResult'].map((it: any) =>
-        it.map((it: any) => it.tgt.trimEnd()).join('')
-      );
-      return result;
+      try {
+        const result = decodedJson['translateResult'].map((it: any) =>
+          it.map((it: any) => it.tgt.trimEnd()).join('')
+        );
+        return result;
+      } catch (e) {
+        this.log(`　错误：${decoded}`);
+        throw 'quit';
+      }
     }
   }
 }
