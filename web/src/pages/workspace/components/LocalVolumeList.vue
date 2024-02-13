@@ -220,98 +220,96 @@ const deleteVolume = (volumeId: string) =>
 </script>
 
 <template>
-  <n-flex vertical :size="0" v-bind="$attrs">
-    <section-header title="文件列表">
-      <n-flex :wrap="false">
-        <n-upload
-          multiple
-          directory-dnd
-          :show-file-list="false"
-          :custom-request="customRequest"
-          @finish="loadVolumes"
-          @before-upload="beforeUpload"
-        >
-          <c-button label="添加文件" :icon="PlusOutlined" />
-        </n-upload>
-        <n-dropdown trigger="click" :options="options" @select="handleSelect">
-          <n-button circle>
-            <n-icon :component="MoreVertOutlined" />
-          </n-button>
-        </n-dropdown>
-      </n-flex>
-    </section-header>
-
+  <section-header title="文件列表">
     <n-flex :wrap="false">
-      <n-select
-        v-model:value="setting.downloadFormat.mode"
-        :options="modeOptions"
-      />
-      <n-select v-model:value="order" :options="orderOptions" />
+      <n-upload
+        multiple
+        directory-dnd
+        :show-file-list="false"
+        :custom-request="customRequest"
+        @finish="loadVolumes"
+        @before-upload="beforeUpload"
+      >
+        <c-button label="添加文件" :icon="PlusOutlined" />
+      </n-upload>
+      <n-dropdown trigger="click" :options="options" @select="handleSelect">
+        <n-button circle>
+          <n-icon :component="MoreVertOutlined" />
+        </n-button>
+      </n-dropdown>
     </n-flex>
+  </section-header>
 
-    <n-divider style="margin-bottom: 4px" />
-
-    <n-spin v-if="sortedVolumes === undefined" style="margin-top: 20px" />
-
-    <n-empty
-      v-else-if="sortedVolumes.length === 0"
-      description="没有文件"
-      style="margin-top: 20px"
+  <n-flex :wrap="false">
+    <n-select
+      v-model:value="setting.downloadFormat.mode"
+      :options="modeOptions"
     />
-
-    <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
-      <n-list style="padding-bottom: 48px">
-        <n-list-item v-for="volume of sortedVolumes ?? []">
-          {{ volume.volumeId }}
-          <br />
-          <n-text depth="3">
-            <n-time :time="volume.createAt" type="relative" /> / 总计{{
-              volume.total
-            }}
-            / 完成{{ volume.finished }} / 过期{{ volume.expired }}
-          </n-text>
-          <br />
-          <n-flex style="margin-top: 4px">
-            <c-button
-              label="排队"
-              size="tiny"
-              secondary
-              @click="queueVolume(volume.volumeId)"
-            />
-            <c-button
-              label="下载"
-              size="tiny"
-              secondary
-              @click="downloadVolume(volume.volumeId)"
-            />
-
-            <c-button
-              label="术语表"
-              size="tiny"
-              secondary
-              @click="
-                () => {
-                  selectedVolumeToEditGlossary = volume;
-                  showGlossaryModal = true;
-                }
-              "
-            />
-
-            <n-popconfirm
-              :show-icon="false"
-              @positive-click="deleteVolume(volume.volumeId)"
-              :negative-text="null"
-            >
-              <template #trigger>
-                <c-button label="删除" type="error" size="tiny" secondary />
-              </template>
-              确定删除{{ volume.volumeId }}吗？
-            </n-popconfirm>
-          </n-flex>
-        </n-list-item>
-      </n-list>
-    </n-scrollbar>
+    <n-select v-model:value="order" :options="orderOptions" />
   </n-flex>
+
+  <n-divider style="margin-bottom: 4px" />
+
+  <n-spin v-if="sortedVolumes === undefined" style="margin-top: 20px" />
+
+  <n-empty
+    v-else-if="sortedVolumes.length === 0"
+    description="没有文件"
+    style="margin-top: 20px"
+  />
+
+  <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
+    <n-list style="padding-bottom: 48px">
+      <n-list-item v-for="volume of sortedVolumes ?? []">
+        {{ volume.volumeId }}
+        <br />
+        <n-text depth="3">
+          <n-time :time="volume.createAt" type="relative" /> / 总计{{
+            volume.total
+          }}
+          / 完成{{ volume.finished }} / 过期{{ volume.expired }}
+        </n-text>
+        <br />
+        <n-flex style="margin-top: 4px">
+          <c-button
+            label="排队"
+            size="tiny"
+            secondary
+            @click="queueVolume(volume.volumeId)"
+          />
+          <c-button
+            label="下载"
+            size="tiny"
+            secondary
+            @click="downloadVolume(volume.volumeId)"
+          />
+
+          <c-button
+            label="术语表"
+            size="tiny"
+            secondary
+            @click="
+              () => {
+                selectedVolumeToEditGlossary = volume;
+                showGlossaryModal = true;
+              }
+            "
+          />
+
+          <n-popconfirm
+            :show-icon="false"
+            @positive-click="deleteVolume(volume.volumeId)"
+            :negative-text="null"
+          >
+            <template #trigger>
+              <c-button label="删除" type="error" size="tiny" secondary />
+            </template>
+            确定删除{{ volume.volumeId }}吗？
+          </n-popconfirm>
+        </n-flex>
+      </n-list-item>
+    </n-list>
+  </n-scrollbar>
 
   <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
     <n-p>{{ selectedVolumeToEditGlossary?.volumeId }}</n-p>

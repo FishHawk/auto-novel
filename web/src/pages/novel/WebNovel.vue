@@ -9,7 +9,7 @@ import { useIsWideScreen } from '@/data/util';
 
 import { ReadableTocItem, WebNovelVM } from './components/common';
 
-const isWideScreen = useIsWideScreen(750);
+const isWideScreen = useIsWideScreen(850);
 const vars = useThemeVars();
 const router = useRouter();
 

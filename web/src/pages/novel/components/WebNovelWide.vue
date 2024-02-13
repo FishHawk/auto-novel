@@ -22,80 +22,75 @@ const scrollToCommentList = () => {
 </script>
 
 <template>
-  <n-flex :wrap="false">
-    <div style="flex: auto">
-      <web-novel-metadata
-        :provider-id="providerId"
-        :novel-id="novelId"
-        :novel="novel"
-        @comment-click="scrollToCommentList()"
-      />
+  <c-layout sidebar :sidebar-width="320">
+    <web-novel-metadata
+      :provider-id="providerId"
+      :novel-id="novelId"
+      :novel="novel"
+      @comment-click="scrollToCommentList()"
+    />
 
-      <section-header title="翻译" />
-      <WebTranslate
-        :provider-id="providerId"
-        :novel-id="novelId"
-        :title-jp="novel.titleJp"
-        :title-zh="novel.titleZh"
-        :total="novel.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
-        v-model:jp="novel.jp"
-        v-model:baidu="novel.baidu"
-        v-model:youdao="novel.youdao"
-        v-model:gpt="novel.gpt"
-        :sakura="novel.sakura"
-        :glossary="novel.glossary"
-      />
+    <section-header title="翻译" />
+    <WebTranslate
+      :provider-id="providerId"
+      :novel-id="novelId"
+      :title-jp="novel.titleJp"
+      :title-zh="novel.titleZh"
+      :total="novel.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
+      v-model:jp="novel.jp"
+      v-model:baidu="novel.baidu"
+      v-model:youdao="novel.youdao"
+      v-model:gpt="novel.gpt"
+      :sakura="novel.sakura"
+      :glossary="novel.glossary"
+    />
 
-      <div ref="commentListRef"></div>
-      <CommentList :site="`web-${providerId}-${novelId}`" />
-    </div>
-    <div style="flex: 0 0 350px">
-      <n-flex :wrap="false" style="width: 350px; position: fixed; top: 50">
-        <n-divider vertical style="height: calc(100vh - 50px); flex: 0 0 1px" />
+    <div ref="commentListRef"></div>
+    <CommentList :site="`web-${providerId}-${novelId}`" />
 
-        <n-flex vertical style="height: calc(100vh - 50px); flex: auto">
-          <section-header title="目录">
-            <c-button
-              :label="setting.tocSortReverse ? '倒序' : '正序'"
-              :icon="SortOutlined"
-              @click="setting.tocSortReverse = !setting.tocSortReverse"
-            />
-          </section-header>
+    <template #sidebar>
+      <section-header title="目录">
+        <c-button
+          :label="setting.tocSortReverse ? '倒序' : '正序'"
+          :icon="SortOutlined"
+          @click="setting.tocSortReverse = !setting.tocSortReverse"
+        />
+      </section-header>
 
-          <n-card
-            v-if="novel.lastReadChapter"
-            :bordered="false"
-            embedded
-            content-style="padding: 6px 0px 0px;"
+      <template v-if="novel.lastReadChapter">
+        <n-card
+          :bordered="false"
+          embedded
+          content-style="padding: 6px 0px 0px;"
+        >
+          <b style="padding-left: 6px">上次读到:</b>
+          <web-novel-toc-item
+            :provider-id="providerId"
+            :novel-id="novelId"
+            :toc-item="novel.lastReadChapter"
+          />
+        </n-card>
+
+        <n-divider style="margin: 16px 0" />
+      </template>
+
+      <n-scrollbar trigger="none" :size="24" style="flex: auto">
+        <n-list style="background-color: #0000; padding-bottom: 48px">
+          <n-list-item
+            v-for="tocItem in setting.tocSortReverse
+              ? novel.toc.slice().reverse()
+              : novel.toc"
+            :key="tocItem.index"
+            style="padding: 0px"
           >
-            <b style="padding-left: 6px">上次读到:</b>
             <web-novel-toc-item
               :provider-id="providerId"
               :novel-id="novelId"
-              :toc-item="novel.lastReadChapter"
+              :toc-item="tocItem"
             />
-          </n-card>
-          <n-divider style="margin: 4px 0" />
-
-          <n-scrollbar trigger="none" :size="24" style="flex: auto">
-            <n-list style="background-color: #0000; padding-bottom: 48px">
-              <n-list-item
-                v-for="tocItem in setting.tocSortReverse
-                  ? novel.toc.slice().reverse()
-                  : novel.toc"
-                :key="tocItem.index"
-                style="padding: 0px"
-              >
-                <web-novel-toc-item
-                  :provider-id="providerId"
-                  :novel-id="novelId"
-                  :toc-item="tocItem"
-                />
-              </n-list-item>
-            </n-list>
-          </n-scrollbar>
-        </n-flex>
-      </n-flex>
-    </div>
-  </n-flex>
+          </n-list-item>
+        </n-list>
+      </n-scrollbar>
+    </template>
+  </c-layout>
 </template>

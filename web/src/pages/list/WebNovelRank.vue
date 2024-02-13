@@ -150,30 +150,25 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
 </script>
 
 <template>
-  <div style="display: flex" class="layout-content">
-    <div style="flex: auto">
-      <n-h1>{{ descriptior.title }}</n-h1>
-      <NovelList
-        :search="
-          descriptior.search
-            ? {
-                suggestions: [],
-                tags: [],
-              }
-            : undefined
-        "
-        :options="descriptior.options"
-        :loader="loader"
-        v-slot="{ page }"
-      >
-        <NovelListWeb :items="page.items" />
-      </NovelList>
-    </div>
-    <n-menu
-      v-if="isWideScreen"
-      style="flex: none; width: 250px; margin-left: 12px"
-      :value="route.path"
-      :options="menuOptions"
-    />
-  </div>
+  <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
+    <n-h1>{{ descriptior.title }}</n-h1>
+    <NovelList
+      :search="
+        descriptior.search
+          ? {
+              suggestions: [],
+              tags: [],
+            }
+          : undefined
+      "
+      :options="descriptior.options"
+      :loader="loader"
+      v-slot="{ page }"
+    >
+      <NovelListWeb :items="page.items" />
+    </NovelList>
+    <template #sidebar>
+      <n-menu :value="route.path" :options="menuOptions" />
+    </template>
+  </c-layout>
 </template>

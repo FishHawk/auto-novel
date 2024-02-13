@@ -114,29 +114,25 @@ watch(
 </script>
 
 <template>
-  <div style="display: flex" class="layout-content">
-    <div style="flex: auto">
-      <n-h1>网络小说</n-h1>
-      <n-text depth="3" style="font-size: 12px">
-        # 搜索语法参见
-        <RouterNA to="/forum/64f3d63f794cbb1321145c07#如何搜索网络小说">
-          如何搜索网络小说
-        </RouterNA>
-      </n-text>
-      <NovelList
-        :search="search"
-        :options="options"
-        :loader="loader"
-        v-slot="{ page }"
-      >
-        <NovelListWeb :items="page.items" />
-      </NovelList>
-    </div>
-    <n-menu
-      v-if="isWideScreen"
-      style="flex: none; width: 250px; margin-left: 12px"
-      :value="route.path"
-      :options="menuOptions"
-    />
-  </div>
+  <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
+    <n-h1>网络小说</n-h1>
+    <n-text depth="3" style="font-size: 12px">
+      # 搜索语法参见
+      <RouterNA to="/forum/64f3d63f794cbb1321145c07#如何搜索网络小说">
+        如何搜索网络小说
+      </RouterNA>
+    </n-text>
+    <NovelList
+      :search="search"
+      :options="options"
+      :loader="loader"
+      v-slot="{ page }"
+    >
+      <NovelListWeb :items="page.items" />
+    </NovelList>
+
+    <template #sidebar>
+      <n-menu :value="route.path" :options="menuOptions" />
+    </template>
+  </c-layout>
 </template>
