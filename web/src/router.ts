@@ -25,31 +25,14 @@ const router = createRouter({
         },
 
         {
+          path: '/account',
+          meta: { title: '账号中心' },
+          component: () => import('./pages/other/AccountCenter.vue'),
+        },
+        {
           path: '/reset-password',
           meta: { title: '重置密码' },
           component: () => import('./pages/other/ResetPassword.vue'),
-        },
-
-        {
-          path: '/*',
-          component: () => import('./layouts/UserLayout.vue'),
-          children: [
-            {
-              path: '/account',
-              meta: { title: '账号中心' },
-              component: () => import('./pages/user/AccountCenter.vue'),
-            },
-            {
-              path: '/favorite',
-              meta: { title: '我的收藏' },
-              component: () => import('./pages/user/FavoriteList.vue'),
-            },
-            {
-              path: '/read-history',
-              meta: { title: '阅读历史' },
-              component: () => import('./pages/user/ReadHistoryList.vue'),
-            },
-          ],
         },
 
         {
@@ -94,6 +77,17 @@ const router = createRouter({
           path: '/wenku-list',
           meta: { title: '文库小说' },
           component: () => import('./pages/list/WenkuNovelList.vue'),
+        },
+
+        {
+          path: '/favorite',
+          meta: { title: '我的收藏' },
+          component: () => import('./pages/list/FavoriteList.vue'),
+        },
+        {
+          path: '/read-history',
+          meta: { title: '阅读历史' },
+          component: () => import('./pages/list/ReadHistoryList.vue'),
         },
 
         {

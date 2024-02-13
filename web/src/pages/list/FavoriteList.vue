@@ -10,10 +10,11 @@ import { mapOk } from '@/data/result';
 import { useIsWideScreen } from '@/data/util';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
-import { Loader } from '../list/components/NovelList.vue';
+import { Loader } from './components/NovelList.vue';
 import { ApiUser, FavoredList } from '@/data/api/api_user';
+import { FormatListBulletedOutlined } from '@vicons/material';
 
-const isWideScreen = useIsWideScreen(600);
+const isWideScreen = useIsWideScreen(850);
 
 const route = useRoute();
 const router = useRouter();
@@ -148,11 +149,13 @@ const showAddModal = ref(false);
 </script>
 
 <template>
-  <div style="display: flex">
+  <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
     <div style="flex: auto">
+      <n-h1>我的收藏</n-h1>
       <c-button
         v-if="!isWideScreen"
         label="收藏夹列表"
+        :icon="FormatListBulletedOutlined"
         @click="showListModal = true"
         style="margin-bottom: 8px"
       />
@@ -161,13 +164,10 @@ const showAddModal = ref(false);
         <NovelListWenku v-if="page.type === 'wenku'" :items="page.items" />
       </NovelList>
     </div>
-    <n-menu
-      v-if="isWideScreen"
-      :value="currentMenuKey"
-      :options="menuOptions"
-      style="flex: none; width: 250px"
-    />
-  </div>
+    <template #sidebar>
+      <n-menu :value="currentMenuKey" :options="menuOptions" />
+    </template>
+  </c-layout>
 
   <n-drawer v-model:show="showListModal" :auto-focus="false" placement="right">
     <n-drawer-content

@@ -1,15 +1,10 @@
 <script lang="ts" setup>
-import { useRoute, useRouter } from 'vue-router';
-
-import { useUserDataStore } from '@/data/stores/user_data';
 import { UserRole } from '@/data/api/api_user';
+import { useSettingStore } from '@/data/stores/setting';
+import { useUserDataStore } from '@/data/stores/user_data';
 
-const router = useRouter();
-const route = useRoute();
+const setting = useSettingStore();
 const userData = useUserDataStore();
-
-const path = route.path;
-const handleUpdateValue = (path: string) => router.push({ path });
 
 const roleToReadableText = (role: UserRole) => {
   if (role === 'normal') return '普通用户';
@@ -30,17 +25,23 @@ const roleToReadableText = (role: UserRole) => {
           {{ roleToReadableText(userData.role!!) }}
         </n-tag>
       </n-h1>
-      <n-tabs
-        type="line"
-        :value="path"
-        @update:value="handleUpdateValue"
-        style="margin-bottom: 24px"
-      >
-        <n-tab name="/account">帐号</n-tab>
-        <n-tab name="/favorite">收藏</n-tab>
-        <n-tab name="/read-history">历史</n-tab>
-      </n-tabs>
-      <router-view />
+
+      <n-switch v-model:value="setting.isDark">
+        <template #checked>深色主题</template>
+        <template #unchecked>浅色主题</template>
+      </n-switch>
+      <n-p>
+        <n-text depth="3" style="font-size: 12px">
+          只有一个主题选项太奇怪了？因为我还没想好放什么
+        </n-text>
+      </n-p>
+      <n-flex v-if="userData.isAdmin">
+        <c-button label="控制台" tag="a" href="/admin/user" />
+        <c-button
+          :label="`管理员模式-${userData.asAdmin}`"
+          @click="userData.toggleAdminMode()"
+        />
+      </n-flex>
     </template>
     <n-result v-else status="error" title="未登录" />
   </div>
