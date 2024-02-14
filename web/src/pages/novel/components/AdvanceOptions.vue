@@ -6,7 +6,7 @@ import { useUserDataStore } from '@/data/stores/user_data';
 import { TranslatorId } from '@/data/translator';
 
 defineProps<{
-  type: 'web' | 'wenku' | 'personal';
+  type: 'web' | 'wenku';
   glossary: { [key: string]: string };
   submit: () => Promise<void>;
 }>();
@@ -132,7 +132,7 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
   >
     <n-list v-if="showTranslateOptions" bordered>
       <n-list-item>
-        <AdvanceOption
+        <advance-option
           title="翻译过期章节"
           description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
         >
@@ -143,11 +143,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
               v-model:value="translateExpireChapter"
             />
           </template>
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
 
       <n-list-item v-if="type === 'web' && userData.passWeek">
-        <AdvanceOption
+        <advance-option
           title="与源站同步"
           description="在启动翻译任务时，同步已缓存章节。如果缓存章节与源站不匹配，会删除章节，包含现有的翻译。慎用，不要抱着试试的心情用这个功能，用之前请确保你知道自己在干什么。一次性设定，默认关闭。"
         >
@@ -158,11 +158,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
               v-model:value="syncFromProvider"
             />
           </template>
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
 
       <n-list-item v-if="type === 'web'">
-        <AdvanceOption
+        <advance-option
           title="自定义更新范围"
           description="控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。比如，从0到10，表示章节需要属于区间[0，10)的章节，不包含序号10。"
         >
@@ -182,11 +182,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
               style="width: 100px"
             />
           </n-input-group>
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
 
-      <n-list-item v-if="type === 'web' || type === 'wenku'">
-        <AdvanceOption
+      <n-list-item>
+        <advance-option
           title="术语表"
           description="术语表过大可能会使得翻译质量下降，此外，出于安全起见，Sakura只会使用日语长度超过两个字的术语。"
         >
@@ -201,13 +201,13 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
             size="small"
             @click="submit"
           />
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
     </n-list>
 
     <n-list v-if="showDownloadOptions" bordered>
       <n-list-item v-if="type === 'web'">
-        <AdvanceOption
+        <advance-option
           title="中文文件名"
           description="如果小说标题已经被翻译，则使用翻译后的中文标题作为下载的文件名。"
         >
@@ -218,11 +218,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
               v-model:value="tryUseChineseTitleAsFilename"
             />
           </template>
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
 
       <n-list-item>
-        <AdvanceOption
+        <advance-option
           title="下载文件语言"
           description="设置下载文件的语言。注意部分EPUB阅读器不支持半透明字体，日文段落无法正确显示为半透明字体。"
         >
@@ -237,11 +237,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
               :label="option.label"
             />
           </n-radio-group>
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
 
       <n-list-item>
-        <AdvanceOption
+        <advance-option
           title="下载文件翻译"
           description="设置下载文件使用的翻译。注意选中的翻译顺序，优先模式下顺序代表优先级，并列模式下顺序代表翻译的排列顺序。"
         >
@@ -275,11 +275,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
               </n-button>
             </n-button-group>
           </n-flex>
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
 
       <n-list-item v-if="type === 'web'">
-        <AdvanceOption title="下载文件类型" description="设置下载文件的类型。">
+        <advance-option title="下载文件类型" description="设置下载文件的类型。">
           <n-radio-group
             v-model:value="setting.downloadFormat.type"
             size="small"
@@ -291,7 +291,7 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
               :label="option.label"
             />
           </n-radio-group>
-        </AdvanceOption>
+        </advance-option>
       </n-list-item>
     </n-list>
   </n-collapse-transition>
