@@ -98,10 +98,19 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
 
 <template>
   <n-p depth="3" style="font-size: 12px">
-    # 翻译功能需要需要安装浏览器插件，参见
-    <RouterNA to="/forum/64f3d63f794cbb1321145c07">插件使用说明</RouterNA>
+    # 如果想自己生成机翻，请先阅读
+    <RouterNA to="/forum/64f3d63f794cbb1321145c07">使用说明</RouterNA>
   </n-p>
-  <workspace-nav />
+
+  <n-p>
+    <n-flex size="small">
+      <RouterNA to="/workspace/gpt">GPT工作区</RouterNA>
+      /
+      <RouterNA to="/workspace/sakura">Sakura工作区</RouterNA>
+      /
+      <RouterNA to="/workspace/sakura-public">公用Sakura工作区</RouterNA>
+    </n-flex>
+  </n-p>
 
   <n-button-group style="margin-bottom: 8px">
     <c-button

@@ -91,7 +91,7 @@ const copyResult = () => {
 
 <template>
   <div class="layout-content">
-    <n-h1>TXT/EPUB片假名统计</n-h1>
+    <n-h1>片假名统计</n-h1>
 
     <n-space align="center">
       <c-button label="打开文件" @click="openOpenFileDialog()" />

@@ -47,9 +47,8 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
-    menuOption('文件翻译', '/workspace'),
+    menuOption('工作区', '/workspace'),
     menuOption('论坛', '/forum'),
-    menuOption('工具箱', '/toolbox'),
   ];
 });
 
@@ -63,8 +62,6 @@ const getTopMenuOptionKey = () => {
     return '/novel-list';
   } else if (path.startsWith('/workspace')) {
     return '/workspace';
-  } else if (path.startsWith('/toolbox')) {
-    return '/toolbox';
   } else {
     return path;
   }
@@ -78,8 +75,8 @@ const getSideMenuOptionKey = () => {
     return path;
   } else if (path.startsWith('/novel')) {
     return '/novel-list';
-  } else if (path.startsWith('/toolbox')) {
-    return '/toolbox';
+  } else if (path.startsWith('/workspace')) {
+    return '/workspace';
   } else {
     return path;
   }
@@ -103,9 +100,8 @@ const collapsedMenuOptions = computed(() => {
       ],
     },
     menuOption('文库小说', '/wenku-list'),
-    menuOption('文件翻译', '/workspace'),
+    menuOption('工作区', '/workspace'),
     menuOption('论坛', '/forum'),
-    menuOption('工具箱', '/toolbox'),
   ];
 });
 

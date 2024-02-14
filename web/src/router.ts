@@ -40,12 +40,17 @@ const router = createRouter({
           children: [
             {
               path: '',
-              meta: { title: '文件翻译' },
+              meta: { title: '工作区' },
               component: () => import('./pages/workspace/Workspace.vue'),
             },
             {
+              path: 'katakana',
+              meta: { title: '片假名统计' },
+              component: () => import('./pages/workspace/Katakana.vue'),
+            },
+            {
               path: 'sakura-public',
-              meta: { title: '公用Sakura' },
+              meta: { title: '公用Sakura工作区' },
               component: () =>
                 import('./pages/workspace/SakuraWorkspacePublic.vue'),
             },
@@ -133,17 +138,6 @@ const router = createRouter({
           path: '/forum-edit/:id',
           meta: { title: '编辑文章' },
           component: () => import('./pages/forum/ForumArticleEdit.vue'),
-        },
-
-        {
-          path: '/toolbox',
-          meta: { title: '工具箱' },
-          component: () => import('./pages/toolbox/Toolbox.vue'),
-        },
-        {
-          path: '/toolbox/katakana',
-          meta: { title: 'TXT/EPUB片假名统计' },
-          component: () => import('./pages/toolbox/ToolboxKatakana.vue'),
         },
 
         {
