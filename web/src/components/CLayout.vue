@@ -4,8 +4,8 @@ defineProps<{ sidebar: boolean; sidebarWidth: number }>();
 
 <template>
   <n-flex :wrap="false" :size="20">
-    <div style="flex: auto">
-        <slot />
+    <div style="flex: 1 1 auto; overflow: auto">
+      <slot />
     </div>
 
     <template v-if="sidebar">
@@ -22,12 +22,14 @@ defineProps<{ sidebar: boolean; sidebarWidth: number }>();
       </div>
 
       <div :style="{ flex: `0 0 ${sidebarWidth}px` }">
-        <div
+        <n-flex
+          :size="0"
+          vertical
           style="position: fixed; top: 50px; height: calc(100vh - 50px)"
           :style="{ width: `${sidebarWidth}px` }"
         >
           <slot name="sidebar" />
-        </div>
+        </n-flex>
       </div>
     </template>
   </n-flex>
