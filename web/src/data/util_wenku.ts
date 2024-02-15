@@ -54,8 +54,10 @@ async function getProductWithAdultCheck(asin: string) {
       .get(url, { redirect: 'error', credentials: 'include' })
       .text();
     return { r18: true, doc: parseHtml(html) };
-  } catch (e: any) {}
-
+  } catch (e: any) {
+    console.log('亚马逊请求失败');
+    console.log(e);
+  }
   throw Error('触发年龄限制，请按说明使用插件公开亚马逊Cookies');
 }
 
