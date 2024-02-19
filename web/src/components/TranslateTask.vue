@@ -141,7 +141,9 @@ defineExpose({ startTask });
 
 const showLogDetailModal = ref(false);
 const selectedLogDetail = ref([] as string[]);
-const showDetail = (detail: string[]) => {
+const selectedLogMessage = ref('');
+const showDetail = (message: string, detail: string[]) => {
+  selectedLogMessage.value = message.trim();
   selectedLogDetail.value = detail;
   showLogDetailModal.value = true;
 };
@@ -176,7 +178,7 @@ const showDetail = (detail: string[]) => {
       >
         <div v-for="log of logs">
           {{ log.message }}
-          <span v-if="log.detail !== undefined" @click="showDetail(log.detail)">
+          <span v-if="log.detail !== undefined" @click="showDetail(log.message, log.detail)">
             [详细]
           </span>
         </div>
@@ -192,7 +194,7 @@ const showDetail = (detail: string[]) => {
     </n-flex>
   </n-card>
 
-  <c-modal title="日志详情" v-model:show="showLogDetailModal">
+  <c-modal :title="`日志详情 - ${selectedLogMessage}`" v-model:show="showLogDetailModal">
     <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
       {{ line }}
     </n-p>
