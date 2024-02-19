@@ -2,6 +2,7 @@ import { DBSchema, deleteDB, openDB } from 'idb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Epub } from '@/data/epub/epub';
+import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 
 import { Glossary } from '../type';
 import { TranslatorId } from '../translator';
@@ -329,6 +330,27 @@ const makeTranslationVolumeFile = async ({
   }
 };
 
+const getVolumeWebNovelChapterDto = async (volumeId: string, chapterId: string) => {
+  const db = await openVolumesDB();
+  const metadata = await db.get('metadata', volumeId);
+  if (metadata === undefined) throw Error('小说不存在');
+
+  const chapter = await db.get('chapter', `${volumeId}/${chapterId}`);
+  if (chapter === undefined) throw Error('章节不存在');
+
+  return <WebNovelChapterDto>{
+    titleJp: volumeId.replace(/\.txt$/, ''),
+    titleZh: undefined,
+    prevId: undefined,
+    nextId: undefined,
+    paragraphs: chapter.paragraphs,
+    baiduParagraphs: chapter.baidu?.paragraphs,
+    youdaoParagraphs: chapter.youdao?.paragraphs,
+    gptParagraphs: chapter.gpt?.paragraphs,
+    sakuraParagraphs: chapter.sakura?.paragraphs,
+  }
+}
+
 interface EpubParser {
   extractText: (doc: Document) => string[];
   injectTranslation: (
@@ -397,4 +419,5 @@ export const PersonalVolumesManager = {
   deleteVolumesDb,
   //
   makeTranslationVolumeFile,
+  getVolumeWebNovelChapterDto,
 };

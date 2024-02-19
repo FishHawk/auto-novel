@@ -80,6 +80,7 @@ const onGlobalClick = (event: MouseEvent) => {
       <side-button
         quaternary
         tag="a"
+        v-if="providerId !== 'local'"
         :href="`/novel/${providerId}/${novelId}`"
         text="详情"
         :icon="LibraryBooksOutlined"

@@ -170,6 +170,10 @@ const queueVolume = (volumeId: string) => {
   }
 };
 
+const openWebReader = (volumeId: string) => {
+  window.open(`/novel/local/${encodeURIComponent(volumeId.replace(/\.txt$/,''))}/0`, '_blank');
+};
+
 const downloadVolume = async (volumeId: string) => {
   const { mode } = setting.downloadFormat;
 
@@ -276,6 +280,13 @@ const deleteVolume = (volumeId: string) =>
             size="tiny"
             secondary
             @click="queueVolume(volume.volumeId)"
+          />
+          <c-button
+            label="阅读"
+            v-if="volume.volumeId.endsWith('.txt')"
+            size="tiny"
+            secondary
+            @click="openWebReader(volume.volumeId)"
           />
           <c-button
             label="下载"

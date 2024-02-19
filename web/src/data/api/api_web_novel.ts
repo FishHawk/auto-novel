@@ -1,4 +1,5 @@
 import { runCatching } from '@/data/result';
+import { PersonalVolumesManager } from '@/data/translator';
 
 import { Favored } from './api_user';
 import { client } from './client';
@@ -116,12 +117,17 @@ const listRank = (providerId: string, params: { [key: string]: string }) =>
 const getNovel = (providerId: string, novelId: string) =>
   runCatching(client.get(`novel/${providerId}/${novelId}`).json<WebNovelDto>());
 
-const getChapter = (providerId: string, novelId: string, chapterId: string) =>
-  runCatching(
+const getChapter = (providerId: string, novelId: string, chapterId: string) => {
+  if (providerId === 'local') return runCatching(
+    PersonalVolumesManager
+      .getVolumeWebNovelChapterDto(novelId + '.txt', '0')
+  );
+  else return runCatching(
     client
       .get(`novel/${providerId}/${novelId}/chapter/${chapterId}`)
       .json<WebNovelChapterDto>()
   );
+}
 
 const updateNovel = (
   providerId: string,

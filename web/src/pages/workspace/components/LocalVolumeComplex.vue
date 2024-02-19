@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { FileDownloadOutlined } from '@vicons/material';
+import { FileDownloadOutlined, MenuBookOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
@@ -67,6 +67,10 @@ const translatorLabels = computed(
       },
     ]
 );
+
+const openWebReader = () => {
+  window.open(`/novel/local/${encodeURIComponent(props.volume.volumeId.replace(/\.txt$/,''))}/0`, '_blank');
+};
 
 const downloadFile = async () => {
   const { mode, translationsMode, translations } = setting.downloadFormat;
@@ -186,6 +190,13 @@ const showGlossaryEditor = ref(false);
           </n-popconfirm>
         </n-flex>
       </n-flex>
+      <c-button
+        label="阅读"
+        v-if="volume.volumeId.endsWith('.txt')"
+        :icon="MenuBookOutlined"
+        @click="openWebReader"
+        style="margin-left: auto"
+      />
       <c-button
         label="下载"
         :icon="FileDownloadOutlined"
