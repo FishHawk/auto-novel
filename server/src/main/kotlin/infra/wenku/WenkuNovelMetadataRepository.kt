@@ -132,6 +132,7 @@ class WenkuNovelMetadataRepository(
         artists: List<String>,
         r18: Boolean,
         introduction: String,
+        keywords: List<String>,
         volumes: List<WenkuNovelVolume>,
     ): String {
         val model = WenkuNovelMetadata(
@@ -141,8 +142,8 @@ class WenkuNovelMetadataRepository(
             cover = cover,
             authors = authors,
             artists = artists,
-            keywords = emptyList(),
             introduction = introduction,
+            keywords = keywords,
             r18 = r18,
             volumes = volumes,
             visited = 0,
@@ -164,6 +165,7 @@ class WenkuNovelMetadataRepository(
         artists: List<String>,
         r18: Boolean,
         introduction: String,
+        keywords: List<String>,
         volumes: List<WenkuNovelVolume>,
     ) {
         mongo
@@ -179,6 +181,7 @@ class WenkuNovelMetadataRepository(
                         setValue(WenkuNovelMetadata::artists, artists),
                         setValue(WenkuNovelMetadata::r18, r18),
                         setValue(WenkuNovelMetadata::introduction, introduction),
+                        setValue(WenkuNovelMetadata::keywords, keywords),
                         setValue(WenkuNovelMetadata::volumes, volumes)
                     )
                 ),

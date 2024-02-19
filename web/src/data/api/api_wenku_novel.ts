@@ -79,6 +79,7 @@ interface WenkuNovelCreateBody {
   artists: string[];
   r18: boolean;
   introduction: string;
+  keywords: string[];
   volumes: WenkuVolumeDto[];
 }
 

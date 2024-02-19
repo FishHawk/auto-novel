@@ -11,6 +11,7 @@ import {
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/data/util';
 import { fetchMetadata, prettyCover } from '@/data/util_wenku';
+import { presetKeywordsR18, presetKeywordsNonR18 } from '@/data/wenku/keyword';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 const route = useRoute();
@@ -30,6 +31,7 @@ const formValue = ref({
   authors: [] as string[],
   artists: [] as string[],
   r18: false,
+  keywords: [] as string[],
   introduction: '',
   volumes: [] as { asin: string; title: string; cover: string }[],
 });
@@ -81,6 +83,7 @@ onMounted(async () => {
         authors: result.value.authors,
         artists: result.value.artists,
         r18: result.value.r18,
+        keywords: result.value.keywords,
         introduction: result.value.introduction,
         volumes: result.value.volumes.map(({ asin, title, cover }) => ({
           asin,
@@ -111,6 +114,7 @@ const submit = async () => {
     artists: formValue.value.artists,
     r18: formValue.value.r18,
     introduction: formValue.value.introduction,
+    keywords: formValue.value.keywords,
     volumes: formValue.value.volumes,
   };
 
@@ -165,6 +169,7 @@ const fetchMetadataFromAmazon = async () => {
           ? formValue.value.artists
           : amazonMetadata.artists,
       r18: amazonMetadata.r18,
+      keywords: formValue.value.keywords,
       introduction: formValue.value.introduction
         ? formValue.value.introduction
         : amazonMetadata.introduction,
@@ -227,9 +232,25 @@ const markAsDuplicate = () => {
     authors: [],
     artists: [],
     r18: formValue.value.r18,
+    keywords: [],
     introduction: '',
     volumes: [],
   };
+};
+
+const presetKeywords = computed(() =>
+  formValue.value.r18 ? presetKeywordsR18 : presetKeywordsNonR18
+);
+const showKeywordsModal = ref(false);
+
+const togglePresetKeyword = (checked: boolean, keyword: string) => {
+  if (checked) {
+    formValue.value.keywords.push(keyword);
+  } else {
+    formValue.value.keywords = formValue.value.keywords.filter(
+      (it) => it !== keyword
+    );
+  }
 };
 </script>
 
@@ -243,7 +264,7 @@ const markAsDuplicate = () => {
       :bordered="false"
       style="margin-bottom: 20px"
     >
-      <b style="color: red">创建文库小说之前一定要看！！</b>
+      <b style="color: red">创建文库小说注意事项：</b>
       <n-ul>
         <n-li>
           文库小说只允许已经发行单行本的小说，原则上以亚马逊上可以买到为准。
@@ -359,7 +380,40 @@ const markAsDuplicate = () => {
       </n-form-item-row>
     </n-form>
 
-    <n-h2 prefix="bar">分卷</n-h2>
+    <section-header title="标签">
+      <c-button label="使用说明" @click="showKeywordsModal = true" />
+    </section-header>
+
+    <n-p v-if="presetKeywords.groups.length > 0">
+      <b>编辑标签前务必先看一遍使用说明。</b>
+    </n-p>
+    <n-list
+      v-if="presetKeywords.groups.length > 0"
+      bordered
+      style="width: 100%"
+    >
+      <n-list-item v-for="group of presetKeywords.groups" :key="group.title">
+        <n-p>
+          <n-flex style="margin-top: 8px">
+            <n-tag :bordered="false" size="small">
+              <b>{{ group.title }}</b>
+            </n-tag>
+            <n-tag
+              v-for="keyword of group.presetKeywords"
+              size="small"
+              checkable
+              :checked="formValue.keywords.includes(keyword)"
+              @update:checked="(checked: boolean) => togglePresetKeyword(checked, keyword)"
+            >
+              {{ keyword }}
+            </n-tag>
+          </n-flex>
+        </n-p>
+      </n-list-item>
+    </n-list>
+    <n-p v-else>R18标签暂时不支持。</n-p>
+
+    <section-header title="分卷" />
     <n-image-group show-toolbar-tooltip>
       <n-list>
         <n-list-item v-for="(volume, index) in formValue.volumes">
@@ -464,4 +518,19 @@ const markAsDuplicate = () => {
       </n-step>
     </n-steps>
   </div>
+
+  <c-modal title="使用说明" v-model:show="showKeywordsModal">
+    <n-p>
+      标签的意义在于辅助搜索。一个标签是否合适，要看标签相关情节的比例。仅仅是存在相关情节，不足以作为添加标签的依据。在实际操作中，可以思考搜索该标签的用户想不想看到这本书。
+    </n-p>
+    <n-p>
+      下面是一些标签的具体解释。注意，同一个标签在一般向和R18下可能存在区别。
+    </n-p>
+    <n-divider />
+    <n-p v-for="row of presetKeywords.explanations">
+      <b>{{ row.word }}</b>
+      <br />
+      {{ row.explanation }}
+    </n-p>
+  </c-modal>
 </template>

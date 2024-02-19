@@ -333,6 +333,7 @@ class WenkuNovelApi(
         val artists: List<String>,
         val r18: Boolean,
         val introduction: String,
+        val keywords: List<String>,
         val volumes: List<WenkuNovelVolume>,
     )
 
@@ -348,6 +349,7 @@ class WenkuNovelApi(
             artists = body.artists,
             r18 = body.r18,
             introduction = body.introduction,
+            keywords = body.keywords,
             volumes = body.volumes,
         )
         operationHistoryRepo.create(
@@ -396,6 +398,7 @@ class WenkuNovelApi(
             artists = body.artists,
             r18 = body.r18,
             introduction = body.introduction,
+            keywords = body.keywords,
             volumes = body.volumes,
         )
 

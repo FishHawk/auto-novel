@@ -5,11 +5,11 @@ import {
   EditNoteOutlined,
 } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
+import { computed } from 'vue';
 
-import { buildWebNovelUrl } from '@/data/util_web';
+import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
 
 import { WebNovelVM } from './common';
-import { computed } from 'vue';
 
 const props = defineProps<{
   providerId: string;
@@ -94,15 +94,18 @@ const labels = computed(() => {
   </n-p>
 
   <n-flex :size="[4, 4]">
-    <web-novel-tag
+    <router-link
       v-for="attention of novel.attentions.sort()"
-      :tag="attention"
-      :attention="true"
-    />
-    <web-novel-tag
+      :to="`/novel-list?query=${attention}\$`"
+    >
+      <novel-tag :tag="attention" strong />
+    </router-link>
+
+    <router-link
       v-for="keyword of novel.keywords"
-      :tag="keyword"
-      :attention="false"
-    />
+      :to="`/novel-list?query=${keyword}\$`"
+    >
+      <novel-tag :tag="tryTranslateKeyword(keyword)" />
+    </router-link>
   </n-flex>
 </template>

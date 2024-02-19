@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { EditNoteOutlined, PlusOutlined } from '@vicons/material';
+import { EditNoteOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
-import { UploadInst, useMessage, useThemeVars } from 'naive-ui';
+import { useMessage, useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -172,11 +172,14 @@ const deleteVolume = async (volumeId: string) => {
       <n-p>原名：{{ metadata.title }}</n-p>
       <n-p v-html="metadata.introduction.replace(/\n/g, '<br />')" />
 
-      <n-space :size="[4, 4]">
-        <n-tag v-for="tag of metadata.keywords" :bordered="false" size="small">
-          {{ tag }}
-        </n-tag>
-      </n-space>
+      <n-flex :size="[4, 4]">
+        <router-link
+          v-for="keyword of metadata.keywords"
+          :to="`/wenku-list?query=${keyword}\$`"
+        >
+          <novel-tag :tag="keyword" />
+        </router-link>
+      </n-flex>
 
       <template v-if="metadata.volumes.length">
         <section-header title="各卷封面" />
