@@ -214,6 +214,12 @@ const setCustomFontColor = (color: string) => {
           size="small"
         />
       </ReuseOption>
+      <ReuseOption label="增加行间距" align="center">
+        <n-switch
+          v-model:value="setting.enableExtraLineSpacing"
+          size="small"
+        />
+      </ReuseOption>
 
       <ReuseOption label="主透明度" align="center">
         <n-slider

@@ -179,7 +179,7 @@ const createWebIncorrectCase = async (
       v-for="(p, index) of paragraphs"
       :key="`${chapter.prevId}/${index}`"
     >
-      <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">
+      <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary, notExtraLineSpacing: !setting.enableExtraLineSpacing }">
         {{ p.text }}
         <n-popconfirm
           v-if="p.popover !== undefined"
@@ -222,6 +222,9 @@ const createWebIncorrectCase = async (
     "setting.theme.fontColor ?? (setting.theme.isDark ? 'white' : 'black')"
   );
   opacity: v-bind('setting.mixZhOpacity');
+}
+#chapter-content p.notExtraLineSpacing {
+  margin: 0;
 }
 #chapter-content .secondary {
   opacity: v-bind('setting.mixJpOpacity');

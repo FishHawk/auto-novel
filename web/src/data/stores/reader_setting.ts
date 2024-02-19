@@ -9,6 +9,7 @@ export interface ReaderSetting {
   fontSize: string;
   theme: { isDark: boolean; bodyColor: string; fontColor?: string };
   enableSakuraReportButton: boolean;
+  enableExtraLineSpacing: boolean;
   mixJpOpacity: number;
   mixZhOpacity: number;
 }
@@ -22,6 +23,7 @@ export const useReaderSettingStore = defineStore('readerSetting', {
       fontSize: '14px',
       theme: { isDark: false, bodyColor: '#FFFFFF' },
       enableSakuraReportButton: true,
+      enableExtraLineSpacing: true,
       mixJpOpacity: 0.4,
       mixZhOpacity: 0.75,
     },
