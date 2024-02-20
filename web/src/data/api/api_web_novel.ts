@@ -120,7 +120,7 @@ const getNovel = (providerId: string, novelId: string) =>
 const getChapter = (providerId: string, novelId: string, chapterId: string) => {
   if (providerId === 'local') return runCatching(
     PersonalVolumesManager
-      .getVolumeWebNovelChapterDto(novelId + '.txt', '0')
+      .getVolumeWebNovelChapterDto(novelId + '.txt', chapterId)
   );
   else return runCatching(
     client

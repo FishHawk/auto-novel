@@ -338,11 +338,13 @@ const getVolumeWebNovelChapterDto = async (volumeId: string, chapterId: string) 
   const chapter = await db.get('chapter', `${volumeId}/${chapterId}`);
   if (chapter === undefined) throw Error('章节不存在');
 
+  const currIndex = metadata.toc.findIndex((it) => it.chapterId == chapterId);
+
   return <WebNovelChapterDto>{
     titleJp: volumeId.replace(/\.txt$/, ''),
     titleZh: undefined,
-    prevId: undefined,
-    nextId: undefined,
+    prevId: metadata.toc[currIndex-1]?.chapterId,
+    nextId: metadata.toc[currIndex+1]?.chapterId,
     paragraphs: chapter.paragraphs,
     baiduParagraphs: chapter.baidu?.paragraphs,
     youdaoParagraphs: chapter.youdao?.paragraphs,
