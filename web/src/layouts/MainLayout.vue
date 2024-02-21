@@ -47,7 +47,14 @@ const topMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
-    menuOption('工作区', '/workspace'),
+    {
+      ...menuOption('工作区', '/workspace'),
+      children: [
+        menuOption('片假名统计', '/workspace/katakana'),
+        menuOption('GPT工作区', '/workspace/gpt'),
+        menuOption('Sakura工作区', '/workspace/sakura'),
+      ],
+    },
     menuOption('论坛', '/forum'),
   ];
 });
