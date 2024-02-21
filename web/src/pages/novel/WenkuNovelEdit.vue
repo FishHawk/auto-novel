@@ -106,6 +106,10 @@ const submit = async () => {
   });
   if (!validated) return;
 
+  const allPresetKeywords = presetKeywords.value.groups.flatMap(
+    (it) => it.presetKeywords
+  );
+
   const body = {
     title: formValue.value.title,
     titleZh: formValue.value.titleZh,
@@ -114,7 +118,9 @@ const submit = async () => {
     artists: formValue.value.artists,
     r18: formValue.value.r18,
     introduction: formValue.value.introduction,
-    keywords: formValue.value.keywords,
+    keywords: formValue.value.keywords.filter((it) =>
+      allPresetKeywords.includes(it)
+    ),
     volumes: formValue.value.volumes,
   };
 
