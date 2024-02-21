@@ -70,12 +70,12 @@ loadVolumes();
 const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
   if (!(file.name.endsWith('.txt') || file.name.endsWith('.epub'))) {
     message.error(
-      `上传失败:不允许的文件类型，必须是EPUB或TXT文件\n文件名:${file.file}`
+      `上传失败:不允许的文件类型，必须是EPUB或TXT文件\n文件名: ${file.name}`
     );
     return false;
   }
   if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error(`上传失败:文件大小不能超过40MB\n文件名:${file.file}`);
+    message.error(`上传失败:文件大小不能超过40MB\n文件名: ${file.name}`);
     return false;
   }
 };
@@ -89,7 +89,7 @@ const customRequest = ({
     .then(() => queueVolume(file.file!!.name))
     .then(onFinish)
     .catch((error) => {
-      message.error(`上传失败:${error}\n文件名:${file.file}`);
+      message.error(`上传失败:${error}\n文件名: ${file.name}`);
       onError();
     });
 };
