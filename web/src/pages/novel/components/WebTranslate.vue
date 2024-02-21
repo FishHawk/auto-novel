@@ -3,7 +3,6 @@ import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
-import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import {
@@ -104,24 +103,6 @@ const submitGlossary = async () => {
   }
 };
 
-const submitPublicSakuraJob = async () => {
-  const options = advanceOptions.value!!.getTranslationOptions();
-  const result = await ApiSakura.createSakuraJobWebTranslate(
-    providerId,
-    novelId,
-    {
-      start: options.startIndex,
-      end: options.endIndex,
-      expire: options.translateExpireChapter,
-    }
-  );
-  if (result.ok) {
-    message.info('排队成功');
-  } else {
-    message.error('排队失败:' + result.error.message);
-  }
-};
-
 const submitJob = (id: 'gpt' | 'sakura') => {
   const options = advanceOptions.value!!.getTranslationOptions();
   const task = buildWebTranslateTask(providerId, novelId, {
@@ -202,22 +183,13 @@ const translatorLabels = computed(() => ({
           tertiary
           @click="() => submitJob(translatorId)"
         />
-        <n-flex v-if="translatorId === 'sakura'" :wrap="false">
-          <c-button
-            label="公用排队"
-            async
-            require-login
-            size="small"
-            tertiary
-            @click="submitPublicSakuraJob"
-          />
-          <c-button
-            label="排队Sakura"
-            size="small"
-            tertiary
-            @click="submitJob(translatorId)"
-          />
-        </n-flex>
+        <c-button
+          v-if="translatorId === 'sakura'"
+          label="排队Sakura"
+          size="small"
+          tertiary
+          @click="submitJob(translatorId)"
+        />
       </template>
     </n-list-item>
   </n-list>

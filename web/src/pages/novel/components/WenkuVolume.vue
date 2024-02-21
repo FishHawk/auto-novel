@@ -4,7 +4,6 @@ import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
-import { ApiSakura } from '@/data/api/api_sakura';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
@@ -88,24 +87,6 @@ const file = computed(() => {
   return { url, filename };
 });
 
-const submitPublicSakuraJob = async () => {
-  const { translateExpireChapter } = getParams();
-  const result = await ApiSakura.createSakuraJobWenkuTranslate(
-    novelId,
-    volume.volumeId,
-    {
-      start: 0,
-      end: 65535,
-      expire: translateExpireChapter,
-    }
-  );
-  if (result.ok) {
-    message.info('排队成功');
-  } else {
-    message.error('排队失败:' + result.error.message);
-  }
-};
-
 const submitJob = (id: 'gpt' | 'sakura') => {
   const { translateExpireChapter } = getParams();
   const task = buildWenkuTranslateTask(novelId, volume.volumeId, {
@@ -134,33 +115,22 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         <n-text>{{ volume.volumeId }}</n-text>
         <n-space>
           <template v-for="{ translatorId, label } of translatorLabels">
-            <n-button
+            <c-button
               v-if="translatorId === 'gpt' || translatorId === 'sakura'"
-              text
-              type="primary"
-              @click="() => submitJob(translatorId)"
-            >
-              排队{{ label }}
-            </n-button>
+              :label="`排队${label}`"
+              size="tiny"
+              secondary
+              @click="submitJob(translatorId)"
+            />
 
-            <n-button
+            <c-button
               v-else
-              text
-              type="primary"
+              :label="`更新${label}`"
+              size="tiny"
+              secondary
               @click="startTranslateTask(translatorId)"
-            >
-              更新{{ label }}
-            </n-button>
+            />
           </template>
-
-          <c-button
-            label="公用排队Sakura"
-            async
-            require-login
-            text
-            type="primary"
-            @click="submitPublicSakuraJob"
-          />
 
           <n-popconfirm
             v-if="userData.isMaintainer"
@@ -169,7 +139,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
             :negative-text="null"
           >
             <template #trigger>
-              <n-button text type="error"> 删除 </n-button>
+              <c-button label="删除" type="error" size="tiny" secondary />
             </template>
             真的要删除《{{ volume.volumeId }}》吗？
           </n-popconfirm>

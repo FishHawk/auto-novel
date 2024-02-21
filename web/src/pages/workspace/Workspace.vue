@@ -120,11 +120,6 @@ const subPages = [
     description: '使用Sakura翻译小说。',
     href: '/workspace/sakura',
   },
-  {
-    name: '公用Sakura工作区[停用中]',
-    description: '使用网友贡献的Sakura翻译器翻译小说。',
-    href: '/workspace/sakura-public',
-  },
 ];
 </script>
 

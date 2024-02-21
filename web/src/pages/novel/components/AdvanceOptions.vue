@@ -102,16 +102,6 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
     <RouterNA to="/forum/64f3d63f794cbb1321145c07">使用说明</RouterNA>
   </n-p>
 
-  <n-p>
-    <n-flex size="small">
-      <RouterNA to="/workspace/gpt">GPT工作区</RouterNA>
-      /
-      <RouterNA to="/workspace/sakura">Sakura工作区</RouterNA>
-      /
-      <RouterNA to="/workspace/sakura-public">公用Sakura工作区</RouterNA>
-    </n-flex>
-  </n-p>
-
   <n-button-group style="margin-bottom: 8px">
     <c-button
       label="翻译设置"

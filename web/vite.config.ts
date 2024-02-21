@@ -20,7 +20,7 @@ export default defineConfig(({ command, mode }) => {
     };
   else
     proxyOptions = {
-      target: 'https://books.fishhawk.top',
+      target: 'https://books1.fishhawk.top',
       changeOrigin: true,
       bypass(req, _res, _options) {
         if (

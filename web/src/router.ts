@@ -49,12 +49,6 @@ const router = createRouter({
               component: () => import('./pages/workspace/Katakana.vue'),
             },
             {
-              path: 'sakura-public',
-              meta: { title: '公用Sakura工作区' },
-              component: () =>
-                import('./pages/workspace/SakuraWorkspacePublic.vue'),
-            },
-            {
               path: 'sakura',
               meta: { title: 'Sakura工作区' },
               component: () => import('./pages/workspace/SakuraWorkspace.vue'),
