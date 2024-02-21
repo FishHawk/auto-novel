@@ -298,7 +298,7 @@ class WenkuNovelApi(
             cover = metadata.cover,
             authors = metadata.authors,
             artists = metadata.artists,
-            keywords = emptyList(), // TODO:停用文库关键字，等之后重做
+            keywords = metadata.keywords,
             r18 = metadata.r18,
             introduction = metadata.introduction,
             volumes = metadata.volumes,
