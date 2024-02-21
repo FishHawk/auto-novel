@@ -25,6 +25,7 @@ const groupsNonR18: PresetKeywordsGroup[] = [
       '兄妹',
       '姐弟',
       '父女',
+      '师生',
       '萝莉',
       '人外',
       '伪娘',
@@ -51,7 +52,7 @@ const groupsNonR18: PresetKeywordsGroup[] = [
   },
   {
     title: '氛围',
-    presetKeywords: ['治愈', '欢乐', '残酷', '致郁', '猎奇', '悬疑'],
+    presetKeywords: ['治愈', '欢乐', '扭曲', '残酷', '致郁', '猎奇', '悬疑'],
   },
   {
     title: '主题',
@@ -91,6 +92,10 @@ const explanationsNonR18: PresetKeywordsExplanation[] = [
       '小说的主视角，绝大多数情况只选择其中一个。单纯双主角不要添加“群像”。',
   },
   {
+    word: '龙傲天',
+    explanation: '不分男女，但必须得是主视角。',
+  },
+  {
     word: '科幻',
     explanation: '科幻风格的世界观，例如近未来的地球、空想科学的异世界、宇宙。',
   },
@@ -108,9 +113,9 @@ const explanationsNonR18: PresetKeywordsExplanation[] = [
     explanation: '“治愈”表示剧情轻松，例如慢生活系。',
   },
   {
-    word: '残酷, 致郁, 猎奇',
+    word: '扭曲, 残酷, 致郁, 猎奇',
     explanation:
-      '“残酷”表示存在黑暗的设定或情节，例如死亡游戏或大逃杀。“致郁”表示存在让人郁闷的情节，注意致郁不一定意味着角色死亡。“猎奇”表示存在重口或血腥描写。',
+      '“扭曲”表示存在情感纠葛的剧情，简单的多角恋党争不算。“残酷”表示存在黑暗的设定或情节，例如死亡游戏或大逃杀。“致郁”表示存在让人郁闷的情节，注意致郁不一定意味着角色死亡。“猎奇”表示存在重口或血腥描写。',
   },
   {
     word: '后宫, 逆后宫, 百合, 耽美',
