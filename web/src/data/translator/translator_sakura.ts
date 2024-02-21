@@ -232,6 +232,7 @@ namespace SakuraLlamacpp {
           top_p: 1,
           n_predict: 1,
           n_probs: 10,
+          min_keep: 10,
           seed: 0,
         },
         {

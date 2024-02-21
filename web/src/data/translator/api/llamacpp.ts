@@ -31,6 +31,7 @@ interface LlamaCompletion {
   repeat_penalty?: number;
   frequency_penalty?: number;
   n_probs?: number;
+  min_keep?: number;
   seed?: number;
 }
 
