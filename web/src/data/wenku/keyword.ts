@@ -24,7 +24,7 @@ const groupsNonR18: PresetKeywordsGroup[] = [
       '青梅竹马',
       '兄妹',
       '姐弟',
-      '父女',
+      '亲子',
       '师生',
       '萝莉',
       '人外',
