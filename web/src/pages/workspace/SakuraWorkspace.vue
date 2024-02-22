@@ -42,6 +42,14 @@ const deleteJob = (task: string) => {
   }
   sakuraWorkspace.deleteJob(task);
 };
+const deleteAllJobs = () => {
+  sakuraWorkspace.jobs.forEach((job) => {
+    if (processedJobs.value.has(job.task)) {
+      return;
+    }
+    sakuraWorkspace.deleteJob(job.task);
+  });
+};
 
 const onProgressUpdated = (
   task: string,
@@ -132,7 +140,13 @@ const clearCache = async () => {
       </n-list-item>
     </n-list>
 
-    <section-header title="任务队列" />
+    <section-header title="任务队列">
+      <c-button
+        label="清空队列"
+        :icon="DeleteOutlined"
+        @click="deleteAllJobs()"
+      />
+    </section-header>
     <n-empty v-if="sakuraWorkspace.jobs.length === 0" description="没有任务" />
     <n-list>
       <n-list-item v-for="job of sakuraWorkspace.jobs" :key="job.task">

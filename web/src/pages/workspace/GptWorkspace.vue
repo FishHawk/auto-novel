@@ -44,6 +44,14 @@ const deleteJob = (task: string) => {
   }
   gptWorkspace.deleteJob(task);
 };
+const deleteAllJobs = () => {
+  gptWorkspace.jobs.forEach((job) => {
+    if (processedJobs.value.has(job.task)) {
+      return;
+    }
+    gptWorkspace.deleteJob(job.task);
+  });
+};
 
 const onProgressUpdated = (
   task: string,
@@ -113,7 +121,13 @@ const clearCache = async () => {
       </n-list-item>
     </n-list>
 
-    <section-header title="任务队列" />
+    <section-header title="任务队列">
+      <c-button
+        label="清空队列"
+        :icon="DeleteOutlined"
+        @click="deleteAllJobs()"
+      />
+    </section-header>
     <n-empty v-if="gptWorkspace.jobs.length === 0" description="没有任务" />
     <n-list>
       <n-list-item v-for="job of gptWorkspace.jobs" :key="job.task">

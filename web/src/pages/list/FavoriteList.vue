@@ -1,24 +1,32 @@
 <script lang="ts" setup>
-import { useRoute, useRouter } from 'vue-router';
+import { FormatListBulletedOutlined, PlusOutlined } from '@vicons/material';
+import { MenuOption, useMessage } from 'naive-ui';
 import { computed, h, ref } from 'vue';
-import { MenuOption, NButton, useMessage } from 'naive-ui';
+import { useRoute, useRouter } from 'vue-router';
 
+import { ApiUser, FavoredList } from '@/data/api/api_user';
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
 import { Page } from '@/data/api/common';
 import { mapOk } from '@/data/result';
+import {
+  buildWebTranslateTask,
+  useGptWorkspaceStore,
+  useSakuraWorkspaceStore,
+} from '@/data/stores/workspace';
 import { useIsWideScreen } from '@/data/util';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
 import { Loader } from './components/NovelList.vue';
-import { ApiUser, FavoredList } from '@/data/api/api_user';
-import { FormatListBulletedOutlined } from '@vicons/material';
+import NovelListWeb from './components/NovelListWeb.vue';
 
 const isWideScreen = useIsWideScreen(850);
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
+const gptWorkspace = useGptWorkspaceStore();
+const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const favoriteType = computed(() => (route.query.type ?? 'web') as string);
 const favoriteId = computed(() => (route.query.fid ?? 'default') as string);
@@ -102,29 +110,6 @@ const currentMenuKey = computed(() => favoriteType.value + favoriteId.value);
 const menuOptions = computed(() => [
   {
     type: 'group',
-    label: '操作',
-    children: [
-      <MenuOption>{
-        label: () =>
-          h(
-            'a',
-            {
-              onClick() {
-                showAddModal.value = true;
-              },
-            },
-            '新建收藏夹'
-          ),
-      },
-    ],
-  },
-  {
-    type: 'divider',
-    key: 'divider-1',
-    props: { style: { marginLeft: '32px' } },
-  },
-  {
-    type: 'group',
     label: '网络小说',
     children: favoredList.value.web.map(({ id, title }) =>
       favoriteMenuOption('web', id, title)
@@ -132,7 +117,7 @@ const menuOptions = computed(() => [
   },
   {
     type: 'divider',
-    key: 'divider-2',
+    key: 'divider',
     props: { style: { marginLeft: '32px' } },
   },
   {
@@ -146,35 +131,110 @@ const menuOptions = computed(() => [
 
 const showListModal = ref(false);
 const showAddModal = ref(false);
+const showOperationPanel = ref(false);
+
+const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
+
+const submitJob = (id: 'gpt' | 'sakura') => {
+  const novels = novelListWebRef.value?.$props.items;
+  if (novels === undefined || novels.length === 0) {
+    message.error('本页无小说');
+  } else {
+    novels.forEach((it) => {
+      const task = buildWebTranslateTask(it.providerId, it.novelId, {
+        start: 0,
+        end: 65535,
+        expire: false,
+      });
+      const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+      workspace.addJob({
+        task,
+        description: it.titleJp,
+        createAt: Date.now(),
+      });
+    });
+    message.success('排队成功');
+  }
+};
 </script>
 
 <template>
-  <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
+  <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
     <div style="flex: auto">
       <n-h1>我的收藏</n-h1>
-      <c-button
-        v-if="!isWideScreen"
-        label="收藏夹列表"
-        :icon="FormatListBulletedOutlined"
-        @click="showListModal = true"
-        style="margin-bottom: 8px"
-      />
+      <n-flex style="margin-bottom: 24px">
+        <c-button
+          label="批量操作"
+          @click="showOperationPanel = !showOperationPanel"
+        />
+        <c-button
+          v-if="!isWideScreen"
+          label="收藏夹列表"
+          :icon="FormatListBulletedOutlined"
+          @click="showListModal = true"
+        />
+      </n-flex>
+
+      <n-collapse-transition
+        :show="showOperationPanel"
+        style="margin-bottom: 16px"
+      >
+        <n-card>
+          <n-flex>
+            <c-button label="移动（暂未实现）" />
+            <c-button
+              v-if="favoriteType === 'web'"
+              label="排队GPT-本页"
+              @click="submitJob('gpt')"
+            />
+            <c-button
+              v-if="favoriteType === 'web'"
+              label="排队Sakura-本页"
+              @click="submitJob('sakura')"
+            />
+          </n-flex>
+        </n-card>
+      </n-collapse-transition>
+
       <NovelList :options="options" :loader="loader" v-slot="{ page }">
-        <NovelListWeb v-if="page.type === 'web'" :items="page.items" simple />
+        <NovelListWeb
+          v-if="page.type === 'web'"
+          ref="novelListWebRef"
+          :items="page.items"
+          simple
+        />
         <NovelListWenku v-if="page.type === 'wenku'" :items="page.items" />
       </NovelList>
     </div>
     <template #sidebar>
+      <section-header title="收藏夹">
+        <c-button
+          label="添加"
+          :icon="PlusOutlined"
+          @click="showAddModal = true"
+        />
+      </section-header>
       <n-menu :value="currentMenuKey" :options="menuOptions" />
     </template>
   </c-layout>
 
-  <n-drawer v-model:show="showListModal" :auto-focus="false" placement="right">
+  <n-drawer
+    v-model:show="showListModal"
+    width="320"
+    :auto-focus="false"
+    placement="right"
+  >
     <n-drawer-content
-      max-width="600"
       :native-scrollbar="false"
       :scrollbar-props="{ trigger: 'none' }"
     >
+      <section-header title="收藏夹">
+        <c-button
+          label="添加"
+          :icon="PlusOutlined"
+          @click="showAddModal = true"
+        />
+      </section-header>
       <n-menu :value="currentMenuKey" :options="menuOptions" />
     </n-drawer-content>
   </n-drawer>

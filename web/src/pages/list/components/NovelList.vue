@@ -1,11 +1,3 @@
-<script lang="ts">
-export type Loader<T extends Page<any>> = (
-  page: number,
-  query: string,
-  selected: number[]
-) => Promise<Result<T>>;
-</script>
-
 <script lang="ts" setup generic="T extends Page<any>">
 import { ref, watch } from 'vue';
 import { LocationQuery, useRoute, useRouter } from 'vue-router';
@@ -13,6 +5,12 @@ import { LocationQuery, useRoute, useRouter } from 'vue-router';
 import { Page } from '@/data/api/common';
 import { Result, ResultState } from '@/data/result';
 import { onKeyStroke } from '@vueuse/core';
+
+export type Loader<T extends Page<any>> = (
+  page: number,
+  query: string,
+  selected: number[]
+) => Promise<Result<T>>;
 
 const route = useRoute();
 const router = useRouter();
