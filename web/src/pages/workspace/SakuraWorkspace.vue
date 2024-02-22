@@ -52,12 +52,7 @@ const onProgressUpdated = (
   if (state.state === 'finish') {
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
-    if (
-      job.progress === undefined ||
-      job.progress.finished < job.progress.total
-    ) {
-      sakuraWorkspace.addUncompletedJob(job as any);
-    }
+    sakuraWorkspace.addJobRecord(job as any);
     sakuraWorkspace.deleteJob(task);
   } else {
     const job = processedJobs.value.get(task)!!;
@@ -150,16 +145,16 @@ const clearCache = async () => {
       </n-list-item>
     </n-list>
 
-    <section-header title="未完成任务">
+    <section-header title="任务记录">
       <c-button
-        label="全部重试"
+        label="重试"
         :icon="RefreshOutlined"
-        @click="sakuraWorkspace.retryAllUncompletedJobs()"
+        @click="sakuraWorkspace.retryAllJobRecords()"
       />
       <c-button
         label="清空记录"
         :icon="DeleteOutlined"
-        @click="sakuraWorkspace.deleteAllUncompletedJobs()"
+        @click="sakuraWorkspace.deleteAllJobRecords()"
       />
     </section-header>
 
@@ -172,10 +167,10 @@ const clearCache = async () => {
         v-for="job of sakuraWorkspace.uncompletedJobs"
         :key="job.task"
       >
-        <job-uncompleted
+        <job-record
           :job="job"
-          @retry-job="sakuraWorkspace.retryUncompletedJob(job)"
-          @delete-job="sakuraWorkspace.deleteUncompletedJob(job)"
+          @retry-job="sakuraWorkspace.retryJobRecord(job)"
+          @delete-job="sakuraWorkspace.deleteJobRecord(job)"
         />
       </n-list-item>
     </n-list>

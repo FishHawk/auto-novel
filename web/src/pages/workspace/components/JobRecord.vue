@@ -1,15 +1,20 @@
 <script lang="ts" setup>
-defineProps<{
-  job: {
-    task: string;
-    description: string;
-    progress?: { total: number; finished: number; error: number };
-  };
+import { computed } from 'vue';
+
+import {
+  TranslateJobRecord,
+  isTranslateJobFinished,
+} from '@/data/stores/workspace';
+
+const props = defineProps<{
+  job: TranslateJobRecord;
 }>();
 const emit = defineEmits<{
   retryJob: [];
   deleteJob: [];
 }>();
+const isFinished = computed(() => isTranslateJobFinished(props.job));
+console.log(isFinished.value);
 </script>
 
 <template>
@@ -22,6 +27,7 @@ const emit = defineEmits<{
     <template #header-extra>
       <n-flex size="small" :wrap="false">
         <c-button
+          v-if="!isFinished"
           label="重试"
           size="tiny"
           secondary
@@ -39,10 +45,17 @@ const emit = defineEmits<{
 
     <template #description>
       {{ job.description }}
-      <template v-if="job.progress">
-        总共 {{ job.progress?.total }} / 成功 {{ job.progress?.finished }} /
-        失败 {{ job.progress?.error }}
-      </template>
+      <br />
+      <n-text depth="3">
+        <template v-if="!isFinished">
+          未完成
+          <template v-if="job.progress !== undefined">
+            总共 {{ job.progress?.total }} / 成功 {{ job.progress?.finished }} /
+            失败 {{ job.progress?.error }}
+          </template>
+        </template>
+        <template v-else>已完成</template>
+      </n-text>
     </template>
   </n-thing>
 </template>

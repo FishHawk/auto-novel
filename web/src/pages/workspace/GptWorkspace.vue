@@ -7,7 +7,11 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { TranslateJob, useGptWorkspaceStore } from '@/data/stores/workspace';
+import {
+  TranslateJob,
+  TranslateJobRecord,
+  useGptWorkspaceStore,
+} from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 
@@ -50,12 +54,7 @@ const onProgressUpdated = (
   if (state.state === 'finish') {
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
-    if (
-      job.progress === undefined ||
-      job.progress.finished < job.progress.total
-    ) {
-      gptWorkspace.addUncompletedJob(job as any);
-    }
+    gptWorkspace.addJobRecord(job);
     gptWorkspace.deleteJob(task);
   } else {
     const job = processedJobs.value.get(task)!!;
@@ -127,16 +126,16 @@ const clearCache = async () => {
       </n-list-item>
     </n-list>
 
-    <section-header title="未完成任务记录">
+    <section-header title="任务记录">
       <c-button
-        label="全部重试"
+        label="重试"
         :icon="RefreshOutlined"
-        @click="gptWorkspace.retryAllUncompletedJobs()"
+        @click="gptWorkspace.retryAllJobRecords()"
       />
       <c-button
         label="清空记录"
         :icon="DeleteOutlined"
-        @click="gptWorkspace.deleteAllUncompletedJobs()"
+        @click="gptWorkspace.deleteAllJobRecords()"
       />
     </section-header>
 
@@ -146,10 +145,10 @@ const clearCache = async () => {
     />
     <n-list>
       <n-list-item v-for="job of gptWorkspace.uncompletedJobs" :key="job.task">
-        <job-uncompleted
+        <job-record
           :job="job"
-          @retry-job="gptWorkspace.retryUncompletedJob(job)"
-          @delete-job="gptWorkspace.deleteUncompletedJob(job)"
+          @retry-job="gptWorkspace.retryJobRecord(job)"
+          @delete-job="gptWorkspace.deleteJobRecord(job)"
         />
       </n-list-item>
     </n-list>

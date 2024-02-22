@@ -1,9 +1,8 @@
 <script lang="ts" setup>
+import { TranslateJob } from '@/data/stores/workspace';
+
 defineProps<{
-  job: {
-    task: string;
-    description: string;
-  };
+  job: TranslateJob;
   percentage?: number;
 }>();
 const emit = defineEmits<{

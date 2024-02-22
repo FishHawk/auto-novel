@@ -6,95 +6,16 @@ export interface TranslateJob {
   createAt: number;
 }
 
-export type UncompletedTranslateJob = TranslateJob & {
-  progress: {
+export type TranslateJobRecord = TranslateJob & {
+  progress?: {
     finished: number;
     error: number;
     total: number;
   };
 };
 
-export interface SakuraWorker {
-  id: string;
-  endpoint: string;
-  useLlamaApi?: boolean;
-}
-
-export interface SakuraWorkspace {
-  workers: SakuraWorker[];
-  jobs: TranslateJob[];
-  uncompletedJobs: UncompletedTranslateJob[];
-}
-
-export const useSakuraWorkspaceStore = defineStore('sakura-workspace', {
-  state: () =>
-    <SakuraWorkspace>{
-      workers: [
-        { id: '本机', endpoint: 'http://127.0.0.1:8080', useLlamaApi: true },
-        { id: 'AutoDL', endpoint: 'http://127.0.0.1:6006', useLlamaApi: true },
-      ],
-      jobs: [],
-      uncompletedJobs: [],
-    },
-  actions: {
-    addWorker(worker: SakuraWorker) {
-      this.workers.push(worker);
-    },
-    deleteWorker(id: string) {
-      this.workers = this.workers.filter((w) => w.id !== id);
-    },
-
-    addJob(job: TranslateJob) {
-      const conflictJob = this.jobs.find((it) => it.task === job.task);
-      if (conflictJob !== undefined) {
-        return false;
-      } else {
-        this.jobs.push(job);
-        return true;
-      }
-    },
-    deleteJob(task: string) {
-      this.jobs = this.jobs.filter((j) => j.task !== task);
-    },
-    topJob(job: TranslateJob) {
-      this.jobs.sort((a, b) => {
-        return a.task == job.task ? -1 : b.task == job.task ? 1 : 0;
-      });
-    },
-
-    addUncompletedJob(job: UncompletedTranslateJob) {
-      this.deleteUncompletedJob(job);
-      this.uncompletedJobs.push(job);
-    },
-    deleteUncompletedJob(job: UncompletedTranslateJob) {
-      this.uncompletedJobs = this.uncompletedJobs.filter(
-        (j) => j.task !== job.task
-      );
-    },
-    retryUncompletedJob(job: UncompletedTranslateJob) {
-      this.addJob({
-        task: job.task,
-        description: job.description,
-        createAt: Date.now(),
-      });
-      this.deleteUncompletedJob(job);
-    },
-    retryAllUncompletedJobs() {
-      for (const job of this.uncompletedJobs) {
-        this.addJob({
-          task: job.task,
-          description: job.description,
-          createAt: Date.now(),
-        });
-      }
-      this.deleteAllUncompletedJobs();
-    },
-    deleteAllUncompletedJobs() {
-      this.uncompletedJobs = [];
-    },
-  },
-  persist: true,
-});
+export const isTranslateJobFinished = (job: TranslateJobRecord) =>
+  job.progress !== undefined && job.progress.finished >= job.progress.total;
 
 export interface GptWorker {
   id: string;
@@ -104,78 +25,107 @@ export interface GptWorker {
   key: string;
 }
 
-export interface GptWorkspace {
-  workers: GptWorker[];
-  jobs: TranslateJob[];
-  uncompletedJobs: UncompletedTranslateJob[];
+export interface SakuraWorker {
+  id: string;
+  endpoint: string;
+  useLlamaApi?: boolean;
 }
 
-export const useGptWorkspaceStore = defineStore('gpt-workspace', {
-  state: () =>
-    <GptWorkspace>{
-      workers: [],
-      jobs: [],
-      uncompletedJobs: [],
-    },
-  actions: {
-    addWorker(worker: GptWorker) {
-      this.workers.push(worker);
-    },
-    deleteWorker(id: string) {
-      this.workers = this.workers.filter((w) => w.id !== id);
-    },
+export interface Workspace<T> {
+  workers: T[];
+  jobs: TranslateJob[];
+  // 为了兼容性，仍使用 uncompletedJobs
+  uncompletedJobs: TranslateJobRecord[];
+}
 
-    addJob(job: TranslateJob) {
-      const conflictJob = this.jobs.find((it) => it.task === job.task);
-      if (conflictJob !== undefined) {
-        return false;
-      } else {
-        this.jobs.push(job);
-        return true;
-      }
-    },
-    deleteJob(task: string) {
-      this.jobs = this.jobs.filter((j) => j.task !== task);
-    },
-    topJob(job: TranslateJob) {
-      this.jobs.sort((a, b) => {
-        return a.task == job.task ? -1 : b.task == job.task ? 1 : 0;
-      });
-    },
+const useWorkspaceStoreFactory = <W extends GptWorker | SakuraWorker>(
+  id: string,
+  workers: W[]
+) =>
+  defineStore(id, {
+    state: () =>
+      <Workspace<W>>{
+        workers,
+        jobs: [],
+        uncompletedJobs: [],
+      },
+    actions: {
+      addWorker(worker: W) {
+        this.workers.push(worker as any);
+      },
+      deleteWorker(id: string) {
+        this.workers = this.workers.filter((w) => w.id !== id);
+      },
 
-    addUncompletedJob(job: UncompletedTranslateJob) {
-      this.deleteUncompletedJob(job);
-      this.uncompletedJobs.push(job);
-    },
-    deleteUncompletedJob(job: UncompletedTranslateJob) {
-      this.uncompletedJobs = this.uncompletedJobs.filter(
-        (j) => j.task !== job.task
-      );
-    },
-    retryUncompletedJob(job: UncompletedTranslateJob) {
-      this.addJob({
-        task: job.task,
-        description: job.description,
-        createAt: Date.now(),
-      });
-      this.deleteUncompletedJob(job);
-    },
-    retryAllUncompletedJobs() {
-      for (const job of this.uncompletedJobs) {
+      addJob(job: TranslateJob) {
+        const conflictJob = this.jobs.find((it) => it.task === job.task);
+        if (conflictJob !== undefined) {
+          return false;
+        } else {
+          this.jobs.push(job);
+          return true;
+        }
+      },
+      deleteJob(task: string) {
+        this.jobs = this.jobs.filter((j) => j.task !== task);
+      },
+      topJob(job: TranslateJob) {
+        this.jobs.sort((a, b) => {
+          return a.task == job.task ? -1 : b.task == job.task ? 1 : 0;
+        });
+      },
+
+      addJobRecord(job: TranslateJobRecord) {
+        this.deleteJobRecord(job);
+        this.uncompletedJobs.push(job);
+      },
+      deleteJobRecord(job: TranslateJobRecord) {
+        this.uncompletedJobs = this.uncompletedJobs.filter(
+          (j) => j.task !== job.task
+        );
+      },
+      retryJobRecord(job: TranslateJobRecord) {
         this.addJob({
           task: job.task,
           description: job.description,
           createAt: Date.now(),
         });
-      }
-      this.deleteAllUncompletedJobs();
+        this.deleteJobRecord(job);
+      },
+      retryAllJobRecords() {
+        const newArray: TranslateJobRecord[] = [];
+        for (const job of this.uncompletedJobs) {
+          if (isTranslateJobFinished(job)) {
+            newArray.push(job);
+          } else {
+            this.addJob({
+              task: job.task,
+              description: job.description,
+              createAt: Date.now(),
+            });
+          }
+        }
+        this.uncompletedJobs = newArray;
+      },
+      deleteAllJobRecords() {
+        this.uncompletedJobs = [];
+      },
     },
-    deleteAllUncompletedJobs() {
-      this.uncompletedJobs = [];
-    },
-  },
-  persist: true,
-});
+    persist: true,
+  });
+
+export const useGptWorkspaceStore = useWorkspaceStoreFactory<GptWorker>(
+  'gpt-workspace',
+  []
+);
+
+export const useSakuraWorkspaceStore = useWorkspaceStoreFactory<SakuraWorker>(
+  'sakura-workspace',
+  [
+    { id: '本机', endpoint: 'http://127.0.0.1:8080', useLlamaApi: true },
+    { id: 'AutoDL', endpoint: 'http://127.0.0.1:6006', useLlamaApi: true },
+  ]
+);
 
 const buildTaskQueryString = ({
   start,
