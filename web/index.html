@@ -13,6 +13,16 @@
       gtag('js', new Date());
       gtag('config', 'G-QD8MZ90XFJ');
     </script>
+    <script>
+      window.onerror = function (msg, url, lno, cno) {
+        var div = document.createElement('div');
+        div.innerHTML = `JS错误: ${lno}:${cno} ${msg
+          .replace('<', '&lt;')
+          .replace('>', '&gt;')} ${url}`;
+        document.body.appendChild(div);
+        return false;
+      };
+    </script>
     <meta charset="UTF-8" />
     <meta name="keywords" content="轻小说,日本轻小说,成为小说家,机翻,翻译" />
     <meta
