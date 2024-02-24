@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
 import { ref } from 'vue';
-import { PlusOutlined, MinusOutlined } from '@vicons/material';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator';
@@ -21,6 +20,7 @@ const modeOptions = [
   { value: 'mix', label: '中日' },
   { value: 'mix-reverse', label: '日中' },
 ];
+
 const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
@@ -31,15 +31,27 @@ const translationOptions: { label: string; value: TranslatorId }[] = [
   { label: '有道', value: 'youdao' },
   { label: '百度', value: 'baidu' },
 ];
-const toggleFontSize = (delta: 1 | -1) => {
-  const fontSizeOptions = ['14px', '16px', '18px', '20px', '30px', '40px'];
-  const index = fontSizeOptions.indexOf(setting.fontSize);
-  const nextIndex = Math.min(
-    Math.max(index + delta, 0),
-    fontSizeOptions.length - 1
-  );
-  setting.fontSize = fontSizeOptions[nextIndex];
+const toggleTranslator = (id: TranslatorId) => {
+  if (setting.translations.includes(id)) {
+    setting.translations = setting.translations.filter((it) => it !== id);
+  } else {
+    setting.translations.push(id);
+  }
 };
+const calculateTranslatorOrderLabel = (id: TranslatorId) => {
+  const index = setting.translations.indexOf(id);
+  if (index < 0) {
+    return '[x]';
+  } else {
+    return `[${index + 1}]`;
+  }
+};
+
+// 兼容旧格式
+if (typeof setting.fontSize === 'string') {
+  setting.fontSize = Number((setting.fontSize as any).replace(/[^0-9]/g, ''));
+}
+
 const themeOptions = [
   { isDark: false, bodyColor: '#FFFFFF' },
   { isDark: false, bodyColor: '#FFF2E2' },
@@ -50,23 +62,6 @@ const themeOptions = [
   { isDark: true, bodyColor: '#000000' },
   { isDark: true, bodyColor: '#272727' },
 ];
-
-const toggleTranslator = (id: TranslatorId) => {
-  if (setting.translations.includes(id)) {
-    setting.translations = setting.translations.filter((it) => it !== id);
-  } else {
-    setting.translations.push(id);
-  }
-};
-
-const calculateTranslatorOrderLabel = (id: TranslatorId) => {
-  const index = setting.translations.indexOf(id);
-  if (index < 0) {
-    return '[x]';
-  } else {
-    return `[${index + 1}]`;
-  }
-};
 
 const showCustomThemeControls = ref(false);
 const setCustomBodyColor = (color: string) => {
@@ -136,23 +131,19 @@ const setCustomFontColor = (color: string) => {
         </n-flex>
       </ReuseOption>
       <ReuseOption label="字体" align="baseline">
-        <n-input-group>
-          <n-button
-            :disabled="setting.fontSize === '14px'"
-            @click="toggleFontSize(-1)"
-          >
-            <n-icon :component="MinusOutlined" />
-          </n-button>
-          <n-input-group-label>
-            {{ setting.fontSize }}
-          </n-input-group-label>
-          <n-button
-            :disabled="setting.fontSize === '40px'"
-            @click="toggleFontSize(1)"
-          >
-            <n-icon :component="PlusOutlined" />
-          </n-button>
-        </n-input-group>
+        <c-select-number
+          v-model:value="setting.fontSize"
+          :options="[14, 16, 18, 20, 24, 30, 40]"
+          :format="(value: number) => `${value}px`"
+        />
+      </ReuseOption>
+
+      <ReuseOption label="行距" align="baseline">
+        <c-select-number
+          v-model:value="setting.lineSpace"
+          :options="[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]"
+          :format="(value: number) => value.toFixed(1)"
+        />
       </ReuseOption>
       <ReuseOption label="主题" align="baseline">
         <n-flex size="large" vertical>
@@ -211,12 +202,6 @@ const setCustomFontColor = (color: string) => {
       <ReuseOption label="Sakura报错按钮" align="center">
         <n-switch
           v-model:value="setting.enableSakuraReportButton"
-          size="small"
-        />
-      </ReuseOption>
-      <ReuseOption label="增加行间距" align="center">
-        <n-switch
-          v-model:value="setting.enableExtraLineSpacing"
           size="small"
         />
       </ReuseOption>
