@@ -168,7 +168,7 @@ const showGlossaryEditor = ref(false);
           </template>
 
           <c-button
-            label="术语表"
+            :label="`术语表[${Object.keys(volume.glossary).length}]`"
             size="tiny"
             secondary
             @click="showGlossaryEditor = !showGlossaryEditor"

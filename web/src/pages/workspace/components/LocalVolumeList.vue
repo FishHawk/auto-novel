@@ -285,7 +285,7 @@ const deleteVolume = (volumeId: string) =>
           />
 
           <c-button
-            label="术语表"
+            :label="`术语表[${Object.keys(volume.glossary).length}]`"
             size="tiny"
             secondary
             @click="
