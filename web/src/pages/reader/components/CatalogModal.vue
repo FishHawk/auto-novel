@@ -2,11 +2,14 @@
 import { computed, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ApiWebNovel, WebNovelTocItemDto } from '@/data/api/api_web_novel';
-import { ResultState, mapOk } from '@/data/result';
+import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
+import { Result } from '@/data/result';
+
+import { NovelInfo, getNovelToc } from './util';
 
 const props = defineProps<{
   show: boolean;
+  novelInfo: NovelInfo;
   chapterId: string;
 }>();
 
@@ -21,7 +24,7 @@ const providerId = route.params.providerId as string;
 const novelId = route.params.novelId as string;
 
 type TocItem = WebNovelTocItemDto & { key: number };
-const tocResult = shallowRef<ResultState<TocItem[]>>();
+const tocResult = shallowRef<Result<TocItem[]>>();
 
 const tocNumber = computed(() => {
   if (tocResult.value?.ok !== true) {
@@ -36,13 +39,7 @@ watch(
   () => props.show,
   async (show) => {
     if (show && tocResult.value?.ok !== true) {
-      const result = await ApiWebNovel.getNovel(providerId, novelId);
-      const newResult = mapOk(result, (novel) => {
-        const toc = novel.toc as TocItem[];
-        toc.forEach((it, index) => (it.key = index));
-        return toc;
-      });
-      tocResult.value = newResult;
+      tocResult.value = await getNovelToc(props.novelInfo);
     }
   }
 );

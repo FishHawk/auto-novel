@@ -2,6 +2,7 @@ import { DBSchema, deleteDB, openDB } from 'idb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Epub } from '@/data/epub/epub';
+import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 
 import { Glossary } from '../type';
 import { TranslatorId } from '../translator';
@@ -75,6 +76,12 @@ const withDb = <T extends Array<any>, U>(
 };
 
 const listVolumes = withDb((db) => db.getAll('metadata'));
+
+const getVolume = withDb(async (db, id: string) => {
+  const metadata = await db.get('metadata', id);
+  if (metadata === undefined) throw Error('小说不存在');
+  return metadata;
+});
 
 const saveVolume = withDb(async (db, file: File) => {
   const id = file.name;
@@ -161,6 +168,16 @@ const updateGlossary = withDb(async (db, id: string, glossary: Glossary) => {
     await tx.store.put(metadata);
   }
   await tx.done;
+});
+
+const getChapter = withDb(async (db, id: string, chapterId: string) => {
+  const metadata = await db.get('metadata', id);
+  if (metadata === undefined) throw Error('小说不存在');
+
+  const chapter = await db.get('chapter', `${id}/${chapterId}`);
+  if (chapter === undefined) throw Error('章节不存在');
+
+  return { toc: metadata.toc, chapter };
 });
 
 const getTranslateTask = withDb(
@@ -388,12 +405,16 @@ const epubParserV1: EpubParser = {
 
 export const PersonalVolumesManager = {
   listVolumes,
+  getVolume,
   saveVolume,
   deleteVolume,
   updateGlossary,
+  getChapter,
+  //
   getTranslateTask,
   getChapterToTranslate,
   updateChapterTranslation,
+  //
   deleteVolumesDb,
   //
   makeTranslationVolumeFile,

@@ -168,6 +168,15 @@ const showGlossaryEditor = ref(false);
           </template>
 
           <c-button
+            v-if="volume.volumeId.endsWith('.txt')"
+            label="阅读"
+            tag="a"
+            :href="`/workspace/reader/${encodeURIComponent(volume.volumeId)}/0`"
+            size="tiny"
+            secondary
+          />
+
+          <c-button
             :label="`术语表[${Object.keys(volume.glossary).length}]`"
             size="tiny"
             secondary

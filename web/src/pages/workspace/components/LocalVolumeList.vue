@@ -277,6 +277,15 @@ const deleteVolume = (volumeId: string) =>
             secondary
             @click="queueVolume(volume.volumeId)"
           />
+
+          <c-button
+            v-if="volume.volumeId.endsWith('.txt')"
+            label="阅读"
+            tag="a"
+            :href="`/workspace/reader/${encodeURIComponent(volume.volumeId)}/0`"
+            size="tiny"
+            secondary
+          />
           <c-button
             label="下载"
             size="tiny"
