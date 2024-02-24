@@ -12,8 +12,7 @@ import { ref } from 'vue';
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 
 defineProps<{
-  providerId: string;
-  novelId: string;
+  novelUrl?: string;
   chapterId: string;
   chapter: WebNovelChapterDto;
 }>();
@@ -78,10 +77,10 @@ const onGlobalClick = (event: MouseEvent) => {
         style="flex: 1"
       />
       <side-button
+        v-if="novelUrl"
         quaternary
         tag="a"
-        v-if="providerId !== 'local'"
-        :href="`/novel/${providerId}/${novelId}`"
+        :href="novelUrl"
         text="详情"
         :icon="LibraryBooksOutlined"
         style="flex: 1"

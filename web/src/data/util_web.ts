@@ -117,18 +117,6 @@ const novelism: Provider = {
   },
 };
 
-const local: Provider = {
-  parseUrl(url: string) {
-    return undefined;
-  },
-  buildNovelUrl(novelId: string): string {
-    return '';
-  },
-  buildChapterUrl(novelId: string, chapterId: string): string {
-    return '';
-  },
-};
-
 const providers: { [id: string]: Provider } = {
   kakuyomu,
   syosetu,
@@ -137,8 +125,6 @@ const providers: { [id: string]: Provider } = {
   pixiv,
   alphapolis,
   novelism,
-
-  local,
 };
 
 export function parseUrl(

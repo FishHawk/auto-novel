@@ -2,21 +2,21 @@
 import { ErrorOutlineOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed } from 'vue';
-import { useRoute } from 'vue-router';
 
 import { ApiSakura } from '@/data/api/api_sakura';
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator';
 
+import { NovelInfo } from './util';
+
 const props = defineProps<{
-  providerId: string;
-  novelId: string;
+  novelInfo: NovelInfo;
+  chapterId: string;
   chapter: WebNovelChapterDto;
 }>();
 
 const setting = useReaderSettingStore();
-const route = useRoute();
 const message = useMessage();
 
 type Paragraph =
@@ -62,7 +62,10 @@ const paragraphs = computed(() => {
           styles.push({
             paragraphs,
             secondary: false,
-            popover: setting.enableSakuraReportButton && t === 'sakura',
+            popover:
+              setting.enableSakuraReportButton &&
+              props.novelInfo.type === 'web' &&
+              t === 'sakura',
           });
           break;
         } else {
@@ -114,6 +117,8 @@ const createWebIncorrectCase = async (
   index: number,
   chapter: WebNovelChapterDto
 ) => {
+  if (props.novelInfo.type !== 'web') return;
+
   const jp = chapter.paragraphs[index];
   const zh = chapter.sakuraParagraphs!![index];
 
@@ -157,9 +162,9 @@ const createWebIncorrectCase = async (
   const contextZh = [...contextZhBefore.reverse(), zh, ...contextZhAfter];
 
   const result = await ApiSakura.createWebIncorrectCase({
-    providerId: props.providerId,
-    novelId: props.novelId,
-    chapterId: route.params.chapterId as string,
+    providerId: props.novelInfo.providerId,
+    novelId: props.novelInfo.novelId,
+    chapterId: props.chapterId,
     jp,
     zh,
     contextJp,

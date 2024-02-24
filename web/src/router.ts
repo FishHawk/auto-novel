@@ -11,6 +11,10 @@ const router = createRouter({
           path: '/novel/:providerId/:novelId/:chapterId',
           component: () => import('./pages/reader/WebChapter.vue'),
         },
+        {
+          path: '/workspace/reader/:novelId/:chapterId',
+          component: () => import('./pages/reader/WebChapter.vue'),
+        },
       ],
     },
 

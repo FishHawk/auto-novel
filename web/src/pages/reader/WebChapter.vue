@@ -5,11 +5,12 @@ import { computed, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { ApiUser } from '@/data/api/api_user';
-import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { Ok, ResultState } from '@/data/result';
+import { WebNovelChapterDto } from '@/data/api/api_web_novel';
+import { Ok, Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { checkIsMobile, useIsWideScreen } from '@/data/util';
-import { buildWebChapterUrl } from '@/data/util_web';
+
+import { getChapter, getNovelInfo } from './components/util';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   label: string;
@@ -21,17 +22,16 @@ const userData = useUserDataStore();
 const route = useRoute();
 const isMobile = checkIsMobile();
 
-const providerId = route.params.providerId as string;
-const novelId = route.params.novelId as string;
-
 const currentChapterId = ref(route.params.chapterId as string);
 const chapters = new Map<string, WebNovelChapterDto>();
-const chapterResult = shallowRef<ResultState<WebNovelChapterDto>>();
+const chapterResult = shallowRef<Result<WebNovelChapterDto>>();
+
+const novelInfo = getNovelInfo(route.path, route.params);
 
 const loadChapter = async (chapterId: string) => {
   const chapterStored = chapters.get(chapterId);
   if (chapterStored === undefined) {
-    const result = await ApiWebNovel.getChapter(providerId, novelId, chapterId);
+    const result = await getChapter(novelInfo, chapterId);
     if (result.ok) {
       chapters.set(chapterId, result.value);
     }
@@ -61,14 +61,18 @@ watch(
       window.history.pushState(
         {},
         document.title,
-        `/novel/${providerId}/${novelId}/${chapterId}`
+        `${novelInfo.pathPrefix}/${chapterId}`
       );
     }
     if (result.ok) {
       document.title = result.value.titleJp;
       chapterResult.value = result;
-      if (userData.isLoggedIn) {
-        ApiUser.updateReadHistoryWeb(providerId, novelId, chapterId);
+      if (novelInfo.type === 'web' && userData.isLoggedIn) {
+        ApiUser.updateReadHistoryWeb(
+          novelInfo.providerId,
+          novelInfo.novelId,
+          chapterId
+        );
       }
       if (chapters.size > 1 && result.value.nextId) {
         loadChapter(result.value.nextId);
@@ -78,9 +82,7 @@ watch(
   { immediate: true }
 );
 
-const url = computed(() =>
-  buildWebChapterUrl(providerId, novelId, currentChapterId.value)
-);
+const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
 </script>
 
 <template>
@@ -138,29 +140,25 @@ const url = computed(() =>
 
       <web-reader-layout-mobile
         v-if="isMobile"
-        :provider-id="providerId"
-        :novel-id="novelId"
         :chapter-id="currentChapterId"
         :chapter="chapter"
         @nav="navToChapter"
       >
         <web-reader-content
-          :provider-id="providerId"
-          :novel-id="novelId"
+          :novel-info="novelInfo"
+          :chapter-id="currentChapterId"
           :chapter="chapter"
         />
       </web-reader-layout-mobile>
       <web-reader-layout-desktop
         v-else
-        :provider-id="providerId"
-        :novel-id="novelId"
         :chapter-id="currentChapterId"
         :chapter="chapter"
         @nav="navToChapter"
       >
         <web-reader-content
-          :provider-id="providerId"
-          :novel-id="novelId"
+          :novel-info="novelInfo"
+          :chapter-id="currentChapterId"
           :chapter="chapter"
         />
       </web-reader-layout-desktop>

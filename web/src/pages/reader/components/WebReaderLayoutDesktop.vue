@@ -12,8 +12,7 @@ import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator';
 
 const props = defineProps<{
-  providerId: string;
-  novelId: string;
+  novelUrl?: string;
   chapterId: string;
   chapter: WebNovelChapterDto;
 }>();
@@ -75,9 +74,9 @@ onKeyStroke(['Enter'], (e) => {
         style="margin-left: 20px; position: fixed; bottom: 20px"
       >
         <side-button
+          v-if="novelUrl"
           tag="a"
-          v-if="providerId !== 'local'"
-          :href="`/novel/${providerId}/${novelId}`"
+          :href="novelUrl"
           text="详情"
           :icon="LibraryBooksOutlined"
         />
