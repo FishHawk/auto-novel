@@ -7,6 +7,7 @@ import {
   dateZhCN,
   lightTheme,
   zhCN,
+  useOsTheme,
 } from 'naive-ui';
 import { Component, computed, h, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
@@ -130,11 +131,31 @@ const onSignInSuccess = (profile: SignInDto) => {
 };
 
 const navToMySpace = () => router.push({ path: '/account' });
+
+const osThemeRef = useOsTheme();
+const theme = computed(() => {
+  let specificTheme: 'light' | 'dark' = 'light';
+  if (setting.theme === 'system') {
+    if (osThemeRef.value !== null) {
+      specificTheme = osThemeRef.value;
+    }
+  } else {
+    specificTheme = setting.theme;
+  }
+  return specificTheme === 'light' ? null : darkTheme;
+});
+// 兼容旧格式
+if ((setting as any).isDark !== undefined) {
+  if ((setting as any).isDark === true) {
+    setting.theme = 'dark';
+  }
+  (setting as any).isDark = undefined;
+}
 </script>
 
 <template>
   <n-config-provider
-    :theme="setting.isDark ? darkTheme : lightTheme"
+    :theme="theme"
     :locale="zhCN"
     :date-locale="dateZhCN"
     inline-theme-disabled

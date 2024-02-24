@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { TranslatorId } from '@/data/translator';
 
 export interface Setting {
-  isDark: boolean;
+  theme: 'light' | 'dark' | 'system';
   tocSortReverse: boolean;
   downloadFilenameType: 'jp' | 'zh';
   downloadFormat: {
@@ -17,7 +17,7 @@ export interface Setting {
 export const useSettingStore = defineStore('setting', {
   state: () =>
     <Setting>{
-      isDark: false,
+      theme: 'light',
       tocSortReverse: false,
       downloadFilenameType: 'zh',
       downloadFormat: {
