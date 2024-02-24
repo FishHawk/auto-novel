@@ -1,13 +1,17 @@
 import { RouteParams } from 'vue-router';
 
-import { ApiWebNovel, WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { Result, runCatching } from '@/data/result';
+import {
+  ApiWebNovel,
+  WebNovelChapterDto,
+  WebNovelTocItemDto,
+} from '@/data/api/api_web_novel';
+import { Result, mapOk, runCatching } from '@/data/result';
 import { PersonalVolumesManager } from '@/data/translator';
 import { buildWebChapterUrl } from '@/data/util_web';
 
 export type NovelInfo = (
   | { type: 'web'; providerId: string; novelId: string }
-  | { type: 'workspace'; novelId: string }
+  | { type: 'workspace'; volumeId: string }
 ) & {
   pathPrefix: string;
   novelUrl?: string;
@@ -31,29 +35,72 @@ export const getNovelInfo = (path: string, params: RouteParams): NovelInfo => {
     const novelId = params.novelId as string;
     return {
       type: 'workspace',
-      novelId: params.novelId as string,
+      volumeId: params.novelId as string,
       pathPrefix: `/workspace/reader/${novelId}`,
       getChapterUrl: (_) => '/workspace',
     };
   }
 };
 
+type TocItem = WebNovelTocItemDto & { key: number };
+
+export const getNovelToc = async (
+  novelInfo: NovelInfo
+): Promise<Result<TocItem[]>> => {
+  if (novelInfo.type === 'web') {
+    const result = await ApiWebNovel.getNovel(
+      novelInfo.providerId,
+      novelInfo.novelId
+    );
+    const newResult = mapOk(result, (novel) => {
+      const toc = novel.toc as TocItem[];
+      toc.forEach((it, index) => (it.key = index));
+      return toc;
+    });
+    return newResult;
+  } else {
+    const getNovelTocInner = async (id: string) => {
+      const metadata = await PersonalVolumesManager.getVolume(id);
+      return metadata.toc.map((it, index) => ({
+        titleJp: it.chapterId,
+        chapterId: it.chapterId,
+        key: index,
+      }));
+    };
+    return runCatching(getNovelTocInner(novelInfo.volumeId));
+  }
+};
+
 export const getChapter = (
-  novelPath: NovelInfo,
+  novelInfo: NovelInfo,
   chapterId: string
 ): Promise<Result<WebNovelChapterDto>> => {
-  if (novelPath.type === 'web') {
+  if (novelInfo.type === 'web') {
     return ApiWebNovel.getChapter(
-      novelPath.providerId,
-      novelPath.novelId,
+      novelInfo.providerId,
+      novelInfo.novelId,
       chapterId
     );
   } else {
-    return runCatching(
-      PersonalVolumesManager.getVolumeWebNovelChapterDto(
-        novelPath.novelId,
+    const getChapterInner = async (id: string, chapterId: string) => {
+      const { toc, chapter } = await PersonalVolumesManager.getChapter(
+        id,
         chapterId
-      )
-    );
+      );
+      const currIndex = toc.findIndex((it) => it.chapterId == chapterId);
+      return <WebNovelChapterDto>{
+        titleJp: `${id} - ${chapterId}`,
+        titleZh: undefined,
+        prevId: toc[currIndex - 1]?.chapterId,
+        nextId: toc[currIndex + 1]?.chapterId,
+        paragraphs: chapter.paragraphs,
+        baiduParagraphs: chapter.baidu?.paragraphs,
+        youdaoParagraphs: chapter.youdao?.paragraphs,
+        gptParagraphs: chapter.gpt?.paragraphs,
+        sakuraParagraphs: chapter.sakura?.paragraphs,
+      };
+    };
+
+    return runCatching(getChapterInner(novelInfo.volumeId, chapterId));
   }
 };

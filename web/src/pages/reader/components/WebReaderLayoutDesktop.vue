@@ -11,8 +11,10 @@ import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator';
 
+import { NovelInfo } from './util';
+
 const props = defineProps<{
-  novelUrl?: string;
+  novelInfo: NovelInfo;
   chapterId: string;
   chapter: WebNovelChapterDto;
 }>();
@@ -74,9 +76,9 @@ onKeyStroke(['Enter'], (e) => {
         style="margin-left: 20px; position: fixed; bottom: 20px"
       >
         <side-button
-          v-if="novelUrl"
+          v-if="novelInfo.novelUrl"
           tag="a"
-          :href="novelUrl"
+          :href="novelInfo.novelUrl"
           text="详情"
           :icon="LibraryBooksOutlined"
         />
@@ -98,6 +100,7 @@ onKeyStroke(['Enter'], (e) => {
 
   <catalog-modal
     v-model:show="showCatalogModal"
+    :novel-info="novelInfo"
     :chapter-id="chapterId"
     @nav="(chapterId: string) => emit('nav', chapterId)"
   />

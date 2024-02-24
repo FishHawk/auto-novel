@@ -11,8 +11,10 @@ import { ref } from 'vue';
 
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 
+import { NovelInfo } from './util';
+
 defineProps<{
-  novelUrl?: string;
+  novelInfo: NovelInfo;
   chapterId: string;
   chapter: WebNovelChapterDto;
 }>();
@@ -57,6 +59,7 @@ const onGlobalClick = (event: MouseEvent) => {
 
   <catalog-modal
     v-model:show="showCatalogModal"
+    :novel-info="novelInfo"
     :chapter-id="chapterId"
     @nav="(chapterId: string) => emit('nav', chapterId)"
   />
@@ -77,10 +80,10 @@ const onGlobalClick = (event: MouseEvent) => {
         style="flex: 1"
       />
       <side-button
-        v-if="novelUrl"
+        v-if="novelInfo.novelUrl"
         quaternary
         tag="a"
-        :href="novelUrl"
+        :href="novelInfo.novelUrl"
         text="详情"
         :icon="LibraryBooksOutlined"
         style="flex: 1"

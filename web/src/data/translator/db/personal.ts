@@ -77,6 +77,12 @@ const withDb = <T extends Array<any>, U>(
 
 const listVolumes = withDb((db) => db.getAll('metadata'));
 
+const getVolume = withDb(async (db, id: string) => {
+  const metadata = await db.get('metadata', id);
+  if (metadata === undefined) throw Error('小说不存在');
+  return metadata;
+});
+
 const saveVolume = withDb(async (db, file: File) => {
   const id = file.name;
   const chapters: { chapterId: string; paragraphs: string[] }[] = [];
@@ -162,6 +168,16 @@ const updateGlossary = withDb(async (db, id: string, glossary: Glossary) => {
     await tx.store.put(metadata);
   }
   await tx.done;
+});
+
+const getChapter = withDb(async (db, id: string, chapterId: string) => {
+  const metadata = await db.get('metadata', id);
+  if (metadata === undefined) throw Error('小说不存在');
+
+  const chapter = await db.get('chapter', `${id}/${chapterId}`);
+  if (chapter === undefined) throw Error('章节不存在');
+
+  return { toc: metadata.toc, chapter };
 });
 
 const getTranslateTask = withDb(
@@ -330,29 +346,6 @@ const makeTranslationVolumeFile = async ({
   }
 };
 
-const getVolumeWebNovelChapterDto = async (volumeId: string, chapterId: string) => {
-  const db = await openVolumesDB();
-  const metadata = await db.get('metadata', volumeId);
-  if (metadata === undefined) throw Error('小说不存在');
-
-  const chapter = await db.get('chapter', `${volumeId}/${chapterId}`);
-  if (chapter === undefined) throw Error('章节不存在');
-
-  const currIndex = metadata.toc.findIndex((it) => it.chapterId == chapterId);
-
-  return <WebNovelChapterDto>{
-    titleJp: volumeId.replace(/\.txt$/, ''),
-    titleZh: undefined,
-    prevId: metadata.toc[currIndex-1]?.chapterId,
-    nextId: metadata.toc[currIndex+1]?.chapterId,
-    paragraphs: chapter.paragraphs,
-    baiduParagraphs: chapter.baidu?.paragraphs,
-    youdaoParagraphs: chapter.youdao?.paragraphs,
-    gptParagraphs: chapter.gpt?.paragraphs,
-    sakuraParagraphs: chapter.sakura?.paragraphs,
-  }
-}
-
 interface EpubParser {
   extractText: (doc: Document) => string[];
   injectTranslation: (
@@ -412,14 +405,17 @@ const epubParserV1: EpubParser = {
 
 export const PersonalVolumesManager = {
   listVolumes,
+  getVolume,
   saveVolume,
   deleteVolume,
   updateGlossary,
+  getChapter,
+  //
   getTranslateTask,
   getChapterToTranslate,
   updateChapterTranslation,
+  //
   deleteVolumesDb,
   //
   makeTranslationVolumeFile,
-  getVolumeWebNovelChapterDto,
 };

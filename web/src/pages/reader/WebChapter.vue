@@ -140,6 +140,7 @@ const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
 
       <web-reader-layout-mobile
         v-if="isMobile"
+        :novel-info="novelInfo"
         :chapter-id="currentChapterId"
         :chapter="chapter"
         @nav="navToChapter"
@@ -152,6 +153,7 @@ const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
       </web-reader-layout-mobile>
       <web-reader-layout-desktop
         v-else
+        :novel-info="novelInfo"
         :chapter-id="currentChapterId"
         :chapter="chapter"
         @nav="navToChapter"
