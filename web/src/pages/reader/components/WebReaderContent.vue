@@ -217,7 +217,8 @@ const createWebIncorrectCase = async (
   min-height: 65vh;
 }
 #chapter-content p {
-  font-size: v-bind('setting.fontSize');
+  font-size: v-bind('`${setting.fontSize}px`');
+  margin: v-bind('`${setting.fontSize * setting.lineSpace}px 0`');
   color: v-bind(
     "setting.theme.fontColor ?? (setting.theme.isDark ? 'white' : 'black')"
   );
