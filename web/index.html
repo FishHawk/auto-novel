@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh">
   <head>
+    <script src="web-streams-polyfill@3.3.3.polyfill.min.js"></script>
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-QD8MZ90XFJ"
@@ -15,11 +16,13 @@
     </script>
     <script>
       window.onerror = function (msg, url, lno, cno) {
-        var div = document.createElement('div');
-        div.innerHTML = `JS错误: ${lno}:${cno} ${msg
-          .replace('<', '&lt;')
-          .replace('>', '&gt;')} ${url}`;
-        document.body.appendChild(div);
+        if (window.location.href.replace(window.origin, '') === '/') {
+          var div = document.createElement('div');
+          div.innerHTML = `JS错误: ${lno}:${cno} ${msg
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')} ${url}`;
+          document.body.appendChild(div);
+        }
         return false;
       };
     </script>
