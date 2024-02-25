@@ -7,11 +7,7 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import {
-  TranslateJob,
-  TranslateJobRecord,
-  useGptWorkspaceStore,
-} from '@/data/stores/workspace';
+import { TranslateJob, useGptWorkspaceStore } from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 
@@ -113,8 +109,8 @@ const clearCache = async () => {
     />
     <n-list>
       <n-list-item v-for="worker of gptWorkspace.workers" :key="worker.id">
-        <gpt-worker
-          :worker="worker"
+        <job-worker
+          :worker="{ translatorId: 'gpt', ...worker }"
           :get-next-job="getNextJob"
           @update:progress="onProgressUpdated"
         />

@@ -130,10 +130,8 @@ const clearCache = async () => {
     />
     <n-list>
       <n-list-item v-for="worker of sakuraWorkspace.workers" :key="worker.id">
-        <sakura-worker
-          :id="worker.id"
-          :endpoint="worker.endpoint"
-          :use-llama-api="worker.useLlamaApi ?? false"
+        <job-worker
+          :worker="{ translatorId: 'sakura', ...worker }"
           :get-next-job="getNextJob"
           @update:progress="onProgressUpdated"
         />

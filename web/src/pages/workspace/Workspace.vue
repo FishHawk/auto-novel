@@ -1,10 +1,6 @@
 <script lang="ts" setup>
 import { DeleteOutlined, PlusOutlined } from '@vicons/material';
-import {
-  UploadCustomRequestOptions,
-  UploadFileInfo,
-  useMessage,
-} from 'naive-ui';
+import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { useSettingStore } from '@/data/stores/setting';
@@ -34,30 +30,6 @@ const loadVolumes = () => {
   });
 };
 loadVolumes();
-
-const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
-  if (!(file.name.endsWith('.txt') || file.name.endsWith('.epub'))) {
-    message.error('不允许的文件类型，必须是EPUB或TXT文件');
-    return false;
-  }
-  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error('文件大小不能超过40MB');
-    return false;
-  }
-};
-
-const customRequest = ({
-  file,
-  onFinish,
-  onError,
-}: UploadCustomRequestOptions) => {
-  PersonalVolumesManager.saveVolume(file.file!!)
-    .then(onFinish)
-    .catch((error) => {
-      message.error(`上传失败:${error}`);
-      onError();
-    });
-};
 
 const showClearModal = ref(false);
 const deleteAllVolumes = () => {
@@ -139,16 +111,7 @@ const subPages = [
     <section-header title="本地文件" />
     <n-flex>
       <n-flex :wrap="false">
-        <n-upload
-          multiple
-          directory-dnd
-          :custom-request="customRequest"
-          @finish="loadVolumes"
-          @before-upload="beforeUpload"
-        >
-          <c-button label="添加文件" :icon="PlusOutlined" />
-        </n-upload>
-
+        <add-button @finish="loadVolumes" />
         <c-button
           label="清空文件"
           :icon="DeleteOutlined"

@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+import { MoreVertOutlined } from '@vicons/material';
+import { UploadFileInfo, useMessage } from 'naive-ui';
+import { computed, ref, toRaw } from 'vue';
+
 import { useSettingStore } from '@/data/stores/setting';
 import {
   buildPersonalTranslateTask,
@@ -6,13 +10,6 @@ import {
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
 import { PersonalVolumesManager } from '@/data/translator';
-import { MoreVertOutlined, PlusOutlined } from '@vicons/material';
-import {
-  UploadCustomRequestOptions,
-  UploadFileInfo,
-  useMessage,
-} from 'naive-ui';
-import { computed, ref, toRaw } from 'vue';
 
 const props = defineProps<{ type: 'gpt' | 'sakura' }>();
 
@@ -67,31 +64,9 @@ const loadVolumes = () => {
 };
 loadVolumes();
 
-const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
-  if (!(file.name.endsWith('.txt') || file.name.endsWith('.epub'))) {
-    message.error(
-      `上传失败:不允许的文件类型，必须是EPUB或TXT文件\n文件名: ${file.name}`
-    );
-    return false;
-  }
-  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error(`上传失败:文件大小不能超过40MB\n文件名: ${file.name}`);
-    return false;
-  }
-};
-
-const customRequest = ({
-  file,
-  onFinish,
-  onError,
-}: UploadCustomRequestOptions) => {
-  PersonalVolumesManager.saveVolume(file.file!!)
-    .then(() => queueVolume(file.file!!.name))
-    .then(onFinish)
-    .catch((error) => {
-      message.error(`上传失败:${error}\n文件名: ${file.name}`);
-      onError();
-    });
+const onFinish = ({ file }: { file: UploadFileInfo }) => {
+  queueVolume(file.file!!.name);
+  loadVolumes();
 };
 
 const options = [
@@ -222,16 +197,7 @@ const deleteVolume = (volumeId: string) =>
 <template>
   <section-header title="文件列表">
     <n-flex :wrap="false">
-      <n-upload
-        multiple
-        directory-dnd
-        :show-file-list="false"
-        :custom-request="customRequest"
-        @finish="loadVolumes"
-        @before-upload="beforeUpload"
-      >
-        <c-button label="添加文件" :icon="PlusOutlined" />
-      </n-upload>
+      <add-button :show-file-list="false" @finish="onFinish" />
       <n-dropdown trigger="click" :options="options" @select="handleSelect">
         <n-button circle>
           <n-icon :component="MoreVertOutlined" />
