@@ -38,6 +38,17 @@ export const parseTask = (task: string) => {
   return { desc, params };
 };
 
+export const parseTaskUrl = (task: string) => {
+  const { desc } = parseTask(task);
+  if (desc.type === 'web') {
+    return `/novel/${desc.providerId}/${desc.novelId}`;
+  } else if (desc.type === 'wenku') {
+    return `/wenku/${desc.novelId}`;
+  } else {
+    return undefined;
+  }
+};
+
 export const computePercentage = (
   progress:
     | {

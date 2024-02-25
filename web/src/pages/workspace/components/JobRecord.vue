@@ -6,6 +6,8 @@ import {
   isTranslateJobFinished,
 } from '@/data/stores/workspace';
 
+import { parseTaskUrl } from './util';
+
 const props = defineProps<{
   job: TranslateJobRecord;
 }>();
@@ -14,15 +16,18 @@ const emit = defineEmits<{
   deleteJob: [];
 }>();
 const isFinished = computed(() => isTranslateJobFinished(props.job));
-console.log(isFinished.value);
+
+const url = computed(() => parseTaskUrl(props.job.task));
 </script>
 
 <template>
   <n-thing>
     <template #header>
-      <n-text depth="3" style="font-size: 12px">
-        {{ job.task }}
-      </n-text>
+      <RouterNA v-if="url" :to="url">
+        <n-text depth="3" style="font-size: 12px">
+          {{ job.task }}
+        </n-text>
+      </RouterNA>
     </template>
     <template #header-extra>
       <n-flex size="small" :wrap="false">

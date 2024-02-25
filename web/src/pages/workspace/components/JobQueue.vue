@@ -1,7 +1,12 @@
 <script lang="ts" setup>
+import { computed } from 'vue';
+import { LinkFilled } from '@vicons/material';
+
 import { TranslateJob } from '@/data/stores/workspace';
 
-defineProps<{
+import { parseTaskUrl } from './util';
+
+const props = defineProps<{
   job: TranslateJob;
   percentage?: number;
 }>();
@@ -9,14 +14,18 @@ const emit = defineEmits<{
   topJob: [];
   deleteJob: [];
 }>();
+
+const url = computed(() => parseTaskUrl(props.job.task));
 </script>
 
 <template>
   <n-thing>
     <template #header>
-      <n-text depth="3" style="font-size: 12px">
-        {{ job.task }}
-      </n-text>
+      <RouterNA v-if="url" :to="url">
+        <n-text depth="3" style="font-size: 12px">
+          {{ job.task }}
+        </n-text>
+      </RouterNA>
     </template>
     <template #header-extra>
       <n-flex size="small" :wrap="false">
