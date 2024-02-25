@@ -1,15 +1,9 @@
-import {
-  BlobReader,
-  BlobWriter,
-  TextWriter,
-  ZipReader,
-  ZipWriter,
-} from '@zip.js/zip.js';
-
 const forEachXHtmlFile = async (
   file: File,
   callback: (path: string, doc: Document) => void
 ) => {
+  const { BlobReader, TextWriter, ZipReader } = await import('@zip.js/zip.js');
+
   const reader = new ZipReader(new BlobReader(file));
   const entries = new Map(
     (await reader.getEntries()).map((obj) => [obj.filename, obj])
@@ -44,6 +38,10 @@ const modify = async (
   file: File,
   callback: (path: string, blobIn: Blob) => Promise<Blob>
 ) => {
+  const { BlobReader, BlobWriter, ZipReader, ZipWriter } = await import(
+    '@zip.js/zip.js'
+  );
+
   // 准备读Epub
   const reader = new ZipReader(new BlobReader(file));
   const entriesFilenameSet = new Set<string>();
