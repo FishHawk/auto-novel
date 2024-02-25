@@ -58,7 +58,7 @@ const translatorLabels = computed(
         translatorId: 'youdao',
       },
       {
-        label: `GPT3(${props.volume.gpt}/${props.volume.total})`,
+        label: `GPT(${props.volume.gpt}/${props.volume.total})`,
         translatorId: 'gpt',
       },
       {
@@ -147,25 +147,41 @@ const showGlossaryEditor = ref(false);
 <template>
   <div>
     <n-flex align="center" justify="space-between" :wrap="false">
-      <n-flex vertical>
+      <n-flex :size="4" vertical>
         <n-text>{{ volume.volumeId }}</n-text>
-        <n-flex>
-          <template v-for="{ translatorId, label } of translatorLabels">
-            <c-button
-              v-if="translatorId !== 'sakura' && translatorId !== 'gpt'"
-              :label="`更新${label}`"
-              size="tiny"
-              secondary
-              @click="startTranslateTask(translatorId)"
-            />
-            <c-button
-              v-else
-              :label="`排队${label}`"
-              size="tiny"
-              secondary
-              @click="submitJob(translatorId)"
-            />
-          </template>
+
+        <n-text depth="3">
+          总计 {{ volume.total }} / 百度 {{ volume.baidu }} / 有道
+          {{ volume.youdao }} / GPT {{ volume.gpt }} / Sakura
+          {{ volume.sakura }}
+        </n-text>
+
+        <n-flex :size="8">
+          <c-button
+            label="更新百度"
+            size="tiny"
+            secondary
+            @click="startTranslateTask('baidu')"
+          />
+          <c-button
+            label="更新有道"
+            size="tiny"
+            secondary
+            @click="startTranslateTask('youdao')"
+          />
+
+          <c-button
+            label="排队GPT"
+            size="tiny"
+            secondary
+            @click="submitJob('gpt')"
+          />
+          <c-button
+            label="排队Sakura"
+            size="tiny"
+            secondary
+            @click="submitJob('sakura')"
+          />
 
           <c-button
             v-if="volume.volumeId.endsWith('.txt')"

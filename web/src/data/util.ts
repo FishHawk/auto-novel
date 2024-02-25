@@ -27,7 +27,7 @@ export const getTranslatorLabel = (id: TranslatorId) => {
   const idToLaber = {
     baidu: '百度',
     youdao: '有道',
-    gpt: 'GPT3',
+    gpt: 'GPT',
     sakura: 'Sakura',
   };
   return idToLaber[id];

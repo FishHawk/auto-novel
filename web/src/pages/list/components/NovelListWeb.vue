@@ -67,8 +67,8 @@ withDefaults(
 
       <template v-if="item.total">
         {{ item.type ? item.type + ' / ' : '' }}
-        总计{{ item.total }} / 百度{{ item.baidu }} / 有道{{ item.youdao }} /
-        GPT3 {{ item.gpt }} / Sakura {{ item.sakura }}
+        总计 {{ item.total }} / 百度 {{ item.baidu }} / 有道 {{ item.youdao }} /
+        GPT {{ item.gpt }} / Sakura {{ item.sakura }}
         <br />
       </template>
 

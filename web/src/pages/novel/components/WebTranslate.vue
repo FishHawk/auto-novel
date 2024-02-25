@@ -126,7 +126,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 const translatorLabels = computed(() => ({
   baidu: `百度(${props.baidu}/${total})`,
   youdao: `有道(${props.youdao}/${total})`,
-  gpt: `GPT3(${props.gpt}/${total})`,
+  gpt: `GPT(${props.gpt}/${total})`,
   sakura: `Sakura(${props.sakura}/${total})`,
 }));
 </script>

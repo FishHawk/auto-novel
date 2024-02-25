@@ -48,7 +48,7 @@ const paragraphs = computed(() => {
       } else if (t === 'baidu') {
         return ['百度', chapter.baiduParagraphs];
       } else if (t === 'gpt') {
-        return ['GPT3', chapter.gptParagraphs];
+        return ['GPT', chapter.gptParagraphs];
       } else {
         return ['Sakura', chapter.sakuraParagraphs];
       }

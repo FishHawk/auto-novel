@@ -12,7 +12,6 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { TranslatorId } from '@/data/translator';
 
 const { novelId, volume, getParams } = defineProps<{
   novelId: string;
@@ -42,28 +41,6 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
     { id: translatorId }
   );
 };
-
-const translatorLabels = computed(
-  () =>
-    <{ label: string; translatorId: TranslatorId }[]>[
-      {
-        label: `百度(${volume.baidu}/${volume.total})`,
-        translatorId: 'baidu',
-      },
-      {
-        label: `有道(${volume.youdao}/${volume.total})`,
-        translatorId: 'youdao',
-      },
-      {
-        label: `GPT3(${volume.gpt}/${volume.total})`,
-        translatorId: 'gpt',
-      },
-      {
-        label: `Sakura(${volume.sakura}/${volume.total})`,
-        translatorId: 'sakura',
-      },
-    ]
-);
 
 const file = computed(() => {
   const { mode, translationsMode, translations } = setting.downloadFormat;
@@ -109,60 +86,72 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 </script>
 
 <template>
-  <div>
-    <n-space align="center" justify="space-between" :wrap="false">
-      <n-space vertical>
-        <n-text>{{ volume.volumeId }}</n-text>
-        <n-space>
-          <template v-for="{ translatorId, label } of translatorLabels">
-            <c-button
-              v-if="translatorId === 'gpt' || translatorId === 'sakura'"
-              :label="`排队${label}`"
-              size="tiny"
-              secondary
-              @click="submitJob(translatorId)"
-            />
+  <n-flex align="center" justify="space-between" :wrap="false">
+    <n-flex :size="4" vertical>
+      <n-text>{{ volume.volumeId }}</n-text>
 
-            <c-button
-              v-else
-              :label="`更新${label}`"
-              size="tiny"
-              secondary
-              @click="startTranslateTask(translatorId)"
-            />
+      <n-text depth="3">
+        总计 {{ volume.total }} / 百度 {{ volume.baidu }} / 有道
+        {{ volume.youdao }} / GPT {{ volume.gpt }} / Sakura {{ volume.sakura }}
+      </n-text>
+
+      <n-flex :size="8">
+        <c-button
+          label="更新百度"
+          size="tiny"
+          secondary
+          @click="startTranslateTask('baidu')"
+        />
+        <c-button
+          label="更新有道"
+          size="tiny"
+          secondary
+          @click="startTranslateTask('youdao')"
+        />
+
+        <c-button
+          label="排队GPT"
+          size="tiny"
+          secondary
+          @click="submitJob('gpt')"
+        />
+        <c-button
+          label="排队Sakura"
+          size="tiny"
+          secondary
+          @click="submitJob('sakura')"
+        />
+
+        <n-popconfirm
+          v-if="userData.isMaintainer"
+          :show-icon="false"
+          @positive-click="emit('delete')"
+          :negative-text="null"
+        >
+          <template #trigger>
+            <c-button label="删除" type="error" size="tiny" secondary />
           </template>
+          真的要删除《{{ volume.volumeId }}》吗？
+        </n-popconfirm>
+      </n-flex>
+    </n-flex>
 
-          <n-popconfirm
-            v-if="userData.isMaintainer"
-            :show-icon="false"
-            @positive-click="emit('delete')"
-            :negative-text="null"
-          >
-            <template #trigger>
-              <c-button label="删除" type="error" size="tiny" secondary />
-            </template>
-            真的要删除《{{ volume.volumeId }}》吗？
-          </n-popconfirm>
-        </n-space>
-      </n-space>
-
-      <c-button
-        label="下载"
-        :icon="FileDownloadOutlined"
-        tag="a"
-        :href="file.url"
-        :download="file.filename"
-        target="_blank"
-      />
-    </n-space>
-
-    <TranslateTask
-      ref="translateTask"
-      @update:baidu="(zh) => (volume.baidu = zh)"
-      @update:youdao="(zh) => (volume.youdao = zh)"
-      @update:gpt="(zh) => (volume.gpt = zh)"
-      @update:sakura="(zh) => (volume.sakura = zh)"
-      style="margin-top: 20px"
+    <c-button
+      label="下载"
+      :icon="FileDownloadOutlined"
+      tag="a"
+      :href="file.url"
+      :download="file.filename"
+      target="_blank"
     />
-  </div>
+  </n-flex>
+
+  <TranslateTask
+    ref="translateTask"
+    @update:baidu="(zh) => (volume.baidu = zh)"
+    @update:youdao="(zh) => (volume.youdao = zh)"
+    @update:gpt="(zh) => (volume.gpt = zh)"
+    @update:sakura="(zh) => (volume.sakura = zh)"
+    style="margin-top: 20px"
+  />
 </template>

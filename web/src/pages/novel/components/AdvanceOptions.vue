@@ -72,7 +72,7 @@ const translationModeOptions = [
 ];
 const translationOptions: { label: string; value: TranslatorId }[] = [
   { label: 'Sakura', value: 'sakura' },
-  { label: 'GPT3', value: 'gpt' },
+  { label: 'GPT', value: 'gpt' },
   { label: '有道', value: 'youdao' },
   { label: '百度', value: 'baidu' },
 ];

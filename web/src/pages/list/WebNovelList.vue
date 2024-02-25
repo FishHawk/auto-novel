@@ -44,7 +44,7 @@ const options = [
   ...oldAssOptions,
   {
     label: '翻译',
-    tags: ['全部', 'GPT3', 'Sakura'],
+    tags: ['全部', 'GPT', 'Sakura'],
   },
   {
     label: '排序',

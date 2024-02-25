@@ -227,60 +227,63 @@ const deleteVolume = (volumeId: string) =>
   <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
     <n-list style="padding-bottom: 48px">
       <n-list-item v-for="volume of sortedVolumes ?? []">
-        {{ volume.volumeId }}
-        <br />
-        <n-text depth="3">
-          <n-time :time="volume.createAt" type="relative" /> / 总计{{
-            volume.total
-          }}
-          / 完成{{ volume.finished }} / 过期{{ volume.expired }}
-        </n-text>
-        <br />
-        <n-flex style="margin-top: 4px">
-          <c-button
-            label="排队"
-            size="tiny"
-            secondary
-            @click="queueVolume(volume.volumeId)"
-          />
+        <n-flex :size="4" vertical>
+          <n-text>{{ volume.volumeId }}</n-text>
 
-          <c-button
-            v-if="volume.volumeId.endsWith('.txt')"
-            label="阅读"
-            tag="a"
-            :href="`/workspace/reader/${encodeURIComponent(volume.volumeId)}/0`"
-            size="tiny"
-            secondary
-          />
-          <c-button
-            label="下载"
-            size="tiny"
-            secondary
-            @click="downloadVolume(volume.volumeId)"
-          />
+          <n-text depth="3">
+            <n-time :time="volume.createAt" type="relative" /> / 总计
+            {{ volume.total }} / 完成 {{ volume.finished }} / 过期
+            {{ volume.expired }}
+          </n-text>
 
-          <c-button
-            :label="`术语表[${Object.keys(volume.glossary).length}]`"
-            size="tiny"
-            secondary
-            @click="
-              () => {
-                selectedVolumeToEditGlossary = volume;
-                showGlossaryModal = true;
-              }
-            "
-          />
+          <n-flex :size="8">
+            <c-button
+              label="排队"
+              size="tiny"
+              secondary
+              @click="queueVolume(volume.volumeId)"
+            />
 
-          <n-popconfirm
-            :show-icon="false"
-            @positive-click="deleteVolume(volume.volumeId)"
-            :negative-text="null"
-          >
-            <template #trigger>
-              <c-button label="删除" type="error" size="tiny" secondary />
-            </template>
-            确定删除{{ volume.volumeId }}吗？
-          </n-popconfirm>
+            <c-button
+              v-if="volume.volumeId.endsWith('.txt')"
+              label="阅读"
+              tag="a"
+              :href="`/workspace/reader/${encodeURIComponent(
+                volume.volumeId
+              )}/0`"
+              size="tiny"
+              secondary
+            />
+            <c-button
+              label="下载"
+              size="tiny"
+              secondary
+              @click="downloadVolume(volume.volumeId)"
+            />
+
+            <c-button
+              :label="`术语表[${Object.keys(volume.glossary).length}]`"
+              size="tiny"
+              secondary
+              @click="
+                () => {
+                  selectedVolumeToEditGlossary = volume;
+                  showGlossaryModal = true;
+                }
+              "
+            />
+
+            <n-popconfirm
+              :show-icon="false"
+              @positive-click="deleteVolume(volume.volumeId)"
+              :negative-text="null"
+            >
+              <template #trigger>
+                <c-button label="删除" type="error" size="tiny" secondary />
+              </template>
+              确定删除{{ volume.volumeId }}吗？
+            </n-popconfirm>
+          </n-flex>
         </n-flex>
       </n-list-item>
     </n-list>
