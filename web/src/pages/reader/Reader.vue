@@ -120,7 +120,7 @@ const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
       </n-flex>
 
       <div v-else style="margin-top: 20px">
-        <n-h4 style="text-align: center; margin: 0">
+        <n-h4 style="text-align: center; margin: 0 0 8px 0">
           <n-a :href="url">{{ chapter.titleJp }}</n-a>
           <br />
           <n-text depth="3">{{ chapter.titleZh }}</n-text>
