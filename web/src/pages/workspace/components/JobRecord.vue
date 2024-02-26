@@ -24,7 +24,7 @@ const url = computed(() => parseTaskUrl(props.job.task));
   <n-thing>
     <template #header>
       <router-link v-if="url" :to="url">
-        <n-text depth="3" style="font-size: 12px">
+        <n-text depth="3" underline style="font-size: 12px">
           {{ job.task }}
         </n-text>
       </router-link>
