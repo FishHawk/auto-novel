@@ -3,7 +3,6 @@ import { createReusableTemplate } from '@vueuse/core';
 import { ref } from 'vue';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { TranslatorId } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
@@ -25,27 +24,6 @@ const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
 ];
-const translationOptions: { label: string; value: TranslatorId }[] = [
-  { label: 'Sakura', value: 'sakura' },
-  { label: 'GPT', value: 'gpt' },
-  { label: '有道', value: 'youdao' },
-  { label: '百度', value: 'baidu' },
-];
-const toggleTranslator = (id: TranslatorId) => {
-  if (setting.translations.includes(id)) {
-    setting.translations = setting.translations.filter((it) => it !== id);
-  } else {
-    setting.translations.push(id);
-  }
-};
-const calculateTranslatorOrderLabel = (id: TranslatorId) => {
-  const index = setting.translations.indexOf(id);
-  if (index < 0) {
-    return '[x]';
-  } else {
-    return `[${index + 1}]`;
-  }
-};
 
 // 兼容旧格式
 if (typeof setting.fontSize === 'string') {
@@ -114,25 +92,6 @@ const setCustomFontColor = (color: string) => {
             show-order
             :two-line="!isWideScreen"
           />
-          <!-- <n-button-group>
-            <n-button
-              v-for="option in translationOptions"
-              :focusable="false"
-              ghost
-              :type="
-                setting.translations.includes(option.value)
-                  ? 'primary'
-                  : 'default'
-              "
-              :value="option.value"
-              @click="toggleTranslator(option.value)"
-              :style="isWideScreen ? {} : { height: '48px' }"
-            >
-              {{ option.label }}
-              <br v-if="!isWideScreen" />
-              {{ calculateTranslatorOrderLabel(option.value) }}
-            </n-button>
-          </n-button-group> -->
         </n-flex>
       </ReuseOption>
       <ReuseOption label="字体" align="baseline">
