@@ -21,11 +21,14 @@ const url = computed(() => parseTaskUrl(props.job.task));
 <template>
   <n-thing>
     <template #header>
-      <RouterNA v-if="url" :to="url">
+      <router-link v-if="url" :to="url">
         <n-text depth="3" style="font-size: 12px">
           {{ job.task }}
         </n-text>
-      </RouterNA>
+      </router-link>
+      <n-text v-else depth="3" style="font-size: 12px">
+        {{ job.task }}
+      </n-text>
     </template>
     <template #header-extra>
       <n-flex size="small" :wrap="false">
