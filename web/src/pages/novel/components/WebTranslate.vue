@@ -103,22 +103,52 @@ const submitGlossary = async () => {
 };
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const options = advanceOptions.value!!.getTranslationOptions();
-  const task = buildWebTranslateTask(providerId, novelId, {
-    start: options.startIndex,
-    end: options.endIndex,
-    expire: options.translateExpireChapter,
-  });
-  const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
-  const success = workspace.addJob({
-    task,
-    description: titleJp,
-    createAt: Date.now(),
-  });
-  if (success) {
-    message.success('排队成功');
+  const { startIndex, endIndex, translateExpireChapter, taskNumber } =
+    advanceOptions.value!!.getTranslationOptions();
+
+  if (endIndex <= startIndex || startIndex >= total) {
+    message.error('排队失败：没有选中章节');
+    return;
+  }
+
+  const tasks: string[] = [];
+  if (taskNumber > 1) {
+    const taskSize = (Math.min(endIndex, total) - startIndex) / taskNumber;
+    for (let i = 0; i < taskNumber; i++) {
+      const start = Math.round(startIndex + i * taskSize);
+      const end = Math.round(startIndex + (i + 1) * taskSize);
+      console.log(`${start} => ${end}`);
+      if (end > start) {
+        const task = buildWebTranslateTask(providerId, novelId, {
+          start,
+          end,
+          expire: translateExpireChapter,
+        });
+        tasks.push(task);
+      }
+    }
   } else {
+    const task = buildWebTranslateTask(providerId, novelId, {
+      start: startIndex,
+      end: endIndex,
+      expire: translateExpireChapter,
+    });
+    tasks.push(task);
+  }
+  console.log(tasks);
+
+  const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+  const results = tasks.map((task) =>
+    workspace.addJob({
+      task,
+      description: titleJp,
+      createAt: Date.now(),
+    })
+  );
+  if (results.length === 1 && !results[0]) {
     message.error('排队失败：翻译任务已经存在');
+  } else {
+    message.success('排队成功');
   }
 };
 </script>

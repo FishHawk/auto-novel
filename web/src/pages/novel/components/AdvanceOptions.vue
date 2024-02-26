@@ -3,7 +3,6 @@ import { ref, watch } from 'vue';
 
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { TranslatorId } from '@/data/translator';
 
 defineProps<{
   type: 'web' | 'wenku';
@@ -40,6 +39,7 @@ const translateExpireChapter = ref(false);
 const syncFromProvider = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
+const taskNumber = ref<number | null>(1);
 
 defineExpose({
   getTranslationOptions: () => ({
@@ -47,6 +47,7 @@ defineExpose({
     syncFromProvider: syncFromProvider.value,
     startIndex: startIndex.value ?? 0,
     endIndex: endIndex.value ?? 65536,
+    taskNumber: taskNumber.value ?? 1,
   }),
 });
 
@@ -130,24 +131,45 @@ const translationModeOptions = [
       <n-list-item v-if="type === 'web'">
         <advance-option
           title="自定义更新范围"
-          description="控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。比如，从0到10，表示章节需要属于区间[0，10)的章节，不包含序号10。"
+          description="控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。比如，“从0到10”，表示属于区间[0，10)的章节，从第0章到第9章，不包含第10章。均分任务只对排队GPT/Sakura生效，最大为10。"
         >
-          <n-input-group style="margin-top: 4px">
-            <n-input-group-label size="small">从</n-input-group-label>
-            <n-input-number
-              size="small"
-              v-model:value="startIndex"
-              :min="0"
-              style="width: 100px"
-            />
-            <n-input-group-label size="small">到</n-input-group-label>
-            <n-input-number
-              size="small"
-              v-model:value="endIndex"
-              :min="0"
-              style="width: 100px"
-            />
-          </n-input-group>
+          <n-flex style="text-align: center">
+            <div>
+              <n-input-group>
+                <n-input-group-label size="small">从</n-input-group-label>
+                <n-input-number
+                  size="small"
+                  v-model:value="startIndex"
+                  :show-button="false"
+                  button-placement="both"
+                  :min="0"
+                  style="width: 60px"
+                />
+                <n-input-group-label size="small">到</n-input-group-label>
+                <n-input-number
+                  size="small"
+                  v-model:value="endIndex"
+                  :show-button="false"
+                  :min="0"
+                  style="width: 60px"
+                />
+              </n-input-group>
+            </div>
+            <div>
+              <n-input-group>
+                <n-input-group-label size="small">均分</n-input-group-label>
+                <n-input-number
+                  size="small"
+                  v-model:value="taskNumber"
+                  :show-button="false"
+                  :min="1"
+                  :max="10"
+                  style="width: 60px"
+                />
+                <n-input-group-label size="small">个任务</n-input-group-label>
+              </n-input-group>
+            </div>
+          </n-flex>
         </advance-option>
       </n-list-item>
 
