@@ -135,7 +135,7 @@ const showOperationPanel = ref(false);
 
 const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
 
-const submitJob = (id: 'gpt' | 'sakura') => {
+const submitJob = (id: 'gpt' | 'sakura', end?: number) => {
   const novels = novelListWebRef.value?.$props.items;
   if (novels === undefined || novels.length === 0) {
     message.error('本页无小说');
@@ -143,7 +143,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     novels.forEach((it) => {
       const task = buildWebTranslateTask(it.providerId, it.novelId, {
         start: 0,
-        end: 65535,
+        end: end ?? 65535,
         expire: false,
       });
       const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
@@ -180,18 +180,29 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         style="margin-bottom: 16px"
       >
         <n-card>
-          <n-flex>
-            <c-button label="移动（暂未实现）" />
-            <c-button
-              v-if="favoriteType === 'web'"
-              label="排队GPT-本页"
-              @click="submitJob('gpt')"
-            />
-            <c-button
-              v-if="favoriteType === 'web'"
-              label="排队Sakura-本页"
-              @click="submitJob('sakura')"
-            />
+          <n-flex vertical>
+            <div>
+              <c-button label="移动（暂未实现）" />
+            </div>
+            <template v-if="favoriteType === 'web'">
+              <n-button-group>
+                <c-button label="排队GPT-本页" @click="submitJob('gpt')" />
+                <c-button
+                  label="排队GPT-本页-前5话"
+                  @click="submitJob('gpt', 5)"
+                />
+              </n-button-group>
+              <n-button-group>
+                <c-button
+                  label="排队Sakura-本页"
+                  @click="submitJob('sakura')"
+                />
+                <c-button
+                  label="排队Sakura-本页-前5话"
+                  @click="submitJob('sakura', 5)"
+                />
+              </n-button-group>
+            </template>
           </n-flex>
         </n-card>
       </n-collapse-transition>
