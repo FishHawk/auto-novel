@@ -158,8 +158,12 @@ const theme = computed(() => {
     }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
-      <n-layout style="overflow-x: overlay">
-        <n-layout-header bordered>
+      <n-layout
+        :native-scrollbar="false"
+        :scrollbar-props="{ trigger: 'none' }"
+        style="height: 100vh"
+      >
+        <n-layout-header bordered position="absolute" style="z-index: 1">
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
               <router-link to="/">
@@ -212,15 +216,11 @@ const theme = computed(() => {
           </n-flex>
         </n-layout-header>
 
-        <n-layout
-          :native-scrollbar="false"
-          :scrollbar-props="{ trigger: 'none' }"
-          style="height: calc(100vh - 51px)"
-        >
-          <n-layout-content style="padding-bottom: 48px">
-            <router-view />
-          </n-layout-content>
-        </n-layout>
+        <n-layout-content style="margin-top: 50px">
+          <router-view />
+        </n-layout-content>
+
+        <n-layout-footer style="height: 64px; background-color: transparent" />
       </n-layout>
 
       <n-drawer
