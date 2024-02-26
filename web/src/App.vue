@@ -4,8 +4,10 @@ import { watch } from 'vue';
 import { ApiAuth } from '@/data/api/api_auth';
 import { updateToken } from '@/data/api/client';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { useSettingStore } from '@/data/stores/setting';
 
 const userData = useUserDataStore();
+const setting = useSettingStore();
 
 // 全局注册token
 watch(
@@ -24,6 +26,17 @@ if (userData.isLoggedIn) {
       }
     });
   }
+}
+
+// 兼容旧格式
+if ((setting as any).isDark !== undefined) {
+  if ((setting as any).isDark === true) {
+    setting.theme = 'dark';
+  }
+  (setting as any).isDark = undefined;
+}
+if (setting.enabledTranslator === undefined) {
+  setting.enabledTranslator = ['baidu', 'youdao', 'gpt', 'sakura'];
 }
 </script>
 

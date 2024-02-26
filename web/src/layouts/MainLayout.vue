@@ -5,7 +5,6 @@ import {
   NIcon,
   darkTheme,
   dateZhCN,
-  lightTheme,
   zhCN,
   useOsTheme,
 } from 'naive-ui';
@@ -144,13 +143,6 @@ const theme = computed(() => {
   }
   return specificTheme === 'light' ? null : darkTheme;
 });
-// 兼容旧格式
-if ((setting as any).isDark !== undefined) {
-  if ((setting as any).isDark === true) {
-    setting.theme = 'dark';
-  }
-  (setting as any).isDark = undefined;
-}
 </script>
 
 <template>

@@ -4,6 +4,7 @@ import { TranslatorId } from '@/data/translator';
 
 export interface Setting {
   theme: 'light' | 'dark' | 'system';
+  enabledTranslator: TranslatorId[];
   tocSortReverse: boolean;
   downloadFilenameType: 'jp' | 'zh';
   downloadFormat: {
@@ -18,6 +19,7 @@ export const useSettingStore = defineStore('setting', {
   state: () =>
     <Setting>{
       theme: 'light',
+      enabledTranslator: ['baidu', 'youdao', 'gpt', 'sakura'],
       tocSortReverse: false,
       downloadFilenameType: 'zh',
       downloadFormat: {

@@ -10,7 +10,6 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { TranslatorId } from '@/data/translator';
 
 import AdvanceOptions from './AdvanceOptions.vue';
 
@@ -122,13 +121,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     message.error('排队失败：翻译任务已经存在');
   }
 };
-
-const translatorLabels = computed(() => ({
-  baidu: `百度(${props.baidu}/${total})`,
-  youdao: `有道(${props.youdao}/${total})`,
-  gpt: `GPT(${props.gpt}/${total})`,
-  sakura: `Sakura(${props.sakura}/${total})`,
-}));
 </script>
 
 <template>
@@ -138,61 +130,58 @@ const translatorLabels = computed(() => ({
     :glossary="glossary"
     :submit="submitGlossary"
   >
-    <c-button
-      label="下载机翻"
-      :round="false"
-      tag="a"
-      :href="files.zh.url"
-      :download="files.zh.filename"
-      target="_blank"
-    />
-    <c-button
-      label="下载日文"
-      :round="false"
-      tag="a"
-      :href="files.jp.url"
-      :download="files.jp.filename"
-      target="_blank"
-    />
+    <div style="margin-left: 8px">
+      <c-button
+        label="下载机翻"
+        :round="false"
+        tag="a"
+        :href="files.zh.url"
+        :download="files.zh.filename"
+        target="_blank"
+      />
+      <c-button
+        label="下载日文"
+        :round="false"
+        tag="a"
+        :href="files.jp.url"
+        :download="files.jp.filename"
+        target="_blank"
+      />
+    </div>
   </advance-options>
 
-  <n-list>
-    <n-list-item
-      v-for="translatorId of (['baidu', 'youdao', 'gpt', 'sakura'] as TranslatorId[])"
-    >
-      {{ translatorLabels[translatorId] }}
-      <template #suffix>
-        <c-button
-          v-if="translatorId === 'baidu'"
-          label="更新百度"
-          size="small"
-          tertiary
-          @click="startTranslateTask(translatorId)"
-        />
-        <c-button
-          v-if="translatorId === 'youdao'"
-          label="更新有道"
-          size="small"
-          tertiary
-          @click="startTranslateTask(translatorId)"
-        />
-        <c-button
-          v-if="translatorId === 'gpt'"
-          label="排队GPT"
-          size="small"
-          tertiary
-          @click="() => submitJob(translatorId)"
-        />
-        <c-button
-          v-if="translatorId === 'sakura'"
-          label="排队Sakura"
-          size="small"
-          tertiary
-          @click="submitJob(translatorId)"
-        />
-      </template>
-    </n-list-item>
-  </n-list>
+  <n-p>
+    总计 {{ total }} / 百度 {{ baidu }} / 有道 {{ youdao }} / GPT {{ gpt }} /
+    Sakura {{ sakura }}
+  </n-p>
+
+  <n-button-group v-if="setting.enabledTranslator.length > 0">
+    <c-button
+      v-if="setting.enabledTranslator.includes('baidu')"
+      label="更新百度"
+      :round="false"
+      @click="startTranslateTask('baidu')"
+    />
+    <c-button
+      v-if="setting.enabledTranslator.includes('youdao')"
+      label="更新有道"
+      :round="false"
+      @click="startTranslateTask('youdao')"
+    />
+    <c-button
+      v-if="setting.enabledTranslator.includes('gpt')"
+      label="排队GPT"
+      :round="false"
+      @click="submitJob('gpt')"
+    />
+    <c-button
+      v-if="setting.enabledTranslator.includes('sakura')"
+      label="排队Sakura"
+      :round="false"
+      @click="submitJob('sakura')"
+    />
+  </n-button-group>
+  <n-p v-else>没有翻译器启用</n-p>
 
   <TranslateTask
     ref="translateTask"

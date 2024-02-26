@@ -70,30 +70,6 @@ const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
 ];
-const translationOptions: { label: string; value: TranslatorId }[] = [
-  { label: 'Sakura', value: 'sakura' },
-  { label: 'GPT', value: 'gpt' },
-  { label: '有道', value: 'youdao' },
-  { label: '百度', value: 'baidu' },
-];
-
-const toggleTranslator = (id: TranslatorId) => {
-  if (setting.downloadFormat.translations.includes(id)) {
-    setting.downloadFormat.translations =
-      setting.downloadFormat.translations.filter((it) => it !== id);
-  } else {
-    setting.downloadFormat.translations.push(id);
-  }
-};
-
-const calculateTranslatorOrderLabel = (id: TranslatorId) => {
-  const index = setting.downloadFormat.translations.indexOf(id);
-  if (index < 0) {
-    return '[x]';
-  } else {
-    return `[${index + 1}]`;
-  }
-};
 </script>
 
 <template>
@@ -247,23 +223,11 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
                 :label="option.label"
               />
             </n-radio-group>
-            <n-button-group size="small">
-              <n-button
-                v-for="option in translationOptions"
-                :focusable="false"
-                ghost
-                :type="
-                  setting.downloadFormat.translations.includes(option.value)
-                    ? 'primary'
-                    : 'default'
-                "
-                :value="option.value"
-                @click="toggleTranslator(option.value)"
-              >
-                {{ option.label }}
-                {{ calculateTranslatorOrderLabel(option.value) }}
-              </n-button>
-            </n-button-group>
+            <translator-check
+              v-model:value="setting.downloadFormat.translations"
+              show-order
+              size="small"
+            />
           </n-flex>
         </advance-option>
       </n-list-item>

@@ -109,7 +109,12 @@ const setCustomFontColor = (color: string) => {
               :label="option.label"
             />
           </n-radio-group>
-          <n-button-group>
+          <translator-check
+            v-model:value="setting.translations"
+            show-order
+            :two-line="!isWideScreen"
+          />
+          <!-- <n-button-group>
             <n-button
               v-for="option in translationOptions"
               :focusable="false"
@@ -127,7 +132,7 @@ const setCustomFontColor = (color: string) => {
               <br v-if="!isWideScreen" />
               {{ calculateTranslatorOrderLabel(option.value) }}
             </n-button>
-          </n-button-group>
+          </n-button-group> -->
         </n-flex>
       </ReuseOption>
       <ReuseOption label="字体" align="baseline">

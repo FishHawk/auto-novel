@@ -158,12 +158,14 @@ const showGlossaryEditor = ref(false);
 
         <n-flex :size="8">
           <c-button
+            v-if="setting.enabledTranslator.includes('baidu')"
             label="更新百度"
             size="tiny"
             secondary
             @click="startTranslateTask('baidu')"
           />
           <c-button
+            v-if="setting.enabledTranslator.includes('youdao')"
             label="更新有道"
             size="tiny"
             secondary
@@ -171,12 +173,14 @@ const showGlossaryEditor = ref(false);
           />
 
           <c-button
+            v-if="setting.enabledTranslator.includes('gpt')"
             label="排队GPT"
             size="tiny"
             secondary
             @click="submitJob('gpt')"
           />
           <c-button
+            v-if="setting.enabledTranslator.includes('sakura')"
             label="排队Sakura"
             size="tiny"
             secondary

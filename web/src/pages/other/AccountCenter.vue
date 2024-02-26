@@ -51,7 +51,14 @@ const themeOptions = [
             </n-radio-group>
           </advance-option>
         </n-list-item>
-
+        <n-list-item>
+          <advance-option title="显示的翻译按钮">
+            <translator-check
+              v-model:value="setting.enabledTranslator"
+              size="small"
+            />
+          </advance-option>
+        </n-list-item>
         <n-list-item v-if="userData.isAdmin">
           <advance-option title="控制台">
             <n-flex>
