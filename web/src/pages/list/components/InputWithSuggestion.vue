@@ -42,6 +42,7 @@ const options = computed(() => {
       h(
         NFlex,
         {
+          size: [4, 4],
           align: 'center',
           style: ' width:100%; padding: 8px 12px;',
         },
@@ -50,6 +51,8 @@ const options = computed(() => {
             NTag,
             {
               type: tag.startsWith('-') ? 'error' : 'success',
+              size: 'small',
+              style: { cursor: 'pointer' },
               onClick() {
                 emit('update:value', [props.value, tag].join(' '));
               },
@@ -88,3 +91,10 @@ const options = computed(() => {
     </n-input>
   </n-dropdown>
 </template>
+
+<style>
+.n-dropdown-option-body__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
