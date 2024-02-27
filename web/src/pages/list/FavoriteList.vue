@@ -19,6 +19,7 @@ import { useIsWideScreen } from '@/data/util';
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
 import { Loader } from './components/NovelList.vue';
 import NovelListWeb from './components/NovelListWeb.vue';
+import NovelListWenku from './components/NovelListWenku.vue';
 
 const isWideScreen = useIsWideScreen(850);
 
@@ -134,6 +135,65 @@ const showAddModal = ref(false);
 const showOperationPanel = ref(false);
 
 const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
+const novelListWenkuRef = ref<InstanceType<typeof NovelListWenku>>();
+
+const targetFavoredId = ref<string>(favoriteId.value);
+
+const getSelectedNovels = () => {
+  if (favoriteType.value === 'web') {
+    const novels = novelListWebRef.value?.$props.items;
+    if (novels !== undefined && novels.length > 0) {
+      return { type: 'web' as 'web', novels };
+    }
+  } else {
+    const novels = novelListWenkuRef.value?.$props.items;
+    if (novels !== undefined && novels.length > 0) {
+      return { type: 'wenku' as 'wenku', novels };
+    }
+  }
+  message.error('本页无小说');
+  return undefined;
+};
+
+const moveToFavored = async () => {
+  const selectedNovels = getSelectedNovels();
+  if (selectedNovels === undefined) return;
+  if (targetFavoredId.value === favoriteId.value) {
+    message.info('无需移动');
+    return;
+  }
+
+  if (selectedNovels.type === 'web') {
+    for (const novel of selectedNovels.novels) {
+      const result = await (targetFavoredId.value !== 'deleted'
+        ? ApiUser.favoriteWebNovel(
+            targetFavoredId.value,
+            novel.providerId,
+            novel.novelId
+          )
+        : ApiUser.unfavoriteWebNovel(
+            favoriteId.value,
+            novel.providerId,
+            novel.novelId
+          ));
+      if (!result.ok) {
+        message.error(`收藏错误： ${novel.titleJp}\n` + result.error.message);
+      }
+    }
+  } else {
+    for (const novel of selectedNovels.novels) {
+      const result = await (targetFavoredId.value !== 'deleted'
+        ? ApiUser.favoriteWenkuNovel(targetFavoredId.value, novel.id)
+        : ApiUser.unfavoriteWenkuNovel(targetFavoredId.value, novel.id));
+      if (!result.ok) {
+        message.error(
+          `取消收藏错误： ${novel.titleZh}\n` + result.error.message
+        );
+      }
+    }
+  }
+  message.info('移动完成');
+};
 
 const queueOrder = ref<'asc' | 'desc'>('desc');
 const queueOrderOptions = [
@@ -148,29 +208,29 @@ const queueTaskSizeOptions = [
 ];
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const novels = novelListWebRef.value?.$props.items;
-  if (novels === undefined || novels.length === 0) {
-    message.error('本页无小说');
-  } else {
-    const novelsSorted =
-      queueOrder.value === 'desc' ? novels : novels.slice().reverse();
-    const end = queueTaskSize.value === 'full' ? 65535 : 5;
+  const selectedNovels = getSelectedNovels();
+  if (selectedNovels === undefined || selectedNovels.type === 'wenku') return;
 
-    novelsSorted.forEach((it) => {
-      const task = buildWebTranslateTask(it.providerId, it.novelId, {
-        start: 0,
-        end: end,
-        expire: false,
-      });
-      const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
-      workspace.addJob({
-        task,
-        description: it.titleJp,
-        createAt: Date.now(),
-      });
+  const novelsSorted =
+    queueOrder.value === 'desc'
+      ? selectedNovels.novels
+      : selectedNovels.novels.slice().reverse();
+  const end = queueTaskSize.value === 'full' ? 65535 : 5;
+
+  novelsSorted.forEach((it) => {
+    const task = buildWebTranslateTask(it.providerId, it.novelId, {
+      start: 0,
+      end: end,
+      expire: false,
     });
-    message.success('排队成功');
-  }
+    const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+    workspace.addJob({
+      task,
+      description: it.titleJp,
+      createAt: Date.now(),
+    });
+  });
+  message.success('排队成功');
 };
 </script>
 
@@ -199,7 +259,38 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           <n-list-item>目前不支持选择小说，只能控制整页。</n-list-item>
 
           <n-list-item>
-            <c-button size="small" label="移动（暂未实现）" />
+            <n-flex vertical>
+              <b>批量移动小说（低配版，很慢，等到显示移动完成）</b>
+
+              <n-flex align="baseline" :wrap="false">
+                <n-text style="white-space: nowrap">目标</n-text>
+                <n-radio-group v-model:value="targetFavoredId">
+                  <n-flex vertical size="large">
+                    <n-radio
+                      v-for="favored of favoriteType === 'web'
+                        ? favoredList.web
+                        : favoredList.wenku"
+                      :key="favored.id"
+                      :value="favored.id"
+                    >
+                      {{ favored.title }}
+                    </n-radio>
+                    <n-radio key="deleted" value="deleted"> 取消收藏 </n-radio>
+                  </n-flex>
+                </n-radio-group>
+              </n-flex>
+
+              <n-flex align="baseline" :wrap="false">
+                <n-text style="white-space: nowrap">操作</n-text>
+                <c-button
+                  label="移动"
+                  async
+                  size="small"
+                  :round="false"
+                  @click="moveToFavored"
+                />
+              </n-flex>
+            </n-flex>
           </n-list-item>
 
           <n-list-item v-if="favoriteType === 'web'">
@@ -257,7 +348,11 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           :items="page.items"
           simple
         />
-        <NovelListWenku v-if="page.type === 'wenku'" :items="page.items" />
+        <NovelListWenku
+          v-if="page.type === 'wenku'"
+          ref="novelListWenkuRef"
+          :items="page.items"
+        />
       </NovelList>
     </div>
     <template #sidebar>
