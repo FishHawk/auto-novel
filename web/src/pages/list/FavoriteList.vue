@@ -298,7 +298,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
               <b>批量生成GPT/Sakura任务</b>
 
               <n-flex align="baseline" :wrap="false">
-                <n-text style="white-space: nowrap">语言</n-text>
+                <n-text style="white-space: nowrap">顺序</n-text>
                 <n-radio-group v-model:value="queueOrder" size="small">
                   <n-radio-button
                     v-for="option in queueOrderOptions"
