@@ -135,15 +135,31 @@ const showOperationPanel = ref(false);
 
 const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
 
-const submitJob = (id: 'gpt' | 'sakura', end?: number) => {
+const queueOrder = ref<'asc' | 'desc'>('desc');
+const queueOrderOptions = [
+  { value: 'desc', label: '从新到旧' },
+  { value: 'asc', label: '从旧到新' },
+];
+
+const queueTaskSize = ref<'full' | 'first5'>('full');
+const queueTaskSizeOptions = [
+  { value: 'full', label: '全部' },
+  { value: 'first5', label: '前5话' },
+];
+
+const submitJob = (id: 'gpt' | 'sakura') => {
   const novels = novelListWebRef.value?.$props.items;
   if (novels === undefined || novels.length === 0) {
     message.error('本页无小说');
   } else {
-    novels.forEach((it) => {
+    const novelsSorted =
+      queueOrder.value === 'desc' ? novels : novels.slice().reverse();
+    const end = queueTaskSize.value === 'full' ? 65535 : 5;
+
+    novelsSorted.forEach((it) => {
       const task = buildWebTranslateTask(it.providerId, it.novelId, {
         start: 0,
-        end: end ?? 65535,
+        end: end,
         expire: false,
       });
       const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
@@ -179,32 +195,59 @@ const submitJob = (id: 'gpt' | 'sakura', end?: number) => {
         :show="showOperationPanel"
         style="margin-bottom: 16px"
       >
-        <n-card>
-          <n-flex vertical>
-            <div>
-              <c-button label="移动（暂未实现）" />
-            </div>
-            <template v-if="favoriteType === 'web'">
-              <n-button-group>
-                <c-button label="排队GPT-本页" @click="submitJob('gpt')" />
-                <c-button
-                  label="排队GPT-本页-前5话"
-                  @click="submitJob('gpt', 5)"
-                />
-              </n-button-group>
-              <n-button-group>
-                <c-button
-                  label="排队Sakura-本页"
-                  @click="submitJob('sakura')"
-                />
-                <c-button
-                  label="排队Sakura-本页-前5话"
-                  @click="submitJob('sakura', 5)"
-                />
-              </n-button-group>
-            </template>
-          </n-flex>
-        </n-card>
+        <n-list bordered>
+          <n-list-item>目前不支持选择小说，只能控制整页。</n-list-item>
+
+          <n-list-item>
+            <c-button size="small" label="移动（暂未实现）" />
+          </n-list-item>
+
+          <n-list-item v-if="favoriteType === 'web'">
+            <n-flex vertical>
+              <b>批量生成GPT/Sakura任务</b>
+
+              <n-flex align="baseline" :wrap="false">
+                <n-text style="white-space: nowrap">语言</n-text>
+                <n-radio-group v-model:value="queueOrder" size="small">
+                  <n-radio-button
+                    v-for="option in queueOrderOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    :label="option.label"
+                  />
+                </n-radio-group>
+              </n-flex>
+
+              <n-flex align="baseline" :wrap="false">
+                <n-text style="white-space: nowrap">范围</n-text>
+                <n-radio-group v-model:value="queueTaskSize" size="small">
+                  <n-radio-button
+                    v-for="option in queueTaskSizeOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    :label="option.label"
+                  />
+                </n-radio-group>
+              </n-flex>
+
+              <n-flex align="baseline" :wrap="false">
+                <n-text style="white-space: nowrap">操作</n-text>
+                <n-button-group size="small">
+                  <c-button
+                    label="排队GPT"
+                    :round="false"
+                    @click="submitJob('gpt')"
+                  />
+                  <c-button
+                    label="排队Sakura"
+                    :round="false"
+                    @click="submitJob('sakura')"
+                  />
+                </n-button-group>
+              </n-flex>
+            </n-flex>
+          </n-list-item>
+        </n-list>
       </n-collapse-transition>
 
       <NovelList :options="options" :loader="loader" v-slot="{ page }">
