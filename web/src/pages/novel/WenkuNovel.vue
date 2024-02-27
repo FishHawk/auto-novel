@@ -84,9 +84,7 @@ const deleteVolume = async (volumeId: string) => {
   <div
     v-if="novelMetadataResult?.ok"
     :style="{
-      background:
-        `linear-gradient(color-mix(in srgb, ${vars.bodyColor} 40%, transparent), ${vars.bodyColor}), ` +
-        `url(${novelMetadataResult.value.cover})`,
+      background: `url(${novelMetadataResult.value.cover})`,
     }"
     style="
       width: 100%;
@@ -95,7 +93,12 @@ const deleteVolume = async (volumeId: string) => {
       background-position: center 15%;
     "
   >
-    <div style="width: 100%; height: 100%; backdrop-filter: blur(8px)">
+    <div
+      :style="{
+        background: `linear-gradient(to bottom, color-mix(in srgb, ${vars.bodyColor} 50%, transparent), ${vars.bodyColor})`,
+      }"
+      style="width: 100%; height: 100%; backdrop-filter: blur(8px)"
+    >
       <div class="layout-content">
         <n-flex :wrap="false" style="padding-top: 20px; padding-bottom: 21px">
           <div>
