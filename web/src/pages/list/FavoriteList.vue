@@ -137,23 +137,45 @@ const showOperationPanel = ref(false);
 const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
 const novelListWenkuRef = ref<InstanceType<typeof NovelListWenku>>();
 
-const targetFavoredId = ref<string>(favoriteId.value);
-
+const toggleSelectMode = () => {
+  showOperationPanel.value = !showOperationPanel.value;
+  if (favoriteType.value === 'web') {
+    novelListWebRef.value?.toggleSelectMode(showOperationPanel.value);
+  } else {
+    novelListWenkuRef.value?.toggleSelectMode(showOperationPanel.value);
+  }
+};
 const getSelectedNovels = () => {
   if (favoriteType.value === 'web') {
-    const novels = novelListWebRef.value?.$props.items;
+    const novels = novelListWebRef.value?.getSelectedNovels();
     if (novels !== undefined && novels.length > 0) {
       return { type: 'web' as 'web', novels };
     }
   } else {
-    const novels = novelListWenkuRef.value?.$props.items;
+    const novels = novelListWenkuRef.value?.getSelectedNovels();
     if (novels !== undefined && novels.length > 0) {
       return { type: 'wenku' as 'wenku', novels };
     }
   }
-  message.error('本页无小说');
+  message.info('没有选中小说');
   return undefined;
 };
+const selectAll = () => {
+  if (favoriteType.value === 'web') {
+    novelListWebRef.value?.selectAll();
+  } else {
+    novelListWenkuRef.value?.selectAll();
+  }
+};
+const invertSelection = () => {
+  if (favoriteType.value === 'web') {
+    novelListWebRef.value?.invertSelection();
+  } else {
+    novelListWenkuRef.value?.invertSelection();
+  }
+};
+
+const targetFavoredId = ref<string>(favoriteId.value);
 
 const moveToFavored = async () => {
   const selectedNovels = getSelectedNovels();
@@ -193,6 +215,7 @@ const moveToFavored = async () => {
     }
   }
   message.info('移动完成');
+  window.location.reload();
 };
 
 const queueOrder = ref<'asc' | 'desc'>('desc');
@@ -239,10 +262,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     <div style="flex: auto">
       <n-h1>我的收藏</n-h1>
       <n-flex style="margin-bottom: 24px">
-        <c-button
-          label="批量操作"
-          @click="showOperationPanel = !showOperationPanel"
-        />
+        <c-button label="批量操作" @click="toggleSelectMode" />
         <c-button
           v-if="!isWideScreen"
           label="收藏夹列表"
@@ -256,7 +276,19 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         style="margin-bottom: 16px"
       >
         <n-list bordered>
-          <n-list-item>目前不支持选择小说，只能控制整页。</n-list-item>
+          <n-list-item>
+            <n-flex align="baseline" :wrap="false">
+              <n-text style="white-space: nowrap">选择</n-text>
+              <n-button-group size="small">
+                <c-button label="全选" :round="false" @click="selectAll" />
+                <c-button
+                  label="反选"
+                  :round="false"
+                  @click="invertSelection"
+                />
+              </n-button-group>
+            </n-flex>
+          </n-list-item>
 
           <n-list-item>
             <n-flex vertical>

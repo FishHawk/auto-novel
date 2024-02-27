@@ -3,21 +3,59 @@ import { createReusableTemplate } from '@vueuse/core';
 
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
+import { ref } from 'vue';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;
   isAttention: boolean;
 }>();
 
-withDefaults(
-  defineProps<{
-    simple: boolean;
-    items: WebNovelOutlineDto[];
-  }>(),
-  {
-    simple: false,
+const props = defineProps<{
+  simple?: boolean;
+  items: WebNovelOutlineDto[];
+}>();
+
+const enableSelectMode = ref(false);
+const selectedNovels = ref<string[]>([]);
+
+const toggleSelectMode = (enable: boolean) => {
+  enableSelectMode.value = enable;
+  if (enable === false) {
+    selectedNovels.value = [];
   }
-);
+};
+const toggleNovelSelect = (novel: string, selected: boolean) => {
+  if (!selected) {
+    selectedNovels.value = selectedNovels.value.filter((it) => it != novel);
+  } else if (!selectedNovels.value.includes(novel)) {
+    selectedNovels.value.push(novel);
+  }
+};
+
+const getSelectedNovels = () => {
+  return props.items.filter((it) =>
+    selectedNovels.value.includes(`${it.providerId}/${it.novelId}`)
+  );
+};
+
+const selectAll = () => {
+  selectedNovels.value = props.items.map(
+    (it) => `${it.providerId}/${it.novelId}`
+  );
+};
+
+const invertSelection = () => {
+  selectedNovels.value = props.items
+    .map((it) => `${it.providerId}/${it.novelId}`)
+    .filter((it) => !selectedNovels.value.includes(it));
+};
+
+defineExpose({
+  toggleSelectMode,
+  getSelectedNovels,
+  selectAll,
+  invertSelection,
+});
 </script>
 
 <template>
@@ -34,6 +72,15 @@ withDefaults(
 
   <n-list>
     <n-list-item v-for="item of items">
+      <n-checkbox
+        v-if="enableSelectMode"
+        :checked="selectedNovels.includes(`${item.providerId}/${item.novelId}`)"
+        @update:checked="
+          (selected: boolean) =>
+            toggleNovelSelect(`${item.providerId}/${item.novelId}`, selected)
+        "
+        style="margin-right: 8px"
+      />
       <RouterNA :to="`/novel/${item.providerId}/${item.novelId}`">
         {{ item.titleJp }}
       </RouterNA>
