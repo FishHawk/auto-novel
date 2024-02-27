@@ -66,7 +66,7 @@ const setCustomFontColor = (color: string) => {
       </n-flex>
     </DefineOption>
 
-    <n-space vertical size="large" style="width: 100%">
+    <n-flex vertical size="large" style="width: 100%">
       <ReuseOption label="语言" align="baseline">
         <n-radio-group v-model:value="setting.mode">
           <n-radio-button
@@ -191,7 +191,7 @@ const setCustomFontColor = (color: string) => {
       <n-text depth="3" style="font-size: 12px">
         # 左/右方向键跳转章节，数字键1～4切换翻译
       </n-text>
-    </n-space>
+    </n-flex>
   </c-modal>
 </template>
 

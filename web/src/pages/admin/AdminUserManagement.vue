@@ -55,7 +55,7 @@ const roleToReadableText = (role: UserRole) => {
 <template>
   <n-p>
     <n-radio-group v-model:value="userRole" name="user-role">
-      <n-space>
+      <n-flex>
         <n-radio
           v-for="option in userRoleOptions"
           :key="option.value"
@@ -63,7 +63,7 @@ const roleToReadableText = (role: UserRole) => {
         >
           {{ option.label }}
         </n-radio>
-      </n-space>
+      </n-flex>
     </n-radio-group>
   </n-p>
 

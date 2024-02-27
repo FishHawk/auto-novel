@@ -178,23 +178,29 @@ const showDetail = (message: string, detail: string[]) => {
       >
         <div v-for="log of logs">
           {{ log.message }}
-          <span v-if="log.detail !== undefined" @click="showDetail(log.message, log.detail)">
+          <span
+            v-if="log.detail !== undefined"
+            @click="showDetail(log.message, log.detail)"
+          >
             [详细]
           </span>
         </div>
       </n-scrollbar>
-      <n-space align="center" vertical size="large" style="flex: none">
+      <n-flex align="center" vertical size="large" style="flex: none">
         <n-progress type="circle" :percentage="percentage" />
         <n-text>
           成功 {{ chapterFinished }}/{{ chapterTotal ?? '-' }}
           <br />
           失败 {{ chapterError }}/{{ chapterTotal ?? '-' }}
         </n-text>
-      </n-space>
+      </n-flex>
     </n-flex>
   </n-card>
 
-  <c-modal :title="`日志详情 - ${selectedLogMessage}`" v-model:show="showLogDetailModal">
+  <c-modal
+    :title="`日志详情 - ${selectedLogMessage}`"
+    v-model:show="showLogDetailModal"
+  >
     <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
       {{ line }}
     </n-p>

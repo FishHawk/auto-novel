@@ -199,9 +199,9 @@ const theme = computed(() => {
                 :options="userDropdownOptions"
                 @select="handleUserDropdownSelect"
               >
-                <n-button quaternary @click="navToMySpace()">
-                  @{{ userData.username }}
-                </n-button>
+                <router-link :to="'/account'">
+                  <n-button quaternary>@{{ userData.username }}</n-button>
+                </router-link>
               </n-dropdown>
             </template>
 

@@ -93,7 +93,7 @@ const copyResult = () => {
   <div class="layout-content">
     <n-h1>片假名统计</n-h1>
 
-    <n-space align="center">
+    <n-flex align="center">
       <c-button label="打开文件" @click="openOpenFileDialog()" />
       <c-button v-if="filename" label="预览" @click="showPreviewModal = true" />
       <n-p>{{ filename }}</n-p>
@@ -104,7 +104,7 @@ const copyResult = () => {
         @change="loadFile"
         style="width: 0; height: 0"
       />
-    </n-space>
+    </n-flex>
 
     <n-divider />
 

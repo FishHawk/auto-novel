@@ -67,7 +67,7 @@ watch(type, () => {
 <template>
   <n-p>
     <n-radio-group v-model:value="type" name="operation-type">
-      <n-space>
+      <n-flex>
         <n-radio
           v-for="option in typeOptions"
           :key="option.value"
@@ -75,7 +75,7 @@ watch(type, () => {
         >
           {{ option.label }}
         </n-radio>
-      </n-space>
+      </n-flex>
     </n-radio-group>
   </n-p>
 
@@ -114,7 +114,7 @@ watch(type, () => {
           v-else-if="item.operation.type === 'wenku-upload'"
           :op="item.operation"
         />
-        <n-space>
+        <n-flex>
           <n-text>
             于<n-time :time="item.createAt * 1000" type="relative" /> 由{{
               item.operator.username
@@ -123,7 +123,7 @@ watch(type, () => {
           <n-button type="error" text @click="deleteHistory(item.id)">
             删除
           </n-button>
-        </n-space>
+        </n-flex>
       </n-list-item>
     </n-list>
   </ResultView>
