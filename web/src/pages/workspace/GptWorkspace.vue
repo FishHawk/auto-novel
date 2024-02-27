@@ -87,6 +87,12 @@ const clearCache = async () => {
       </n-li>
       <n-li> 启动了的翻译器无法暂停或删除。等这句话没了就可以了。 </n-li>
       <n-li> AccessToken有效期为90天，过期请重新获取。 </n-li>
+      <n-li style="color: red">
+        <b>
+          GPT3.5 web
+          不再使用中转，而是使用官网链接，需要你的网络环境能正常访问ChatGPT并安装插件。你仍然可以在添加翻译器的时候设置中转链接。
+        </b>
+      </n-li>
     </n-ul>
 
     <section-header title="翻译器">

@@ -58,7 +58,9 @@ const createGptWorker = async () => {
   worker.key = worker.key.trim();
   try {
     const obj = JSON.parse(worker.key);
-    worker.key = obj.accessToken;
+    if (typeof obj.accessToken === 'string') {
+      worker.key = obj.accessToken;
+    }
   } catch {}
   gptWorkspace.addWorker(worker);
 };

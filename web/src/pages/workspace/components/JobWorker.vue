@@ -47,7 +47,7 @@ const translatorDesc = computed<TranslatorDesc & { id: 'gpt' | 'sakura' }>(
       const endpoint = (() => {
         if (worker.endpoint.length === 0) {
           if (worker.type === 'web') {
-            return 'https://chatgpt-proxy.lss233.com/api';
+            return 'https://chat.openai.com/backend-api';
           } else {
             return 'https://api.openai.com';
           }
