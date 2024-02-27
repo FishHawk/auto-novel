@@ -3,14 +3,14 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { ApiArticle, Article } from '@/data/api/api_article';
-import { ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 const route = useRoute();
 const userData = useUserDataStore();
 
 const articleId = route.params.id as string;
-const articleResult = ref<ResultState<Article>>();
+const articleResult = ref<Result<Article>>();
 
 onMounted(async () => {
   const result = await ApiArticle.getArticle(articleId);

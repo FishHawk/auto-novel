@@ -117,7 +117,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     for (let i = 0; i < taskNumber; i++) {
       const start = Math.round(startIndex + i * taskSize);
       const end = Math.round(startIndex + (i + 1) * taskSize);
-      console.log(`${start} => ${end}`);
       if (end > start) {
         const task = buildWebTranslateTask(providerId, novelId, {
           start,
@@ -135,7 +134,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     });
     tasks.push(task);
   }
-  console.log(tasks);
 
   const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
   const results = tasks.map((task) =>
@@ -185,7 +183,10 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     Sakura {{ sakura }}
   </n-p>
 
-  <n-button-group v-if="setting.enabledTranslator.length > 0">
+  <n-button-group
+    v-if="setting.enabledTranslator.length > 0"
+    style="margin-bottom: 16px"
+  >
     <c-button
       v-if="setting.enabledTranslator.includes('baidu')"
       label="更新百度"

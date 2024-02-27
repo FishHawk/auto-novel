@@ -129,8 +129,6 @@ const onSignInSuccess = (profile: SignInDto) => {
   showLoginModal.value = false;
 };
 
-const navToMySpace = () => router.push({ path: '/account' });
-
 const osThemeRef = useOsTheme();
 const theme = computed(() => {
   let specificTheme: 'light' | 'dark' = 'light';
@@ -167,7 +165,7 @@ const theme = computed(() => {
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
               <router-link to="/">
-                <robot-icon style="margin-right: 8px; margin-bottom: 8px" />
+                <robot-icon style="margin-top:0px"/>
               </router-link>
               <div>
                 <n-menu

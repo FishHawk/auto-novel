@@ -32,12 +32,6 @@ const themeOptions = [
         </n-tag>
       </n-h1>
 
-      <n-p>
-        <n-text depth="3" style="font-size: 12px">
-          只有一个主题选项太奇怪了？因为我还没想好放什么
-        </n-text>
-      </n-p>
-
       <n-list bordered>
         <n-list-item>
           <advance-option title="主题">

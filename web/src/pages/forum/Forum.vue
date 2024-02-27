@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { LockOutlined, PlusOutlined, PushPinOutlined } from '@vicons/material';
+import {
+  LockOutlined,
+  MoreVertOutlined,
+  PlusOutlined,
+  PushPinOutlined,
+} from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -14,9 +19,8 @@ const router = useRouter();
 const message = useMessage();
 const userData = useUserDataStore();
 
-function parsePage(q: typeof route.query) {
-  return parseInt(route.query.page as string) || 1;
-}
+const parsePage = (q: typeof route.query) =>
+  parseInt(route.query.page as string) || 1;
 
 const articlePageResult = ref<ResultState<Page<ArticleOutline>>>();
 const currentPage = ref(parsePage(route.query));
@@ -154,16 +158,17 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
             </td>
             <td class="article-number">
               {{ article.numViews }}/{{ article.numComments }}
-              <template v-if="userData.asAdmin" trigger="click">
-                <br />
-                <n-dropdown
-                  trigger="hover"
-                  :options="generateOptions(article)"
-                  @select="(key: any) => handleSelect(key, article)"
-                >
-                  <n-button size="tiny">操作</n-button>
-                </n-dropdown>
-              </template>
+              <br/>
+              <n-dropdown
+                v-if="userData.asAdmin"
+                trigger="click"
+                :options="generateOptions(article)"
+                @select="(key: any) => handleSelect(key, article)"
+              >
+                <n-button circle size="tiny">
+                  <n-icon :component="MoreVertOutlined" />
+                </n-button>
+              </n-dropdown>
             </td>
           </tr>
         </tbody>
