@@ -47,7 +47,7 @@ defineExpose({
 </script>
 
 <template>
-  <n-grid :x-gap="12" :y-gap="12" cols="2 600:4">
+  <n-grid :x-gap="12" :y-gap="12" cols="2 500:3 800:4">
     <n-grid-item v-for="item in items">
       <router-link :to="`/wenku/${item.id}`">
         <ImageCard
