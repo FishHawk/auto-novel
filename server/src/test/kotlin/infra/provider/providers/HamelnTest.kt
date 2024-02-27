@@ -47,6 +47,11 @@ class HamelnTest : DescribeSpec({
             val metadata = provider.getMetadata("94938")
             metadata.title.shouldBe("オズの国のドロシー")
         }
+        it("常规，评价为空") {
+            // https://syosetu.org/novel/274708
+            val metadata = provider.getMetadata("274708")
+            metadata.points.shouldBeNull()
+        }
         it("短篇") {
             // https://syosetu.org/novel/303189
             val metadata = provider.getMetadata("303189")
