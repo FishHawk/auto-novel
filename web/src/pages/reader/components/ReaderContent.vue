@@ -36,7 +36,7 @@ const paragraphs = computed(() => {
   if (setting.mode === 'jp') {
     styles.push({ paragraphs: chapter.paragraphs, secondary: false });
   } else {
-    if (setting.mode === 'mix-reverse') {
+    if (setting.mode === 'jp-zh') {
       styles.push({ paragraphs: chapter.paragraphs, secondary: true });
     }
 
@@ -90,7 +90,7 @@ const paragraphs = computed(() => {
       }
     }
 
-    if (setting.mode === 'mix') {
+    if (setting.mode === 'zh-jp') {
       styles.push({ paragraphs: chapter.paragraphs, secondary: true });
     }
   }

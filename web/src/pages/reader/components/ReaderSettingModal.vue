@@ -2,7 +2,14 @@
 import { createReusableTemplate } from '@vueuse/core';
 import { ref } from 'vue';
 
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import {
+  fontSizeOptions,
+  lineSpaceOptions,
+  modeOptions,
+  themeOptions,
+  translationModeOptions,
+  useReaderSettingStore,
+} from '@/data/stores/reader_setting';
 import { useIsWideScreen } from '@/data/util';
 
 const [DefineOption, ReuseOption] = createReusableTemplate<{
@@ -12,34 +19,6 @@ const [DefineOption, ReuseOption] = createReusableTemplate<{
 
 const isWideScreen = useIsWideScreen(600);
 const setting = useReaderSettingStore();
-
-const modeOptions = [
-  { value: 'jp', label: '日文' },
-  { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中日' },
-  { value: 'mix-reverse', label: '日中' },
-];
-
-const translationModeOptions = [
-  { label: '优先', value: 'priority' },
-  { label: '并列', value: 'parallel' },
-];
-
-// 兼容旧格式
-if (typeof setting.fontSize === 'string') {
-  setting.fontSize = Number((setting.fontSize as any).replace(/[^0-9]/g, ''));
-}
-
-const themeOptions = [
-  { isDark: false, bodyColor: '#FFFFFF' },
-  { isDark: false, bodyColor: '#FFF2E2' },
-  { isDark: false, bodyColor: '#E3EDCD' },
-  { isDark: false, bodyColor: '#E9EBFE' },
-  { isDark: false, bodyColor: '#EAEAEF' },
-
-  { isDark: true, bodyColor: '#000000' },
-  { isDark: true, bodyColor: '#272727' },
-];
 
 const showCustomThemeControls = ref(false);
 const setCustomBodyColor = (color: string) => {
@@ -97,7 +76,7 @@ const setCustomFontColor = (color: string) => {
       <ReuseOption label="字体" align="baseline">
         <c-select-number
           v-model:value="setting.fontSize"
-          :options="[14, 16, 18, 20, 24, 30, 40]"
+          :options="fontSizeOptions"
           :format="(value: number) => `${value}px`"
         />
       </ReuseOption>
@@ -105,7 +84,7 @@ const setCustomFontColor = (color: string) => {
       <ReuseOption label="行距" align="baseline">
         <c-select-number
           v-model:value="setting.lineSpace"
-          :options="[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]"
+          :options="lineSpaceOptions"
           :format="(value: number) => value.toFixed(1)"
         />
       </ReuseOption>

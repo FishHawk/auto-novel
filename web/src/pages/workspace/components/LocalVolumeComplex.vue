@@ -71,20 +71,11 @@ const translatorLabels = computed(
 const downloadFile = async () => {
   const { mode, translationsMode, translations } = setting.downloadFormat;
 
-  let lang: 'zh' | 'zh-jp' | 'jp-zh';
-  if (mode === 'jp' || mode === 'zh') {
-    lang = 'zh';
-  } else if (mode === 'mix') {
-    lang = 'zh-jp';
-  } else {
-    lang = 'jp-zh';
-  }
-
   try {
     const { filename, blob } =
       await PersonalVolumesManager.makeTranslationVolumeFile({
         volumeId: props.volume.volumeId,
-        lang,
+        lang: mode,
         translationsMode,
         translations,
       });

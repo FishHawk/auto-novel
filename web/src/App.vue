@@ -3,11 +3,14 @@ import { watch } from 'vue';
 
 import { ApiAuth } from '@/data/api/api_auth';
 import { updateToken } from '@/data/api/client';
+import {
+  migrateReaderSetting,
+  useReaderSettingStore,
+} from '@/data/stores/reader_setting';
+import { migrateSetting, useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useSettingStore } from '@/data/stores/setting';
 
 const userData = useUserDataStore();
-const setting = useSettingStore();
 
 // 全局注册token
 watch(
@@ -28,16 +31,12 @@ if (userData.isLoggedIn) {
   }
 }
 
-// 兼容旧格式
-if ((setting as any).isDark !== undefined) {
-  if ((setting as any).isDark === true) {
-    setting.theme = 'dark';
-  }
-  (setting as any).isDark = undefined;
-}
-if (setting.enabledTranslator === undefined) {
-  setting.enabledTranslator = ['baidu', 'youdao', 'gpt', 'sakura'];
-}
+// 设置格式迁移
+const setting = useSettingStore();
+migrateSetting(setting);
+
+const readerSetting = useReaderSettingStore();
+migrateReaderSetting(readerSetting);
 </script>
 
 <template>

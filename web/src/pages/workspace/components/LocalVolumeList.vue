@@ -3,7 +3,7 @@ import { MoreVertOutlined } from '@vicons/material';
 import { UploadFileInfo, useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
-import { useSettingStore } from '@/data/stores/setting';
+import { downloadModeOptions, useSettingStore } from '@/data/stores/setting';
 import {
   buildPersonalTranslateTask,
   useGptWorkspaceStore,
@@ -102,12 +102,6 @@ const deleteAllVolumes = () =>
       message.error(`清空失败:${error}`);
     });
 
-const modeOptions = [
-  { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中日' },
-  { value: 'mix-reverse', label: '日中' },
-];
-
 const order = ref('byId');
 const orderOptions = [
   { value: 'byId', label: '按文件名排序' },
@@ -148,20 +142,11 @@ const queueVolume = (volumeId: string) => {
 const downloadVolume = async (volumeId: string) => {
   const { mode } = setting.downloadFormat;
 
-  let lang: 'zh' | 'zh-jp' | 'jp-zh';
-  if (mode === 'jp' || mode === 'zh') {
-    lang = 'zh';
-  } else if (mode === 'mix') {
-    lang = 'zh-jp';
-  } else {
-    lang = 'jp-zh';
-  }
-
   try {
     const { filename, blob } =
       await PersonalVolumesManager.makeTranslationVolumeFile({
         volumeId,
-        lang,
+        lang: mode,
         translationsMode: 'priority',
         translations: [props.type],
       });
@@ -209,7 +194,7 @@ const deleteVolume = (volumeId: string) =>
   <n-flex :wrap="false">
     <n-select
       v-model:value="setting.downloadFormat.mode"
-      :options="modeOptions"
+      :options="downloadModeOptions"
     />
     <n-select v-model:value="order" :options="orderOptions" />
   </n-flex>

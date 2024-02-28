@@ -1,10 +1,14 @@
 <script lang="ts" setup>
-import { DeleteOutlined, PlusOutlined } from '@vicons/material';
+import { DeleteOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { useSettingStore } from '@/data/stores/setting';
-import { PersonalVolumesManager, TranslatorId } from '@/data/translator';
+import {
+  downloadModeOptions,
+  downloadTranslationModeOptions,
+  useSettingStore,
+} from '@/data/stores/setting';
+import { PersonalVolumesManager } from '@/data/translator';
 
 import { Volume } from './components/LocalVolumeComplex.vue';
 
@@ -40,17 +44,6 @@ const deleteAllVolumes = () => {
       message.error(`清空失败:${error}`);
     });
 };
-
-const modeOptions = [
-  { value: 'jp', label: '日文' },
-  { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中日' },
-  { value: 'mix-reverse', label: '日中' },
-];
-const translationModeOptions = [
-  { label: '优先', value: 'priority' },
-  { label: '并列', value: 'parallel' },
-];
 
 const subPages = [
   {
@@ -105,7 +98,7 @@ const subPages = [
             size="small"
           >
             <n-radio-button
-              v-for="option in modeOptions"
+              v-for="option in downloadModeOptions"
               :key="option.value"
               :value="option.value"
               :label="option.label"
@@ -121,7 +114,7 @@ const subPages = [
               size="small"
             >
               <n-radio-button
-                v-for="option in translationModeOptions"
+                v-for="option in downloadTranslationModeOptions"
                 :key="option.value"
                 :value="option.value"
                 :label="option.label"

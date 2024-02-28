@@ -1,7 +1,12 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 
-import { useSettingStore } from '@/data/stores/setting';
+import {
+  downloadModeOptions,
+  downloadTranslationModeOptions,
+  downloadTypeOptions,
+  useSettingStore,
+} from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 defineProps<{
@@ -57,20 +62,6 @@ watch(
   tryUseChineseTitleAsFilename,
   (it) => (setting.downloadFilenameType = it ? 'zh' : 'jp')
 );
-
-const typeOptions = [
-  { value: 'epub', label: 'EPUB' },
-  { value: 'txt', label: 'TXT' },
-];
-const modeOptions = [
-  { value: 'zh', label: '中文' },
-  { value: 'mix', label: '中日' },
-  { value: 'mix-reverse', label: '日中' },
-];
-const translationModeOptions = [
-  { label: '优先', value: 'priority' },
-  { label: '并列', value: 'parallel' },
-];
 </script>
 
 <template>
@@ -219,7 +210,7 @@ const translationModeOptions = [
             size="small"
           >
             <n-radio-button
-              v-for="option in modeOptions"
+              v-for="option in downloadModeOptions"
               :key="option.value"
               :value="option.value"
               :label="option.label"
@@ -239,7 +230,7 @@ const translationModeOptions = [
               size="small"
             >
               <n-radio-button
-                v-for="option in translationModeOptions"
+                v-for="option in downloadTranslationModeOptions"
                 :key="option.value"
                 :value="option.value"
                 :label="option.label"
@@ -261,7 +252,7 @@ const translationModeOptions = [
             size="small"
           >
             <n-radio-button
-              v-for="option in typeOptions"
+              v-for="option in downloadTypeOptions"
               :key="option.value"
               :value="option.value"
               :label="option.label"

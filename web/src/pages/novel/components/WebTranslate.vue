@@ -58,15 +58,6 @@ const files = computed(() => {
 
   const type = setting.downloadFormat.type;
 
-  let lang: 'zh' | 'zh-jp' | 'jp-zh';
-  if (mode === 'jp' || mode === 'zh') {
-    lang = 'zh';
-  } else if (mode === 'mix') {
-    lang = 'zh-jp';
-  } else {
-    lang = 'jp-zh';
-  }
-
   return {
     jp: ApiWebNovel.createFileUrl({
       providerId,
@@ -80,7 +71,7 @@ const files = computed(() => {
     zh: ApiWebNovel.createFileUrl({
       providerId,
       novelId,
-      lang,
+      lang: mode,
       translationsMode,
       translations,
       type,
