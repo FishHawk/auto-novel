@@ -1,4 +1,3 @@
-
 import api.*
 import api.plugins.authentication
 import api.plugins.contentNegotiation
@@ -88,21 +87,41 @@ fun main() {
 }
 
 val appModule = module {
-    fun envOrNull(name: String) =
+    fun env(name: String): String? =
         System.getenv(name)
 
-    fun env(name: String) =
-        System.getenv(name)
-            ?: throw RuntimeException("缺少环境变量:${name}")
+    fun envDbHost(name: String) =
+        env(name)
+            ?: env("DB_HOST_TEST")
+            ?: "localhost"
+
+    fun envDbPort(name: String) =
+        env(name)
+            ?.toIntOrNull()
 
     // Data Source
-    single { DataSourceMongo(env("MONGODB_URL")) }
-    single { DataSourceElasticSearch(env("ELASTIC_SEARCH_DB_URL")) }
-    single { createRedisDataSource(env("REDIS_URL")) }
+    single {
+        DataSourceMongo(
+            host = envDbHost("DB_HOST_MONGO"),
+            port = envDbPort("DB_PORT_MONGO"),
+        )
+    }
+    single {
+        DataSourceElasticSearch(
+            host = envDbHost("DB_HOST_ES"),
+            port = envDbPort("DB_PORT_ES"),
+        )
+    }
+    single {
+        createRedisDataSource(
+            host = envDbHost("DB_HOST_REDIS"),
+            port = envDbPort("DB_PORT_REDIS"),
+        )
+    }
     single {
         DataSourceWebNovelProvider(
-            httpsProxy = envOrNull("HTTPS_PROXY"),
-            pixivPhpsessid = envOrNull("PIXIV_COOKIE_PHPSESSID"),
+            httpsProxy = env("HTTPS_PROXY"),
+            pixivPhpsessid = env("PIXIV_COOKIE_PHPSESSID"),
         )
     }
     singleOf(::DataSourceFileSystem)
@@ -128,7 +147,12 @@ val appModule = module {
     singleOf(::WenkuNovelVolumeRepository)
 
     // Api
-    single { AuthApi(env("JWT_SECRET"), get()) } withOptions { createdAtStart() }
+    single {
+        AuthApi(
+            secret = env("JWT_SECRET")!!,
+            get(),
+        )
+    } withOptions { createdAtStart() }
     singleOf(::ArticleApi) { createdAtStart() }
     singleOf(::CommentApi) { createdAtStart() }
     singleOf(::OperationHistoryApi) { createdAtStart() }

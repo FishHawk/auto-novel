@@ -8,8 +8,8 @@ import kotlin.time.Duration.Companion.hours
 
 typealias DataSourceRedis = KredsClient
 
-fun createRedisDataSource(url: String): DataSourceRedis {
-    return newClient(Endpoint.from(url))
+fun createRedisDataSource(host: String, port: Int?): DataSourceRedis {
+    return newClient(Endpoint(host, port ?: 6379))
 }
 
 suspend inline fun DataSourceRedis.withRateLimit(key: String, block: () -> Unit) {

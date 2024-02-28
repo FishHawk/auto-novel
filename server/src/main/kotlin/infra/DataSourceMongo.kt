@@ -9,8 +9,10 @@ import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import java.util.concurrent.TimeUnit
 
-class DataSourceMongo(url: String) {
-    val client = KMongo.createClient(url).coroutine
+class DataSourceMongo(host: String, port: Int?) {
+    val client = KMongo.createClient(
+        "mongodb://${host}:${port ?: 27017}"
+    ).coroutine
     private val database = client.getDatabase("main")
 
     // Common

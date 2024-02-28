@@ -18,9 +18,9 @@ services:
       - EMAIL_PASSWORD
       - JWT_SECRET
       - PIXIV_COOKIE_PHPSESSID
-      - MONGODB_URL=mongodb://mongo:27017
-      - ELASTIC_SEARCH_DB_URL=elasticsearch
-      - REDIS_URL=redis:6379
+      - DB_HOST_MONGO=mongo
+      - DB_HOST_ES=elasticsearch
+      - DB_HOST_REDIS=redis
     ports:
       - 8081:8081
     volumes:

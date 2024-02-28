@@ -36,10 +36,10 @@ data class WenkuNovelMetadataEsModel(
     val updateAt: Long,
 )
 
-class DataSourceElasticSearch(url: String) {
+class DataSourceElasticSearch(host: String, port: Int?) {
     val client = SearchClient(
         KtorRestClient(
-            Node(url, 9200)
+            Node(host, port ?: 9200)
         )
     )
 
