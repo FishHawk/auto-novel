@@ -1,6 +1,3 @@
 User-agent: *
 Allow: /$
-Allow: /novel/
-Allow: /wenku/
 Disallow: /
-Sitemap: https://books.fishhawk.top/files-extra/sitemap.txt
