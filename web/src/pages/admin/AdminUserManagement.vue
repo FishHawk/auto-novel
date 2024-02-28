@@ -4,7 +4,7 @@ import { ref, watch } from 'vue';
 
 import { ApiUser } from '@/data/api/api_user';
 import { Page } from '@/data/api/common';
-import { ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 import { UserRole, UserOutline } from '@/data/api/api_user';
 
 const userRole = ref<UserRole>('normal');
@@ -18,7 +18,7 @@ const message = useMessage();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const userResult = ref<ResultState<Page<UserOutline>>>();
+const userResult = ref<Result<Page<UserOutline>>>();
 
 async function loadPage(page: number) {
   userResult.value = undefined;

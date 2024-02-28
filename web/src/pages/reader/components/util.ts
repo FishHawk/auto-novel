@@ -7,7 +7,7 @@ import {
 } from '@/data/api/api_web_novel';
 import { Result, mapOk, runCatching } from '@/data/result';
 import { PersonalVolumesManager } from '@/data/translator';
-import { buildWebChapterUrl } from '@/data/util_web';
+import { buildWebChapterUrl } from '@/data/web/url';
 
 export type NovelInfo = (
   | { type: 'web'; providerId: string; novelId: string }

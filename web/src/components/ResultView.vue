@@ -1,8 +1,8 @@
 <script setup lang="ts" generic="T extends any">
-import { ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 
 defineProps<{
-  result: ResultState<T>;
+  result?: Result<T>;
   showEmpty: (value: T) => boolean;
 }>();
 </script>

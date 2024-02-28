@@ -12,8 +12,6 @@ export const Err = (error: string): Result<never> => {
   return { ok: false, error: { message: error } };
 };
 
-export type ResultState<T> = Result<T> | undefined;
-
 export function runCatching<T>(callback: Promise<T>): Promise<Result<T>> {
   return callback
     .then((it) => Ok(it))

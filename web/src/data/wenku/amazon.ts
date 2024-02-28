@@ -17,12 +17,12 @@ export const prettyCover = (cover: string) =>
     .replace('m.media-amazon.com', 'images-cn.ssl-images-amazon.cn')
     .replace(/\.[A-Z0-9_]+\.jpg$/, '.jpg');
 
-async function getHtml(url: string) {
+const getHtml = async (url: string) => {
   const html = await ky.get(url, { credentials: 'include' }).text();
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   return doc;
-}
+};
 
 interface AmazonMetadata {
   title: string;
@@ -38,7 +38,7 @@ interface AmazonMetadata {
   }>;
 }
 
-async function getProductWithAdultCheck(asin: string) {
+const getProductWithAdultCheck = async (asin: string) => {
   const url = `https://www.amazon.co.jp/dp/${asin}`;
 
   const parseHtml = (html: string) =>
@@ -59,9 +59,9 @@ async function getProductWithAdultCheck(asin: string) {
     console.log(e);
   }
   throw Error('触发年龄限制，请按说明使用插件公开亚马逊Cookies');
-}
+};
 
-async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
+const fetchMetadataFromAsin = async (asin: string): Promise<AmazonMetadata> => {
   const { r18, doc } = await getProductWithAdultCheck(asin);
   const serial = doc.getElementsByClassName('series-childAsin-widget').item(0);
   if (serial === null) {
@@ -172,11 +172,13 @@ async function fetchMetadataFromAsin(asin: string): Promise<AmazonMetadata> {
       volumes,
     };
   }
-}
+};
 
-async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
+const fetchMetadataFromSearch = async (
+  title: string
+): Promise<AmazonMetadata> => {
   title = title.trim();
-  async function search(query: string) {
+  const search = async (query: string) => {
     const doc = await getHtml(
       `https://www.amazon.co.jp/s?k=${query}&rh=n%3A465392&i=stripbooks`
     );
@@ -194,7 +196,7 @@ async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
         );
         return { asin, title, cover };
       });
-  }
+  };
 
   const volumes = (await search(title + ' 小説'))
     .filter((it) => it.title.includes(title))
@@ -206,13 +208,13 @@ async function fetchMetadataFromSearch(title: string): Promise<AmazonMetadata> {
   metadata.volumes = volumes;
   metadata.cover = volumes[0].cover;
   return metadata;
-}
+};
 
-export function fetchMetadata(query: string) {
+export const fetchMetadataFromAmazon = (query: string) => {
   const asin = extractAsin(query);
   if (asin === undefined) {
     return fetchMetadataFromSearch(query);
   } else {
     return fetchMetadataFromAsin(asin);
   }
-}
+};

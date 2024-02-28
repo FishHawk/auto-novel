@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
-import { ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 
-defineProps<{ listResult: ResultState<WenkuNovelOutlineDto[]> }>();
+defineProps<{ listResult?: Result<WenkuNovelOutlineDto[]> }>();
 </script>
 
 <template>

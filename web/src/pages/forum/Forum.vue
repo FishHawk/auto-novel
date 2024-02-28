@@ -11,7 +11,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { ApiArticle, ArticleOutline } from '@/data/api/api_article';
 import { Page } from '@/data/api/common';
-import { Result, ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 const route = useRoute();
@@ -22,7 +22,7 @@ const userData = useUserDataStore();
 const parsePage = (q: typeof route.query) =>
   parseInt(route.query.page as string) || 1;
 
-const articlePageResult = ref<ResultState<Page<ArticleOutline>>>();
+const articlePageResult = ref<Result<Page<ArticleOutline>>>();
 const currentPage = ref(parsePage(route.query));
 const pageNumber = ref(1);
 
@@ -158,7 +158,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
             </td>
             <td class="article-number">
               {{ article.numViews }}/{{ article.numComments }}
-              <br/>
+              <br />
               <n-dropdown
                 v-if="userData.asAdmin"
                 trigger="click"

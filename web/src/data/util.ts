@@ -1,8 +1,6 @@
 import { useWindowSize } from '@vueuse/core';
 import { computed } from 'vue';
 
-import { TranslatorId } from '@/data/translator';
-
 export const useIsWideScreen = (limit: number) => {
   const { width } = useWindowSize();
   return computed(() => width.value > limit);
@@ -21,14 +19,4 @@ export const checkIsMobile = () => {
     return true;
   }
   return false;
-};
-
-export const getTranslatorLabel = (id: TranslatorId) => {
-  const idToLaber = {
-    baidu: '百度',
-    youdao: '有道',
-    gpt: 'GPT',
-    sakura: 'Sakura',
-  };
-  return idToLaber[id];
 };

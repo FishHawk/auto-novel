@@ -8,7 +8,7 @@ import {
   OperationType,
 } from '@/data/api/api_operation';
 import { Page } from '@/data/api/common';
-import { ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 
 import OperationWenkuEdit from './components/OperationWenkuEdit.vue';
 import OperationWenkuUpload from './components/OperationWenkuUpload.vue';
@@ -26,7 +26,7 @@ const message = useMessage();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const historiesResult = ref<ResultState<Page<OperationHistory>>>();
+const historiesResult = ref<Result<Page<OperationHistory>>>();
 
 async function loadPage(page: number) {
   historiesResult.value = undefined;

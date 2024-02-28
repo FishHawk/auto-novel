@@ -10,7 +10,7 @@ import {
 } from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/data/util';
-import { fetchMetadata, prettyCover } from '@/data/util_wenku';
+import { fetchMetadataFromAmazon, prettyCover } from '@/data/wenku/amazon';
 import { presetKeywordsR18, presetKeywordsNonR18 } from '@/data/wenku/keyword';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
@@ -144,9 +144,9 @@ const submit = async () => {
 };
 
 const amazonUrl = ref('');
-const fetchMetadataFromAmazon = async () => {
+const fetchMetadata = async () => {
   try {
-    const amazonMetadata = await fetchMetadata(amazonUrl.value);
+    const amazonMetadata = await fetchMetadataFromAmazon(amazonUrl.value);
     const volumesOld = formValue.value.volumes.map((oldV) => {
       const newV = amazonMetadata.volumes.find((it) => it.asin === oldV.asin);
       if (newV === undefined) {
@@ -307,9 +307,13 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             placeholder="从亚马逊导入..."
             :input-props="{ spellcheck: false }"
           />
-          <n-button type="primary" @click="fetchMetadataFromAmazon()">
-            导入
-          </n-button>
+          <c-button
+            label="导入"
+            async
+            :round="false"
+            type="primary"
+            @click="fetchMetadata()"
+          />
         </n-input-group>
         <n-p v-if="userData.isMaintainer">
           <c-button
@@ -540,3 +544,4 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
     </n-p>
   </c-modal>
 </template>
+@/data/wenku/util_wenku

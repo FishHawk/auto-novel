@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
+import { ref } from 'vue';
 
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
-import { ref } from 'vue';
+import { tryTranslateKeyword } from '@/data/web/keyword';
+import { buildWebNovelUrl } from '@/data/web/url';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;

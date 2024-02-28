@@ -4,7 +4,7 @@ import { ref, watch } from 'vue';
 
 import { ApiComment, Comment1 } from '@/data/api/api_comment';
 import { Page } from '@/data/api/common';
-import { Ok, ResultState } from '@/data/result';
+import { Ok, Result } from '@/data/result';
 
 const { site } = withDefaults(
   defineProps<{
@@ -14,7 +14,7 @@ const { site } = withDefaults(
   { locked: false }
 );
 
-const commentPage = ref<ResultState<Page<Comment1>>>();
+const commentPage = ref<Result<Page<Comment1>>>();
 const currentPage = ref(1);
 
 async function loadComments(page: number) {

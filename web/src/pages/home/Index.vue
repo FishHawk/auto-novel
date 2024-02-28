@@ -11,9 +11,9 @@ import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
-import { Ok, ResultState } from '@/data/result';
+import { Ok, Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { parseUrl } from '@/data/util_web';
+import { parseUrl } from '@/data/web/url';
 import bannerUrl from '@/images/banner.webp';
 
 const userData = useUserDataStore();
@@ -32,7 +32,7 @@ const query = (url: string) => {
   }
 };
 
-const favoriteList = ref<ResultState<WebNovelOutlineDto[]>>();
+const favoriteList = ref<Result<WebNovelOutlineDto[]>>();
 const loadFavorite = async () => {
   const result = await ApiUser.listFavoredWebNovel('default', {
     page: 0,
@@ -53,7 +53,7 @@ watch(
   { immediate: true }
 );
 
-const mostVisitedWeb = ref<ResultState<WebNovelOutlineDto[]>>();
+const mostVisitedWeb = ref<Result<WebNovelOutlineDto[]>>();
 const loadWeb = async () => {
   const result = await ApiWebNovel.listNovel({
     page: 0,
@@ -69,7 +69,7 @@ const loadWeb = async () => {
 };
 loadWeb();
 
-const latestUpdateWenku = ref<ResultState<WenkuNovelOutlineDto[]>>();
+const latestUpdateWenku = ref<Result<WenkuNovelOutlineDto[]>>();
 const loadWenku = async () => {
   const result = await ApiWenkuNovel.listNovel({
     page: 0,
@@ -117,15 +117,13 @@ const notices = [
 
 <template>
   <div
-    :style="{
-      background: `rgba(0, 0, 0, .15) url(${bannerUrl})`,
-      'background-blend-mode': 'darken',
-      width: '100%',
-      'padding-top': '20px',
-      'padding-bottom': '50px',
-    }"
+    :style="{ background: `rgba(0, 0, 0, .25) url(${bannerUrl})` }"
+    style="background-blend-mode: darken"
   >
-    <div class="layout-content" style="max-width: 800px">
+    <div
+      class="layout-content"
+      style="max-width: 800px; padding-top: 20px; padding-bottom: 50px"
+    >
       <n-h1
         style="
           text-align: center;

@@ -7,7 +7,8 @@ import {
 import { NA, NText } from 'naive-ui';
 import { computed } from 'vue';
 
-import { buildWebNovelUrl, tryTranslateKeyword } from '@/data/util_web';
+import { tryTranslateKeyword } from '@/data/web/keyword';
+import { buildWebNovelUrl } from '@/data/web/url';
 
 import { WebNovelVM } from './common';
 

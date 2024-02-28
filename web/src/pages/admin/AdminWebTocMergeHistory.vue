@@ -4,13 +4,13 @@ import { ref, watch } from 'vue';
 
 import { ApiOperation, MergeHistoryDto } from '@/data/api/api_operation';
 import { Page } from '@/data/api/common';
-import { ResultState } from '@/data/result';
+import { Result} from '@/data/result';
 
 const message = useMessage();
 
 const currentPage = ref(1);
 const pageNumber = ref(1);
-const novelPage = ref<ResultState<Page<MergeHistoryDto>>>();
+const novelPage = ref<Result<Page<MergeHistoryDto>>>();
 
 async function loadPage(page: number) {
   novelPage.value = undefined;

@@ -6,7 +6,7 @@ import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
-import { ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
@@ -26,7 +26,7 @@ const route = useRoute();
 
 const novelId = route.params.novelId as string;
 
-const novelMetadataResult = ref<ResultState<WenkuNovelDto>>();
+const novelMetadataResult = ref<Result<WenkuNovelDto>>();
 
 const getNovel = async () => {
   const result = await ApiWenkuNovel.getNovel(novelId);

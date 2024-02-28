@@ -8,7 +8,6 @@ import {
   TranslatorDesc,
   translate,
 } from '@/data/translator/api';
-import { getTranslatorLabel } from '@/data/util';
 
 type LogLine = { message: string; detail?: string[] };
 
@@ -74,7 +73,13 @@ const startTask = async (
   }
 
   const buildLabel = () => {
-    let label = `${getTranslatorLabel(translatorDesc.id)}翻译`;
+    const idToLaber = {
+      baidu: '百度',
+      youdao: '有道',
+      gpt: 'GPT',
+      sakura: 'Sakura',
+    };
+    let label = `${idToLaber[translatorDesc.id]}翻译`;
     if (params.translateExpireChapter) label += '[翻译过期章节]';
     if (params.syncFromProvider) label += '[强制同步]';
     return label;

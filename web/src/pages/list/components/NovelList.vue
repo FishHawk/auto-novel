@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import { LocationQuery, useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@/data/api/common';
-import { Result, ResultState } from '@/data/result';
+import { Result } from '@/data/result';
 import { onKeyStroke } from '@vueuse/core';
 
 export type Loader<T extends Page<any>> = (
@@ -24,7 +24,7 @@ const props = defineProps<{
 const filters = ref(parseFilters(route.query));
 const currentPage = ref(parsePage(route.query));
 const pageNumber = ref(1);
-const novelPageResult = ref<ResultState<T>>();
+const novelPageResult = ref<Result<T>>();
 
 function parsePage(q: typeof route.query) {
   return parseInt(route.query.page as string) || 1;
