@@ -165,7 +165,7 @@ const theme = computed(() => {
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
               <router-link to="/">
-                <robot-icon style="margin-top:0px"/>
+                <robot-icon />
               </router-link>
               <div>
                 <n-menu
@@ -214,7 +214,7 @@ const theme = computed(() => {
           </n-flex>
         </n-layout-header>
 
-        <n-layout-content style="margin-top: 50px">
+        <n-layout-content style="margin-top: 50px; z-index: 0">
           <router-view />
         </n-layout-content>
 
