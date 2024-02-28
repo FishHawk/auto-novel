@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { createReusableTemplate } from '@vueuse/core';
+import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
 import { getScrollParent } from 'seemly';
 import { computed, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -11,15 +11,18 @@ import { useUserDataStore } from '@/data/stores/user_data';
 import { checkIsMobile, useIsWideScreen } from '@/data/util';
 
 import { getChapter, getNovelInfo } from './components/util';
+import { TranslatorId } from '@/data/translator';
+import { useReaderSettingStore } from '@/data/stores/reader_setting';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   label: string;
   id: string | undefined;
 }>();
 
-const isWideScreen = useIsWideScreen(600);
-const userData = useUserDataStore();
 const route = useRoute();
+const userData = useUserDataStore();
+const setting = useReaderSettingStore();
+const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
 const currentChapterId = ref(route.params.chapterId as string);
@@ -41,7 +44,7 @@ const loadChapter = async (chapterId: string) => {
   }
 };
 
-const navToChapter = async (targetChapterId: string) => {
+const navToChapter = (targetChapterId: string) => {
   currentChapterId.value = targetChapterId;
 };
 
@@ -83,6 +86,48 @@ watch(
 );
 
 const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
+
+onKeyStroke(['ArrowLeft'], (e) => {
+  if (chapterResult.value?.ok) {
+    if (chapterResult.value.value.prevId) {
+      navToChapter(chapterResult.value.value.prevId);
+      e.preventDefault();
+    }
+  }
+});
+onKeyStroke(['ArrowRight'], (e) => {
+  if (chapterResult.value?.ok) {
+    if (chapterResult.value.value.nextId) {
+      navToChapter(chapterResult.value.value.nextId);
+      e.preventDefault();
+    }
+  }
+});
+
+onKeyStroke(['1', '2', '3', '4'], (e) => {
+  const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
+  const translatorId = translatorIds[parseInt(e.key, 10) - 1];
+  if (setting.translationsMode === 'parallel') {
+    if (setting.translations.includes(translatorId)) {
+      setting.translations = setting.translations.filter(
+        (it) => it !== translatorId
+      );
+    } else {
+      setting.translations.push(translatorId);
+    }
+  } else {
+    setting.translations = [translatorId];
+  }
+  e.preventDefault();
+});
+
+const showSettingModal = ref(false);
+const showCatalogModal = ref(false);
+
+onKeyStroke(['Enter'], (e) => {
+  showCatalogModal.value = !showCatalogModal.value;
+  e.preventDefault();
+});
 </script>
 
 <template>
@@ -140,10 +185,11 @@ const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
 
       <reader-layout-mobile
         v-if="isMobile"
-        :novel-info="novelInfo"
-        :chapter-id="currentChapterId"
+        :novel-url="novelInfo.novelUrl"
         :chapter="chapter"
         @nav="navToChapter"
+        @require-catalog-modal="showCatalogModal = true"
+        @require-setting-modal="showSettingModal = true"
       >
         <reader-content
           :novel-info="novelInfo"
@@ -153,10 +199,9 @@ const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
       </reader-layout-mobile>
       <reader-layout-desktop
         v-else
-        :novel-info="novelInfo"
-        :chapter-id="currentChapterId"
-        :chapter="chapter"
-        @nav="navToChapter"
+        :novel-url="novelInfo.novelUrl"
+        @require-catalog-modal="showCatalogModal = true"
+        @require-setting-modal="showSettingModal = true"
       >
         <reader-content
           :novel-info="novelInfo"
@@ -172,6 +217,15 @@ const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
         <ReuseChapterLink :id="chapter.nextId" label="下一章" />
       </n-flex>
     </ResultView>
+
+    <reader-setting-modal v-model:show="showSettingModal" />
+
+    <catalog-modal
+      v-model:show="showCatalogModal"
+      :novel-info="novelInfo"
+      :chapter-id="currentChapterId"
+      @nav="navToChapter"
+    />
   </div>
 </template>
 

@@ -4,63 +4,15 @@ import {
   LibraryBooksOutlined,
   TuneOutlined,
 } from '@vicons/material';
-import { onKeyStroke } from '@vueuse/core';
-import { ref } from 'vue';
 
-import { WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { TranslatorId } from '@/data/translator';
-
-import { NovelInfo } from './util';
-
-const props = defineProps<{
-  novelInfo: NovelInfo;
-  chapterId: string;
-  chapter: WebNovelChapterDto;
+defineProps<{
+  novelUrl?: string;
 }>();
 
 const emit = defineEmits<{
-  nav: [string];
+  requireCatalogModal: [];
+  requireSettingModal: [];
 }>();
-
-const setting = useReaderSettingStore();
-
-const showSettingModal = ref(false);
-const showCatalogModal = ref(false);
-
-onKeyStroke(['1', '2', '3', '4'], (e) => {
-  const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
-  const translatorId = translatorIds[parseInt(e.key, 10) - 1];
-  if (setting.translationsMode === 'parallel') {
-    if (setting.translations.includes(translatorId)) {
-      setting.translations = setting.translations.filter(
-        (it) => it !== translatorId
-      );
-    } else {
-      setting.translations.push(translatorId);
-    }
-  } else {
-    setting.translations = [translatorId];
-  }
-  e.preventDefault();
-});
-
-onKeyStroke(['ArrowLeft'], (e) => {
-  if (props.chapter.prevId) {
-    emit('nav', props.chapter.prevId);
-    e.preventDefault();
-  }
-});
-onKeyStroke(['ArrowRight'], (e) => {
-  if (props.chapter.nextId) {
-    emit('nav', props.chapter.nextId);
-    e.preventDefault();
-  }
-});
-onKeyStroke(['Enter'], (e) => {
-  showCatalogModal.value = !showCatalogModal.value;
-  e.preventDefault();
-});
 </script>
 
 <template>
@@ -76,32 +28,23 @@ onKeyStroke(['Enter'], (e) => {
         style="margin-left: 20px; position: fixed; bottom: 20px"
       >
         <side-button
-          v-if="novelInfo.novelUrl"
+          v-if="novelUrl"
           tag="a"
-          :href="novelInfo.novelUrl"
+          :href="novelUrl"
           text="详情"
           :icon="LibraryBooksOutlined"
         />
         <side-button
           text="目录"
           :icon="FormatListBulletedOutlined"
-          @click="showCatalogModal = true"
+          @click="emit('requireCatalogModal')"
         />
         <side-button
           text="设置"
           :icon="TuneOutlined"
-          @click="showSettingModal = true"
+          @click="emit('requireSettingModal')"
         />
       </n-flex>
     </div>
   </n-flex>
-
-  <reader-setting-modal v-model:show="showSettingModal" />
-
-  <catalog-modal
-    v-model:show="showCatalogModal"
-    :novel-info="novelInfo"
-    :chapter-id="chapterId"
-    @nav="(chapterId: string) => emit('nav', chapterId)"
-  />
 </template>

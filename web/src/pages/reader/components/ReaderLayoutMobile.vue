@@ -11,21 +11,18 @@ import { ref } from 'vue';
 
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 
-import { NovelInfo } from './util';
-
 defineProps<{
-  novelInfo: NovelInfo;
-  chapterId: string;
+  novelUrl?: string;
   chapter: WebNovelChapterDto;
 }>();
 
 const emit = defineEmits<{
   nav: [string];
+  requireCatalogModal: [];
+  requireSettingModal: [];
 }>();
 
 const showMenu = ref(false);
-const showSettingModal = ref(false);
-const showCatalogModal = ref(false);
 
 const contentRef = ref<HTMLElement>();
 
@@ -55,15 +52,6 @@ const onGlobalClick = (event: MouseEvent) => {
     <slot />
   </div>
 
-  <reader-setting-modal v-model:show="showSettingModal" />
-
-  <catalog-modal
-    v-model:show="showCatalogModal"
-    :novel-info="novelInfo"
-    :chapter-id="chapterId"
-    @nav="(chapterId: string) => emit('nav', chapterId)"
-  />
-
   <n-drawer
     v-model:show="showMenu"
     :height="'auto'"
@@ -80,10 +68,10 @@ const onGlobalClick = (event: MouseEvent) => {
         style="flex: 1"
       />
       <side-button
-        v-if="novelInfo.novelUrl"
+        v-if="novelUrl"
         quaternary
         tag="a"
-        :href="novelInfo.novelUrl"
+        :href="novelUrl"
         text="详情"
         :icon="LibraryBooksOutlined"
         style="flex: 1"
@@ -92,14 +80,14 @@ const onGlobalClick = (event: MouseEvent) => {
         quaternary
         text="目录"
         :icon="FormatListBulletedOutlined"
-        @click="showCatalogModal = true"
+        @click="emit('requireCatalogModal')"
         style="flex: 1"
       />
       <side-button
         quaternary
         text="设置"
         :icon="TuneOutlined"
-        @click="showSettingModal = true"
+        @click="emit('requireSettingModal')"
         style="flex: 1"
       />
       <side-button
