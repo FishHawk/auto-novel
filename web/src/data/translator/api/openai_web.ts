@@ -29,6 +29,35 @@ export class OpenAiWeb {
         ...options,
       })
       .text()
+      .then((text) => {
+        if (text.includes('wss_url')) {
+          const wssUrl = JSON.parse(text).wss_url;
+          return new Promise<string>((resolve, reject) => {
+            const ws = new WebSocket(wssUrl);
+            const messages: string[] = [];
+            ws.onmessage = (event) => {
+              if (event.type === 'message') {
+                const base64Body = JSON.parse(event.data).body;
+                const bodyByte = atob(base64Body);
+                if (bodyByte.length > 0) {
+                  messages.push(bodyByte);
+                }
+                if (bodyByte.includes('[DONE]')) {
+                  ws.close();
+                }
+              }
+            };
+            ws.onerror = (error) => {
+              reject(error);
+            };
+            ws.onclose = () => {
+              resolve(messages.join('\n'));
+            };
+          });
+        } else {
+          return text;
+        }
+      })
       .then(parseEventStream<ConversationChunk>);
 
   getConversation = (
@@ -38,6 +67,23 @@ export class OpenAiWeb {
     this.client
       .get(`conversation/${conversationId}`, options)
       .json<Conversation>();
+}
+
+function* parseWss<T>(text: string) {
+  for (const line of text.split('\n')) {
+    if (line == '[DONE]') {
+      return;
+    } else if (!line.trim() || line.startsWith(': ping')) {
+      continue;
+    } else {
+      try {
+        const obj: T = JSON.parse(line.replace(/^data\:/, '').trim());
+        yield obj;
+      } catch {
+        continue;
+      }
+    }
+  }
 }
 
 interface Conversation {
