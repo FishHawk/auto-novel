@@ -7,6 +7,7 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
+import { notice } from '@/components/NoticeBoard.vue';
 import { TranslateJob, useGptWorkspaceStore } from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
@@ -75,25 +76,21 @@ const clearCache = async () => {
   await cache.clear();
   message.success('缓存清除成功');
 };
+
+const notices = [
+  notice('启动了的翻译器无法暂停或删除。等这句话没了就可以了。'),
+  notice(
+    'GPT3.5 web 不再使用中转，而是使用官网链接，需要你的网络环境能正常访问ChatGPT并安装插件。你仍然可以在添加翻译器的时候设置中转链接。',
+    true
+  ),
+];
 </script>
 
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
     <n-h1>GPT工作区</n-h1>
 
-    <n-ul>
-      <n-li>
-        翻译任务运行在你的浏览器里面，关闭或者刷新本页面都会停止翻译。长时间挂机的话不要把本页面放在后台，防止被浏览器杀掉。
-      </n-li>
-      <n-li> 启动了的翻译器无法暂停或删除。等这句话没了就可以了。 </n-li>
-      <n-li> AccessToken有效期为90天，过期请重新获取。 </n-li>
-      <n-li style="color: red">
-        <b>
-          GPT3.5 web
-          不再使用中转，而是使用官网链接，需要你的网络环境能正常访问ChatGPT并安装插件。你仍然可以在添加翻译器的时候设置中转链接。
-        </b>
-      </n-li>
-    </n-ul>
+    <notice-board :notices="notices" />
 
     <section-header title="翻译器">
       <c-button

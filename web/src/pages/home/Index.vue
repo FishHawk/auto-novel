@@ -4,6 +4,7 @@ import { useThemeVars } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { notice } from '@/components/NoticeBoard.vue';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
@@ -106,9 +107,11 @@ const qqLink =
 const telegramLink = 'https://t.me/+Mphy0wV4LYZkNTI1';
 const githubLink = 'https://github.com/FishHawk/auto-novel';
 
-const notifications = [
-  '1月20日晚10点网站出现恶性bug，如果你能看到这行字，说明你没有问题。',
-  '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。',
+const notices = [
+  notice('1月20日晚10点网站出现恶性bug，如果你能看到这行字，说明你没有问题。'),
+  notice(
+    '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。'
+  ),
 ];
 </script>
 
@@ -150,7 +153,7 @@ const notifications = [
   </div>
 
   <div class="layout-content">
-    <n-card embedded style="margin-top: 24px">
+    <notice-board :notices="notices" style="margin-top: 24px">
       <n-flex>
         <n-button text type="primary" @click="showHowToUseModal = true">
           使用说明
@@ -164,12 +167,7 @@ const notifications = [
         /
         <n-a :href="githubLink" target="_blank">Github</n-a>
       </n-flex>
-      <n-p
-        v-for="n of notifications"
-        style="margin-top: 0.5em; margin-bottom: 0em"
-        >{{ n }}</n-p
-      >
-    </n-card>
+    </notice-board>
 
     <template v-if="userData.isLoggedIn">
       <section-header title="我的收藏">

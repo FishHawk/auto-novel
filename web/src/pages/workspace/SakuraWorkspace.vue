@@ -7,6 +7,7 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
+import { notice } from '@/components/NoticeBoard.vue';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
@@ -77,38 +78,29 @@ const clearCache = async () => {
   await cache.clear();
   message.success('缓存清除成功');
 };
+
+const notices = [
+  notice('启动了的翻译器无法暂停或删除。等这句话没了就可以了。'),
+  notice('目前允许的模型： v0.9b-Q4_K_M 及以上。'),
+  notice('AWQ量化版本目前有bug，请不要使用。'),
+];
 </script>
 
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
     <n-h1>Sakura工作区</n-h1>
-    <n-ul>
-      <n-li>
-        翻译任务运行在你的浏览器里面，关闭或者刷新本页面都会停止翻译。长时间挂机的话不要把本页面放在后台，防止被浏览器杀掉。
-      </n-li>
-      <n-li> 启动了的翻译器无法暂停或删除。等这句话没了就可以了。 </n-li>
-      <n-li>
-        Sakura部署教程参见
+
+    <notice-board :notices="notices">
+      <n-flex>
         <RouterNA to="/forum/656d60530286f15e3384fcf8" target="_blank">
           本地部署教程
         </RouterNA>
-        和
+        /
         <RouterNA to="/forum/65719bf16843e12bd3a4dc98" target="_blank">
           租用显卡教程
         </RouterNA>
-        。
-      </n-li>
-      <n-li>
-        如果你想直接翻译网络小说/文库小说，请确保你的模型版本允许上传。当前推荐的版本：
-        <n-a
-          href="https://huggingface.co/SakuraLLM/Sakura-13B-LNovel-v0.9b-GGUF/blob/main/sakura-13b-lnovel-v0.9b-Q4_K_M.gguf"
-          target="_blank"
-        >
-          v0.9b-Q4_K_M
-        </n-a>
-        。AWQ量化版本目前有bug，请不要使用。
-      </n-li>
-    </n-ul>
+      </n-flex>
+    </notice-board>
 
     <section-header title="翻译器">
       <c-button
