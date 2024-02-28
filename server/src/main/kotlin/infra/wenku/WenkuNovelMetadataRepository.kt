@@ -55,13 +55,30 @@ class WenkuNovelMetadataRepository(
                     )
                 }
 
+                // Parse query
+                val queryWords = mutableListOf<String>()
+                userQuery
+                    ?.split(" ")
+                    ?.forEach { token ->
+                        if (token.endsWith('$')) {
+                            val rawToken = token.removePrefix("-").removeSuffix("$")
+                            val queries =
+                                if (token.startsWith("-")) mustNotQueries
+                                else mustQueries
+                            val field = WenkuNovelMetadataEsModel::keywords
+                            queries.add(term(field, rawToken))
+                        } else {
+                            queryWords.add(token)
+                        }
+                    }
+
                 filter(mustQueries)
                 mustNot(mustNotQueries)
 
-                if (userQuery != null) {
+                if (queryWords.isNotEmpty()) {
                     must(
                         simpleQueryString(
-                            userQuery,
+                            queryWords.joinToString(" "),
                             WenkuNovelMetadataEsModel::title,
                             WenkuNovelMetadataEsModel::titleZh,
                             WenkuNovelMetadataEsModel::authors,

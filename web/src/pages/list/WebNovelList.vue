@@ -116,12 +116,6 @@ watch(
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
     <n-h1>网络小说</n-h1>
-    <n-text depth="3" style="font-size: 12px">
-      # 搜索语法参见
-      <RouterNA to="/forum/64f3d63f794cbb1321145c07#如何搜索网络小说">
-        如何搜索网络小说
-      </RouterNA>
-    </n-text>
     <NovelList
       :search="search"
       :options="options"

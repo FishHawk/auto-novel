@@ -1,16 +1,21 @@
 <script lang="ts" setup>
 import { PlusOutlined } from '@vicons/material';
+import { computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 import {
   ApiWenkuNovel,
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
 import { Page } from '@/data/api/common';
+import { useWenkuSearchHistoryStore } from '@/data/stores/search_history';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 import { Loader } from './components/NovelList.vue';
 
 const userData = useUserDataStore();
+const route = useRoute();
+const searchHistory = useWenkuSearchHistoryStore();
 
 const options = userData.isOldAss
   ? [
@@ -38,6 +43,28 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
     });
   }
 };
+
+const search = computed(() => {
+  return {
+    suggestions: searchHistory.queries,
+    tags: searchHistory.tags
+      .sort((a, b) => Math.log2(b.used) - Math.log2(a.used))
+      .map((it) => it.tag)
+      .slice(0, 8),
+  };
+});
+
+watch(
+  route,
+  async (route) => {
+    let query = '';
+    if (typeof route.query.query === 'string') {
+      query = route.query.query;
+    }
+    searchHistory.addHistory(query);
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -53,10 +80,7 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
     </router-link>
 
     <NovelList
-      :search="{
-        suggestions: [],
-        tags: [],
-      }"
+      :search="search"
       :options="options"
       :loader="loader"
       v-slot="{ page }"
