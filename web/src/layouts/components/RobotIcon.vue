@@ -1,25 +1,33 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui';
+import { ref } from 'vue';
 
 const vars = useThemeVars();
+const showGirl = ref(false);
 </script>
 
 <template>
-  <n-icon size="30" :color="vars.primaryColor">
-    <svg
-      version="1.0"
-      xmlns="http://www.w3.org/2000/svg"
-      width="512.000000pt"
-      height="512.000000pt"
-      viewBox="0 0 512.000000 512.000000"
-      preserveAspectRatio="xMidYMid meet"
+  <div>
+    <n-icon
+      size="30"
+      :color="vars.primaryColor"
+      style="cursor: pointer"
+      @click="showGirl = !showGirl"
     >
-      <g
-        transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
-        stroke="none"
+      <svg
+        version="1.0"
+        xmlns="http://www.w3.org/2000/svg"
+        width="512.000000pt"
+        height="512.000000pt"
+        viewBox="0 0 512.000000 512.000000"
+        preserveAspectRatio="xMidYMid meet"
       >
-        <path
-          d="M1438 4566 c-65 -34 -120 -64 -123 -67 -2 -3 96 -199 219 -435 l224
+        <g
+          transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
+          stroke="none"
+        >
+          <path
+            d="M1438 4566 c-65 -34 -120 -64 -123 -67 -2 -3 96 -199 219 -435 l224
 -429 -614 -3 -614 -2 0 -400 0 -400 -185 0 -185 0 0 -750 0 -750 185 0 185 0
 0 -400 0 -400 2030 0 2030 0 0 400 0 400 185 0 185 0 0 750 0 750 -185 0 -185
 0 -2 398 -3 397 -614 3 c-534 2 -612 4 -607 17 3 8 104 204 225 435 l219 420
@@ -30,8 +38,22 @@ const vars = useThemeVars();
 -224 -292 -330 -461 -182 -62 55 -88 108 -94 192 -8 119 44 213 150 267 58 29
 69 31 138 27 50 -2 89 -11 116 -25z m-126 -1372 l0 -280 -890 0 -890 0 0 280
 0 280 890 0 890 0 0 -280z"
-        />
-      </g>
-    </svg>
-  </n-icon>
+          />
+        </g>
+      </svg>
+    </n-icon>
+
+    <img
+      v-if="showGirl"
+      src="https://books.fishhawk.top/files-extra/girl.6e4fe22c238737fd028247f8f0cfd4ee.webp"
+      style="
+        width: 200px;
+        position: fixed;
+        right: -30px;
+        bottom: -30px;
+        transform: rotate(-15deg);
+        user-select: none;
+      "
+    />
+  </div>
 </template>

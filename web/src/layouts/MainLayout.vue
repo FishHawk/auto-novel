@@ -164,9 +164,7 @@ const theme = computed(() => {
         <n-layout-header bordered position="absolute" style="z-index: 1">
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
-              <router-link to="/">
-                <robot-icon />
-              </router-link>
+              <robot-icon />
               <div>
                 <n-menu
                   :value="getTopMenuOptionKey()"
