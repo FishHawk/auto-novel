@@ -28,15 +28,16 @@ export class YoudaoTranslator implements SegmentTranslator {
   async translate(
     seg: string[],
     _segInfo: { index: number; size: number },
-    glossary: Glossary
+    glossary: Glossary,
+    signal?: AbortSignal
   ): Promise<string[]> {
     return createGlossaryWrapper(glossary)(seg, (seg) =>
-      this.translateInner(seg)
+      this.translateInner(seg, signal)
     );
   }
 
-  async translateInner(seg: string[]): Promise<string[]> {
-    const decoded = await this.api.webtranslate(seg.join('\n'));
+  async translateInner(seg: string[], signal?: AbortSignal): Promise<string[]> {
+    const decoded = await this.api.webtranslate(seg.join('\n'), { signal });
     const decodedJson = safeJson(decoded);
 
     if (decodedJson === undefined) {

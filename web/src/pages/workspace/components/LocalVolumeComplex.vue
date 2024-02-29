@@ -10,7 +10,7 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { PersonalVolumesManager, TranslatorId } from '@/data/translator';
+import { PersonalVolumesManager } from '@/data/translator';
 
 export interface Volume {
   volumeId: string;
@@ -45,28 +45,6 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
     { id: translatorId }
   );
 };
-
-const translatorLabels = computed(
-  () =>
-    <{ label: string; translatorId: TranslatorId }[]>[
-      {
-        label: `百度(${props.volume.baidu}/${props.volume.total})`,
-        translatorId: 'baidu',
-      },
-      {
-        label: `有道(${props.volume.youdao}/${props.volume.total})`,
-        translatorId: 'youdao',
-      },
-      {
-        label: `GPT(${props.volume.gpt}/${props.volume.total})`,
-        translatorId: 'gpt',
-      },
-      {
-        label: `Sakura(${props.volume.sakura}/${props.volume.total})`,
-        translatorId: 'sakura',
-      },
-    ]
-);
 
 const downloadFile = async () => {
   const { mode, translationsMode, translations } = setting.downloadFormat;

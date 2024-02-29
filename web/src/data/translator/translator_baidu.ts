@@ -26,20 +26,24 @@ export class BaiduTranslator implements SegmentTranslator {
   async translate(
     seg: string[],
     _segInfo: { index: number; size: number },
-    glossary: Glossary
+    glossary: Glossary,
+    signal?: AbortSignal
   ): Promise<string[]> {
     return createGlossaryWrapper(glossary)(seg, (seg) =>
-      this.translateInner(seg)
+      this.translateInner(seg, signal)
     );
   }
 
-  async translateInner(input: string[]): Promise<string[]> {
+  async translateInner(
+    input: string[],
+    signal?: AbortSignal
+  ): Promise<string[]> {
     // 开头的空格似乎会导致998错误
     const newInput = input.slice();
     newInput[0] = newInput[0].trimStart();
     const query = newInput.join('\n');
 
-    const json = await this.api.v2transapi(query);
+    const json = await this.api.v2transapi(query, { signal });
 
     if ('error' in json) {
       throw Error(`百度翻译错误：${json.error}: ${json.msg}`);

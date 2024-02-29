@@ -1,7 +1,7 @@
 import { AES } from 'crypto-es/lib/aes';
 import { Utf8 } from 'crypto-es/lib/core';
 import { MD5 } from 'crypto-es/lib/md5';
-import ky from 'ky';
+import ky, { Options } from 'ky';
 
 export class Youdao {
   id: 'youdao' = 'youdao';
@@ -34,7 +34,7 @@ export class Youdao {
       .json()
       .then((json: any) => (this.key = json['data']['secretKey']));
 
-  webtranslate = (query: string) =>
+  webtranslate = (query: string, options?: Options) =>
     this.client
       .post('https://dict.youdao.com/webtranslate', {
         body: new URLSearchParams({
@@ -48,6 +48,7 @@ export class Youdao {
         headers: {
           Accept: 'application/json, text/plain, */*',
         },
+        ...options,
       })
       .text()
       .then(decode);

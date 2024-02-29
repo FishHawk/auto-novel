@@ -40,7 +40,8 @@ export class OpenAiTranslator implements SegmentTranslator {
   async translate(
     seg: string[],
     segInfo: { index: number; size: number },
-    glossary: Glossary
+    glossary: Glossary,
+    signal?: AbortSignal
   ): Promise<string[]> {
     let enableBypass = false;
 
@@ -80,7 +81,12 @@ export class OpenAiTranslator implements SegmentTranslator {
     let retry = 0;
     let failBecasueLineNumberNotMatch = 0;
     while (true) {
-      const result = await this.translateLines(seg, glossary, enableBypass);
+      const result = await this.translateLines(
+        seg,
+        glossary,
+        enableBypass,
+        signal
+      );
 
       if (result === 'censored') {
         logSegInfo({ retry, lineNumber: [seg.length, NaN] });
@@ -113,7 +119,7 @@ export class OpenAiTranslator implements SegmentTranslator {
         }
       } else {
         logSegInfo({ retry, lineNumber: [seg.length, NaN] });
-        await this.onError(result);
+        await this.onError(result, signal);
       }
 
       retry += 1;
@@ -134,7 +140,8 @@ export class OpenAiTranslator implements SegmentTranslator {
       const result = await this.translateLines(
         seg.slice(left, right),
         glossary,
-        enableBypass
+        enableBypass,
+        signal
       );
 
       if (typeof result === 'object') {
@@ -184,7 +191,8 @@ export class OpenAiTranslator implements SegmentTranslator {
   private async translateLines(
     lines: string[],
     glossary: Glossary,
-    enableBypass: boolean
+    enableBypass: boolean,
+    signal?: AbortSignal
   ): Promise<
     | 'censored'
     | { message: string; delaySeconds?: number }
@@ -204,7 +212,7 @@ export class OpenAiTranslator implements SegmentTranslator {
 
     const messages = buildMessages(lines, glossary, enableBypass);
     if (this.api.id === 'openai') {
-      return askApi(this.api, this.model, messages)
+      return askApi(this.api, this.model, messages, signal)
         .then((it) => ({
           answer: parseAnswer(it.answer),
           fromHistory: false,
@@ -254,7 +262,7 @@ export class OpenAiTranslator implements SegmentTranslator {
         return { message: error };
       };
 
-      const result = await askApiWeb(this.api, this.model, messages);
+      const result = await askApiWeb(this.api, this.model, messages, signal);
       if (typeof result === 'object') {
         return {
           answer: parseAnswer(result.answer),
@@ -268,25 +276,36 @@ export class OpenAiTranslator implements SegmentTranslator {
     }
   }
 
-  private async onError({
-    message,
-    delaySeconds,
-  }: {
-    message: string;
-    delaySeconds?: number;
-  }) {
+  private async onError(
+    {
+      message,
+      delaySeconds,
+    }: {
+      message: string;
+      delaySeconds?: number;
+    },
+    signal?: AbortSignal
+  ) {
     if (delaySeconds === undefined) {
       this.log(`　未知错误，请反馈给站长：${message}`);
     } else if (delaySeconds > 0) {
-      const delay = (s: number) =>
-        new Promise((res) => setTimeout(res, 1000 * s));
-
       if (delaySeconds > 60) {
         this.log('　发生错误：' + message + `，暂停${delaySeconds / 60}分钟`);
       } else {
         this.log('　发生错误：' + message + `，暂停${delaySeconds}秒`);
       }
-      await delay(delaySeconds);
+      await new Promise((resolve, reject) => {
+        let timeout: number;
+        const abortHandler = () => {
+          clearTimeout(timeout);
+          reject(new DOMException('Aborted', 'AbortError'));
+        };
+        timeout = setTimeout(() => {
+          resolve('Promise Resolved');
+          signal?.removeEventListener('abort', abortHandler);
+        }, 1000 * delaySeconds);
+        signal?.addEventListener('abort', abortHandler);
+      });
       return;
     } else {
       this.log('　发生错误：' + message + '，退出');
@@ -298,14 +317,18 @@ export class OpenAiTranslator implements SegmentTranslator {
 const askApi = (
   api: OpenAi,
   model: string,
-  messages: ['user' | 'assistant', string][]
+  messages: ['user' | 'assistant', string][],
+  signal?: AbortSignal
 ): Promise<{ answer: string }> =>
   api
-    .createChatCompletionsStream({
-      messages: messages.map(([role, content]) => ({ content, role })),
-      model,
-      stream: true,
-    })
+    .createChatCompletionsStream(
+      {
+        messages: messages.map(([role, content]) => ({ content, role })),
+        model,
+        stream: true,
+      },
+      { signal }
+    )
     .then((completionStream) => {
       const answer = Array.from(completionStream)
         .map((chunk) => chunk.choices.at(0)?.delta.content)
@@ -317,7 +340,8 @@ const askApi = (
 const askApiWeb = async (
   api: OpenAiWeb,
   model: string,
-  messages: ['user' | 'assistant', string][]
+  messages: ['user' | 'assistant', string][],
+  signal?: AbortSignal
 ): Promise<{ answer: string; fromHistory: boolean } | string> => {
   const chunks = await api.createConversation(
     {
@@ -332,6 +356,7 @@ const askApiWeb = async (
       history_and_training_disabled: false,
     },
     {
+      signal,
       throwHttpErrors: false,
     }
   );
@@ -366,7 +391,9 @@ const askApiWeb = async (
     return { answer, fromHistory: false };
   } else {
     if (conversationId) {
-      const conversation = await api.getConversation(conversationId);
+      const conversation = await api.getConversation(conversationId, {
+        signal,
+      });
       try {
         const mapping = Object.values(conversation.mapping);
         const obj: any = mapping[mapping.length - 1];

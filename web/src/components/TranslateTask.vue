@@ -65,11 +65,12 @@ const startTask = async (
       error: number;
       total: number;
     }) => void;
-  }
-): Promise<boolean> => {
+  },
+  signal?: AbortSignal
+) => {
   if (running.value) {
     message.info('已有任务在运行。');
-    return false;
+    return 'fail';
   }
 
   const buildLabel = () => {
@@ -100,7 +101,7 @@ const startTask = async (
       total: chapterTotal.value ?? 0,
     });
 
-  await translate(
+  const state = await translate(
     desc,
     params,
     {
@@ -132,14 +133,24 @@ const startTask = async (
         logs.value.push({ message: `${message}`, detail });
       },
     },
-    translatorDesc
+    translatorDesc,
+    signal
   );
 
   pushLog('\n结束');
   logs.value.push();
   running.value = false;
 
-  return chapterTotal.value === chapterFinished.value + chapterError.value;
+  if (state === 'abort') {
+    return 'abort';
+  } else if (
+    chapterTotal.value ===
+    chapterFinished.value + chapterError.value
+  ) {
+    return 'complete';
+  } else {
+    return 'uncomplete';
+  }
 };
 
 defineExpose({ startTask });
@@ -200,14 +211,14 @@ const showDetail = (message: string, detail: string[]) => {
         </n-text>
       </n-flex>
     </n-flex>
-  </n-card>
 
-  <c-modal
-    :title="`日志详情 - ${selectedLogMessage}`"
-    v-model:show="showLogDetailModal"
-  >
-    <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
-      {{ line }}
-    </n-p>
-  </c-modal>
+    <c-modal
+      :title="`日志详情 - ${selectedLogMessage}`"
+      v-model:show="showLogDetailModal"
+    >
+      <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
+        {{ line }}
+      </n-p>
+    </c-modal>
+  </n-card>
 </template>

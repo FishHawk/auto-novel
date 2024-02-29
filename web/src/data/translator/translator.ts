@@ -22,18 +22,23 @@ export class Translator {
     this.segCache = segCache;
   }
 
-  async translate(input: string[], glossary: Glossary): Promise<string[]> {
+  async translate(
+    input: string[],
+    glossary: Glossary,
+    signal?: AbortSignal
+  ): Promise<string[]> {
     return emptyLineFilterWrapper(input, async (input) => {
       if (input.length === 0) return [];
 
       let output: string[][] = [];
-      const segs = await this.segTranslator.createSegments(input);
+      const segs = this.segTranslator.createSegments(input);
       const size = segs.length;
       for (const [index, seg] of segs.entries()) {
-        const segOutput = await this.translateSegWithCache(
+        const segOutput = await this.translateSeg(
           seg,
           { index, size },
-          glossary
+          glossary,
+          signal
         );
         output.push(segOutput);
       }
@@ -41,10 +46,11 @@ export class Translator {
     });
   }
 
-  async translateSegWithCache(
+  async translateSeg(
     seg: string[],
     segInfo: { index: number; size: number },
-    glossary: Glossary
+    glossary: Glossary,
+    signal?: AbortSignal
   ) {
     let cacheKey: string | null = null;
     if (this.segCache) {
@@ -69,7 +75,8 @@ export class Translator {
     const segOutput = await this.segTranslator.translate(
       seg,
       segInfo,
-      glossary
+      glossary,
+      signal
     );
 
     if (this.segCache && cacheKey !== null) {

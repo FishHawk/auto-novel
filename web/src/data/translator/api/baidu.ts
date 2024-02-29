@@ -1,4 +1,4 @@
-import ky from 'ky';
+import ky, { Options } from 'ky';
 
 export class Baidu {
   id: 'baidu' = 'baidu';
@@ -26,7 +26,7 @@ export class Baidu {
           '';
       });
 
-  v2transapi = (query: string) =>
+  v2transapi = (query: string, options?: Options) =>
     this.client
       .post('v2transapi', {
         body: new URLSearchParams({
@@ -38,6 +38,7 @@ export class Baidu {
           token: this.token,
           domain: 'common',
         }),
+        ...options,
       })
       .json<V2transapiResponse>();
 }

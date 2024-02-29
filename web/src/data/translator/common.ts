@@ -63,7 +63,7 @@ export const createLengthSegmentor = (
   const maxLine = extra?.maxLine ?? 65536;
   const lastSegMinLength = extra?.lastSegMinLength;
 
-  return async (input: string[]) => {
+  return (input: string[]) => {
     const segs: string[][] = [];
     let seg: string[] = [];
     let segSize = 0;

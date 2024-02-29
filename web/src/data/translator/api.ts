@@ -62,7 +62,8 @@ const translateWeb = async (
     translateExpireChapter,
   }: TranslateTaskParams,
   callback: TranslateTaskCallback,
-  translatorDesc: TranslatorDesc
+  translatorDesc: TranslatorDesc,
+  signal?: AbortSignal
 ) => {
   // Api
   const endpoint = `novel/${providerId}/${novelId}/translate/${translatorDesc.id}`;
@@ -92,16 +93,18 @@ const translateWeb = async (
           limit: 3,
           delay: (attemptCount: number) => 2 * 2 ** (attemptCount - 1) * 1000,
         },
+        signal,
       })
       .json<TranslateTaskDto>();
 
   const updateMetadataTranslation = (json: MetadataUpdateBody) =>
-    client.post(`${endpoint}/metadata`, { json }).text();
+    client.post(`${endpoint}/metadata`, { json, signal }).text();
 
   const checkChapter = (chapterId: string) =>
     client
       .post(`${endpoint}/check-chapter/${chapterId}`, {
         searchParams: { sync: syncFromProvider },
+        signal,
       })
       .json<string[]>();
 
@@ -115,6 +118,7 @@ const translateWeb = async (
     client
       .put(`${endpoint}/chapter/${chapterId}`, {
         json: { ...json, sakuraVersion: '0.9' },
+        signal,
       })
       .json<{ jp: number; zh: number }>();
 
@@ -153,8 +157,13 @@ const translateWeb = async (
     callback.log('获取元数据');
     task = await getTranslateTask();
   } catch (e: any) {
-    callback.log(`发生错误，结束翻译任务：${e}`);
-    return;
+    if (e.name === 'AbortError') {
+      callback.log(`中止翻译任务`);
+      return 'abort';
+    } else {
+      callback.log(`发生错误，结束翻译任务：${e}`);
+      return;
+    }
   }
 
   let translator: Translator;
@@ -186,7 +195,11 @@ const translateWeb = async (
         callback.log('目前GPT翻译目录超级不稳定，跳过');
       } else {
         callback.log('翻译元数据');
-        const textsDst = await translator.translate(textsSrc, task.glossary);
+        const textsDst = await translator.translate(
+          textsSrc,
+          task.glossary,
+          signal
+        );
 
         callback.log(`上传元数据`);
         await updateMetadataTranslation(
@@ -198,6 +211,9 @@ const translateWeb = async (
     if (e === 'quit') {
       callback.log(`发生错误，结束翻译任务`);
       return;
+    } else if (e.name === 'AbortError') {
+      callback.log(`中止翻译任务`);
+      return 'abort';
     } else {
       callback.log(`发生错误，跳过：${e}`);
       callback.onChapterFailure();
@@ -237,7 +253,11 @@ const translateWeb = async (
         callback.onChapterSuccess({});
       } else {
         callback.log('翻译章节' + logSuffix);
-        const textsZh = await translator.translate(textsJp, task.glossary);
+        const textsZh = await translator.translate(
+          textsJp,
+          task.glossary,
+          signal
+        );
         callback.log('上传章节' + logSuffix);
         const { jp, zh } = await updateChapterTranslation(chapterId, {
           glossaryUuid: task.glossaryUuid,
@@ -245,10 +265,13 @@ const translateWeb = async (
         });
         callback.onChapterSuccess({ jp, zh });
       }
-    } catch (e) {
+    } catch (e: any) {
       if (e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
         return;
+      } else if (e.name === 'AbortError') {
+        callback.log(`中止翻译任务`);
+        return 'abort';
       } else {
         callback.log(`发生错误，跳过：${e}`);
         callback.onChapterFailure();
@@ -261,7 +284,8 @@ const translateWenku = async (
   { novelId, volumeId }: WenkuTranslateTaskDesc,
   { translateExpireChapter }: TranslateTaskParams,
   callback: TranslateTaskCallback,
-  translatorDesc: TranslatorDesc
+  translatorDesc: TranslatorDesc,
+  signal?: AbortSignal
 ) => {
   // Api
   const endpoint = `wenku/${novelId}/translate/${translatorDesc.id}/${volumeId}`;
@@ -272,10 +296,11 @@ const translateWenku = async (
     untranslatedChapters: string[];
     expiredChapters: string;
   }
-  const getTranslateTask = () => client.get(endpoint).json<TranslateTaskDto>();
+  const getTranslateTask = () =>
+    client.get(endpoint, { signal }).json<TranslateTaskDto>();
 
   const getChapterToTranslate = (chapterId: string) =>
-    client.get(`${endpoint}/${chapterId}`).json<string[]>();
+    client.get(`${endpoint}/${chapterId}`, { signal }).json<string[]>();
 
   const updateChapterTranslation = (
     chapterId: string,
@@ -284,6 +309,7 @@ const translateWenku = async (
     client
       .put(`${endpoint}/${chapterId}`, {
         json: { ...json, sakuraVersion: '0.9' },
+        signal,
       })
       .json<number>();
 
@@ -293,8 +319,13 @@ const translateWenku = async (
     callback.log(`获取未翻译章节 ${volumeId}`);
     task = await getTranslateTask();
   } catch (e: any) {
-    callback.log(`发生错误，结束翻译任务：${e}`);
-    return;
+    if (e.name === 'AbortError') {
+      callback.log(`中止翻译任务`);
+      return 'abort';
+    } else {
+      callback.log(`发生错误，结束翻译任务：${e}`);
+      return;
+    }
   }
 
   let translator: Translator;
@@ -336,7 +367,11 @@ const translateWenku = async (
       const textsJp = await getChapterToTranslate(chapterId);
 
       callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(textsJp, task.glossary);
+      const textsZh = await translator.translate(
+        textsJp,
+        task.glossary,
+        signal
+      );
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await updateChapterTranslation(chapterId, {
@@ -344,10 +379,13 @@ const translateWenku = async (
         paragraphsZh: textsZh,
       });
       callback.onChapterSuccess({ zh: state });
-    } catch (e) {
+    } catch (e: any) {
       if (e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
         return;
+      } else if (e.name === 'AbortError') {
+        callback.log(`中止翻译任务`);
+        return 'abort';
       } else {
         callback.log(`发生错误，跳过：${e}`);
         callback.onChapterFailure();
@@ -360,7 +398,8 @@ const translatePersonal = async (
   { volumeId }: PersonalTranslateTaskDesc,
   { translateExpireChapter }: TranslateTaskParams,
   callback: TranslateTaskCallback,
-  translatorDesc: TranslatorDesc
+  translatorDesc: TranslatorDesc,
+  signal?: AbortSignal
 ) => {
   // Api
 
@@ -422,7 +461,11 @@ const translatePersonal = async (
       const textsJp = await getChapterToTranslate(chapterId);
 
       callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(textsJp, task.glossary);
+      const textsZh = await translator.translate(
+        textsJp,
+        task.glossary,
+        signal
+      );
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await updateChapterTranslation(chapterId, {
@@ -431,10 +474,13 @@ const translatePersonal = async (
         paragraphs: textsZh,
       });
       callback.onChapterSuccess({ zh: state });
-    } catch (e) {
+    } catch (e: any) {
       if (e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
         return;
+      } else if (e.name === 'AbortError') {
+        callback.log(`中止翻译任务`);
+        return 'abort';
       } else {
         callback.log(`发生错误，跳过：${e}`);
         callback.onChapterFailure();
@@ -447,18 +493,32 @@ export const translate = (
   taskDesc: TranslateTaskDesc,
   taskParams: TranslateTaskParams,
   taskCallback: TranslateTaskCallback,
-  translatorDesc: TranslatorDesc
+  translatorDesc: TranslatorDesc,
+  signal?: AbortSignal
 ) => {
   if (taskDesc.type === 'web') {
-    return translateWeb(taskDesc, taskParams, taskCallback, translatorDesc);
+    return translateWeb(
+      taskDesc,
+      taskParams,
+      taskCallback,
+      translatorDesc,
+      signal
+    );
   } else if (taskDesc.type === 'wenku') {
-    return translateWenku(taskDesc, taskParams, taskCallback, translatorDesc);
+    return translateWenku(
+      taskDesc,
+      taskParams,
+      taskCallback,
+      translatorDesc,
+      signal
+    );
   } else {
     return translatePersonal(
       taskDesc,
       taskParams,
       taskCallback,
-      translatorDesc
+      translatorDesc,
+      signal
     );
   }
 };

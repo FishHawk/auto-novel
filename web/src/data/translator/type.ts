@@ -1,6 +1,6 @@
 export type Glossary = { [key: string]: string };
 
-export type Segmentor = (input: string[]) => Promise<string[][]>;
+export type Segmentor = (input: string[]) => string[][];
 
 export interface BaseTranslatorConfig {
   log: (message: string, detail?: string[]) => void;
@@ -11,7 +11,8 @@ export interface SegmentTranslator {
   translate: (
     seg: string[],
     segInfo: { index: number; size: number },
-    glossary: Glossary
+    glossary: Glossary,
+    signal?: AbortSignal
   ) => Promise<string[]>;
   log: (message: string, detail?: string[]) => void;
 }

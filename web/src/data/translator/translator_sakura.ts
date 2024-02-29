@@ -103,7 +103,8 @@ export class SakuraTranslator implements SegmentTranslator {
   async translate(
     seg: string[],
     segInfo: { index: number; size: number },
-    glossary: Glossary
+    glossary: Glossary,
+    signal?: AbortSignal
   ): Promise<string[]> {
     const newSeg = seg
       .map((text) =>
@@ -122,12 +123,13 @@ export class SakuraTranslator implements SegmentTranslator {
         }
         return text;
       });
-    return this.translateInner(newSeg, segInfo);
+    return this.translateInner(newSeg, segInfo, signal);
   }
 
   async translateInner(
     seg: string[],
-    segInfo: { index: number; size: number }
+    segInfo: { index: number; size: number },
+    signal?: AbortSignal
   ): Promise<string[]> {
     const maxNewToken = 1000;
     const concatedSeg = seg.join('\n');
@@ -137,7 +139,8 @@ export class SakuraTranslator implements SegmentTranslator {
       const { text, hasDegradation, extra } = await this.translatePrompt(
         concatedSeg,
         maxNewToken,
-        retry > 0
+        retry > 0,
+        signal
       );
       const splitText = text.replaceAll('<|im_end|>', '').split('\n');
 
@@ -166,7 +169,8 @@ export class SakuraTranslator implements SegmentTranslator {
       const { text, hasDegradation } = await this.translatePrompt(
         line,
         maxNewToken,
-        true
+        true,
+        signal
       );
       if (hasDegradation) {
         throw Error('发生单行退化，Sakura翻译器可能存在异常');
@@ -180,7 +184,8 @@ export class SakuraTranslator implements SegmentTranslator {
   private translatePrompt(
     text: string,
     maxNewToken: number,
-    tryFixDegradation: boolean
+    tryFixDegradation: boolean,
+    signal?: AbortSignal
   ) {
     if (this.api.id === 'llamacpp') {
       return SakuraLlamacpp.translateText(
@@ -188,14 +193,16 @@ export class SakuraTranslator implements SegmentTranslator {
         this.model.version,
         text,
         maxNewToken,
-        tryFixDegradation
+        tryFixDegradation,
+        signal
       );
     } else {
       return SakuraOpenai.translateText(
         this.api,
         text,
         maxNewToken,
-        tryFixDegradation
+        tryFixDegradation,
+        signal
       );
     }
   }
@@ -256,7 +263,8 @@ namespace SakuraLlamacpp {
     version: '0.8' | '0.9',
     text: string,
     maxNewToken: number,
-    tryFixDegradation: boolean
+    tryFixDegradation: boolean,
+    signal?: AbortSignal
   ) =>
     api
       .createCompletion(
@@ -270,6 +278,7 @@ namespace SakuraLlamacpp {
           frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
         },
         {
+          signal,
           timeout: false,
         }
       )
@@ -287,7 +296,8 @@ namespace SakuraOpenai {
   const createChatCompletions = (
     api: OpenAi,
     text: string,
-    config: { max_tokens: number; frequency_penalty?: number }
+    config: { max_tokens: number; frequency_penalty?: number },
+    signal?: AbortSignal
   ) =>
     api.createChatCompletions(
       {
@@ -314,6 +324,7 @@ namespace SakuraOpenai {
         repetition_penalty: 1.0,
       } as any,
       {
+        signal,
         timeout: false,
       }
     );
@@ -346,12 +357,18 @@ namespace SakuraOpenai {
     api: OpenAi,
     text: string,
     maxNewToken: number,
-    tryFixDegradation: boolean
+    tryFixDegradation: boolean,
+    signal?: AbortSignal
   ) =>
-    createChatCompletions(api, text, {
-      max_tokens: maxNewToken,
-      frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
-    }).then((completion) => ({
+    createChatCompletions(
+      api,
+      text,
+      {
+        max_tokens: maxNewToken,
+        frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
+      },
+      signal
+    ).then((completion) => ({
       text: completion.choices[0].message.content!!,
       hasDegradation: completion.choices[0].finish_reason !== 'stop',
       extra: undefined,

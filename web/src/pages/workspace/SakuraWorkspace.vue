@@ -55,14 +55,16 @@ const deleteAllJobs = () => {
 const onProgressUpdated = (
   task: string,
   state:
-    | { state: 'finish' }
+    | { state: 'finish'; abort: boolean }
     | { state: 'processed'; finished: number; error: number; total: number }
 ) => {
   if (state.state === 'finish') {
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
-    sakuraWorkspace.addJobRecord(job as any);
-    sakuraWorkspace.deleteJob(task);
+    if (!state.abort) {
+      sakuraWorkspace.addJobRecord(job as any);
+      sakuraWorkspace.deleteJob(task);
+    }
   } else {
     const job = processedJobs.value.get(task)!!;
     job.progress = {
@@ -80,7 +82,6 @@ const clearCache = async () => {
 };
 
 const notices = [
-  notice('启动了的翻译器无法暂停或删除。等这句话没了就可以了。'),
   notice('目前允许的模型： v0.9b-Q4_K_M 及以上。'),
   notice('AWQ量化版本目前有bug，请不要使用。'),
 ];

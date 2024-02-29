@@ -53,14 +53,16 @@ const deleteAllJobs = () => {
 const onProgressUpdated = (
   task: string,
   state:
-    | { state: 'finish' }
+    | { state: 'finish'; abort: boolean }
     | { state: 'processed'; finished: number; error: number; total: number }
 ) => {
   if (state.state === 'finish') {
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
-    gptWorkspace.addJobRecord(job);
-    gptWorkspace.deleteJob(task);
+    if (!state.abort) {
+      gptWorkspace.addJobRecord(job);
+      gptWorkspace.deleteJob(task);
+    }
   } else {
     const job = processedJobs.value.get(task)!!;
     job.progress = {
@@ -78,7 +80,6 @@ const clearCache = async () => {
 };
 
 const notices = [
-  notice('启动了的翻译器无法暂停或删除。等这句话没了就可以了。'),
   notice(
     'GPT3.5 web 不再使用中转，而是使用官网链接，需要你的网络环境能正常访问ChatGPT并安装插件。你仍然可以在添加翻译器的时候设置中转链接。',
     true

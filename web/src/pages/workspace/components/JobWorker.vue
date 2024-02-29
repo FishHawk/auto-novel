@@ -28,7 +28,7 @@ const emit = defineEmits<{
   'update:progress': [
     string,
     (
-      | { state: 'finish' }
+      | { state: 'finish'; abort: boolean }
       | { state: 'processed'; finished: number; error: number; total: number }
     )
   ];
@@ -89,7 +89,13 @@ const currentJob = ref<{
 }>();
 const running = computed(() => currentJob.value !== undefined);
 
+let abortHandler = () => {};
+
 const processTasks = async () => {
+  const controller = new AbortController();
+  const { signal } = controller;
+  abortHandler = () => controller.abort();
+
   while (true) {
     const job = getNextJob();
     currentJob.value = job;
@@ -97,7 +103,7 @@ const processTasks = async () => {
     if (job === undefined) break;
     const { desc, params } = parseTask(job.task);
 
-    const completed = await translateTask.value!!.startTask(
+    const state = await translateTask.value!!.startTask(
       desc,
       params,
       translatorDesc.value,
@@ -108,11 +114,17 @@ const processTasks = async () => {
             ...progress,
           });
         },
-      }
+      },
+      signal
     );
-    emit('update:progress', job.task, { state: 'finish' });
+    emit('update:progress', job.task, {
+      state: 'finish',
+      abort: state === 'abort',
+    });
 
-    if (!completed) break;
+    if (state !== 'complete') {
+      break;
+    }
   }
   currentJob.value = undefined;
 };
@@ -123,15 +135,10 @@ const startWorker = () => {
 };
 const stopWorker = () => {
   if (!running.value) return;
-  // TODO
-  message.error('还不支持');
+  abortHandler();
 };
 const deleteWorker = () => {
-  // TODO
-  if (running.value) {
-    message.error('翻译器正在运行');
-    return;
-  }
+  abortHandler();
   workspace.deleteWorker(worker.id);
 };
 
@@ -202,7 +209,7 @@ const testWorker = async () => {
 
         <c-button
           v-if="running"
-          label="暂停"
+          label="停止"
           size="tiny"
           secondary
           @click="stopWorker"
