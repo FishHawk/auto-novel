@@ -51,14 +51,10 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('tiktoken')) {
-              return 'tiktoken';
-            } else if (id.includes('web/src')) {
+            if (id.includes('web/src')) {
               return 'chunk';
             } else if (id.includes('naive')) {
               return 'naive';
-            } else if (id.includes('node_module') && id.includes('zip.js')) {
-              return 'zip';
             } else if (id.includes('node_module')) {
               return 'dep';
             }

@@ -34,7 +34,6 @@
     "pinia-plugin-persistedstate": "^3.2.1",
     "pinia-shared-state": "^0.4.5",
     "seemly": "^0.3.8",
-    "tiktoken": "^1.0.11",
     "typescript": "^5.3.3",
     "unplugin-auto-import": "^0.16.7",
     "unplugin-vue-components": "^0.25.2",

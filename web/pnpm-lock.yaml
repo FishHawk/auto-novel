@@ -68,9 +68,6 @@ dependencies:
   seemly:
     specifier: ^0.3.8
     version: 0.3.8
-  tiktoken:
-    specifier: ^1.0.11
-    version: 1.0.11
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -1938,10 +1935,6 @@ packages:
   /supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
-    dev: false
-
-  /tiktoken@1.0.11:
-    resolution: {integrity: sha512-aMJcn9NGmb6zDXkCweJLnACyIyjdiYIk1odAfnCUvin7O1QsV1rQP1hatGDMhQovxkeSJhFeU7QuGkbDHGciDQ==}
     dev: false
 
   /tinybench@2.6.0:
