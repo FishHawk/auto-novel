@@ -1,5 +1,6 @@
 package infra
 
+import appModule
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
 import infra.common.SakuraJobRepository
@@ -14,46 +15,12 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.bson.Document
 import org.bson.types.ObjectId
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
-import org.litote.kmongo.coroutine.projection
 import org.litote.kmongo.eq
 import org.litote.kmongo.id.toId
-import java.io.File
-
-
-val appModule = module {
-    // Data Source
-    single {
-        val mongodbUrl = System.getenv("MONGODB_URL") ?: "mongodb://192.168.9.202:27017"
-        DataSourceMongo(mongodbUrl)
-    }
-    single {
-        val url = System.getenv("ELASTIC_SEARCH_DB_URL") ?: "192.168.9.202"
-        DataSourceElasticSearch(url)
-    }
-    single {
-        val url = System.getenv("REDIS_URL") ?: "192.168.9.202:6379"
-        createRedisDataSource(url)
-    }
-    single {
-        val httpProxy: String? = System.getenv("HTTPS_PROXY")
-        val pixivPhpsessid: String? = System.getenv("PIXIV_COOKIE_PHPSESSID")
-        DataSourceWebNovelProvider(
-            httpsProxy = httpProxy,
-            pixivPhpsessid = pixivPhpsessid,
-        )
-    }
-
-    singleOf(::UserRepository)
-    singleOf(::SakuraJobRepository)
-    singleOf(::WenkuNovelMetadataRepository)
-}
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(
@@ -239,41 +206,6 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
                 } else {
                     break
                 }
-            }
-        }
-
-
-        describe("kmongo issue 415") {
-//            println(setValue(BookEpisode::youdaoParagraphs.pos(0), "test").toBsonDocument())
-//            println(setValue(BookEpisode::baiduParagraphs.pos(0), "test").toBsonDocument())
-//            println(Updates.set("paragraphsZh.0", "test").toBsonDocument())
-        }
-
-        describe("generate sitemap") {
-            File("sitemap.txt").printWriter().use { out ->
-                mongo
-                    .webNovelMetadataCollection
-                    .withDocumentClass<Document>()
-                    .find()
-                    .projection(
-                        WebNovelMetadata::providerId,
-                        WebNovelMetadata::novelId,
-                    )
-                    .toList()
-                    .forEach {
-                        val pid = it.getString("providerId")
-                        val nid = it.getString("bookId")
-                        out.println("https://books.fishhawk.top/novel/${pid}/${nid}")
-                    }
-
-                mongo
-                    .wenkuNovelMetadataCollection
-                    .projection(WenkuNovelMetadata::id)
-                    .toList()
-                    .forEach {
-                        val nid = it.toHexString()
-                        out.println("https://books.fishhawk.top/wenku/${nid}")
-                    }
             }
         }
     }
