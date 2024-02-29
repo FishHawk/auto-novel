@@ -95,7 +95,9 @@ const deleteVolume = async (volumeId: string) => {
   >
     <div
       :style="{
-        background: `linear-gradient(to bottom, color-mix(in srgb, ${vars.bodyColor} 50%, transparent), ${vars.bodyColor})`,
+        background: `linear-gradient(to bottom, ${
+          vars.bodyColor == '#fff' ? '#ffffff80' : 'rgba(16, 16, 20, 0.5)'
+        }, ${vars.bodyColor})`,
       }"
       style="width: 100%; height: 100%; backdrop-filter: blur(8px)"
     >
