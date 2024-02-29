@@ -1,18 +1,14 @@
-import { KyInstance } from 'ky/distribution/types/ky';
+import ky from 'ky';
 
 export class Baidu {
   id: 'baidu' = 'baidu';
-  client: KyInstance;
+  client = ky.create({
+    prefixUrl: 'https://fanyi.baidu.com',
+    credentials: 'include',
+  });
 
   token: string = '';
   gtk: string = '';
-
-  constructor(client: KyInstance) {
-    this.client = client.create({
-      prefixUrl: 'https://fanyi.baidu.com',
-      credentials: 'include',
-    });
-  }
 
   refreshGtkAndToken = () =>
     this.client

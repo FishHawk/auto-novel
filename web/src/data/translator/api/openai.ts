@@ -1,7 +1,6 @@
 // Copyright 2023 OpenAI
 
-import { HTTPError, Options } from 'ky';
-import { KyInstance } from 'ky/distribution/types/ky';
+import ky, { HTTPError, KyInstance, Options } from 'ky';
 
 import { parseEventStream, safeJson } from './util';
 
@@ -9,8 +8,8 @@ export class OpenAi {
   id: 'openai' = 'openai';
   client: KyInstance;
 
-  constructor(client: KyInstance, endpoint: string, key: string) {
-    this.client = client.create({
+  constructor(endpoint: string, key: string) {
+    this.client = ky.create({
       prefixUrl: endpoint,
       headers: {
         Accept: 'application/json',
@@ -32,7 +31,7 @@ export class OpenAi {
 
   createChatCompletions = (
     json: ChatCompletion.Params & { stream?: false },
-    options?: Options,
+    options?: Options
   ): Promise<ChatCompletion> =>
     this.client
       .post('v1/chat/completions', { json, ...options })

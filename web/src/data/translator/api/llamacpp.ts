@@ -1,12 +1,11 @@
-import { Options } from 'ky';
-import { KyInstance } from 'ky/distribution/types/ky';
+import ky, { KyInstance, Options } from 'ky';
 
 export class Llamacpp {
   id: 'llamacpp' = 'llamacpp';
   client: KyInstance;
 
-  constructor(client: KyInstance, endpoint: string) {
-    this.client = client.create({
+  constructor(endpoint: string) {
+    this.client = ky.create({
       prefixUrl: endpoint,
       headers: {
         Accept: 'application/json',

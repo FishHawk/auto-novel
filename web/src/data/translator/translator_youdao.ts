@@ -6,18 +6,16 @@ import { safeJson } from './api/util';
 export type YoudaoTranslatorConfig = BaseTranslatorConfig;
 
 export class YoudaoTranslator implements SegmentTranslator {
+  private api = new Youdao();
+
   glossary: Glossary;
   log: (message: string) => void;
 
-  private api: Youdao;
-
   private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
 
-  constructor({ client, glossary, log }: YoudaoTranslatorConfig) {
+  constructor({ glossary, log }: YoudaoTranslatorConfig) {
     this.glossary = glossary;
     this.log = log;
-
-    this.api = new Youdao(client);
 
     this.glossaryWarpper = createGlossaryWrapper(glossary);
   }

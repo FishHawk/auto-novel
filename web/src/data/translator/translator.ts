@@ -91,20 +91,17 @@ export class Translator {
     }
   }
 
-  static async create(config: TranslatorConfig) {
+  static async create(config: TranslatorConfig, cache: boolean) {
     const segTranslator = await this.createSegmentTranslator(config);
     let segCache: SegmentCache | undefined = undefined;
-    if (config.id === 'gpt') {
-      segCache = await createSegIndexedDbCache('gpt-seg-cache');
-    } else if (config.id === 'sakura') {
-      segCache = await createSegIndexedDbCache('sakura-seg-cache');
+    if (cache) {
+      if (config.id === 'gpt') {
+        segCache = await createSegIndexedDbCache('gpt-seg-cache');
+      } else if (config.id === 'sakura') {
+        segCache = await createSegIndexedDbCache('sakura-seg-cache');
+      }
     }
     return new Translator(segTranslator, segCache);
-  }
-
-  static async createWithoutCache(config: TranslatorConfig) {
-    const segTranslator = await this.createSegmentTranslator(config);
-    return new Translator(segTranslator, undefined);
   }
 }
 

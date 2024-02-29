@@ -3,7 +3,6 @@ import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
-import { client } from '@/data/api/client';
 import {
   GptWorker,
   SakuraWorker,
@@ -140,12 +139,14 @@ const testWorker = async () => {
   const input =
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
   try {
-    const translator = await Translator.createWithoutCache({
-      client,
-      glossary: {},
-      log: () => {},
-      ...translatorDesc.value,
-    });
+    const translator = await Translator.create(
+      {
+        glossary: {},
+        log: () => {},
+        ...translatorDesc.value,
+      },
+      false
+    );
     const result = await translator.translate([input]);
     const output = result[0];
 

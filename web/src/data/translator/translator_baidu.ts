@@ -6,18 +6,16 @@ import { Baidu } from './api/baidu';
 export type BaiduTranslatorConfig = BaseTranslatorConfig;
 
 export class BaiduTranslator implements SegmentTranslator {
+  private api = new Baidu();
+
   glossary: Glossary;
   log: (message: string) => void;
 
-  private api: Baidu;
-
   private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
 
-  constructor({ client, glossary, log }: BaiduTranslatorConfig) {
+  constructor({ glossary, log }: BaiduTranslatorConfig) {
     this.glossary = glossary;
     this.log = log;
-
-    this.api = new Baidu(client);
 
     this.glossaryWarpper = createGlossaryWrapper(glossary);
   }

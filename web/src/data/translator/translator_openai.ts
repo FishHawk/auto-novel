@@ -20,7 +20,6 @@ export class OpenAiTranslator implements SegmentTranslator {
   private model: string;
 
   constructor({
-    client,
     glossary,
     log,
     type,
@@ -29,10 +28,10 @@ export class OpenAiTranslator implements SegmentTranslator {
     key,
   }: OpenAiTranslatorConfig) {
     if (type === 'web') {
-      this.api = new OpenAiWeb(client, endpoint, key);
+      this.api = new OpenAiWeb(endpoint, key);
       this.model = 'text-davinci-002-render-sha';
     } else {
-      this.api = new OpenAi(client, endpoint, key);
+      this.api = new OpenAi(endpoint, key);
       if (model === 'gpt-3.5') {
         this.model = 'gpt-3.5-turbo';
       } else {

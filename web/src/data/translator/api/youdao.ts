@@ -1,19 +1,15 @@
 import { AES } from 'crypto-es/lib/aes';
 import { Utf8 } from 'crypto-es/lib/core';
 import { MD5 } from 'crypto-es/lib/md5';
-import { KyInstance } from 'ky/distribution/types/ky';
+import ky from 'ky';
 
 export class Youdao {
   id: 'youdao' = 'youdao';
-  client: KyInstance;
+  client = ky.create({
+    credentials: 'include',
+  });
 
   key: string = 'fsdsogkndfokasodnaso';
-
-  constructor(client: KyInstance) {
-    this.client = client.create({
-      credentials: 'include',
-    });
-  }
 
   rlog = () =>
     this.client.get('https://rlogs.youdao.com/rlog.php', {

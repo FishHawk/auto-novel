@@ -9,14 +9,13 @@ export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
 }
 
 export class SakuraTranslator implements SegmentTranslator {
+  private api: Llamacpp | OpenAi;
+
   glossary: Glossary;
   log: (message: string, detail?: string[]) => void;
-
-  private api: Llamacpp | OpenAi;
   model: SakuraModel = { version: '0.8' };
 
   constructor({
-    client,
     glossary,
     log,
     endpoint,
@@ -26,9 +25,9 @@ export class SakuraTranslator implements SegmentTranslator {
     this.log = log;
 
     if (useLlamaApi) {
-      this.api = new Llamacpp(client, endpoint);
+      this.api = new Llamacpp(endpoint);
     } else {
-      this.api = new OpenAi(client, endpoint, 'no-key');
+      this.api = new OpenAi(endpoint, 'no-key');
     }
   }
 

@@ -159,12 +159,14 @@ const translateWeb = async (
 
   let translator: Translator;
   try {
-    translator = await Translator.create({
-      client,
-      glossary: task.glossary,
-      log: (message, detail) => callback.log('　　' + message, detail),
-      ...translatorDesc,
-    });
+    translator = await Translator.create(
+      {
+        glossary: task.glossary,
+        log: (message, detail) => callback.log('　　' + message, detail),
+        ...translatorDesc,
+      },
+      true
+    );
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
     return;
@@ -298,12 +300,14 @@ const translateWenku = async (
 
   let translator: Translator;
   try {
-    translator = await Translator.create({
-      client,
-      glossary: task.glossary,
-      log: (message, detail) => callback.log('　　' + message, detail),
-      ...translatorDesc,
-    });
+    translator = await Translator.create(
+      {
+        glossary: task.glossary,
+        log: (message, detail) => callback.log('　　' + message, detail),
+        ...translatorDesc,
+      },
+      true
+    );
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
     return;
@@ -391,12 +395,14 @@ const translatePersonal = async (
 
   let translator: Translator;
   try {
-    translator = await Translator.create({
-      client,
-      glossary: task.glossary,
-      log: (message, detail) => callback.log('　　' + message, detail),
-      ...translatorDesc,
-    });
+    translator = await Translator.create(
+      {
+        glossary: task.glossary,
+        log: (message, detail) => callback.log('　　' + message, detail),
+        ...translatorDesc,
+      },
+      true
+    );
   } catch (e: any) {
     callback.log(`发生错误，无法创建翻译器：${e}`);
     return;

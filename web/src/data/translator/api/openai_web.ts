@@ -1,5 +1,4 @@
-import { KyInstance } from 'ky/distribution/types/ky';
-import { Options } from 'ky/distribution/types/options';
+import ky, { KyInstance, Options } from 'ky';
 
 import { parseEventStream } from './util';
 
@@ -7,8 +6,8 @@ export class OpenAiWeb {
   id: 'openai-web' = 'openai-web';
   client: KyInstance;
 
-  constructor(client: KyInstance, endpoint: string, accessToken: string) {
-    this.client = client.create({
+  constructor(endpoint: string, accessToken: string) {
+    this.client = ky.create({
       prefixUrl: endpoint,
       headers: {
         Authorization: `Bearer ${accessToken}`,
