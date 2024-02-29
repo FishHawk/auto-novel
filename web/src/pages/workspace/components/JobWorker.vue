@@ -141,13 +141,12 @@ const testWorker = async () => {
   try {
     const translator = await Translator.create(
       {
-        glossary: {},
         log: () => {},
         ...translatorDesc.value,
       },
       false
     );
-    const result = await translator.translate([input]);
+    const result = await translator.translate([input], {});
     const output = result[0];
 
     if (worker.translatorId === 'gpt') {

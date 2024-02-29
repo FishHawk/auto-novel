@@ -14,19 +14,11 @@ export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
 
 export class OpenAiTranslator implements SegmentTranslator {
   log: (message: string) => void;
-  glossary: Glossary;
-
   private api: OpenAi | OpenAiWeb;
   private model: string;
 
-  constructor({
-    glossary,
-    log,
-    type,
-    model,
-    endpoint,
-    key,
-  }: OpenAiTranslatorConfig) {
+  constructor({ log, type, model, endpoint, key }: OpenAiTranslatorConfig) {
+    this.log = log;
     if (type === 'web') {
       this.api = new OpenAiWeb(endpoint, key);
       this.model = 'text-davinci-002-render-sha';
@@ -38,8 +30,6 @@ export class OpenAiTranslator implements SegmentTranslator {
         this.model = 'gpt-4';
       }
     }
-    this.log = log;
-    this.glossary = glossary;
   }
 
   createSegments = createLengthSegmentor(1500, {
@@ -49,7 +39,8 @@ export class OpenAiTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    segInfo: { index: number; size: number }
+    segInfo: { index: number; size: number },
+    glossary: Glossary
   ): Promise<string[]> {
     let enableBypass = false;
 
@@ -89,7 +80,7 @@ export class OpenAiTranslator implements SegmentTranslator {
     let retry = 0;
     let failBecasueLineNumberNotMatch = 0;
     while (true) {
-      const result = await this.translateLines(seg, enableBypass);
+      const result = await this.translateLines(seg, glossary, enableBypass);
 
       if (result === 'censored') {
         logSegInfo({ retry, lineNumber: [seg.length, NaN] });
@@ -142,6 +133,7 @@ export class OpenAiTranslator implements SegmentTranslator {
     ): Promise<string[]> => {
       const result = await this.translateLines(
         seg.slice(left, right),
+        glossary,
         enableBypass
       );
 
@@ -191,6 +183,7 @@ export class OpenAiTranslator implements SegmentTranslator {
 
   private async translateLines(
     lines: string[],
+    glossary: Glossary,
     enableBypass: boolean
   ): Promise<
     | 'censored'
@@ -209,7 +202,7 @@ export class OpenAiTranslator implements SegmentTranslator {
         );
     };
 
-    const messages = buildMessages(lines, this.glossary, enableBypass);
+    const messages = buildMessages(lines, glossary, enableBypass);
     if (this.api.id === 'openai') {
       return askApi(this.api, this.model, messages)
         .then((it) => ({

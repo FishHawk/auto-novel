@@ -9,21 +9,13 @@ export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
 }
 
 export class SakuraTranslator implements SegmentTranslator {
-  private api: Llamacpp | OpenAi;
-
-  glossary: Glossary;
   log: (message: string, detail?: string[]) => void;
+
+  private api: Llamacpp | OpenAi;
   model: SakuraModel = { version: '0.8' };
 
-  constructor({
-    glossary,
-    log,
-    endpoint,
-    useLlamaApi,
-  }: SakuraTranslatorConfig) {
-    this.glossary = glossary;
+  constructor({ log, endpoint, useLlamaApi }: SakuraTranslatorConfig) {
     this.log = log;
-
     if (useLlamaApi) {
       this.api = new Llamacpp(endpoint);
     } else {
@@ -110,7 +102,8 @@ export class SakuraTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    segInfo: { index: number; size: number }
+    segInfo: { index: number; size: number },
+    glossary: Glossary
   ): Promise<string[]> {
     const newSeg = seg
       .map((text) =>
@@ -120,11 +113,11 @@ export class SakuraTranslator implements SegmentTranslator {
         )
       )
       .map((text) => {
-        const wordJpArray = Object.keys(this.glossary).sort(
+        const wordJpArray = Object.keys(glossary).sort(
           (a, b) => b.length - a.length
         );
         for (const wordJp of wordJpArray) {
-          const wordZh = this.glossary[wordJp];
+          const wordZh = glossary[wordJp];
           text = text.replaceAll(wordJp, wordZh);
         }
         return text;

@@ -161,7 +161,6 @@ const translateWeb = async (
   try {
     translator = await Translator.create(
       {
-        glossary: task.glossary,
         log: (message, detail) => callback.log('　　' + message, detail),
         ...translatorDesc,
       },
@@ -187,7 +186,7 @@ const translateWeb = async (
         callback.log('目前GPT翻译目录超级不稳定，跳过');
       } else {
         callback.log('翻译元数据');
-        const textsDst = await translator.translate(textsSrc);
+        const textsDst = await translator.translate(textsSrc, task.glossary);
 
         callback.log(`上传元数据`);
         await updateMetadataTranslation(
@@ -238,7 +237,7 @@ const translateWeb = async (
         callback.onChapterSuccess({});
       } else {
         callback.log('翻译章节' + logSuffix);
-        const textsZh = await translator.translate(textsJp);
+        const textsZh = await translator.translate(textsJp, task.glossary);
         callback.log('上传章节' + logSuffix);
         const { jp, zh } = await updateChapterTranslation(chapterId, {
           glossaryUuid: task.glossaryUuid,
@@ -302,7 +301,6 @@ const translateWenku = async (
   try {
     translator = await Translator.create(
       {
-        glossary: task.glossary,
         log: (message, detail) => callback.log('　　' + message, detail),
         ...translatorDesc,
       },
@@ -338,7 +336,7 @@ const translateWenku = async (
       const textsJp = await getChapterToTranslate(chapterId);
 
       callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(textsJp);
+      const textsZh = await translator.translate(textsJp, task.glossary);
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await updateChapterTranslation(chapterId, {
@@ -397,7 +395,6 @@ const translatePersonal = async (
   try {
     translator = await Translator.create(
       {
-        glossary: task.glossary,
         log: (message, detail) => callback.log('　　' + message, detail),
         ...translatorDesc,
       },
@@ -425,7 +422,7 @@ const translatePersonal = async (
       const textsJp = await getChapterToTranslate(chapterId);
 
       callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(textsJp);
+      const textsZh = await translator.translate(textsJp, task.glossary);
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await updateChapterTranslation(chapterId, {

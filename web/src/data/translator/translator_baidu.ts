@@ -6,18 +6,11 @@ import { Baidu } from './api/baidu';
 export type BaiduTranslatorConfig = BaseTranslatorConfig;
 
 export class BaiduTranslator implements SegmentTranslator {
+  log: (message: string) => void;
   private api = new Baidu();
 
-  glossary: Glossary;
-  log: (message: string) => void;
-
-  private glossaryWarpper: ReturnType<typeof createGlossaryWrapper>;
-
-  constructor({ glossary, log }: BaiduTranslatorConfig) {
-    this.glossary = glossary;
+  constructor({ log }: BaiduTranslatorConfig) {
     this.log = log;
-
-    this.glossaryWarpper = createGlossaryWrapper(glossary);
   }
 
   async init() {
@@ -32,9 +25,12 @@ export class BaiduTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    _segInfo: { index: number; size: number }
+    _segInfo: { index: number; size: number },
+    glossary: Glossary
   ): Promise<string[]> {
-    return this.glossaryWarpper(seg, (seg) => this.translateInner(seg));
+    return createGlossaryWrapper(glossary)(seg, (seg) =>
+      this.translateInner(seg)
+    );
   }
 
   async translateInner(input: string[]): Promise<string[]> {

@@ -4,15 +4,14 @@ export type Segmentor = (input: string[]) => Promise<string[][]>;
 
 export interface BaseTranslatorConfig {
   log: (message: string, detail?: string[]) => void;
-  glossary: Glossary;
 }
 
 export interface SegmentTranslator {
-  glossary: Glossary;
   createSegments: Segmentor;
   translate: (
     seg: string[],
-    segInfo: { index: number; size: number }
+    segInfo: { index: number; size: number },
+    glossary: Glossary
   ) => Promise<string[]>;
   log: (message: string, detail?: string[]) => void;
 }

@@ -3,7 +3,7 @@ import { BaiduTranslator, BaiduTranslatorConfig } from './translator_baidu';
 import { OpenAiTranslator, OpenAiTranslatorConfig } from './translator_openai';
 import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
 import { YoudaoTranslator, YoudaoTranslatorConfig } from './translator_youdao';
-import { SegmentTranslator } from './type';
+import { Glossary, SegmentTranslator } from './type';
 
 export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
 
@@ -22,7 +22,7 @@ export class Translator {
     this.segCache = segCache;
   }
 
-  async translate(input: string[]): Promise<string[]> {
+  async translate(input: string[], glossary: Glossary): Promise<string[]> {
     return emptyLineFilterWrapper(input, async (input) => {
       if (input.length === 0) return [];
 
@@ -30,10 +30,11 @@ export class Translator {
       const segs = await this.segTranslator.createSegments(input);
       const size = segs.length;
       for (const [index, seg] of segs.entries()) {
-        const segOutput = await this.translateSegWithCache(seg, {
-          index,
-          size,
-        });
+        const segOutput = await this.translateSegWithCache(
+          seg,
+          { index, size },
+          glossary
+        );
         output.push(segOutput);
       }
       return output.flat();
@@ -42,12 +43,13 @@ export class Translator {
 
   async translateSegWithCache(
     seg: string[],
-    segInfo: { index: number; size: number }
+    segInfo: { index: number; size: number },
+    glossary: Glossary
   ) {
     let cacheKey: string | null = null;
     if (this.segCache) {
       try {
-        let extra: any = { glossary: this.segTranslator.glossary };
+        let extra: any = { glossary };
         if (this.segTranslator instanceof SakuraTranslator) {
           extra.model = this.segTranslator.model;
         }
@@ -64,7 +66,11 @@ export class Translator {
       }
     }
 
-    const segOutput = await this.segTranslator.translate(seg, segInfo);
+    const segOutput = await this.segTranslator.translate(
+      seg,
+      segInfo,
+      glossary
+    );
 
     if (this.segCache && cacheKey !== null) {
       try {
