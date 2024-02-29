@@ -224,10 +224,11 @@ const queueOrderOptions = [
   { value: 'asc', label: '从旧到新' },
 ];
 
-const queueTaskSize = ref<'full' | 'first5'>('full');
+const queueTaskSize = ref<'first5' | 'full' | 'full-expire'>('full');
 const queueTaskSizeOptions = [
-  { value: 'full', label: '全部' },
   { value: 'first5', label: '前5话' },
+  { value: 'full', label: '全部' },
+  { value: 'full-expire', label: '全部+过期章节' },
 ];
 
 const submitJob = (id: 'gpt' | 'sakura') => {
@@ -238,13 +239,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     queueOrder.value === 'desc'
       ? selectedNovels.novels
       : selectedNovels.novels.slice().reverse();
-  const end = queueTaskSize.value === 'full' ? 65535 : 5;
+  const end = queueTaskSize.value === 'first5' ? 5 : 65535;
+  const expire = queueTaskSize.value === 'full-expire';
 
   novelsSorted.forEach((it) => {
     const task = buildWebTranslateTask(it.providerId, it.novelId, {
       start: 0,
-      end: end,
-      expire: false,
+      end,
+      expire,
     });
     const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
     workspace.addJob({
