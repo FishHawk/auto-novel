@@ -3,17 +3,45 @@ type Filter = { query: string; selected: number[] };
 
 const props = defineProps<{
   search: { suggestions: string[]; tags: string[] } | undefined;
-  options: { label: string; tags: string[] }[];
+  options: { label: string; tags: string[]; multiple?: boolean }[];
   filters: Filter;
 }>();
 const emits = defineEmits<{
   userInput: [];
 }>();
 
-function select(optionIndex: number, index: number) {
-  props.filters.selected[optionIndex] = index;
+const select = (
+  optionIndex: number,
+  index: number,
+  multiple: boolean = false
+) => {
+  if (!multiple) {
+    props.filters.selected[optionIndex] = index;
+  } else {
+    props.filters.selected[optionIndex] ^= 1 << index;
+  }
   emits('userInput');
-}
+};
+
+const selected = (
+  optionIndex: number,
+  index: number,
+  multiple: boolean = false
+) => {
+  if (!multiple) {
+    return index === props.filters.selected[optionIndex];
+  } else {
+    return (props.filters.selected[optionIndex] & (1 << index)) != 0;
+  }
+};
+
+const invertSelection = (optionIndex: number) => {
+  const option = props.options[optionIndex];
+  if (option.multiple === true) {
+    props.filters.selected[optionIndex] ^= 2 ** option.tags.length - 1;
+    emits('userInput');
+  }
+};
 </script>
 
 <template>
@@ -52,18 +80,28 @@ function select(optionIndex: number, index: number) {
       align="baseline"
       :wrap="false"
     >
-      <n-text style="white-space: nowrap" depth="3">{{ option.label }}</n-text>
+      <n-text
+        style="white-space: nowrap"
+        depth="3"
+        @click="invertSelection(optionIndex)"
+        :style="option.multiple === true ? { cursor: 'pointer' } : {}"
+      >
+        {{ option.label }}
+      </n-text>
       <n-flex size="large">
-        <n-button
+        <n-text
           v-for="(tag, index) in option.tags"
           text
           :type="
-            index === filters.selected[optionIndex] ? 'primary' : 'default'
+            selected(optionIndex, index, option.multiple)
+              ? 'primary'
+              : 'default'
           "
-          @click="select(optionIndex, index)"
+          @click="select(optionIndex, index, option.multiple)"
+          style="cursor: pointer"
         >
           {{ tag }}
-        </n-button>
+        </n-text>
       </n-flex>
     </n-flex>
   </n-flex>

@@ -28,7 +28,6 @@ const options = [
   {
     label: '来源',
     tags: [
-      '全部',
       'Kakuyomu',
       '成为小说家吧',
       'Novelup',
@@ -36,6 +35,7 @@ const options = [
       'Pixiv',
       'Alphapolis',
     ],
+    multiple: true,
   },
   {
     label: '类型',
@@ -53,24 +53,26 @@ const options = [
 ];
 
 const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
-  function optionNth(n: number): string {
-    return options[n].tags[selected[n]];
-  }
-  const providerMap: { [key: string]: string } = {
-    全部: '',
-    Kakuyomu: 'kakuyomu',
-    成为小说家吧: 'syosetu',
-    Novelup: 'novelup',
-    Hameln: 'hameln',
-    Pixiv: 'pixiv',
-    Alphapolis: 'alphapolis',
+  const parseProviderBitFlags = (n: number): string => {
+    const providerMap: { [key: string]: string } = {
+      Kakuyomu: 'kakuyomu',
+      成为小说家吧: 'syosetu',
+      Novelup: 'novelup',
+      Hameln: 'hameln',
+      Pixiv: 'pixiv',
+      Alphapolis: 'alphapolis',
+    };
+    return options[n].tags
+      .filter((_, index) => (selected[n] & (1 << index)) !== 0)
+      .map((tag) => providerMap[tag])
+      .join();
   };
   if (userData.isOldAss) {
     return ApiWebNovel.listNovel({
       page,
       pageSize: 20,
       query,
-      provider: providerMap[optionNth(0)],
+      provider: parseProviderBitFlags(0),
       type: selected[1],
       level: selected[2],
       translate: selected[3],
@@ -81,7 +83,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
       page,
       pageSize: 20,
       query,
-      provider: providerMap[optionNth(0)],
+      provider: parseProviderBitFlags(0),
       type: selected[1],
       level: 1,
       translate: selected[2],
