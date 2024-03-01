@@ -67,29 +67,25 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
       .map((tag) => providerMap[tag])
       .join();
   };
-  if (userData.isOldAss) {
-    return ApiWebNovel.listNovel({
-      page,
-      pageSize: 20,
-      query,
-      provider: parseProviderBitFlags(0),
-      type: selected[1],
-      level: selected[2],
-      translate: selected[3],
-      sort: selected[4],
-    });
-  } else {
-    return ApiWebNovel.listNovel({
-      page,
-      pageSize: 20,
-      query,
-      provider: parseProviderBitFlags(0),
-      type: selected[1],
-      level: 1,
-      translate: selected[2],
-      sort: selected[3],
-    });
-  }
+
+  return ApiWebNovel.listNovel({
+    page,
+    pageSize: 20,
+    query,
+    provider: parseProviderBitFlags(0),
+    type: selected[1],
+    ...(userData.isOldAss
+      ? {
+          level: selected[2],
+          translate: selected[3],
+          sort: selected[4],
+        }
+      : {
+          level: 1,
+          translate: selected[2],
+          sort: selected[3],
+        }),
+  });
 };
 
 const search = computed(() => {

@@ -58,6 +58,7 @@ const loadWeb = async () => {
   const result = await ApiWebNovel.listNovel({
     page: 0,
     pageSize: 8,
+    provider: 'kakuyomu,syosetu,novelup,hameln,pixiv,alphapolis',
     sort: 1,
     level: 1,
   });
