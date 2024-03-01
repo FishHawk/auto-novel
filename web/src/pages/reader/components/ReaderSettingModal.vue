@@ -123,7 +123,7 @@ const setCustomFontColor = (color: string) => {
               :show-alpha="false"
               :default-value="setting.theme.bodyColor"
               :on-complete="setCustomBodyColor"
-              style="width: 8em"
+              style="width: 8.2em"
             >
               <template #label="color">背景：{{ color }}</template>
             </n-color-picker>
@@ -135,7 +135,7 @@ const setCustomFontColor = (color: string) => {
                 (setting.theme.isDark ? '#FFFFFF' : '#000000')
               "
               :on-complete="setCustomFontColor"
-              style="width: 8em"
+              style="width: 8.2em"
             >
               <template #label="color">文字：{{ color }}</template>
             </n-color-picker>
@@ -173,9 +173,3 @@ const setCustomFontColor = (color: string) => {
     </n-flex>
   </c-modal>
 </template>
-
-<style>
-.n-transfer-list-header__extra {
-  display: none;
-}
-</style>
