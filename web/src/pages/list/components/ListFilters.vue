@@ -14,7 +14,9 @@ function select(optionIndex: number, index: number, multiple: boolean = false) {
   if (!multiple) {
     props.filters.selected[optionIndex] = index;
   } else {
-    props.filters.selected[optionIndex] ^= index > 0 ? 1 << (index - 1) : 0;
+    props.filters.selected[optionIndex] = index !== 0
+        ? props.filters.selected[optionIndex] ^ (1 << (index - 1))
+        : 0;
   }
   emits('userInput');
 }
