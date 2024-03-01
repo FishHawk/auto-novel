@@ -23,7 +23,7 @@ function selected(optionIndex: number, index: number, multiple: boolean = false)
   if (!multiple) {
     return index === props.filters.selected[optionIndex];
   } else {
-    return (props.filters.selected[optionIndex] >> (index - 1)) & 1;
+    return index !== 0 ? (props.filters.selected[optionIndex] >> (index - 1)) & 1 : props.filters.selected[optionIndex] === 0;
   }
 }
 </script>
