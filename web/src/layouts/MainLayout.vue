@@ -19,7 +19,6 @@ import { useIsWideScreen } from '@/data/util';
 const isWideScreen = useIsWideScreen(850);
 const setting = useSettingStore();
 const route = useRoute();
-const router = useRouter();
 const userData = useUserDataStore();
 
 const menuOption = (
@@ -219,23 +218,12 @@ const theme = computed(() => {
         <n-layout-footer style="height: 64px; background-color: transparent" />
       </n-layout>
 
-      <n-drawer
-        v-if="!isWideScreen"
-        v-model:show="showMenuModal"
-        :auto-focus="false"
-        placement="left"
-      >
-        <n-drawer-content
-          max-width="600"
-          :native-scrollbar="false"
-          :scrollbar-props="{ trigger: 'none' }"
-        >
-          <n-menu
-            :value="getSideMenuOptionKey()"
-            :options="collapsedMenuOptions"
-          />
-        </n-drawer-content>
-      </n-drawer>
+      <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
+        <n-menu
+          :value="getSideMenuOptionKey()"
+          :options="collapsedMenuOptions"
+        />
+      </c-drawer-left>
 
       <c-modal
         v-model:show="showLoginModal"

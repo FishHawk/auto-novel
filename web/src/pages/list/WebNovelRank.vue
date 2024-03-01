@@ -7,6 +7,8 @@ import { useIsWideScreen } from '@/data/util';
 
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
+import { ref } from 'vue';
+import { FormatListBulletedOutlined } from '@vicons/material';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
@@ -147,11 +149,24 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
   }
   return ApiWebNovel.listRank(providerId, filters);
 };
+
+const showListModal = ref(false);
+FormatListBulletedOutlined;
 </script>
 
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
     <n-h1>{{ descriptior.title }}</n-h1>
+
+    <div style="margin-bottom: 24px">
+      <c-button
+        v-if="!isWideScreen"
+        label="列表/排行"
+        :icon="FormatListBulletedOutlined"
+        @click="showListModal = true"
+      />
+    </div>
+
     <NovelList
       :search="
         descriptior.search
@@ -170,5 +185,13 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
     <template #sidebar>
       <n-menu :value="route.path" :options="menuOptions" />
     </template>
+
+    <c-drawer-right
+      v-if="!isWideScreen"
+      v-model:show="showListModal"
+      title="列表/排行"
+    >
+      <n-menu :value="route.path" :options="menuOptions" />
+    </c-drawer-right>
   </c-layout>
 </template>

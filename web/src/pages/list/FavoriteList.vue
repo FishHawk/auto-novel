@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { FormatListBulletedOutlined, PlusOutlined } from '@vicons/material';
+import {
+  FormatListBulletedOutlined,
+  ChecklistOutlined,
+  PlusOutlined,
+} from '@vicons/material';
 import { MenuOption, useMessage } from 'naive-ui';
 import { computed, h, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -264,10 +268,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     <div style="flex: auto">
       <n-h1>我的收藏</n-h1>
       <n-flex style="margin-bottom: 24px">
-        <c-button label="批量操作" @click="toggleSelectMode" />
+        <c-button
+          label="批量操作"
+          :icon="ChecklistOutlined"
+          @click="toggleSelectMode"
+        />
         <c-button
           v-if="!isWideScreen"
-          label="收藏夹列表"
+          label="收藏夹"
           :icon="FormatListBulletedOutlined"
           @click="showListModal = true"
         />
@@ -401,26 +409,20 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     </template>
   </c-layout>
 
-  <n-drawer
+  <c-drawer-right
+    v-if="!isWideScreen"
     v-model:show="showListModal"
-    width="320"
-    :auto-focus="false"
-    placement="right"
+    title="收藏夹"
   >
-    <n-drawer-content
-      :native-scrollbar="false"
-      :scrollbar-props="{ trigger: 'none' }"
-    >
-      <section-header title="收藏夹">
-        <c-button
-          label="添加"
-          :icon="PlusOutlined"
-          @click="showAddModal = true"
-        />
-      </section-header>
-      <n-menu :value="currentMenuKey" :options="menuOptions" />
-    </n-drawer-content>
-  </n-drawer>
+    <template #action>
+      <c-button
+        label="添加"
+        :icon="PlusOutlined"
+        @click="showAddModal = true"
+      />
+    </template>
+    <n-menu :value="currentMenuKey" :options="menuOptions" />
+  </c-drawer-right>
 
   <favorite-add-modal v-model:show="showAddModal" @created="loadFavoredList" />
 </template>
