@@ -95,7 +95,7 @@ fun Route.routeWebNovel() {
                 service.list(
                     user = user,
                     queryString = loc.query?.ifBlank { null },
-                    filterProvider = loc.provider.ifEmpty { null },
+                    filterProvider = loc.provider,
                     filterType = when (loc.type) {
                         1 -> WebNovelFilter.Type.连载中
                         2 -> WebNovelFilter.Type.已完结
@@ -285,7 +285,7 @@ class WebNovelApi(
     suspend fun list(
         user: AuthenticatedUser?,
         queryString: String?,
-        filterProvider: String?,
+        filterProvider: String,
         filterType: WebNovelFilter.Type,
         filterLevel: WebNovelFilter.Level,
         filterTranslate: WebNovelFilter.Translate,
@@ -296,6 +296,12 @@ class WebNovelApi(
         validatePageNumber(page)
         validatePageSize(pageSize)
 
+        val filterProviderParsed = if (filterProvider.isEmpty()) {
+            return emptyPage()
+        } else {
+            filterProvider.split(",")
+        }
+
         val filterLevelAllowed = if (user != null && user.isOldAss()) {
             filterLevel
         } else {
@@ -305,7 +311,7 @@ class WebNovelApi(
         return metadataRepo
             .search(
                 userQuery = queryString,
-                filterProvider = filterProvider,
+                filterProvider = filterProviderParsed,
                 filterType = filterType,
                 filterLevel = filterLevelAllowed,
                 filterTranslate = filterTranslate,

@@ -17,24 +17,21 @@ const router = useRouter();
 
 const props = defineProps<{
   search?: { suggestions: string[]; tags: string[] };
-  options: { label: string; tags: string[] }[];
+  options: { label: string; tags: string[]; multiple?: boolean }[];
   loader: Loader<T>;
 }>();
 
-const filters = ref(parseFilters(route.query));
-const currentPage = ref(parsePage(route.query));
-const pageNumber = ref(1);
-const novelPageResult = ref<Result<T>>();
-
-function parsePage(q: typeof route.query) {
-  return parseInt(route.query.page as string) || 1;
-}
-function parseFilters(q: typeof route.query) {
+const parsePage = (q: typeof route.query) => {
+  return parseInt(q.page as string) || 1;
+};
+const parseFilters = (q: typeof route.query) => {
   let query = '';
   if (typeof q.query === 'string') {
     query = q.query;
   }
-  let selected: number[] = Array(props.options.length).fill(0);
+  let selected: number[] = props.options.map((it) =>
+    it.multiple === true ? 2 ** it.tags.length - 1 : 0
+  );
   if (typeof q.selected === 'string') {
     selected[0] = parseInt(q.selected) || 0;
   } else if (q.selected) {
@@ -43,7 +40,12 @@ function parseFilters(q: typeof route.query) {
     });
   }
   return { query, selected };
-}
+};
+
+const filters = ref(parseFilters(route.query));
+const currentPage = ref(parsePage(route.query));
+const pageNumber = ref(1);
+const novelPageResult = ref<Result<T>>();
 
 watch(
   route,

@@ -3,31 +3,37 @@ type Filter = { query: string; selected: number[] };
 
 const props = defineProps<{
   search: { suggestions: string[]; tags: string[] } | undefined;
-  options: { label: string; tags: string[]; multiple: boolean }[];
+  options: { label: string; tags: string[]; multiple?: boolean }[];
   filters: Filter;
 }>();
 const emits = defineEmits<{
   userInput: [];
 }>();
 
-function select(optionIndex: number, index: number, multiple: boolean = false) {
+const select = (
+  optionIndex: number,
+  index: number,
+  multiple: boolean = false
+) => {
   if (!multiple) {
     props.filters.selected[optionIndex] = index;
   } else {
-    props.filters.selected[optionIndex] = index !== 0
-        ? props.filters.selected[optionIndex] ^ (1 << (index - 1))
-        : 0;
+    props.filters.selected[optionIndex] ^= 1 << index;
   }
   emits('userInput');
-}
+};
 
-function selected(optionIndex: number, index: number, multiple: boolean = false) {
+const selected = (
+  optionIndex: number,
+  index: number,
+  multiple: boolean = false
+) => {
   if (!multiple) {
     return index === props.filters.selected[optionIndex];
   } else {
-    return index !== 0 ? (props.filters.selected[optionIndex] >> (index - 1)) & 1 : props.filters.selected[optionIndex] === 0;
+    return (props.filters.selected[optionIndex] & (1 << index)) != 0;
   }
-}
+};
 </script>
 
 <template>
@@ -68,16 +74,19 @@ function selected(optionIndex: number, index: number, multiple: boolean = false)
     >
       <n-text style="white-space: nowrap" depth="3">{{ option.label }}</n-text>
       <n-flex size="large">
-        <n-button
+        <n-text
           v-for="(tag, index) in option.tags"
           text
           :type="
-            selected(optionIndex, index, option.multiple) ? 'primary' : 'default'
+            selected(optionIndex, index, option.multiple)
+              ? 'primary'
+              : 'default'
           "
           @click="select(optionIndex, index, option.multiple)"
+          style="cursor: pointer"
         >
           {{ tag }}
-        </n-button>
+        </n-text>
       </n-flex>
     </n-flex>
   </n-flex>

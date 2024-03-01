@@ -51,7 +51,7 @@ class WebNovelMetadataRepository(
 
     suspend fun search(
         userQuery: String?,
-        filterProvider: String?,
+        filterProvider: List<String>,
         filterType: WebNovelFilter.Type,
         filterLevel: WebNovelFilter.Level,
         filterTranslate: WebNovelFilter.Translate,
@@ -69,9 +69,12 @@ class WebNovelMetadataRepository(
                 val mustNotQueries = mutableListOf<ESQuery>()
 
                 // Filter provider
-                if (!filterProvider.isNullOrBlank()) {
-                    mustQueries.add(terms(WebNovelMetadataEsModel::providerId, *filterProvider.split(",").toTypedArray()))
-                }
+                mustQueries.add(
+                    terms(
+                        WebNovelMetadataEsModel::providerId,
+                        *filterProvider.toTypedArray()
+                    )
+                )
 
                 // Filter type
                 when (filterType) {
