@@ -36,6 +36,7 @@ const options = [
       'Pixiv',
       'Alphapolis',
     ],
+    multiple: true,
   },
   {
     label: '类型',
@@ -54,7 +55,7 @@ const options = [
 
 const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
   function optionNth(n: number): string {
-    return options[n].tags[selected[n]];
+    return options[n].tags.filter((_, index) => (selected[n] >> (index - 1)) & 1).map(tag => providerMap[tag]).join()
   }
   const providerMap: { [key: string]: string } = {
     全部: '',
@@ -70,7 +71,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
       page,
       pageSize: 20,
       query,
-      provider: providerMap[optionNth(0)],
+      provider: optionNth(0),
       type: selected[1],
       level: selected[2],
       translate: selected[3],

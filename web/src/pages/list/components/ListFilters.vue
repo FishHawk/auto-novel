@@ -3,16 +3,28 @@ type Filter = { query: string; selected: number[] };
 
 const props = defineProps<{
   search: { suggestions: string[]; tags: string[] } | undefined;
-  options: { label: string; tags: string[] }[];
+  options: { label: string; tags: string[]; multiple: boolean }[];
   filters: Filter;
 }>();
 const emits = defineEmits<{
   userInput: [];
 }>();
 
-function select(optionIndex: number, index: number) {
-  props.filters.selected[optionIndex] = index;
+function select(optionIndex: number, index: number, multiple: boolean = false) {
+  if (!multiple) {
+    props.filters.selected[optionIndex] = index;
+  } else {
+    props.filters.selected[optionIndex] ^= index > 0 ? 1 << (index - 1) : 0;
+  }
   emits('userInput');
+}
+
+function selected(optionIndex: number, index: number, multiple: boolean = false) {
+  if (!multiple) {
+    return index === props.filters.selected[optionIndex];
+  } else {
+    return (props.filters.selected[optionIndex] >> (index - 1)) & 1;
+  }
 }
 </script>
 
@@ -58,9 +70,9 @@ function select(optionIndex: number, index: number) {
           v-for="(tag, index) in option.tags"
           text
           :type="
-            index === filters.selected[optionIndex] ? 'primary' : 'default'
+            selected(optionIndex, index, option.multiple) ? 'primary' : 'default'
           "
-          @click="select(optionIndex, index)"
+          @click="select(optionIndex, index, option.multiple)"
         >
           {{ tag }}
         </n-button>

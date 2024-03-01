@@ -69,8 +69,8 @@ class WebNovelMetadataRepository(
                 val mustNotQueries = mutableListOf<ESQuery>()
 
                 // Filter provider
-                if (filterProvider != null) {
-                    mustQueries.add(term(WebNovelMetadataEsModel::providerId, filterProvider))
+                if (!filterProvider.isNullOrBlank()) {
+                    mustQueries.add(terms(WebNovelMetadataEsModel::providerId, *filterProvider.split(",").toTypedArray()))
                 }
 
                 // Filter type
