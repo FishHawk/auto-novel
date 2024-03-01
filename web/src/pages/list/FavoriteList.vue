@@ -141,14 +141,14 @@ const showOperationPanel = ref(false);
 const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
 const novelListWenkuRef = ref<InstanceType<typeof NovelListWenku>>();
 
-const toggleSelectMode = () => {
-  showOperationPanel.value = !showOperationPanel.value;
+const selectedSize = computed(() => {
   if (favoriteType.value === 'web') {
-    novelListWebRef.value?.toggleSelectMode(showOperationPanel.value);
+    return novelListWebRef.value?.getSelectedNovels()?.length ?? 0;
   } else {
-    novelListWenkuRef.value?.toggleSelectMode(showOperationPanel.value);
+    return novelListWenkuRef.value?.getSelectedNovels()?.length ?? 0;
   }
-};
+});
+
 const getSelectedNovels = () => {
   if (favoriteType.value === 'web') {
     const novels = novelListWebRef.value?.getSelectedNovels();
@@ -271,7 +271,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         <c-button
           label="批量操作"
           :icon="ChecklistOutlined"
-          @click="toggleSelectMode"
+          @click="showOperationPanel = !showOperationPanel"
         />
         <c-button
           v-if="!isWideScreen"
@@ -297,6 +297,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                   @click="invertSelection"
                 />
               </n-button-group>
+              <n-text depth="3"> 已选择{{ selectedSize }}本小说 </n-text>
             </n-flex>
           </n-list-item>
 
@@ -388,12 +389,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           v-if="page.type === 'web'"
           ref="novelListWebRef"
           :items="page.items"
+          :selectable="showOperationPanel"
           simple
         />
         <NovelListWenku
           v-if="page.type === 'wenku'"
           ref="novelListWenkuRef"
           :items="page.items"
+          :selectable="showOperationPanel"
         />
       </NovelList>
     </div>
