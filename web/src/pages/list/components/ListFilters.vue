@@ -34,6 +34,14 @@ const selected = (
     return (props.filters.selected[optionIndex] & (1 << index)) != 0;
   }
 };
+
+const invertSelection = (optionIndex: number) => {
+  const option = props.options[optionIndex];
+  if (option.multiple === true) {
+    props.filters.selected[optionIndex] ^= 2 ** option.tags.length - 1;
+    emits('userInput');
+  }
+};
 </script>
 
 <template>
@@ -72,7 +80,14 @@ const selected = (
       align="baseline"
       :wrap="false"
     >
-      <n-text style="white-space: nowrap" depth="3">{{ option.label }}</n-text>
+      <n-text
+        style="white-space: nowrap"
+        depth="3"
+        @click="invertSelection(optionIndex)"
+        :style="option.multiple === true ? { cursor: 'pointer' } : {}"
+      >
+        {{ option.label }}
+      </n-text>
       <n-flex size="large">
         <n-text
           v-for="(tag, index) in option.tags"
