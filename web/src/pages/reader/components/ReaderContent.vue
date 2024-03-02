@@ -176,6 +176,13 @@ const createWebIncorrectCase = async (
     message.error('提交失败:' + result.error.message);
   }
 };
+
+const fontColor = computed(() => {
+  if (setting.theme.mode === 'custom') {
+    return setting.theme.fontColor;
+  }
+  return 'inherit';
+});
 </script>
 
 <template>
@@ -224,9 +231,7 @@ const createWebIncorrectCase = async (
 #chapter-content p {
   font-size: v-bind('`${setting.fontSize}px`');
   margin: v-bind('`${setting.fontSize * setting.lineSpace}px 0`');
-  color: v-bind(
-    "setting.theme.fontColor ?? (setting.theme.isDark ? 'white' : 'black')"
-  );
+  color: v-bind('fontColor');
   opacity: v-bind('setting.mixZhOpacity');
 }
 #chapter-content .secondary {

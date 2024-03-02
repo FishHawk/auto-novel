@@ -6,6 +6,7 @@ import {
   fontSizeOptions,
   lineSpaceOptions,
   modeOptions,
+  themeModeOptions,
   themeOptions,
   translationModeOptions,
   useReaderSettingStore,
@@ -23,11 +24,6 @@ const setting = useReaderSettingStore();
 const showCustomThemeControls = ref(false);
 const setCustomBodyColor = (color: string) => {
   setting.theme.bodyColor = color;
-  const r = parseInt(color.substring(1, 3), 16);
-  const g = parseInt(color.substring(3, 5), 16);
-  const b = parseInt(color.substring(5, 7), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  setting.theme.isDark = brightness < 120;
 };
 const setCustomFontColor = (color: string) => {
   setting.theme.fontColor = color;
@@ -91,16 +87,26 @@ const setCustomFontColor = (color: string) => {
       <ReuseOption label="主题" align="baseline">
         <n-flex size="large" vertical>
           <n-flex>
+            <n-radio-group v-model:value="setting.theme.mode">
+              <n-radio
+                v-for="mode in themeModeOptions"
+                :key="mode.value"
+                :value="mode.value"
+                >{{ mode.label }}</n-radio
+              >
+            </n-radio-group>
+          </n-flex>
+          <n-flex v-if="setting.theme.mode === 'custom'">
             <n-radio
               v-for="theme of themeOptions"
               :checked="theme.bodyColor == setting.theme.bodyColor"
-              @update:checked="setting.theme = { ...theme }"
+              @update:checked="setting.theme = { mode: 'custom', ...theme }"
             >
               <n-tag
                 :round="!isWideScreen"
                 :color="{
                   color: theme.bodyColor,
-                  textColor: theme.isDark ? 'white' : 'black',
+                  textColor: theme.fontColor,
                 }"
                 :style="{
                   width: isWideScreen ? '5.5em' : '2em',
@@ -130,10 +136,7 @@ const setCustomFontColor = (color: string) => {
             <n-color-picker
               :modes="['hex']"
               :show-alpha="false"
-              :default-value="
-                setting.theme.fontColor ??
-                (setting.theme.isDark ? '#FFFFFF' : '#000000')
-              "
+              :default-value="setting.theme.fontColor"
               :on-complete="setCustomFontColor"
               style="width: 8.2em"
             >

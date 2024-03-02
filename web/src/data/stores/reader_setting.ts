@@ -8,7 +8,11 @@ export interface ReaderSetting {
   translations: TranslatorId[];
   fontSize: number;
   lineSpace: number;
-  theme: { isDark: boolean; bodyColor: string; fontColor?: string };
+  theme: {
+    mode: 'light' | 'dark' | 'system' | 'custom';
+    bodyColor: string;
+    fontColor: string;
+  };
   enableSakuraReportButton: boolean;
   mixJpOpacity: number;
   mixZhOpacity: number;
@@ -22,7 +26,7 @@ export const useReaderSettingStore = defineStore('readerSetting', {
       translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       fontSize: 14,
       lineSpace: 1.0,
-      theme: { isDark: false, bodyColor: '#FFFFFF' },
+      theme: { mode: 'custom', bodyColor: '#FFFFFF', fontColor: '#000000' },
       enableSakuraReportButton: true,
       mixJpOpacity: 0.4,
       mixZhOpacity: 0.75,
@@ -37,6 +41,13 @@ export const modeOptions = [
   { value: 'jp-zh', label: '日中' },
 ];
 
+export const themeModeOptions = [
+  { value: 'light', label: '浅色' },
+  { value: 'dark', label: '深色' },
+  { value: 'system', label: '跟随系统' },
+  { value: 'custom', label: '自定义' },
+];
+
 export const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
@@ -47,14 +58,14 @@ export const fontSizeOptions = [14, 16, 18, 20, 24, 30, 40];
 export const lineSpaceOptions = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
 
 export const themeOptions = [
-  { isDark: false, bodyColor: '#FFFFFF' },
-  { isDark: false, bodyColor: '#FFF2E2' },
-  { isDark: false, bodyColor: '#E3EDCD' },
-  { isDark: false, bodyColor: '#E9EBFE' },
-  { isDark: false, bodyColor: '#EAEAEF' },
+  { bodyColor: '#FFFFFF', fontColor: '#000000' },
+  { bodyColor: '#FFF2E2', fontColor: '#000000' },
+  { bodyColor: '#E3EDCD', fontColor: '#000000' },
+  { bodyColor: '#E9EBFE', fontColor: '#000000' },
+  { bodyColor: '#EAEAEF', fontColor: '#000000' },
 
-  { isDark: true, bodyColor: '#000000' },
-  { isDark: true, bodyColor: '#272727' },
+  { bodyColor: '#000000', fontColor: '#FFFFFF' },
+  { bodyColor: '#272727', fontColor: '#FFFFFF' },
 ];
 
 export const migrateReaderSetting = (
@@ -67,5 +78,9 @@ export const migrateReaderSetting = (
     setting.mode = 'zh-jp';
   } else if ((setting.mode as any) === 'mix-reverse') {
     setting.mode = 'jp-zh';
+  }
+  if ((setting.theme as any).isDark !== undefined) {
+    setting.theme.mode = 'custom';
+    (setting.theme as any).isDark = undefined;
   }
 };
