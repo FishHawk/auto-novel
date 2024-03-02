@@ -81,8 +81,10 @@ const clearCache = async () => {
 
 const notices = [
   notice(
-    'GPT3.5 web 不再使用中转，而是使用官网链接，需要你的网络环境能正常访问ChatGPT并安装插件。你仍然可以在添加翻译器的时候设置中转链接。',
-    true
+    '当您添加翻译器时，若链接留空，则表示将使用OpenAI官方链接，您也可以提供链接以使用第三方GPT代理。'
+  ),
+  notice(
+    '当使用GPT-3.5 Web且选择官方链接时，需要安装相应的插件，详情看使用教程。'
   ),
 ];
 </script>
@@ -91,7 +93,23 @@ const notices = [
   <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
     <n-h1>GPT工作区</n-h1>
 
-    <notice-board :notices="notices" />
+    <notice-board :notices="notices">
+      <n-flex>
+        <RouterNA to="/forum/64f3d63f794cbb1321145c07" target="_blank">
+          使用教程
+        </RouterNA>
+        /
+        <n-a href="https://github.com/eujc/ChatGPT" target="_blank">
+          帐号注册教程
+        </n-a>
+        /
+        <n-a href="https://chat.openai.com/" target="_blank"> ChatGPT </n-a>
+        /
+        <n-a href="https://chat.openai.com/api/auth/session" target="_blank">
+          AccessToken
+        </n-a>
+      </n-flex>
+    </notice-board>
 
     <section-header title="翻译器">
       <c-button
