@@ -121,12 +121,10 @@ const onSignInSuccess = (profile: SignInDto) => {
 const osThemeRef = useOsTheme();
 const theme = computed(() => {
   let specificTheme: 'light' | 'dark' = 'light';
-  if (setting.theme === 'system') {
-    if (osThemeRef.value !== null) {
-      specificTheme = osThemeRef.value;
-    }
-  } else {
+  if (setting.theme !== 'system') {
     specificTheme = setting.theme;
+  } else if (osThemeRef.value) {
+    specificTheme = osThemeRef.value;
   }
   return specificTheme === 'light' ? null : darkTheme;
 });

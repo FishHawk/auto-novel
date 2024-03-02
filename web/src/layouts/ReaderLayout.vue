@@ -6,7 +6,6 @@ import {
   lightTheme,
   zhCN,
   useOsTheme,
-  GlobalThemeOverrides,
 } from 'naive-ui';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
@@ -18,11 +17,7 @@ const osThemeRef = useOsTheme();
 
 const readerTheme = computed(() => {
   let theme = lightTheme;
-  let themeOverride: GlobalThemeOverrides = {
-    common: {
-      scrollbarWidth: '6px',
-    },
-  };
+  let bodyColor = undefined;
 
   if (readerSetting.theme.mode === 'light') {
     theme = lightTheme;
@@ -32,12 +27,12 @@ const readerTheme = computed(() => {
     if (osThemeRef.value) {
       theme = osThemeRef.value === 'dark' ? darkTheme : lightTheme;
     }
-  } else {
+  } else if (readerSetting.theme.mode === 'custom') {
     theme = isDarkColor(readerSetting.theme.bodyColor) ? darkTheme : lightTheme;
-    themeOverride.common!.bodyColor = readerSetting.theme.bodyColor;
+    bodyColor = readerSetting.theme.bodyColor;
   }
 
-  return { theme, themeOverride };
+  return { theme, bodyColor: bodyColor ? { bodyColor } : undefined };
 });
 </script>
 
@@ -47,7 +42,12 @@ const readerTheme = computed(() => {
     :locale="zhCN"
     :date-locale="dateZhCN"
     inline-theme-disabled
-    :theme-overrides="readerTheme.themeOverride"
+    :theme-overrides="{
+      common: {
+        scrollbarWidth: '6px',
+        ...readerTheme.bodyColor,
+      },
+    }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <n-global-style />

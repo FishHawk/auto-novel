@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ErrorOutlineOutlined } from '@vicons/material';
-import { useMessage } from 'naive-ui';
+import { useMessage, useOsTheme } from 'naive-ui';
 import { computed } from 'vue';
 
 import { ApiSakura } from '@/data/api/api_sakura';
@@ -18,6 +18,7 @@ const props = defineProps<{
 
 const setting = useReaderSettingStore();
 const message = useMessage();
+const osThemeRef = useOsTheme();
 
 type Paragraph =
   | { text: string; secondary: boolean; popover?: number }
@@ -180,17 +181,21 @@ const createWebIncorrectCase = async (
 const fontColor = computed(() => {
   if (setting.theme.mode === 'custom') {
     return setting.theme.fontColor;
+  } else {
+    let specificTheme: 'light' | 'dark' = 'light';
+    if (setting.theme.mode !== 'system') {
+      specificTheme = setting.theme.mode;
+    } else if (osThemeRef.value) {
+      specificTheme = osThemeRef.value;
+    }
+    return specificTheme === 'light' ? 'black' : 'white';
   }
-  return 'inherit';
 });
 </script>
 
 <template>
   <div id="chapter-content">
-    <template
-      v-for="(p, index) of paragraphs"
-      :key="`${chapter.prevId}/${index}`"
-    >
+    <template v-for="p of paragraphs" :key="`${chapter.prevId}/${index}`">
       <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">
         {{ p.text }}
         <n-popconfirm

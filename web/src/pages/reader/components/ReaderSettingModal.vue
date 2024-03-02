@@ -21,13 +21,8 @@ const [DefineOption, ReuseOption] = createReusableTemplate<{
 const isWideScreen = useIsWideScreen(600);
 const setting = useReaderSettingStore();
 
-const showCustomThemeControls = ref(false);
-const setCustomBodyColor = (color: string) => {
-  setting.theme.bodyColor = color;
-};
-const setCustomFontColor = (color: string) => {
-  setting.theme.fontColor = color;
-};
+const setCustomBodyColor = (color: string) => (setting.theme.bodyColor = color);
+const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
 </script>
 
 <template>
@@ -88,61 +83,56 @@ const setCustomFontColor = (color: string) => {
         <n-flex size="large" vertical>
           <n-flex>
             <n-radio-group v-model:value="setting.theme.mode">
-              <n-radio
+              <n-radio-button
                 v-for="mode in themeModeOptions"
                 :key="mode.value"
                 :value="mode.value"
-                >{{ mode.label }}</n-radio
-              >
+                :label="mode.label"
+              />
             </n-radio-group>
           </n-flex>
-          <n-flex v-if="setting.theme.mode === 'custom'">
-            <n-radio
-              v-for="theme of themeOptions"
-              :checked="theme.bodyColor == setting.theme.bodyColor"
-              @update:checked="setting.theme = { mode: 'custom', ...theme }"
-            >
-              <n-tag
-                :round="!isWideScreen"
-                :color="{
-                  color: theme.bodyColor,
-                  textColor: theme.fontColor,
-                }"
-                :style="{
-                  width: isWideScreen ? '5.5em' : '2em',
-                }"
+          <template v-if="setting.theme.mode === 'custom'">
+            <n-flex>
+              <n-radio
+                v-for="theme of themeOptions"
+                :checked="theme.bodyColor == setting.theme.bodyColor"
+                @update:checked="setting.theme = { mode: 'custom', ...theme }"
               >
-                {{ isWideScreen ? theme.bodyColor : '#' }}
-              </n-tag>
-            </n-radio>
-            <n-button
-              type="primary"
-              text
-              @click="showCustomThemeControls = !showCustomThemeControls"
-            >
-              自定义
-            </n-button>
-          </n-flex>
-          <n-flex v-if="showCustomThemeControls" align="center">
-            <n-color-picker
-              :modes="['hex']"
-              :show-alpha="false"
-              :default-value="setting.theme.bodyColor"
-              :on-complete="setCustomBodyColor"
-              style="width: 8.2em"
-            >
-              <template #label="color">背景：{{ color }}</template>
-            </n-color-picker>
-            <n-color-picker
-              :modes="['hex']"
-              :show-alpha="false"
-              :default-value="setting.theme.fontColor"
-              :on-complete="setCustomFontColor"
-              style="width: 8.2em"
-            >
-              <template #label="color">文字：{{ color }}</template>
-            </n-color-picker>
-          </n-flex>
+                <n-tag
+                  :color="{
+                    color: theme.bodyColor,
+                    textColor: theme.fontColor,
+                  }"
+                  :style="{
+                    width: isWideScreen ? '5.5em' : '2em',
+                  }"
+                >
+                  {{ isWideScreen ? theme.bodyColor : '#' }}
+                </n-tag>
+              </n-radio>
+            </n-flex>
+            <n-divider style="margin: 2px" />
+            <n-flex>
+              <n-color-picker
+                :modes="['hex']"
+                :show-alpha="false"
+                :default-value="setting.theme.bodyColor"
+                :on-complete="setCustomBodyColor"
+                style="width: 8.2em"
+              >
+                <template #label="color">背景：{{ color }}</template>
+              </n-color-picker>
+              <n-color-picker
+                :modes="['hex']"
+                :show-alpha="false"
+                :default-value="setting.theme.fontColor"
+                :on-complete="setCustomFontColor"
+                style="width: 8.2em"
+              >
+                <template #label="color">文字：{{ color }}</template>
+              </n-color-picker>
+            </n-flex>
+          </template>
         </n-flex>
       </ReuseOption>
       <ReuseOption label="Sakura报错按钮" align="center">
