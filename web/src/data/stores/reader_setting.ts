@@ -27,7 +27,7 @@ export const useReaderSettingStore = defineStore('readerSetting', {
       translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       fontSize: 14,
       lineSpace: 1.0,
-      theme: { mode: 'light', bodyColor: 'white', fontColor: 'black' },
+      theme: { mode: 'light', bodyColor: '#FFFFFF', fontColor: '#000000' },
       enableSakuraReportButton: true,
       mixJpOpacity: 0.4,
       mixZhOpacity: 0.75,
@@ -83,14 +83,22 @@ export const migrateReaderSetting = (
   const theme = setting.theme as any;
   if (theme.isDark !== undefined) {
     if (theme.bodyColor === '#FFFFFF' && theme.fontColor === undefined) {
-      setting.theme = { mode: 'light', bodyColor: 'white', fontColor: 'black' };
+      setting.theme = {
+        mode: 'light',
+        bodyColor: '#FFFFFF',
+        fontColor: '#000000',
+      };
     } else if (theme.bodyColor === '#272727' && theme.fontColor === undefined) {
-      setting.theme = { mode: 'dark', bodyColor: 'white', fontColor: 'black' };
+      setting.theme = {
+        mode: 'dark',
+        bodyColor: '#FFFFFF',
+        fontColor: '#000000',
+      };
     } else {
       setting.theme = {
         mode: 'custom',
         bodyColor: theme.bodyColor,
-        fontColor: isDarkColor(theme.bodyColor) ? 'white' : 'black',
+        fontColor: isDarkColor(theme.bodyColor) ? '#FFFFFF' : '#000000',
       };
     }
   }
