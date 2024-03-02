@@ -394,7 +394,7 @@ const translateWenku = async (
   }
 };
 
-const translatePersonal = async (
+const translateLocal = async (
   { volumeId }: PersonalTranslateTaskDesc,
   { translateExpireChapter }: TranslateTaskParams,
   callback: TranslateTaskCallback,
@@ -513,7 +513,7 @@ export const translate = (
       signal
     );
   } else {
-    return translatePersonal(
+    return translateLocal(
       taskDesc,
       taskParams,
       taskCallback,

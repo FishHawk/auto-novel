@@ -85,15 +85,6 @@ const katakanas = computed(() => {
   );
 });
 
-const copyCountJson = () => {
-  const obj = Object.fromEntries(
-    Array.from(katakanas.value).map(([key, value]) => [key, value.toString()])
-  );
-  const jsonString = JSON.stringify(obj, null, 2);
-  navigator.clipboard.writeText(jsonString);
-  message.info('已经将统计次数复制到剪切板');
-};
-
 const copyTranslationJson = async () => {
   const obj = Object.fromEntries(
     Array.from(katakanas.value).map(([key]) => [
@@ -163,8 +154,7 @@ const translateKatakanas = async (id: 'baidu' | 'youdao') => {
     <section-header :title="`统计结果（${katakanas.size}个）`" />
     <n-flex vertical>
       <n-flex>
-        <c-button label="复制次数" @click="copyCountJson()" />
-        <c-button label="复制翻译" @click="copyTranslationJson()" />
+        <c-button label="复制术语表" @click="copyTranslationJson()" />
         <c-button label="百度翻译" async @click="translateKatakanas('baidu')" />
         <c-button
           label="有道翻译"

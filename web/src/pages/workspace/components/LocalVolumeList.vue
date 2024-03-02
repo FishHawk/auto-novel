@@ -117,7 +117,7 @@ defineExpose({ deleteVolume });
 
   <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
     <n-list style="padding-bottom: 48px">
-      <n-list-item v-for="volume of sortedVolumes ?? []">
+      <n-list-item v-for="volume of sortedVolumes ?? []" :key="volume.id">
         <slot name="volume" v-bind="volume" />
       </n-list-item>
     </n-list>

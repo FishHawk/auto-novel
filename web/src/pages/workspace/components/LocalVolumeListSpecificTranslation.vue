@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useMessage } from 'naive-ui';
-import { ref, toRaw } from 'vue';
+import { ref } from 'vue';
 
 import { downloadModeOptions, useSettingStore } from '@/data/stores/setting';
 import {
@@ -94,17 +94,6 @@ const downloadVolume = async (volumeId: string) => {
     message.error(`文件生成错误：${error}`);
   }
 };
-
-const showGlossaryModal = ref(false);
-const selectedVolumeToEditGlossary = ref<LocalVolumeMetadata>();
-const submitGlossary = (
-  volumeId: string,
-  glossary: { [key: string]: string }
-) =>
-  PersonalVolumesManager.updateGlossary(volumeId, toRaw(glossary))
-    .then(() => message.success('术语表提交成功'))
-    .catch((error) => message.error(`术语表提交失败：${error}`))
-    .then(() => {});
 </script>
 
 <template>
@@ -160,17 +149,7 @@ const submitGlossary = (
             @click="downloadVolume(volume.id)"
           />
 
-          <c-button
-            :label="`术语表[${Object.keys(volume.glossary).length}]`"
-            size="tiny"
-            secondary
-            @click="
-              () => {
-                selectedVolumeToEditGlossary = volume;
-                showGlossaryModal = true;
-              }
-            "
-          />
+          <glossary-button :volume="volume" size="tiny" secondary />
 
           <n-popconfirm
             :show-icon="false"
@@ -186,26 +165,4 @@ const submitGlossary = (
       </n-flex>
     </template>
   </local-volume-list>
-
-  <n-divider style="margin-bottom: 4px" />
-
-  <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
-    <n-p>{{ selectedVolumeToEditGlossary?.id }}</n-p>
-    <glossary-edit
-      v-if="selectedVolumeToEditGlossary !== undefined"
-      :glossary="selectedVolumeToEditGlossary.glossary"
-    />
-    <template #action>
-      <c-button
-        label="提交"
-        type="primary"
-        @click="
-          submitGlossary(
-            selectedVolumeToEditGlossary!!.id,
-            selectedVolumeToEditGlossary!!.glossary
-          )
-        "
-      />
-    </template>
-  </c-modal>
 </template>
