@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
-import { ref } from 'vue';
 
 import {
   fontSizeOptions,
