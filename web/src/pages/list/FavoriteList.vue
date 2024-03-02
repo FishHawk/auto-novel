@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { FormatListBulletedOutlined, PlusOutlined } from '@vicons/material';
+import {
+  FormatListBulletedOutlined,
+  ChecklistOutlined,
+  PlusOutlined,
+} from '@vicons/material';
 import { MenuOption, useMessage } from 'naive-ui';
 import { computed, h, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -137,14 +141,14 @@ const showOperationPanel = ref(false);
 const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
 const novelListWenkuRef = ref<InstanceType<typeof NovelListWenku>>();
 
-const toggleSelectMode = () => {
-  showOperationPanel.value = !showOperationPanel.value;
+const selectedSize = computed(() => {
   if (favoriteType.value === 'web') {
-    novelListWebRef.value?.toggleSelectMode(showOperationPanel.value);
+    return novelListWebRef.value?.getSelectedNovels()?.length ?? 0;
   } else {
-    novelListWenkuRef.value?.toggleSelectMode(showOperationPanel.value);
+    return novelListWenkuRef.value?.getSelectedNovels()?.length ?? 0;
   }
-};
+});
+
 const getSelectedNovels = () => {
   if (favoriteType.value === 'web') {
     const novels = novelListWebRef.value?.getSelectedNovels();
@@ -264,10 +268,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     <div style="flex: auto">
       <n-h1>我的收藏</n-h1>
       <n-flex style="margin-bottom: 24px">
-        <c-button label="批量操作" @click="toggleSelectMode" />
+        <c-button
+          label="批量操作"
+          :icon="ChecklistOutlined"
+          @click="showOperationPanel = !showOperationPanel"
+        />
         <c-button
           v-if="!isWideScreen"
-          label="收藏夹列表"
+          label="收藏夹"
           :icon="FormatListBulletedOutlined"
           @click="showListModal = true"
         />
@@ -289,6 +297,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                   @click="invertSelection"
                 />
               </n-button-group>
+              <n-text depth="3"> 已选择{{ selectedSize }}本小说 </n-text>
             </n-flex>
           </n-list-item>
 
@@ -380,12 +389,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           v-if="page.type === 'web'"
           ref="novelListWebRef"
           :items="page.items"
+          :selectable="showOperationPanel"
           simple
         />
         <NovelListWenku
           v-if="page.type === 'wenku'"
           ref="novelListWenkuRef"
           :items="page.items"
+          :selectable="showOperationPanel"
         />
       </NovelList>
     </div>
@@ -401,26 +412,20 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     </template>
   </c-layout>
 
-  <n-drawer
+  <c-drawer-right
+    v-if="!isWideScreen"
     v-model:show="showListModal"
-    width="320"
-    :auto-focus="false"
-    placement="right"
+    title="收藏夹"
   >
-    <n-drawer-content
-      :native-scrollbar="false"
-      :scrollbar-props="{ trigger: 'none' }"
-    >
-      <section-header title="收藏夹">
-        <c-button
-          label="添加"
-          :icon="PlusOutlined"
-          @click="showAddModal = true"
-        />
-      </section-header>
-      <n-menu :value="currentMenuKey" :options="menuOptions" />
-    </n-drawer-content>
-  </n-drawer>
+    <template #action>
+      <c-button
+        label="添加"
+        :icon="PlusOutlined"
+        @click="showAddModal = true"
+      />
+    </template>
+    <n-menu :value="currentMenuKey" :options="menuOptions" />
+  </c-drawer-right>
 
   <favorite-add-modal v-model:show="showAddModal" @created="loadFavoredList" />
 </template>

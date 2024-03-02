@@ -5,11 +5,11 @@ import {
   NIcon,
   darkTheme,
   dateZhCN,
-  zhCN,
   useOsTheme,
+  zhCN,
 } from 'naive-ui';
 import { Component, computed, h, ref } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 
 import { SignInDto } from '@/data/api/api_auth';
 import { useSettingStore } from '@/data/stores/setting';
@@ -19,7 +19,6 @@ import { useIsWideScreen } from '@/data/util';
 const isWideScreen = useIsWideScreen(850);
 const setting = useSettingStore();
 const route = useRoute();
-const router = useRouter();
 const userData = useUserDataStore();
 
 const menuOption = (
@@ -95,17 +94,7 @@ const collapsedMenuOptions = computed(() => {
     menuOption('首页', '/'),
     menuOption('我的收藏', '/favorite', signed),
     menuOption('阅读历史', '/read-history', signed),
-    {
-      type: 'group',
-      label: '网络小说',
-      children: [
-        menuOption('网络小说', '/novel-list'),
-        menuOption('成为小说家：流派', '/novel-rank/syosetu/1'),
-        menuOption('成为小说家：综合', '/novel-rank/syosetu/2'),
-        menuOption('成为小说家：异世界转移/转生', '/novel-rank/syosetu/3'),
-        menuOption('Kakuyomu：流派', '/novel-rank/kakuyomu/1'),
-      ],
-    },
+    menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
     menuOption('工作区', '/workspace'),
     menuOption('论坛', '/forum'),
@@ -219,23 +208,12 @@ const theme = computed(() => {
         <n-layout-footer style="height: 64px; background-color: transparent" />
       </n-layout>
 
-      <n-drawer
-        v-if="!isWideScreen"
-        v-model:show="showMenuModal"
-        :auto-focus="false"
-        placement="left"
-      >
-        <n-drawer-content
-          max-width="600"
-          :native-scrollbar="false"
-          :scrollbar-props="{ trigger: 'none' }"
-        >
-          <n-menu
-            :value="getSideMenuOptionKey()"
-            :options="collapsedMenuOptions"
-          />
-        </n-drawer-content>
-      </n-drawer>
+      <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
+        <n-menu
+          :value="getSideMenuOptionKey()"
+          :options="collapsedMenuOptions"
+        />
+      </c-drawer-left>
 
       <c-modal
         v-model:show="showLoginModal"

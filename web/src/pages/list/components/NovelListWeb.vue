@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { tryTranslateKeyword } from '@/data/web/keyword';
@@ -14,17 +14,19 @@ const [DefineTag, ReuseTag] = createReusableTemplate<{
 const props = defineProps<{
   simple?: boolean;
   items: WebNovelOutlineDto[];
+  selectable?: boolean;
 }>();
 
-const enableSelectMode = ref(false);
 const selectedNovels = ref<string[]>([]);
 
-const toggleSelectMode = (enable: boolean) => {
-  enableSelectMode.value = enable;
-  if (enable === false) {
-    selectedNovels.value = [];
+watch(
+  () => props.selectable,
+  (selectable) => {
+    if (selectable !== false) {
+      selectedNovels.value = [];
+    }
   }
-};
+);
 const toggleNovelSelect = (novel: string, selected: boolean) => {
   if (!selected) {
     selectedNovels.value = selectedNovels.value.filter((it) => it != novel);
@@ -52,7 +54,6 @@ const invertSelection = () => {
 };
 
 defineExpose({
-  toggleSelectMode,
   getSelectedNovels,
   selectAll,
   invertSelection,
@@ -74,7 +75,7 @@ defineExpose({
   <n-list>
     <n-list-item v-for="item of items">
       <n-checkbox
-        v-if="enableSelectMode"
+        v-if="selectable"
         :checked="selectedNovels.includes(`${item.providerId}/${item.novelId}`)"
         @update:checked="
           (selected: boolean) =>

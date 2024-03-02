@@ -11,7 +11,9 @@
       <slot name="header" />
     </template>
     <n-scrollbar trigger="none" style="max-height: 60vh">
-      <slot />
+      <div style="padding-right: 16px">
+        <slot />
+      </div>
     </n-scrollbar>
 
     <template #action v-if="$slots.action">

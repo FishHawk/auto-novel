@@ -36,7 +36,7 @@ const onGlobalClick = (event: MouseEvent) => {
     }
   };
   const p = event.pageY / window.innerHeight;
-  const t = 0.2;
+  const t = 0.15;
   if (p < t) {
     scrollBy(-0.8);
   } else if (p > 1 - t) {

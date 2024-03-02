@@ -6,10 +6,11 @@ import { Page } from '@/data/api/common';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/data/util';
 
+import { useWebSearchHistoryStore } from '@/data/stores/search_history';
+import { FormatListBulletedOutlined } from '@vicons/material';
+import { computed, ref, watch } from 'vue';
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
-import { computed, watch } from 'vue';
-import { useWebSearchHistoryStore } from '@/data/stores/search_history';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
@@ -67,29 +68,25 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
       .map((tag) => providerMap[tag])
       .join();
   };
-  if (userData.isOldAss) {
-    return ApiWebNovel.listNovel({
-      page,
-      pageSize: 20,
-      query,
-      provider: parseProviderBitFlags(0),
-      type: selected[1],
-      level: selected[2],
-      translate: selected[3],
-      sort: selected[4],
-    });
-  } else {
-    return ApiWebNovel.listNovel({
-      page,
-      pageSize: 20,
-      query,
-      provider: parseProviderBitFlags(0),
-      type: selected[1],
-      level: 1,
-      translate: selected[2],
-      sort: selected[3],
-    });
-  }
+
+  return ApiWebNovel.listNovel({
+    page,
+    pageSize: 20,
+    query,
+    provider: parseProviderBitFlags(0),
+    type: selected[1],
+    ...(userData.isOldAss
+      ? {
+          level: selected[2],
+          translate: selected[3],
+          sort: selected[4],
+        }
+      : {
+          level: 1,
+          translate: selected[2],
+          sort: selected[3],
+        }),
+  });
 };
 
 const search = computed(() => {
@@ -113,11 +110,23 @@ watch(
   },
   { immediate: true }
 );
+
+const showListModal = ref(false);
 </script>
 
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
     <n-h1>网络小说</n-h1>
+
+    <div style="margin-bottom: 24px">
+      <c-button
+        v-if="!isWideScreen"
+        label="列表/排行"
+        :icon="FormatListBulletedOutlined"
+        @click="showListModal = true"
+      />
+    </div>
+
     <NovelList
       :search="search"
       :options="options"
@@ -130,5 +139,13 @@ watch(
     <template #sidebar>
       <n-menu :value="route.path" :options="menuOptions" />
     </template>
+
+    <c-drawer-right
+      v-if="!isWideScreen"
+      v-model:show="showListModal"
+      title="列表/排行"
+    >
+      <n-menu :value="route.path" :options="menuOptions" />
+    </c-drawer-right>
   </c-layout>
 </template>
