@@ -11,6 +11,7 @@
 		header /assets/* Cache-Control "public, max-age=7776000"
 		header /*.png Cache-Control "public, max-age=7776000"
 		header /*.svg Cache-Control "public, max-age=7776000"
+		header /*.webp Cache-Control "public, max-age=7776000"
 	}
 
 	@filename {
@@ -37,5 +38,6 @@
 		root * /data/files-extra
 		file_server
 		header /*.png Cache-Control "public, max-age=7776000"
+		header /*.webp Cache-Control "public, max-age=7776000"
 	}
 }
