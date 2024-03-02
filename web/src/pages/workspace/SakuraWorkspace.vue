@@ -181,7 +181,7 @@ const notices = [
     </n-list>
 
     <template #sidebar>
-      <local-volume-list type="sakura" />
+      <local-volume-list-specific-translation type="sakura" />
     </template>
   </c-layout>
 

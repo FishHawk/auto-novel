@@ -101,6 +101,7 @@ const uploadVolumes = () => {
   />
   <n-upload
     ref="uploadRef"
+    accept=".txt,.epub"
     multiple
     :custom-request="customRequest"
     :show-trigger="haveReadRule"

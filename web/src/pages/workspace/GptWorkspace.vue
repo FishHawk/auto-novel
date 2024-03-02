@@ -168,7 +168,7 @@ const notices = [
     </n-list>
 
     <template #sidebar>
-      <local-volume-list type="gpt" />
+      <local-volume-list-specific-translation type="gpt" />
     </template>
   </c-layout>
 

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { LinkFilled } from '@vicons/material';
 
 import { TranslateJob } from '@/data/stores/workspace';
 
