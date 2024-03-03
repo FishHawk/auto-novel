@@ -3,7 +3,7 @@ import { useMessage } from 'naive-ui';
 
 import { PersonalVolumesManager } from '@/data/translator';
 import { LocalVolumeMetadata } from '@/data/translator/db/personal';
-import { ref } from 'vue';
+import { ref, toRaw } from 'vue';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
@@ -21,8 +21,11 @@ const toggleGlossaryModal = () => {
 };
 
 const submitGlossary = () =>
-  PersonalVolumesManager.updateGlossary(props.volume.id, glossary.value)
-    .then(() => message.success('术语表提交成功'))
+  PersonalVolumesManager.updateGlossary(props.volume.id, toRaw(glossary.value))
+    .then(() => {
+      props.volume.glossary = glossary.value;
+      message.success('术语表提交成功');
+    })
     .catch((error) => message.error(`术语表提交失败：${error}`))
     .then(() => {});
 </script>
