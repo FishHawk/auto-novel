@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { SyncAltOutlined } from '@vicons/material';
+
 type Filter = { query: string; selected: number[] };
 
 const props = defineProps<{
@@ -51,13 +53,7 @@ const invertSelection = (optionIndex: number) => {
     vertical
     style="width: 100%; margin-top: 8px"
   >
-    <n-flex
-      v-if="search !== undefined"
-      size="large"
-      align="baseline"
-      :wrap="false"
-    >
-      <n-text style="white-space: nowrap" depth="3">搜索</n-text>
+    <c-action-wrapper v-if="search !== undefined" title="搜索" size="large">
       <input-with-suggestion
         v-model:value="filters.query"
         :suggestions="search.suggestions"
@@ -73,22 +69,14 @@ const invertSelection = (optionIndex: number) => {
           }
         "
       />
-    </n-flex>
-    <n-flex
+    </c-action-wrapper>
+    <c-action-wrapper
       v-for="(option, optionIndex) in options"
-      size="large"
+      :title="option.label"
       align="baseline"
-      :wrap="false"
+      size="large"
     >
-      <n-text
-        style="white-space: nowrap"
-        depth="3"
-        @click="invertSelection(optionIndex)"
-        :style="option.multiple === true ? { cursor: 'pointer' } : {}"
-      >
-        {{ option.label }}
-      </n-text>
-      <n-flex size="large">
+      <n-flex :size="[16, 4]">
         <n-text
           v-for="(tag, index) in option.tags"
           text
@@ -102,7 +90,15 @@ const invertSelection = (optionIndex: number) => {
         >
           {{ tag }}
         </n-text>
+        <n-button
+          v-if="option.multiple"
+          type="primary"
+          text
+          @click="invertSelection(optionIndex)"
+        >
+          <n-icon :component="SyncAltOutlined" />
+        </n-button>
       </n-flex>
-    </n-flex>
+    </c-action-wrapper>
   </n-flex>
 </template>
