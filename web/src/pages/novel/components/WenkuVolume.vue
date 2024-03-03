@@ -16,7 +16,10 @@ import {
 const { novelId, volume, getParams } = defineProps<{
   novelId: string;
   volume: VolumeJpDto;
-  getParams: () => { translateExpireChapter: boolean };
+  getParams: () => {
+    translateExpireChapter: boolean;
+    autoTop: boolean;
+  };
 }>();
 
 const emit = defineEmits<{ delete: [] }>();
@@ -56,18 +59,20 @@ const file = computed(() => {
 });
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const { translateExpireChapter } = getParams();
+  const { translateExpireChapter, autoTop } = getParams();
   const task = buildWenkuTranslateTask(novelId, volume.volumeId, {
     start: 0,
     end: 65535,
     expire: translateExpireChapter,
   });
   const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
-  const success = workspace.addJob({
+  const job = {
     task,
     description: volume.volumeId,
     createAt: Date.now(),
-  });
+  };
+  const success = workspace.addJob(job);
+  if (autoTop) workspace.topJob(job);
   if (success) {
     message.success('排队成功');
   } else {

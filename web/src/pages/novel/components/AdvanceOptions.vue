@@ -8,6 +8,7 @@ import {
   useSettingStore,
 } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { useIsWideScreen } from '@/data/util';
 
 defineProps<{
   type: 'web' | 'wenku';
@@ -17,31 +18,13 @@ defineProps<{
 
 const userData = useUserDataStore();
 const setting = useSettingStore();
-
-const showDownloadOptions = ref(false);
-const showTranslateOptions = ref(false);
-
-const toggleTranslateOptions = () => {
-  if (showTranslateOptions.value) {
-    showTranslateOptions.value = false;
-  } else {
-    showTranslateOptions.value = true;
-    showDownloadOptions.value = false;
-  }
-};
-
-const toggleDownloadOptions = () => {
-  if (showDownloadOptions.value) {
-    showDownloadOptions.value = false;
-  } else {
-    showDownloadOptions.value = true;
-    showTranslateOptions.value = false;
-  }
-};
+const isWideScreen = useIsWideScreen(600);
 
 // 翻译设置
+const showGlossaryModal = ref(false);
 const translateExpireChapter = ref(false);
 const syncFromProvider = ref(false);
+const autoTop = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
 const taskNumber = ref<number | null>(1);
@@ -53,10 +36,12 @@ defineExpose({
     startIndex: startIndex.value ?? 0,
     endIndex: endIndex.value ?? 65536,
     taskNumber: taskNumber.value ?? 1,
+    autoTop: autoTop.value,
   }),
 });
 
 // 下载设置
+const showDownloadModal = ref(false);
 const tryUseChineseTitleAsFilename = ref(setting.downloadFilenameType === 'zh');
 watch(
   tryUseChineseTitleAsFilename,
@@ -65,183 +50,146 @@ watch(
 </script>
 
 <template>
-  <n-p depth="3" style="font-size: 12px">
-    # 如果想自己生成机翻，请先阅读
-    <RouterNA to="/forum/64f3d63f794cbb1321145c07">使用说明</RouterNA>
-  </n-p>
+  <n-flex vertical>
+    <c-action-wrapper title="选项">
+      <n-flex>
+        <n-checkbox v-model:checked="translateExpireChapter">
+          <n-tooltip trigger="hover">
+            <template #trigger>过期章节</template>
+            翻译术语表过期的章节。
+          </n-tooltip>
+        </n-checkbox>
 
-  <n-button-group style="margin-bottom: 8px">
-    <c-button
-      label="翻译设置"
-      :round="false"
-      @click="toggleTranslateOptions()"
-    />
-    <c-button
-      label="下载设置"
-      :round="false"
-      @click="toggleDownloadOptions()"
-    />
-    <slot />
-  </n-button-group>
-
-  <n-collapse-transition
-    :show="showTranslateOptions || showDownloadOptions"
-    style="margin-bottom: 16px"
-  >
-    <n-list v-if="showTranslateOptions" bordered>
-      <n-list-item>
-        <advance-option
-          title="翻译过期章节"
-          description="在启动翻译任务时，重新翻译术语表过期的章节。一次性设定，默认关闭。"
+        <n-checkbox
+          v-if="type === 'web' && userData.passWeek"
+          v-model:checked="syncFromProvider"
         >
-          <template #suffix>
-            <n-switch
-              :rubber-band="false"
+          <n-tooltip trigger="hover">
+            <template #trigger>源站同步</template>
+            强行同步已缓存章节，与源站不一致会删除现有翻译，慎用！!
+          </n-tooltip>
+        </n-checkbox>
+
+        <n-checkbox v-model:checked="autoTop">
+          <n-tooltip trigger="hover">
+            <template #trigger>自动置顶</template>
+            GPT/Sakura任务排队的时候，自动置顶。
+          </n-tooltip>
+        </n-checkbox>
+      </n-flex>
+    </c-action-wrapper>
+
+    <c-action-wrapper v-if="type === 'web'" title="范围">
+      <!-- "控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。比如，“从0到10”，表示属于区间[0，10)的章节，从第0章到第9章，不包含第10章。均分任务只对排队GPT/Sakura生效，最大为10。" -->
+      <n-flex style="text-align: center">
+        <div>
+          <n-input-group>
+            <n-input-group-label size="small">从</n-input-group-label>
+            <n-input-number
               size="small"
-              v-model:value="translateExpireChapter"
+              v-model:value="startIndex"
+              :show-button="false"
+              button-placement="both"
+              :min="0"
+              style="width: 60px"
             />
-          </template>
-        </advance-option>
-      </n-list-item>
-
-      <n-list-item v-if="type === 'web' && userData.passWeek">
-        <advance-option
-          title="与源站同步"
-          description="在启动翻译任务时，同步已缓存章节。如果缓存章节与源站不匹配，会删除章节，包含现有的翻译。慎用，不要抱着试试的心情用这个功能，用之前请确保你知道自己在干什么。一次性设定，默认关闭。"
-        >
-          <template #suffix>
-            <n-switch
-              :rubber-band="false"
+            <n-input-group-label size="small">到</n-input-group-label>
+            <n-input-number
               size="small"
-              v-model:value="syncFromProvider"
+              v-model:value="endIndex"
+              :show-button="false"
+              :min="0"
+              style="width: 60px"
             />
-          </template>
-        </advance-option>
-      </n-list-item>
-
-      <n-list-item v-if="type === 'web'">
-        <advance-option
-          title="自定义更新范围"
-          description="控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。比如，“从0到10”，表示属于区间[0，10)的章节，从第0章到第9章，不包含第10章。均分任务只对排队GPT/Sakura生效，最大为10。"
-        >
-          <n-flex style="text-align: center">
-            <div>
-              <n-input-group>
-                <n-input-group-label size="small">从</n-input-group-label>
-                <n-input-number
-                  size="small"
-                  v-model:value="startIndex"
-                  :show-button="false"
-                  button-placement="both"
-                  :min="0"
-                  style="width: 60px"
-                />
-                <n-input-group-label size="small">到</n-input-group-label>
-                <n-input-number
-                  size="small"
-                  v-model:value="endIndex"
-                  :show-button="false"
-                  :min="0"
-                  style="width: 60px"
-                />
-              </n-input-group>
-            </div>
-            <div>
-              <n-input-group>
-                <n-input-group-label size="small">均分</n-input-group-label>
-                <n-input-number
-                  size="small"
-                  v-model:value="taskNumber"
-                  :show-button="false"
-                  :min="1"
-                  :max="10"
-                  style="width: 60px"
-                />
-                <n-input-group-label size="small">个任务</n-input-group-label>
-              </n-input-group>
-            </div>
-          </n-flex>
-        </advance-option>
-      </n-list-item>
-
-      <n-list-item>
-        <advance-option
-          title="术语表"
-          description="术语表过大可能会使得翻译质量下降，此外，出于安全起见，Sakura只会使用日语长度超过两个字的术语。"
-        >
-          <glossary-edit :glossary="glossary" />
-          <c-button
-            label="提交"
-            async
-            require-login
-            :round="false"
-            type="primary"
-            secondary
-            size="small"
-            @click="submit"
-          />
-        </advance-option>
-      </n-list-item>
-    </n-list>
-
-    <n-list v-if="showDownloadOptions" bordered>
-      <n-list-item v-if="type === 'web'">
-        <advance-option
-          title="中文文件名"
-          description="如果小说标题已经被翻译，则使用翻译后的中文标题作为下载的文件名。"
-        >
-          <template #suffix>
-            <n-switch
-              :rubber-band="false"
+          </n-input-group>
+        </div>
+        <div>
+          <n-input-group>
+            <n-input-group-label size="small">均分</n-input-group-label>
+            <n-input-number
               size="small"
-              v-model:value="tryUseChineseTitleAsFilename"
+              v-model:value="taskNumber"
+              :show-button="false"
+              :min="1"
+              :max="10"
+              style="width: 60px"
             />
-          </template>
-        </advance-option>
-      </n-list-item>
+            <n-input-group-label size="small">个任务</n-input-group-label>
+          </n-input-group>
+        </div>
+      </n-flex>
+    </c-action-wrapper>
 
-      <n-list-item>
-        <advance-option
-          title="下载文件语言"
-          description="设置下载文件的语言。注意部分EPUB阅读器不支持半透明字体，日文段落无法正确显示为半透明字体。"
-        >
+    <c-action-wrapper title="操作">
+      <n-button-group size="small">
+        <c-button
+          :round="false"
+          label="下载设置"
+          @click="showDownloadModal = true"
+        />
+        <c-button
+          :round="false"
+          :label="`编辑术语表[${Object.keys(glossary).length}]`"
+          @click="showGlossaryModal = true"
+        />
+      </n-button-group>
+    </c-action-wrapper>
+
+    <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
+      <glossary-edit :glossary="glossary" />
+      <template #action>
+        <c-button
+          label="提交"
+          async
+          require-login
+          type="primary"
+          @click="submit"
+        />
+      </template>
+    </c-modal>
+
+    <c-modal title="下载设置" v-model:show="showDownloadModal">
+      <n-flex vertical size="large">
+        <c-action-wrapper title="语言">
           <c-radio-group
             v-model:value="setting.downloadFormat.mode"
             :options="downloadModeOptions"
-            size="small"
           />
-        </advance-option>
-      </n-list-item>
+        </c-action-wrapper>
 
-      <n-list-item>
-        <advance-option
-          title="下载文件翻译"
-          description="设置下载文件使用的翻译。注意选中的翻译顺序，优先模式下顺序代表优先级，并列模式下顺序代表翻译的排列顺序。"
-        >
+        <c-action-wrapper title="翻译">
           <n-flex>
             <c-radio-group
               v-model:value="setting.downloadFormat.translationsMode"
               :options="downloadTranslationModeOptions"
-              size="small"
             />
             <translator-check
               v-model:value="setting.downloadFormat.translations"
               show-order
-              size="small"
+              :two-line="!isWideScreen"
             />
           </n-flex>
-        </advance-option>
-      </n-list-item>
+        </c-action-wrapper>
 
-      <n-list-item v-if="type === 'web'">
-        <advance-option title="下载文件类型" description="设置下载文件的类型。">
+        <c-action-wrapper v-if="type === 'web'" title="文件">
           <c-radio-group
             v-model:value="setting.downloadFormat.type"
             :options="downloadTypeOptions"
-            size="small"
           />
-        </advance-option>
-      </n-list-item>
-    </n-list>
-  </n-collapse-transition>
+        </c-action-wrapper>
+
+        <c-action-wrapper
+          v-if="type === 'web'"
+          title="中文文件名"
+          align="center"
+        >
+          <n-switch size="small" v-model:value="tryUseChineseTitleAsFilename" />
+        </c-action-wrapper>
+
+        <n-text depth="3" style="font-size: 12px">
+          # 某些EPUB阅读器无法正确显示日文段落的浅色字体
+        </n-text>
+      </n-flex>
+    </c-modal>
+  </n-flex>
 </template>

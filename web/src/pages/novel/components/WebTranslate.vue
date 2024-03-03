@@ -104,7 +104,7 @@ const submitGlossary = async () => {
 };
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const { startIndex, endIndex, translateExpireChapter, taskNumber } =
+  const { startIndex, endIndex, translateExpireChapter, taskNumber, autoTop } =
     advanceOptions.value!!.getTranslationOptions();
 
   if (endIndex <= startIndex || startIndex >= total) {
@@ -137,13 +137,16 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   }
 
   const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
-  const results = tasks.map((task) =>
-    workspace.addJob({
+  const results = tasks.map((task) => {
+    const job = {
       task,
       description: titleJp,
       createAt: Date.now(),
-    })
-  );
+    };
+    const success = workspace.addJob(job);
+    if (autoTop) workspace.topJob(job);
+    return success;
+  });
   if (results.length === 1 && !results[0]) {
     message.error('排队失败：翻译任务已经存在');
   } else {
@@ -158,15 +161,44 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     type="web"
     :glossary="glossary"
     :submit="submitGlossary"
-  >
-  </advance-options>
+  />
 
-  <n-p>
-    总计 {{ total }} / 百度 {{ baidu }} / 有道 {{ youdao }} / GPT {{ gpt }} /
-    Sakura {{ sakura }}
-  </n-p>
+  <n-divider style="margin: 24px 0 16px" />
 
-  <n-p>
+  <n-flex vertical>
+    <n-text>
+      总计 {{ total }} / 百度 {{ baidu }} / 有道 {{ youdao }} / GPT {{ gpt }} /
+      Sakura {{ sakura }}
+    </n-text>
+
+    <n-button-group v-if="setting.enabledTranslator.length > 0">
+      <c-button
+        v-if="setting.enabledTranslator.includes('baidu')"
+        label="更新百度"
+        :round="false"
+        @click="startTranslateTask('baidu')"
+      />
+      <c-button
+        v-if="setting.enabledTranslator.includes('youdao')"
+        label="更新有道"
+        :round="false"
+        @click="startTranslateTask('youdao')"
+      />
+      <c-button
+        v-if="setting.enabledTranslator.includes('gpt')"
+        label="排队GPT"
+        :round="false"
+        @click="submitJob('gpt')"
+      />
+      <c-button
+        v-if="setting.enabledTranslator.includes('sakura')"
+        label="排队Sakura"
+        :round="false"
+        @click="submitJob('sakura')"
+      />
+    </n-button-group>
+    <n-text v-else>没有翻译器启用</n-text>
+
     <n-button-group>
       <c-button
         label="下载机翻"
@@ -191,38 +223,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         @click="importToWorkspace"
       />
     </n-button-group>
-  </n-p>
-
-  <n-button-group
-    v-if="setting.enabledTranslator.length > 0"
-    style="margin-bottom: 16px"
-  >
-    <c-button
-      v-if="setting.enabledTranslator.includes('baidu')"
-      label="更新百度"
-      :round="false"
-      @click="startTranslateTask('baidu')"
-    />
-    <c-button
-      v-if="setting.enabledTranslator.includes('youdao')"
-      label="更新有道"
-      :round="false"
-      @click="startTranslateTask('youdao')"
-    />
-    <c-button
-      v-if="setting.enabledTranslator.includes('gpt')"
-      label="排队GPT"
-      :round="false"
-      @click="submitJob('gpt')"
-    />
-    <c-button
-      v-if="setting.enabledTranslator.includes('sakura')"
-      label="排队Sakura"
-      :round="false"
-      @click="submitJob('sakura')"
-    />
-  </n-button-group>
-  <n-p v-else>没有翻译器启用</n-p>
+  </n-flex>
 
   <TranslateTask
     ref="translateTask"

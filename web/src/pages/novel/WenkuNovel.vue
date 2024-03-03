@@ -251,7 +251,9 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
         type="wenku"
         :glossary="metadata.glossary"
         :submit="() => submitGlossary(metadata.glossary)"
+        style="margin-top: 16px"
       />
+      <n-divider style="margin: 16px 0 0" />
 
       <n-list>
         <n-list-item v-for="volume of metadata.volumeJp" :key="volume.volumeId">
