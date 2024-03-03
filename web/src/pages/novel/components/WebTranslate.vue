@@ -149,24 +149,22 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     :glossary="glossary"
     :submit="submitGlossary"
   >
-    <div style="margin-left: 8px">
-      <c-button
-        label="下载机翻"
-        :round="false"
-        tag="a"
-        :href="files.zh.url"
-        :download="files.zh.filename"
-        target="_blank"
-      />
-      <c-button
-        label="下载日文"
-        :round="false"
-        tag="a"
-        :href="files.jp.url"
-        :download="files.jp.filename"
-        target="_blank"
-      />
-    </div>
+    <c-button
+      label="下载机翻"
+      :round="false"
+      tag="a"
+      :href="files.zh.url"
+      :download="files.zh.filename"
+      target="_blank"
+    />
+    <c-button
+      label="下载日文"
+      :round="false"
+      tag="a"
+      :href="files.jp.url"
+      :download="files.jp.filename"
+      target="_blank"
+    />
   </advance-options>
 
   <n-p>

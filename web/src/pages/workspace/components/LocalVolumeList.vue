@@ -78,7 +78,7 @@ defineExpose({ deleteVolume });
 </script>
 
 <template>
-  <section-header title="文件列表">
+  <section-header title="本地小说">
     <n-flex :wrap="false">
       <add-button :show-file-list="false" @finish="onFinish" />
       <n-dropdown trigger="click" :options="options" @select="handleSelect">
@@ -90,17 +90,13 @@ defineExpose({ deleteVolume });
   </section-header>
 
   <n-flex vertical>
-    <n-flex align="baseline" :wrap="false">
-      <n-text style="white-space: nowrap">排序</n-text>
-      <n-radio-group v-model:value="order" size="small">
-        <n-radio-button
-          v-for="option in orderOptions"
-          :key="option.value"
-          :value="option.value"
-          :label="option.label"
-        />
-      </n-radio-group>
-    </n-flex>
+    <c-action-wrapper title="排序">
+      <c-radio-group
+        v-model:value="order"
+        :options="orderOptions"
+        size="small"
+      />
+    </c-action-wrapper>
 
     <slot name="extra" />
   </n-flex>

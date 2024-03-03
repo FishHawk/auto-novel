@@ -103,17 +103,13 @@ const downloadVolume = async (volumeId: string) => {
     :beforeVolumeAdd="(file:File)=>queueVolume(file.name)"
   >
     <template #extra>
-      <n-flex align="baseline" :wrap="false">
-        <n-text style="white-space: nowrap">语言</n-text>
-        <n-radio-group v-model:value="setting.downloadFormat.mode" size="small">
-          <n-radio-button
-            v-for="option in downloadModeOptions"
-            :key="option.value"
-            :value="option.value"
-            :label="option.label"
-          />
-        </n-radio-group>
-      </n-flex>
+      <c-action-wrapper title="语言">
+        <c-radio-group
+          v-model:value="setting.downloadFormat.mode"
+          :options="downloadModeOptions"
+          size="small"
+        />
+      </c-action-wrapper>
     </template>
 
     <template #volume="volume">

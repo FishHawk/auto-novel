@@ -35,14 +35,11 @@ const themeOptions = [
       <n-list bordered>
         <n-list-item>
           <advance-option title="主题">
-            <n-radio-group v-model:value="setting.theme" size="small">
-              <n-radio-button
-                v-for="option in themeOptions"
-                :key="option.label"
-                :value="option.value"
-                :label="option.label"
-              />
-            </n-radio-group>
+            <c-radio-group
+              v-model:value="setting.theme"
+              :options="themeOptions"
+              size="small"
+            />
           </advance-option>
         </n-list-item>
         <n-list-item>

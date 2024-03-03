@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { createReusableTemplate } from '@vueuse/core';
-
 import {
   fontSizeOptions,
   lineSpaceOptions,
@@ -12,11 +10,6 @@ import {
 } from '@/data/stores/reader_setting';
 import { useIsWideScreen } from '@/data/util';
 
-const [DefineOption, ReuseOption] = createReusableTemplate<{
-  label: string;
-  align: 'baseline' | 'center';
-}>();
-
 const isWideScreen = useIsWideScreen(600);
 const setting = useReaderSettingStore();
 
@@ -26,70 +19,47 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
 
 <template>
   <c-modal title="设置">
-    <DefineOption v-slot="{ $slots, label, align }">
-      <n-flex :wrap="false" :align="align">
-        <n-text depth="3" style="white-space: nowrap; font-size: 12px">
-          {{ label }}
-        </n-text>
-        <component :is="$slots.default!" />
-      </n-flex>
-    </DefineOption>
-
     <n-flex vertical size="large" style="width: 100%">
-      <ReuseOption label="语言" align="baseline">
-        <n-radio-group v-model:value="setting.mode">
-          <n-radio-button
-            v-for="option in modeOptions"
-            :key="option.value"
-            :value="option.value"
-            :label="option.label"
-          />
-        </n-radio-group>
-      </ReuseOption>
-      <ReuseOption label="翻译" align="baseline">
+      <c-action-wrapper title="语言">
+        <c-radio-group v-model:value="setting.mode" :options="modeOptions" />
+      </c-action-wrapper>
+
+      <c-action-wrapper title="翻译">
         <n-flex>
-          <n-radio-group v-model:value="setting.translationsMode">
-            <n-radio-button
-              v-for="option in translationModeOptions"
-              :key="option.value"
-              :value="option.value"
-              :label="option.label"
-            />
-          </n-radio-group>
+          <c-radio-group
+            v-model:value="setting.translationsMode"
+            :options="translationModeOptions"
+          />
           <translator-check
             v-model:value="setting.translations"
             show-order
             :two-line="!isWideScreen"
           />
         </n-flex>
-      </ReuseOption>
-      <ReuseOption label="字体" align="baseline">
+      </c-action-wrapper>
+
+      <c-action-wrapper title="字体">
         <c-select-number
           v-model:value="setting.fontSize"
           :options="fontSizeOptions"
           :format="(value: number) => `${value}px`"
         />
-      </ReuseOption>
+      </c-action-wrapper>
 
-      <ReuseOption label="行距" align="baseline">
+      <c-action-wrapper title="行距">
         <c-select-number
           v-model:value="setting.lineSpace"
           :options="lineSpaceOptions"
           :format="(value: number) => value.toFixed(1)"
         />
-      </ReuseOption>
-      <ReuseOption label="主题" align="baseline">
+      </c-action-wrapper>
+
+      <c-action-wrapper title="主题">
         <n-flex size="large" vertical>
-          <n-flex>
-            <n-radio-group v-model:value="setting.theme.mode">
-              <n-radio-button
-                v-for="mode in themeModeOptions"
-                :key="mode.value"
-                :value="mode.value"
-                :label="mode.label"
-              />
-            </n-radio-group>
-          </n-flex>
+          <c-radio-group
+            v-model:value="setting.theme.mode"
+            :options="themeModeOptions"
+          />
           <template v-if="setting.theme.mode === 'custom'">
             <n-flex>
               <n-radio
@@ -110,7 +80,7 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
                 </n-tag>
               </n-radio>
             </n-flex>
-            <n-divider style="margin: 2px" />
+            <n-divider style="margin: 0px" />
             <n-flex>
               <n-color-picker
                 :modes="['hex']"
@@ -133,15 +103,16 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
             </n-flex>
           </template>
         </n-flex>
-      </ReuseOption>
-      <ReuseOption label="Sakura报错按钮" align="center">
+      </c-action-wrapper>
+
+      <c-action-wrapper title="报错按钮-Sakura" align="center">
         <n-switch
           v-model:value="setting.enableSakuraReportButton"
           size="small"
         />
-      </ReuseOption>
+      </c-action-wrapper>
 
-      <ReuseOption label="主透明度" align="center">
+      <c-action-wrapper title="主透明度" align="center">
         <n-slider
           v-model:value="setting.mixZhOpacity"
           :max="1"
@@ -149,8 +120,8 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
           :step="0.05"
           :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
         />
-      </ReuseOption>
-      <ReuseOption label="辅透明度" align="center">
+      </c-action-wrapper>
+      <c-action-wrapper title="辅透明度" align="center">
         <n-slider
           v-model:value="setting.mixJpOpacity"
           :max="1"
@@ -158,7 +129,7 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
           :step="0.05"
           :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
         />
-      </ReuseOption>
+      </c-action-wrapper>
       <n-text depth="3" style="font-size: 12px">
         # 左/右方向键跳转章节，数字键1～4切换翻译
       </n-text>

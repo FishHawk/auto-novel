@@ -17,39 +17,28 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 <template>
   <local-volume-list ref="localVolumeListRef">
     <template #extra>
-      <n-flex align="baseline" :wrap="false">
-        <n-text style="white-space: nowrap">语言</n-text>
-        <n-radio-group v-model:value="setting.downloadFormat.mode" size="small">
-          <n-radio-button
-            v-for="option in downloadModeOptions"
-            :key="option.value"
-            :value="option.value"
-            :label="option.label"
-          />
-        </n-radio-group>
-      </n-flex>
+      <c-action-wrapper title="语言">
+        <c-radio-group
+          v-model:value="setting.downloadFormat.mode"
+          :options="downloadModeOptions"
+          size="small"
+        />
+      </c-action-wrapper>
 
-      <n-flex align="baseline" :wrap="false">
-        <n-text style="white-space: nowrap">翻译</n-text>
+      <c-action-wrapper title="翻译">
         <n-flex>
-          <n-radio-group
+          <c-radio-group
             v-model:value="setting.downloadFormat.translationsMode"
+            :options="downloadTranslationModeOptions"
             size="small"
-          >
-            <n-radio-button
-              v-for="option in downloadTranslationModeOptions"
-              :key="option.value"
-              :value="option.value"
-              :label="option.label"
-            />
-          </n-radio-group>
+          />
           <translator-check
             v-model:value="setting.downloadFormat.translations"
             show-order
             size="small"
           />
         </n-flex>
-      </n-flex>
+      </c-action-wrapper>
     </template>
 
     <template #volume="volume">

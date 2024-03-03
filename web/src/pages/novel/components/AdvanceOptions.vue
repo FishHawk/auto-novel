@@ -205,17 +205,11 @@ watch(
           title="下载文件语言"
           description="设置下载文件的语言。注意部分EPUB阅读器不支持半透明字体，日文段落无法正确显示为半透明字体。"
         >
-          <n-radio-group
+          <c-radio-group
             v-model:value="setting.downloadFormat.mode"
+            :options="downloadModeOptions"
             size="small"
-          >
-            <n-radio-button
-              v-for="option in downloadModeOptions"
-              :key="option.value"
-              :value="option.value"
-              :label="option.label"
-            />
-          </n-radio-group>
+          />
         </advance-option>
       </n-list-item>
 
@@ -225,17 +219,11 @@ watch(
           description="设置下载文件使用的翻译。注意选中的翻译顺序，优先模式下顺序代表优先级，并列模式下顺序代表翻译的排列顺序。"
         >
           <n-flex>
-            <n-radio-group
+            <c-radio-group
               v-model:value="setting.downloadFormat.translationsMode"
+              :options="downloadTranslationModeOptions"
               size="small"
-            >
-              <n-radio-button
-                v-for="option in downloadTranslationModeOptions"
-                :key="option.value"
-                :value="option.value"
-                :label="option.label"
-              />
-            </n-radio-group>
+            />
             <translator-check
               v-model:value="setting.downloadFormat.translations"
               show-order
@@ -247,17 +235,11 @@ watch(
 
       <n-list-item v-if="type === 'web'">
         <advance-option title="下载文件类型" description="设置下载文件的类型。">
-          <n-radio-group
+          <c-radio-group
             v-model:value="setting.downloadFormat.type"
+            :options="downloadTypeOptions"
             size="small"
-          >
-            <n-radio-button
-              v-for="option in downloadTypeOptions"
-              :key="option.value"
-              :value="option.value"
-              :label="option.label"
-            />
-          </n-radio-group>
+          />
         </advance-option>
       </n-list-item>
     </n-list>

@@ -8,10 +8,10 @@ import { useRoute } from 'vue-router';
 import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
 import { Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { useIsWideScreen } from '@/data/util';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
 import AdvanceOptions from './components/AdvanceOptions.vue';
-import { useIsWideScreen } from '@/data/util';
 
 const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   label: string;
@@ -65,6 +65,8 @@ const deleteVolume = async (volumeId: string) => {
     message.error('删除失败：' + result.error.message);
   }
 };
+
+const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
 </script>
 
 <template>
@@ -74,9 +76,9 @@ const deleteVolume = async (volumeId: string) => {
         {{ label }}
       </n-tag>
       <n-flex :size="[4, 4]">
-        <n-tag v-for="tag of tags" :bordered="false" size="small">
-          {{ tag }}
-        </n-tag>
+        <router-link v-for="tag of tags" :to="buildSearchLink(tag)">
+          <novel-tag :tag="tag" />
+        </router-link>
       </n-flex>
     </n-flex>
   </DefineTagGroup>
