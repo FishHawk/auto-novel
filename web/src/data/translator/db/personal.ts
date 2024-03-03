@@ -146,7 +146,7 @@ const updateGlossary = withDb(async (db, id: string, glossary: Glossary) => {
   const tx = db.transaction('metadata', 'readwrite');
   const metadata = await tx.store.get(id);
   if (metadata !== undefined) {
-    metadata.glossary = glossary;
+    metadata.glossary = { ...glossary };
     metadata.glossaryId = uuidv4();
     await tx.store.put(metadata);
   }
