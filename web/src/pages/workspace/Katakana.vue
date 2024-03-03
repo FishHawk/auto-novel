@@ -7,9 +7,12 @@ import { Txt } from '@/data/epub/txt';
 import { useIsWideScreen } from '@/data/util';
 import { PlusOutlined } from '@vicons/material';
 import { PersonalVolumesManager, Translator } from '@/data/translator';
+import { TranslatorConfig } from '@/data/translator/translator';
+import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 
 const message = useMessage();
 const isWideScreen = useIsWideScreen(850);
+const sakuraWorkspace = useSakuraWorkspaceStore();
 
 interface FileInfo {
   source: 'tmp' | 'local';
@@ -97,17 +100,35 @@ const copyTranslationJson = async () => {
   message.info('已经将翻译结果复制到剪切板');
 };
 
+const showSakuraSelectModal = ref(false);
+const selectedSakuraWorkerId = ref(sakuraWorkspace.workers.at(0)?.id);
+
 const katakanaTranslations = ref<{ [key: string]: string }>({});
-const translateKatakanas = async (id: 'baidu' | 'youdao') => {
+const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
   const jpWords = [...katakanas.value.keys()];
-  try {
-    const translator = await Translator.create(
-      {
-        id,
-        log: () => {},
-      },
-      false
+  let config: TranslatorConfig;
+  if (id === 'sakura') {
+    const worker = sakuraWorkspace.workers.find(
+      (it) => it.id === selectedSakuraWorkerId.value
     );
+    if (worker === undefined) {
+      message.error('未选择Sakura翻译器');
+      return;
+    }
+    config = {
+      id,
+      log: () => {},
+      endpoint: worker.endpoint,
+      useLlamaApi: worker.useLlamaApi ?? false,
+    };
+  } else {
+    config = {
+      id,
+      log: () => {},
+    };
+  }
+  try {
+    const translator = await Translator.create(config, false);
     const zhWords = await translator.translate(jpWords, {});
 
     const jpToZh: { [key: string]: string } = {};
@@ -148,20 +169,46 @@ const translateKatakanas = async (id: 'baidu' | 'youdao') => {
 
     <section-header :title="`统计结果（${katakanas.size}个）`" />
     <n-flex vertical>
-      <n-flex>
-        <c-button label="复制术语表" @click="copyTranslationJson()" />
-        <c-button label="百度翻译" async @click="translateKatakanas('baidu')" />
-        <c-button
-          label="有道翻译"
-          async
-          @click="translateKatakanas('youdao')"
-        />
-      </n-flex>
-
-      <n-flex align="baseline">
-        次数下限
+      <c-action-wrapper title="次数下限">
         <n-input-number v-model:value="katakanaThredhold" clearable />
-      </n-flex>
+      </c-action-wrapper>
+      <c-action-wrapper title="操作">
+        <n-flex vertical>
+          <n-button-group>
+            <c-button
+              label="复制术语表"
+              :round="false"
+              @click="copyTranslationJson()"
+            />
+            <c-button
+              label="百度翻译"
+              :round="false"
+              async
+              @click="translateKatakanas('baidu')"
+            />
+            <c-button
+              label="有道翻译"
+              :round="false"
+              async
+              @click="translateKatakanas('youdao')"
+            />
+          </n-button-group>
+
+          <n-button-group>
+            <c-button
+              :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
+              :round="false"
+              async
+              @click="translateKatakanas('sakura')"
+            />
+            <c-button
+              label="选择翻译器"
+              :round="false"
+              @click="showSakuraSelectModal = true"
+            />
+          </n-button-group>
+        </n-flex>
+      </c-action-wrapper>
     </n-flex>
 
     <n-card v-if="katakanas.size > 0" embedded style="margin-top: 20px">
@@ -190,6 +237,23 @@ const translateKatakanas = async (id: 'baidu' | 'youdao') => {
         {{ line }}
       </n-p>
     </template>
+  </c-modal>
+
+  <c-modal title="选择Sakura翻译器" v-model:show="showSakuraSelectModal">
+    <n-radio-group v-model:value="selectedSakuraWorkerId">
+      <n-flex vertical>
+        <n-radio
+          v-for="worker of sakuraWorkspace.workers"
+          :key="worker.id"
+          :value="worker.id"
+        >
+          {{ worker.id }}
+          <n-text depth="3">
+            {{ worker.endpoint }}
+          </n-text>
+        </n-radio>
+      </n-flex>
+    </n-radio-group>
   </c-modal>
 </template>
 
