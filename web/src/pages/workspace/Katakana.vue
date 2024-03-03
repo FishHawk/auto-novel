@@ -109,8 +109,6 @@ const translateKatakanas = async (id: 'baidu' | 'youdao') => {
       false
     );
     const zhWords = await translator.translate(jpWords, {});
-    console.log(jpWords);
-    console.log(zhWords);
 
     const jpToZh: { [key: string]: string } = {};
     jpWords.forEach((jpWord, index) => {
@@ -127,23 +125,20 @@ const translateKatakanas = async (id: 'baidu' | 'youdao') => {
   <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
     <n-h1>片假名统计</n-h1>
 
-    <n-flex align="center">
-      <div>
-        <n-upload
-          accept=".txt,.epub"
-          :custom-request="customRequest"
-          :show-file-list="false"
-        >
-          <c-button label="加载文件" :icon="PlusOutlined" />
-        </n-upload>
-      </div>
-    </n-flex>
+    <n-upload
+      accept=".txt,.epub"
+      :custom-request="customRequest"
+      :show-file-list="false"
+    >
+      <c-button label="加载文件" :icon="PlusOutlined" />
+    </n-upload>
 
     <n-p v-if="fileInfo" style="margin-bottom: 0">
       {{ fileInfo.source === 'tmp' ? '临时文件' : '本地文件' }}
       /
+      {{ fileInfo.filename }}
       <c-button
-        :label="`[点击预览] ${fileInfo.filename}`"
+        :label="`[预览] `"
         text
         type="primary"
         @click="showPreviewModal = true"
@@ -171,14 +166,12 @@ const translateKatakanas = async (id: 'baidu' | 'youdao') => {
 
     <n-card v-if="katakanas.size > 0" embedded style="margin-top: 20px">
       <n-scrollbar trigger="none" style="max-height: 300px">
-        <table style="border-spacing: 30px 0">
+        <table id="glossary" style="border-spacing: 10px 0">
           <tr v-for="[word, number] in katakanas" :key="word">
             <td style="min-width: 100px">{{ word }}</td>
             <td>=></td>
             <td>{{ number }}</td>
-
             <template v-if="katakanaTranslations[word]">
-              <td>=></td>
               <td>{{ katakanaTranslations[word] }}</td>
             </template>
           </tr>
@@ -199,3 +192,9 @@ const translateKatakanas = async (id: 'baidu' | 'youdao') => {
     </template>
   </c-modal>
 </template>
+
+<style scoped>
+.id td {
+  white-space: nowrap;
+}
+</style>
