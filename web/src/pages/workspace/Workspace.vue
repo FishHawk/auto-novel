@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 const subPages = [
   {
-    name: '片假名统计',
-    description: '统计片假名次数来制作术语表。',
+    name: '术语表工作区',
+    description: '辅助制作术语表。',
     href: '/workspace/katakana',
   },
   {

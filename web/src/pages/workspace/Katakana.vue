@@ -2,13 +2,14 @@
 import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
+import { notice } from '@/components/NoticeBoard.vue';
 import { Epub } from '@/data/epub/epub';
 import { Txt } from '@/data/epub/txt';
-import { useIsWideScreen } from '@/data/util';
-import { PlusOutlined } from '@vicons/material';
+import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { PersonalVolumesManager, Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
-import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import { useIsWideScreen } from '@/data/util';
+import { PlusOutlined } from '@vicons/material';
 
 const message = useMessage();
 const isWideScreen = useIsWideScreen(850);
@@ -140,19 +141,30 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
     message.error(`翻译器错误：${e}`);
   }
 };
+
+const notices = [
+  notice('术语表辅助制作工具正在开发中，当前方案分为识别和翻译两步。'),
+  notice('识别阶段：根据片假名词汇出现频率判断可能是术语的词汇。'),
+  notice('翻译阶段：直接翻译日语词汇。'),
+  notice('注意，这是辅助制作，不是全自动生成，使用前务必检查结果。', true),
+];
 </script>
 
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
-    <n-h1>片假名统计</n-h1>
+    <n-h1>术语表工作区</n-h1>
 
-    <n-upload
-      accept=".txt,.epub"
-      :custom-request="customRequest"
-      :show-file-list="false"
-    >
-      <c-button label="加载文件" :icon="PlusOutlined" />
-    </n-upload>
+    <notice-board :notices="notices" />
+
+    <n-p>
+      <n-upload
+        accept=".txt,.epub"
+        :custom-request="customRequest"
+        :show-file-list="false"
+      >
+        <c-button label="加载文件" :icon="PlusOutlined" />
+      </n-upload>
+    </n-p>
 
     <n-p v-if="fileInfo" style="margin-bottom: 0">
       {{ fileInfo.source === 'tmp' ? '临时文件' : '本地文件' }}

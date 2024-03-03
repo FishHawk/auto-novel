@@ -49,7 +49,7 @@ const topMenuOptions = computed(() => {
     {
       ...menuOption('工作区', '/workspace'),
       children: [
-        menuOption('片假名统计', '/workspace/katakana'),
+        menuOption('术语表工作区', '/workspace/katakana'),
         menuOption('GPT工作区', '/workspace/gpt'),
         menuOption('Sakura工作区', '/workspace/sakura'),
       ],
