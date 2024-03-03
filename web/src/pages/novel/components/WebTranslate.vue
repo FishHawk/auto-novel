@@ -12,6 +12,8 @@ import {
 } from '@/data/stores/workspace';
 
 import AdvanceOptions from './AdvanceOptions.vue';
+import ky from 'ky';
+import { PersonalVolumesManager } from '@/data/translator/db/personal';
 
 const props = defineProps<{
   providerId: string;
@@ -79,6 +81,14 @@ const files = computed(() => {
     }),
   };
 });
+
+const importToWorkspace = async () => {
+  const blob = await ky.get(files.value.jp.url).blob();
+  const file = new File([blob], files.value.jp.filename);
+  await PersonalVolumesManager.saveVolume(file)
+    .then(() => message.success('导入成功'))
+    .catch((error) => message.error(`导入失败:${error}`));
+};
 
 const submitGlossary = async () => {
   const result = await ApiWebNovel.updateGlossary(
@@ -149,27 +159,38 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     :glossary="glossary"
     :submit="submitGlossary"
   >
-    <c-button
-      label="下载机翻"
-      :round="false"
-      tag="a"
-      :href="files.zh.url"
-      :download="files.zh.filename"
-      target="_blank"
-    />
-    <c-button
-      label="下载日文"
-      :round="false"
-      tag="a"
-      :href="files.jp.url"
-      :download="files.jp.filename"
-      target="_blank"
-    />
   </advance-options>
 
   <n-p>
     总计 {{ total }} / 百度 {{ baidu }} / 有道 {{ youdao }} / GPT {{ gpt }} /
     Sakura {{ sakura }}
+  </n-p>
+
+  <n-p>
+    <n-button-group>
+      <c-button
+        label="下载机翻"
+        :round="false"
+        tag="a"
+        :href="files.zh.url"
+        :download="files.zh.filename"
+        target="_blank"
+      />
+      <c-button
+        label="下载日文"
+        :round="false"
+        tag="a"
+        :href="files.jp.url"
+        :download="files.jp.filename"
+        target="_blank"
+      />
+      <c-button
+        label="导入日文至工作区"
+        async
+        :round="false"
+        @click="importToWorkspace"
+      />
+    </n-button-group>
   </n-p>
 
   <n-button-group

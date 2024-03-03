@@ -55,10 +55,10 @@ const deleteAllVolumes = () =>
       message.error(`清空失败:${error}`);
     });
 
-const order = ref<'byId' | 'byCreateAt'>('byId');
+const order = ref<'byCreateAt' | 'byId'>('byCreateAt');
 const orderOptions = [
-  { value: 'byId', label: '按文件名' },
   { value: 'byCreateAt', label: '按添加时间' },
+  { value: 'byId', label: '按文件名' },
 ];
 const sortedVolumes = computed(() => {
   if (order.value === 'byId') {
