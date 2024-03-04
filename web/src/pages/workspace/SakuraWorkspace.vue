@@ -145,6 +145,7 @@ const notices = [
           :job="job"
           :percentage="computePercentage(processedJobs.get(job.task)?.progress)"
           @top-job="sakuraWorkspace.topJob(job)"
+          @bottom-job="sakuraWorkspace.bottomJob(job)"
           @delete-job="deleteJob(job.task)"
         />
       </n-list-item>

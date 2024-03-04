@@ -153,6 +153,7 @@ const notices = [
           :job="job"
           :percentage="computePercentage(processedJobs.get(job.task)?.progress)"
           @top-job="gptWorkspace.topJob(job)"
+          @bottom-job="gptWorkspace.bottomJob(job)"
           @delete-job="deleteJob(job.task)"
         />
       </n-list-item>
