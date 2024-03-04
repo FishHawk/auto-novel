@@ -161,7 +161,7 @@ const notices = [
 
     <section-header title="任务记录">
       <c-button
-        label="重试"
+        label="重试失败任务"
         :icon="RefreshOutlined"
         @click="gptWorkspace.retryAllJobRecords()"
       />

@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import {
-  VerticalAlignBottomOutlined,
-  VerticalAlignTopOutlined,
+  DeleteOutlineOutlined,
+  KeyboardDoubleArrowDownOutlined,
+  KeyboardDoubleArrowUpOutlined,
 } from '@vicons/material';
 import { computed } from 'vue';
 
@@ -35,29 +36,22 @@ const url = computed(() => parseTaskUrl(props.job.task));
       </n-text>
     </template>
     <template #header-extra>
-      <n-flex size="small" :wrap="false">
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <n-button text @click="emit('topJob')">
-              <n-icon :component="VerticalAlignTopOutlined" />
-            </n-button>
-          </template>
-          置顶
-        </n-tooltip>
+      <n-flex :size="6" :wrap="false">
+        <c-icon-button
+          tooltip="置顶"
+          :icon="KeyboardDoubleArrowUpOutlined"
+          @click="emit('topJob')"
+        />
 
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <n-button text @click="emit('bottomJob')">
-              <n-icon :component="VerticalAlignBottomOutlined" />
-            </n-button>
-          </template>
-          置底
-        </n-tooltip>
+        <c-icon-button
+          tooltip="置底"
+          :icon="KeyboardDoubleArrowDownOutlined"
+          @click="emit('bottomJob')"
+        />
 
-        <c-button
-          label="删除"
-          size="tiny"
-          secondary
+        <c-icon-button
+          tooltip="删除"
+          :icon="DeleteOutlineOutlined"
           type="error"
           @click="emit('deleteJob')"
         />
