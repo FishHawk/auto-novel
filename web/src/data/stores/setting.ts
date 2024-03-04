@@ -13,6 +13,7 @@ export interface Setting {
     translations: TranslatorId[];
     type: 'epub' | 'txt';
   };
+  workspaceSound: boolean;
 }
 
 export const useSettingStore = defineStore('setting', {
@@ -28,6 +29,7 @@ export const useSettingStore = defineStore('setting', {
         translations: ['sakura', 'gpt', 'youdao', 'baidu'],
         type: 'epub',
       },
+      workspaceSound: false,
     },
   persist: true,
 });
@@ -68,5 +70,9 @@ export const migrateSetting = (setting: ReturnType<typeof useSettingStore>) => {
     setting.downloadFormat.mode = 'jp-zh';
   } else if ((setting.downloadFormat.mode as any) === 'jp') {
     setting.downloadFormat.mode = 'zh';
+  }
+  // 2024-03-05
+  if (setting.workspaceSound === undefined) {
+    setting.workspaceSound = false;
   }
 };

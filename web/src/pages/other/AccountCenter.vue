@@ -37,6 +37,7 @@ const roleToReadableText = (role: UserRole) => {
             />
           </n-flex>
         </n-list-item>
+
         <n-list-item>
           <n-flex vertical>
             <b>显示的翻译按钮</b>
@@ -46,6 +47,14 @@ const roleToReadableText = (role: UserRole) => {
             />
           </n-flex>
         </n-list-item>
+
+        <n-list-item>
+          <n-flex vertical align="start">
+            <b>工作区语音提醒</b>
+            <n-switch size="small" v-model:value="setting.workspaceSound" />
+          </n-flex>
+        </n-list-item>
+
         <n-list-item v-if="userData.isAdmin">
           <n-flex vertical>
             <b>控制台</b>

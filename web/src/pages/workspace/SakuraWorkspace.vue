@@ -8,13 +8,16 @@ import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { notice } from '@/components/NoticeBoard.vue';
+import { useSettingStore } from '@/data/stores/setting';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
+import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 import { computePercentage } from './components/util';
 
 const message = useMessage();
+const setting = useSettingStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
 
@@ -32,6 +35,9 @@ const getNextJob = () => {
   );
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);
+  } else if (processedJobs.value.size === 0 && setting.workspaceSound) {
+    // 全部任务都已经完成
+    new Audio(SoundAllTaskCompleted).play();
   }
   return job;
 };
