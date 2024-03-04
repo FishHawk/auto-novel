@@ -72,7 +72,7 @@ watch(
 
         <n-checkbox v-model:checked="autoTop">
           <n-tooltip trigger="hover">
-            <template #trigger>自动置顶</template>
+            <template #trigger>排队置顶</template>
             GPT/Sakura任务排队的时候，自动置顶。
           </n-tooltip>
         </n-checkbox>
