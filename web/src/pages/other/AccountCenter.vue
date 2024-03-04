@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { UserRole } from '@/data/api/api_user';
-import { useSettingStore } from '@/data/stores/setting';
+import { themeOptions, useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 
 const setting = useSettingStore();
@@ -14,12 +14,6 @@ const roleToReadableText = (role: UserRole) => {
   else if (role === 'banned') return '封禁用户';
   else return '未知';
 };
-
-const themeOptions = [
-  { label: '亮色主题', value: 'light' },
-  { label: '暗色主题', value: 'dark' },
-  { label: '跟随系统', value: 'system' },
-];
 </script>
 
 <template>
@@ -34,24 +28,27 @@ const themeOptions = [
 
       <n-list bordered>
         <n-list-item>
-          <advance-option title="主题">
+          <n-flex vertical>
+            <b>主题</b>
             <c-radio-group
               v-model:value="setting.theme"
               :options="themeOptions"
               size="small"
             />
-          </advance-option>
+          </n-flex>
         </n-list-item>
         <n-list-item>
-          <advance-option title="显示的翻译按钮">
+          <n-flex vertical>
+            <b>显示的翻译按钮</b>
             <translator-check
               v-model:value="setting.enabledTranslator"
               size="small"
             />
-          </advance-option>
+          </n-flex>
         </n-list-item>
         <n-list-item v-if="userData.isAdmin">
-          <advance-option title="控制台">
+          <n-flex vertical>
+            <b>控制台</b>
             <n-flex>
               <c-button
                 label="控制台"
@@ -65,7 +62,7 @@ const themeOptions = [
                 @click="userData.toggleAdminMode()"
               />
             </n-flex>
-          </advance-option>
+          </n-flex>
         </n-list-item>
       </n-list>
     </template>

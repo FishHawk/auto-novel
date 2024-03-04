@@ -36,19 +36,11 @@ export const useReaderSettingStore = defineStore('readerSetting', {
 });
 
 export const modeOptions = [
-  { value: 'jp', label: '日文' },
-  { value: 'zh', label: '中文' },
-  { value: 'zh-jp', label: '中日' },
-  { value: 'jp-zh', label: '日中' },
+  { label: '日文', value: 'jp' },
+  { label: '中文', value: 'zh' },
+  { label: '中日', value: 'zh-jp' },
+  { label: '日中', value: 'jp-zh' },
 ];
-
-export const themeModeOptions = [
-  { value: 'light', label: '浅色' },
-  { value: 'dark', label: '深色' },
-  { value: 'system', label: '跟随系统' },
-  { value: 'custom', label: '自定义' },
-];
-
 export const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
@@ -58,6 +50,12 @@ export const fontSizeOptions = [14, 16, 18, 20, 24, 30, 40];
 
 export const lineSpaceOptions = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
 
+export const themeModeOptions = [
+  { label: '浅色', value: 'light' },
+  { label: '深色', value: 'dark' },
+  { label: '跟随系统', value: 'system' },
+  { label: '自定义', value: 'custom' },
+];
 export const themeOptions = [
   { bodyColor: '#FFFFFF', fontColor: '#000000' },
   { bodyColor: '#FFF2E2', fontColor: '#000000' },

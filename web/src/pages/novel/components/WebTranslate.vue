@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import ky from 'ky';
 import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
@@ -10,10 +11,9 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-
-import AdvanceOptions from './AdvanceOptions.vue';
-import ky from 'ky';
 import { PersonalVolumesManager } from '@/data/translator/db/personal';
+
+import TranslateOptions from './TranslateOptions.vue';
 
 const props = defineProps<{
   providerId: string;
@@ -43,12 +43,12 @@ const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
-const advanceOptions = ref<InstanceType<typeof AdvanceOptions>>();
+const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   translateTask?.value?.startTask(
     { type: 'web', providerId, novelId },
-    advanceOptions.value!!.getTranslationOptions(),
+    translateOptions.value!!.getTranslationOptions(),
     { id: translatorId }
   );
 
@@ -108,7 +108,7 @@ const submitGlossary = async () => {
 
 const submitJob = (id: 'gpt' | 'sakura') => {
   const { startIndex, endIndex, translateExpireChapter, taskNumber, autoTop } =
-    advanceOptions.value!!.getTranslationOptions();
+    translateOptions.value!!.getTranslationOptions();
 
   if (endIndex <= startIndex || startIndex >= total) {
     message.error('排队失败：没有选中章节');
@@ -159,8 +159,8 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 </script>
 
 <template>
-  <advance-options
-    ref="advanceOptions"
+  <translate-options
+    ref="translateOptions"
     type="web"
     :glossary="glossary"
     :submit="submitGlossary"

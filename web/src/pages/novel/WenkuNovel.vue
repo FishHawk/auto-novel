@@ -11,7 +11,7 @@ import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/data/util';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
-import AdvanceOptions from './components/AdvanceOptions.vue';
+import TranslateOptions from './components/TranslateOptions.vue';
 
 const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   label: string;
@@ -45,7 +45,7 @@ const getNovel = async () => {
 };
 getNovel();
 
-const advanceOptions = ref<InstanceType<typeof AdvanceOptions>>();
+const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
 const submitGlossary = async (glossary: { [key: string]: string }) => {
   const result = await ApiWenkuNovel.updateGlossary(novelId, glossary);
@@ -246,8 +246,8 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
         @upload-finished="getNovel()"
       />
 
-      <advance-options
-        ref="advanceOptions"
+      <translate-options
+        ref="translateOptions"
         type="wenku"
         :glossary="metadata.glossary"
         :submit="() => submitGlossary(metadata.glossary)"
@@ -260,7 +260,7 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
           <WenkuVolume
             :novel-id="novelId"
             :volume="volume"
-            :get-params="() => advanceOptions!!.getTranslationOptions()"
+            :get-params="() => translateOptions!!.getTranslationOptions()"
             @delete="deleteVolume(volume.volumeId)"
           />
         </n-list-item>
