@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
+import { computed, ref, toRaw } from 'vue';
 
 import TranslateTask from '@/components/TranslateTask.vue';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
@@ -86,6 +86,9 @@ const importToWorkspace = async () => {
   const blob = await ky.get(files.value.jp.url).blob();
   const file = new File([blob], files.value.jp.filename);
   await PersonalVolumesManager.saveVolume(file)
+    .then(() =>
+      PersonalVolumesManager.updateGlossary(file.name, toRaw(props.glossary))
+    )
     .then(() => message.success('导入成功'))
     .catch((error) => message.error(`导入失败:${error}`));
 };

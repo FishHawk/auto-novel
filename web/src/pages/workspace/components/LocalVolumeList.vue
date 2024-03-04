@@ -71,7 +71,7 @@ const sortedVolumes = computed(() => {
 const deleteVolume = (volumeId: string) =>
   PersonalVolumesManager.deleteVolume(volumeId)
     .then(() => message.info('删除成功'))
-    .then(() => loadVolumes)
+    .then(() => loadVolumes())
     .catch((error) => message.error(`删除失败：${error}`));
 
 defineExpose({ deleteVolume });
