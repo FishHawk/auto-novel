@@ -85,20 +85,16 @@ function importGlossary() {
     </n-p>
 
     <n-p>
-      <n-scrollbar style="max-height: 400px">
-        <table style="border-spacing: 16px 0px; font-size: 12px">
-          <tr v-for="workJp in Object.keys(glossary).reverse()">
-            <td>{{ workJp }}</td>
-            <td nowrap="nowrap">=></td>
-            <td>{{ glossary[workJp] }}</td>
-            <td>
-              <n-button size="tiny" @click="deleteTerm(workJp)">
-                删除
-              </n-button>
-            </td>
-          </tr>
-        </table>
-      </n-scrollbar>
+      <table style="border-spacing: 16px 0px; font-size: 12px">
+        <tr v-for="workJp in Object.keys(glossary).reverse()">
+          <td>{{ workJp }}</td>
+          <td nowrap="nowrap">=></td>
+          <td>{{ glossary[workJp] }}</td>
+          <td>
+            <n-button size="tiny" @click="deleteTerm(workJp)"> 删除 </n-button>
+          </td>
+        </tr>
+      </table>
     </n-p>
   </div>
 </template>
