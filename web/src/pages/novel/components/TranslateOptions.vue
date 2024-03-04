@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
+import { InfoOutlined } from '@vicons/material';
 
 import {
   downloadModeOptions,
@@ -15,7 +16,6 @@ defineProps<{
   glossary: { [key: string]: string };
   submit: () => Promise<void>;
 }>();
-
 const userData = useUserDataStore();
 const setting = useSettingStore();
 const isWideScreen = useIsWideScreen(600);
@@ -54,7 +54,7 @@ watch(
     <c-action-wrapper title="选项">
       <n-flex>
         <n-checkbox v-model:checked="translateExpireChapter">
-          <n-tooltip trigger="hover">
+          <n-tooltip trigger="hover" style="max-width: 200px">
             <template #trigger>过期章节</template>
             翻译术语表过期的章节。
           </n-tooltip>
@@ -64,14 +64,14 @@ watch(
           v-if="type === 'web' && userData.passWeek"
           v-model:checked="syncFromProvider"
         >
-          <n-tooltip trigger="hover">
+          <n-tooltip trigger="hover" style="max-width: 200px">
             <template #trigger>源站同步</template>
             强行同步已缓存章节，与源站不一致会删除现有翻译，慎用！!
           </n-tooltip>
         </n-checkbox>
 
         <n-checkbox v-model:checked="autoTop">
-          <n-tooltip trigger="hover">
+          <n-tooltip trigger="hover" style="max-width: 200px">
             <template #trigger>排队置顶</template>
             GPT/Sakura任务排队的时候，自动置顶。
           </n-tooltip>
@@ -80,7 +80,6 @@ watch(
     </c-action-wrapper>
 
     <c-action-wrapper v-if="type === 'web'" title="范围">
-      <!-- "控制翻译任务的范围，章节序号可以看下面目录结尾方括号里的数字。比如，“从0到10”，表示属于区间[0，10)的章节，从第0章到第9章，不包含第10章。均分任务只对排队GPT/Sakura生效，最大为10。" -->
       <n-flex style="text-align: center">
         <div>
           <n-input-group>
@@ -117,6 +116,15 @@ watch(
             <n-input-group-label size="small">个任务</n-input-group-label>
           </n-input-group>
         </div>
+
+        <n-tooltip trigger="hover" placement="top" style="max-width: 200px">
+          <template #trigger>
+            <n-button text>
+              <n-icon depth="4" :component="InfoOutlined" />
+            </n-button>
+          </template>
+          章节序号看下面目录方括号里的数字。“从0到10”表示从第0章到第9章，不包含第10章。均分任务只对排队生效，最大为10。
+        </n-tooltip>
       </n-flex>
     </c-action-wrapper>
 
