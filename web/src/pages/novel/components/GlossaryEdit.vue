@@ -60,19 +60,6 @@ function importGlossary() {
     <n-p>
       <n-input-group>
         <n-input
-          v-model:value="importGlossaryRaw"
-          size="small"
-          placeholder="批量导入术语表"
-          :input-props="{ spellcheck: false }"
-        />
-        <n-button size="small" @click="exportGlossary()">导出</n-button>
-        <n-button size="small" @click="importGlossary()">导入</n-button>
-      </n-input-group>
-    </n-p>
-
-    <n-p>
-      <n-input-group>
-        <n-input
           pair
           v-model:value="termsToAdd"
           size="small"
@@ -81,6 +68,19 @@ function importGlossary() {
           :input-props="{ spellcheck: false }"
         />
         <n-button size="small" @click="addTerm()">添加</n-button>
+      </n-input-group>
+    </n-p>
+
+    <n-p>
+      <n-input-group>
+        <n-input
+          v-model:value="importGlossaryRaw"
+          size="small"
+          placeholder="批量导入术语表"
+          :input-props="{ spellcheck: false }"
+        />
+        <n-button size="small" @click="exportGlossary()">导出</n-button>
+        <n-button size="small" @click="importGlossary()">导入</n-button>
       </n-input-group>
     </n-p>
 
