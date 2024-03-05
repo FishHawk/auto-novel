@@ -6,12 +6,12 @@ defineProps<{
 </script>
 
 <template>
-    <n-tag :bordered="false" size="small" style="cursor: pointer">
-      <template v-if="strong === true">
-        <b>{{ tag }}</b>
-      </template>
-      <template v-else>
-        {{ tag }}
-      </template>
-    </n-tag>
+  <n-tag :bordered="false" size="small" style="cursor: pointer">
+    <template v-if="strong === true">
+      <b>{{ tag }}</b>
+    </template>
+    <template v-else>
+      {{ tag }}
+    </template>
+  </n-tag>
 </template>

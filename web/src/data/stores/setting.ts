@@ -13,6 +13,7 @@ export interface Setting {
     translations: TranslatorId[];
     type: 'epub' | 'txt';
   };
+  workspaceSound: boolean;
 }
 
 export const useSettingStore = defineStore('setting', {
@@ -28,22 +29,29 @@ export const useSettingStore = defineStore('setting', {
         translations: ['sakura', 'gpt', 'youdao', 'baidu'],
         type: 'epub',
       },
+      workspaceSound: false,
     },
   persist: true,
 });
 
 export const downloadModeOptions = [
-  { value: 'zh', label: '中文' },
-  { value: 'zh-jp', label: '中日' },
-  { value: 'jp-zh', label: '日中' },
+  { label: '中文', value: 'zh' },
+  { label: '中日', value: 'zh-jp' },
+  { label: '日中', value: 'jp-zh' },
 ];
 export const downloadTranslationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
 ];
 export const downloadTypeOptions = [
-  { value: 'epub', label: 'EPUB' },
-  { value: 'txt', label: 'TXT' },
+  { label: 'EPUB', value: 'epub' },
+  { label: 'TXT', value: 'txt' },
+];
+
+export const themeOptions = [
+  { label: '亮色主题', value: 'light' },
+  { label: '暗色主题', value: 'dark' },
+  { label: '跟随系统', value: 'system' },
 ];
 
 export const migrateSetting = (setting: ReturnType<typeof useSettingStore>) => {
@@ -62,5 +70,9 @@ export const migrateSetting = (setting: ReturnType<typeof useSettingStore>) => {
     setting.downloadFormat.mode = 'jp-zh';
   } else if ((setting.downloadFormat.mode as any) === 'jp') {
     setting.downloadFormat.mode = 'zh';
+  }
+  // 2024-03-05
+  if (setting.workspaceSound === undefined) {
+    setting.workspaceSound = false;
   }
 };

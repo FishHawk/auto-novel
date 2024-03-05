@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { DeleteOutlineOutlined, RefreshOutlined } from '@vicons/material';
 import { computed } from 'vue';
 
 import {
@@ -33,18 +34,17 @@ const url = computed(() => parseTaskUrl(props.job.task));
       </n-text>
     </template>
     <template #header-extra>
-      <n-flex size="small" :wrap="false">
-        <c-button
+      <n-flex :size="6" :wrap="false">
+        <c-icon-button
           v-if="!isFinished"
-          label="重试"
-          size="tiny"
-          secondary
+          tooltip="重试"
+          :icon="RefreshOutlined"
           @click="emit('retryJob')"
         />
-        <c-button
-          label="删除"
-          size="tiny"
-          secondary
+
+        <c-icon-button
+          tooltip="删除"
+          :icon="DeleteOutlineOutlined"
           type="error"
           @click="emit('deleteJob')"
         />

@@ -49,7 +49,7 @@ const topMenuOptions = computed(() => {
     {
       ...menuOption('工作区', '/workspace'),
       children: [
-        menuOption('片假名统计', '/workspace/katakana'),
+        menuOption('术语表工作区', '/workspace/katakana'),
         menuOption('GPT工作区', '/workspace/gpt'),
         menuOption('Sakura工作区', '/workspace/sakura'),
       ],
@@ -121,12 +121,10 @@ const onSignInSuccess = (profile: SignInDto) => {
 const osThemeRef = useOsTheme();
 const theme = computed(() => {
   let specificTheme: 'light' | 'dark' = 'light';
-  if (setting.theme === 'system') {
-    if (osThemeRef.value !== null) {
-      specificTheme = osThemeRef.value;
-    }
-  } else {
+  if (setting.theme !== 'system') {
     specificTheme = setting.theme;
+  } else if (osThemeRef.value) {
+    specificTheme = osThemeRef.value;
   }
   return specificTheme === 'light' ? null : darkTheme;
 });

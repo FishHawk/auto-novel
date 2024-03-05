@@ -60,19 +60,6 @@ function importGlossary() {
     <n-p>
       <n-input-group>
         <n-input
-          v-model:value="importGlossaryRaw"
-          size="small"
-          placeholder="批量导入术语表"
-          :input-props="{ spellcheck: false }"
-        />
-        <n-button size="small" @click="exportGlossary()">导出</n-button>
-        <n-button size="small" @click="importGlossary()">导入</n-button>
-      </n-input-group>
-    </n-p>
-
-    <n-p>
-      <n-input-group>
-        <n-input
           pair
           v-model:value="termsToAdd"
           size="small"
@@ -85,20 +72,29 @@ function importGlossary() {
     </n-p>
 
     <n-p>
-      <n-scrollbar style="max-height: 400px">
-        <table style="border-spacing: 16px 0px; font-size: 12px">
-          <tr v-for="(termZh, termJp) in glossary">
-            <td>{{ termJp }}</td>
-            <td nowrap="nowrap">=></td>
-            <td>{{ termZh }}</td>
-            <td>
-              <n-button size="tiny" @click="deleteTerm(termJp as string)">
-                删除
-              </n-button>
-            </td>
-          </tr>
-        </table>
-      </n-scrollbar>
+      <n-input-group>
+        <n-input
+          v-model:value="importGlossaryRaw"
+          size="small"
+          placeholder="批量导入术语表"
+          :input-props="{ spellcheck: false }"
+        />
+        <n-button size="small" @click="exportGlossary()">导出</n-button>
+        <n-button size="small" @click="importGlossary()">导入</n-button>
+      </n-input-group>
+    </n-p>
+
+    <n-p>
+      <table style="border-spacing: 16px 0px; font-size: 12px">
+        <tr v-for="workJp in Object.keys(glossary).reverse()">
+          <td>{{ workJp }}</td>
+          <td nowrap="nowrap">=></td>
+          <td>{{ glossary[workJp] }}</td>
+          <td>
+            <n-button size="tiny" @click="deleteTerm(workJp)"> 删除 </n-button>
+          </td>
+        </tr>
+      </table>
     </n-p>
   </div>
 </template>

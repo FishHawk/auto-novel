@@ -8,10 +8,10 @@ import { useRoute } from 'vue-router';
 import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
 import { Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { useIsWideScreen } from '@/data/util';
 import coverPlaceholder from '@/images/cover_placeholder.png';
 
-import AdvanceOptions from './components/AdvanceOptions.vue';
-import { useIsWideScreen } from '@/data/util';
+import TranslateOptions from './components/TranslateOptions.vue';
 
 const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   label: string;
@@ -45,7 +45,7 @@ const getNovel = async () => {
 };
 getNovel();
 
-const advanceOptions = ref<InstanceType<typeof AdvanceOptions>>();
+const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
 const submitGlossary = async (glossary: { [key: string]: string }) => {
   const result = await ApiWenkuNovel.updateGlossary(novelId, glossary);
@@ -65,6 +65,8 @@ const deleteVolume = async (volumeId: string) => {
     message.error('删除失败：' + result.error.message);
   }
 };
+
+const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
 </script>
 
 <template>
@@ -74,9 +76,9 @@ const deleteVolume = async (volumeId: string) => {
         {{ label }}
       </n-tag>
       <n-flex :size="[4, 4]">
-        <n-tag v-for="tag of tags" :bordered="false" size="small">
-          {{ tag }}
-        </n-tag>
+        <router-link v-for="tag of tags" :to="buildSearchLink(tag)">
+          <novel-tag :tag="tag" />
+        </router-link>
       </n-flex>
     </n-flex>
   </DefineTagGroup>
@@ -244,19 +246,21 @@ const deleteVolume = async (volumeId: string) => {
         @upload-finished="getNovel()"
       />
 
-      <advance-options
-        ref="advanceOptions"
+      <translate-options
+        ref="translateOptions"
         type="wenku"
         :glossary="metadata.glossary"
         :submit="() => submitGlossary(metadata.glossary)"
+        style="margin-top: 16px"
       />
+      <n-divider style="margin: 16px 0 0" />
 
       <n-list>
         <n-list-item v-for="volume of metadata.volumeJp" :key="volume.volumeId">
           <WenkuVolume
             :novel-id="novelId"
             :volume="volume"
-            :get-params="() => advanceOptions!!.getTranslationOptions()"
+            :get-params="() => translateOptions!!.getTranslationOptions()"
             @delete="deleteVolume(volume.volumeId)"
           />
         </n-list-item>

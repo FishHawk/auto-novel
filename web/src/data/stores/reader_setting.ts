@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 
 import { TranslatorId } from '@/data/translator';
+import { isDarkColor } from '@/pages/reader/components/util';
 
 export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';
@@ -8,7 +9,11 @@ export interface ReaderSetting {
   translations: TranslatorId[];
   fontSize: number;
   lineSpace: number;
-  theme: { isDark: boolean; bodyColor: string; fontColor?: string };
+  theme: {
+    mode: 'light' | 'dark' | 'system' | 'custom';
+    bodyColor: string;
+    fontColor: string;
+  };
   enableSakuraReportButton: boolean;
   mixJpOpacity: number;
   mixZhOpacity: number;
@@ -22,7 +27,7 @@ export const useReaderSettingStore = defineStore('readerSetting', {
       translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       fontSize: 14,
       lineSpace: 1.0,
-      theme: { isDark: false, bodyColor: '#FFFFFF' },
+      theme: { mode: 'light', bodyColor: '#FFFFFF', fontColor: '#000000' },
       enableSakuraReportButton: true,
       mixJpOpacity: 0.4,
       mixZhOpacity: 0.75,
@@ -31,12 +36,11 @@ export const useReaderSettingStore = defineStore('readerSetting', {
 });
 
 export const modeOptions = [
-  { value: 'jp', label: '日文' },
-  { value: 'zh', label: '中文' },
-  { value: 'zh-jp', label: '中日' },
-  { value: 'jp-zh', label: '日中' },
+  { label: '日文', value: 'jp' },
+  { label: '中文', value: 'zh' },
+  { label: '中日', value: 'zh-jp' },
+  { label: '日中', value: 'jp-zh' },
 ];
-
 export const translationModeOptions = [
   { label: '优先', value: 'priority' },
   { label: '并列', value: 'parallel' },
@@ -46,15 +50,21 @@ export const fontSizeOptions = [14, 16, 18, 20, 24, 30, 40];
 
 export const lineSpaceOptions = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
 
+export const themeModeOptions = [
+  { label: '浅色', value: 'light' },
+  { label: '深色', value: 'dark' },
+  { label: '跟随系统', value: 'system' },
+  { label: '自定义', value: 'custom' },
+];
 export const themeOptions = [
-  { isDark: false, bodyColor: '#FFFFFF' },
-  { isDark: false, bodyColor: '#FFF2E2' },
-  { isDark: false, bodyColor: '#E3EDCD' },
-  { isDark: false, bodyColor: '#E9EBFE' },
-  { isDark: false, bodyColor: '#EAEAEF' },
+  { bodyColor: '#FFFFFF', fontColor: '#000000' },
+  { bodyColor: '#FFF2E2', fontColor: '#000000' },
+  { bodyColor: '#E3EDCD', fontColor: '#000000' },
+  { bodyColor: '#E9EBFE', fontColor: '#000000' },
+  { bodyColor: '#EAEAEF', fontColor: '#000000' },
 
-  { isDark: true, bodyColor: '#000000' },
-  { isDark: true, bodyColor: '#272727' },
+  { bodyColor: '#000000', fontColor: '#FFFFFF' },
+  { bodyColor: '#272727', fontColor: '#FFFFFF' },
 ];
 
 export const migrateReaderSetting = (
@@ -67,5 +77,27 @@ export const migrateReaderSetting = (
     setting.mode = 'zh-jp';
   } else if ((setting.mode as any) === 'mix-reverse') {
     setting.mode = 'jp-zh';
+  }
+  const theme = setting.theme as any;
+  if (theme.isDark !== undefined) {
+    if (theme.bodyColor === '#FFFFFF' && theme.fontColor === undefined) {
+      setting.theme = {
+        mode: 'light',
+        bodyColor: '#FFFFFF',
+        fontColor: '#000000',
+      };
+    } else if (theme.bodyColor === '#272727' && theme.fontColor === undefined) {
+      setting.theme = {
+        mode: 'dark',
+        bodyColor: '#FFFFFF',
+        fontColor: '#000000',
+      };
+    } else {
+      setting.theme = {
+        mode: 'custom',
+        bodyColor: theme.bodyColor,
+        fontColor: isDarkColor(theme.bodyColor) ? '#FFFFFF' : '#000000',
+      };
+    }
   }
 };

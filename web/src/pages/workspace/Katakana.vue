@@ -1,19 +1,76 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui';
-import { computed } from 'vue';
-import { ref } from 'vue';
+import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
+import { computed, ref } from 'vue';
 
+import { notice } from '@/components/NoticeBoard.vue';
 import { Epub } from '@/data/epub/epub';
+import { Txt } from '@/data/epub/txt';
+import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import { PersonalVolumesManager, Translator } from '@/data/translator';
+import { TranslatorConfig } from '@/data/translator/translator';
+import { useIsWideScreen } from '@/data/util';
+import { PlusOutlined } from '@vicons/material';
 
 const message = useMessage();
+const isWideScreen = useIsWideScreen(850);
+const sakuraWorkspace = useSakuraWorkspaceStore();
 
+interface FileInfo {
+  source: 'tmp' | 'local';
+  filename: string;
+  content: string;
+}
+const fileInfo = ref<FileInfo>();
 const showPreviewModal = ref(false);
-const inputElRef = ref<HTMLInputElement>();
+
+const loadFile = async (
+  source: 'tmp' | 'local',
+  filename: string,
+  file: File
+) => {
+  if (filename.endsWith('.txt')) {
+    const content = await Txt.readContent(file);
+    fileInfo.value = { source, filename, content };
+  } else if (filename.endsWith('.epub')) {
+    const fullContent: string[] = [];
+    await Epub.forEachXHtmlFile(file, (_path, doc) => {
+      Array.from(doc.getElementsByClassName('rt')).forEach((node) =>
+        node.parentNode!!.removeChild(node)
+      );
+      fullContent.push(doc.body.textContent ?? '');
+    });
+    fileInfo.value = {
+      source,
+      filename: file.name,
+      content: fullContent.join('\n'),
+    };
+  }
+};
+
+const loadLocalFile = (volumeId: string) =>
+  PersonalVolumesManager.getFile(volumeId)
+    .then((file) => loadFile('local', volumeId, file))
+    .catch((error) => message.error(`术语表提交失败：${error}`));
+
+const customRequest = ({
+  file,
+  onFinish,
+  onError,
+}: UploadCustomRequestOptions) => {
+  if (!file.file) return;
+  loadFile('tmp', file.name, file.file)
+    .then(onFinish)
+    .catch((err) => {
+      message.error('文件读取失败:' + err);
+      onError();
+    });
+};
 
 const katakanaThredhold = ref(10);
 const katakanaCounter = computed(() => {
+  if (!fileInfo.value) return new Map();
   const regexp = /[\u30A0-\u30FF]{2,}/g;
-  const matches = content.value.matchAll(regexp);
+  const matches = fileInfo.value.content.matchAll(regexp);
   const katakanaCounter = new Map<string, number>();
   for (const match of matches) {
     const w = match[0];
@@ -32,110 +89,188 @@ const katakanas = computed(() => {
   );
 });
 
-const openOpenFileDialog = () => inputElRef.value?.click();
-
-const filename = ref<string | null>(null);
-const content = ref<string>('');
-
-const loadFile = () => {
-  const selectedFile = inputElRef.value?.files?.[0];
-  if (!selectedFile) {
-    message.error('没有选中文件');
-    return;
-  }
-
-  if (selectedFile.name.endsWith('.epub')) {
-    const getFullTextFromEpubFile = async (file: File) => {
-      const fullContent: string[] = [];
-      await Epub.forEachXHtmlFile(file, (_path, doc) => {
-        Array.from(doc.getElementsByClassName('rt')).forEach((node) =>
-          node.parentNode!!.removeChild(node)
-        );
-        fullContent.push(doc.body.textContent ?? '');
-      });
-      return fullContent.join('\n');
-    };
-    getFullTextFromEpubFile(selectedFile)
-      .then((text) => {
-        filename.value = selectedFile?.name;
-        content.value = text;
-      })
-      .catch((err) => {
-        message.error('文件读取失败:' + err);
-      });
-  } else if (selectedFile.name.endsWith('.txt')) {
-    const reader = new FileReader();
-    reader.onload = (res) => {
-      content.value = res.target?.result as string;
-      filename.value = selectedFile?.name;
-    };
-    reader.onerror = (err) => {
-      message.error('文件读取失败:' + err);
-    };
-    reader.readAsText(selectedFile);
-  } else {
-    message.error('文件类型不合法，只能选择TXT和EPUB文件');
-    return;
-  }
-};
-
-const copyResult = () => {
+const copyTranslationJson = async () => {
   const obj = Object.fromEntries(
-    Array.from(katakanas.value).map(([key, value]) => [key, value.toString()])
+    Array.from(katakanas.value).map(([key]) => [
+      key,
+      katakanaTranslations.value[key] ?? '',
+    ])
   );
   const jsonString = JSON.stringify(obj, null, 2);
   navigator.clipboard.writeText(jsonString);
-  message.info('已经将结果复制到剪切板');
+  message.info('已经将翻译结果复制到剪切板');
 };
+
+const showSakuraSelectModal = ref(false);
+const selectedSakuraWorkerId = ref(sakuraWorkspace.workers.at(0)?.id);
+
+const katakanaTranslations = ref<{ [key: string]: string }>({});
+const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
+  const jpWords = [...katakanas.value.keys()];
+  let config: TranslatorConfig;
+  if (id === 'sakura') {
+    const worker = sakuraWorkspace.workers.find(
+      (it) => it.id === selectedSakuraWorkerId.value
+    );
+    if (worker === undefined) {
+      message.error('未选择Sakura翻译器');
+      return;
+    }
+    config = {
+      id,
+      log: () => {},
+      endpoint: worker.endpoint,
+      useLlamaApi: worker.useLlamaApi ?? false,
+    };
+  } else {
+    config = {
+      id,
+      log: () => {},
+    };
+  }
+  try {
+    const translator = await Translator.create(config, false);
+    const zhWords = await translator.translate(jpWords, {});
+
+    const jpToZh: { [key: string]: string } = {};
+    jpWords.forEach((jpWord, index) => {
+      jpToZh[jpWord] = zhWords[index];
+    });
+    katakanaTranslations.value = jpToZh;
+  } catch (e: any) {
+    message.error(`翻译器错误：${e}`);
+  }
+};
+
+const notices = [
+  notice('术语表辅助制作工具正在开发中，当前方案分为识别和翻译两步。'),
+  notice('识别阶段：根据片假名词汇出现频率判断可能是术语的词汇。'),
+  notice('翻译阶段：直接翻译日语词汇。'),
+  notice('注意，这是辅助制作，不是全自动生成，使用前务必检查结果。', true),
+];
 </script>
 
 <template>
-  <div class="layout-content">
-    <n-h1>片假名统计</n-h1>
+  <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
+    <n-h1>术语表工作区</n-h1>
 
-    <n-flex align="center">
-      <c-button label="打开文件" @click="openOpenFileDialog()" />
-      <c-button v-if="filename" label="预览" @click="showPreviewModal = true" />
-      <n-p>{{ filename }}</n-p>
-      <input
-        ref="inputElRef"
-        type="file"
+    <notice-board :notices="notices" />
+
+    <n-p>
+      <n-upload
         accept=".txt,.epub"
-        @change="loadFile"
-        style="width: 0; height: 0"
+        :custom-request="customRequest"
+        :show-file-list="false"
+      >
+        <c-button label="加载文件" :icon="PlusOutlined" />
+      </n-upload>
+    </n-p>
+
+    <n-p v-if="fileInfo" style="margin-bottom: 0">
+      {{ fileInfo.source === 'tmp' ? '临时文件' : '本地文件' }}
+      /
+      {{ fileInfo.filename }}
+      <c-button
+        :label="`[预览] `"
+        text
+        type="primary"
+        @click="showPreviewModal = true"
       />
+    </n-p>
+    <n-p v-else depth="3" style="margin-bottom: 0">未选择文件</n-p>
+
+    <section-header :title="`统计结果（${katakanas.size}个）`" />
+    <n-flex vertical>
+      <c-action-wrapper title="次数下限">
+        <n-input-number v-model:value="katakanaThredhold" clearable />
+      </c-action-wrapper>
+      <c-action-wrapper title="操作">
+        <n-flex vertical>
+          <n-button-group>
+            <c-button
+              label="复制术语表"
+              :round="false"
+              @click="copyTranslationJson()"
+            />
+            <c-button
+              label="百度翻译"
+              :round="false"
+              async
+              @click="translateKatakanas('baidu')"
+            />
+            <c-button
+              label="有道翻译"
+              :round="false"
+              async
+              @click="translateKatakanas('youdao')"
+            />
+          </n-button-group>
+
+          <n-button-group>
+            <c-button
+              :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
+              :round="false"
+              async
+              @click="translateKatakanas('sakura')"
+            />
+            <c-button
+              label="选择翻译器"
+              :round="false"
+              @click="showSakuraSelectModal = true"
+            />
+          </n-button-group>
+        </n-flex>
+      </c-action-wrapper>
     </n-flex>
 
-    <n-divider />
-
-    <div style="display: flex">
-      <div style="flex: 50%; padding-right: 50px">
-        <n-p>
-          片假名次数阈值
-          <n-input-number v-model:value="katakanaThredhold" clearable />
-        </n-p>
-        <c-button label="复制结果" @click="copyResult()" />
-      </div>
-      <div style="flex: 50%">
-        <n-card :title="`片假名统计结果(${katakanas.size}个)`">
-          <n-scrollbar trigger="none" style="width: 300px; max-height: 400px">
-            {
-            <br />
-            <template v-for="([word, number], index) in katakanas">
-              {{ `"${word}": "${number}"` }}
-              <template v-if="index != katakanas.size - 1">,</template>
-              <br />
+    <n-card v-if="katakanas.size > 0" embedded style="margin-top: 20px">
+      <n-scrollbar trigger="none" style="max-height: 300px">
+        <table id="glossary" style="border-spacing: 10px 0">
+          <tr v-for="[word, number] in katakanas" :key="word">
+            <td style="min-width: 100px">{{ word }}</td>
+            <td>=></td>
+            <td>{{ number }}</td>
+            <template v-if="katakanaTranslations[word]">
+              <td>{{ katakanaTranslations[word] }}</td>
             </template>
-            }
-          </n-scrollbar>
-        </n-card>
-      </div>
-    </div>
-  </div>
+          </tr>
+        </table>
+      </n-scrollbar>
+    </n-card>
+
+    <template #sidebar>
+      <local-volume-list-katakana @volume-loaded="loadLocalFile" />
+    </template>
+  </c-layout>
 
   <c-modal title="预览（前100行）" v-model:show="showPreviewModal">
-    <n-p v-for="line of content.split('\n').slice(0, 100)">
-      {{ line }}
-    </n-p>
+    <template v-if="fileInfo">
+      <n-p v-for="line of fileInfo.content.split('\n').slice(0, 100)">
+        {{ line }}
+      </n-p>
+    </template>
+  </c-modal>
+
+  <c-modal title="选择Sakura翻译器" v-model:show="showSakuraSelectModal">
+    <n-radio-group v-model:value="selectedSakuraWorkerId">
+      <n-flex vertical>
+        <n-radio
+          v-for="worker of sakuraWorkspace.workers"
+          :key="worker.id"
+          :value="worker.id"
+        >
+          {{ worker.id }}
+          <n-text depth="3">
+            {{ worker.endpoint }}
+          </n-text>
+        </n-radio>
+      </n-flex>
+    </n-radio-group>
   </c-modal>
 </template>
+
+<style scoped>
+.id td {
+  white-space: nowrap;
+}
+</style>

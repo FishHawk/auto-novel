@@ -122,7 +122,7 @@ async function handleSelect(key: string | number, article: ArticleOutline) {
       :showEmpty="(it: Page<ArticleOutline>) => it.items.length === 0"
       v-slot="{ value: page }"
     >
-      <n-table :bordered="false">
+      <n-table :bordered="false" style="margin-top: 24px">
         <thead>
           <tr>
             <th><b>标题</b></th>

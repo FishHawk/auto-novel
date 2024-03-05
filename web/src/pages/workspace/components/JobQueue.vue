@@ -1,6 +1,10 @@
 <script lang="ts" setup>
+import {
+  DeleteOutlineOutlined,
+  KeyboardDoubleArrowDownOutlined,
+  KeyboardDoubleArrowUpOutlined,
+} from '@vicons/material';
 import { computed } from 'vue';
-import { LinkFilled } from '@vicons/material';
 
 import { TranslateJob } from '@/data/stores/workspace';
 
@@ -12,6 +16,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   topJob: [];
+  bottomJob: [];
   deleteJob: [];
 }>();
 
@@ -31,12 +36,22 @@ const url = computed(() => parseTaskUrl(props.job.task));
       </n-text>
     </template>
     <template #header-extra>
-      <n-flex size="small" :wrap="false">
-        <c-button label="置顶" size="tiny" secondary @click="emit('topJob')" />
-        <c-button
-          label="删除"
-          size="tiny"
-          secondary
+      <n-flex :size="6" :wrap="false">
+        <c-icon-button
+          tooltip="置顶"
+          :icon="KeyboardDoubleArrowUpOutlined"
+          @click="emit('topJob')"
+        />
+
+        <c-icon-button
+          tooltip="置底"
+          :icon="KeyboardDoubleArrowDownOutlined"
+          @click="emit('bottomJob')"
+        />
+
+        <c-icon-button
+          tooltip="删除"
+          :icon="DeleteOutlineOutlined"
           type="error"
           @click="emit('deleteJob')"
         />

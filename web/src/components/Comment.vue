@@ -5,7 +5,6 @@ import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
 import { ApiComment, Comment1 } from '@/data/api/api_comment';
-import { useUserDataStore } from '@/data/stores/user_data';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;

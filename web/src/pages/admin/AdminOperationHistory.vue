@@ -66,17 +66,7 @@ watch(type, () => {
 
 <template>
   <n-p>
-    <n-radio-group v-model:value="type" name="operation-type">
-      <n-flex>
-        <n-radio
-          v-for="option in typeOptions"
-          :key="option.value"
-          :value="option.value"
-        >
-          {{ option.label }}
-        </n-radio>
-      </n-flex>
-    </n-radio-group>
+    <c-radio-group v-model:value="type" :options="typeOptions" />
   </n-p>
 
   <n-pagination

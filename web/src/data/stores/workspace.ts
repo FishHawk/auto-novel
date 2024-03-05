@@ -74,6 +74,11 @@ const useWorkspaceStoreFactory = <W extends GptWorker | SakuraWorker>(
           return a.task == job.task ? -1 : b.task == job.task ? 1 : 0;
         });
       },
+      bottomJob(job: TranslateJob) {
+        this.jobs.sort((a, b) => {
+          return a.task == job.task ? 1 : b.task == job.task ? -1 : 0;
+        });
+      },
 
       addJobRecord(job: TranslateJobRecord) {
         this.deleteJobRecord(job);

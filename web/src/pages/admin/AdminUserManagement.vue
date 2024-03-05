@@ -54,17 +54,7 @@ const roleToReadableText = (role: UserRole) => {
 
 <template>
   <n-p>
-    <n-radio-group v-model:value="userRole" name="user-role">
-      <n-flex>
-        <n-radio
-          v-for="option in userRoleOptions"
-          :key="option.value"
-          :value="option.value"
-        >
-          {{ option.label }}
-        </n-radio>
-      </n-flex>
-    </n-radio-group>
+    <c-radio-group v-model:value="userRole" :options="userRoleOptions" />
   </n-p>
 
   <n-pagination

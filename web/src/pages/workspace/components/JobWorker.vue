@@ -198,7 +198,7 @@ const testWorker = async () => {
     </template>
 
     <template #header-extra>
-      <n-flex :wrap="false">
+      <n-flex :size="6" :wrap="false">
         <c-button
           label="测试"
           async

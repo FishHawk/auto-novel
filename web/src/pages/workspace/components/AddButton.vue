@@ -39,6 +39,7 @@ const customRequest = ({
 
 <template>
   <n-upload
+    accept=".txt,.epub"
     multiple
     directory-dnd
     :custom-request="customRequest"

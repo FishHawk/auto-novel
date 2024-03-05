@@ -8,13 +8,16 @@ import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { notice } from '@/components/NoticeBoard.vue';
+import { useSettingStore } from '@/data/stores/setting';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
+import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 import { computePercentage } from './components/util';
 
 const message = useMessage();
+const setting = useSettingStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
 
@@ -32,6 +35,9 @@ const getNextJob = () => {
   );
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);
+  } else if (processedJobs.value.size === 0 && setting.workspaceSound) {
+    // 全部任务都已经完成
+    new Audio(SoundAllTaskCompleted).play();
   }
   return job;
 };
@@ -145,6 +151,7 @@ const notices = [
           :job="job"
           :percentage="computePercentage(processedJobs.get(job.task)?.progress)"
           @top-job="sakuraWorkspace.topJob(job)"
+          @bottom-job="sakuraWorkspace.bottomJob(job)"
           @delete-job="deleteJob(job.task)"
         />
       </n-list-item>
@@ -152,7 +159,7 @@ const notices = [
 
     <section-header title="任务记录">
       <c-button
-        label="重试"
+        label="重试失败任务"
         :icon="RefreshOutlined"
         @click="sakuraWorkspace.retryAllJobRecords()"
       />
@@ -181,7 +188,7 @@ const notices = [
     </n-list>
 
     <template #sidebar>
-      <local-volume-list type="sakura" />
+      <local-volume-list-specific-translation type="sakura" />
     </template>
   </c-layout>
 

@@ -2,10 +2,10 @@ import { DBSchema, deleteDB, openDB } from 'idb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Epub } from '@/data/epub/epub';
-import { WebNovelChapterDto } from '@/data/api/api_web_novel';
+import { Txt } from '@/data/epub/txt';
 
-import { Glossary } from '../type';
 import { TranslatorId } from '../translator';
+import { Glossary } from '../type';
 
 export interface ChapterTranslation {
   glossaryId: string;
@@ -13,22 +13,34 @@ export interface ChapterTranslation {
   paragraphs: string[];
 }
 
+export interface LocalVolumeMetadata {
+  id: string;
+  createAt: number;
+  toc: {
+    chapterId: string;
+    baidu?: string;
+    youdao?: string;
+    gpt?: string;
+    sakura?: string;
+  }[];
+  glossaryId: string;
+  glossary: Glossary;
+}
+
+export interface LocalVolumeChapter {
+  id: string;
+  volumeId: string;
+  paragraphs: string[];
+  baidu?: ChapterTranslation;
+  youdao?: ChapterTranslation;
+  gpt?: ChapterTranslation;
+  sakura?: ChapterTranslation;
+}
+
 interface VolumesDBSchema extends DBSchema {
   metadata: {
     key: string;
-    value: {
-      id: string;
-      createAt: number;
-      toc: {
-        chapterId: string;
-        baidu?: string;
-        youdao?: string;
-        gpt?: string;
-        sakura?: string;
-      }[];
-      glossaryId: string;
-      glossary: Glossary;
-    };
+    value: LocalVolumeMetadata;
   };
   file: {
     key: string;
@@ -39,15 +51,7 @@ interface VolumesDBSchema extends DBSchema {
   };
   chapter: {
     key: string;
-    value: {
-      id: string;
-      volumeId: string;
-      paragraphs: string[];
-      baidu?: ChapterTranslation;
-      youdao?: ChapterTranslation;
-      gpt?: ChapterTranslation;
-      sakura?: ChapterTranslation;
-    };
+    value: LocalVolumeChapter;
     indexes: { byVolumeId: string };
   };
 }
@@ -92,28 +96,7 @@ const saveVolume = withDb(async (db, file: File) => {
   }
 
   if (id.endsWith('.txt')) {
-    const buffer = await file.arrayBuffer();
-
-    const tryDecode = async (label: string) => {
-      const decoder = new TextDecoder(label, { fatal: true });
-      try {
-        const decoded = decoder.decode(buffer);
-        return decoded;
-      } catch (e) {
-        if (e instanceof TypeError) return undefined;
-        throw e;
-      }
-    };
-
-    let content: string | undefined;
-    for (const label of ['utf-8', 'gbk']) {
-      content = await tryDecode(label);
-      if (content !== undefined) break;
-    }
-    if (content === undefined) {
-      throw '未知编码';
-    }
-
+    const content = await Txt.readContent(file);
     const jpLines = content.split('\n');
     const chunkSize = 1000;
     for (let i = 0; i < jpLines.length; i += chunkSize) {
@@ -168,6 +151,12 @@ const updateGlossary = withDb(async (db, id: string, glossary: Glossary) => {
     await tx.store.put(metadata);
   }
   await tx.done;
+});
+
+const getFile = withDb(async (db, id: string) => {
+  const file = await db.get('file', id);
+  if (file === undefined) throw Error('小说不存在');
+  return file.file;
 });
 
 const getChapter = withDb(async (db, id: string, chapterId: string) => {
@@ -409,6 +398,7 @@ export const PersonalVolumesManager = {
   saveVolume,
   deleteVolume,
   updateGlossary,
+  getFile,
   getChapter,
   //
   getTranslateTask,

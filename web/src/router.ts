@@ -49,7 +49,7 @@ const router = createRouter({
             },
             {
               path: 'katakana',
-              meta: { title: '片假名统计' },
+              meta: { title: '术语表工作区' },
               component: () => import('./pages/workspace/Katakana.vue'),
             },
             {

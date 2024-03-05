@@ -287,28 +287,28 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       >
         <n-list bordered>
           <n-list-item>
-            <n-flex align="baseline" :wrap="false">
-              <n-text style="white-space: nowrap">选择</n-text>
-              <n-button-group size="small">
-                <c-button label="全选" :round="false" @click="selectAll" />
-                <c-button
-                  label="反选"
-                  :round="false"
-                  @click="invertSelection"
-                />
-              </n-button-group>
-              <n-text depth="3"> 已选择{{ selectedSize }}本小说 </n-text>
-            </n-flex>
+            <c-action-wrapper title="选择">
+              <n-flex align="baseline">
+                <n-button-group size="small">
+                  <c-button label="全选" :round="false" @click="selectAll" />
+                  <c-button
+                    label="反选"
+                    :round="false"
+                    @click="invertSelection"
+                  />
+                </n-button-group>
+                <n-text depth="3"> 已选择{{ selectedSize }}本小说 </n-text>
+              </n-flex>
+            </c-action-wrapper>
           </n-list-item>
 
           <n-list-item>
             <n-flex vertical>
               <b>批量移动小说（低配版，很慢，等到显示移动完成）</b>
 
-              <n-flex align="baseline" :wrap="false">
-                <n-text style="white-space: nowrap">目标</n-text>
+              <c-action-wrapper title="目标">
                 <n-radio-group v-model:value="targetFavoredId">
-                  <n-flex vertical size="large">
+                  <n-flex>
                     <n-radio
                       v-for="favored of favoriteType === 'web'
                         ? favoredList.web
@@ -321,10 +321,9 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                     <n-radio key="deleted" value="deleted"> 取消收藏 </n-radio>
                   </n-flex>
                 </n-radio-group>
-              </n-flex>
+              </c-action-wrapper>
 
-              <n-flex align="baseline" :wrap="false">
-                <n-text style="white-space: nowrap">操作</n-text>
+              <c-action-wrapper title="操作">
                 <c-button
                   label="移动"
                   async
@@ -332,7 +331,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                   :round="false"
                   @click="moveToFavored"
                 />
-              </n-flex>
+              </c-action-wrapper>
             </n-flex>
           </n-list-item>
 
@@ -340,32 +339,23 @@ const submitJob = (id: 'gpt' | 'sakura') => {
             <n-flex vertical>
               <b>批量生成GPT/Sakura任务</b>
 
-              <n-flex align="baseline" :wrap="false">
-                <n-text style="white-space: nowrap">顺序</n-text>
-                <n-radio-group v-model:value="queueOrder" size="small">
-                  <n-radio-button
-                    v-for="option in queueOrderOptions"
-                    :key="option.value"
-                    :value="option.value"
-                    :label="option.label"
-                  />
-                </n-radio-group>
-              </n-flex>
+              <c-action-wrapper title="顺序">
+                <c-radio-group
+                  v-model:value="queueOrder"
+                  :options="queueOrderOptions"
+                  size="small"
+                />
+              </c-action-wrapper>
 
-              <n-flex align="baseline" :wrap="false">
-                <n-text style="white-space: nowrap">范围</n-text>
-                <n-radio-group v-model:value="queueTaskSize" size="small">
-                  <n-radio-button
-                    v-for="option in queueTaskSizeOptions"
-                    :key="option.value"
-                    :value="option.value"
-                    :label="option.label"
-                  />
-                </n-radio-group>
-              </n-flex>
+              <c-action-wrapper title="范围">
+                <c-radio-group
+                  v-model:value="queueTaskSize"
+                  :options="queueTaskSizeOptions"
+                  size="small"
+                />
+              </c-action-wrapper>
 
-              <n-flex align="baseline" :wrap="false">
-                <n-text style="white-space: nowrap">操作</n-text>
+              <c-action-wrapper title="操作">
                 <n-button-group size="small">
                   <c-button
                     label="排队GPT"
@@ -378,7 +368,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                     @click="submitJob('sakura')"
                   />
                 </n-button-group>
-              </n-flex>
+              </c-action-wrapper>
             </n-flex>
           </n-list-item>
         </n-list>

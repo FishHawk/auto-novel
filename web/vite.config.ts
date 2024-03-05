@@ -53,6 +53,8 @@ export default defineConfig(({ command, mode }) => {
           manualChunks(id) {
             if (id.includes('web/src')) {
               return 'chunk';
+            } else if (id.includes('@zip.js')) {
+              return 'zip';
             } else if (id.includes('naive')) {
               return 'naive';
             } else if (id.includes('node_module')) {

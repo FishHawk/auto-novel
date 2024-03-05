@@ -1,96 +1,49 @@
 <script lang="ts" setup>
 import { MoreVertOutlined } from '@vicons/material';
 import { UploadFileInfo, useMessage } from 'naive-ui';
-import { computed, ref, toRaw } from 'vue';
+import { computed, ref } from 'vue';
 
-import { downloadModeOptions, useSettingStore } from '@/data/stores/setting';
-import {
-  buildPersonalTranslateTask,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
 import { PersonalVolumesManager } from '@/data/translator';
+import { LocalVolumeMetadata } from '@/data/translator/db/personal';
 
-const props = defineProps<{ type: 'gpt' | 'sakura' }>();
+const props = defineProps<{
+  options?: { [key: string]: (volumes: LocalVolumeMetadata[]) => void };
+  beforeVolumeAdd?: (file: File) => void;
+}>();
 
 const message = useMessage();
-const setting = useSettingStore();
-const gptWorkspace = useGptWorkspaceStore();
-const sakuraWorkspace = useSakuraWorkspaceStore();
 
-const volumes = ref<Volume[]>();
+const volumes = ref<LocalVolumeMetadata[]>();
 
-interface Volume {
-  volumeId: string;
-  createAt: number;
-  total: number;
-  finished: number;
-  expired: number;
-  glossary: { [key: string]: string };
-}
-
-const loadVolumes = () => {
-  PersonalVolumesManager.listVolumes().then((rawVolumes) => {
-    volumes.value = rawVolumes.map((rawVolume) => {
-      return {
-        volumeId: rawVolume.id,
-        createAt: rawVolume.createAt,
-        total: rawVolume.toc.length,
-        finished: rawVolume.toc.filter((it) => {
-          let chapterGlossaryId: string | undefined;
-          if (props.type === 'gpt') {
-            chapterGlossaryId = it.gpt;
-          } else {
-            chapterGlossaryId = it.sakura;
-          }
-          return chapterGlossaryId === rawVolume.glossaryId;
-        }).length,
-        expired: rawVolume.toc.filter((it) => {
-          let chapterGlossaryId: string | undefined;
-          if (props.type === 'gpt') {
-            chapterGlossaryId = it.gpt;
-          } else {
-            chapterGlossaryId = it.sakura;
-          }
-          return (
-            chapterGlossaryId !== undefined &&
-            chapterGlossaryId !== rawVolume.glossaryId
-          );
-        }).length,
-        glossary: rawVolume.glossary,
-      };
-    });
-  });
+const loadVolumes = async () => {
+  volumes.value = await PersonalVolumesManager.listVolumes();
 };
 loadVolumes();
 
 const onFinish = ({ file }: { file: UploadFileInfo }) => {
-  queueVolume(file.file!!.name);
+  if (props.beforeVolumeAdd) {
+    props.beforeVolumeAdd(file.file!!);
+  }
   loadVolumes();
 };
 
-const options = [
-  {
-    label: '全部排队',
-    key: '全部排队',
-  },
-  {
-    label: '清空文件',
-    key: '清空文件',
-  },
-];
+const options = computed(() => {
+  const options =
+    props.options === undefined
+      ? []
+      : Object.keys(props.options).map((it) => ({
+          label: it,
+          key: it,
+        }));
+  options.push({ label: '清空文件', key: '清空文件' });
+  return options;
+});
 const handleSelect = (key: string) => {
-  if (key === '全部排队') {
-    queueAllVolumes();
-  } else {
+  if (key === '清空文件') {
     showClearModal.value = true;
+  } else {
+    props.options?.[key]?.(volumes.value ?? []);
   }
-};
-
-const queueAllVolumes = () => {
-  volumes.value?.forEach((volume) => {
-    queueVolume(volume.volumeId);
-  });
 };
 
 const showClearModal = ref(false);
@@ -102,85 +55,30 @@ const deleteAllVolumes = () =>
       message.error(`清空失败:${error}`);
     });
 
-const order = ref('byId');
+const order = ref<'byCreateAt' | 'byId'>('byCreateAt');
 const orderOptions = [
-  { value: 'byId', label: '按文件名排序' },
-  { value: 'byCreateAt', label: '按添加时间排序' },
+  { value: 'byCreateAt', label: '按添加时间' },
+  { value: 'byId', label: '按文件名' },
 ];
-
 const sortedVolumes = computed(() => {
   if (order.value === 'byId') {
-    return volumes.value?.sort((a, b) => a.volumeId.localeCompare(b.volumeId));
+    return volumes.value?.sort((a, b) => a.id.localeCompare(b.id));
   } else {
     return volumes.value?.sort((a, b) => b.createAt - a.createAt);
   }
 });
-
-const queueVolume = (volumeId: string) => {
-  const task = buildPersonalTranslateTask(volumeId, {
-    start: 0,
-    end: 65535,
-    expire: true,
-  });
-
-  const addJob =
-    props.type === 'gpt' ? gptWorkspace.addJob : sakuraWorkspace.addJob;
-
-  const success = addJob({
-    task,
-    description: volumeId,
-    createAt: Date.now(),
-  });
-
-  if (success) {
-    message.success('排队成功');
-  } else {
-    message.error('排队失败：翻译任务已经存在');
-  }
-};
-
-const downloadVolume = async (volumeId: string) => {
-  const { mode } = setting.downloadFormat;
-
-  try {
-    const { filename, blob } =
-      await PersonalVolumesManager.makeTranslationVolumeFile({
-        volumeId,
-        lang: mode,
-        translationsMode: 'priority',
-        translations: [props.type],
-      });
-
-    const el = document.createElement('a');
-    el.href = URL.createObjectURL(blob);
-    el.target = '_blank';
-    el.download = filename;
-    el.click();
-  } catch (error) {
-    message.error(`文件生成错误：${error}`);
-  }
-};
-
-const showGlossaryModal = ref(false);
-const selectedVolumeToEditGlossary = ref<Volume>();
-const submitGlossary = (
-  volumeId: string,
-  glossary: { [key: string]: string }
-) =>
-  PersonalVolumesManager.updateGlossary(volumeId, toRaw(glossary))
-    .then(() => message.success('术语表提交成功'))
-    .catch((error) => message.error(`术语表提交失败：${error}`))
-    .then(() => {});
 
 const deleteVolume = (volumeId: string) =>
   PersonalVolumesManager.deleteVolume(volumeId)
     .then(() => message.info('删除成功'))
     .then(() => loadVolumes())
     .catch((error) => message.error(`删除失败：${error}`));
+
+defineExpose({ deleteVolume });
 </script>
 
 <template>
-  <section-header title="文件列表">
+  <section-header title="本地小说">
     <n-flex :wrap="false">
       <add-button :show-file-list="false" @finish="onFinish" />
       <n-dropdown trigger="click" :options="options" @select="handleSelect">
@@ -191,15 +89,19 @@ const deleteVolume = (volumeId: string) =>
     </n-flex>
   </section-header>
 
-  <n-flex :wrap="false">
-    <n-select
-      v-model:value="setting.downloadFormat.mode"
-      :options="downloadModeOptions"
-    />
-    <n-select v-model:value="order" :options="orderOptions" />
+  <n-flex vertical>
+    <c-action-wrapper title="排序">
+      <c-radio-group
+        v-model:value="order"
+        :options="orderOptions"
+        size="small"
+      />
+    </c-action-wrapper>
+
+    <slot name="extra" />
   </n-flex>
 
-  <n-divider style="margin-bottom: 4px" />
+  <n-divider style="margin: 16px 0 8px" />
 
   <n-spin v-if="sortedVolumes === undefined" style="margin-top: 20px" />
 
@@ -211,88 +113,11 @@ const deleteVolume = (volumeId: string) =>
 
   <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
     <n-list style="padding-bottom: 48px">
-      <n-list-item v-for="volume of sortedVolumes ?? []">
-        <n-flex :size="4" vertical>
-          <n-text>{{ volume.volumeId }}</n-text>
-
-          <n-text depth="3">
-            <n-time :time="volume.createAt" type="relative" /> / 总计
-            {{ volume.total }} / 完成 {{ volume.finished }} / 过期
-            {{ volume.expired }}
-          </n-text>
-
-          <n-flex :size="8">
-            <c-button
-              label="排队"
-              size="tiny"
-              secondary
-              @click="queueVolume(volume.volumeId)"
-            />
-
-            <c-button
-              v-if="volume.volumeId.endsWith('.txt')"
-              label="阅读"
-              tag="a"
-              :href="`/workspace/reader/${encodeURIComponent(
-                volume.volumeId
-              )}/0`"
-              size="tiny"
-              secondary
-            />
-            <c-button
-              label="下载"
-              size="tiny"
-              secondary
-              @click="downloadVolume(volume.volumeId)"
-            />
-
-            <c-button
-              :label="`术语表[${Object.keys(volume.glossary).length}]`"
-              size="tiny"
-              secondary
-              @click="
-                () => {
-                  selectedVolumeToEditGlossary = volume;
-                  showGlossaryModal = true;
-                }
-              "
-            />
-
-            <n-popconfirm
-              :show-icon="false"
-              @positive-click="deleteVolume(volume.volumeId)"
-              :negative-text="null"
-            >
-              <template #trigger>
-                <c-button label="删除" type="error" size="tiny" secondary />
-              </template>
-              确定删除{{ volume.volumeId }}吗？
-            </n-popconfirm>
-          </n-flex>
-        </n-flex>
+      <n-list-item v-for="volume of sortedVolumes ?? []" :key="volume.id">
+        <slot name="volume" v-bind="volume" />
       </n-list-item>
     </n-list>
   </n-scrollbar>
-
-  <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
-    <n-p>{{ selectedVolumeToEditGlossary?.volumeId }}</n-p>
-    <glossary-edit
-      v-if="selectedVolumeToEditGlossary !== undefined"
-      :glossary="selectedVolumeToEditGlossary.glossary"
-    />
-    <template #action>
-      <c-button
-        label="提交"
-        type="primary"
-        @click="
-          submitGlossary(
-            selectedVolumeToEditGlossary!!.volumeId,
-            selectedVolumeToEditGlossary!!.glossary
-          )
-        "
-      />
-    </template>
-  </c-modal>
 
   <c-modal title="清空所有文件" v-model:show="showClearModal">
     <n-p>
