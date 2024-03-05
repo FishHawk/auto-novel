@@ -137,13 +137,12 @@ const theme = computed(() => {
     :date-locale="dateZhCN"
     inline-theme-disabled
     :theme-overrides="{
-      common: { scrollbarWidth: '6px' },
       Drawer: { bodyPadding: '0px' },
       List: { color: '#0000' },
     }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
-      <c-app-layout>
+      <n-layout>
         <n-layout-header bordered class="layout-header">
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
@@ -200,7 +199,7 @@ const theme = computed(() => {
         </n-layout-content>
 
         <n-layout-footer style="height: 64px; background-color: transparent" />
-      </c-app-layout>
+      </n-layout>
 
       <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
         <n-menu

@@ -44,16 +44,15 @@ const readerTheme = computed(() => {
     inline-theme-disabled
     :theme-overrides="{
       common: {
-        scrollbarWidth: '6px',
         ...readerTheme.bodyColor,
       },
     }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <n-global-style />
-      <c-app-layout>
+      <n-layout>
         <router-view :key="$route.path" />
-      </c-app-layout>
+      </n-layout>
     </n-message-provider>
   </n-config-provider>
 </template>
