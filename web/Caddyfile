@@ -1,7 +1,14 @@
 :80 {
 	encode gzip
 
-	handle {
+	@block_filter {
+        maxmind_geolocation {
+          db_path "/etc/caddy/Country.mmdb"
+          deny_countries JP UNK
+        }
+    }
+
+	handle @block_filter {
 		root * /dist
 		file_server
 		route {
