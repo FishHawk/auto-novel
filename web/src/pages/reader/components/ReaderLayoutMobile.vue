@@ -35,7 +35,7 @@ const onGlobalClick = (event: MouseEvent) => {
       });
     }
   };
-  const p = event.pageY / window.innerHeight;
+  const p = event.clientY / window.innerHeight;
   const t = 0.15;
   if (p < t) {
     scrollBy(-0.8);
@@ -58,7 +58,15 @@ const onGlobalClick = (event: MouseEvent) => {
     placement="bottom"
     :auto-focus="false"
   >
-    <n-flex :size="0" style="width: 100%; margin-top: 4px; margin-bottom: 4px">
+    <n-flex
+      :size="0"
+      style="
+        width: 100%;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        padding-bottom: env(safe-area-inset-bottom);
+      "
+    >
       <side-button
         quaternary
         :disable="!chapter.prevId"

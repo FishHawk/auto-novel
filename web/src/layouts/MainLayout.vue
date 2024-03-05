@@ -137,18 +137,13 @@ const theme = computed(() => {
     :date-locale="dateZhCN"
     inline-theme-disabled
     :theme-overrides="{
-      common: { scrollbarWidth: '6px' },
       Drawer: { bodyPadding: '0px' },
       List: { color: '#0000' },
     }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
-      <n-layout
-        :native-scrollbar="false"
-        :scrollbar-props="{ trigger: 'none' }"
-        style="height: 100vh"
-      >
-        <n-layout-header bordered position="absolute" style="z-index: 1">
+      <n-layout>
+        <n-layout-header bordered style="position: fixed; z-index: 1">
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
               <robot-icon />

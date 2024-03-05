@@ -44,6 +44,9 @@ migrateReaderSetting(readerSetting);
 </template>
 
 <style>
+body {
+  overflow-y: scroll;
+}
 a {
   text-decoration: none;
 }

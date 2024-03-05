@@ -195,7 +195,10 @@ const fontColor = computed(() => {
 
 <template>
   <div id="chapter-content">
-    <template v-for="p of paragraphs" :key="`${chapter.prevId}/${index}`">
+    <template
+      v-for="(p, index) of paragraphs"
+      :key="`${chapter.prevId}/${index}`"
+    >
       <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">
         {{ p.text }}
         <n-popconfirm

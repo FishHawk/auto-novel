@@ -44,18 +44,13 @@ const readerTheme = computed(() => {
     inline-theme-disabled
     :theme-overrides="{
       common: {
-        scrollbarWidth: '6px',
         ...readerTheme.bodyColor,
       },
     }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <n-global-style />
-      <n-layout
-        :native-scrollbar="false"
-        :scrollbar-props="{ trigger: 'none' }"
-        style="height: 100vh"
-      >
+      <n-layout>
         <router-view :key="$route.path" />
       </n-layout>
     </n-message-provider>
