@@ -143,12 +143,8 @@ const theme = computed(() => {
     }"
   >
     <n-message-provider container-style="white-space: pre-wrap">
-      <n-layout
-        :native-scrollbar="false"
-        :scrollbar-props="{ trigger: 'none' }"
-        style="height: 100vh"
-      >
-        <n-layout-header bordered position="absolute" style="z-index: 1">
+      <c-app-layout>
+        <n-layout-header bordered class="layout-header">
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
               <robot-icon />
@@ -199,12 +195,12 @@ const theme = computed(() => {
           </n-flex>
         </n-layout-header>
 
-        <n-layout-content style="margin-top: 50px; z-index: 0">
+        <n-layout-content style="z-index: 0">
           <router-view />
         </n-layout-content>
 
         <n-layout-footer style="height: 64px; background-color: transparent" />
-      </n-layout>
+      </c-app-layout>
 
       <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
         <n-menu
@@ -238,6 +234,12 @@ const theme = computed(() => {
 </template>
 
 <style>
+.layout-header {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  z-index: 1;
+}
 .layout-content {
   max-width: 1000px;
   margin: 0 auto;

@@ -51,13 +51,9 @@ const readerTheme = computed(() => {
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <n-global-style />
-      <n-layout
-        :native-scrollbar="false"
-        :scrollbar-props="{ trigger: 'none' }"
-        style="height: 100vh"
-      >
+      <c-app-layout>
         <router-view :key="$route.path" />
-      </n-layout>
+      </c-app-layout>
     </n-message-provider>
   </n-config-provider>
 </template>
