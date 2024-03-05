@@ -58,7 +58,15 @@ const onGlobalClick = (event: MouseEvent) => {
     placement="bottom"
     :auto-focus="false"
   >
-    <n-flex :size="0" style="width: 100%; margin-top: 4px; margin-bottom: 4px; padding-bottom: env(safe-area-inset-bottom);">
+    <n-flex
+      :size="0"
+      style="
+        width: 100%;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        padding-bottom: env(safe-area-inset-bottom);
+      "
+    >
       <side-button
         quaternary
         :disable="!chapter.prevId"
