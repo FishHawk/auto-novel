@@ -143,7 +143,7 @@ const theme = computed(() => {
   >
     <n-message-provider container-style="white-space: pre-wrap">
       <n-layout>
-        <n-layout-header bordered class="layout-header">
+        <n-layout-header bordered style="position: fixed; z-index: 1">
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">
               <robot-icon />
@@ -194,7 +194,7 @@ const theme = computed(() => {
           </n-flex>
         </n-layout-header>
 
-        <n-layout-content style="z-index: 0">
+        <n-layout-content style="margin-top: 50px; z-index: 0">
           <router-view />
         </n-layout-content>
 
@@ -233,12 +233,6 @@ const theme = computed(() => {
 </template>
 
 <style>
-.layout-header {
-  position: sticky;
-  position: -webkit-sticky;
-  top: 0;
-  z-index: 1;
-}
 .layout-content {
   max-width: 1000px;
   margin: 0 auto;
