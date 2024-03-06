@@ -33,6 +33,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
     { type: 'personal', volumeId: props.volume.id },
     {
       translateExpireChapter: true,
+      overriteToc: false,
       syncFromProvider: false,
       startIndex: 0,
       endIndex: 65535,

@@ -251,6 +251,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       start: 0,
       end,
       expire,
+      toc: false,
     });
     const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
     workspace.addJob({

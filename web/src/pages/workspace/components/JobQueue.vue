@@ -12,7 +12,7 @@ import { parseTaskUrl } from './util';
 
 const props = defineProps<{
   job: TranslateJob;
-  percentage?: number;
+  progress?: { finished: number; error: number; total: number };
 }>();
 const emit = defineEmits<{
   topJob: [];
@@ -21,6 +21,18 @@ const emit = defineEmits<{
 }>();
 
 const url = computed(() => parseTaskUrl(props.job.task));
+
+const percentage = computed(() => {
+  if (props.progress === undefined) {
+    return 0;
+  }
+  const { finished, error, total } = props.progress;
+  if (total === 0) {
+    return 100;
+  } else {
+    return Math.round((1000 * (finished + error)) / total) / 10;
+  }
+});
 </script>
 
 <template>

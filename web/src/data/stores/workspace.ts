@@ -136,15 +136,18 @@ const buildTaskQueryString = ({
   start,
   end,
   expire,
+  toc,
 }: {
   start: number;
   end: number;
   expire: boolean;
+  toc?: boolean;
 }) => {
   const searchParamsInit: { [key: string]: string } = {};
   if (start > 0) searchParamsInit['start'] = start.toString();
   if (end < 65535) searchParamsInit['end'] = end.toString();
   if (expire) searchParamsInit['expire'] = expire.toString();
+  if (toc) searchParamsInit['toc'] = expire.toString();
   const searchParams = new URLSearchParams(searchParamsInit).toString();
   return searchParams ? `?${searchParams}` : '';
 };
@@ -156,6 +159,7 @@ export const buildWebTranslateTask = (
     start: number;
     end: number;
     expire: boolean;
+    toc: boolean;
   }
 ) => `web/${providerId}/${novelId}` + buildTaskQueryString(params);
 

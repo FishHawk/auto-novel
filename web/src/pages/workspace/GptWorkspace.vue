@@ -12,8 +12,6 @@ import { TranslateJob, useGptWorkspaceStore } from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 
-import { computePercentage } from './components/util';
-
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
@@ -151,7 +149,7 @@ const notices = [
       <n-list-item v-for="job of gptWorkspace.jobs" :key="job.task">
         <job-queue
           :job="job"
-          :percentage="computePercentage(processedJobs.get(job.task)?.progress)"
+          :progress="processedJobs.get(job.task)?.progress"
           @top-job="gptWorkspace.topJob(job)"
           @bottom-job="gptWorkspace.bottomJob(job)"
           @delete-job="deleteJob(job.task)"

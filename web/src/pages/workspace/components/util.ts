@@ -1,8 +1,8 @@
-import { TranslateTaskDesc } from '@/data/translator/api';
+import { TranslateTaskDesc, TranslateTaskParams } from '@/data/translator/api';
 
 export const parseTask = (task: string) => {
   const [taskString, queryString] = task.split('?');
-  const { start, end, expire } = Object.fromEntries(
+  const { start, end, expire, toc } = Object.fromEntries(
     new URLSearchParams(queryString) as any
   );
 
@@ -13,11 +13,11 @@ export const parseTask = (task: string) => {
   } else if (taskString.startsWith('wenku/')) {
     const [type, novelId, volumeId] = taskString.split('/');
     desc = { type: type as any, novelId, volumeId };
-  } else if (taskString.startsWith('personal/')) {
-    const [type, volumeId] = taskString.split('/');
-    desc = { type: type as any, volumeId };
-  } else if (taskString.startsWith('personal2/')) {
-    const [type, volumeId] = taskString.split('/');
+  } else if (
+    taskString.startsWith('personal/') ||
+    taskString.startsWith('personal2/')
+  ) {
+    const [_type, volumeId] = taskString.split('/');
     desc = { type: 'personal', volumeId };
   } else {
     throw 'quit';
@@ -28,8 +28,9 @@ export const parseTask = (task: string) => {
     return isNaN(num) ? defaultValue : num;
   };
 
-  const params = {
+  const params: TranslateTaskParams = {
     translateExpireChapter: expire === 'true',
+    overriteToc: toc === 'true',
     syncFromProvider: false,
     startIndex: parseIntWithDefault(start, 0),
     endIndex: parseIntWithDefault(end, 65535),
@@ -46,25 +47,5 @@ export const parseTaskUrl = (task: string) => {
     return `/wenku/${desc.novelId}`;
   } else {
     return undefined;
-  }
-};
-
-export const computePercentage = (
-  progress:
-    | {
-        finished: number;
-        error: number;
-        total: number;
-      }
-    | undefined
-) => {
-  if (progress === undefined) {
-    return 0;
-  }
-  const { finished, error, total } = progress;
-  if (total === 0) {
-    return 100;
-  } else {
-    return Math.round((1000 * (finished + error)) / total) / 10;
   }
 };

@@ -14,8 +14,6 @@ import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
-import { computePercentage } from './components/util';
-
 const message = useMessage();
 const setting = useSettingStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
@@ -149,7 +147,7 @@ const notices = [
       <n-list-item v-for="job of sakuraWorkspace.jobs" :key="job.task">
         <job-queue
           :job="job"
-          :percentage="computePercentage(processedJobs.get(job.task)?.progress)"
+          :progress="processedJobs.get(job.task)?.progress"
           @top-job="sakuraWorkspace.topJob(job)"
           @bottom-job="sakuraWorkspace.bottomJob(job)"
           @delete-job="deleteJob(job.task)"

@@ -680,20 +680,16 @@ class WebNovelApi(
         val metadata = metadataRepo.get(providerId, novelId)
             ?: return
 
-        val titleZh = title.takeIf { metadata.titleZh == null }
-        val introductionZh = introduction.takeIf { metadata.introductionZh == null }
         val tocZh = mutableMapOf<Int, String>()
         metadata.toc.forEachIndexed { index, item ->
-            if (item.titleZh == null) {
-                val newTitleZh = toc[item.titleJp]
-                if (newTitleZh != null) {
-                    tocZh[index] = newTitleZh
-                }
+            val newTitleZh = toc[item.titleJp]
+            if (newTitleZh != null) {
+                tocZh[index] = newTitleZh
             }
         }
 
-        if (titleZh == null &&
-            introductionZh == null &&
+        if (title == null &&
+            introduction == null &&
             tocZh.isEmpty()
         ) return
 

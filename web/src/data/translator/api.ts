@@ -3,6 +3,7 @@ import { client } from '@/data/api/client';
 import { ChapterTranslation, PersonalVolumesManager } from './db/personal';
 import { Translator } from './translator';
 import { SakuraTranslator } from './translator_sakura';
+import { ApiWebNovel, WebNovelDto } from '../api/api_web_novel';
 
 type WebTranslateTaskDesc = {
   type: 'web';
@@ -28,6 +29,7 @@ export type TranslateTaskDesc =
 
 export type TranslateTaskParams = {
   translateExpireChapter: boolean;
+  overriteToc: boolean;
   syncFromProvider: boolean;
   startIndex: number;
   endIndex: number;
@@ -55,11 +57,11 @@ export type TranslatorDesc =
 const translateWeb = async (
   { providerId, novelId }: WebTranslateTaskDesc,
   {
+    translateExpireChapter,
+    overriteToc,
     syncFromProvider,
-    //
     startIndex,
     endIndex,
-    translateExpireChapter,
   }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translatorDesc: TranslatorDesc,
@@ -122,39 +124,18 @@ const translateWeb = async (
       })
       .json<{ jp: number; zh: number }>();
 
-  const encodeMetadataToTranslate = (metadata: TranslateTaskDto) => {
-    const query = [];
-    if (metadata.title) {
-      query.push(metadata.title);
-    }
-    if (metadata.introduction) {
-      query.push(metadata.introduction);
-    }
-    query.push(...metadata.toc);
-    return query;
-  };
-
-  const decodeAsMetadataTranslated = (
-    metadata: TranslateTaskDto,
-    translated: string[]
-  ) => {
-    const obj: MetadataUpdateBody = { toc: {} };
-    if (metadata.title) {
-      obj.title = translated.shift();
-    }
-    if (metadata.introduction) {
-      obj.introduction = translated.shift();
-    }
-    for (const textJp of metadata.toc) {
-      obj.toc[textJp] = translated.shift()!!;
-    }
-    return obj;
-  };
-
   // Task
+  let novel: WebNovelDto;
   let task: TranslateTaskDto;
   try {
     callback.log('获取元数据');
+    const novelResult = await ApiWebNovel.getNovel(providerId, novelId);
+    if (novelResult.ok) {
+      novel = novelResult.value;
+    } else {
+      throw novelResult.error;
+    }
+    callback.log('获取翻译任务');
     task = await getTranslateTask();
   } catch (e: any) {
     if (e.name === 'AbortError') {
@@ -189,7 +170,44 @@ const translateWeb = async (
   }
 
   try {
-    const textsSrc = encodeMetadataToTranslate(task);
+    const encodeMetadataToTranslate = () => {
+      const query = [];
+      if (!novel.titleZh) {
+        query.push(novel.titleJp);
+      }
+      if (!novel.introductionZh) {
+        query.push(novel.introductionJp);
+      }
+      const toc = novel.toc
+        .filter((it) => overriteToc || !it.titleZh)
+        .map((it) => it.titleJp);
+      query.push(...new Set(toc));
+      return query;
+    };
+
+    const decodeAsMetadataTranslated = (translated: string[]) => {
+      const obj: MetadataUpdateBody = { toc: {} };
+
+      if (!novel.titleZh) {
+        obj.title = translated.shift();
+      }
+      if (!novel.introductionZh) {
+        obj.introduction = translated.shift();
+      }
+      const toc = novel.toc
+        .filter((it) => overriteToc || !it.titleZh)
+        .map((it) => it.titleJp);
+      for (const textJp of [...new Set(toc)]) {
+        obj.toc[textJp] = translated.shift()!!;
+      }
+      return obj;
+    };
+
+    if (overriteToc) {
+      callback.log('重新翻译目录');
+    }
+
+    const textsSrc = encodeMetadataToTranslate();
     if (textsSrc.length > 0) {
       if (translatorDesc.id === 'gpt') {
         callback.log('目前GPT翻译目录超级不稳定，跳过');
@@ -202,9 +220,7 @@ const translateWeb = async (
         );
 
         callback.log(`上传元数据`);
-        await updateMetadataTranslation(
-          decodeAsMetadataTranslated(task, textsDst)
-        );
+        await updateMetadataTranslation(decodeAsMetadataTranslated(textsDst));
       }
     }
   } catch (e: any) {

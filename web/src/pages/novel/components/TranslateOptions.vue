@@ -23,6 +23,7 @@ const isWideScreen = useIsWideScreen(600);
 // 翻译设置
 const showGlossaryModal = ref(false);
 const translateExpireChapter = ref(false);
+const overriteToc = ref(false);
 const syncFromProvider = ref(false);
 const autoTop = ref(false);
 const startIndex = ref<number | null>(0);
@@ -32,6 +33,7 @@ const taskNumber = ref<number | null>(1);
 defineExpose({
   getTranslationOptions: () => ({
     translateExpireChapter: translateExpireChapter.value,
+    overriteToc: overriteToc.value,
     syncFromProvider: syncFromProvider.value,
     startIndex: startIndex.value ?? 0,
     endIndex: endIndex.value ?? 65536,
@@ -60,6 +62,20 @@ watch(
           </n-tooltip>
         </n-checkbox>
 
+        <n-checkbox v-model:checked="autoTop">
+          <n-tooltip trigger="hover">
+            <template #trigger>排队置顶</template>
+            GPT/Sakura任务排队的时候，自动置顶。
+          </n-tooltip>
+        </n-checkbox>
+
+        <n-checkbox v-model:checked="overriteToc">
+          <n-tooltip trigger="hover">
+            <template #trigger>重翻目录</template>
+            重新翻译整个目录，覆盖已经翻译的结果。
+          </n-tooltip>
+        </n-checkbox>
+
         <n-checkbox
           v-if="type === 'web' && userData.passWeek"
           v-model:checked="syncFromProvider"
@@ -67,13 +83,6 @@ watch(
           <n-tooltip trigger="hover" style="max-width: 200px">
             <template #trigger>源站同步</template>
             强行同步已缓存章节，与源站不一致会删除现有翻译，慎用！!
-          </n-tooltip>
-        </n-checkbox>
-
-        <n-checkbox v-model:checked="autoTop">
-          <n-tooltip trigger="hover" style="max-width: 200px">
-            <template #trigger>排队置顶</template>
-            GPT/Sakura任务排队的时候，自动置顶。
           </n-tooltip>
         </n-checkbox>
       </n-flex>

@@ -37,6 +37,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
     { type: 'wenku', novelId, volumeId: volume.volumeId },
     {
       ...params,
+      overriteToc: false,
       syncFromProvider: false,
       startIndex: 0,
       endIndex: 65536,
