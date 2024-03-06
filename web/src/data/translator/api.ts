@@ -89,15 +89,7 @@ const translateWeb = async (
   }
 
   const getTranslateTask = () =>
-    client
-      .get(endpoint, {
-        retry: {
-          limit: 3,
-          delay: (attemptCount: number) => 2 * 2 ** (attemptCount - 1) * 1000,
-        },
-        signal,
-      })
-      .json<TranslateTaskDto>();
+    client.get(endpoint, { signal }).json<TranslateTaskDto>();
 
   const updateMetadataTranslation = (json: MetadataUpdateBody) =>
     client.post(`${endpoint}/metadata`, { json, signal }).text();
@@ -136,7 +128,25 @@ const translateWeb = async (
       throw novelResult.error;
     }
     callback.log('获取翻译任务');
-    task = await getTranslateTask();
+    // 临时手段解决timeout，等数据库大修完成后删去
+    try {
+      task = await getTranslateTask();
+    } catch (e: any) {
+      callback.log('获取翻译任务-延迟10s重试');
+      await new Promise((resolve, reject) => {
+        let timeout: number;
+        const abortHandler = () => {
+          clearTimeout(timeout);
+          reject(new DOMException('Aborted', 'AbortError'));
+        };
+        timeout = setTimeout(() => {
+          resolve('Promise Resolved');
+          signal?.removeEventListener('abort', abortHandler);
+        }, 1000 * 10);
+        signal?.addEventListener('abort', abortHandler);
+      });
+      task = await getTranslateTask();
+    }
   } catch (e: any) {
     if (e.name === 'AbortError') {
       callback.log(`中止翻译任务`);
