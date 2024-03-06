@@ -141,8 +141,9 @@ const theme = computed(() => {
       List: { color: '#0000' },
     }"
   >
+    <n-global-style />
     <n-message-provider container-style="white-space: pre-wrap">
-      <n-layout>
+      <n-layout id="kk">
         <n-layout-header bordered style="position: fixed; z-index: 1">
           <n-flex class="layout-content" align="center" style="height: 50px">
             <template v-if="isWideScreen">

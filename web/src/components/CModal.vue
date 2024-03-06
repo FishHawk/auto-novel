@@ -5,6 +5,8 @@
     :bordered="false"
     :closable="$attrs.title !== undefined || $slots.header !== undefined"
     size="large"
+    transform-origin="center"
+    :block-scroll="false"
     style="width: min(600px, calc(100% - 16px))"
   >
     <template #header v-if="$slots.header">

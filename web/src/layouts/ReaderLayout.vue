@@ -7,9 +7,9 @@ import {
   zhCN,
   useOsTheme,
 } from 'naive-ui';
+import { computed } from 'vue';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { computed } from 'vue';
 import { isDarkColor } from '@/pages/reader/components/util';
 
 const readerSetting = useReaderSettingStore();
@@ -48,8 +48,8 @@ const readerTheme = computed(() => {
       },
     }"
   >
+    <n-global-style />
     <n-message-provider container-style="white-space: pre-wrap">
-      <n-global-style />
       <n-layout>
         <router-view :key="$route.path" />
       </n-layout>

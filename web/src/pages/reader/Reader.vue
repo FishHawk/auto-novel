@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
-import { getScrollParent } from 'seemly';
 import { computed, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -48,17 +47,14 @@ const navToChapter = (targetChapterId: string) => {
   currentChapterId.value = targetChapterId;
 };
 
-const placeholderRef = ref<HTMLElement>();
 watch(
   currentChapterId,
   async (chapterId, oldChapterId) => {
     const result = await loadChapter(chapterId);
-    if (placeholderRef.value) {
-      getScrollParent(placeholderRef.value)?.scrollTo({
-        top: 0,
-        behavior: 'instant',
-      });
-    }
+    window.scrollTo({
+      top: 0,
+      behavior: 'instant',
+    });
 
     if (oldChapterId !== chapterId) {
       window.history.pushState(
@@ -142,7 +138,7 @@ onKeyStroke(['Enter'], (e) => {
     />
   </DefineChapterLink>
 
-  <div ref="placeholderRef" class="content">
+  <div class="content">
     <ResultView
       :result="chapterResult"
       :showEmpty="() => false"

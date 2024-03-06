@@ -6,7 +6,6 @@ import {
   FormatListBulletedOutlined,
   LibraryBooksOutlined,
 } from '@vicons/material';
-import { getScrollParent } from 'seemly';
 import { ref } from 'vue';
 
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
@@ -24,16 +23,12 @@ const emit = defineEmits<{
 
 const showMenu = ref(false);
 
-const contentRef = ref<HTMLElement>();
-
 const onGlobalClick = (event: MouseEvent) => {
   const scrollBy = (y: number) => {
-    if (contentRef.value) {
-      getScrollParent(contentRef.value)?.scrollBy({
-        top: y * window.innerHeight,
-        behavior: 'smooth',
-      });
-    }
+    window.scrollBy({
+      top: y * window.innerHeight,
+      behavior: 'smooth',
+    });
   };
   const p = event.clientY / window.innerHeight;
   const t = 0.15;
@@ -48,7 +43,7 @@ const onGlobalClick = (event: MouseEvent) => {
 </script>
 
 <template>
-  <div ref="contentRef" @click="onGlobalClick">
+  <div @click="onGlobalClick">
     <slot />
   </div>
 

@@ -51,8 +51,8 @@ dependencies:
     specifier: ^8.6.7
     version: 8.6.7(@types/markdown-it@13.0.7)(markdown-it@14.0.0)
   naive-ui:
-    specifier: ^2.37.3
-    version: 2.37.3(vue@3.4.14)
+    specifier: ^2.38.1
+    version: 2.38.1(vue@3.4.14)
   nanoid:
     specifier: ^5.0.4
     version: 5.0.4
@@ -65,9 +65,6 @@ dependencies:
   pinia-shared-state:
     specifier: ^0.4.5
     version: 0.4.5(pinia@2.1.7)(vue@3.4.14)
-  seemly:
-    specifier: ^0.3.8
-    version: 0.3.8
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -1546,8 +1543,8 @@ packages:
     resolution: {integrity: sha512-ckmWDJjphvd/FvZawgygcUeQCxzvohjFO5RxTjj4eq8kw359gFF3E1brjfI+viLMxss5JrHTDRHZvu2/tuy0Qg==}
     dev: false
 
-  /naive-ui@2.37.3(vue@3.4.14):
-    resolution: {integrity: sha512-aUkHFXVIluSi8Me+npbcsdv1NYhVMj5t9YaruoCESlqmfqspj+R2QHEVXkTtUI1kQwVrABMCtAGq/wountqjZA==}
+  /naive-ui@2.38.1(vue@3.4.14):
+    resolution: {integrity: sha512-AnU1FQ7K/CbhguAX++V4kCFjk7h7RvWt4nvZPRjORMpq+fUIlzD+EcQ5Cv1VqDloNF8+eMv4Akc2Ogacc9S+5A==}
     peerDependencies:
       vue: ^3.0.0
     dependencies:
