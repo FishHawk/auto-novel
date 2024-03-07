@@ -69,7 +69,7 @@ watch(
           </n-tooltip>
         </n-checkbox>
 
-        <n-checkbox v-model:checked="overriteToc">
+        <n-checkbox v-if="type === 'web'" v-model:checked="overriteToc">
           <n-tooltip trigger="hover">
             <template #trigger>重翻目录</template>
             重新翻译整个目录，覆盖已经翻译的结果。
