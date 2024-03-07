@@ -36,9 +36,12 @@ const onClick = () => {
 
 <template>
   <n-button round @click="onClick">
-    <template v-if="icon" #icon>
+    <template v-if="icon && label" #icon>
       <n-icon :component="icon" />
     </template>
     {{ label }}
+    <template v-if="icon && !label">
+      <n-icon :component="icon" />
+    </template>
   </n-button>
 </template>

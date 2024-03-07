@@ -10,9 +10,7 @@ defineProps<{
 <template>
   <n-tooltip trigger="hover">
     <template #trigger>
-      <n-button text v-bind="$attrs">
-        <n-icon :component="icon" />
-      </n-button>
+      <c-button size="tiny" :icon="icon" secondary circle v-bind="$attrs" />
     </template>
     {{ tooltip }}
   </n-tooltip>

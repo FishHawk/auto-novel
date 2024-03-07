@@ -1,4 +1,10 @@
 <script lang="ts" setup>
+import {
+  DeleteOutlineOutlined,
+  FlashOnOutlined,
+  PlayArrowOutlined,
+  StopOutlined,
+} from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
@@ -199,33 +205,29 @@ const testWorker = async () => {
 
     <template #header-extra>
       <n-flex :size="6" :wrap="false">
-        <c-button
-          label="测试"
+        <c-icon-button
+          tooltip="测试"
+          :icon="FlashOnOutlined"
           async
-          size="tiny"
-          secondary
           @click="testWorker"
         />
 
-        <c-button
+        <c-icon-button
           v-if="running"
-          label="停止"
-          size="tiny"
-          secondary
+          tooltip="停止"
+          :icon="StopOutlined"
           @click="stopWorker"
         />
-        <c-button
+        <c-icon-button
           v-else
-          label="启动"
-          size="tiny"
-          secondary
+          tooltip="启动"
+          :icon="PlayArrowOutlined"
           @click="startWorker"
         />
 
-        <c-button
-          label="删除"
-          size="tiny"
-          secondary
+        <c-icon-button
+          tooltip="删除"
+          :icon="DeleteOutlineOutlined"
           type="error"
           @click="deleteWorker"
         />
