@@ -167,13 +167,6 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
           :favored-list="metadata.favoredList"
           :novel="{ type: 'wenku', novelId }"
         />
-
-        <c-button
-          label="在亚马逊搜索"
-          tag="a"
-          :href="`https://www.amazon.co.jp/s?k=${metadata.title}&rh=n%3A465392`"
-          target="_blank"
-        />
       </n-flex>
 
       <n-p>原名：{{ metadata.title }}</n-p>

@@ -270,7 +270,9 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
       :bordered="false"
       style="margin-bottom: 20px"
     >
-      <b style="color: red">创建文库小说注意事项：</b>
+      <n-text type="error">
+        <b>创建文库小说注意事项：</b>
+      </n-text>
       <n-ul>
         <n-li>
           文库小说只允许已经发行单行本的小说，原则上以亚马逊上可以买到为准。
@@ -315,13 +317,23 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             @click="fetchMetadata()"
           />
         </n-input-group>
-        <n-p v-if="userData.isMaintainer">
-          <c-button
-            type="error"
-            secondary
-            label="标记重复"
-            @click="markAsDuplicate"
-          />
+        <n-p>
+          <n-flex v-if="userData.isMaintainer">
+            <c-button
+              label="在亚马逊搜索"
+              tag="a"
+              :href="`https://www.amazon.co.jp/s?k=${encodeURIComponent(
+                formValue.title
+              )}&rh=n%3A465392`"
+              target="_blank"
+            />
+            <c-button
+              type="error"
+              secondary
+              label="标记重复"
+              @click="markAsDuplicate"
+            />
+          </n-flex>
         </n-p>
       </div>
     </n-flex>
@@ -394,9 +406,10 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
       <c-button label="使用说明" @click="showKeywordsModal = true" />
     </section-header>
 
-    <n-p v-if="presetKeywords.groups.length > 0">
-      <b>编辑标签前务必先看一遍使用说明。</b>
+    <n-p>
+      <n-text type="error"> 编辑标签前务必先看一遍使用说明。 </n-text>
     </n-p>
+
     <n-list
       v-if="presetKeywords.groups.length > 0"
       bordered
