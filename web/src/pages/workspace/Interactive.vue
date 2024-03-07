@@ -2,43 +2,107 @@
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
-import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
-import { Translator, TranslatorConfig } from '@/data/translator/translator';
+import {
+  useGptWorkspaceStore,
+  useSakuraWorkspaceStore,
+} from '@/data/stores/workspace';
+import {
+  Translator,
+  TranslatorConfig,
+  TranslatorId,
+} from '@/data/translator/translator';
 
 const message = useMessage();
 
 const textJp = ref('');
 const textZh = ref('');
 
+const translatorId = ref<TranslatorId>('sakura');
+const translationOptions: { label: string; value: TranslatorId }[] = [
+  { label: '百度', value: 'baidu' },
+  { label: '有道', value: 'youdao' },
+  { label: 'GPT', value: 'gpt' },
+  { label: 'Sakura', value: 'sakura' },
+];
+
 watch(textJp, () => {
   textZh.value = '';
 });
+watch(translatorId, () => {
+  textZh.value = '';
+});
+
+const gptWorkspace = useGptWorkspaceStore();
+const selectedGptWorkerId = ref(gptWorkspace.workers.at(0)?.id);
 
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const selectedSakuraWorkerId = ref(sakuraWorkspace.workers.at(0)?.id);
 
 interface SavedTranslation {
-  id: string;
-  endpoint: string;
+  id: TranslatorId;
+  workerId?: string;
+  endpoint?: string;
   jp: string;
   zh: string;
 }
 const savedTranslation = ref<SavedTranslation[]>([]);
 
 const translate = async () => {
-  const worker = sakuraWorkspace.workers.find(
-    (it) => it.id === selectedSakuraWorkerId.value
-  );
-  if (worker === undefined) {
-    message.error('未选择Sakura翻译器');
-    return;
+  let config: TranslatorConfig;
+  let workerId: string | undefined;
+  let endpoint: string | undefined;
+  const id = translatorId.value;
+  if (id === 'gpt') {
+    const worker = gptWorkspace.workers.find(
+      (it) => it.id === selectedGptWorkerId.value
+    );
+    if (worker === undefined) {
+      message.error('未选择GPT翻译器');
+      return;
+    }
+    const realEndpoint = (() => {
+      if (worker.endpoint.length === 0) {
+        if (worker.type === 'web') {
+          return 'https://chat.openai.com/backend-api';
+        } else {
+          return 'https://api.openai.com';
+        }
+      } else {
+        return worker.endpoint;
+      }
+    })();
+    workerId = worker.id;
+    endpoint = endpoint;
+    config = {
+      id,
+      log: () => {},
+      type: worker.type,
+      model: worker.model ?? 'gpt-3.5',
+      endpoint: realEndpoint,
+      key: worker.key,
+    };
+  } else if (id === 'sakura') {
+    const worker = sakuraWorkspace.workers.find(
+      (it) => it.id === selectedSakuraWorkerId.value
+    );
+    if (worker === undefined) {
+      message.error('未选择Sakura翻译器');
+      return;
+    }
+    workerId = worker.id;
+    endpoint = worker.endpoint;
+    config = {
+      id,
+      log: () => {},
+      endpoint: worker.endpoint,
+      useLlamaApi: worker.useLlamaApi ?? false,
+    };
+  } else {
+    config = {
+      id,
+      log: () => {},
+    };
   }
-  const config: TranslatorConfig = {
-    id: 'sakura',
-    log: () => {},
-    endpoint: worker.endpoint,
-    useLlamaApi: worker.useLlamaApi ?? false,
-  };
 
   try {
     const translator = await Translator.create(config, false);
@@ -48,6 +112,14 @@ const translate = async () => {
   } catch (e: any) {
     message.error(`翻译器错误：${e}`);
   }
+
+  savedTranslation.value.push({
+    id,
+    workerId,
+    endpoint,
+    jp: textJp.value,
+    zh: textZh.value,
+  });
 };
 const clearTranslation = () => {
   textJp.value = '';
@@ -56,21 +128,6 @@ const clearTranslation = () => {
 const copyToClipboard = () => {
   navigator.clipboard.writeText(textZh.value);
   message.info('已经将翻译结果复制到剪切板');
-};
-const save = () => {
-  const worker = sakuraWorkspace.workers.find(
-    (it) => it.id === selectedSakuraWorkerId.value
-  );
-  if (worker === undefined) {
-    message.error('未选择Sakura翻译器');
-    return;
-  }
-  savedTranslation.value.push({
-    id: worker.id,
-    endpoint: worker.endpoint,
-    jp: textJp.value,
-    zh: textZh.value,
-  });
 };
 const clearSavedTranslation = () => {
   savedTranslation.value = [];
@@ -81,32 +138,70 @@ const clearSavedTranslation = () => {
   <div class="layout-content">
     <n-h1>交互翻译</n-h1>
 
-    <n-p>
-      <n-radio-group v-model:value="selectedSakuraWorkerId">
+    <n-flex vertical>
+      <c-action-wrapper title="排序">
         <n-flex vertical>
-          <n-radio
-            v-for="worker of sakuraWorkspace.workers"
-            :key="worker.id"
-            :value="worker.id"
-          >
-            {{ worker.id }}
-            <n-text depth="3">
-              {{ worker.endpoint }}
-            </n-text>
-          </n-radio>
-        </n-flex>
-      </n-radio-group>
-    </n-p>
+          <c-radio-group
+            v-model:value="translatorId"
+            :options="translationOptions"
+            size="small"
+          />
 
-    <n-flex style="margin-bottom: 16px">
-      <n-button-group>
-        <c-button label="翻译" async @click="translate" />
-        <c-button label="清空" @click="clearTranslation" />
-      </n-button-group>
-      <n-button-group>
-        <c-button label="复制到剪贴板" @click="copyToClipboard" />
-        <c-button label="暂存" @click="save" />
-      </n-button-group>
+          <n-radio-group
+            v-if="translatorId === 'gpt'"
+            v-model:value="selectedGptWorkerId"
+          >
+            <n-flex vertical>
+              <n-radio
+                v-for="worker of gptWorkspace.workers"
+                :key="worker.id"
+                :value="worker.id"
+              >
+                {{ worker.id }}
+                <n-text depth="3">
+                  {{ worker.model }}@{{
+                    worker.endpoint ? worker.endpoint : 'default'
+                  }}
+                </n-text>
+              </n-radio>
+            </n-flex>
+          </n-radio-group>
+
+          <n-radio-group
+            v-if="translatorId === 'sakura'"
+            v-model:value="selectedSakuraWorkerId"
+          >
+            <n-flex vertical>
+              <n-radio
+                v-for="worker of sakuraWorkspace.workers"
+                :key="worker.id"
+                :value="worker.id"
+              >
+                {{ worker.id }}
+                <n-text depth="3">
+                  {{ worker.endpoint }}
+                </n-text>
+              </n-radio>
+            </n-flex>
+          </n-radio-group>
+        </n-flex>
+      </c-action-wrapper>
+
+      <c-action-wrapper title="排序">
+        <n-flex style="margin-bottom: 16px">
+          <n-button-group size="small">
+            <c-button label="翻译" async :round="false" @click="translate" />
+            <c-button label="清空" :round="false" @click="clearTranslation" />
+          </n-button-group>
+          <n-button-group size="small">
+            <c-button
+              label="复制到剪贴板"
+              :round="false"
+              @click="copyToClipboard"
+            />
+          </n-button-group>
+        </n-flex>
+      </c-action-wrapper>
     </n-flex>
 
     <n-input-group>
@@ -133,11 +228,11 @@ const clearSavedTranslation = () => {
       />
     </n-input-group>
 
-    <section-header title="暂存">
+    <section-header title="翻译历史">
       <c-button label="清空" @click="clearSavedTranslation" />
     </section-header>
 
-    <n-empty v-if="savedTranslation.length === 0" description="没有暂存翻译" />
+    <n-empty v-if="savedTranslation.length === 0" description="没有翻译历史" />
     <n-list>
       <n-list-item v-for="t of savedTranslation">
         <n-thing content-indented>
@@ -151,6 +246,7 @@ const clearSavedTranslation = () => {
 
           <template #header>
             {{ t.id }}
+            {{ t.workerId }}
             <n-text depth="3" style="font-size: 12px; padding-left: 2px">
               {{ t.endpoint }}
             </n-text>
