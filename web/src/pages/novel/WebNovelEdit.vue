@@ -118,6 +118,11 @@ const submit = async () => {
     </n-form>
 
     <n-h2 prefix="bar">目录</n-h2>
+    <n-p>
+      <n-text type="error">
+        注意，手动编辑目录可能会被其他人覆盖。如果你不满意目录的翻译，可以先用翻译器重翻试试。
+      </n-text>
+    </n-p>
     <n-table :bordered="false" :bottom-bordered="false" style="width: 100%">
       <tr v-for="token in formValue.toc">
         <td style="width: 50%; padding: 4px">

@@ -191,7 +191,11 @@ const translateWeb = async (
       const toc = novel.toc
         .filter((it) => overriteToc || !it.titleZh)
         .map((it) => it.titleJp);
-      query.push(...new Set(toc));
+      const tocWords = toc
+        .map((it) => it.split(/[\s　]+/))
+        .filter((it) => it.length > 0)
+        .flat();
+      query.push(...new Set(tocWords));
       return query;
     };
 
@@ -207,9 +211,30 @@ const translateWeb = async (
       const toc = novel.toc
         .filter((it) => overriteToc || !it.titleZh)
         .map((it) => it.titleJp);
-      for (const textJp of [...new Set(toc)]) {
-        obj.toc[textJp] = translated.shift()!!;
+
+      const tocWordsDict: { [key: string]: string } = {};
+      const tocWords = toc
+        .map((it) => it.split(/[\s　]+/))
+        .filter((it) => it.length > 0)
+        .flat();
+      for (const textJp of [...new Set(tocWords)]) {
+        tocWordsDict[textJp] = translated.shift()!!;
       }
+
+      new Set(toc).forEach((it) => {
+        const spaces = it.split(/[^\s　]+/).filter((it) => it.length > 0);
+        obj.toc[it] = it
+          .split(/[\s　]+/)
+          .map((it) => {
+            if (it.length === 0) {
+              return [spaces.shift() ?? ''];
+            } else {
+              return [tocWordsDict[it], spaces.shift() ?? ''];
+            }
+          })
+          .flat()
+          .join('');
+      });
       return obj;
     };
 
