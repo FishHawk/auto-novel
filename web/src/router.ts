@@ -53,14 +53,20 @@ const router = createRouter({
               component: () => import('./pages/workspace/Katakana.vue'),
             },
             {
+              path: 'gpt',
+              meta: { title: 'GPT工作区' },
+              component: () => import('./pages/workspace/GptWorkspace.vue'),
+            },
+            {
               path: 'sakura',
               meta: { title: 'Sakura工作区' },
               component: () => import('./pages/workspace/SakuraWorkspace.vue'),
             },
             {
-              path: 'gpt',
-              meta: { title: 'GPT工作区' },
-              component: () => import('./pages/workspace/GptWorkspace.vue'),
+              path: 'interactive',
+              meta: { title: '交互翻译' },
+              component: () =>
+                import('./pages/workspace/Interactive.vue'),
             },
           ],
         },

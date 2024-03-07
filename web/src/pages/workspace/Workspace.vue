@@ -7,13 +7,18 @@ const subPages = [
   },
   {
     name: 'GPT工作区',
-    description: '使用GPT翻译小说。',
+    description: '使用GPT批量翻译小说。',
     href: '/workspace/gpt',
   },
   {
     name: 'Sakura工作区',
-    description: '使用Sakura翻译小说。',
+    description: '使用Sakura批量翻译小说。',
     href: '/workspace/sakura',
+  },
+  {
+    name: '交互翻译',
+    description: '使用Sakura直接翻译文本。',
+    href: '/workspace/interactive',
   },
 ];
 </script>

@@ -52,6 +52,7 @@ const topMenuOptions = computed(() => {
         menuOption('术语表工作区', '/workspace/katakana'),
         menuOption('GPT工作区', '/workspace/gpt'),
         menuOption('Sakura工作区', '/workspace/sakura'),
+        menuOption('交互翻译', '/workspace/interactive'),
       ],
     },
     menuOption('论坛', '/forum'),
