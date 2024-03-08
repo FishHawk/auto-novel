@@ -290,19 +290,21 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
       </n-ul>
     </n-card>
 
-    <n-flex style="margin-bottom: 24px" :wrap="false">
-      <n-image
-        width="160"
-        :src="formValue.cover ? formValue.cover : coverPlaceholder"
-        alt="cover"
-      />
+    <n-flex style="margin-bottom: 24px">
+      <div>
+        <n-image
+          width="160"
+          :src="formValue.cover ? formValue.cover : coverPlaceholder"
+          alt="cover"
+        />
+      </div>
 
-      <div style="max-width: 530px">
-        <n-p>
+      <n-flex size="large" vertical style="max-width: 530px">
+        <n-text>
           可以通过亚马逊系列链接/单本链接导入，你也可以输入小说标题从搜索导入。
           <br />
           导入R18书需要安装v1.0.7以上的版本的插件，并在亚马逊上点过“已满18岁”。
-        </n-p>
+        </n-text>
         <n-input-group>
           <n-input
             v-model:value="amazonUrl"
@@ -316,25 +318,23 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             @action="fetchMetadata"
           />
         </n-input-group>
-        <n-p>
-          <n-flex v-if="userData.isMaintainer">
-            <c-button
-              label="在亚马逊搜索"
-              tag="a"
-              :href="`https://www.amazon.co.jp/s?k=${encodeURIComponent(
-                formValue.title
-              )}&rh=n%3A465392`"
-              target="_blank"
-            />
-            <c-button
-              type="error"
-              secondary
-              label="标记重复"
-              @action="markAsDuplicate"
-            />
-          </n-flex>
-        </n-p>
-      </div>
+        <n-flex v-if="userData.isMaintainer">
+          <c-button
+            label="在亚马逊搜索"
+            tag="a"
+            :href="`https://www.amazon.co.jp/s?k=${encodeURIComponent(
+              formValue.title
+            )}&rh=n%3A465392`"
+            target="_blank"
+          />
+          <c-button
+            type="error"
+            secondary
+            label="标记重复"
+            @action="markAsDuplicate"
+          />
+        </n-flex>
+      </n-flex>
     </n-flex>
 
     <n-form
