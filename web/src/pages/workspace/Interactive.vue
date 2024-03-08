@@ -130,7 +130,7 @@ const clearSavedTranslation = () => {
     <n-h1>交互翻译</n-h1>
 
     <n-flex vertical>
-      <c-action-wrapper title="排序">
+      <c-action-wrapper title="翻译">
         <n-flex vertical>
           <c-radio-group
             v-model:value="translatorId"
@@ -178,7 +178,7 @@ const clearSavedTranslation = () => {
         </n-flex>
       </c-action-wrapper>
 
-      <c-action-wrapper title="排序">
+      <c-action-wrapper title="操作">
         <n-flex style="margin-bottom: 16px">
           <n-button-group size="small">
             <c-button label="翻译" :round="false" @action="translate" />
