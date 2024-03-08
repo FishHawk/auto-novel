@@ -4,6 +4,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import kotlinx.datetime.Instant
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -14,12 +15,14 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 
+@OptIn(ExperimentalSerializationApi::class)
 fun Application.contentNegotiation() {
     install(ContentNegotiation) {
         json(Json {
             serializersModule = SerializersModule {
                 contextual(InstantEpochSecondsSerializer)
             }
+            explicitNulls = false
         })
     }
 }
