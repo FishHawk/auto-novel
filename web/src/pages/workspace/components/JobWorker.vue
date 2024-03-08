@@ -46,42 +46,31 @@ const workspace =
     ? useGptWorkspaceStore()
     : useSakuraWorkspaceStore();
 
-const translatorDesc = computed<TranslatorDesc & { id: 'gpt' | 'sakura' }>(
-  () => {
-    if (worker.translatorId === 'gpt') {
-      const endpoint = (() => {
-        if (worker.endpoint.length === 0) {
-          if (worker.type === 'web') {
-            return 'https://chat.openai.com/backend-api';
-          } else {
-            return 'https://api.openai.com';
-          }
-        } else {
-          return worker.endpoint;
-        }
-      })();
-      return {
-        id: 'gpt',
-        type: worker.type,
-        model: worker.model ?? 'gpt-3.5',
-        endpoint,
-        key: worker.key,
-      };
-    } else {
-      return {
-        id: 'sakura',
-        endpoint: worker.endpoint,
-        useLlamaApi: worker.useLlamaApi ?? false,
-      };
-    }
+const translatorDesc = computed(() => {
+  if (worker.translatorId === 'gpt') {
+    return <TranslatorDesc & { id: 'gpt' }>{
+      id: 'gpt',
+      type: worker.type,
+      model: worker.model,
+      endpoint: worker.endpoint,
+      key: worker.key,
+    };
+  } else {
+    return <TranslatorDesc & { id: 'sakura' }>{
+      id: 'sakura',
+      endpoint: worker.endpoint,
+      useLlamaApi: worker.useLlamaApi ?? false,
+    };
   }
-);
+});
 
 const endpointPrefix = computed(() => {
   if (worker.translatorId === 'gpt') {
-    return `${worker.type}-${worker.model ?? 'gpt-3.5'}[${worker.key.slice(
-      -4
-    )}]@`;
+    if (worker.type === 'web') {
+      return `web[${worker.key.slice(-4)}]@`;
+    } else {
+      return `${worker.model}[${worker.key.slice(-4)}]@`;
+    }
   } else {
     return worker.useLlamaApi ? '' : 'OAI@';
   }

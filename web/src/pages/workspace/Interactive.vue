@@ -3,6 +3,9 @@ import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
 import {
+  GptWorker,
+  SakuraWorker,
+  migrateGptWorkspace,
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
@@ -38,6 +41,8 @@ const selectedGptWorkerId = ref(gptWorkspace.workers.at(0)?.id);
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const selectedSakuraWorkerId = ref(sakuraWorkspace.workers.at(0)?.id);
 
+migrateGptWorkspace(gptWorkspace);
+
 interface SavedTranslation {
   id: TranslatorId;
   workerId?: string;
@@ -49,8 +54,7 @@ const savedTranslation = ref<SavedTranslation[]>([]);
 
 const translate = async () => {
   let config: TranslatorConfig;
-  let workerId: string | undefined;
-  let endpoint: string | undefined;
+  let selectedWorker: GptWorker | SakuraWorker | undefined;
   const id = translatorId.value;
   if (id === 'gpt') {
     const worker = gptWorkspace.workers.find(
@@ -60,25 +64,13 @@ const translate = async () => {
       message.error('未选择GPT翻译器');
       return;
     }
-    const realEndpoint = (() => {
-      if (worker.endpoint.length === 0) {
-        if (worker.type === 'web') {
-          return 'https://chat.openai.com/backend-api';
-        } else {
-          return 'https://api.openai.com';
-        }
-      } else {
-        return worker.endpoint;
-      }
-    })();
-    workerId = worker.id;
-    endpoint = endpoint;
+    selectedWorker = worker;
     config = {
       id,
       log: () => {},
       type: worker.type,
-      model: worker.model ?? 'gpt-3.5',
-      endpoint: realEndpoint,
+      model: worker.model,
+      endpoint: worker.endpoint,
       key: worker.key,
     };
   } else if (id === 'sakura') {
@@ -89,8 +81,7 @@ const translate = async () => {
       message.error('未选择Sakura翻译器');
       return;
     }
-    workerId = worker.id;
-    endpoint = worker.endpoint;
+    selectedWorker = worker;
     config = {
       id,
       log: () => {},
@@ -115,8 +106,8 @@ const translate = async () => {
 
   savedTranslation.value.push({
     id,
-    workerId,
-    endpoint,
+    workerId: selectedWorker?.id,
+    endpoint: selectedWorker?.endpoint,
     jp: textJp.value,
     zh: textZh.value,
   });

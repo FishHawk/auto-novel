@@ -48,7 +48,7 @@ export type TranslatorDesc =
   | {
       id: 'gpt';
       type: 'web' | 'api';
-      model: 'gpt-3.5' | 'gpt-4';
+      model: string;
       endpoint: string;
       key: string;
     }

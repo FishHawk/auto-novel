@@ -7,7 +7,7 @@ import { BaseTranslatorConfig, Glossary, SegmentTranslator } from './type';
 
 export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
   type: 'web' | 'api';
-  model: 'gpt-3.5' | 'gpt-4';
+  model: string;
   endpoint: string;
   key: string;
 }
@@ -19,16 +19,11 @@ export class OpenAiTranslator implements SegmentTranslator {
 
   constructor({ log, type, model, endpoint, key }: OpenAiTranslatorConfig) {
     this.log = log;
+    this.model = model;
     if (type === 'web') {
       this.api = new OpenAiWeb(endpoint, key);
-      this.model = 'text-davinci-002-render-sha';
     } else {
       this.api = new OpenAi(endpoint, key);
-      if (model === 'gpt-3.5') {
-        this.model = 'gpt-3.5-turbo';
-      } else {
-        this.model = 'gpt-4';
-      }
     }
   }
 

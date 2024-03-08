@@ -2,25 +2,38 @@
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 import { ref } from 'vue';
 
-import { GptWorker, useGptWorkspaceStore } from '@/data/stores/workspace';
+import { useGptWorkspaceStore } from '@/data/stores/workspace';
 
 const gptWorkspace = useGptWorkspaceStore();
 
 const formRef = ref<FormInst>();
-const formValue = ref<GptWorker>({
+const formValue = ref<{
+  id: string;
+  type: 'web' | 'api';
+  modelWeb: string;
+  modelApi: string;
+  endpointWeb: string;
+  endpointApi: string;
+  key: string;
+}>({
   id: '',
   type: 'web',
-  model: 'gpt-3.5',
-  endpoint: '',
+  modelWeb: 'text-davinci-002-render-sha',
+  modelApi: 'gpt-3.5-turbo',
+  endpointWeb: 'https://chat.openai.com/backend-api',
+  endpointApi: 'https://api.openai.com',
   key: '',
 });
+
+const emptyCheck = (name: string) => ({
+  validator: (rule: FormItemRule, value: string) => value.trim().length > 0,
+  message: name + '不能为空',
+  trigger: 'input',
+});
+
 const formRules: FormRules = {
   id: [
-    {
-      validator: (rule: FormItemRule, value: string) => value.trim().length > 0,
-      message: '名字不能为空',
-      trigger: 'input',
-    },
+    emptyCheck('名字'),
     {
       validator: (rule: FormItemRule, value: string) =>
         gptWorkspace.workers.find(({ id }) => id === value) === undefined,
@@ -28,12 +41,12 @@ const formRules: FormRules = {
       trigger: 'input',
     },
   ],
+  modelWeb: [emptyCheck('模型')],
+  modelApi: [emptyCheck('模型')],
+  endpointWeb: [emptyCheck('链接')],
+  endpointApi: [emptyCheck('链接')],
   key: [
-    {
-      validator: (rule: FormItemRule, value: string) => value.trim().length > 0,
-      message: 'Key不能为空',
-      trigger: 'input',
-    },
+    emptyCheck('Key'),
     {
       validator: (rule: FormItemRule, value: string) =>
         gptWorkspace.workers.find(({ key }) => key === value) === undefined,
@@ -52,10 +65,15 @@ const createGptWorker = async () => {
   });
   if (!validated) return;
 
-  const worker = { ...formValue.value };
-  worker.id = worker.id.trim();
-  worker.endpoint = worker.endpoint.trim();
-  worker.key = worker.key.trim();
+  const { id, type, modelWeb, modelApi, endpointWeb, endpointApi, key } =
+    formValue.value;
+  const worker = {
+    id: id.trim(),
+    type,
+    model: type === 'web' ? modelWeb.trim() : modelApi.trim(),
+    endpoint: type === 'web' ? endpointWeb.trim() : endpointApi.trim(),
+    key: key.trim(),
+  };
   try {
     const obj = JSON.parse(worker.key);
     if (typeof obj.accessToken === 'string') {
@@ -90,23 +108,42 @@ const createGptWorker = async () => {
           </n-flex>
         </n-radio-group>
       </n-form-item-row>
-      <n-form-item-row path="model" label="模型">
-        <n-radio-group v-model:value="formValue.model" name="model">
-          <n-flex>
-            <n-radio value="gpt-3.5">GPT-3.5</n-radio>
-            <n-radio :disabled="formValue.type === 'web'" value="gpt-4">
-              GPT-4
-            </n-radio>
-          </n-flex>
-        </n-radio-group>
-      </n-form-item-row>
-      <n-form-item-row path="endpoint" label="链接">
-        <n-input
-          v-model:value="formValue.endpoint"
-          placeholder="可选，空着表示使用默认值"
-          :input-props="{ spellcheck: false }"
-        />
-      </n-form-item-row>
+
+      <template v-if="formValue.type === 'web'">
+        <n-form-item-row path="modelWeb" label="模型">
+          <n-input
+            v-model:value="formValue.modelWeb"
+            disabled
+            placeholder="模型名称"
+            :input-props="{ spellcheck: false }"
+          />
+        </n-form-item-row>
+        <n-form-item-row path="endpointWeb" label="链接">
+          <n-input
+            v-model:value="formValue.endpointWeb"
+            placeholder="OpenAI链接，可以使用第三方中转"
+            :input-props="{ spellcheck: false }"
+          />
+        </n-form-item-row>
+      </template>
+
+      <template v-else>
+        <n-form-item-row path="modelApi" label="模型">
+          <n-input
+            v-model:value="formValue.modelApi"
+            placeholder="模型名称"
+            :input-props="{ spellcheck: false }"
+          />
+        </n-form-item-row>
+        <n-form-item-row path="endpointApi" label="链接">
+          <n-input
+            v-model:value="formValue.endpointApi"
+            placeholder="OpenAI链接，可以使用第三方中转"
+            :input-props="{ spellcheck: false }"
+          />
+        </n-form-item-row>
+      </template>
+
       <n-form-item-row path="key" label="Key">
         <n-input
           v-model:value="formValue.key"

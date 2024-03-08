@@ -21,7 +21,7 @@ export interface GptWorker {
   id: string;
   endpoint: string;
   type: 'web' | 'api';
-  model?: 'gpt-3.5' | 'gpt-4';
+  model: string;
   key: string;
 }
 
@@ -181,3 +181,25 @@ export const buildPersonalTranslateTask = (
     expire: boolean;
   }
 ) => `personal/${volumeId}` + buildTaskQueryString(params);
+
+export const migrateGptWorkspace = (
+  workspace: ReturnType<typeof useGptWorkspaceStore>
+) => {
+  // 2024-3-8
+  workspace.workers.forEach((it) => {
+    if (it.endpoint.length === 0) {
+      if (it.type === 'web') {
+        it.endpoint = 'https://chat.openai.com/backend-api';
+      } else {
+        it.endpoint = 'https://api.openai.com';
+      }
+    }
+    if (it.type === 'web') {
+      it.model = 'text-davinci-002-render-sha';
+    } else {
+      if (it.model === undefined || it.model === 'gpt-3.5') {
+        it.model = 'gpt-3.5-turbo';
+      }
+    }
+  });
+};

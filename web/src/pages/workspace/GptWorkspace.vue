@@ -8,13 +8,19 @@ import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { notice } from '@/components/NoticeBoard.vue';
-import { TranslateJob, useGptWorkspaceStore } from '@/data/stores/workspace';
+import {
+  TranslateJob,
+  migrateGptWorkspace,
+  useGptWorkspaceStore,
+} from '@/data/stores/workspace';
 import { createSegIndexedDbCache } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
+
+migrateGptWorkspace(gptWorkspace);
 
 const showCreateWorkerModal = ref(false);
 
