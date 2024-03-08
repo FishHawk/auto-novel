@@ -51,21 +51,24 @@ watch(
   currentChapterId,
   async (chapterId, oldChapterId) => {
     const result = await loadChapter(chapterId);
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant',
-    });
 
-    if (oldChapterId !== chapterId) {
-      window.history.pushState(
-        {},
-        document.title,
-        `${novelInfo.pathPrefix}/${chapterId}`
-      );
+    if (oldChapterId !== undefined) {
+      window.scrollTo({
+        top: 0,
+        behavior: 'instant',
+      });
+      if (oldChapterId !== chapterId) {
+        window.history.pushState(
+          {},
+          document.title,
+          `${novelInfo.pathPrefix}/${chapterId}`
+        );
+      }
     }
+
+    chapterResult.value = result;
     if (result.ok) {
       document.title = result.value.titleJp;
-      chapterResult.value = result;
       if (novelInfo.type === 'web' && userData.isLoggedIn) {
         ApiUser.updateReadHistoryWeb(
           novelInfo.providerId,
