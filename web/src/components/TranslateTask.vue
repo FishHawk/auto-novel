@@ -177,12 +177,12 @@ const showDetail = (message: string, detail: string[]) => {
         <c-button
           :label="enableAutoScroll ? '暂停滚动' : '自动滚动'"
           size="small"
-          @click="enableAutoScroll = !enableAutoScroll"
+          @action="enableAutoScroll = !enableAutoScroll"
         />
         <c-button
           :label="expandLog ? '收起日志' : '展开日志'"
           size="small"
-          @click="expandLog = !expandLog"
+          @action="expandLog = !expandLog"
         />
       </n-flex>
     </template>

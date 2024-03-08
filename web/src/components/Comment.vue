@@ -67,7 +67,7 @@ const showInput = ref(false);
         quaternary
         type="tertiary"
         size="tiny"
-        @click="showInput = !showInput"
+        @action="showInput = !showInput"
       />
     </n-flex>
     <n-card embedded :bordered="false" size="small">

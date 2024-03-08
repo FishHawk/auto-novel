@@ -68,7 +68,7 @@ const roleToReadableText = (role: UserRole) => {
               <c-button
                 :label="`管理员模式-${userData.asAdmin}`"
                 size="small"
-                @click="userData.toggleAdminMode()"
+                @action="userData.toggleAdminMode()"
               />
             </n-flex>
           </n-flex>

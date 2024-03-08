@@ -272,13 +272,13 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         <c-button
           label="批量操作"
           :icon="ChecklistOutlined"
-          @click="showOperationPanel = !showOperationPanel"
+          @action="showOperationPanel = !showOperationPanel"
         />
         <c-button
           v-if="!isWideScreen"
           label="收藏夹"
           :icon="FormatListBulletedOutlined"
-          @click="showListModal = true"
+          @action="showListModal = true"
         />
       </n-flex>
 
@@ -291,11 +291,11 @@ const submitJob = (id: 'gpt' | 'sakura') => {
             <c-action-wrapper title="选择">
               <n-flex align="baseline">
                 <n-button-group size="small">
-                  <c-button label="全选" :round="false" @click="selectAll" />
+                  <c-button label="全选" :round="false" @action="selectAll" />
                   <c-button
                     label="反选"
                     :round="false"
-                    @click="invertSelection"
+                    @action="invertSelection"
                   />
                 </n-button-group>
                 <n-text depth="3"> 已选择{{ selectedSize }}本小说 </n-text>
@@ -327,10 +327,9 @@ const submitJob = (id: 'gpt' | 'sakura') => {
               <c-action-wrapper title="操作">
                 <c-button
                   label="移动"
-                  async
                   size="small"
                   :round="false"
-                  @click="moveToFavored"
+                  @action="moveToFavored"
                 />
               </c-action-wrapper>
             </n-flex>
@@ -361,12 +360,12 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                   <c-button
                     label="排队GPT"
                     :round="false"
-                    @click="submitJob('gpt')"
+                    @action="submitJob('gpt')"
                   />
                   <c-button
                     label="排队Sakura"
                     :round="false"
-                    @click="submitJob('sakura')"
+                    @action="submitJob('sakura')"
                   />
                 </n-button-group>
               </c-action-wrapper>
@@ -396,7 +395,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         <c-button
           label="添加"
           :icon="PlusOutlined"
-          @click="showAddModal = true"
+          @action="showAddModal = true"
         />
       </section-header>
       <n-menu :value="currentMenuKey" :options="menuOptions" />
@@ -412,7 +411,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       <c-button
         label="添加"
         :icon="PlusOutlined"
-        @click="showAddModal = true"
+        @action="showAddModal = true"
       />
     </template>
     <n-menu :value="currentMenuKey" :options="menuOptions" />

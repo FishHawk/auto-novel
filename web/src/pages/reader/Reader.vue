@@ -134,7 +134,7 @@ onKeyStroke(['Enter'], (e) => {
       quaternary
       ghost
       :type="chapterId ? 'primary' : 'default'"
-      @click="navToChapter(chapterId!!)"
+      @action="navToChapter(chapterId!!)"
     />
   </DefineChapterLink>
 

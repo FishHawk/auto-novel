@@ -190,14 +190,14 @@ const clearSavedTranslation = () => {
       <c-action-wrapper title="排序">
         <n-flex style="margin-bottom: 16px">
           <n-button-group size="small">
-            <c-button label="翻译" async :round="false" @click="translate" />
-            <c-button label="清空" :round="false" @click="clearTranslation" />
+            <c-button label="翻译" :round="false" @action="translate" />
+            <c-button label="清空" :round="false" @action="clearTranslation" />
           </n-button-group>
           <n-button-group size="small">
             <c-button
               label="复制到剪贴板"
               :round="false"
-              @click="copyToClipboard"
+              @action="copyToClipboard"
             />
           </n-button-group>
         </n-flex>
@@ -229,7 +229,7 @@ const clearSavedTranslation = () => {
     </n-input-group>
 
     <section-header title="翻译历史">
-      <c-button label="清空" @click="clearSavedTranslation" />
+      <c-button label="清空" @action="clearSavedTranslation" />
     </section-header>
 
     <n-empty v-if="savedTranslation.length === 0" description="没有翻译历史" />

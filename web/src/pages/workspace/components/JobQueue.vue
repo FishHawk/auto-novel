@@ -52,20 +52,20 @@ const percentage = computed(() => {
         <c-icon-button
           tooltip="置顶"
           :icon="KeyboardDoubleArrowUpOutlined"
-          @click="emit('topJob')"
+          @action="emit('topJob')"
         />
 
         <c-icon-button
           tooltip="置底"
           :icon="KeyboardDoubleArrowDownOutlined"
-          @click="emit('bottomJob')"
+          @action="emit('bottomJob')"
         />
 
         <c-icon-button
           tooltip="删除"
           :icon="DeleteOutlineOutlined"
           type="error"
-          @click="emit('deleteJob')"
+          @action="emit('deleteJob')"
         />
       </n-flex>
     </template>

@@ -127,7 +127,7 @@ const createGptWorker = async () => {
     </n-form>
 
     <template #action>
-      <c-button label="添加" async type="primary" @click="createGptWorker" />
+      <c-button label="添加" type="primary" @action="createGptWorker" />
     </template>
   </c-modal>
 </template>

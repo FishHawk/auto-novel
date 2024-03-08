@@ -97,7 +97,7 @@ const uploadVolumes = () => {
     v-if="!haveReadRule"
     label="上传"
     :icon="PlusOutlined"
-    @click="uploadVolumes"
+    @action="uploadVolumes"
   />
   <n-upload
     ref="uploadRef"
@@ -130,7 +130,7 @@ const uploadVolumes = () => {
     <n-p> 由于文库小说还在开发中，规则也会变化，务必留意。 </n-p>
 
     <template #action>
-      <c-button label="确定" type="primary" @click="showRuleModal = false" />
+      <c-button label="确定" type="primary" @action="showRuleModal = false" />
     </template>
   </c-modal>
 </template>

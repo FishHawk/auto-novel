@@ -84,7 +84,7 @@ const createSakuraWorker = async () => {
     </n-form>
 
     <template #action>
-      <c-button label="添加" async type="primary" @click="createSakuraWorker" />
+      <c-button label="添加" type="primary" @action="createSakuraWorker" />
     </template>
   </c-modal>
 </template>

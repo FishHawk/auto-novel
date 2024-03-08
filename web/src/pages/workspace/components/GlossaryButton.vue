@@ -34,13 +34,13 @@ const submitGlossary = () =>
   <c-button
     :label="`术语表[${Object.keys(volume.glossary).length}]`"
     v-bind="$attrs"
-    @click="toggleGlossaryModal()"
+    @action="toggleGlossaryModal()"
   />
   <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
     <n-p>{{ volume.id }}</n-p>
     <glossary-edit :glossary="glossary" />
     <template #action>
-      <c-button label="提交" async type="primary" @click="submitGlossary()" />
+      <c-button label="提交" type="primary" @action="submitGlossary()" />
     </template>
   </c-modal>
 </template>

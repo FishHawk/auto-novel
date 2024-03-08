@@ -311,10 +311,9 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
           />
           <c-button
             label="导入"
-            async
             :round="false"
             type="primary"
-            @click="fetchMetadata()"
+            @action="fetchMetadata"
           />
         </n-input-group>
         <n-p>
@@ -331,7 +330,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
               type="error"
               secondary
               label="标记重复"
-              @click="markAsDuplicate"
+              @action="markAsDuplicate"
             />
           </n-flex>
         </n-p>
@@ -403,7 +402,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
     </n-form>
 
     <section-header title="标签">
-      <c-button label="使用说明" @click="showKeywordsModal = true" />
+      <c-button label="使用说明" @action="showKeywordsModal = true" />
     </section-header>
 
     <n-p>
@@ -464,11 +463,11 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
                 :input-props="{ spellcheck: false }"
               />
               <n-flex>
-                <c-button label="删除" @click="deleteVolume(index)" />
+                <c-button label="删除" @action="deleteVolume(index)" />
                 <c-button
                   v-if="index > 0"
                   label="上移"
-                  @click="moveVolumeUp(index)"
+                  @action="moveVolumeUp(index)"
                 />
               </n-flex>
             </n-flex>
@@ -483,12 +482,11 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
       v-if="novelId"
       label="提交"
       :icon="UploadOutlined"
-      async
       require-login
       size="large"
       type="primary"
       class="float"
-      @click="submit"
+      @action="submit"
     />
 
     <n-steps
@@ -532,11 +530,10 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
         <c-button
           label="提交"
           :icon="UploadOutlined"
-          async
           require-login
           type="primary"
           :disabled="submitCurrentStep !== 2"
-          @click="submit"
+          @action="submit"
         />
       </n-step>
     </n-steps>

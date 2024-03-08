@@ -65,17 +65,15 @@ const selectedFavoredId = ref(props.favored ?? 'default');
       v-if="favored"
       label="已收藏"
       :icon="FavoriteOutlined"
-      async
       require-login
-      @click="unfavoriteNovel"
+      @action="unfavoriteNovel"
     />
     <c-button
       v-else
       label="收藏"
       :icon="FavoriteBorderOutlined"
-      async
       require-login
-      @click="favoriteNovel(favoredList[0].id)"
+      @action="favoriteNovel(favoredList[0].id)"
     />
   </template>
 
@@ -84,7 +82,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
       :label="favored ? '已收藏:' + favoredTitle : '收藏'"
       :icon="favored ? FavoriteOutlined : FavoriteBorderOutlined"
       require-login
-      @click="showFavoredModal = true"
+      @action="showFavoredModal = true"
     />
   </template>
 
@@ -104,10 +102,9 @@ const selectedFavoredId = ref(props.favored ?? 'default');
     <template #action>
       <c-button
         label="确定"
-        async
         require-login
         type="primary"
-        @click="
+        @action="
           selectedFavoredId === 'deleted'
             ? unfavoriteNovel()
             : favoriteNovel(selectedFavoredId)

@@ -150,12 +150,11 @@ const submit = async () => {
     <c-button
       label="提交"
       :icon="UploadOutlined"
-      async
       require-login
       size="large"
       type="primary"
       class="float"
-      @click="submit"
+      @action="submit"
     />
   </div>
 </template>

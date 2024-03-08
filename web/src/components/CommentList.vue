@@ -53,7 +53,7 @@ const showInput = ref(false);
       label="发表评论"
       :icon="CommentOutlined"
       require-login
-      @click="showInput = !showInput"
+      @action="showInput = !showInput"
     />
   </section-header>
 

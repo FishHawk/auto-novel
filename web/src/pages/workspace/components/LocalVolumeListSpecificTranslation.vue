@@ -127,7 +127,7 @@ const downloadVolume = async (volumeId: string) => {
             label="排队"
             size="tiny"
             secondary
-            @click="queueVolume(volume.id)"
+            @action="queueVolume(volume.id)"
           />
 
           <c-button
@@ -142,7 +142,7 @@ const downloadVolume = async (volumeId: string) => {
             label="下载"
             size="tiny"
             secondary
-            @click="downloadVolume(volume.id)"
+            @action="downloadVolume(volume.id)"
           />
 
           <glossary-button :volume="volume" size="tiny" secondary />

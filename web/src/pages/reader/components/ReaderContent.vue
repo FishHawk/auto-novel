@@ -210,13 +210,12 @@ const fontColor = computed(() => {
           @positive-click="createWebIncorrectCase(p.popover, chapter)"
         >
           <template #trigger>
-            <n-button
+            <c-button
               text
               style="opacity: 0.5"
-              @click="(e: MouseEvent) => e.stopPropagation()"
-            >
-              <n-icon :component="ErrorOutlineOutlined" />
-            </n-button>
+              :icon="ErrorOutlineOutlined"
+              @action="(e: MouseEvent) => e.stopPropagation()"
+            />
           </template>
           这段话翻得不准确？
         </n-popconfirm>

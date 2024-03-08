@@ -120,10 +120,9 @@ const deleteFavorite = async () => {
     <template #action>
       <c-button
         label="确定"
-        async
         require-login
         type="primary"
-        @click="updateFavorite"
+        @action="updateFavorite"
       />
     </template>
   </c-modal>
@@ -134,10 +133,9 @@ const deleteFavorite = async () => {
     <template #action>
       <c-button
         label="确定"
-        async
         require-login
         type="primary"
-        @click="deleteFavorite"
+        @action="deleteFavorite"
       />
     </template>
   </c-modal>

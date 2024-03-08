@@ -208,28 +208,27 @@ const testWorker = async () => {
         <c-icon-button
           tooltip="测试"
           :icon="FlashOnOutlined"
-          async
-          @click="testWorker"
+          @action="testWorker"
         />
 
         <c-icon-button
           v-if="running"
           tooltip="停止"
           :icon="StopOutlined"
-          @click="stopWorker"
+          @action="stopWorker"
         />
         <c-icon-button
           v-else
           tooltip="启动"
           :icon="PlayArrowOutlined"
-          @click="startWorker"
+          @action="startWorker"
         />
 
         <c-icon-button
           tooltip="删除"
           :icon="DeleteOutlineOutlined"
           type="error"
-          @click="deleteWorker"
+          @action="deleteWorker"
         />
       </n-flex>
     </template>

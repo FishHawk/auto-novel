@@ -100,14 +100,14 @@ const downloadVolume = async () => {
         label="更新百度"
         size="tiny"
         secondary
-        @click="startTranslateTask('baidu')"
+        @action="startTranslateTask('baidu')"
       />
       <c-button
         v-if="setting.enabledTranslator.includes('youdao')"
         label="更新有道"
         size="tiny"
         secondary
-        @click="startTranslateTask('youdao')"
+        @action="startTranslateTask('youdao')"
       />
 
       <c-button
@@ -115,14 +115,14 @@ const downloadVolume = async () => {
         label="排队GPT"
         size="tiny"
         secondary
-        @click="queueVolume('gpt')"
+        @action="queueVolume('gpt')"
       />
       <c-button
         v-if="setting.enabledTranslator.includes('sakura')"
         label="排队Sakura"
         size="tiny"
         secondary
-        @click="queueVolume('sakura')"
+        @action="queueVolume('sakura')"
       />
 
       <c-button
@@ -136,13 +136,7 @@ const downloadVolume = async () => {
 
       <glossary-button :volume="volume" size="tiny" secondary />
 
-      <c-button
-        label="下载"
-        async
-        size="tiny"
-        secondary
-        @click="downloadVolume()"
-      />
+      <c-button label="下载" size="tiny" secondary @action="downloadVolume" />
       <slot />
     </n-flex>
   </n-flex>

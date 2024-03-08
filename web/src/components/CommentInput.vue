@@ -3,7 +3,6 @@ import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
 import { ApiComment } from '@/data/api/api_comment';
-import { useUserDataStore } from '@/data/stores/user_data';
 
 const { site, parent } = withDefaults(
   defineProps<{
@@ -17,7 +16,6 @@ const { site, parent } = withDefaults(
 const emit = defineEmits<{ replied: [] }>();
 
 const message = useMessage();
-const userData = useUserDataStore();
 
 const content = ref('');
 
@@ -57,11 +55,10 @@ async function reply() {
   />
   <c-button
     label="发布"
-    async
     require-login
     :round="false"
     type="primary"
-    @click="reply()"
+    @action="reply()"
     style="margin-top: 10px"
   />
 </template>

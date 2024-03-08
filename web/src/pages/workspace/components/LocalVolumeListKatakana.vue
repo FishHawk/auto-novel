@@ -24,7 +24,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
             label="加载"
             size="tiny"
             secondary
-            @click="emit('volumeLoaded', volume.id)"
+            @action="emit('volumeLoaded', volume.id)"
           />
 
           <glossary-button :volume="volume" size="tiny" secondary />

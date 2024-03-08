@@ -111,14 +111,9 @@ const notices = [
       <c-button
         label="添加翻译器"
         :icon="PlusOutlined"
-        @click="showCreateWorkerModal = true"
+        @action="showCreateWorkerModal = true"
       />
-      <c-button
-        label="清空缓存"
-        :icon="DeleteOutlined"
-        async
-        @click="clearCache"
-      />
+      <c-button label="清空缓存" :icon="DeleteOutlined" @action="clearCache" />
     </section-header>
 
     <n-empty
@@ -139,7 +134,7 @@ const notices = [
       <c-button
         label="清空队列"
         :icon="DeleteOutlined"
-        @click="deleteAllJobs()"
+        @action="deleteAllJobs()"
       />
     </section-header>
     <n-empty v-if="sakuraWorkspace.jobs.length === 0" description="没有任务" />
@@ -159,12 +154,12 @@ const notices = [
       <c-button
         label="重试失败任务"
         :icon="RefreshOutlined"
-        @click="sakuraWorkspace.retryAllJobRecords()"
+        @action="sakuraWorkspace.retryAllJobRecords()"
       />
       <c-button
         label="清空记录"
         :icon="DeleteOutlined"
-        @click="sakuraWorkspace.deleteAllJobRecords()"
+        @action="sakuraWorkspace.deleteAllJobRecords()"
       />
     </section-header>
 

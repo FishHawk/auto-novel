@@ -39,14 +39,14 @@ const url = computed(() => parseTaskUrl(props.job.task));
           v-if="!isFinished"
           tooltip="重试"
           :icon="RefreshOutlined"
-          @click="emit('retryJob')"
+          @action="emit('retryJob')"
         />
 
         <c-icon-button
           tooltip="删除"
           :icon="DeleteOutlineOutlined"
           type="error"
-          @click="emit('deleteJob')"
+          @action="emit('deleteJob')"
         />
       </n-flex>
     </template>

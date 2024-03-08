@@ -84,10 +84,9 @@ const addFavorite = async () => {
     <template #action>
       <c-button
         label="确定"
-        async
         require-login
         type="primary"
-        @click="addFavorite"
+        @action="addFavorite"
       />
     </template>
   </c-modal>

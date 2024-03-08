@@ -187,25 +187,25 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         v-if="setting.enabledTranslator.includes('baidu')"
         label="更新百度"
         :round="false"
-        @click="startTranslateTask('baidu')"
+        @action="startTranslateTask('baidu')"
       />
       <c-button
         v-if="setting.enabledTranslator.includes('youdao')"
         label="更新有道"
         :round="false"
-        @click="startTranslateTask('youdao')"
+        @action="startTranslateTask('youdao')"
       />
       <c-button
         v-if="setting.enabledTranslator.includes('gpt')"
         label="排队GPT"
         :round="false"
-        @click="submitJob('gpt')"
+        @action="submitJob('gpt')"
       />
       <c-button
         v-if="setting.enabledTranslator.includes('sakura')"
         label="排队Sakura"
         :round="false"
-        @click="submitJob('sakura')"
+        @action="submitJob('sakura')"
       />
     </n-button-group>
     <n-text v-else>没有翻译器启用</n-text>
@@ -229,9 +229,8 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       />
       <c-button
         label="导入日文至工作区"
-        async
         :round="false"
-        @click="importToWorkspace"
+        @action="importToWorkspace"
       />
     </n-button-group>
   </n-flex>

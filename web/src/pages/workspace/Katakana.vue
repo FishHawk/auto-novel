@@ -174,7 +174,7 @@ const notices = [
         :label="`[预览] `"
         text
         type="primary"
-        @click="showPreviewModal = true"
+        @action="showPreviewModal = true"
       />
     </n-p>
     <n-p v-else depth="3" style="margin-bottom: 0">未选择文件</n-p>
@@ -190,19 +190,17 @@ const notices = [
             <c-button
               label="复制术语表"
               :round="false"
-              @click="copyTranslationJson()"
+              @action="copyTranslationJson()"
             />
             <c-button
               label="百度翻译"
               :round="false"
-              async
-              @click="translateKatakanas('baidu')"
+              @action="translateKatakanas('baidu')"
             />
             <c-button
               label="有道翻译"
               :round="false"
-              async
-              @click="translateKatakanas('youdao')"
+              @action="translateKatakanas('youdao')"
             />
           </n-button-group>
 
@@ -210,13 +208,12 @@ const notices = [
             <c-button
               :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
               :round="false"
-              async
-              @click="translateKatakanas('sakura')"
+              @action="translateKatakanas('sakura')"
             />
             <c-button
               label="选择翻译器"
               :round="false"
-              @click="showSakuraSelectModal = true"
+              @action="showSakuraSelectModal = true"
             />
           </n-button-group>
         </n-flex>

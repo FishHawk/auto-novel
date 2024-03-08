@@ -126,7 +126,7 @@ defineExpose({ deleteVolume });
     </n-p>
 
     <template #action>
-      <c-button label="确定" async type="primary" @click="deleteAllVolumes" />
+      <c-button label="确定" type="primary" @action="deleteAllVolumes" />
     </template>
   </c-modal>
 </template>

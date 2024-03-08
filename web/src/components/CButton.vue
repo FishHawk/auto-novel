@@ -4,33 +4,29 @@ import { Component, ref } from 'vue';
 
 import { useUserDataStore } from '@/data/stores/user_data';
 
-type Props = { label?: string; icon?: Component; requireLogin?: boolean } & (
-  | { async: true; onClick: () => Promise<any> }
-  | { async?: false; onClick?: () => void }
-);
-
-const props = defineProps<Props>();
+const props = defineProps<{
+  label?: string;
+  icon?: Component;
+  requireLogin?: boolean;
+  onAction?: (e: MouseEvent) => any;
+}>();
 
 const userData = useUserDataStore();
 const message = useMessage();
 
 const running = ref(false);
 
-const onClick = () => {
+const onClick = async (e: MouseEvent) => {
+  if (!props.onAction) return;
+
   if (props.requireLogin === true && !userData.isLoggedIn) {
     message.info('请先登录');
     return;
   }
-
-  if (props.async === true) {
-    if (running.value) return;
-    running.value = true;
-    props.onClick().finally(() => (running.value = false));
-  } else {
-    if (props.onClick) {
-      props.onClick();
-    }
-  }
+  if (running.value) return;
+  running.value = true;
+  await props.onAction(e);
+  running.value = false;
 };
 </script>
 

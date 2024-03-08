@@ -123,7 +123,7 @@ const showListModal = ref(false);
         v-if="!isWideScreen"
         label="列表/排行"
         :icon="FormatListBulletedOutlined"
-        @click="showListModal = true"
+        @action="showListModal = true"
       />
     </div>
 

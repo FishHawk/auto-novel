@@ -79,7 +79,7 @@ const labels = computed(() => {
     <c-button
       label="评论"
       :icon="CommentOutlined"
-      @click="emit('commentClick')"
+      @action="emit('commentClick')"
     />
   </n-flex>
 

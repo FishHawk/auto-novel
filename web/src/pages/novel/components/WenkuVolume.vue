@@ -98,14 +98,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           label="更新百度"
           size="tiny"
           secondary
-          @click="startTranslateTask('baidu')"
+          @action="startTranslateTask('baidu')"
         />
         <c-button
           v-if="setting.enabledTranslator.includes('youdao')"
           label="更新有道"
           size="tiny"
           secondary
-          @click="startTranslateTask('youdao')"
+          @action="startTranslateTask('youdao')"
         />
 
         <c-button
@@ -113,14 +113,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           label="排队GPT"
           size="tiny"
           secondary
-          @click="submitJob('gpt')"
+          @action="submitJob('gpt')"
         />
         <c-button
           v-if="setting.enabledTranslator.includes('sakura')"
           label="排队Sakura"
           size="tiny"
           secondary
-          @click="submitJob('sakura')"
+          @action="submitJob('sakura')"
         />
 
         <n-popconfirm

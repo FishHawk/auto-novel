@@ -142,12 +142,12 @@ watch(
         <c-button
           :round="false"
           label="下载设置"
-          @click="showDownloadModal = true"
+          @action="showDownloadModal = true"
         />
         <c-button
           :round="false"
           :label="`编辑术语表[${Object.keys(glossary).length}]`"
-          @click="showGlossaryModal = true"
+          @action="showGlossaryModal = true"
         />
       </n-button-group>
     </c-action-wrapper>
@@ -157,10 +157,9 @@ watch(
       <template #action>
         <c-button
           label="提交"
-          async
           require-login
           type="primary"
-          @click="submit"
+          @action="submit"
         />
       </template>
     </c-modal>

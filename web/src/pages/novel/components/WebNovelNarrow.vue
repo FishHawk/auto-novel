@@ -47,7 +47,7 @@ const scrollToCommentList = () => {
     <c-button
       :label="setting.tocSortReverse ? '倒序' : '正序'"
       :icon="SortOutlined"
-      @click="setting.tocSortReverse = !setting.tocSortReverse"
+      @action="setting.tocSortReverse = !setting.tocSortReverse"
     />
   </section-header>
 
