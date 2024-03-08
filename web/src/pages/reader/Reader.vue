@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
 import { computed, ref, shallowRef, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import { ApiUser } from '@/data/api/api_user';
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
@@ -19,12 +19,13 @@ const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
 }>();
 
 const route = useRoute();
+const router = useRouter();
 const userData = useUserDataStore();
 const setting = useReaderSettingStore();
 const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
-const currentChapterId = ref(route.params.chapterId as string);
+const currentChapterId = computed(() => route.params.chapterId as string);
 const chapters = new Map<string, WebNovelChapterDto>();
 const chapterResult = shallowRef<Result<WebNovelChapterDto>>();
 
@@ -44,7 +45,7 @@ const loadChapter = async (chapterId: string) => {
 };
 
 const navToChapter = (targetChapterId: string) => {
-  currentChapterId.value = targetChapterId;
+  router.push(`${novelInfo.pathPrefix}/${targetChapterId}`);
 };
 
 watch(
@@ -57,13 +58,6 @@ watch(
         top: 0,
         behavior: 'instant',
       });
-      if (oldChapterId !== chapterId) {
-        window.history.pushState(
-          {},
-          document.title,
-          `${novelInfo.pathPrefix}/${chapterId}`
-        );
-      }
     }
 
     chapterResult.value = result;
