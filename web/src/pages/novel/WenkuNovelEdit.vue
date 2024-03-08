@@ -181,8 +181,9 @@ const fetchMetadata = async () => {
         : amazonMetadata.introduction,
       volumes,
     };
+    message.info('导入成功');
   } catch (e) {
-    message.error(`获取失败:${e}`);
+    message.error(`导入失败:${e}`);
   }
 };
 
@@ -216,13 +217,29 @@ const confirmNovelNotExist = () => {
     submitCurrentStep.value = 2;
   }
 };
-
 const moveVolumeUp = (index: number) => {
   if (index > 0) {
     const temp = formValue.value.volumes[index];
     formValue.value.volumes[index] = formValue.value.volumes[index - 1];
     formValue.value.volumes[index - 1] = temp;
   }
+};
+const moveVolumeDown = (index: number) => {
+  if (index < formValue.value.volumes.length - 1) {
+    const temp = formValue.value.volumes[index];
+    formValue.value.volumes[index] = formValue.value.volumes[index + 1];
+    formValue.value.volumes[index + 1] = temp;
+  }
+};
+const topVolume = (asin: string) => {
+  formValue.value.volumes.sort((a, b) => {
+    return a.asin == asin ? -1 : b.asin == asin ? 1 : 0;
+  });
+};
+const bottomVolume = (asin: string) => {
+  formValue.value.volumes.sort((a, b) => {
+    return a.asin == asin ? 1 : b.asin == asin ? -1 : 0;
+  });
 };
 const deleteVolume = (index: number) => {
   formValue.value.volumes = formValue.value.volumes.filter(
@@ -463,11 +480,31 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
                 :input-props="{ spellcheck: false }"
               />
               <n-flex>
-                <c-button label="删除" @action="deleteVolume(index)" />
                 <c-button
-                  v-if="index > 0"
                   label="上移"
+                  secondary
                   @action="moveVolumeUp(index)"
+                />
+                <c-button
+                  label="下移"
+                  secondary
+                  @action="moveVolumeDown(index)"
+                />
+                <c-button
+                  label="置顶"
+                  secondary
+                  @action="topVolume(volume.asin)"
+                />
+                <c-button
+                  label="置底"
+                  secondary
+                  @action="bottomVolume(volume.asin)"
+                />
+                <c-button
+                  label="删除"
+                  secondary
+                  type="error"
+                  @action="deleteVolume(index)"
                 />
               </n-flex>
             </n-flex>

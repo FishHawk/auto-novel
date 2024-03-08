@@ -23,7 +23,10 @@ const onClick = async (e: MouseEvent) => {
     message.info('请先登录');
     return;
   }
-  if (running.value) return;
+  if (running.value) {
+    message.warning('处理中...');
+    return;
+  }
   running.value = true;
   await props.onAction(e);
   running.value = false;
