@@ -59,35 +59,20 @@ const topMenuOptions = computed(() => {
   ];
 });
 
-const path = route.path;
-const getTopMenuOptionKey = () => {
-  if (path.startsWith('/forum')) {
-    return '/forum';
+const menuKey = computed(() => {
+  const path = route.path;
+  if (path.startsWith('/novel')) {
+    return '/novel-list';
   } else if (path.startsWith('/wenku')) {
     return '/wenku-list';
-  } else if (path.startsWith('/novel')) {
-    return '/novel-list';
   } else if (path.startsWith('/workspace')) {
     return '/workspace';
+  } else if (path.startsWith('/forum')) {
+    return '/forum';
   } else {
     return path;
   }
-};
-const getSideMenuOptionKey = () => {
-  if (path.startsWith('/forum')) {
-    return '/forum';
-  } else if (path.startsWith('/wenku')) {
-    return '/wenku-list';
-  } else if (path.startsWith('/novel-rank')) {
-    return path;
-  } else if (path.startsWith('/novel')) {
-    return '/novel-list';
-  } else if (path.startsWith('/workspace')) {
-    return '/workspace';
-  } else {
-    return path;
-  }
-};
+});
 
 const collapsedMenuOptions = computed(() => {
   const signed = userData.info !== undefined;
@@ -151,7 +136,7 @@ const theme = computed(() => {
               <robot-icon />
               <div>
                 <n-menu
-                  :value="getTopMenuOptionKey()"
+                  :value="menuKey"
                   mode="horizontal"
                   :options="topMenuOptions"
                 />
@@ -204,10 +189,7 @@ const theme = computed(() => {
       </n-layout>
 
       <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
-        <n-menu
-          :value="getSideMenuOptionKey()"
-          :options="collapsedMenuOptions"
-        />
+        <n-menu :value="menuKey" :options="collapsedMenuOptions" />
       </c-drawer-left>
 
       <c-modal
