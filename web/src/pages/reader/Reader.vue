@@ -50,15 +50,8 @@ const navToChapter = (targetChapterId: string) => {
 
 watch(
   currentChapterId,
-  async (chapterId, oldChapterId) => {
+  async (chapterId) => {
     const result = await loadChapter(chapterId);
-
-    if (oldChapterId !== undefined) {
-      window.scrollTo({
-        top: 0,
-        behavior: 'instant',
-      });
-    }
 
     chapterResult.value = result;
     if (result.ok) {
@@ -70,6 +63,7 @@ watch(
           chapterId
         );
       }
+      // 在阅读器缓存章节大于1时，再进行预加载
       if (chapters.size > 1 && result.value.nextId) {
         loadChapter(result.value.nextId);
       }
@@ -124,14 +118,14 @@ onKeyStroke(['Enter'], (e) => {
 </script>
 
 <template>
-  <DefineChapterLink v-slot="{ id: chapterId, label }">
+  <DefineChapterLink v-slot="{ id, label }">
     <c-button
-      :disabled="!chapterId"
+      :key="id"
+      :disabled="id === undefined"
       :lable="label"
       quaternary
-      ghost
-      :type="chapterId ? 'primary' : 'default'"
-      @action="navToChapter(chapterId!!)"
+      :type="id ? 'primary' : 'default'"
+      @action="navToChapter(id!!)"
     />
   </DefineChapterLink>
 
