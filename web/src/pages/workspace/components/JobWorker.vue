@@ -194,23 +194,27 @@ const testWorker = async () => {
 
     <template #header-extra>
       <n-flex :size="6" :wrap="false">
+        <c-button
+          v-if="running"
+          label="停止"
+          :icon="StopOutlined"
+          size="tiny"
+          secondary
+          @action="stopWorker"
+        />
+        <c-button
+          v-else
+          label="启动"
+          :icon="PlayArrowOutlined"
+          size="tiny"
+          secondary
+          @action="startWorker"
+        />
+
         <c-icon-button
           tooltip="测试"
           :icon="FlashOnOutlined"
           @action="testWorker"
-        />
-
-        <c-icon-button
-          v-if="running"
-          tooltip="停止"
-          :icon="StopOutlined"
-          @action="stopWorker"
-        />
-        <c-icon-button
-          v-else
-          tooltip="启动"
-          :icon="PlayArrowOutlined"
-          @action="startWorker"
         />
 
         <c-icon-button
