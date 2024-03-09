@@ -222,6 +222,6 @@ onKeyStroke(['Enter'], (e) => {
   margin: 0 auto;
   padding-left: v-bind("isMobile? '12px' : '24px'");
   padding-right: v-bind("isMobile? '12px' : '84px'");
-  padding-bottom: 48px;
+  padding-bottom: 92px;
 }
 </style>
