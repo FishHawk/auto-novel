@@ -51,7 +51,7 @@ const readerTheme = computed(() => {
     <n-global-style />
     <n-message-provider container-style="white-space: pre-wrap">
       <n-layout>
-        <router-view :key="$route.path" />
+        <router-view />
       </n-layout>
     </n-message-provider>
   </n-config-provider>
