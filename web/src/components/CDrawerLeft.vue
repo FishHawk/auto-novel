@@ -1,5 +1,10 @@
 <template>
-  <n-drawer :width="280" :auto-focus="false" placement="left">
+  <n-drawer
+    :width="280"
+    :auto-focus="false"
+    :block-scroll="false"
+    placement="left"
+  >
     <n-drawer-content
       :native-scrollbar="false"
       :scrollbar-props="{ trigger: 'none' }"

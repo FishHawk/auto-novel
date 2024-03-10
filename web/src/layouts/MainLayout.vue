@@ -8,7 +8,7 @@ import {
   useOsTheme,
   zhCN,
 } from 'naive-ui';
-import { Component, computed, h, ref } from 'vue';
+import { Component, computed, h, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 import { SignInDto } from '@/data/api/api_auth';
@@ -98,6 +98,11 @@ const handleUserDropdownSelect = (key: string | number) => {
 
 const showLoginModal = ref(false);
 const showMenuModal = ref(false);
+
+watch(
+  () => route.path,
+  () => (showMenuModal.value = false)
+);
 
 const onSignInSuccess = (profile: SignInDto) => {
   userData.setProfile(profile);

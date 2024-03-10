@@ -3,7 +3,12 @@ defineProps<{ title: string }>();
 </script>
 
 <template>
-  <n-drawer :width="280" :auto-focus="false" placement="right">
+  <n-drawer
+    :width="280"
+    :auto-focus="false"
+    :block-scroll="false"
+    placement="right"
+  >
     <n-drawer-content
       :native-scrollbar="false"
       :scrollbar-props="{ trigger: 'none' }"
