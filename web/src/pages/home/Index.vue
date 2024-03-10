@@ -109,9 +109,11 @@ const telegramLink = 'https://t.me/+Mphy0wV4LYZkNTI1';
 const githubLink = 'https://github.com/FishHawk/auto-novel';
 
 const notices = [
-  notice('1月20日晚10点网站出现恶性bug，如果你能看到这行字，说明你没有问题。'),
   notice(
     '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。'
+  ),
+  notice(
+    '升级了网络小说目录翻译，有道翻译目录会正确处理空格了，又需要可以使用“重翻目录”。'
   ),
 ];
 </script>
@@ -200,8 +202,8 @@ const notices = [
       将小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。更高级的用法，例如生成机翻、高级搜索等，参见
       <RouterNA to="/forum/64f3d63f794cbb1321145c07">使用教程</RouterNA>
       。有什么问题和建议请在
-      <RouterNA to="/forum/64f3e280794cbb1321145c09"> 反馈&建议 </RouterNA>
-      集中讨论。
+      <RouterNA to="/forum">论坛</RouterNA>
+      中发帖讨论。
     </n-p>
     <n-p> 支持的小说站如下: </n-p>
     <n-p v-for="[name, link] of linkExample">
