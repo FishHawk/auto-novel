@@ -104,6 +104,20 @@ const notices = [
         <RouterNA to="/forum/65719bf16843e12bd3a4dc98" target="_blank">
           租用显卡教程
         </RouterNA>
+        /
+        <n-a
+          href="https://www.autodl.com/console/instance/list"
+          target="_blank"
+        >
+          AutoDL控制台
+        </n-a>
+        /
+        <n-a
+          href="https://www.kaggle.com/code/scratchpad/notebookb5b9fe84c5/edit"
+          target="_blank"
+        >
+          Kaggle脚本
+        </n-a>
       </n-flex>
     </notice-board>
 
