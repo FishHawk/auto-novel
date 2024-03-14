@@ -1,5 +1,5 @@
-import { DBSchema, Mutator, lazyOpenDb } from '@/data/db';
 import { LocalVolumeChapter, LocalVolumeMetadata } from '@/model/LocalVolume';
+import { DBSchema, Mutator, lazyOpenDb } from '@/util/db';
 
 interface VolumesDBSchema extends DBSchema {
   metadata: {

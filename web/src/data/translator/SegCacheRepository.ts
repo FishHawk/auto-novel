@@ -1,4 +1,4 @@
-import { DBSchema, lazyOpenDb } from '@/data/db';
+import { DBSchema, lazyOpenDb } from '@/util/db';
 
 interface SegCacheDBSchema extends DBSchema {
   'gpt-seg-cache': {
