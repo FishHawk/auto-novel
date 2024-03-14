@@ -8,8 +8,8 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { PersonalVolumesManager } from '@/data/translator';
-import { LocalVolumeMetadata } from '@/data/translator/db/personal';
+import { LocalVolumeService } from '@/data/local';
+import { LocalVolumeMetadata } from '@/model/LocalVolume';
 
 import LocalVolumeList from './LocalVolumeList.vue';
 
@@ -77,13 +77,12 @@ const downloadVolume = async (volumeId: string) => {
   const { mode } = setting.downloadFormat;
 
   try {
-    const { filename, blob } =
-      await PersonalVolumesManager.makeTranslationVolumeFile({
-        volumeId,
-        lang: mode,
-        translationsMode: 'priority',
-        translations: [props.type],
-      });
+    const { filename, blob } = await LocalVolumeService.getTranslationFile({
+      id: volumeId,
+      lang: mode,
+      translationsMode: 'priority',
+      translations: [props.type],
+    });
 
     const el = document.createElement('a');
     el.href = URL.createObjectURL(blob);

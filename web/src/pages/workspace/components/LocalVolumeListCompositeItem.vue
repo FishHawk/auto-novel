@@ -9,8 +9,9 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { PersonalVolumesManager, TranslatorId } from '@/data/translator';
-import { LocalVolumeMetadata } from '@/data/translator/db/personal';
+import { TranslatorId } from '@/data/translator';
+import { LocalVolumeMetadata } from '@/model/LocalVolume';
+import { LocalVolumeService } from '@/data/local';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
@@ -67,13 +68,12 @@ const downloadVolume = async () => {
   const { mode, translationsMode, translations } = setting.downloadFormat;
 
   try {
-    const { filename, blob } =
-      await PersonalVolumesManager.makeTranslationVolumeFile({
-        volumeId: props.volume.id,
-        lang: mode,
-        translationsMode,
-        translations,
-      });
+    const { filename, blob } = await LocalVolumeService.getTranslationFile({
+      id: props.volume.id,
+      lang: mode,
+      translationsMode,
+      translations,
+    });
 
     const el = document.createElement('a');
     el.href = URL.createObjectURL(blob);

@@ -3,8 +3,8 @@ import { MoreVertOutlined } from '@vicons/material';
 import { UploadFileInfo, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { PersonalVolumesManager } from '@/data/translator';
-import { LocalVolumeMetadata } from '@/data/translator/db/personal';
+import { LocalVolumeService } from '@/data/local';
+import { LocalVolumeMetadata } from '@/model/LocalVolume';
 
 const props = defineProps<{
   options?: { [key: string]: (volumes: LocalVolumeMetadata[]) => void };
@@ -16,7 +16,7 @@ const message = useMessage();
 const volumes = ref<LocalVolumeMetadata[]>();
 
 const loadVolumes = async () => {
-  volumes.value = await PersonalVolumesManager.listVolumes();
+  volumes.value = await LocalVolumeService.listVolume();
 };
 loadVolumes();
 
@@ -48,7 +48,7 @@ const handleSelect = (key: string) => {
 
 const showClearModal = ref(false);
 const deleteAllVolumes = () =>
-  PersonalVolumesManager.deleteVolumesDb()
+  LocalVolumeService.deleteVolumesDb()
     .then(loadVolumes)
     .then(() => (showClearModal.value = false))
     .catch((error) => {
@@ -69,7 +69,7 @@ const sortedVolumes = computed(() => {
 });
 
 const deleteVolume = (volumeId: string) =>
-  PersonalVolumesManager.deleteVolume(volumeId)
+  LocalVolumeService.deleteVolume(volumeId)
     .then(() => message.info('删除成功'))
     .then(() => loadVolumes())
     .catch((error) => message.error(`删除失败：${error}`));

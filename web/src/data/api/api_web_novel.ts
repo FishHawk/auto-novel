@@ -57,14 +57,14 @@ export interface WebNovelDto {
 
 export interface WebNovelChapterDto {
   titleJp: string;
-  titleZh: string | undefined;
-  prevId: string | undefined;
-  nextId: string | undefined;
+  titleZh?: string;
+  prevId?: string;
+  nextId?: string;
   paragraphs: string[];
-  baiduParagraphs: string[] | undefined;
-  youdaoParagraphs: string[] | undefined;
-  gptParagraphs: string[] | undefined;
-  sakuraParagraphs: string[] | undefined;
+  baiduParagraphs?: string[];
+  youdaoParagraphs?: string[];
+  gptParagraphs?: string[];
+  sakuraParagraphs?: string[];
 }
 
 const listNovel = ({

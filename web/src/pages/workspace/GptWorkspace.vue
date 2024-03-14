@@ -13,7 +13,7 @@ import {
   migrateGptWorkspace,
   useGptWorkspaceStore,
 } from '@/data/stores/workspace';
-import { createSegIndexedDbCache } from '@/data/translator';
+import { CachedSegRepository } from '@/data/translator';
 import { useIsWideScreen } from '@/data/util';
 
 const message = useMessage();
@@ -78,8 +78,7 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () => {
-  const cache = await createSegIndexedDbCache('gpt-seg-cache');
-  await cache.clear();
+  await CachedSegRepository.clear('gpt-seg-cache');
   message.success('缓存清除成功');
 };
 

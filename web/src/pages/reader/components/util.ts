@@ -5,8 +5,8 @@ import {
   WebNovelChapterDto,
   WebNovelTocItemDto,
 } from '@/data/api/api_web_novel';
+import { LocalVolumeService } from '@/data/local';
 import { Result, mapOk, runCatching } from '@/data/result';
-import { PersonalVolumesManager } from '@/data/translator';
 import { buildWebChapterUrl } from '@/data/web/url';
 
 export type NovelInfo = (
@@ -60,7 +60,8 @@ export const getNovelToc = async (
     return newResult;
   } else {
     const getNovelTocInner = async (id: string) => {
-      const metadata = await PersonalVolumesManager.getVolume(id);
+      const metadata = await LocalVolumeService.getVolume(id);
+      if (metadata === undefined) throw Error('小说不存在');
       return metadata.toc.map((it, index) => ({
         titleJp: it.chapterId,
         chapterId: it.chapterId,
@@ -82,26 +83,9 @@ export const getChapter = (
       chapterId
     );
   } else {
-    const getChapterInner = async (id: string, chapterId: string) => {
-      const { toc, chapter } = await PersonalVolumesManager.getChapter(
-        id,
-        chapterId
-      );
-      const currIndex = toc.findIndex((it) => it.chapterId == chapterId);
-      return <WebNovelChapterDto>{
-        titleJp: `${id} - ${chapterId}`,
-        titleZh: undefined,
-        prevId: toc[currIndex - 1]?.chapterId,
-        nextId: toc[currIndex + 1]?.chapterId,
-        paragraphs: chapter.paragraphs,
-        baiduParagraphs: chapter.baidu?.paragraphs,
-        youdaoParagraphs: chapter.youdao?.paragraphs,
-        gptParagraphs: chapter.gpt?.paragraphs,
-        sakuraParagraphs: chapter.sakura?.paragraphs,
-      };
-    };
-
-    return runCatching(getChapterInner(novelInfo.volumeId, chapterId));
+    return runCatching(
+      LocalVolumeService.getReadableChapter(novelInfo.volumeId, chapterId)
+    );
   }
 };
 

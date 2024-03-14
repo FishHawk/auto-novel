@@ -591,4 +591,3 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
     </n-p>
   </c-modal>
 </template>
-@/data/wenku/util_wenku
