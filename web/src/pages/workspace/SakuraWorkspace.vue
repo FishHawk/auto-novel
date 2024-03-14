@@ -7,11 +7,11 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { notice } from '@/components/NoticeBoard.vue';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { CachedSegRepository } from '@/data/translator';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 const message = useMessage();

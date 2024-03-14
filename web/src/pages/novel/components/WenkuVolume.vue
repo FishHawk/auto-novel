@@ -3,7 +3,7 @@ import { FileDownloadOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import TranslateTask from '@/components/TranslateTask.vue';
+import TranslateTask from '@/pages/components/TranslateTask.vue';
 import { ApiWenkuNovel, VolumeJpDto } from '@/data/api/api_wenku_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';

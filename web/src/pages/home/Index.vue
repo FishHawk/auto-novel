@@ -4,7 +4,7 @@ import { useThemeVars } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { notice } from '@/components/NoticeBoard.vue';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import { ApiUser } from '@/data/api/api_user';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
@@ -14,7 +14,7 @@ import {
 import { Ok, Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { parseUrl } from '@/data/web/url';
-import bannerUrl from '@/images/banner.webp';
+import bannerUrl from '@/image/banner.webp';
 
 const userData = useUserDataStore();
 const router = useRouter();

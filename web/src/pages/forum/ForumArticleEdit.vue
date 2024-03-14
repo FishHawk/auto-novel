@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { ApiArticle } from '@/data/api/api_article';
-import avaterUrl from '@/images/avater.jpg';
+import avaterUrl from '@/image/avater.jpg';
 
 const route = useRoute();
 const router = useRouter();

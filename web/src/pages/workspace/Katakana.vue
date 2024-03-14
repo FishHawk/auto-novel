@@ -2,12 +2,12 @@
 import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { notice } from '@/components/NoticeBoard.vue';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import { LocalVolumeService } from '@/data/local';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 import { Epub } from '@/util/epub/epub';
 import { Txt } from '@/util/epub/txt';
 import { PlusOutlined } from '@vicons/material';

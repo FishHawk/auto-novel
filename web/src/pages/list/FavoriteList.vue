@@ -18,7 +18,7 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
 import { Loader } from './components/NovelList.vue';

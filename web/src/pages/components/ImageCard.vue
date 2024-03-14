@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import coverPlaceholder from '@/images/cover_placeholder.png';
+import coverPlaceholder from '@/image/cover_placeholder.png';
 
 defineProps<{
   src: string;

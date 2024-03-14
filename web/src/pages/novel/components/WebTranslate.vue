@@ -3,7 +3,7 @@ import ky from 'ky';
 import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
-import TranslateTask from '@/components/TranslateTask.vue';
+import TranslateTask from '@/pages/components/TranslateTask.vue';
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { useSettingStore } from '@/data/stores/setting';
 import {

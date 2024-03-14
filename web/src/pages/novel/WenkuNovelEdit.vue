@@ -9,10 +9,10 @@ import {
   WenkuNovelOutlineDto,
 } from '@/data/api/api_wenku_novel';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 import { fetchMetadataFromAmazon, prettyCover } from '@/data/wenku/amazon';
 import { presetKeywordsR18, presetKeywordsNonR18 } from '@/data/wenku/keyword';
-import coverPlaceholder from '@/images/cover_placeholder.png';
+import coverPlaceholder from '@/image/cover_placeholder.png';
 
 const route = useRoute();
 const router = useRouter();

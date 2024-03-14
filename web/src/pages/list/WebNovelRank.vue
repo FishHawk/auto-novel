@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router';
 
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { Page } from '@/data/api/common';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';

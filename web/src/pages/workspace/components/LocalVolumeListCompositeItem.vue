@@ -2,7 +2,7 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import TranslateTask from '@/components/TranslateTask.vue';
+import TranslateTask from '@/pages/components/TranslateTask.vue';
 import { useSettingStore } from '@/data/stores/setting';
 import {
   buildPersonalTranslateTask,

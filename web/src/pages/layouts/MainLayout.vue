@@ -14,7 +14,7 @@ import { RouterLink, useRoute } from 'vue-router';
 import { SignInDto } from '@/data/api/api_auth';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(850);
 const setting = useSettingStore();

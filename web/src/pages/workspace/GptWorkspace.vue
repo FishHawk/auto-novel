@@ -7,14 +7,14 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { notice } from '@/components/NoticeBoard.vue';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import {
   TranslateJob,
   migrateGptWorkspace,
   useGptWorkspaceStore,
 } from '@/data/stores/workspace';
 import { CachedSegRepository } from '@/data/translator';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();

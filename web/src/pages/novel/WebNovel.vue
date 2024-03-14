@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { ApiWebNovel } from '@/data/api/api_web_novel';
 import { Result, mapOk } from '@/data/result';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 import { ReadableTocItem, WebNovelVM } from './components/common';
 

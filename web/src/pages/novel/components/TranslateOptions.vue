@@ -9,7 +9,7 @@ import {
   useSettingStore,
 } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 defineProps<{
   type: 'web' | 'wenku';

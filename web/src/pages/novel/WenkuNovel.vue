@@ -8,8 +8,8 @@ import { useRoute } from 'vue-router';
 import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
 import { Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/data/util';
-import coverPlaceholder from '@/images/cover_placeholder.png';
+import { useIsWideScreen } from '@/pages/util';
+import coverPlaceholder from '@/image/cover_placeholder.png';
 
 import TranslateOptions from './components/TranslateOptions.vue';
 

@@ -7,7 +7,7 @@ import { ApiUser } from '@/data/api/api_user';
 import { WebNovelChapterDto } from '@/data/api/api_web_novel';
 import { Ok, Result } from '@/data/result';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { checkIsMobile, useIsWideScreen } from '@/data/util';
+import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 
 import { getChapter, getNovelInfo } from './components/util';
 import { TranslatorId } from '@/data/translator';

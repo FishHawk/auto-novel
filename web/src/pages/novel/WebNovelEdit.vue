@@ -5,7 +5,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { ApiWebNovel, WebNovelDto } from '@/data/api/api_web_novel';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 const route = useRoute();
 const router = useRouter();

@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { Page } from '@/data/api/common';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 import { useWebSearchHistoryStore } from '@/data/stores/search_history';
 import { FormatListBulletedOutlined } from '@vicons/material';
