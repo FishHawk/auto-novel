@@ -4,10 +4,10 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { ArticleRepository } from '@/data/api';
-import { formatError } from '@/data/api/client';
 import avaterUrl from '@/image/avater.jpg';
 import { ArticleCategory } from '@/model/Article';
 import { runCatching } from '@/pages/result';
+import { doAction } from '@/pages/util';
 
 const route = useRoute();
 const router = useRouter();
@@ -79,23 +79,21 @@ const submit = async () => {
   if (!validated) return;
 
   if (articleId === undefined) {
-    await ArticleRepository.createArticle(formValue.value)
-      .then((id) => {
-        message.info('发布成功');
-        router.push({ path: `/forum/${id}` });
-      })
-      .catch((e) => {
-        message.error('发布失败:' + formatError(e));
-      });
+    await doAction(
+      ArticleRepository.createArticle(formValue.value).then((id) =>
+        router.push({ path: `/forum/${id}` })
+      ),
+      '发布',
+      message
+    );
   } else {
-    await ArticleRepository.updateArticle(articleId, formValue.value)
-      .then(() => {
-        message.info('更新成功');
-        router.push({ path: `/forum/${articleId}` });
-      })
-      .catch((e) => {
-        message.error('更新失败:' + formatError(e));
-      });
+    await doAction(
+      ArticleRepository.updateArticle(articleId, formValue.value).then(() =>
+        router.push({ path: `/forum/${articleId}` })
+      ),
+      '更新',
+      message
+    );
   }
 };
 

@@ -52,9 +52,9 @@ async function realSendEmail() {
         }
       }, 1000);
     })
-    .catch((e) => {
+    .catch(async (e) => {
       verifyState.value = undefined;
-      message.error('邮件发送失败:' + formatError(e));
+      message.error('邮件发送失败:' + (await formatError(e)));
     });
 }
 </script>

@@ -458,13 +458,15 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
       <n-list>
         <n-list-item v-for="(volume, index) in formValue.volumes">
           <n-flex :wrap="false">
-            <n-image
-              width="104"
-              :src="volume.cover"
-              :alt="volume.asin"
-              lazy
-              style="border-radius: 2px"
-            />
+            <div>
+              <n-image
+                width="104"
+                :src="volume.cover"
+                :alt="volume.asin"
+                lazy
+                style="border-radius: 2px"
+              />
+            </div>
 
             <n-flex vertical style="flex: auto">
               <n-a :href="`https://www.amazon.co.jp/-/zh/dp/${volume.asin}`">

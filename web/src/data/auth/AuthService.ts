@@ -23,7 +23,7 @@ export const AuthService = {
           const profile = await AuthRepository.renew();
           userData.setProfile(profile);
         } catch (e) {
-          console.warn('更新授权失败：' + formatError(e));
+          console.warn('更新授权失败：' + (await formatError(e)));
         }
       }
     }

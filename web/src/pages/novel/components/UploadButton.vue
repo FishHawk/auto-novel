@@ -75,9 +75,9 @@ const customRequest = ({
     .then(() => {
       onFinish();
     })
-    .catch((e) => {
+    .catch(async (e) => {
       onError();
-      message.error(`上传失败:${formatError(e)}`);
+      message.error(`上传失败:${await formatError(e)}`);
     });
 };
 
