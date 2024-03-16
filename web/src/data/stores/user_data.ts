@@ -1,9 +1,14 @@
 import { defineStore } from 'pinia';
 
-import { SignInDto } from '@/data/api/api_auth';
-import { UserRole } from '@/data/api/api_user';
+import { UserProfile, UserRole } from '@/model/User';
 
-function validExpires(info: SignInDto | undefined) {
+interface UserData {
+  info?: UserProfile;
+  renewedAt?: number;
+  adminMode: boolean;
+}
+
+const validExpires = (info: UserProfile | undefined) => {
   if (info) {
     if (Date.now() / 1000 > info.expiresAt) {
       return undefined;
@@ -13,15 +18,9 @@ function validExpires(info: SignInDto | undefined) {
   } else {
     return undefined;
   }
-}
+};
 
-interface UserData {
-  info?: SignInDto;
-  renewedAt?: number;
-  adminMode: boolean;
-}
-
-function userRoleAtLeast(info: SignInDto | undefined, role: UserRole) {
+const userRoleAtLeast = (info: UserProfile | undefined, role: UserRole) => {
   const myRole = validExpires(info)?.role;
   if (!myRole) {
     return false;
@@ -39,7 +38,7 @@ function userRoleAtLeast(info: SignInDto | undefined, role: UserRole) {
   } else {
     return roleToNumber.get(myRole)! >= roleToNumber.get(role)!;
   }
-}
+};
 
 export const useUserDataStore = defineStore('authInfo', {
   state: () =>
@@ -76,7 +75,7 @@ export const useUserDataStore = defineStore('authInfo', {
       adminMode && userRoleAtLeast(info, 'admin'),
   },
   actions: {
-    setProfile(profile: SignInDto) {
+    setProfile(profile: UserProfile) {
       this.renewedAt = Date.now();
       this.info = profile;
     },

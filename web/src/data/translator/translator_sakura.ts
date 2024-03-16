@@ -1,7 +1,9 @@
+import { Glossary } from '@/model/Glossary';
+
 import { Llamacpp } from './api/llamacpp';
 import { OpenAi } from './api/openai';
 import { createLengthSegmentor } from './common';
-import { BaseTranslatorConfig, Glossary, SegmentTranslator } from './type';
+import { BaseTranslatorConfig, SegmentTranslator } from './type';
 
 export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
   endpoint: string;

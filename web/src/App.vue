@@ -1,35 +1,12 @@
 <script lang="ts" setup>
-import { watch } from 'vue';
-
-import { ApiAuth } from '@/data/api/api_auth';
-import { updateToken } from '@/data/api/client';
 import {
   migrateReaderSetting,
   useReaderSettingStore,
 } from '@/data/stores/reader_setting';
 import { migrateSetting, useSettingStore } from '@/data/stores/setting';
-import { useUserDataStore } from '@/data/stores/user_data';
+import { AuthService } from '@/data/auth/AuthService';
 
-const userData = useUserDataStore();
-
-// 全局注册token
-watch(
-  () => userData.token,
-  (newToken, _oldToken) => updateToken(newToken),
-  { immediate: true }
-);
-
-// 每隔24小时刷新登录状态
-if (userData.isLoggedIn) {
-  const sinceLoggedIn = Date.now() - (userData.renewedAt ?? 0);
-  if (!userData.info?.createAt || sinceLoggedIn > 24 * 3600 * 1000) {
-    ApiAuth.renew().then((result) => {
-      if (result.ok) {
-        userData.setProfile(result.value);
-      }
-    });
-  }
-}
+AuthService.activate();
 
 // 设置格式迁移
 const setting = useSettingStore();

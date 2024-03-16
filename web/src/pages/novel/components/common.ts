@@ -1,4 +1,4 @@
-import { WebNovelDto, WebNovelTocItemDto } from '@/data/api/api_web_novel';
+import { WebNovelDto, WebNovelTocItemDto } from "@/model/WebNovel";
 
 export type ReadableTocItem = WebNovelTocItemDto & {
   index: number;

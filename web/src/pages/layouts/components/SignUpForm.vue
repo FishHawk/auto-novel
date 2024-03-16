@@ -2,9 +2,11 @@
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { ApiAuth, SignInDto } from '@/data/api/api_auth';
+import { AuthRepository } from '@/data/api';
+import { AuthService } from '@/data/auth';
+import { doAction } from '@/pages/util';
 
-const emit = defineEmits<{ (e: 'signUp', user: SignInDto): void }>();
+const emit = defineEmits<{ (e: 'signUp'): void }>();
 
 const message = useMessage();
 
@@ -68,18 +70,16 @@ const signUp = async () => {
     return;
   }
 
-  const result = await ApiAuth.signUp(
-    formValue.value.email,
-    formValue.value.emailCode,
-    formValue.value.username,
-    formValue.value.password
+  await doAction(
+    AuthService.signUp({
+      email: formValue.value.email,
+      emailCode: formValue.value.emailCode,
+      username: formValue.value.username,
+      password: formValue.value.password,
+    }).then(() => emit('signUp')),
+    '注册',
+    message
   );
-
-  if (result.ok) {
-    emit('signUp', result.value);
-  } else {
-    message.error('注册失败:' + result.error.message);
-  }
 };
 
 const allowSendEmail = () => {
@@ -89,7 +89,7 @@ const allowSendEmail = () => {
   return allow;
 };
 
-const sendEmail = () => ApiAuth.verifyEmail(formValue.value.email);
+const sendEmail = () => AuthRepository.verifyEmail(formValue.value.email);
 </script>
 
 <template>

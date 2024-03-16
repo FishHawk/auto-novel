@@ -1,10 +1,11 @@
+import { WebNovelRepository } from '@/data/api';
 import { client } from '@/data/api/client';
 import { LocalVolumeService } from '@/data/local';
 import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
+import { WebNovelDto } from '@/model/WebNovel';
 
 import { Translator } from './translator';
 import { SakuraTranslator } from './translator_sakura';
-import { ApiWebNovel, WebNovelDto } from '../api/api_web_novel';
 
 type WebTranslateTaskDesc = {
   type: 'web';
@@ -122,12 +123,7 @@ const translateWeb = async (
   let task: TranslateTaskDto;
   try {
     callback.log('获取元数据');
-    const novelResult = await ApiWebNovel.getNovel(providerId, novelId);
-    if (novelResult.ok) {
-      novel = novelResult.value;
-    } else {
-      throw novelResult.error;
-    }
+    novel = await WebNovelRepository.getNovel(providerId, novelId);
     callback.log('获取翻译任务');
     // 临时手段解决timeout，等数据库大修完成后删去
     try {

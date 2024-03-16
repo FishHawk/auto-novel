@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { TranslatorId } from '@/data/translator/translator';
-import { Glossary } from '@/data/translator/type';
 import {
   ChapterTranslation,
   LocalVolumeChapter,
   LocalVolumeMetadata,
 } from '@/model/LocalVolume';
+import { Glossary } from '@/model/Glossary';
 
 import { createVolume, deleteVolume } from './CreateAndDeleteVolumeUseCase';
 import { getReadableChapter } from './GetReaderableChapterUseCase';

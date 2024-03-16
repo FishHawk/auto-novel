@@ -2,9 +2,9 @@
 import { createReusableTemplate } from '@vueuse/core';
 import { ref, watch } from 'vue';
 
-import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import { tryTranslateKeyword } from '@/data/web/keyword';
 import { buildWebNovelUrl } from '@/data/web/url';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;

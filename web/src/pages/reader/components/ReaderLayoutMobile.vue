@@ -2,13 +2,13 @@
 import {
   ArrowBackIosOutlined,
   ArrowForwardIosOutlined,
-  TuneOutlined,
   FormatListBulletedOutlined,
   LibraryBooksOutlined,
+  TuneOutlined,
 } from '@vicons/material';
 import { ref } from 'vue';
 
-import { WebNovelChapterDto } from '@/data/api/api_web_novel';
+import { WebNovelChapterDto } from '@/model/WebNovel';
 
 defineProps<{
   novelUrl?: string;

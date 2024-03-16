@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
-import { ApiUser } from '@/data/api/api_user';
-import { Page } from '@/data/api/common';
-import { Result } from '@/data/result';
-import { UserRole, UserOutline } from '@/data/api/api_user';
+import { UserRepository } from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
+import { Page } from '@/model/Page';
+import { UserOutline, UserRole } from '@/model/User';
 
 const userRole = ref<UserRole>('normal');
 const userRoleOptions = [
@@ -14,19 +13,19 @@ const userRoleOptions = [
   { value: 'banned', label: '封禁用户' },
 ];
 
-const message = useMessage();
-
 const currentPage = ref(1);
 const pageNumber = ref(1);
 const userResult = ref<Result<Page<UserOutline>>>();
 
 async function loadPage(page: number) {
   userResult.value = undefined;
-  const result = await ApiUser.listUser({
-    page: currentPage.value - 1,
-    pageSize: 50,
-    role: userRole.value,
-  });
+  const result = await runCatching(
+    UserRepository.listUser({
+      page: currentPage.value - 1,
+      pageSize: 50,
+      role: userRole.value,
+    })
+  );
   if (currentPage.value == page) {
     userResult.value = result;
     if (result.ok) {

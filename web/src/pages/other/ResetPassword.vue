@@ -2,7 +2,8 @@
 import { ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 
-import { ApiAuth } from '@/data/api/api_auth';
+import { AuthRepository } from '@/data/api';
+import { doAction } from '../util';
 
 const message = useMessage();
 
@@ -54,22 +55,20 @@ const resetPassword = async () => {
     return;
   }
 
-  const userResult = await ApiAuth.resetPassword(
-    formValue.value.emailOrUsername,
-    formValue.value.resetPasswordToken,
-    formValue.value.password
+  await doAction(
+    AuthRepository.resetPassword(
+      formValue.value.emailOrUsername,
+      formValue.value.resetPasswordToken,
+      formValue.value.password
+    ),
+    '密码重置',
+    message
   );
-
-  if (userResult.ok) {
-    message.info('密码重置成功');
-  } else {
-    message.error('密码重置失败:' + userResult.error.message);
-  }
 };
 
 const allowSendEmail = () => true;
 const sendEmail = () =>
-  ApiAuth.sendResetPasswordEmail(formValue.value.emailOrUsername);
+  AuthRepository.sendResetPasswordEmail(formValue.value.emailOrUsername);
 </script>
 
 <template>

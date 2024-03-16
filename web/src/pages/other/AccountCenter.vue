@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { UserRole } from '@/data/api/api_user';
 import { themeOptions, useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { UserRole } from '@/model/User';
 
 const setting = useSettingStore();
 const userData = useUserDataStore();

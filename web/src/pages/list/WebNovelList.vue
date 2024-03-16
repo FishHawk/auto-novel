@@ -1,16 +1,18 @@
 <script lang="ts" setup>
-import { useRoute } from 'vue-router';
-
-import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { Page } from '@/data/api/common';
-import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/pages/util';
-
-import { useWebSearchHistoryStore } from '@/data/stores/search_history';
 import { FormatListBulletedOutlined } from '@vicons/material';
 import { computed, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+
+import { WebNovelRepository } from '@/data/api';
+import { useWebSearchHistoryStore } from '@/data/stores/search_history';
+import { useUserDataStore } from '@/data/stores/user_data';
+import { Page } from '@/model/Page';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { useIsWideScreen } from '@/pages/util';
+
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
+import { runCatching } from '@/pages/result';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
@@ -69,24 +71,26 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
       .join();
   };
 
-  return ApiWebNovel.listNovel({
-    page,
-    pageSize: 20,
-    query,
-    provider: parseProviderBitFlags(0),
-    type: selected[1],
-    ...(userData.isOldAss
-      ? {
-          level: selected[2],
-          translate: selected[3],
-          sort: selected[4],
-        }
-      : {
-          level: 1,
-          translate: selected[2],
-          sort: selected[3],
-        }),
-  });
+  return runCatching(
+    WebNovelRepository.listNovel({
+      page,
+      pageSize: 20,
+      query,
+      provider: parseProviderBitFlags(0),
+      type: selected[1],
+      ...(userData.isOldAss
+        ? {
+            level: selected[2],
+            translate: selected[3],
+            sort: selected[4],
+          }
+        : {
+            level: 1,
+            translate: selected[2],
+            sort: selected[3],
+          }),
+    })
+  );
 };
 
 const search = computed(() => {

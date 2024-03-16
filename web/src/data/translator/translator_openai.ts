@@ -1,9 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { Glossary } from '@/model/Glossary';
+
 import { OpenAi, OpenAiError } from './api/openai';
 import { OpenAiWeb } from './api/openai_web';
 import { createLengthSegmentor } from './common';
-import { BaseTranslatorConfig, Glossary, SegmentTranslator } from './type';
+import { BaseTranslatorConfig, SegmentTranslator } from './type';
 
 export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
   type: 'web' | 'api';

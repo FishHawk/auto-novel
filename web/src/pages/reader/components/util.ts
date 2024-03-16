@@ -1,13 +1,10 @@
 import { RouteParams } from 'vue-router';
 
-import {
-  ApiWebNovel,
-  WebNovelChapterDto,
-  WebNovelTocItemDto,
-} from '@/data/api/api_web_novel';
+import { WebNovelRepository } from '@/data/api';
 import { LocalVolumeService } from '@/data/local';
-import { Result, mapOk, runCatching } from '@/data/result';
+import { Result, runCatching } from '@/pages/result';
 import { buildWebChapterUrl } from '@/data/web/url';
+import { WebNovelChapterDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
 export type NovelInfo = (
   | { type: 'web'; providerId: string; novelId: string }
@@ -48,16 +45,15 @@ export const getNovelToc = async (
   novelInfo: NovelInfo
 ): Promise<Result<TocItem[]>> => {
   if (novelInfo.type === 'web') {
-    const result = await ApiWebNovel.getNovel(
-      novelInfo.providerId,
-      novelInfo.novelId
+    return await runCatching(
+      WebNovelRepository.getNovel(novelInfo.providerId, novelInfo.novelId).then(
+        (novel) => {
+          const toc = novel.toc as TocItem[];
+          toc.forEach((it, index) => (it.key = index));
+          return toc;
+        }
+      )
     );
-    const newResult = mapOk(result, (novel) => {
-      const toc = novel.toc as TocItem[];
-      toc.forEach((it, index) => (it.key = index));
-      return toc;
-    });
-    return newResult;
   } else {
     const getNovelTocInner = async (id: string) => {
       const metadata = await LocalVolumeService.getVolume(id);
@@ -77,10 +73,12 @@ export const getChapter = (
   chapterId: string
 ): Promise<Result<WebNovelChapterDto>> => {
   if (novelInfo.type === 'web') {
-    return ApiWebNovel.getChapter(
-      novelInfo.providerId,
-      novelInfo.novelId,
-      chapterId
+    return runCatching(
+      WebNovelRepository.getChapter(
+        novelInfo.providerId,
+        novelInfo.novelId,
+        chapterId
+      )
     );
   } else {
     return runCatching(

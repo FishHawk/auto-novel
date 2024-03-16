@@ -2,9 +2,10 @@
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { ApiAuth, SignInDto } from '@/data/api/api_auth';
+import { AuthService } from '@/data/auth';
+import { doAction } from '@/pages/util';
 
-const emit = defineEmits<{ (e: 'signIn', user: SignInDto): void }>();
+const emit = defineEmits<{ (e: 'signIn'): void }>();
 
 const message = useMessage();
 
@@ -38,17 +39,11 @@ const signIn = async () => {
   } catch (e) {
     return;
   }
-
-  const result = await ApiAuth.signIn(
-    formValue.value.emailOrUsername,
-    formValue.value.password
+  await doAction(
+    AuthService.signIn(formValue.value).then(() => emit('signIn')),
+    '登录',
+    message
   );
-
-  if (result.ok) {
-    emit('signIn', result.value);
-  } else {
-    message.error('登录失败:' + result.error.message);
-  }
 };
 </script>
 

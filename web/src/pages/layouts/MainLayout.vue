@@ -11,7 +11,6 @@ import {
 import { Component, computed, h, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-import { SignInDto } from '@/data/api/api_auth';
 import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/pages/util';
@@ -103,11 +102,6 @@ watch(
   () => route.path,
   () => (showMenuModal.value = false)
 );
-
-const onSignInSuccess = (profile: SignInDto) => {
-  userData.setProfile(profile);
-  showLoginModal.value = false;
-};
 
 const osThemeRef = useOsTheme();
 const theme = computed(() => {
@@ -209,11 +203,11 @@ const theme = computed(() => {
           pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
         >
           <n-tab-pane name="signin" tab="登录">
-            <SignInForm @signIn="onSignInSuccess" />
+            <SignInForm @signIn="showLoginModal = false" />
           </n-tab-pane>
 
           <n-tab-pane name="signup" tab="注册">
-            <SignUpForm @signUp="onSignInSuccess" />
+            <SignUpForm @signUp="showLoginModal = false" />
           </n-tab-pane>
         </n-tabs>
       </c-modal>

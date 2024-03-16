@@ -2,9 +2,10 @@
 import { CommentOutlined } from '@vicons/material';
 import { ref, watch } from 'vue';
 
-import { ApiComment, Comment1 } from '@/data/api/api_comment';
-import { Page } from '@/data/api/common';
-import { Ok, Result } from '@/data/result';
+import { CommentRepository } from '@/data/api';
+import { Ok, Result, runCatching } from '@/pages/result';
+import { Comment1 } from '@/model/Comment';
+import { Page } from '@/model/Page';
 
 const { site } = withDefaults(
   defineProps<{
@@ -18,11 +19,13 @@ const commentPage = ref<Result<Page<Comment1>>>();
 const currentPage = ref(1);
 
 async function loadComments(page: number) {
-  const result = await ApiComment.listComment({
-    site,
-    page: page - 1,
-    pageSize: 10,
-  });
+  const result = await runCatching(
+    CommentRepository.listComment({
+      site,
+      page: page - 1,
+      pageSize: 10,
+    })
+  );
   if (result.ok) {
     commentPage.value = Ok({
       ...result.value,

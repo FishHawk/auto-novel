@@ -4,7 +4,9 @@ import { createReusableTemplate } from '@vueuse/core';
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
-import { ApiComment, Comment1 } from '@/data/api/api_comment';
+import { CommentRepository } from '@/data/api';
+import { Comment1 } from '@/model/Comment';
+import { runCatching } from '@/pages/result';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;
@@ -23,12 +25,14 @@ const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
 
 const loadReplies = async (page: number) => {
-  const result = await ApiComment.listComment({
-    site,
-    parentId: comment.id,
-    page: page - 1,
-    pageSize: 10,
-  });
+  const result = await runCatching(
+    CommentRepository.listComment({
+      site,
+      parentId: comment.id,
+      page: page - 1,
+      pageSize: 10,
+    })
+  );
   if (result.ok) {
     pageCount.value = result.value.pageNumber;
     comment.replies = result.value.items;

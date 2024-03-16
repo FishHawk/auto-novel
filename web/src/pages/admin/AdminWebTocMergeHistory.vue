@@ -2,9 +2,11 @@
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
-import { ApiOperation, MergeHistoryDto } from '@/data/api/api_operation';
-import { Page } from '@/data/api/common';
-import { Result} from '@/data/result';
+import { OperationRepository } from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
+import { MergeHistoryDto } from '@/model/Operation';
+import { Page } from '@/model/Page';
+import { doAction } from '../util';
 
 const message = useMessage();
 
@@ -12,30 +14,31 @@ const currentPage = ref(1);
 const pageNumber = ref(1);
 const novelPage = ref<Result<Page<MergeHistoryDto>>>();
 
-async function loadPage(page: number) {
+const loadPage = async (page: number) => {
   novelPage.value = undefined;
-  const result = await ApiOperation.listMergeHistory(currentPage.value - 1);
+  const result = await runCatching(
+    OperationRepository.listMergeHistory(currentPage.value - 1)
+  );
   if (currentPage.value == page) {
     novelPage.value = result;
     if (result.ok) {
       pageNumber.value = result.value.pageNumber;
     }
   }
-}
+};
 
-async function deleteDetail(id: string) {
-  const result = await ApiOperation.deleteMergeHistory(id);
-  if (result.ok) {
-    message.info('删除成功');
-    if (novelPage.value?.ok) {
-      novelPage.value.value.items = novelPage.value.value.items.filter(
-        (it) => it.id !== id
-      );
-    }
-  } else {
-    message.error('删除失败：' + result.error.message);
-  }
-}
+const deleteDetail = (id: string) =>
+  doAction(
+    OperationRepository.deleteMergeHistory(id).then(() => {
+      if (novelPage.value?.ok) {
+        novelPage.value.value.items = novelPage.value.value.items.filter(
+          (it) => it.id !== id
+        );
+      }
+    }),
+    '删除',
+    message
+  );
 
 interface DiffTocItem {
   same: boolean;

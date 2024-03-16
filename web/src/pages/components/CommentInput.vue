@@ -2,7 +2,8 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { ApiComment } from '@/data/api/api_comment';
+import { CommentRepository } from '@/data/api';
+import { doAction } from '../util';
 
 const { site, parent } = withDefaults(
   defineProps<{
@@ -19,24 +20,25 @@ const message = useMessage();
 
 const content = ref('');
 
-async function reply() {
+const reply = async () => {
   if (content.value.length === 0) {
     message.info('回复内容不能为空');
-  } else {
-    const result = await ApiComment.createComment({
+    return;
+  }
+
+  await doAction(
+    CommentRepository.createComment({
       site,
       parent,
       content: content.value,
-    });
-    if (result.ok) {
+    }).then(() => {
       content.value = '';
-      message.info('回复发布成功');
       emit('replied');
-    } else {
-      message.error('回复发布错误：' + result.error.message);
-    }
-  }
-}
+    }),
+    '回复发布',
+    message
+  );
+};
 </script>
 
 <template>

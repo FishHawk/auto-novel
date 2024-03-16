@@ -1,5 +1,8 @@
 import { useWindowSize } from '@vueuse/core';
+import { MessageApi } from 'naive-ui';
 import { computed } from 'vue';
+
+import { formatError } from '@/data/api/client';
 
 export const useIsWideScreen = (limit: number) => {
   const { width } = useWindowSize();
@@ -20,3 +23,16 @@ export const checkIsMobile = () => {
   }
   return false;
 };
+
+export const doAction = (
+  promise: Promise<any>,
+  label: string,
+  message: MessageApi
+) =>
+  promise
+    .then(() => {
+      message.info(label + '成功');
+    })
+    .catch((e) => {
+      message.error(label + '失败:' + formatError(e));
+    });

@@ -4,8 +4,10 @@ import { useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ApiWebNovel, WebNovelDto } from '@/data/api/api_web_novel';
-import { useIsWideScreen } from '@/pages/util';
+import { WebNovelRepository } from '@/data/api';
+import { WebNovelDto } from '@/model/WebNovel';
+import { doAction, useIsWideScreen } from '@/pages/util';
+import { runCatching } from '@/pages/result';
 
 const route = useRoute();
 const router = useRouter();
@@ -25,7 +27,9 @@ const formValue = ref({
 });
 
 onMounted(async () => {
-  const result = await ApiWebNovel.getNovel(providerId, novelId);
+  const result = await runCatching(
+    WebNovelRepository.getNovel(providerId, novelId)
+  );
   if (result.ok) {
     novel.value = result.value;
 
@@ -53,21 +57,21 @@ onMounted(async () => {
 const submit = async () => {
   if (novel.value === undefined) return;
 
-  const result = await ApiWebNovel.updateNovel(providerId, novelId, {
-    title: formValue.value.title.trim(),
-    introduction: formValue.value.introduction.trim(),
-    wenkuId: formValue.value.wenkuId.trim(),
-    toc: Object.assign(
-      {},
-      ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh }))
-    ),
-  });
-  if (result.ok) {
-    message.success('编辑成功');
-    router.push({ path: `/novel/${providerId}/${novelId}` });
-  } else {
-    message.error('编辑失败：' + result.error.message);
-  }
+  await doAction(
+    WebNovelRepository.updateNovel(providerId, novelId, {
+      title: formValue.value.title.trim(),
+      introduction: formValue.value.introduction.trim(),
+      wenkuId: formValue.value.wenkuId.trim(),
+      toc: Object.assign(
+        {},
+        ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh }))
+      ),
+    }).then(() => {
+      router.push({ path: `/novel/${providerId}/${novelId}` });
+    }),
+    '编辑',
+    message
+  );
 };
 </script>
 

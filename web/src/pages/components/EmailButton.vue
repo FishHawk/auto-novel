@@ -2,14 +2,14 @@
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { Result } from '@/data/result';
+import { formatError } from '@/data/api/client';
 
 const message = useMessage();
 
 const props = defineProps<{
   label: string;
   allowSendEmail: () => boolean;
-  sendEmail: () => Promise<Result<string>>;
+  sendEmail: () => Promise<any>;
 }>();
 
 type VerifyState =
@@ -34,27 +34,28 @@ async function realSendEmail() {
   if (!props.allowSendEmail) return;
 
   verifyState.value = { state: 'sending' };
-  const result = await props.sendEmail();
+  await props
+    .sendEmail()
+    .then(() => {
+      verifyState.value = { state: 'cooldown', seconds: 60 };
+      message.info('邮件已发送');
 
-  if (result.ok) {
-    verifyState.value = { state: 'cooldown', seconds: 60 };
-    message.info('邮件已发送');
-
-    const timer = window.setInterval(() => {
-      if (
-        verifyState.value?.state === 'cooldown' &&
-        verifyState.value.seconds > 0
-      ) {
-        verifyState.value.seconds--;
-      } else {
-        verifyState.value = undefined;
-        window.clearInterval(timer);
-      }
-    }, 1000);
-  } else {
-    verifyState.value = undefined;
-    message.error('邮件发送失败:' + result.error.message);
-  }
+      const timer = window.setInterval(() => {
+        if (
+          verifyState.value?.state === 'cooldown' &&
+          verifyState.value.seconds > 0
+        ) {
+          verifyState.value.seconds--;
+        } else {
+          verifyState.value = undefined;
+          window.clearInterval(timer);
+        }
+      }, 1000);
+    })
+    .catch((e) => {
+      verifyState.value = undefined;
+      message.error('邮件发送失败:' + formatError(e));
+    });
 }
 </script>
 

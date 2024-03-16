@@ -1,7 +1,8 @@
-import { BaseTranslatorConfig, Glossary, SegmentTranslator } from './type';
-import { createGlossaryWrapper, createLengthSegmentor } from './common';
+import { Glossary } from '@/model/Glossary';
 
 import { Baidu } from './api/baidu';
+import { createGlossaryWrapper, createLengthSegmentor } from './common';
+import { BaseTranslatorConfig, SegmentTranslator } from './type';
 
 export type BaiduTranslatorConfig = BaseTranslatorConfig;
 

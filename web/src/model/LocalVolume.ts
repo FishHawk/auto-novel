@@ -1,4 +1,4 @@
-import { Glossary } from '@/data/translator/type';
+import { Glossary } from './Glossary';
 
 export interface ChapterTranslation {
   glossaryId: string;

@@ -1,11 +1,13 @@
 import { MD5 } from 'crypto-es/lib/md5';
 
+import { Glossary } from '@/model/Glossary';
+
+import { CachedSegRepository } from './SegCacheRepository';
 import { BaiduTranslator, BaiduTranslatorConfig } from './translator_baidu';
 import { OpenAiTranslator, OpenAiTranslatorConfig } from './translator_openai';
 import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
 import { YoudaoTranslator, YoudaoTranslatorConfig } from './translator_youdao';
-import { Glossary, SegmentTranslator } from './type';
-import { CachedSegRepository } from './SegCacheRepository';
+import { SegmentTranslator } from './type';
 
 export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
 

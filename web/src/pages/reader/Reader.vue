@@ -3,9 +3,9 @@ import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
 import { computed, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ApiUser } from '@/data/api/api_user';
-import { WebNovelChapterDto } from '@/data/api/api_web_novel';
-import { Ok, Result } from '@/data/result';
+import { UserRepository } from '@/data/api';
+import { WebNovelChapterDto } from '@/model/WebNovel';
+import { Ok, Result } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 
@@ -57,7 +57,7 @@ watch(
     if (result.ok) {
       document.title = result.value.titleJp;
       if (novelInfo.type === 'web' && userData.isLoggedIn) {
-        ApiUser.updateReadHistoryWeb(
+        UserRepository.updateReadHistoryWeb(
           novelInfo.providerId,
           novelInfo.novelId,
           chapterId

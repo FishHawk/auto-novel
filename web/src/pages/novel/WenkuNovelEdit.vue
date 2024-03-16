@@ -4,15 +4,14 @@ import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import {
-  ApiWenkuNovel,
-  WenkuNovelOutlineDto,
-} from '@/data/api/api_wenku_novel';
+import { WenkuNovelRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/pages/util';
 import { fetchMetadataFromAmazon, prettyCover } from '@/data/wenku/amazon';
-import { presetKeywordsR18, presetKeywordsNonR18 } from '@/data/wenku/keyword';
+import { presetKeywordsNonR18, presetKeywordsR18 } from '@/data/wenku/keyword';
 import coverPlaceholder from '@/image/cover_placeholder.png';
+import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
+import { doAction, useIsWideScreen } from '@/pages/util';
+import { runCatching } from '@/pages/result';
 
 const route = useRoute();
 const router = useRouter();
@@ -74,7 +73,7 @@ const formRules: FormRules = {
 
 onMounted(async () => {
   if (novelId !== undefined) {
-    const result = await ApiWenkuNovel.getNovel(novelId);
+    const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
     if (result.ok) {
       formValue.value = {
         title: result.value.title,
@@ -125,21 +124,21 @@ const submit = async () => {
   };
 
   if (novelId === undefined) {
-    const result = await ApiWenkuNovel.createNovel(body);
-    if (result.ok) {
-      message.info('新建文库成功');
-      router.push({ path: `/wenku/${result.value}` });
-    } else {
-      message.error('新建文库失败:' + result.error.message);
-    }
+    await doAction(
+      WenkuNovelRepository.createNovel(body).then(() =>
+        router.push({ path: `/wenku/${novelId}` })
+      ),
+      '新建文库',
+      message
+    );
   } else {
-    const result = await ApiWenkuNovel.updateNovel(novelId, body);
-    if (result.ok) {
-      message.info('编辑文库成功');
-      router.push({ path: `/wenku/${novelId}` });
-    } else {
-      message.error('编辑文库失败:' + result.error.message);
-    }
+    await doAction(
+      WenkuNovelRepository.updateNovel(novelId, body).then(() =>
+        router.push({ path: `/wenku/${novelId}` })
+      ),
+      '编辑文库',
+      message
+    );
   }
 };
 
@@ -200,12 +199,14 @@ const findSimilarNovels = async () => {
     /[^\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\u3400-\u4dbf]/,
     2
   )[0];
-  const result = await ApiWenkuNovel.listNovel({
-    page: 0,
-    pageSize: 6,
-    query,
-    level: 0,
-  });
+  const result = await runCatching(
+    WenkuNovelRepository.listNovel({
+      page: 0,
+      pageSize: 6,
+      query,
+      level: 0,
+    })
+  );
   if (result.ok) {
     similarNovels.value = result.value.items;
   } else {

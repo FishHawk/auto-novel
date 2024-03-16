@@ -3,7 +3,8 @@ import { MoreVertOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { ApiUser } from '@/data/api/api_user';
+import { UserRepository } from '@/data/api';
+import { doAction } from '@/pages/util';
 
 const { id, type, title } = defineProps<{
   id: string;
@@ -61,31 +62,33 @@ const updateFavorite = async () => {
   }
 
   const title = formValue.value.title;
-  const result = await (type === 'web'
-    ? ApiUser.updateFavoredWeb(id, { title })
-    : ApiUser.updateFavoredWenku(id, { title }));
-  if (result.ok) {
-    message.success('收藏夹更新成功');
-    emit('updated');
-    showEditModal.value = false;
-  } else {
-    message.error('收藏夹更新失败:' + result.error.message);
-  }
+
+  await doAction(
+    (type === 'web'
+      ? UserRepository.updateFavoredWeb(id, { title })
+      : UserRepository.updateFavoredWenku(id, { title })
+    ).then(() => {
+      emit('updated');
+      showEditModal.value = false;
+    }),
+    '收藏夹更新',
+    message
+  );
 };
 
 const showDeleteModal = ref(false);
-const deleteFavorite = async () => {
-  const result = await (type === 'web'
-    ? ApiUser.deleteFavoredWeb(id)
-    : ApiUser.deleteFavoredWenku(id));
-  if (result.ok) {
-    message.success('收藏夹删除成功');
-    emit('deleted');
-    showDeleteModal.value = false;
-  } else {
-    message.error('收藏夹删除失败:' + result.error.message);
-  }
-};
+const deleteFavorite = () =>
+  doAction(
+    (type === 'web'
+      ? UserRepository.deleteFavoredWeb(id)
+      : UserRepository.deleteFavoredWenku(id)
+    ).then(() => {
+      emit('deleted');
+      showDeleteModal.value = false;
+    }),
+    '收藏夹删除',
+    message
+  );
 </script>
 
 <template>

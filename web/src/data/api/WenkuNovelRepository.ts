@@ -1,50 +1,11 @@
-import { Err, Ok, Result, runCatching } from '@/data/result';
+import { Page } from '@/model/Page';
+import {
+  WenkuNovelDto,
+  WenkuNovelOutlineDto,
+  WenkuVolumeDto,
+} from '@/model/WenkuNovel';
 
-import { Favored } from './api_user';
 import { client } from './client';
-import { Page } from './common';
-import { TranslatorId } from '../translator/translator';
-
-export interface WenkuNovelOutlineDto {
-  id: string;
-  title: string;
-  titleZh: string;
-  cover: string;
-}
-
-export interface WenkuNovelDto {
-  title: string;
-  titleZh: string;
-  cover: string;
-  authors: string[];
-  artists: string[];
-  keywords: string[];
-  r18: boolean;
-  introduction: string;
-  volumes: WenkuVolumeDto[];
-  glossary: { [key: string]: string };
-  visited: number;
-  favored?: string;
-  favoredList: Favored[];
-  volumeZh: string[];
-  volumeJp: VolumeJpDto[];
-}
-
-export interface WenkuVolumeDto {
-  asin: string;
-  title: string;
-  titleZh?: string;
-  cover: string;
-}
-
-export interface VolumeJpDto {
-  volumeId: string;
-  total: number;
-  baidu: number;
-  youdao: number;
-  gpt: number;
-  sakura: number;
-}
 
 const listNovel = ({
   page,
@@ -57,19 +18,12 @@ const listNovel = ({
   query?: string;
   level?: number;
 }) =>
-  runCatching(
-    client
-      .get(`wenku`, { searchParams: { page, pageSize, query, level } })
-      .json<Page<WenkuNovelOutlineDto>>()
-  );
-
-const listVolumesUser = () =>
-  runCatching(
-    client.get(`wenku/user`).json<{ list: VolumeJpDto[]; novelId: string }>()
-  );
+  client
+    .get(`wenku`, { searchParams: { page, pageSize, query, level } })
+    .json<Page<WenkuNovelOutlineDto>>();
 
 const getNovel = (novelId: string) =>
-  runCatching(client.get(`wenku/${novelId}`).json<WenkuNovelDto>());
+  client.get(`wenku/${novelId}`).json<WenkuNovelDto>();
 
 interface WenkuNovelCreateBody {
   title: string;
@@ -84,13 +38,13 @@ interface WenkuNovelCreateBody {
 }
 
 const createNovel = (json: WenkuNovelCreateBody) =>
-  runCatching(client.post(`wenku`, { json }).text());
+  client.post(`wenku`, { json });
 
 const updateNovel = (id: string, json: WenkuNovelCreateBody) =>
-  runCatching(client.put(`wenku/${id}`, { json }).text());
+  client.put(`wenku/${id}`, { json });
 
 const updateGlossary = (id: string, json: { [key: string]: string }) =>
-  runCatching(client.put(`wenku/${id}/glossary`, { json }).text());
+  client.put(`wenku/${id}/glossary`, { json });
 
 const createVolume = (
   novelId: string,
@@ -100,7 +54,7 @@ const createVolume = (
   token: string,
   onProgress: (p: number) => void
 ) =>
-  new Promise<Result<string>>(function (resolve, _reject) {
+  new Promise<void>(function (resolve, reject) {
     const formData = new FormData();
     formData.append(type, file as File);
 
@@ -114,9 +68,9 @@ const createVolume = (
     xhr.setRequestHeader('Authorization', 'Bearer ' + token);
     xhr.onload = function () {
       if (xhr.status === 200) {
-        resolve(Ok(''));
+        resolve();
       } else {
-        resolve(Err(xhr.responseText));
+        reject(new Error(xhr.responseText));
       }
     };
     xhr.upload.addEventListener('progress', (e) => {
@@ -127,11 +81,7 @@ const createVolume = (
   });
 
 const deleteVolume = (novelId: string, volumeId: string) =>
-  runCatching(
-    client
-      .delete(`wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`)
-      .text()
-  );
+  client.delete(`wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`);
 
 const createFileUrl = ({
   novelId,
@@ -163,9 +113,8 @@ const createFileUrl = ({
   return { url, filename };
 };
 
-export const ApiWenkuNovel = {
+export const WenkuNovelRepository = {
   listNovel,
-  listVolumesUser,
   //
   getNovel,
   //

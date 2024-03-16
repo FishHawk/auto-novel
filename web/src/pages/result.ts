@@ -33,7 +33,3 @@ export function runCatching<T>(callback: Promise<T>): Promise<Result<T>> {
       }
     });
 }
-
-export function mapOk<T, R>(result: Result<T>, fn: (value: T) => R): Result<R> {
-  return result.ok === true ? { ok: true, value: fn(result.value) } : result;
-}

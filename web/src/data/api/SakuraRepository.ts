@@ -1,8 +1,6 @@
-import { runCatching } from '@/data/result';
-
 import { client } from './client';
 
-const createWebIncorrectCase = (json: {
+interface WebIncorrectCaseBody {
   providerId: string;
   novelId: string;
   chapterId: string;
@@ -10,8 +8,11 @@ const createWebIncorrectCase = (json: {
   zh: string;
   contextJp: string[];
   contextZh: string[];
-}) => runCatching(client.post('sakura/incorrect-case', { json }).text());
+}
 
-export const ApiSakura = {
+const createWebIncorrectCase = (json: WebIncorrectCaseBody) =>
+  client.post('sakura/incorrect-case', { json });
+
+export const SakuraRepository = {
   createWebIncorrectCase,
 };
