@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { UploadOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -14,6 +15,7 @@ const router = useRouter();
 const message = useMessage();
 
 const articleId = route.params.id as string | undefined;
+let loaded = articleId === undefined;
 
 const articleCategoryOptions = [
   { value: 'Guide', label: '使用指南' },
@@ -63,6 +65,7 @@ onMounted(async () => {
       formValue.value.title = article.value.title;
       formValue.value.category = article.value.category;
       formValue.value.content = article.value.content;
+      loaded = true;
     } else {
       message.error('载入失败');
     }
@@ -70,6 +73,11 @@ onMounted(async () => {
 });
 
 const submit = async () => {
+  if (!loaded) {
+    message.warning('小说未载入');
+    return;
+  }
+
   const validated = await new Promise<boolean>(function (resolve, _reject) {
     formRef.value?.validate((errors) => {
       if (errors) resolve(false);
@@ -151,7 +159,16 @@ const formatExample: [string, string][] = [
         />
       </n-form-item-row>
     </n-form>
-    <c-button label="提交" require-login type="primary" @action="submit" />
+
+    <c-button
+      label="提交"
+      :icon="UploadOutlined"
+      require-login
+      size="large"
+      type="primary"
+      class="float"
+      @action="submit"
+    />
 
     <n-divider />
 

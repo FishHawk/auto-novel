@@ -36,13 +36,13 @@ onMounted(async () => {
           type="relative"
         />
         by {{ article.user.username }}
-        <template v-if="userData.username === article.user.username">
+        <!-- <template v-if="userData.username === article.user.username"> -->
           /
           <RouterNA
             :to="`/forum-edit/${article.id}?category=${article.category}`"
             >编辑</RouterNA
           >
-        </template>
+        <!-- </template> -->
       </n-p>
       <n-divider />
 

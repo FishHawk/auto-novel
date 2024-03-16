@@ -20,8 +20,9 @@ const message = useMessage();
 const userData = useUserDataStore();
 
 const novelId = route.params.id as string | undefined;
+let loaded = novelId === undefined;
 
-const formRef = ref<FormInst | null>(null);
+const formRef = ref<FormInst>();
 
 const formValue = ref({
   title: '',
@@ -90,6 +91,7 @@ onMounted(async () => {
           cover: prettyCover(cover),
         })),
       };
+      loaded = true;
     } else {
       message.error('载入失败');
     }
@@ -97,6 +99,11 @@ onMounted(async () => {
 });
 
 const submit = async () => {
+  if (!loaded) {
+    message.warning('小说未载入');
+    return;
+  }
+
   const validated = await new Promise<boolean>(function (resolve, _reject) {
     formRef.value?.validate((errors) => {
       if (errors) resolve(false);

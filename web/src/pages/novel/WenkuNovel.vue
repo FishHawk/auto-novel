@@ -69,7 +69,7 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
 
 <template>
   <DefineTagGroup v-slot="{ label, tags }">
-    <n-flex v-if="tags.length > 0" :warp="false">
+    <n-flex v-if="tags.length > 0" :wrap="false">
       <n-tag :bordered="false" size="small">
         {{ label }}
       </n-tag>
