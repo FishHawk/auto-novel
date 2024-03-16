@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
+import { useRouter } from 'vue-router';
 
 import { AuthRepository } from '@/data/api';
 import { doAction } from '../util';
 
+const router = useRouter();
 const message = useMessage();
 
 const formRef = ref<FormInst>();
@@ -60,7 +62,9 @@ const resetPassword = async () => {
       formValue.value.emailOrUsername,
       formValue.value.resetPasswordToken,
       formValue.value.password
-    ),
+    ).then(() => {
+      router.push('/');
+    }),
     '密码重置',
     message
   );
@@ -72,8 +76,7 @@ const sendEmail = () =>
 </script>
 
 <template>
-  <div class="layout-content">
-    <n-h1>重置密码</n-h1>
+  <n-card title="重置密码">
     <n-form
       ref="formRef"
       :model="formValue"
@@ -121,6 +124,8 @@ const sendEmail = () =>
         />
       </n-form-item-row>
     </n-form>
-    <n-button type="primary" @click="resetPassword()"> 重置密码 </n-button>
-  </div>
+    <n-button type="primary" block @click="resetPassword()">
+      重置密码
+    </n-button>
+  </n-card>
 </template>

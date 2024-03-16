@@ -1,22 +1,13 @@
 <script lang="ts" setup>
 import { LogOutOutlined, MenuOutlined } from '@vicons/material';
-import {
-  MenuOption,
-  NIcon,
-  darkTheme,
-  dateZhCN,
-  useOsTheme,
-  zhCN,
-} from 'naive-ui';
+import { MenuOption, NIcon } from 'naive-ui';
 import { Component, computed, h, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-import { useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(850);
-const setting = useSettingStore();
 const route = useRoute();
 const userData = useUserDataStore();
 
@@ -95,124 +86,77 @@ const handleUserDropdownSelect = (key: string | number) => {
   }
 };
 
-const showLoginModal = ref(false);
 const showMenuModal = ref(false);
 
 watch(
   () => route.path,
   () => (showMenuModal.value = false)
 );
-
-const osThemeRef = useOsTheme();
-const theme = computed(() => {
-  let specificTheme: 'light' | 'dark' = 'light';
-  if (setting.theme !== 'system') {
-    specificTheme = setting.theme;
-  } else if (osThemeRef.value) {
-    specificTheme = osThemeRef.value;
-  }
-  return specificTheme === 'light' ? null : darkTheme;
-});
 </script>
 
 <template>
-  <n-config-provider
-    :theme="theme"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
-    inline-theme-disabled
-    :theme-overrides="{
-      Drawer: { bodyPadding: '0px' },
-      List: { color: '#0000' },
-    }"
-  >
-    <n-global-style />
-    <n-message-provider container-style="white-space: pre-wrap">
-      <n-layout id="kk">
-        <n-layout-header bordered style="position: fixed; z-index: 1">
-          <n-flex class="layout-content" align="center" style="height: 50px">
-            <template v-if="isWideScreen">
-              <robot-icon />
-              <div>
-                <n-menu
-                  :value="menuKey"
-                  mode="horizontal"
-                  :options="topMenuOptions"
-                />
-              </div>
-            </template>
+  <theme-main>
+    <n-layout>
+      <n-layout-header bordered style="position: fixed; z-index: 1">
+        <n-flex class="layout-content" align="center" style="height: 50px">
+          <template v-if="isWideScreen">
+            <robot-icon />
+            <div>
+              <n-menu
+                :value="menuKey"
+                mode="horizontal"
+                :options="topMenuOptions"
+              />
+            </div>
+          </template>
 
-            <n-icon
-              v-else
-              size="24"
-              :component="MenuOutlined"
-              @click="showMenuModal = true"
-            />
+          <n-icon
+            v-else
+            size="24"
+            :component="MenuOutlined"
+            @click="showMenuModal = true"
+          />
 
-            <div style="flex: 1"></div>
+          <div style="flex: 1"></div>
 
-            <template v-if="userData.username">
-              <router-link v-if="isWideScreen" to="/read-history">
-                <n-button quaternary>历史</n-button>
-              </router-link>
-              <router-link v-if="isWideScreen" to="/favorite">
-                <n-button quaternary>收藏</n-button>
-              </router-link>
-              <n-dropdown
-                trigger="hover"
-                :options="userDropdownOptions"
-                @select="handleUserDropdownSelect"
-              >
-                <router-link :to="'/account'">
-                  <n-button quaternary>@{{ userData.username }}</n-button>
-                </router-link>
-              </n-dropdown>
-            </template>
-
-            <n-button
-              v-else
-              quaternary
-              style="margin-right: 4px"
-              @click="showLoginModal = true"
+          <template v-if="userData.username">
+            <router-link v-if="isWideScreen" to="/read-history">
+              <n-button quaternary>历史</n-button>
+            </router-link>
+            <router-link v-if="isWideScreen" to="/favorite">
+              <n-button quaternary>收藏</n-button>
+            </router-link>
+            <n-dropdown
+              trigger="hover"
+              :options="userDropdownOptions"
+              @select="handleUserDropdownSelect"
             >
-              登录/注册
-            </n-button>
-          </n-flex>
-        </n-layout-header>
+              <router-link to="/account">
+                <n-button quaternary>@{{ userData.username }}</n-button>
+              </router-link>
+            </n-dropdown>
+          </template>
 
-        <n-layout-content style="margin-top: 50px; z-index: 0">
-          <router-view />
-        </n-layout-content>
+          <router-link
+            v-else
+            :to="`/sign-in?from=${encodeURIComponent(route.path)}`"
+          >
+            <n-button quaternary>登录/注册</n-button>
+          </router-link>
+        </n-flex>
+      </n-layout-header>
 
-        <n-layout-footer style="height: 64px; background-color: transparent" />
-      </n-layout>
+      <n-layout-content style="margin-top: 50px; z-index: 0">
+        <router-view />
+      </n-layout-content>
 
-      <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
-        <n-menu :value="menuKey" :options="collapsedMenuOptions" />
-      </c-drawer-left>
+      <n-layout-footer style="height: 64px; background-color: transparent" />
+    </n-layout>
 
-      <c-modal
-        v-model:show="showLoginModal"
-        style="width: min(400px, calc(100% - 16px))"
-      >
-        <n-tabs
-          class="card-tabs"
-          default-value="signin"
-          size="large"
-          animated
-          pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
-        >
-          <n-tab-pane name="signin" tab="登录">
-            <SignInForm @signIn="showLoginModal = false" />
-          </n-tab-pane>
-
-          <n-tab-pane name="signup" tab="注册">
-            <SignUpForm @signUp="showLoginModal = false" />
-          </n-tab-pane>
-        </n-tabs>
-      </c-modal>
-    </n-message-provider>
-  </n-config-provider>
+    <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
+      <n-menu :value="menuKey" :options="collapsedMenuOptions" />
+    </c-drawer-left>
+  </theme-main>
 </template>
 
 <style>

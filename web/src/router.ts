@@ -5,6 +5,23 @@ const router = createRouter({
   routes: [
     {
       path: '/*',
+      component: () => import('./pages/layouts/AuthLayout.vue'),
+      children: [
+        {
+          path: '/sign-in',
+          meta: { title: '登录' },
+          component: () => import('./pages/auth/SignIn.vue'),
+        },
+        {
+          path: '/reset-password',
+          meta: { title: '重置密码' },
+          component: () => import('./pages/auth/ResetPassword.vue'),
+        },
+      ],
+    },
+
+    {
+      path: '/*',
       component: () => import('./pages/layouts/ReaderLayout.vue'),
       children: [
         {
@@ -33,11 +50,6 @@ const router = createRouter({
           meta: { title: '账号中心' },
           component: () => import('./pages/other/AccountCenter.vue'),
         },
-        {
-          path: '/reset-password',
-          meta: { title: '重置密码' },
-          component: () => import('./pages/other/ResetPassword.vue'),
-        },
 
         {
           path: '/workspace',
@@ -65,8 +77,7 @@ const router = createRouter({
             {
               path: 'interactive',
               meta: { title: '交互翻译' },
-              component: () =>
-                import('./pages/workspace/Interactive.vue'),
+              component: () => import('./pages/workspace/Interactive.vue'),
             },
           ],
         },

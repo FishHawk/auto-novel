@@ -9,13 +9,13 @@ import {
   WebNovelRepository,
   WenkuNovelRepository,
 } from '@/data/api';
-import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { parseUrl } from '@/data/web/url';
 import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { notice } from '@/pages/components/NoticeBoard.vue';
+import { Result, runCatching } from '@/pages/result';
 
 const userData = useUserDataStore();
 const router = useRouter();
@@ -43,13 +43,7 @@ const loadFavorite = async () => {
     }).then((it) => it.items)
   );
 };
-watch(
-  () => userData.username,
-  (username) => {
-    if (username) loadFavorite();
-  },
-  { immediate: true }
-);
+loadFavorite();
 
 const mostVisitedWeb = ref<Result<WebNovelOutlineDto[]>>();
 const loadWeb = async () => {
