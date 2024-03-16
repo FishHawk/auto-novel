@@ -3,10 +3,11 @@ import { ErrorOutlineOutlined } from '@vicons/material';
 import { useMessage, useOsTheme } from 'naive-ui';
 import { computed } from 'vue';
 
-import { ApiSakura } from '@/data/api/api_sakura';
-import { WebNovelChapterDto } from '@/data/api/api_web_novel';
+import { SakuraRepository } from '@/data/api';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { TranslatorId } from '@/data/translator';
+import { WebNovelChapterDto } from '@/model/WebNovel';
+import { doAction } from '@/pages/util';
 
 import { NovelInfo } from './util';
 
@@ -162,20 +163,19 @@ const createWebIncorrectCase = async (
   const contextJp = [...contextJpBefore.reverse(), jp, ...contextJpAfter];
   const contextZh = [...contextZhBefore.reverse(), zh, ...contextZhAfter];
 
-  const result = await ApiSakura.createWebIncorrectCase({
-    providerId: props.novelInfo.providerId,
-    novelId: props.novelInfo.novelId,
-    chapterId: props.chapterId,
-    jp,
-    zh,
-    contextJp,
-    contextZh,
-  });
-  if (result.ok) {
-    message.info('提交成功');
-  } else {
-    message.error('提交失败:' + result.error.message);
-  }
+  await doAction(
+    SakuraRepository.createWebIncorrectCase({
+      providerId: props.novelInfo.providerId,
+      novelId: props.novelInfo.novelId,
+      chapterId: props.chapterId,
+      jp,
+      zh,
+      contextJp,
+      contextZh,
+    }),
+    '提交',
+    message
+  );
 };
 
 const fontColor = computed(() => {

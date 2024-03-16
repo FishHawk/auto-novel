@@ -2,9 +2,10 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ApiArticle, Article } from '@/data/api/api_article';
-import { Result } from '@/data/result';
+import { ArticleRepository } from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { Article } from '@/model/Article';
 
 const route = useRoute();
 const userData = useUserDataStore();
@@ -13,7 +14,7 @@ const articleId = route.params.id as string;
 const articleResult = ref<Result<Article>>();
 
 onMounted(async () => {
-  const result = await ApiArticle.getArticle(articleId);
+  const result = await runCatching(ArticleRepository.getArticle(articleId));
   articleResult.value = result;
   if (result.ok) {
     document.title = result.value.title;

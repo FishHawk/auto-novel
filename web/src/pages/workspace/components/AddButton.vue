@@ -6,7 +6,7 @@ import {
   useMessage,
 } from 'naive-ui';
 
-import { PersonalVolumesManager } from '@/data/translator';
+import { LocalVolumeService } from '@/data/local';
 
 const message = useMessage();
 
@@ -28,7 +28,7 @@ const customRequest = ({
   onFinish,
   onError,
 }: UploadCustomRequestOptions) => {
-  PersonalVolumesManager.saveVolume(file.file!!)
+  LocalVolumeService.createVolume(file.file!!)
     .then(onFinish)
     .catch((error) => {
       message.error(`上传失败:${error}\n文件名: ${file.name}`);

@@ -1,4 +1,4 @@
-export type Glossary = { [key: string]: string };
+import { Glossary } from "@/model/Glossary";
 
 export type Segmentor = (input: string[]) => string[][];
 

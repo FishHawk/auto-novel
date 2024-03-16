@@ -5,11 +5,12 @@ import { useMessage, useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ApiWenkuNovel, WenkuNovelDto } from '@/data/api/api_wenku_novel';
-import { Result } from '@/data/result';
+import { WenkuNovelRepository } from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { useIsWideScreen } from '@/data/util';
-import coverPlaceholder from '@/images/cover_placeholder.png';
+import coverPlaceholder from '@/image/cover_placeholder.png';
+import { WenkuNovelDto } from '@/model/WenkuNovel';
+import { doAction, useIsWideScreen } from '@/pages/util';
 
 import TranslateOptions from './components/TranslateOptions.vue';
 
@@ -29,7 +30,7 @@ const novelId = route.params.novelId as string;
 const novelMetadataResult = ref<Result<WenkuNovelDto>>();
 
 const getNovel = async () => {
-  const result = await ApiWenkuNovel.getNovel(novelId);
+  const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
   if (result.ok) {
     result.value.volumeZh = result.value.volumeZh.sort((a, b) =>
       a.localeCompare(b)
@@ -47,24 +48,21 @@ getNovel();
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
-const submitGlossary = async (glossary: { [key: string]: string }) => {
-  const result = await ApiWenkuNovel.updateGlossary(novelId, glossary);
-  if (result.ok) {
-    message.success('术语表提交成功');
-  } else {
-    message.error('术语表提交失败：' + result.error.message);
-  }
-};
+const submitGlossary = (glossary: { [key: string]: string }) =>
+  doAction(
+    WenkuNovelRepository.updateGlossary(novelId, glossary),
+    '术语表提交',
+    message
+  );
 
-const deleteVolume = async (volumeId: string) => {
-  const result = await ApiWenkuNovel.deleteVolume(novelId, volumeId);
-  if (result.ok) {
-    getNovel();
-    message.info('删除成功');
-  } else {
-    message.error('删除失败：' + result.error.message);
-  }
-};
+const deleteVolume = (volumeId: string) =>
+  doAction(
+    WenkuNovelRepository.deleteVolume(novelId, volumeId).then(() => {
+      getNovel();
+    }),
+    '删除',
+    message
+  );
 
 const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
 </script>

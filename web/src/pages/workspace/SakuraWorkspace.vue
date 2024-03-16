@@ -7,11 +7,11 @@ import {
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { notice } from '@/components/NoticeBoard.vue';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
-import { createSegIndexedDbCache } from '@/data/translator';
-import { useIsWideScreen } from '@/data/util';
+import { CachedSegRepository } from '@/data/translator';
+import { useIsWideScreen } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 const message = useMessage();
@@ -80,8 +80,7 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () => {
-  const cache = await createSegIndexedDbCache('sakura-seg-cache');
-  await cache.clear();
+  await CachedSegRepository.clear('sakura-seg-cache');
   message.success('缓存清除成功');
 };
 

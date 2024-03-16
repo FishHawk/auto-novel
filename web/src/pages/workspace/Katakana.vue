@@ -2,13 +2,14 @@
 import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { notice } from '@/components/NoticeBoard.vue';
-import { Epub } from '@/data/epub/epub';
-import { Txt } from '@/data/epub/txt';
+import { notice } from '@/pages/components/NoticeBoard.vue';
+import { LocalVolumeService } from '@/data/local';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
-import { PersonalVolumesManager, Translator } from '@/data/translator';
+import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
+import { Epub } from '@/util/epub/epub';
+import { Txt } from '@/util/epub/txt';
 import { PlusOutlined } from '@vicons/material';
 
 const message = useMessage();
@@ -48,8 +49,13 @@ const loadFile = async (
 };
 
 const loadLocalFile = (volumeId: string) =>
-  PersonalVolumesManager.getFile(volumeId)
-    .then((file) => loadFile('local', volumeId, file))
+  LocalVolumeService.getFile(volumeId)
+    .then((file) => {
+      if (file === undefined) {
+        throw '小说不存在';
+      }
+      return loadFile('local', volumeId, file.file);
+    })
     .catch((error) => message.error(`术语表提交失败：${error}`));
 
 const customRequest = ({

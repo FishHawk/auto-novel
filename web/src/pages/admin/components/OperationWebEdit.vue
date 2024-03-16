@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { OperationWebEdit } from '@/data/api/api_operation';
+import { OperationWebEdit } from '@/model/Operation';
 
 defineProps<{ op: OperationWebEdit }>();
 </script>

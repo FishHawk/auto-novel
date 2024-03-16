@@ -3,17 +3,18 @@ import ky from 'ky';
 import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
-import TranslateTask from '@/components/TranslateTask.vue';
-import { ApiWebNovel } from '@/data/api/api_web_novel';
+import TranslateTask from '@/pages/components/TranslateTask.vue';
+import { WebNovelRepository } from '@/data/api';
 import { useSettingStore } from '@/data/stores/setting';
 import {
   buildWebTranslateTask,
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { PersonalVolumesManager } from '@/data/translator/db/personal';
+import { LocalVolumeService } from '@/data/local';
 
 import TranslateOptions from './TranslateOptions.vue';
+import { doAction } from '@/pages/util';
 
 const props = defineProps<{
   providerId: string;
@@ -61,7 +62,7 @@ const files = computed(() => {
   const type = setting.downloadFormat.type;
 
   return {
-    jp: ApiWebNovel.createFileUrl({
+    jp: WebNovelRepository.createFileUrl({
       providerId,
       novelId,
       lang: 'jp',
@@ -70,7 +71,7 @@ const files = computed(() => {
       type,
       title,
     }),
-    zh: ApiWebNovel.createFileUrl({
+    zh: WebNovelRepository.createFileUrl({
       providerId,
       novelId,
       lang: mode,
@@ -85,26 +86,24 @@ const files = computed(() => {
 const importToWorkspace = async () => {
   const blob = await ky.get(files.value.jp.url).blob();
   const file = new File([blob], files.value.jp.filename);
-  await PersonalVolumesManager.saveVolume(file)
+  await LocalVolumeService.createVolume(file)
     .then(() =>
-      PersonalVolumesManager.updateGlossary(file.name, toRaw(props.glossary))
+      LocalVolumeService.updateGlossary(file.name, toRaw(props.glossary))
     )
     .then(() => message.success('导入成功'))
     .catch((error) => message.error(`导入失败:${error}`));
 };
 
-const submitGlossary = async () => {
-  const result = await ApiWebNovel.updateGlossary(
-    props.providerId,
-    props.novelId,
-    props.glossary
+const submitGlossary = () =>
+  doAction(
+    WebNovelRepository.updateGlossary(
+      props.providerId,
+      props.novelId,
+      props.glossary
+    ),
+    '术语表提交',
+    message
   );
-  if (result.ok) {
-    message.success('术语表提交成功');
-  } else {
-    message.error('术语表提交失败：' + result.error.message);
-  }
-};
 
 const submitJob = (id: 'gpt' | 'sakura') => {
   const {

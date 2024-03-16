@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { useMessage } from 'naive-ui';
 
-import { PersonalVolumesManager } from '@/data/translator';
-import { LocalVolumeMetadata } from '@/data/translator/db/personal';
+import { LocalVolumeService } from '@/data/local';
+import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { ref, toRaw } from 'vue';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
@@ -21,7 +21,7 @@ const toggleGlossaryModal = () => {
 };
 
 const submitGlossary = () =>
-  PersonalVolumesManager.updateGlossary(props.volume.id, toRaw(glossary.value))
+  LocalVolumeService.updateGlossary(props.volume.id, toRaw(glossary.value))
     .then(() => {
       props.volume.glossary = glossary.value;
       message.success('术语表提交成功');

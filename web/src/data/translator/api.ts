@@ -1,9 +1,11 @@
+import { WebNovelRepository } from '@/data/api';
 import { client } from '@/data/api/client';
+import { LocalVolumeService } from '@/data/local';
+import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
+import { WebNovelDto } from '@/model/WebNovel';
 
-import { ChapterTranslation, PersonalVolumesManager } from './db/personal';
 import { Translator } from './translator';
 import { SakuraTranslator } from './translator_sakura';
-import { ApiWebNovel, WebNovelDto } from '../api/api_web_novel';
 
 type WebTranslateTaskDesc = {
   type: 'web';
@@ -121,12 +123,7 @@ const translateWeb = async (
   let task: TranslateTaskDto;
   try {
     callback.log('获取元数据');
-    const novelResult = await ApiWebNovel.getNovel(providerId, novelId);
-    if (novelResult.ok) {
-      novel = novelResult.value;
-    } else {
-      throw novelResult.error;
-    }
+    novel = await WebNovelRepository.getNovel(providerId, novelId);
     callback.log('获取翻译任务');
     // 临时手段解决timeout，等数据库大修完成后删去
     try {
@@ -453,18 +450,13 @@ const translateLocal = async (
   signal?: AbortSignal
 ) => {
   // Api
+  const getVolume = () => LocalVolumeService.getVolume(volumeId);
 
-  const getTranslateTask = () =>
-    PersonalVolumesManager.getTranslateTask(volumeId, translatorDesc.id);
+  const getChapter = (chapterId: string) =>
+    LocalVolumeService.getChapter(volumeId, chapterId);
 
-  const getChapterToTranslate = (chapterId: string) =>
-    PersonalVolumesManager.getChapterToTranslate(volumeId, chapterId);
-
-  const updateChapterTranslation = (
-    chapterId: string,
-    json: ChapterTranslation
-  ) =>
-    PersonalVolumesManager.updateChapterTranslation(
+  const updateTranslation = (chapterId: string, json: ChapterTranslation) =>
+    LocalVolumeService.updateTranslation(
       volumeId,
       chapterId,
       translatorDesc.id,
@@ -472,10 +464,15 @@ const translateLocal = async (
     );
 
   // Task
-  let task: Awaited<ReturnType<typeof getTranslateTask>>;
+  let metadata: LocalVolumeMetadata;
   try {
     callback.log(`获取未翻译章节 ${volumeId}`);
-    task = await getTranslateTask();
+    const metadataOrUndefined = await getVolume();
+    if (metadataOrUndefined === undefined) {
+      throw '小说不存在';
+    } else {
+      metadata = metadataOrUndefined;
+    }
   } catch (e: any) {
     callback.log(`发生错误，结束翻译任务：${e}`);
     return;
@@ -495,10 +492,20 @@ const translateLocal = async (
     return;
   }
 
+  const untranslatedChapters = metadata.toc
+    .filter((it) => it[translatorDesc.id] === undefined)
+    .map((it) => it.chapterId);
+  const expiredChapters = metadata.toc
+    .filter(
+      (it) =>
+        it[translatorDesc.id] !== undefined &&
+        it[translatorDesc.id] !== metadata.glossaryId
+    )
+    .map((it) => it.chapterId);
   const chapters = (
     translateExpireChapter
-      ? task.untranslatedChapters.concat(task.expiredChapters)
-      : task.untranslatedChapters
+      ? untranslatedChapters.concat(expiredChapters)
+      : untranslatedChapters
   ).sort((a, b) => a.localeCompare(b));
 
   callback.onStart(chapters.length);
@@ -509,19 +516,23 @@ const translateLocal = async (
   for (const chapterId of chapters) {
     try {
       callback.log(`\n获取章节 ${volumeId}/${chapterId}`);
-      const textsJp = await getChapterToTranslate(chapterId);
+      const chapter = await getChapter(chapterId);
+      if (chapter === undefined) {
+        throw new Error('章节不存在');
+      }
+      const textsJp = chapter?.paragraphs;
 
       callback.log(`翻译章节 ${volumeId}/${chapterId}`);
       const textsZh = await translator.translate(
         textsJp,
-        task.glossary,
+        metadata.glossary,
         signal
       );
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
-      const state = await updateChapterTranslation(chapterId, {
-        glossaryId: task.glossaryUuid,
-        glossary: task.glossary,
+      const state = await updateTranslation(chapterId, {
+        glossaryId: metadata.glossaryId,
+        glossary: metadata.glossary,
         paragraphs: textsZh,
       });
       callback.onChapterSuccess({ zh: state });

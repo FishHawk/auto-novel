@@ -3,13 +3,12 @@ import { PlusOutlined } from '@vicons/material';
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import {
-  ApiWenkuNovel,
-  WenkuNovelOutlineDto,
-} from '@/data/api/api_wenku_novel';
-import { Page } from '@/data/api/common';
+import { WenkuNovelRepository } from '@/data/api';
+import { runCatching } from '@/pages/result';
 import { useWenkuSearchHistoryStore } from '@/data/stores/search_history';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { Page } from '@/model/Page';
+import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 
 import { Loader } from './components/NovelList.vue';
 
@@ -28,19 +27,23 @@ const options = userData.isOldAss
 
 const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
   if (userData.isOldAss) {
-    return ApiWenkuNovel.listNovel({
-      page,
-      pageSize: 24,
-      query,
-      level: selected[0] + 1,
-    });
+    return runCatching(
+      WenkuNovelRepository.listNovel({
+        page,
+        pageSize: 24,
+        query,
+        level: selected[0] + 1,
+      })
+    );
   } else {
-    return ApiWenkuNovel.listNovel({
-      page,
-      pageSize: 24,
-      query,
-      level: 1,
-    });
+    return runCatching(
+      WenkuNovelRepository.listNovel({
+        page,
+        pageSize: 24,
+        query,
+        level: 1,
+      })
+    );
   }
 };
 

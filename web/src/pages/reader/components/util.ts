@@ -1,13 +1,10 @@
 import { RouteParams } from 'vue-router';
 
-import {
-  ApiWebNovel,
-  WebNovelChapterDto,
-  WebNovelTocItemDto,
-} from '@/data/api/api_web_novel';
-import { Result, mapOk, runCatching } from '@/data/result';
-import { PersonalVolumesManager } from '@/data/translator';
+import { WebNovelRepository } from '@/data/api';
+import { LocalVolumeService } from '@/data/local';
+import { Result, runCatching } from '@/pages/result';
 import { buildWebChapterUrl } from '@/data/web/url';
+import { WebNovelChapterDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
 export type NovelInfo = (
   | { type: 'web'; providerId: string; novelId: string }
@@ -48,19 +45,19 @@ export const getNovelToc = async (
   novelInfo: NovelInfo
 ): Promise<Result<TocItem[]>> => {
   if (novelInfo.type === 'web') {
-    const result = await ApiWebNovel.getNovel(
-      novelInfo.providerId,
-      novelInfo.novelId
+    return await runCatching(
+      WebNovelRepository.getNovel(novelInfo.providerId, novelInfo.novelId).then(
+        (novel) => {
+          const toc = novel.toc as TocItem[];
+          toc.forEach((it, index) => (it.key = index));
+          return toc;
+        }
+      )
     );
-    const newResult = mapOk(result, (novel) => {
-      const toc = novel.toc as TocItem[];
-      toc.forEach((it, index) => (it.key = index));
-      return toc;
-    });
-    return newResult;
   } else {
     const getNovelTocInner = async (id: string) => {
-      const metadata = await PersonalVolumesManager.getVolume(id);
+      const metadata = await LocalVolumeService.getVolume(id);
+      if (metadata === undefined) throw Error('小说不存在');
       return metadata.toc.map((it, index) => ({
         titleJp: it.chapterId,
         chapterId: it.chapterId,
@@ -76,32 +73,17 @@ export const getChapter = (
   chapterId: string
 ): Promise<Result<WebNovelChapterDto>> => {
   if (novelInfo.type === 'web') {
-    return ApiWebNovel.getChapter(
-      novelInfo.providerId,
-      novelInfo.novelId,
-      chapterId
+    return runCatching(
+      WebNovelRepository.getChapter(
+        novelInfo.providerId,
+        novelInfo.novelId,
+        chapterId
+      )
     );
   } else {
-    const getChapterInner = async (id: string, chapterId: string) => {
-      const { toc, chapter } = await PersonalVolumesManager.getChapter(
-        id,
-        chapterId
-      );
-      const currIndex = toc.findIndex((it) => it.chapterId == chapterId);
-      return <WebNovelChapterDto>{
-        titleJp: `${id} - ${chapterId}`,
-        titleZh: undefined,
-        prevId: toc[currIndex - 1]?.chapterId,
-        nextId: toc[currIndex + 1]?.chapterId,
-        paragraphs: chapter.paragraphs,
-        baiduParagraphs: chapter.baidu?.paragraphs,
-        youdaoParagraphs: chapter.youdao?.paragraphs,
-        gptParagraphs: chapter.gpt?.paragraphs,
-        sakuraParagraphs: chapter.sakura?.paragraphs,
-      };
-    };
-
-    return runCatching(getChapterInner(novelInfo.volumeId, chapterId));
+    return runCatching(
+      LocalVolumeService.getReadableChapter(novelInfo.volumeId, chapterId)
+    );
   }
 };
 

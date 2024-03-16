@@ -8,9 +8,10 @@ import {
 } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { ApiWenkuNovel } from '@/data/api/api_wenku_novel';
+import { WenkuNovelRepository } from '@/data/api';
 import { useReadStateStore } from '@/data/stores/read_states';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { formatError } from '@/data/api/client';
 
 const { novelId, type } = defineProps<{
   novelId: string;
@@ -63,21 +64,21 @@ const customRequest = ({
     onError();
     return;
   }
-  ApiWenkuNovel.createVolume(
+  WenkuNovelRepository.createVolume(
     novelId,
     file.name,
     type,
     file.file as File,
     userData.token,
     (p) => onProgress({ percent: p })
-  ).then((result) => {
-    if (result.ok) {
+  )
+    .then(() => {
       onFinish();
-    } else {
-      message.error(`上传失败:${result.error.message}`);
+    })
+    .catch((e) => {
       onError();
-    }
-  });
+      message.error(`上传失败:${formatError(e)}`);
+    });
 };
 
 const showRuleModal = ref(false);

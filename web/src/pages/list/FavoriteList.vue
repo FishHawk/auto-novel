@@ -1,24 +1,26 @@
 <script lang="ts" setup>
 import {
-  FormatListBulletedOutlined,
   ChecklistOutlined,
+  FormatListBulletedOutlined,
   PlusOutlined,
 } from '@vicons/material';
 import { MenuOption, useMessage } from 'naive-ui';
 import { computed, h, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ApiUser, FavoredList } from '@/data/api/api_user';
-import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
-import { Page } from '@/data/api/common';
-import { mapOk } from '@/data/result';
+import { UserRepository } from '@/data/api';
+import { runCatching } from '@/pages/result';
 import {
   buildWebTranslateTask,
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { useIsWideScreen } from '@/data/util';
+import { Page } from '@/model/Page';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
+import { doAction, useIsWideScreen } from '@/pages/util';
+
+import { FavoredList } from '@/model/User';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
 import { Loader } from './components/NovelList.vue';
@@ -60,17 +62,21 @@ const loader: Loader<
   }
 
   if (favoriteType.value === 'web') {
-    return ApiUser.listFavoredWebNovel(favoriteId.value, {
-      page,
-      pageSize: 30,
-      sort: optionSort(),
-    }).then((result) => mapOk(result, (page) => ({ type: 'web', ...page })));
+    return runCatching(
+      UserRepository.listFavoredWebNovel(favoriteId.value, {
+        page,
+        pageSize: 30,
+        sort: optionSort(),
+      }).then((it) => ({ type: 'web', ...it }))
+    );
   } else {
-    return ApiUser.listFavoredWenkuNovel(favoriteId.value, {
-      page,
-      pageSize: 24,
-      sort: optionSort(),
-    }).then((result) => mapOk(result, (page) => ({ type: 'wenku', ...page })));
+    return runCatching(
+      UserRepository.listFavoredWenkuNovel(favoriteId.value, {
+        page,
+        pageSize: 24,
+        sort: optionSort(),
+      }).then((it) => ({ type: 'wenku', ...it }))
+    );
   }
 };
 
@@ -80,7 +86,7 @@ const favoredList = ref<FavoredList>({
 });
 
 const loadFavoredList = async () => {
-  const result = await ApiUser.listFavored();
+  const result = await runCatching(UserRepository.listFavored());
   if (result.ok) {
     favoredList.value = result.value;
     const ids = (
@@ -191,31 +197,34 @@ const moveToFavored = async () => {
 
   if (selectedNovels.type === 'web') {
     for (const novel of selectedNovels.novels) {
-      const result = await (targetFavoredId.value !== 'deleted'
-        ? ApiUser.favoriteWebNovel(
-            targetFavoredId.value,
-            novel.providerId,
-            novel.novelId
-          )
-        : ApiUser.unfavoriteWebNovel(
-            favoriteId.value,
-            novel.providerId,
-            novel.novelId
-          ));
-      if (!result.ok) {
-        message.error(`收藏错误： ${novel.titleJp}\n` + result.error.message);
-      }
+      await doAction(
+        targetFavoredId.value !== 'deleted'
+          ? UserRepository.favoriteWebNovel(
+              targetFavoredId.value,
+              novel.providerId,
+              novel.novelId
+            )
+          : UserRepository.unfavoriteWebNovel(
+              favoriteId.value,
+              novel.providerId,
+              novel.novelId
+            ),
+        '收藏',
+        message
+      );
     }
   } else {
     for (const novel of selectedNovels.novels) {
-      const result = await (targetFavoredId.value !== 'deleted'
-        ? ApiUser.favoriteWenkuNovel(targetFavoredId.value, novel.id)
-        : ApiUser.unfavoriteWenkuNovel(targetFavoredId.value, novel.id));
-      if (!result.ok) {
-        message.error(
-          `取消收藏错误： ${novel.titleZh}\n` + result.error.message
-        );
-      }
+      await doAction(
+        targetFavoredId.value !== 'deleted'
+          ? UserRepository.favoriteWenkuNovel(targetFavoredId.value, novel.id)
+          : UserRepository.unfavoriteWenkuNovel(
+              targetFavoredId.value,
+              novel.id
+            ),
+        '取消收藏',
+        message
+      );
     }
   }
   message.info('移动完成');

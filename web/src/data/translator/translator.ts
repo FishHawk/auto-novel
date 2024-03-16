@@ -1,11 +1,36 @@
-import { SegmentCache, createSegIndexedDbCache } from './db/segment_cache';
+import { MD5 } from 'crypto-es/lib/md5';
+
+import { Glossary } from '@/model/Glossary';
+
+import { CachedSegRepository } from './SegCacheRepository';
 import { BaiduTranslator, BaiduTranslatorConfig } from './translator_baidu';
 import { OpenAiTranslator, OpenAiTranslatorConfig } from './translator_openai';
 import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
 import { YoudaoTranslator, YoudaoTranslatorConfig } from './translator_youdao';
-import { Glossary, SegmentTranslator } from './type';
+import { SegmentTranslator } from './type';
 
 export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
+
+interface SegmentCache {
+  cacheKey(segIndex: number, seg: string[], extra?: any): string;
+  get(cacheKey: string): Promise<string[] | undefined>;
+  save(cacheKey: string, output: string[]): Promise<void>;
+}
+
+const createSegIndexedDbCache = async (
+  storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
+) => {
+  return <SegmentCache>{
+    cacheKey: (_segIndex: number, seg: string[], extra?: any): string =>
+      MD5(JSON.stringify({ seg, extra })).toString(),
+
+    get: (hash: string): Promise<string[] | undefined> =>
+      CachedSegRepository.get(storeName, hash),
+
+    save: (hash: string, text: string[]): Promise<void> =>
+      CachedSegRepository.create(storeName, hash, text).then(() => {}),
+  };
+};
 
 export type TranslatorConfig =
   | ({ id: 'baidu' } & BaiduTranslatorConfig)

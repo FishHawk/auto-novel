@@ -2,8 +2,8 @@
 import { computed, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
-import { Result } from '@/data/result';
+import { WebNovelTocItemDto } from '@/model/WebNovel';
+import { Result } from '@/pages/result';
 
 import { NovelInfo, getNovelToc } from './util';
 

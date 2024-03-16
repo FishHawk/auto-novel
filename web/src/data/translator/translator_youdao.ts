@@ -1,7 +1,9 @@
-import { BaseTranslatorConfig, Glossary, SegmentTranslator } from './type';
-import { createGlossaryWrapper, createLengthSegmentor } from './common';
-import { Youdao } from './api/youdao';
+import { Glossary } from '@/model/Glossary';
+
 import { safeJson } from './api/util';
+import { Youdao } from './api/youdao';
+import { createGlossaryWrapper, createLengthSegmentor } from './common';
+import { BaseTranslatorConfig, SegmentTranslator } from './type';
 
 export type YoudaoTranslatorConfig = BaseTranslatorConfig;
 

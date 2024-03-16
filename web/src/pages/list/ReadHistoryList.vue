@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { ApiUser } from '@/data/api/api_user';
-import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { Page } from '@/data/api/common';
+import { UserRepository } from '@/data/api';
+import { Page } from '@/model/Page';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
 
 import { Loader } from '../list/components/NovelList.vue';
+import { runCatching } from '@/pages/result';
 
 const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, _selected) =>
-  ApiUser.listReadHistoryWeb({ page, pageSize: 30 });
+  runCatching(UserRepository.listReadHistoryWeb({ page, pageSize: 30 }));
 </script>
 
 <template>

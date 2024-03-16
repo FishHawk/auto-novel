@@ -1,14 +1,16 @@
 <script lang="ts" setup>
+import { FormatListBulletedOutlined } from '@vicons/material';
+import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { Page } from '@/data/api/common';
-import { useIsWideScreen } from '@/data/util';
+import { WebNovelRepository } from '@/data/api';
+import { Page } from '@/model/Page';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { useIsWideScreen } from '@/pages/util';
 
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
-import { ref } from 'vue';
-import { FormatListBulletedOutlined } from '@vicons/material';
+import { runCatching } from '@/pages/result';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
@@ -147,7 +149,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
   } else if (providerId == 'kakuyomu') {
     filters = { genre: optionNth(0), range: optionNth(1) };
   }
-  return ApiWebNovel.listRank(providerId, filters);
+  return runCatching(WebNovelRepository.listRank(providerId, filters));
 };
 
 const showListModal = ref(false);

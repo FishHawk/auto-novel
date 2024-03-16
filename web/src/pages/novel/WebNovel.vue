@@ -3,9 +3,9 @@ import { useThemeVars } from 'naive-ui';
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ApiWebNovel } from '@/data/api/api_web_novel';
-import { Result, mapOk } from '@/data/result';
-import { useIsWideScreen } from '@/data/util';
+import { WebNovelRepository } from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
+import { useIsWideScreen } from '@/pages/util';
 
 import { ReadableTocItem, WebNovelVM } from './components/common';
 
@@ -26,37 +26,39 @@ watch(
   ids,
   async ({ providerId, novelId }) => {
     novelResult.value = undefined;
-    const result = await ApiWebNovel.getNovel(providerId, novelId);
+    const result = await runCatching(
+      WebNovelRepository.getNovel(providerId, novelId).then((novel) => {
+        const novelToc = novel.toc as ReadableTocItem[];
+        let order = 0;
+        let index = 0;
+        for (const it of novelToc) {
+          it.index = index;
+          it.order = it.chapterId ? order : undefined;
+          if (it.chapterId) order += 1;
+          index += 1;
+        }
+
+        novel.toc = [];
+        return <WebNovelVM>{
+          ...novel,
+          toc: novelToc,
+          lastReadChapter: novel.lastReadChapterId
+            ? novelToc.find((it) => it.chapterId === novel.lastReadChapterId)
+            : undefined,
+        };
+      })
+    );
 
     if (!result.ok) {
       const message = result.error.message;
       if (message.includes('小说ID不合适，应当使用：')) {
         const targetNovelPath = message.split('小说ID不合适，应当使用：')[1];
         router.push({ path: `/novel${targetNovelPath}` });
+        return;
       }
     }
 
-    const newResult = mapOk(result, (novel) => {
-      const novelToc = novel.toc as ReadableTocItem[];
-      let order = 0;
-      let index = 0;
-      for (const it of novelToc) {
-        it.index = index;
-        it.order = it.chapterId ? order : undefined;
-        if (it.chapterId) order += 1;
-        index += 1;
-      }
-
-      novel.toc = [];
-      return <WebNovelVM>{
-        ...novel,
-        toc: novelToc,
-        lastReadChapter: novel.lastReadChapterId
-          ? novelToc.find((it) => it.chapterId === novel.lastReadChapterId)
-          : undefined,
-      };
-    });
-    novelResult.value = newResult;
+    novelResult.value = result;
     if (result.ok) {
       document.title = result.value.titleJp;
     }

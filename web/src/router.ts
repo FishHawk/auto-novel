@@ -5,7 +5,7 @@ const router = createRouter({
   routes: [
     {
       path: '/*',
-      component: () => import('./layouts/ReaderLayout.vue'),
+      component: () => import('./pages/layouts/ReaderLayout.vue'),
       children: [
         {
           path: '/novel/:providerId/:novelId/:chapterId',
@@ -20,7 +20,7 @@ const router = createRouter({
 
     {
       path: '/*',
-      component: () => import('./layouts/MainLayout.vue'),
+      component: () => import('./pages/layouts/MainLayout.vue'),
       children: [
         {
           path: '/',
@@ -146,7 +146,7 @@ const router = createRouter({
 
         {
           path: '/admin',
-          component: () => import('./layouts/AdminLayout.vue'),
+          component: () => import('./pages/layouts/AdminLayout.vue'),
           children: [
             {
               path: 'user',

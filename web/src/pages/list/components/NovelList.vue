@@ -2,8 +2,8 @@
 import { ref, watch } from 'vue';
 import { LocationQuery, useRoute, useRouter } from 'vue-router';
 
-import { Page } from '@/data/api/common';
-import { Result } from '@/data/result';
+import { Page } from '@/model/Page';
+import { Result } from '@/pages/result';
 import { onKeyStroke } from '@vueuse/core';
 
 export type Loader<T extends Page<any>> = (

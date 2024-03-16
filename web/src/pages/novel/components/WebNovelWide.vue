@@ -2,7 +2,7 @@
 import { SortOutlined } from '@vicons/material';
 import { ref } from 'vue';
 
-import { WebNovelTocItemDto } from '@/data/api/api_web_novel';
+import { WebNovelTocItemDto } from '@/model/WebNovel';
 import { useSettingStore } from '@/data/stores/setting';
 
 import { WebNovelVM } from './common';

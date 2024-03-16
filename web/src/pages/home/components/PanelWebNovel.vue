@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { WebNovelOutlineDto } from '@/data/api/api_web_novel';
-import { Result } from '@/data/result';
+import { Result } from '@/pages/result';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
 
 defineProps<{ listResult?: Result<WebNovelOutlineDto[]> }>();
 </script>

@@ -8,7 +8,7 @@ import {
   translationModeOptions,
   useReaderSettingStore,
 } from '@/data/stores/reader_setting';
-import { useIsWideScreen } from '@/data/util';
+import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(600);
 const setting = useReaderSettingStore();

@@ -3,7 +3,9 @@ import { FavoriteBorderOutlined, FavoriteOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { ApiUser, Favored } from '@/data/api/api_user';
+import { UserRepository } from '@/data/api';
+import { Favored } from '@/model/User';
+import { doAction } from '@/pages/util';
 
 const props = defineProps<{
   favored: string | undefined;
@@ -20,39 +22,40 @@ const favoredTitle = computed(
   () => props.favoredList.find((it) => it.id === props.favored)?.title
 );
 
-const favoriteNovel = async (favoredId: string) => {
-  const result = await (props.novel.type === 'web'
-    ? ApiUser.favoriteWebNovel(
-        favoredId,
-        props.novel.providerId,
-        props.novel.novelId
-      )
-    : ApiUser.favoriteWenkuNovel(favoredId, props.novel.novelId));
-  if (result.ok) {
-    emit('update:favored', favoredId);
-    message.success('收藏成功');
-    showFavoredModal.value = false;
-  } else {
-    message.error('收藏错误：' + result.error.message);
-  }
-};
+const favoriteNovel = (favoredId: string) =>
+  doAction(
+    (props.novel.type === 'web'
+      ? UserRepository.favoriteWebNovel(
+          favoredId,
+          props.novel.providerId,
+          props.novel.novelId
+        )
+      : UserRepository.favoriteWenkuNovel(favoredId, props.novel.novelId)
+    ).then(() => {
+      emit('update:favored', favoredId);
+      showFavoredModal.value = false;
+    }),
+    '收藏',
+    message
+  );
 
 const unfavoriteNovel = async () => {
   if (props.favored === undefined) return;
-  const result = await (props.novel.type === 'web'
-    ? ApiUser.unfavoriteWebNovel(
-        props.favored,
-        props.novel.providerId,
-        props.novel.novelId
-      )
-    : ApiUser.unfavoriteWenkuNovel(props.favored, props.novel.novelId));
-  if (result.ok) {
-    emit('update:favored', undefined);
-    message.success('取消收藏成功');
-    showFavoredModal.value = false;
-  } else {
-    message.error('取消收藏错误：' + result.error.message);
-  }
+  await doAction(
+    (props.novel.type === 'web'
+      ? UserRepository.unfavoriteWebNovel(
+          props.favored,
+          props.novel.providerId,
+          props.novel.novelId
+        )
+      : UserRepository.unfavoriteWenkuNovel(props.favored, props.novel.novelId)
+    ).then(() => {
+      emit('update:favored', undefined);
+      showFavoredModal.value = false;
+    }),
+    '取消收藏',
+    message
+  );
 };
 
 const showFavoredModal = ref(false);

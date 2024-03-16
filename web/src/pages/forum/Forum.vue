@@ -9,10 +9,12 @@ import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ApiArticle, ArticleOutline } from '@/data/api/api_article';
-import { Page } from '@/data/api/common';
-import { Result } from '@/data/result';
+import { ArticleRepository } from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { ArticleOutline } from '@/model/Article';
+import { Page } from '@/model/Page';
+import { doAction } from '@/pages/util';
 
 const route = useRoute();
 const router = useRouter();
@@ -34,10 +36,12 @@ watch(
       currentPage.value = newPage;
     }
     articlePageResult.value = undefined;
-    const result = await ApiArticle.listArticle({
-      page: currentPage.value - 1,
-      pageSize: 20,
-    });
+    const result = await runCatching(
+      ArticleRepository.listArticle({
+        page: currentPage.value - 1,
+        pageSize: 20,
+      })
+    );
     if (currentPage.value === newPage) {
       articlePageResult.value = result;
       if (result.ok) {
@@ -67,36 +71,39 @@ function generateOptions(article: ArticleOutline) {
   return options;
 }
 
-async function handleSelect(key: string | number, article: ArticleOutline) {
-  function notifyResult<T>(result: Result<T>, label: string) {
-    if (result.ok) {
-      currentPage.value = currentPage.value;
-      message.info(label + '成功');
-    } else {
-      message.info(label + '失败' + result.error.message);
-    }
-  }
+const handleSelect = async (key: string | number, article: ArticleOutline) => {
   if (key === 'lock') {
-    const result = await ApiArticle.lockArticle(article.id);
-    if (result.ok) article.locked = true;
-    notifyResult(result, '锁定');
+    await doAction(
+      ArticleRepository.lockArticle(article.id).then(
+        () => (article.locked = true)
+      ),
+      '锁定',
+      message
+    );
   } else if (key === 'unlock') {
-    const result = await ApiArticle.unlockArticle(article.id);
-    if (result.ok) article.locked = false;
-    notifyResult(result, '解除锁定');
+    await doAction(
+      ArticleRepository.unlockArticle(article.id).then(
+        () => (article.locked = false)
+      ),
+      '解除锁定',
+      message
+    );
   } else if (key === 'pin') {
-    const result = await ApiArticle.pinArticle(article.id);
-    if (result.ok) article.pinned = true;
-    notifyResult(result, '置顶');
+    await doAction(
+      ArticleRepository.pinArticle(article.id).then(() => (article.pinned = true)),
+      '置顶',
+      message
+    );
   } else if (key === 'unpin') {
-    const result = await ApiArticle.unpinArticle(article.id);
-    if (result.ok) article.pinned = false;
-    notifyResult(result, '解除置顶');
+    await doAction(
+      ArticleRepository.unpinArticle(article.id).then(() => (article.pinned = false)),
+      '解除置顶',
+      message
+    );
   } else if (key === 'delete') {
-    const result = await ApiArticle.deleteArticle(article.id);
-    notifyResult(result, '删除');
+    await doAction(ArticleRepository.unpinArticle(article.id), '删除', message);
   }
-}
+};
 </script>
 
 <template>

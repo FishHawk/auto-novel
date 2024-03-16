@@ -2,13 +2,11 @@
 import { useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
 
-import {
-  ApiOperation,
-  OperationHistory,
-  OperationType,
-} from '@/data/api/api_operation';
-import { Page } from '@/data/api/common';
-import { Result } from '@/data/result';
+import { OperationRepository } from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
+import { OperationHistory, OperationType } from '@/model/Operation';
+import { Page } from '@/model/Page';
+import { doAction } from '@/pages/util';
 
 import OperationWenkuEdit from './components/OperationWenkuEdit.vue';
 import OperationWenkuUpload from './components/OperationWenkuUpload.vue';
@@ -30,11 +28,13 @@ const historiesResult = ref<Result<Page<OperationHistory>>>();
 
 async function loadPage(page: number) {
   historiesResult.value = undefined;
-  const result = await ApiOperation.listOperationHistory({
-    page: currentPage.value - 1,
-    pageSize: 30,
-    type: type.value,
-  });
+  const result = await runCatching(
+    OperationRepository.listOperationHistory({
+      page: currentPage.value - 1,
+      pageSize: 30,
+      type: type.value,
+    })
+  );
   if (currentPage.value == page) {
     historiesResult.value = result;
     if (result.ok) {
@@ -43,18 +43,17 @@ async function loadPage(page: number) {
   }
 }
 
-async function deleteHistory(id: string) {
-  const result = await ApiOperation.deleteOperationHistory(id);
-  if (result.ok) {
-    message.info('删除成功');
-    if (historiesResult.value?.ok) {
-      historiesResult.value.value.items =
-        historiesResult.value.value.items.filter((it) => it.id !== id);
-    }
-  } else {
-    message.error('删除失败：' + result.error.message);
-  }
-}
+const deleteHistory = (id: string) =>
+  doAction(
+    OperationRepository.deleteOperationHistory(id).then(() => {
+      if (historiesResult.value?.ok) {
+        historiesResult.value.value.items =
+          historiesResult.value.value.items.filter((it) => it.id !== id);
+      }
+    }),
+    '删除',
+    message
+  );
 
 watch(currentPage, (page) => loadPage(page), { immediate: true });
 

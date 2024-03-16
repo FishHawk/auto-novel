@@ -4,17 +4,18 @@ import { useThemeVars } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { notice } from '@/components/NoticeBoard.vue';
-import { ApiUser } from '@/data/api/api_user';
-import { ApiWebNovel, WebNovelOutlineDto } from '@/data/api/api_web_novel';
 import {
-  ApiWenkuNovel,
-  WenkuNovelOutlineDto,
-} from '@/data/api/api_wenku_novel';
-import { Ok, Result } from '@/data/result';
+  UserRepository,
+  WebNovelRepository,
+  WenkuNovelRepository,
+} from '@/data/api';
+import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { parseUrl } from '@/data/web/url';
-import bannerUrl from '@/images/banner.webp';
+import bannerUrl from '@/image/banner.webp';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 
 const userData = useUserDataStore();
 const router = useRouter();
@@ -34,16 +35,13 @@ const query = (url: string) => {
 
 const favoriteList = ref<Result<WebNovelOutlineDto[]>>();
 const loadFavorite = async () => {
-  const result = await ApiUser.listFavoredWebNovel('default', {
-    page: 0,
-    pageSize: 8,
-    sort: 'update',
-  });
-  if (result.ok) {
-    favoriteList.value = Ok(result.value.items);
-  } else {
-    favoriteList.value = result;
-  }
+  favoriteList.value = await runCatching(
+    UserRepository.listFavoredWebNovel('default', {
+      page: 0,
+      pageSize: 8,
+      sort: 'update',
+    }).then((it) => it.items)
+  );
 };
 watch(
   () => userData.username,
@@ -55,33 +53,27 @@ watch(
 
 const mostVisitedWeb = ref<Result<WebNovelOutlineDto[]>>();
 const loadWeb = async () => {
-  const result = await ApiWebNovel.listNovel({
-    page: 0,
-    pageSize: 8,
-    provider: 'kakuyomu,syosetu,novelup,hameln,pixiv,alphapolis',
-    sort: 1,
-    level: 1,
-  });
-  if (result.ok) {
-    mostVisitedWeb.value = Ok(result.value.items);
-  } else {
-    mostVisitedWeb.value = result;
-  }
+  mostVisitedWeb.value = await runCatching(
+    WebNovelRepository.listNovel({
+      page: 0,
+      pageSize: 8,
+      provider: 'kakuyomu,syosetu,novelup,hameln,pixiv,alphapolis',
+      sort: 1,
+      level: 1,
+    }).then((it) => it.items)
+  );
 };
 loadWeb();
 
 const latestUpdateWenku = ref<Result<WenkuNovelOutlineDto[]>>();
 const loadWenku = async () => {
-  const result = await ApiWenkuNovel.listNovel({
-    page: 0,
-    pageSize: 12,
-    level: 1,
-  });
-  if (result.ok) {
-    latestUpdateWenku.value = Ok(result.value.items.slice(0, 12));
-  } else {
-    latestUpdateWenku.value = result;
-  }
+  latestUpdateWenku.value = await runCatching(
+    WenkuNovelRepository.listNovel({
+      page: 0,
+      pageSize: 12,
+      level: 1,
+    }).then((it) => it.items)
+  );
 };
 loadWenku();
 

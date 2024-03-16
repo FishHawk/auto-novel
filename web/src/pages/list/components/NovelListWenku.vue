@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 
-import { WenkuNovelOutlineDto } from '@/data/api/api_wenku_novel';
+import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 
 const props = defineProps<{
   items: WenkuNovelOutlineDto[];

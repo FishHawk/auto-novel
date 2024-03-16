@@ -2,7 +2,8 @@
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { ApiUser } from '@/data/api/api_user';
+import { UserRepository } from '@/data/api';
+import { doAction } from '@/pages/util';
 
 defineProps(['show']);
 const emit = defineEmits<{
@@ -38,16 +39,17 @@ const addFavorite = async () => {
 
   const typeValue = type.value;
   const title = formValue.value.title;
-  const result = await (typeValue === 'web'
-    ? ApiUser.createFavoredWeb({ title })
-    : ApiUser.createFavoredWenku({ title }));
-  if (result.ok) {
-    message.success('收藏夹创建成功');
-    emit('created');
-    emit('update:show', false);
-  } else {
-    message.error('收藏夹创建失败:' + result.error.message);
-  }
+  await doAction(
+    (typeValue === 'web'
+      ? UserRepository.createFavoredWeb({ title })
+      : UserRepository.createFavoredWenku({ title })
+    ).then(() => {
+      emit('created');
+      emit('update:show', false);
+    }),
+    '收藏夹创建',
+    message
+  );
 };
 </script>
 

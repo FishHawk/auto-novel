@@ -3,8 +3,10 @@ import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ApiArticle } from '@/data/api/api_article';
-import avaterUrl from '@/images/avater.jpg';
+import { ArticleRepository } from '@/data/api';
+import { formatError } from '@/data/api/client';
+import { runCatching } from '@/pages/result';
+import avaterUrl from '@/image/avater.jpg';
 
 const route = useRoute();
 const router = useRouter();
@@ -48,7 +50,7 @@ const formRules: FormRules = {
 
 onMounted(async () => {
   if (articleId !== undefined) {
-    const article = await ApiArticle.getArticle(articleId);
+    const article = await runCatching(ArticleRepository.getArticle(articleId));
     if (article.ok) {
       formValue.value.title = article.value.title;
       formValue.value.content = article.value.content;
@@ -58,7 +60,7 @@ onMounted(async () => {
   }
 });
 
-async function submit() {
+const submit = async () => {
   const validated = await new Promise<boolean>(function (resolve, _reject) {
     formRef.value?.validate((errors) => {
       if (errors) resolve(false);
@@ -68,29 +70,31 @@ async function submit() {
   if (!validated) return;
 
   if (articleId === undefined) {
-    const result = await ApiArticle.createArticle({
+    await ArticleRepository.createArticle({
       title: formValue.value.title,
       content: formValue.value.content,
-    });
-    if (result.ok) {
-      message.info('发布成功');
-      router.push({ path: `/forum/${result.value}` });
-    } else {
-      message.error('发布失败:' + result.error.message);
-    }
+    })
+      .then((id) => {
+        message.info('发布成功');
+        router.push({ path: `/forum/${id}` });
+      })
+      .catch((e) => {
+        message.error('发布失败:' + formatError(e));
+      });
   } else {
-    const result = await ApiArticle.updateArticle(articleId, {
+    await ArticleRepository.updateArticle(articleId, {
       title: formValue.value.title,
       content: formValue.value.content,
-    });
-    if (result.ok) {
-      message.info('更新成功');
-      router.push({ path: `/forum/${articleId}` });
-    } else {
-      message.error('更新失败:' + result.error.message);
-    }
+    })
+      .then(() => {
+        message.info('更新成功');
+        router.push({ path: `/forum/${articleId}` });
+      })
+      .catch((e) => {
+        message.error('更新失败:' + formatError(e));
+      });
   }
-}
+};
 
 const formatExample: [string, string][] = [
   ['段落之间要有空行', '第一段巴拉巴拉\n\n第二段巴拉巴拉'],
