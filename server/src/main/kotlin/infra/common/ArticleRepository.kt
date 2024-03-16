@@ -32,7 +32,7 @@ class ArticleRepository(
                     Facet("count", Aggregates.count()),
                     Facet(
                         "items",
-                        sort(descending(ArticleModel::pinned, ArticleModel::updateAt)),
+                        sort(descending(ArticleModel::pinned, ArticleModel::changeAt)),
                         skip(page * pageSize),
                         limit(pageSize),
                         lookup(
@@ -142,6 +142,7 @@ class ArticleRepository(
                     user = userId.toId(),
                     createAt = now,
                     updateAt = now,
+                    changeAt = now,
                 )
             )
         return insertResult.insertedId!!.asObjectId().value
@@ -164,7 +165,10 @@ class ArticleRepository(
             .articleCollection
             .updateOne(
                 ArticleModel::id eq id,
-                inc(ArticleModel::numComments, 1),
+                combine(
+                    inc(ArticleModel::numComments, 1),
+                    setValue(ArticleModel::changeAt, Clock.System.now()),
+                ),
             )
     }
 
@@ -173,6 +177,7 @@ class ArticleRepository(
         title: String,
         content: String,
     ) {
+        val now = Clock.System.now()
         mongo
             .articleCollection
             .updateOne(
@@ -180,7 +185,8 @@ class ArticleRepository(
                 combine(
                     setValue(ArticleModel::title, title),
                     setValue(ArticleModel::content, content),
-                    setValue(ArticleModel::updateAt, Clock.System.now())
+                    setValue(ArticleModel::updateAt, now),
+                    setValue(ArticleModel::changeAt, now),
                 )
             )
     }

@@ -46,4 +46,5 @@ data class ArticleModel(
     @Contextual val user: Id<User>,
     @Contextual val createAt: Instant,
     @Contextual val updateAt: Instant,
+    @Contextual val changeAt: Instant,
 )

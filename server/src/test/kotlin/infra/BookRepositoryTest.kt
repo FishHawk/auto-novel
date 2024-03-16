@@ -20,7 +20,7 @@ import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.litote.kmongo.eq
-import org.litote.kmongo.id.toId
+import org.litote.kmongo.setValue
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
     override fun extensions() = listOf(
@@ -40,18 +40,19 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-            suspend fun test(id: String) {
-                mongo
-                    .userFavoredWenkuCollection
-                    .find(UserFavoredWenkuNovelModel::novelId eq ObjectId(id).toId())
+            mongo.articleCollection.find().toList().forEach {
+                val changeAt = mongo.commentCollection.find(
+                    Comment::site eq "article-${it.id.toHexString()}"
+                )
                     .toList()
-                    .apply { println(size) }
-                    .forEach {
-                        println("${it.userId}")
+                    .maxOfOrNull {
+                        it.createAt
                     }
-                wenkuRepo.delete(id)
+                mongo.articleCollection.updateOne(
+                    ArticleModel::id eq it.id,
+                    setValue(ArticleModel::changeAt, maxOf(changeAt ?: it.updateAt, it.updateAt))
+                )
             }
-            test("65a2701ef9f4eb64961d7881")
         }
         describe("build es index") {
             @Serializable
