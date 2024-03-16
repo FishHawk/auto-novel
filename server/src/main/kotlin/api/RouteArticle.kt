@@ -25,6 +25,7 @@ private class ArticleRes {
         val parent: ArticleRes,
         val page: Int,
         val pageSize: Int,
+        val category: ArticleCategory,
     )
 
     @Resource("/{id}")
@@ -42,7 +43,11 @@ fun Route.routeArticle() {
 
     get<ArticleRes.List> { loc ->
         call.tryRespond {
-            service.listArticle(page = loc.page, pageSize = loc.pageSize)
+            service.listArticle(
+                page = loc.page,
+                pageSize = loc.pageSize,
+                category = loc.category,
+            )
         }
     }
 
@@ -144,6 +149,7 @@ class ArticleApi(
     suspend fun listArticle(
         page: Int,
         pageSize: Int,
+        category: ArticleCategory,
     ): Page<ArticleOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
@@ -151,6 +157,7 @@ class ArticleApi(
             .listArticle(
                 page = page,
                 pageSize = pageSize,
+                category = category,
             )
             .map {
                 ArticleOutlineDto(

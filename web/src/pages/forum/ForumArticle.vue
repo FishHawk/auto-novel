@@ -38,7 +38,10 @@ onMounted(async () => {
         by {{ article.user.username }}
         <template v-if="userData.username === article.user.username">
           /
-          <RouterNA :to="`/forum-edit/${article.id}`">编辑</RouterNA>
+          <RouterNA
+            :to="`/forum-edit/${article.id}?category=${article.category}`"
+            >编辑</RouterNA
+          >
         </template>
       </n-p>
       <n-divider />

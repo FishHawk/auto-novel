@@ -3,7 +3,11 @@ import { Page } from '@/model/Page';
 
 import { client } from './client';
 
-const listArticle = (params: { page: number; pageSize: number }) =>
+const listArticle = (params: {
+  page: number;
+  pageSize: number;
+  category: ArticleCategory;
+}) =>
   client.get('article', { searchParams: params }).json<Page<ArticleOutline>>();
 
 const getArticle = (id: string) => client.get(`article/${id}`).json<Article>();

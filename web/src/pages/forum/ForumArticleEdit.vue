@@ -16,16 +16,16 @@ const message = useMessage();
 const articleId = route.params.id as string | undefined;
 
 const articleCategoryOptions = [
-  { value: 'Support', label: '问题讨论' },
-  { value: 'General', label: '小说交流' },
   { value: 'Guide', label: '使用指南' },
+  { value: 'General', label: '小说交流' },
+  { value: 'Support', label: '反馈与建议' },
 ];
 
 const formRef = ref<FormInst>();
 const formValue = ref({
   title: '',
   content: '',
-  category: 'General' as ArticleCategory,
+  category: (route.query.category || 'General') as ArticleCategory,
 });
 const formRules: FormRules = {
   title: [

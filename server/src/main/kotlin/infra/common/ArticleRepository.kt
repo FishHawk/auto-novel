@@ -21,6 +21,7 @@ class ArticleRepository(
     suspend fun listArticle(
         page: Int,
         pageSize: Int,
+        category: ArticleCategory,
     ): Page<ArticleOutline> {
         @Serializable
         data class ArticlePage(val total: Int = 0, val items: List<ArticleOutline>)
@@ -28,6 +29,7 @@ class ArticleRepository(
         val doc = mongo
             .articleCollection
             .aggregate<ArticlePage>(
+                match(ArticleModel::category eq category),
                 facet(
                     Facet("count", Aggregates.count()),
                     Facet(

@@ -12,7 +12,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { ArticleRepository } from '@/data/api';
 import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { ArticleOutline } from '@/model/Article';
+import { ArticleCategory, ArticleOutline } from '@/model/Article';
 import { Page } from '@/model/Page';
 import { doAction } from '@/pages/util';
 
@@ -21,25 +21,37 @@ const router = useRouter();
 const message = useMessage();
 const userData = useUserDataStore();
 
-const parsePage = (q: typeof route.query) =>
-  parseInt(route.query.page as string) || 1;
+const articleCategoryOptions = [
+  { value: 'Guide', label: '使用指南' },
+  { value: 'General', label: '小说交流' },
+  { value: 'Support', label: '反馈与建议' },
+];
+
+const parsePage = (q: typeof route.query) => parseInt(q.page as string) || 1;
+const parseCategory = (q: typeof route.query) =>
+  (q.category as ArticleCategory) || 'Guide';
 
 const articlePageResult = ref<Result<Page<ArticleOutline>>>();
+const category = ref<ArticleCategory>(parseCategory(route.query));
 const currentPage = ref(parsePage(route.query));
 const pageNumber = ref(1);
 
+watch(category, () => {
+  currentPage.value = 1;
+});
+
 watch(
   route,
-  async (route) => {
-    const newPage = parsePage(route.query);
-    if (newPage !== currentPage.value) {
-      currentPage.value = newPage;
-    }
+  async (_) => {
+    const newPage = currentPage.value;
+    const newCategory = category.value;
+
     articlePageResult.value = undefined;
     const result = await runCatching(
       ArticleRepository.listArticle({
-        page: currentPage.value - 1,
+        page: newPage - 1,
         pageSize: 20,
+        category: newCategory,
       })
     );
     if (currentPage.value === newPage) {
@@ -52,11 +64,14 @@ watch(
   { immediate: true }
 );
 
-watch(currentPage, (_) => {
-  router.push({ path: route.path, query: { page: currentPage.value } });
+watch([category, currentPage], (_) => {
+  router.push({
+    path: route.path,
+    query: { page: currentPage.value, category: category.value },
+  });
 });
 
-function generateOptions(article: ArticleOutline) {
+const generateOptions = (article: ArticleOutline) => {
   const options = [{ label: '删除文章', key: 'delete' }];
   if (article.locked) {
     options.unshift({ label: '解除锁定', key: 'unlock' });
@@ -69,7 +84,7 @@ function generateOptions(article: ArticleOutline) {
     options.unshift({ label: '置顶文章', key: 'pin' });
   }
   return options;
-}
+};
 
 const handleSelect = async (key: string | number, article: ArticleOutline) => {
   if (key === 'lock') {
@@ -90,13 +105,17 @@ const handleSelect = async (key: string | number, article: ArticleOutline) => {
     );
   } else if (key === 'pin') {
     await doAction(
-      ArticleRepository.pinArticle(article.id).then(() => (article.pinned = true)),
+      ArticleRepository.pinArticle(article.id).then(
+        () => (article.pinned = true)
+      ),
       '置顶',
       message
     );
   } else if (key === 'unpin') {
     await doAction(
-      ArticleRepository.unpinArticle(article.id).then(() => (article.pinned = false)),
+      ArticleRepository.unpinArticle(article.id).then(
+        () => (article.pinned = false)
+      ),
       '解除置顶',
       message
     );
@@ -110,13 +129,20 @@ const handleSelect = async (key: string | number, article: ArticleOutline) => {
   <div class="layout-content">
     <n-h1>论坛</n-h1>
 
-    <router-link to="/forum-edit">
+    <router-link :to="`/forum-edit?category=${category}`">
       <c-button
         label="发布文章"
         :icon="PlusOutlined"
         style="margin-bottom: 16px"
       />
     </router-link>
+
+    <c-action-wrapper title="版块" style="margin-bottom: 20px">
+      <c-radio-group
+        v-model:value="category"
+        :options="articleCategoryOptions"
+      />
+    </c-action-wrapper>
 
     <n-pagination
       v-if="pageNumber > 1"
