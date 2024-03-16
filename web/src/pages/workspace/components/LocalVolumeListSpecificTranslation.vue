@@ -130,7 +130,7 @@ const downloadVolume = async (volumeId: string) => {
           />
 
           <c-button
-            v-if="volume.id.endsWith('.txt')"
+            v-if="!volume.id.endsWith('.epub')"
             label="阅读"
             tag="a"
             :href="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"

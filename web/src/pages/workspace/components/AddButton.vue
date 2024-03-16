@@ -11,10 +11,14 @@ import { LocalVolumeService } from '@/data/local';
 const message = useMessage();
 
 const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
-  if (!(file.name.endsWith('.txt') || file.name.endsWith('.epub'))) {
-    message.error(
-      `上传失败:不允许的文件类型，必须是EPUB或TXT文件\n文件名: ${file.name}`
-    );
+  if (
+    !(
+      file.name.endsWith('.txt') ||
+      file.name.endsWith('.srt') ||
+      file.name.endsWith('.epub')
+    )
+  ) {
+    message.error(`上传失败:文件类型不允许\n文件名： ${file.name}`);
     return false;
   }
   if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
@@ -39,7 +43,7 @@ const customRequest = ({
 
 <template>
   <n-upload
-    accept=".txt,.epub"
+    accept=".txt,.epub,.srt"
     multiple
     directory-dnd
     :custom-request="customRequest"

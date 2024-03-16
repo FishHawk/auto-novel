@@ -1,17 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { Epub } from '@/util/epub/epub';
-import { Txt } from '@/util/epub/txt';
+import { Epub, Srt, Txt } from '@/util/file';
 
+import { EpubParserV1 } from './EpubParser';
 import { LocalVolumeRepository } from './LocalVolumeRepository';
 
 export const createVolume = async (file: File) => {
   const id = file.name;
-  const chapters: { chapterId: string; paragraphs: string[] }[] = [];
-
   if ((await LocalVolumeRepository.getMetadata(id)) !== undefined) {
     throw Error('小说已经存在');
   }
+
+  const chapters: { chapterId: string; paragraphs: string[] }[] = [];
 
   if (id.endsWith('.txt')) {
     const content = await Txt.readContent(file);
@@ -21,11 +21,17 @@ export const createVolume = async (file: File) => {
       const paragraphs = jpLines.slice(i, i + chunkSize);
       chapters.push({ chapterId: i.toString(), paragraphs });
     }
-  } else {
+  } else if (id.endsWith('.epub')) {
     await Epub.forEachXHtmlFile(file, (path, doc) => {
-      const paragraphs = epubParserV1.extractText(doc);
+      const paragraphs = EpubParserV1.extractText(doc);
       chapters.push({ chapterId: path, paragraphs });
     });
+  } else if (id.endsWith('.srt')) {
+    const subtitles = await Srt.readContent(file);
+    const jpLines = subtitles
+      .flatMap((it) => it.text)
+      .map((it) => Srt.cleanFormat(it));
+    chapters.push({ chapterId: '0'.toString(), paragraphs: jpLines });
   }
 
   for (const { chapterId, paragraphs } of chapters) {
@@ -53,60 +59,3 @@ export const deleteVolume = (id: string) =>
     LocalVolumeRepository.deleteMetadata(id),
     LocalVolumeRepository.deleteFile(id),
   ]);
-
-interface EpubParser {
-  extractText: (doc: Document) => string[];
-  injectTranslation: (
-    doc: Document,
-    lang: 'zh' | 'jp-zh' | 'zh-jp',
-    zhLinesList: string[][]
-  ) => Document;
-}
-
-export const epubParserV1: EpubParser = {
-  extractText: (doc: Document) => {
-    Array.from(doc.getElementsByTagName('rt')).forEach((node) =>
-      node.parentNode!!.removeChild(node)
-    );
-    return Array.from(doc.body.getElementsByTagName('p'))
-      .map((el) => el.innerText)
-      .filter((it) => it.trim().length !== 0);
-  },
-  injectTranslation: (
-    doc: Document,
-    lang: 'zh' | 'jp-zh' | 'zh-jp',
-    zhLinesList: string[][]
-  ) => {
-    Array.from(doc.body.getElementsByTagName('p'))
-      .filter((el) => el.innerText.trim().length !== 0)
-      .forEach((el, index) => {
-        if (lang === 'zh') {
-          zhLinesList.forEach((lines) => {
-            const p = document.createElement('p');
-            const t = document.createTextNode(lines[index]);
-            p.appendChild(t);
-            el.parentNode!!.insertBefore(p, el);
-          });
-          el.parentNode!!.removeChild(el);
-        } else if (lang === 'jp-zh') {
-          zhLinesList.forEach((lines) => {
-            const p = document.createElement('p');
-            const t = document.createTextNode(lines[index]);
-            p.appendChild(t);
-            el.parentNode!!.insertBefore(p, el.nextSibling);
-          });
-          el.setAttribute('style', 'opacity:0.4;');
-        } else {
-          zhLinesList.forEach((lines) => {
-            const p = document.createElement('p');
-            const t = document.createTextNode(lines[index]);
-            p.appendChild(t);
-            el.parentNode!!.insertBefore(p, el);
-          });
-          el.setAttribute('style', 'opacity:0.4;');
-        }
-      });
-
-    return doc;
-  },
-};

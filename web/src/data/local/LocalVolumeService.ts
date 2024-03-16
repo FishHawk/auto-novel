@@ -35,6 +35,17 @@ export const LocalVolumeService = {
     translatorId: TranslatorId,
     translation: ChapterTranslation
   ) => {
+    const chapter = await LocalVolumeRepository.updateChapter(
+      id,
+      chapterId,
+      (value: LocalVolumeChapter) => {
+        value[translatorId] = translation;
+        return value;
+      }
+    );
+    if (chapter === undefined) {
+      throw '章节不存在';
+    }
     const metadata = await LocalVolumeRepository.updateMetadata(
       id,
       (value: LocalVolumeMetadata) => {
@@ -47,13 +58,6 @@ export const LocalVolumeService = {
     if (metadata === undefined) {
       throw '小说不存在';
     }
-    await LocalVolumeRepository.updateChapter(
-      id,
-      (value: LocalVolumeChapter) => {
-        value[translatorId] = translation;
-        return value;
-      }
-    );
     return metadata.toc.filter((it) => it[translatorId] !== undefined).length;
   },
   //

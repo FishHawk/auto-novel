@@ -102,11 +102,12 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
 
 const notices = [
   notice(
-    '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），帮助我们改善Sakura模型。'
+    '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），用来收集数据帮助sakura训练。'
   ),
   notice(
-    '升级了网络小说目录翻译，有道翻译目录会正确处理空格了，又需要可以使用“重翻目录”。'
+    '升级了网络小说目录翻译，有道翻译目录会正确处理空格了，有需要可以使用“重翻目录”。'
   ),
+  notice('工作区支持SRT字幕文件了。'),
 ];
 </script>
 

@@ -66,9 +66,14 @@ export const LocalVolumeRepository = {
     db.put('chapter', chapter)
   ),
   updateChapter: db.with(
-    async (db, id: string, mutator: Mutator<LocalVolumeChapter>) => {
+    async (
+      db,
+      id: string,
+      chapterId: string,
+      mutator: Mutator<LocalVolumeChapter>
+    ) => {
       const tx = db.transaction('chapter', 'readwrite');
-      let value = await tx.store.get(id);
+      let value = await tx.store.get(`${id}/${chapterId}`);
       if (value !== undefined) {
         value = mutator(value);
         await tx.store.put(value);

@@ -1,16 +1,15 @@
 <script lang="ts" setup>
+import { PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
-import { notice } from '@/pages/components/NoticeBoard.vue';
 import { LocalVolumeService } from '@/data/local';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
-import { Epub } from '@/util/epub/epub';
-import { Txt } from '@/util/epub/txt';
-import { PlusOutlined } from '@vicons/material';
+import { Epub, Txt } from '@/util/file';
 
 const message = useMessage();
 const isWideScreen = useIsWideScreen(850);
@@ -277,3 +276,4 @@ const notices = [
   white-space: nowrap;
 }
 </style>
+@/util/file/epub@/util/file/txt

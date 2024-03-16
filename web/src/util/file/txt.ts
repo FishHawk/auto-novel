@@ -24,6 +24,13 @@ const readContent = async (file: File) => {
   return content;
 };
 
+const writeContent = (lines: string[]) => {
+  return new Blob([lines.join('\n')], {
+    type: 'text/plain',
+  });
+};
+
 export const Txt = {
   readContent,
+  writeContent,
 };

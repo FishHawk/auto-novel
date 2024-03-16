@@ -1,7 +1,8 @@
-import { Epub } from '@/util/epub/epub';
+import { Epub } from '@/util/file/epub';
 
-import { epubParserV1 } from './CreateAndDeleteVolumeUseCase';
+import { EpubParserV1 } from './EpubParser';
 import { LocalVolumeRepository } from './LocalVolumeRepository';
+import { Srt, Txt } from '@/util/file';
 
 export const getTranslationFile = async ({
   id,
@@ -64,11 +65,9 @@ export const getTranslationFile = async ({
     }
     return {
       filename,
-      blob: new Blob([buffer.join('\n')], {
-        type: 'text/plain',
-      }),
+      blob: Txt.writeContent(buffer),
     };
-  } else {
+  } else if (id.endsWith('.epub')) {
     const file = await LocalVolumeRepository.getFile(id);
     if (file === undefined) throw Error('原始文件不存在');
 
@@ -83,7 +82,7 @@ export const getTranslationFile = async ({
         const doc = await parseXHtmlBlob(blobIn);
         const { zhLinesList } = await getZhLinesList(path);
         if (zhLinesList.length === 0) return blobIn;
-        await epubParserV1.injectTranslation(doc, lang, zhLinesList);
+        await EpubParserV1.injectTranslation(doc, lang, zhLinesList);
         return new Blob([doc.documentElement.outerHTML], {
           type: 'text/plain',
         });
@@ -103,6 +102,44 @@ export const getTranslationFile = async ({
         return blobIn;
       }
     });
-    return { filename, blob: generated };
+    return {
+      filename,
+      blob: generated,
+    };
+  } else if (id.endsWith('.srt')) {
+    const file = await LocalVolumeRepository.getFile(id);
+    if (file === undefined) throw Error('原始文件不存在');
+
+    const { zhLinesList } = await getZhLinesList('0');
+
+    const subtitles = await Srt.readContent(file.file);
+    const newSubtitles: typeof subtitles = [];
+    for (const s of subtitles) {
+      let texts: string[][] = [];
+      for (const zhLines of zhLinesList) {
+        texts.push(zhLines.slice(0, s.text.length));
+        zhLines.splice(0, s.text.length);
+      }
+
+      if (lang === 'jp-zh') {
+        texts.unshift(s.text);
+      } else if (lang === 'zh-jp') {
+        texts.push(s.text);
+      }
+
+      for (const text of texts) {
+        newSubtitles.push({
+          id: (newSubtitles.length + 1).toString(),
+          time: s.time,
+          text,
+        });
+      }
+    }
+
+    return {
+      filename,
+      blob: Srt.writeContent(newSubtitles),
+    };
   }
+  throw new Error('不支持的文件格式');
 };
