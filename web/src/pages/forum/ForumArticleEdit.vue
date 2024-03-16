@@ -5,8 +5,9 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { ArticleRepository } from '@/data/api';
 import { formatError } from '@/data/api/client';
-import { runCatching } from '@/pages/result';
 import avaterUrl from '@/image/avater.jpg';
+import { ArticleCategory } from '@/model/Article';
+import { runCatching } from '@/pages/result';
 
 const route = useRoute();
 const router = useRouter();
@@ -14,10 +15,17 @@ const message = useMessage();
 
 const articleId = route.params.id as string | undefined;
 
+const articleCategoryOptions = [
+  { value: 'Support', label: '问题讨论' },
+  { value: 'General', label: '小说交流' },
+  { value: 'Guide', label: '使用指南' },
+];
+
 const formRef = ref<FormInst>();
 const formValue = ref({
   title: '',
   content: '',
+  category: 'General' as ArticleCategory,
 });
 const formRules: FormRules = {
   title: [
@@ -53,6 +61,7 @@ onMounted(async () => {
     const article = await runCatching(ArticleRepository.getArticle(articleId));
     if (article.ok) {
       formValue.value.title = article.value.title;
+      formValue.value.category = article.value.category;
       formValue.value.content = article.value.content;
     } else {
       message.error('载入失败');
@@ -70,10 +79,7 @@ const submit = async () => {
   if (!validated) return;
 
   if (articleId === undefined) {
-    await ArticleRepository.createArticle({
-      title: formValue.value.title,
-      content: formValue.value.content,
-    })
+    await ArticleRepository.createArticle(formValue.value)
       .then((id) => {
         message.info('发布成功');
         router.push({ path: `/forum/${id}` });
@@ -82,10 +88,7 @@ const submit = async () => {
         message.error('发布失败:' + formatError(e));
       });
   } else {
-    await ArticleRepository.updateArticle(articleId, {
-      title: formValue.value.title,
-      content: formValue.value.content,
-    })
+    await ArticleRepository.updateArticle(articleId, formValue.value)
       .then(() => {
         message.info('更新成功');
         router.push({ path: `/forum/${articleId}` });
@@ -120,7 +123,7 @@ const formatExample: [string, string][] = [
       label-width="auto"
       style="max-width: 800px"
     >
-      <n-form-item-row path="title">
+      <n-form-item-row path="title" label="标题">
         <n-input
           v-model:value="formValue.title"
           placeholder="标题"
@@ -129,7 +132,13 @@ const formatExample: [string, string][] = [
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
-      <n-form-item-row path="content">
+      <n-form-item-row path="category" label="版块">
+        <c-radio-group
+          v-model:value="formValue.category"
+          :options="articleCategoryOptions"
+        />
+      </n-form-item-row>
+      <n-form-item-row path="content" label="内容">
         <n-input
           v-model:value="formValue.content"
           type="textarea"

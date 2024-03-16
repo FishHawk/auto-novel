@@ -41,16 +41,9 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
     init {
         describe("test") {
             mongo.articleCollection.find().toList().forEach {
-                val changeAt = mongo.commentCollection.find(
-                    Comment::site eq "article-${it.id.toHexString()}"
-                )
-                    .toList()
-                    .maxOfOrNull {
-                        it.createAt
-                    }
                 mongo.articleCollection.updateOne(
                     ArticleModel::id eq it.id,
-                    setValue(ArticleModel::changeAt, maxOf(changeAt ?: it.updateAt, it.updateAt))
+                    setValue(ArticleModel::category, ArticleCategory.Support)
                 )
             }
         }

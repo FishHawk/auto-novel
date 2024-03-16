@@ -1,4 +1,4 @@
-import { Article, ArticleOutline } from '@/model/Article';
+import { Article, ArticleCategory, ArticleOutline } from '@/model/Article';
 import { Page } from '@/model/Page';
 
 import { client } from './client';
@@ -12,10 +12,12 @@ const deleteArticle = (id: string) => client.delete(`article/${id}`);
 interface ArticleBody {
   title: string;
   content: string;
+  category: ArticleCategory;
 }
 
 const createArticle = (json: ArticleBody) =>
   client.post('article', { json }).text();
+
 const updateArticle = (id: string, json: ArticleBody) =>
   client.put(`article/${id}`, { json }).text();
 

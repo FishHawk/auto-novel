@@ -8,9 +8,22 @@ import org.bson.types.ObjectId
 import org.litote.kmongo.Id
 
 @Serializable
+enum class ArticleCategory {
+    @SerialName("Guide")
+    Guide,
+
+    @SerialName("General")
+    General,
+
+    @SerialName("Support")
+    Support,
+}
+
+@Serializable
 data class ArticleOutline(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
+    val category: ArticleCategory,
     val locked: Boolean,
     val pinned: Boolean,
     val numViews: Int,
@@ -25,6 +38,7 @@ data class Article(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
     val content: String,
+    val category: ArticleCategory,
     val locked: Boolean,
     val pinned: Boolean,
     val numViews: Int,
@@ -39,6 +53,7 @@ data class ArticleModel(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
     val content: String,
+    val category: ArticleCategory,
     val locked: Boolean,
     val pinned: Boolean,
     val numViews: Int,

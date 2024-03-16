@@ -2,6 +2,7 @@ package api
 
 import api.plugins.*
 import infra.common.ArticleRepository
+import infra.model.ArticleCategory
 import infra.model.Page
 import infra.model.User
 import infra.model.UserOutline
@@ -59,6 +60,7 @@ fun Route.routeArticle() {
         class ArticleBody(
             val title: String,
             val content: String,
+            val category: ArticleCategory,
         )
         rateLimit(RateLimitNames.CreateArticle) {
             post<ArticleRes> {
@@ -69,6 +71,7 @@ fun Route.routeArticle() {
                         user = user,
                         title = body.title,
                         content = body.content,
+                        category = body.category,
                     )
                 }
             }
@@ -82,6 +85,7 @@ fun Route.routeArticle() {
                     id = loc.id,
                     title = body.title,
                     content = body.content,
+                    category = body.category,
                 )
             }
         }
@@ -127,6 +131,7 @@ class ArticleApi(
     data class ArticleOutlineDto(
         val id: String,
         val title: String,
+        val category: ArticleCategory,
         val locked: Boolean,
         val pinned: Boolean,
         val numViews: Int,
@@ -151,6 +156,7 @@ class ArticleApi(
                 ArticleOutlineDto(
                     id = it.id.toHexString(),
                     title = it.title,
+                    category = it.category,
                     locked = it.locked,
                     pinned = it.pinned,
                     numViews = it.numViews,
@@ -170,6 +176,7 @@ class ArticleApi(
         val id: String,
         val title: String,
         val content: String,
+        val category: ArticleCategory,
         val locked: Boolean,
         val pinned: Boolean,
         val numViews: Int,
@@ -198,6 +205,7 @@ class ArticleApi(
                 id = it.id.toHexString(),
                 title = it.title,
                 content = it.content,
+                category = it.category,
                 locked = it.locked,
                 pinned = it.pinned,
                 numViews = it.numViews,
@@ -229,6 +237,7 @@ class ArticleApi(
         user: AuthenticatedUser,
         title: String,
         content: String,
+        category: ArticleCategory,
     ): String {
         validateTitle(title)
         validateContent(content)
@@ -236,6 +245,7 @@ class ArticleApi(
         val articleId = articleRepo.createArticle(
             title = title,
             content = content,
+            category = category,
             userId = ObjectId(user.id),
         )
         return articleId.toHexString()
@@ -246,6 +256,7 @@ class ArticleApi(
         id: String,
         title: String,
         content: String,
+        category: ArticleCategory,
     ) {
         validateTitle(title)
         validateContent(content)
@@ -263,6 +274,7 @@ class ArticleApi(
             id = ObjectId(id),
             title = title,
             content = content,
+            category = category,
         )
     }
 

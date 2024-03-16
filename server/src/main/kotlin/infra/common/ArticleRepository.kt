@@ -45,6 +45,7 @@ class ArticleRepository(
                         project(
                             ArticleOutline::id,
                             ArticleOutline::title,
+                            ArticleOutline::category,
                             ArticleOutline::locked,
                             ArticleOutline::pinned,
                             ArticleOutline::numViews,
@@ -125,6 +126,7 @@ class ArticleRepository(
     suspend fun createArticle(
         title: String,
         content: String,
+        category: ArticleCategory,
         userId: ObjectId,
     ): ObjectId {
         val now = Clock.System.now()
@@ -135,6 +137,7 @@ class ArticleRepository(
                     id = ObjectId(),
                     title = title,
                     content = content,
+                    category = category,
                     locked = false,
                     pinned = false,
                     numViews = 0,
@@ -176,6 +179,7 @@ class ArticleRepository(
         id: ObjectId,
         title: String,
         content: String,
+        category: ArticleCategory,
     ) {
         val now = Clock.System.now()
         mongo
@@ -185,6 +189,7 @@ class ArticleRepository(
                 combine(
                     setValue(ArticleModel::title, title),
                     setValue(ArticleModel::content, content),
+                    setValue(ArticleModel::category, category),
                     setValue(ArticleModel::updateAt, now),
                     setValue(ArticleModel::changeAt, now),
                 )
