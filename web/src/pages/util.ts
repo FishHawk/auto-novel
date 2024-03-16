@@ -33,6 +33,6 @@ export const doAction = (
     .then(() => {
       message.info(label + '成功');
     })
-    .catch((e) => {
-      message.error(label + '失败:' + formatError(e));
+    .catch(async (e) => {
+      message.error(label + '失败:' + (await formatError(e)));
     });
