@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh">
   <head>
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-QD8MZ90XFJ"
-    ></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QD8MZ90XFJ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
@@ -34,6 +31,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/robot.svg" />
     <title>轻小说机翻机器人</title>
+    <script>
+      (() => {
+        function createBodyStyle(color, backgroundColor) {
+          const style = document.createElement('style');
+          style.innerHTML = `body {
+            background-color: ${backgroundColor};
+            color: ${color};
+          }`;
+          document.head.appendChild(style);
+        }
+        function createWebDarkTheme() {
+          createBodyStyle('rgba(255, 255, 255, 0.82)', 'rgb(16, 16, 20)');
+        }
+
+        const reg = [/\/novel\/(\w+)\/(\w+)\/(\w+)/, /\/workspace\/reader\/(\w+)\/(\w+)/];
+        const isReader = reg.some((r) => r.test(window.location.pathname));
+
+        if (isReader) {
+          const setting = localStorage.getItem('readerSetting');
+          const theme = setting ? JSON.parse(setting).theme : null;
+          if (!theme) return;
+
+          if (theme.mode === 'dark') {
+            createWebDarkTheme();
+          } else if (
+            theme.mode === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches
+          ) {
+            createWebDarkTheme();
+          } else if (theme.mode === 'custom') {
+            createBodyStyle(theme.fontColor, theme.bodyColor);
+          }
+        } else {
+          const setting = localStorage.getItem('setting');
+          const theme = setting ? JSON.parse(setting).theme : 'light';
+          if (theme === 'dark') {
+            createWebDarkTheme();
+          } else if (
+            theme === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches
+          ) {
+            createWebDarkTheme();
+          }
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
