@@ -18,6 +18,7 @@ defineProps<{
         object-fit: cover;
         border-radius: 2px;
       "
+      loading="lazy"
     />
 
     <n-text tag="div" style="height: 2.5em; padding: 8px" class="text-2line">
