@@ -1,14 +1,19 @@
 <script lang="ts" setup>
-import { LogOutOutlined, MenuOutlined } from '@vicons/material';
+import {
+  AccountCircleOutlined,
+  LogOutOutlined,
+  MenuOutlined,
+} from '@vicons/material';
 import { MenuOption, NIcon } from 'naive-ui';
 import { Component, computed, h, ref, watch } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
+const router = useRouter();
 const userData = useUserDataStore();
 
 const menuOption = (
@@ -77,11 +82,14 @@ const collapsedMenuOptions = computed(() => {
   ];
 });
 
-const userDropdownOptions = computed(() => {
-  return [dropdownOption('退出登录', 'signOut', LogOutOutlined)];
-});
+const userDropdownOptions = [
+  dropdownOption('用户中心', 'account', AccountCircleOutlined),
+  dropdownOption('退出登录', 'signOut', LogOutOutlined),
+];
 const handleUserDropdownSelect = (key: string | number) => {
-  if (key === 'signOut') {
+  if (key === 'account') {
+    router.push('/account');
+  } else if (key === 'signOut') {
     userData.deleteProfile();
   }
 };
@@ -121,19 +129,19 @@ watch(
 
           <template v-if="userData.username">
             <router-link v-if="isWideScreen" to="/read-history">
-              <n-button quaternary>历史</n-button>
+              <n-button :focusable="false" quaternary>历史</n-button>
             </router-link>
             <router-link v-if="isWideScreen" to="/favorite">
-              <n-button quaternary>收藏</n-button>
+              <n-button :focusable="false" quaternary>收藏</n-button>
             </router-link>
             <n-dropdown
               trigger="hover"
               :options="userDropdownOptions"
               @select="handleUserDropdownSelect"
             >
-              <router-link to="/account">
-                <n-button quaternary>@{{ userData.username }}</n-button>
-              </router-link>
+              <n-button :focusable="false" quaternary>
+                @{{ userData.username }}
+              </n-button>
             </n-dropdown>
           </template>
 

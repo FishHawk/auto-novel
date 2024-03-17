@@ -132,8 +132,8 @@ const submit = async () => {
 
   if (novelId === undefined) {
     await doAction(
-      WenkuNovelRepository.createNovel(body).then(() =>
-        router.push({ path: `/wenku/${novelId}` })
+      WenkuNovelRepository.createNovel(body).then((id) =>
+        router.push({ path: `/wenku/${id}` })
       ),
       '新建文库',
       message

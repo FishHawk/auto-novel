@@ -38,7 +38,7 @@ interface WenkuNovelCreateBody {
 }
 
 const createNovel = (json: WenkuNovelCreateBody) =>
-  client.post(`wenku`, { json });
+  client.post(`wenku`, { json }).text();
 
 const updateNovel = (id: string, json: WenkuNovelCreateBody) =>
   client.put(`wenku/${id}`, { json });

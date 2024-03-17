@@ -120,10 +120,10 @@ onKeyStroke(['Enter'], (e) => {
 <template>
   <DefineChapterLink v-slot="{ id, label }">
     <c-button
-      :key="id"
       :disabled="id === undefined"
       :lable="label"
       quaternary
+      :focusable="false"
       :type="id ? 'primary' : 'default'"
       @action="navToChapter(id!!)"
     />
