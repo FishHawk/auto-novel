@@ -226,6 +226,7 @@ const fontColor = computed(() => {
         :src="p.imageUrl"
         :alt="p.imageUrl"
         style="max-width: 100%; object-fit: scale-down"
+        loading="lazy"
       />
     </template>
   </div>
