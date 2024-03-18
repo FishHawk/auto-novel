@@ -61,7 +61,6 @@ const invertSelection = (optionIndex: number) => {
         :placeholder="`中/日文标题或作者`"
         style="flex: 0 1 400px; margin-right: 8px"
         :input-props="{ spellcheck: false }"
-        @keyup.enter="emits('userInput')"
         @select="
           (query: string) => {
             filters.query = query;

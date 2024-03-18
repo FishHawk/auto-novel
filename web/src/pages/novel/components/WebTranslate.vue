@@ -3,18 +3,18 @@ import ky from 'ky';
 import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
-import TranslateTask from '@/pages/components/TranslateTask.vue';
 import { WebNovelRepository } from '@/data/api';
+import { LocalVolumeService } from '@/data/local';
 import { useSettingStore } from '@/data/stores/setting';
 import {
   buildWebTranslateTask,
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { LocalVolumeService } from '@/data/local';
+import { webGnid } from '@/model/Common';
+import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 import TranslateOptions from './TranslateOptions.vue';
-import { doAction } from '@/pages/util';
 
 const props = defineProps<{
   providerId: string;
@@ -94,17 +94,6 @@ const importToWorkspace = async () => {
     .catch((error) => message.error(`导入失败:${error}`));
 };
 
-const submitGlossary = () =>
-  doAction(
-    WebNovelRepository.updateGlossary(
-      props.providerId,
-      props.novelId,
-      props.glossary
-    ),
-    '术语表提交',
-    message
-  );
-
 const submitJob = (id: 'gpt' | 'sakura') => {
   const {
     startIndex,
@@ -168,9 +157,8 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 <template>
   <translate-options
     ref="translateOptions"
-    type="web"
+    :gnid="webGnid(providerId, novelId)"
     :glossary="glossary"
-    :submit="submitGlossary"
   />
 
   <n-divider style="margin: 24px 0 16px" />

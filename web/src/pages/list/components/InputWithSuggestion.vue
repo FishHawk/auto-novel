@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { SearchOutlined } from '@vicons/material';
 import { DropdownOption, NFlex, NTag } from 'naive-ui';
-import { computed, h } from 'vue';
+import { InputWrappedRef } from 'naive-ui/es/input/src/interface';
+import { computed, h, ref } from 'vue';
 
 const props = defineProps<{
   value: string;
@@ -13,10 +14,6 @@ const emit = defineEmits<{
   'update:value': [string];
   select: [string];
 }>();
-
-const handleSelect = (key: string) => {
-  emit('select', key);
-};
 
 const options = computed(() => {
   const optionsBuffer: DropdownOption[] = [];
@@ -69,20 +66,37 @@ const options = computed(() => {
   }
   return optionsBuffer;
 });
+
+const inputRef = ref<InputWrappedRef>();
+const showSuggestions = ref(false);
+const toggleSuggestions = () => {
+  // Hacky
+  showSuggestions.value = !showSuggestions.value;
+};
+const handleSelect = (key: string) => {
+  emit('select', key);
+  inputRef.value?.blur();
+  showSuggestions.value = false;
+};
 </script>
 
 <template>
   <n-dropdown
     :disabled="options.length === 0"
-    trigger="click"
+    :show="showSuggestions"
     :options="options"
-    @select="handleSelect"
     :animated="false"
     width="trigger"
+    @select="handleSelect"
+    @clickoutside="toggleSuggestions"
   >
     <n-input
+      ref="inputRef"
       v-bind="$attrs"
+      clearable
       :value="value"
+      @click="toggleSuggestions"
+      @keyup.enter="handleSelect(value)"
       @update:value="(it: string) => emit('update:value', it)"
     >
       <template #suffix>

@@ -4,6 +4,7 @@ import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
 import { LocalVolumeService } from '@/data/local';
+import { GlossaryService } from '@/data/service/GlossaryService';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
@@ -101,7 +102,7 @@ const copyTranslationJson = async () => {
       katakanaTranslations.value[key] ?? '',
     ])
   );
-  const jsonString = JSON.stringify(obj, null, 2);
+  const jsonString = GlossaryService.exportGlossaryToText(obj);
   navigator.clipboard.writeText(jsonString);
   message.info('已经将翻译结果复制到剪切板');
 };
@@ -276,4 +277,3 @@ const notices = [
   white-space: nowrap;
 }
 </style>
-@/util/file/epub@/util/file/txt

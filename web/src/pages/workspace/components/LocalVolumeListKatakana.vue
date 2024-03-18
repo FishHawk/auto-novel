@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
+import { localGnid } from '@/model/Common';
+
 import LocalVolumeList from './LocalVolumeList.vue';
 
 const emit = defineEmits<{ volumeLoaded: [string] }>();
@@ -27,7 +29,12 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
             @action="emit('volumeLoaded', volume.id)"
           />
 
-          <glossary-button :volume="volume" size="tiny" secondary />
+          <glossary-button
+            :gnid="localGnid(volume.id)"
+            :value="volume.glossary"
+            size="tiny"
+            secondary
+          />
 
           <n-popconfirm
             :show-icon="false"

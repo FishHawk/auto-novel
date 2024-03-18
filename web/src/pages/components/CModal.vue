@@ -1,3 +1,11 @@
+<script lang="ts" setup>
+import { useWindowSize } from '@vueuse/core';
+
+defineProps<{ extraHeight?: number }>();
+
+const { height } = useWindowSize();
+</script>
+
 <template>
   <n-modal
     :auto-focus="false"
@@ -12,7 +20,12 @@
     <template #header v-if="$slots.header">
       <slot name="header" />
     </template>
-    <n-scrollbar trigger="none" style="max-height: 60vh">
+    <slot name="header-extra" />
+
+    <n-scrollbar
+      trigger="none"
+      :style="{ 'max-height': `${0.6 * height - (extraHeight ?? 0)}px` }"
+    >
       <div style="padding-right: 16px">
         <slot />
       </div>

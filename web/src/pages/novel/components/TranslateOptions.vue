@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
 import { InfoOutlined } from '@vicons/material';
+import { ref, watch } from 'vue';
 
 import {
   downloadModeOptions,
@@ -9,19 +9,19 @@ import {
   useSettingStore,
 } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { GenericNovelId } from '@/model/Common';
+import { Glossary } from '@/model/Glossary';
 import { useIsWideScreen } from '@/pages/util';
 
 defineProps<{
-  type: 'web' | 'wenku';
-  glossary: { [key: string]: string };
-  submit: () => Promise<void>;
+  gnid: GenericNovelId;
+  glossary: Glossary;
 }>();
 const userData = useUserDataStore();
 const setting = useSettingStore();
 const isWideScreen = useIsWideScreen(600);
 
 // 翻译设置
-const showGlossaryModal = ref(false);
 const translateExpireChapter = ref(false);
 const overriteToc = ref(false);
 const syncFromProvider = ref(false);
@@ -69,7 +69,7 @@ watch(
           </n-tooltip>
         </n-checkbox>
 
-        <n-checkbox v-if="type === 'web'" v-model:checked="overriteToc">
+        <n-checkbox v-if="gnid.type === 'web'" v-model:checked="overriteToc">
           <n-tooltip trigger="hover">
             <template #trigger>重翻目录</template>
             重新翻译整个目录，覆盖已经翻译的结果。
@@ -77,7 +77,7 @@ watch(
         </n-checkbox>
 
         <n-checkbox
-          v-if="type === 'web' && userData.passWeek"
+          v-if="gnid.type === 'web' && userData.passWeek"
           v-model:checked="syncFromProvider"
         >
           <n-tooltip trigger="hover" style="max-width: 200px">
@@ -88,7 +88,7 @@ watch(
       </n-flex>
     </c-action-wrapper>
 
-    <c-action-wrapper v-if="type === 'web'" title="范围">
+    <c-action-wrapper v-if="gnid.type === 'web'" title="范围">
       <n-flex style="text-align: center">
         <div>
           <n-input-group>
@@ -140,29 +140,13 @@ watch(
     <c-action-wrapper title="操作">
       <n-button-group size="small">
         <c-button
-          :round="false"
           label="下载设置"
+          :round="false"
           @action="showDownloadModal = true"
         />
-        <c-button
-          :round="false"
-          :label="`编辑术语表[${Object.keys(glossary).length}]`"
-          @action="showGlossaryModal = true"
-        />
+        <glossary-button :gnid="gnid" :value="glossary" :round="false" />
       </n-button-group>
     </c-action-wrapper>
-
-    <c-modal title="编辑术语表" v-model:show="showGlossaryModal">
-      <glossary-edit :glossary="glossary" />
-      <template #action>
-        <c-button
-          label="提交"
-          require-login
-          type="primary"
-          @action="submit"
-        />
-      </template>
-    </c-modal>
 
     <c-modal title="下载设置" v-model:show="showDownloadModal">
       <n-flex vertical size="large">
@@ -187,7 +171,7 @@ watch(
           </n-flex>
         </c-action-wrapper>
 
-        <c-action-wrapper v-if="type === 'web'" title="文件">
+        <c-action-wrapper v-if="gnid.type === 'web'" title="文件">
           <c-radio-group
             v-model:value="setting.downloadFormat.type"
             :options="downloadTypeOptions"
@@ -195,7 +179,7 @@ watch(
         </c-action-wrapper>
 
         <c-action-wrapper
-          v-if="type === 'web'"
+          v-if="gnid.type === 'web'"
           title="中文文件名"
           align="center"
         >

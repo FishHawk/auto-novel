@@ -2,7 +2,7 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import TranslateTask from '@/pages/components/TranslateTask.vue';
+import { LocalVolumeService } from '@/data/local';
 import { useSettingStore } from '@/data/stores/setting';
 import {
   buildPersonalTranslateTask,
@@ -10,8 +10,9 @@ import {
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
 import { TranslatorId } from '@/data/translator';
+import { localGnid } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { LocalVolumeService } from '@/data/local';
+import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
@@ -134,7 +135,12 @@ const downloadVolume = async () => {
         secondary
       />
 
-      <glossary-button :volume="volume" size="tiny" secondary />
+      <glossary-button
+        :gnid="localGnid(volume.id)"
+        :value="volume.glossary"
+        size="tiny"
+        secondary
+      />
 
       <c-button label="下载" size="tiny" secondary @action="downloadVolume" />
       <slot />

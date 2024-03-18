@@ -2,13 +2,14 @@
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
+import { LocalVolumeService } from '@/data/local';
 import { downloadModeOptions, useSettingStore } from '@/data/stores/setting';
 import {
   buildPersonalTranslateTask,
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { LocalVolumeService } from '@/data/local';
+import { localGnid } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 
 import LocalVolumeList from './LocalVolumeList.vue';
@@ -144,7 +145,12 @@ const downloadVolume = async (volumeId: string) => {
             @action="downloadVolume(volume.id)"
           />
 
-          <glossary-button :volume="volume" size="tiny" secondary />
+          <glossary-button
+            :gnid="localGnid(volume.id)"
+            :value="volume.glossary"
+            size="tiny"
+            secondary
+          />
 
           <n-popconfirm
             :show-icon="false"

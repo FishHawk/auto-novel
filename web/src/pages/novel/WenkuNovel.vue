@@ -6,10 +6,11 @@ import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { WenkuNovelRepository } from '@/data/api';
-import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/image/cover_placeholder.png';
+import { wenkuGnid } from '@/model/Common';
 import { WenkuNovelDto } from '@/model/WenkuNovel';
+import { Result, runCatching } from '@/pages/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 import TranslateOptions from './components/TranslateOptions.vue';
@@ -47,13 +48,6 @@ const getNovel = async () => {
 getNovel();
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
-
-const submitGlossary = (glossary: { [key: string]: string }) =>
-  doAction(
-    WenkuNovelRepository.updateGlossary(novelId, glossary),
-    '术语表提交',
-    message
-  );
 
 const deleteVolume = (volumeId: string) =>
   doAction(
@@ -239,9 +233,8 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
 
       <translate-options
         ref="translateOptions"
-        type="wenku"
+        :gnid="wenkuGnid(novelId)"
         :glossary="metadata.glossary"
-        :submit="() => submitGlossary(metadata.glossary)"
         style="margin-top: 16px"
       />
       <n-divider style="margin: 16px 0 0" />
