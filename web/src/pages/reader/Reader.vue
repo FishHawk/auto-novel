@@ -4,14 +4,15 @@ import { computed, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { UserRepository } from '@/data/api';
-import { WebNovelChapterDto } from '@/model/WebNovel';
-import { Ok, Result } from '@/pages/result';
-import { useUserDataStore } from '@/data/stores/user_data';
-import { checkIsMobile, useIsWideScreen } from '@/pages/util';
-
-import { getChapter, getNovelInfo } from './components/util';
-import { TranslatorId } from '@/data/translator';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { useUserDataStore } from '@/data/stores/user_data';
+import { buildWebChapterUrl } from '@/data/web/url';
+import { GenericNovelId, localGnid, webGnid } from '@/model/Common';
+import { ReaderChapter } from '@/model/Reader';
+import { TranslatorId } from '@/model/Translator';
+import { Ok, Result, runCatching } from '@/pages/result';
+import { checkIsMobile, useIsWideScreen } from '@/pages/util';
+import { ReaderService } from '@/service';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   label: string;
@@ -26,15 +27,32 @@ const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
 const currentChapterId = computed(() => route.params.chapterId as string);
-const chapters = new Map<string, WebNovelChapterDto>();
-const chapterResult = shallowRef<Result<WebNovelChapterDto>>();
+const chapters = new Map<string, ReaderChapter>();
+const chapterResult = shallowRef<Result<ReaderChapter>>();
 
-const novelInfo = getNovelInfo(route.path, route.params);
+const gnid = ((): GenericNovelId => {
+  const path = route.path;
+  const params = route.params;
+  if (path.startsWith('/novel')) {
+    const providerId = params.providerId as string;
+    const novelId = params.novelId as string;
+    return webGnid(providerId, novelId);
+  } else {
+    const volumeId = params.novelId as string;
+    return localGnid(volumeId);
+  }
+})();
+
+const novelUrl = (() => {
+  if (gnid.type === 'web') {
+    return `/novel/${gnid.providerId}/${gnid.novelId}`;
+  }
+})();
 
 const loadChapter = async (chapterId: string) => {
   const chapterStored = chapters.get(chapterId);
   if (chapterStored === undefined) {
-    const result = await getChapter(novelInfo, chapterId);
+    const result = await runCatching(ReaderService.getChapter(gnid, chapterId));
     if (result.ok) {
       chapters.set(chapterId, result.value);
     }
@@ -45,7 +63,15 @@ const loadChapter = async (chapterId: string) => {
 };
 
 const navToChapter = (targetChapterId: string) => {
-  router.push(`${novelInfo.pathPrefix}/${targetChapterId}`);
+  let prefix: string;
+  if (gnid.type === 'web') {
+    prefix = `/novel/${gnid.providerId}/${gnid.novelId}`;
+  } else if (gnid.type === 'wenku') {
+    throw '不支持文库';
+  } else {
+    prefix = `/workspace/reader/${gnid.volumeId}`;
+  }
+  router.push(`${prefix}/${targetChapterId}`);
 };
 
 watch(
@@ -56,10 +82,10 @@ watch(
     chapterResult.value = result;
     if (result.ok) {
       document.title = result.value.titleJp;
-      if (novelInfo.type === 'web' && userData.isLoggedIn) {
+      if (gnid.type === 'web' && userData.isLoggedIn) {
         UserRepository.updateReadHistoryWeb(
-          novelInfo.providerId,
-          novelInfo.novelId,
+          gnid.providerId,
+          gnid.novelId,
           chapterId
         );
       }
@@ -72,7 +98,16 @@ watch(
   { immediate: true }
 );
 
-const url = computed(() => novelInfo.getChapterUrl(currentChapterId.value));
+const chapterHref = computed(() => {
+  const chapterId = currentChapterId.value;
+  if (gnid.type === 'web') {
+    return buildWebChapterUrl(gnid.providerId, gnid.novelId, chapterId);
+  } else if (gnid.type === 'wenku') {
+    throw '不支持文库';
+  } else {
+    return '/workspace';
+  }
+});
 
 onKeyStroke(['ArrowLeft'], (e) => {
   if (chapterResult.value?.ok) {
@@ -144,7 +179,7 @@ onKeyStroke(['Enter'], (e) => {
       >
         <ReuseChapterLink :id="chapter.prevId" label="上一章" />
         <n-h4 style="text-align: center; margin: 0">
-          <n-a :href="url">{{ chapter.titleJp }}</n-a>
+          <n-a :href="chapterHref">{{ chapter.titleJp }}</n-a>
           <br />
           <n-text depth="3">{{ chapter.titleZh }}</n-text>
         </n-h4>
@@ -153,7 +188,7 @@ onKeyStroke(['Enter'], (e) => {
 
       <div v-else style="margin-top: 20px">
         <n-h4 style="text-align: center; margin: 0 0 8px 0">
-          <n-a :href="url">{{ chapter.titleJp }}</n-a>
+          <n-a :href="chapterHref">{{ chapter.titleJp }}</n-a>
           <br />
           <n-text depth="3">{{ chapter.titleZh }}</n-text>
         </n-h4>
@@ -172,26 +207,26 @@ onKeyStroke(['Enter'], (e) => {
 
       <reader-layout-mobile
         v-if="isMobile"
-        :novel-url="novelInfo.novelUrl"
+        :novel-url="novelUrl"
         :chapter="chapter"
         @nav="navToChapter"
         @require-catalog-modal="showCatalogModal = true"
         @require-setting-modal="showSettingModal = true"
       >
         <reader-content
-          :novel-info="novelInfo"
+          :gnid="gnid"
           :chapter-id="currentChapterId"
           :chapter="chapter"
         />
       </reader-layout-mobile>
       <reader-layout-desktop
         v-else
-        :novel-url="novelInfo.novelUrl"
+        :novel-url="novelUrl"
         @require-catalog-modal="showCatalogModal = true"
         @require-setting-modal="showSettingModal = true"
       >
         <reader-content
-          :novel-info="novelInfo"
+          :gnid="gnid"
           :chapter-id="currentChapterId"
           :chapter="chapter"
         />
@@ -209,7 +244,7 @@ onKeyStroke(['Enter'], (e) => {
 
     <catalog-modal
       v-model:show="showCatalogModal"
-      :novel-info="novelInfo"
+      :gnid="gnid"
       :chapter-id="currentChapterId"
       @nav="navToChapter"
     />

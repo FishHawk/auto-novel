@@ -2,7 +2,7 @@
 import { useMessage } from 'naive-ui';
 import { computed, ref, toRaw } from 'vue';
 
-import { GlossaryService } from '@/data/service/GlossaryService';
+import { GlossaryService } from '@/service';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 import { doAction } from '@/pages/util';

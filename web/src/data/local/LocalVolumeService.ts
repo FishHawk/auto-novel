@@ -1,17 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { TranslatorId } from '@/data/translator/translator';
+import { Glossary } from '@/model/Glossary';
 import {
   ChapterTranslation,
   LocalVolumeChapter,
   LocalVolumeMetadata,
 } from '@/model/LocalVolume';
-import { Glossary } from '@/model/Glossary';
+import { TranslatorId } from '@/model/Translator';
 
 import { createVolume, deleteVolume } from './CreateAndDeleteVolumeUseCase';
-import { getReadableChapter } from './GetReaderableChapterUseCase';
-import { LocalVolumeRepository } from './LocalVolumeRepository';
 import { getTranslationFile } from './GetTranslationFileUseCase';
+import { LocalVolumeRepository } from './LocalVolumeRepository';
 
 export const LocalVolumeService = {
   getFile: LocalVolumeRepository.getFile,
@@ -28,7 +27,6 @@ export const LocalVolumeService = {
     }),
   //
   getChapter: LocalVolumeRepository.getChapter,
-  getReadableChapter,
   updateTranslation: async (
     id: string,
     chapterId: string,

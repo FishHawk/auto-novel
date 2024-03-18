@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { TranslatorId } from '@/data/translator';
+import { TranslatorId } from '@/model/Translator';
 
 export interface Setting {
   theme: 'light' | 'dark' | 'system';

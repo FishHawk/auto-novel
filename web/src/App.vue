@@ -1,10 +1,10 @@
 <script lang="ts" setup>
+import { AuthService } from '@/service';
 import {
   migrateReaderSetting,
   useReaderSettingStore,
 } from '@/data/stores/reader_setting';
 import { migrateSetting, useSettingStore } from '@/data/stores/setting';
-import { AuthService } from '@/data/auth/AuthService';
 
 AuthService.activate();
 

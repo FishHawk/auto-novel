@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import { computed, shallowRef, watch } from 'vue';
-import { useRoute } from 'vue-router';
 
-import { WebNovelTocItemDto } from '@/model/WebNovel';
-import { Result } from '@/pages/result';
-
-import { NovelInfo, getNovelToc } from './util';
+import { ReaderService } from '@/service';
+import { GenericNovelId } from '@/model/Common';
+import { ReaderTocItem } from '@/model/Reader';
+import { Result, runCatching } from '@/pages/result';
 
 const props = defineProps<{
   show: boolean;
-  novelInfo: NovelInfo;
+  gnid: GenericNovelId;
   chapterId: string;
 }>();
 
@@ -18,18 +17,11 @@ const emit = defineEmits<{
   (e: 'nav', chapterId: string): void;
 }>();
 
-const route = useRoute();
-
-const providerId = route.params.providerId as string;
-const novelId = route.params.novelId as string;
-
-type TocItem = WebNovelTocItemDto & { key: number };
+type TocItem = ReaderTocItem & { key: number };
 const tocResult = shallowRef<Result<TocItem[]>>();
 
 const tocNumber = computed(() => {
-  if (tocResult.value?.ok !== true) {
-    return undefined;
-  } else {
+  if (tocResult.value?.ok === true) {
     return tocResult.value.value.filter((it) => it.chapterId !== undefined)
       .length;
   }
@@ -39,7 +31,11 @@ watch(
   () => props.show,
   async (show) => {
     if (show && tocResult.value?.ok !== true) {
-      tocResult.value = await getNovelToc(props.novelInfo);
+      tocResult.value = await runCatching(
+        ReaderService.getToc(props.gnid).then((toc) =>
+          toc.map((it, index) => <TocItem>{ ...it, key: index })
+        )
+      );
     }
   }
 );

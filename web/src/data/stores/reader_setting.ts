@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 
-import { TranslatorId } from '@/data/translator';
-import { isDarkColor } from '@/pages/reader/components/util';
+import { TranslatorId } from '@/model/Translator';
+import { isDarkColor } from '@/pages/util';
 
 export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';

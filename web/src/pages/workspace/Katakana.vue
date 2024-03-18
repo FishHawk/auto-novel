@@ -4,13 +4,14 @@ import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
 import { LocalVolumeService } from '@/data/local';
-import { GlossaryService } from '@/data/service/GlossaryService';
+import { GlossaryService } from '@/service';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import { Epub, Txt } from '@/util/file';
+
 import LoadedVolume from './components/LoadedVolume.vue';
 
 const message = useMessage();

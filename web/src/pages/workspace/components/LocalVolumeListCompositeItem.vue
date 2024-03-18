@@ -9,9 +9,9 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { TranslatorId } from '@/data/translator';
 import { localGnid } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
+import { TranslatorId } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();

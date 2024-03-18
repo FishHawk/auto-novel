@@ -9,11 +9,8 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import {
-  Translator,
-  TranslatorConfig,
-  TranslatorId,
-} from '@/data/translator/translator';
+import { Translator, TranslatorConfig } from '@/data/translator/translator';
+import { TranslatorId } from '@/model/Translator';
 
 const message = useMessage();
 

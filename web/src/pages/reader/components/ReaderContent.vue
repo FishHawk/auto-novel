@@ -5,14 +5,13 @@ import { computed } from 'vue';
 
 import { SakuraRepository } from '@/data/api';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { TranslatorId } from '@/data/translator';
+import { GenericNovelId } from '@/model/Common';
 import { WebNovelChapterDto } from '@/model/WebNovel';
 import { doAction } from '@/pages/util';
-
-import { NovelInfo } from './util';
+import { ReaderService } from '@/service';
 
 const props = defineProps<{
-  novelInfo: NovelInfo;
+  gnid: GenericNovelId;
   chapterId: string;
   chapter: WebNovelChapterDto;
 }>();
@@ -21,105 +20,16 @@ const setting = useReaderSettingStore();
 const message = useMessage();
 const osThemeRef = useOsTheme();
 
-type Paragraph =
-  | { text: string; secondary: boolean; popover?: number }
-  | { imageUrl: string }
-  | null;
-
 const paragraphs = computed(() => {
   const chapter = props.chapter;
-  const merged: Paragraph[] = [];
-  const styles: {
-    paragraphs: string[];
-    secondary: boolean;
-    popover?: boolean;
-  }[] = [];
-
-  if (setting.mode === 'jp') {
-    styles.push({ paragraphs: chapter.paragraphs, secondary: false });
-  } else {
-    if (setting.mode === 'jp-zh') {
-      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
-    }
-
-    function paragraphsWithLabel(
-      t: TranslatorId
-    ): [string, string[] | undefined] {
-      if (t === 'youdao') {
-        return ['有道', chapter.youdaoParagraphs];
-      } else if (t === 'baidu') {
-        return ['百度', chapter.baiduParagraphs];
-      } else if (t === 'gpt') {
-        return ['GPT', chapter.gptParagraphs];
-      } else {
-        return ['Sakura', chapter.sakuraParagraphs];
-      }
-    }
-    if (setting.translationsMode === 'priority') {
-      let hasAnyTranslation = false;
-      for (const t of setting.translations) {
-        const [label, paragraphs] = paragraphsWithLabel(t);
-        if (paragraphs) {
-          hasAnyTranslation = true;
-          styles.push({
-            paragraphs,
-            secondary: false,
-            popover:
-              setting.enableSakuraReportButton &&
-              props.novelInfo.type === 'web' &&
-              t === 'sakura',
-          });
-          break;
-        } else {
-          merged.push({ text: label + '翻译不存在', secondary: true });
-        }
-      }
-      if (!hasAnyTranslation) {
-        return merged;
-      }
-    } else {
-      for (const t of setting.translations) {
-        const [label, paragraphs] = paragraphsWithLabel(t);
-        if (paragraphs) {
-          styles.push({
-            paragraphs,
-            secondary: false,
-            popover: setting.enableSakuraReportButton && t === 'sakura',
-          });
-        } else {
-          merged.push({ text: label + '翻译不存在', secondary: true });
-        }
-      }
-    }
-
-    if (setting.mode === 'zh-jp') {
-      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
-    }
-  }
-
-  for (let i = 0; i < chapter.paragraphs.length; i++) {
-    if (chapter.paragraphs[i].trim().length === 0) {
-      merged.push(null);
-    } else if (chapter.paragraphs[i].startsWith('<图片>')) {
-      merged.push({ imageUrl: chapter.paragraphs[i].slice(4) });
-    } else {
-      for (const style of styles) {
-        merged.push({
-          text: style.paragraphs[i],
-          secondary: style.secondary,
-          popover: style.popover === true ? i : undefined,
-        });
-      }
-    }
-  }
-  return merged;
+  return ReaderService.getParagraphs(props.gnid, chapter);
 });
 
 const createWebIncorrectCase = async (
   index: number,
   chapter: WebNovelChapterDto
 ) => {
-  if (props.novelInfo.type !== 'web') return;
+  if (props.gnid.type !== 'web') return;
 
   const jp = chapter.paragraphs[index];
   const zh = chapter.sakuraParagraphs!![index];
@@ -165,8 +75,8 @@ const createWebIncorrectCase = async (
 
   await doAction(
     SakuraRepository.createWebIncorrectCase({
-      providerId: props.novelInfo.providerId,
-      novelId: props.novelInfo.novelId,
+      providerId: props.gnid.providerId,
+      novelId: props.gnid.novelId,
       chapterId: props.chapterId,
       jp,
       zh,

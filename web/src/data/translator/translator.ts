@@ -9,8 +9,6 @@ import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
 import { YoudaoTranslator, YoudaoTranslatorConfig } from './translator_youdao';
 import { SegmentTranslator } from './type';
 
-export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
-
 interface SegmentCache {
   cacheKey(segIndex: number, seg: string[], extra?: any): string;
   get(cacheKey: string): Promise<string[] | undefined>;

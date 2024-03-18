@@ -1,6 +1,6 @@
-import { GenericNovelId } from '@/model/Common';
 import { WebNovelRepository, WenkuNovelRepository } from '@/data/api';
 import { LocalVolumeService } from '@/data/local';
+import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 
 const updateGlossary = (gnid: GenericNovelId, glossary: Glossary) => {

@@ -3,7 +3,7 @@ import { darkTheme, dateZhCN, zhCN, useOsTheme } from 'naive-ui';
 import { computed } from 'vue';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
-import { isDarkColor } from '@/pages/reader/components/util';
+import { isDarkColor } from '@/pages/util';
 
 const readerSetting = useReaderSettingStore();
 const osThemeRef = useOsTheme();
