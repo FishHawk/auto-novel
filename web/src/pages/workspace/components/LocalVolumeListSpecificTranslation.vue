@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useMessage } from 'naive-ui';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { LocalVolumeService } from '@/data/local';
 import { downloadModeOptions, useSettingStore } from '@/data/stores/setting';
@@ -94,15 +94,44 @@ const downloadVolume = async (volumeId: string) => {
     message.error(`文件生成错误：${error}`);
   }
 };
+
+const progressFilter = ref<'all' | 'finished' | 'unfinished'>('all');
+const progressFilterOptions = [
+  { value: 'all', label: '全部' },
+  { value: 'finished', label: '已完成' },
+  { value: 'unfinished', label: '未完成' },
+];
+const progressFilterFunc = computed(() => {
+  if (progressFilter.value === 'finished') {
+    return (volume: LocalVolumeMetadata) => {
+      return volume.toc.length === calculateFinished(volume);
+    };
+  } else if (progressFilter.value === 'unfinished') {
+    return (volume: LocalVolumeMetadata) => {
+      return volume.toc.length !== calculateFinished(volume);
+    };
+  } else {
+    return undefined;
+  }
+});
 </script>
 
 <template>
   <local-volume-list
     ref="localVolumeListRef"
+    :filter="progressFilterFunc"
     :options="{ 全部排队: queueAllVolumes }"
     :beforeVolumeAdd="(file:File)=>queueVolume(file.name)"
   >
     <template #extra>
+      <c-action-wrapper title="状态">
+        <c-radio-group
+          v-model:value="progressFilter"
+          :options="progressFilterOptions"
+          size="small"
+        />
+      </c-action-wrapper>
+
       <c-action-wrapper title="语言">
         <c-radio-group
           v-model:value="setting.downloadFormat.mode"

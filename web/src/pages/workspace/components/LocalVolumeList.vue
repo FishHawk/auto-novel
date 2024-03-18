@@ -8,6 +8,7 @@ import { LocalVolumeMetadata } from '@/model/LocalVolume';
 
 const props = defineProps<{
   options?: { [key: string]: (volumes: LocalVolumeMetadata[]) => void };
+  filter?: (volume: LocalVolumeMetadata) => boolean;
   beforeVolumeAdd?: (file: File) => void;
 }>();
 
@@ -61,10 +62,14 @@ const orderOptions = [
   { value: 'byId', label: '按文件名' },
 ];
 const sortedVolumes = computed(() => {
+  const filteredVolumes =
+    props.filter === undefined
+      ? volumes.value
+      : volumes.value?.filter(props.filter);
   if (order.value === 'byId') {
-    return volumes.value?.sort((a, b) => a.id.localeCompare(b.id));
+    return filteredVolumes?.sort((a, b) => a.id.localeCompare(b.id));
   } else {
-    return volumes.value?.sort((a, b) => b.createAt - a.createAt);
+    return filteredVolumes?.sort((a, b) => b.createAt - a.createAt);
   }
 });
 
