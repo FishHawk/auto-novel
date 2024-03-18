@@ -37,8 +37,23 @@ const parseGlossaryFromText = (text: string): Glossary | undefined => {
   }
 };
 
+const countKatakana = (content: string) => {
+  const regexp = /[\u30A0-\u30FF]{2,}/g;
+  const matches = content.matchAll(regexp);
+  const katakanaCounter = new Map<string, number>();
+  for (const match of matches) {
+    const w = match[0];
+    katakanaCounter.set(w, (katakanaCounter.get(w) || 0) + 1);
+  }
+  const sortedKatakanaCounter = new Map(
+    [...katakanaCounter].sort(([_w1, c1], [_w2, c2]) => c2 - c1)
+  );
+  return sortedKatakanaCounter;
+};
+
 export const GlossaryService = {
   updateGlossary,
   exportGlossaryToText,
   parseGlossaryFromText,
+  countKatakana,
 };

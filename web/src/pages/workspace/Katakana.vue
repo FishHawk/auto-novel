@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { PlusOutlined } from '@vicons/material';
+import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue';
 
@@ -11,27 +11,38 @@ import { TranslatorConfig } from '@/data/translator/translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import { Epub, Txt } from '@/util/file';
+import LoadedVolume from './components/LoadedVolume.vue';
 
 const message = useMessage();
 const isWideScreen = useIsWideScreen(850);
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
-interface FileInfo {
+interface LoadedVolume {
   source: 'tmp' | 'local';
   filename: string;
   content: string;
+  katakanas: Map<string, number>;
 }
-const fileInfo = ref<FileInfo>();
-const showPreviewModal = ref(false);
 
-const loadFile = async (
+const loadedVolumes = ref<LoadedVolume[]>([]);
+
+const loadVolume = async (
   source: 'tmp' | 'local',
   filename: string,
   file: File
 ) => {
-  if (filename.endsWith('.txt')) {
-    const content = await Txt.readContent(file);
-    fileInfo.value = { source, filename, content };
+  if (
+    loadedVolumes.value.find(
+      (it) => it.source === source && it.filename === filename
+    ) !== undefined
+  ) {
+    message.warning('文件已经载入');
+    return;
+  }
+
+  let content: string;
+  if (filename.endsWith('.txt') || filename.endsWith('.srt')) {
+    content = await Txt.readContent(file);
   } else if (filename.endsWith('.epub')) {
     const fullContent: string[] = [];
     await Epub.forEachXHtmlFile(file, (_path, doc) => {
@@ -40,12 +51,22 @@ const loadFile = async (
       );
       fullContent.push(doc.body.textContent ?? '');
     });
-    fileInfo.value = {
-      source,
-      filename: file.name,
-      content: fullContent.join('\n'),
-    };
+    content = fullContent.join('\n');
+  } else {
+    return;
   }
+  loadedVolumes.value.push({
+    source,
+    filename,
+    content,
+    katakanas: GlossaryService.countKatakana(content),
+  });
+};
+
+const deleteVolume = (volume: LoadedVolume) => {
+  loadedVolumes.value = loadedVolumes.value.filter(
+    (it) => !(it.source === volume.source && it.filename === volume.filename)
+  );
 };
 
 const loadLocalFile = (volumeId: string) =>
@@ -54,9 +75,9 @@ const loadLocalFile = (volumeId: string) =>
       if (file === undefined) {
         throw '小说不存在';
       }
-      return loadFile('local', volumeId, file.file);
+      return loadVolume('local', volumeId, file.file);
     })
-    .catch((error) => message.error(`术语表提交失败：${error}`));
+    .catch((error) => message.error(`文件载入失败：${error}`));
 
 const customRequest = ({
   file,
@@ -64,34 +85,29 @@ const customRequest = ({
   onError,
 }: UploadCustomRequestOptions) => {
   if (!file.file) return;
-  loadFile('tmp', file.name, file.file)
+  loadVolume('tmp', file.name, file.file)
     .then(onFinish)
     .catch((err) => {
-      message.error('文件读取失败:' + err);
+      message.error('文件载入失败:' + err);
       onError();
     });
 };
 
 const katakanaThredhold = ref(10);
-const katakanaCounter = computed(() => {
-  if (!fileInfo.value) return new Map();
-  const regexp = /[\u30A0-\u30FF]{2,}/g;
-  const matches = fileInfo.value.content.matchAll(regexp);
-  const katakanaCounter = new Map<string, number>();
-  for (const match of matches) {
-    const w = match[0];
-    katakanaCounter.set(w, (katakanaCounter.get(w) || 0) + 1);
-  }
 
-  const sortedKatakanaCounter = new Map(
-    [...katakanaCounter].sort(([_w1, c1], [_w2, c2]) => c2 - c1)
-  );
-
-  return sortedKatakanaCounter;
+const katakanaMerged = computed(() => {
+  const map = new Map<string, number>();
+  loadedVolumes.value.forEach(({ katakanas }) => {
+    katakanas.forEach((value, key) => {
+      map.set(key, (map.get(key) ?? 0) + value);
+    });
+  });
+  return map;
 });
+
 const katakanas = computed(() => {
   return new Map(
-    [...katakanaCounter.value].filter(([w, c]) => c > katakanaThredhold.value)
+    [...katakanaMerged.value].filter(([w, c]) => c > katakanaThredhold.value)
   );
 });
 
@@ -162,37 +178,47 @@ const notices = [
 
     <notice-board :notices="notices" />
 
-    <n-p>
-      <n-upload
-        accept=".txt,.epub"
-        :custom-request="customRequest"
-        :show-file-list="false"
-      >
-        <c-button label="加载文件" :icon="PlusOutlined" />
-      </n-upload>
-    </n-p>
+    <c-action-wrapper title="载入文件">
+      <n-flex vertical style="margin: 20px 0">
+        <n-flex :size="4" style="margin-bottom: 8px">
+          <div>
+            <n-upload
+              accept=".txt,.epub"
+              :custom-request="customRequest"
+              :show-file-list="false"
+            >
+              <c-button label="添加文件" :icon="PlusOutlined" size="small" />
+            </n-upload>
+          </div>
+          <c-button
+            label="全部移除"
+            :icon="DeleteOutlineOutlined"
+            size="small"
+            @click="loadedVolumes = []"
+          />
+        </n-flex>
+        <n-text v-for="volume of loadedVolumes">
+          <loaded-volume :volume="volume" @delete="deleteVolume(volume)" />
+        </n-text>
 
-    <n-p v-if="fileInfo" style="margin-bottom: 0">
-      {{ fileInfo.source === 'tmp' ? '临时文件' : '本地文件' }}
-      /
-      {{ fileInfo.filename }}
-      <c-button
-        :label="`[预览] `"
-        text
-        type="primary"
-        @action="showPreviewModal = true"
-      />
-    </n-p>
-    <n-p v-else depth="3" style="margin-bottom: 0">未选择文件</n-p>
+        <n-text v-if="loadedVolumes.length === 0" depth="3">
+          未载入文件
+        </n-text>
+      </n-flex>
+    </c-action-wrapper>
 
-    <section-header :title="`统计结果（${katakanas.size}个）`" />
     <n-flex vertical>
       <c-action-wrapper title="次数下限">
-        <n-input-number v-model:value="katakanaThredhold" clearable />
+        <n-input-number
+          v-model:value="katakanaThredhold"
+          clearable
+          size="small"
+          style="width: 16em"
+        />
       </c-action-wrapper>
       <c-action-wrapper title="操作">
         <n-flex vertical>
-          <n-button-group>
+          <n-button-group size="small">
             <c-button
               label="复制术语表"
               :round="false"
@@ -210,7 +236,7 @@ const notices = [
             />
           </n-button-group>
 
-          <n-button-group>
+          <n-button-group size="small">
             <c-button
               :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
               :round="false"
@@ -226,33 +252,35 @@ const notices = [
       </c-action-wrapper>
     </n-flex>
 
-    <n-card v-if="katakanas.size > 0" embedded style="margin-top: 20px">
-      <n-scrollbar trigger="none" style="max-height: 300px">
-        <table id="glossary" style="border-spacing: 10px 0">
+    <n-divider />
+
+    <div v-if="katakanas.size !== 0">
+      <n-scrollbar
+        trigger="none"
+        style="max-height: 60vh; max-width: 400px; margin-top: 30px"
+      >
+        <n-table striped size="small" style="font-size: 12px">
           <tr v-for="[word, number] in katakanas" :key="word">
             <td style="min-width: 100px">{{ word }}</td>
-            <td>=></td>
-            <td>{{ number }}</td>
-            <template v-if="katakanaTranslations[word]">
-              <td>{{ katakanaTranslations[word] }}</td>
-            </template>
+            <td nowrap="nowrap">=></td>
+            <td>
+              {{ number }}
+              <n-text
+                v-if="katakanaTranslations[word]"
+                style="margin-left: 16px"
+              >
+                {{ katakanaTranslations[word] }}
+              </n-text>
+            </td>
           </tr>
-        </table>
+        </n-table>
       </n-scrollbar>
-    </n-card>
+    </div>
 
     <template #sidebar>
       <local-volume-list-katakana @volume-loaded="loadLocalFile" />
     </template>
   </c-layout>
-
-  <c-modal title="预览（前100行）" v-model:show="showPreviewModal">
-    <template v-if="fileInfo">
-      <n-p v-for="line of fileInfo.content.split('\n').slice(0, 100)">
-        {{ line }}
-      </n-p>
-    </template>
-  </c-modal>
 
   <c-modal title="选择Sakura翻译器" v-model:show="showSakuraSelectModal">
     <n-radio-group v-model:value="selectedSakuraWorkerId">
@@ -271,9 +299,3 @@ const notices = [
     </n-radio-group>
   </c-modal>
 </template>
-
-<style scoped>
-.id td {
-  white-space: nowrap;
-}
-</style>

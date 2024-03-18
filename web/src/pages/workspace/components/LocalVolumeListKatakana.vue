@@ -23,7 +23,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 
         <n-flex :size="8">
           <c-button
-            label="加载"
+            label="添加"
             size="tiny"
             secondary
             @action="emit('volumeLoaded', volume.id)"

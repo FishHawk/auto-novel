@@ -157,19 +157,19 @@ const importGlossary = () => {
       size="small"
       style="font-size: 12px; max-width: 400px"
     >
-      <tr v-for="workJp in Object.keys(glossary).reverse()">
+      <tr v-for="wordJp in Object.keys(glossary).reverse()">
         <td>
           <c-button
             :icon="DeleteOutlineOutlined"
             text
             type="error"
             size="small"
-            @action="deleteTerm(workJp)"
+            @action="deleteTerm(wordJp)"
           />
         </td>
-        <td>{{ workJp }}</td>
+        <td>{{ wordJp }}</td>
         <td nowrap="nowrap">=></td>
-        <td>{{ glossary[workJp] }}</td>
+        <td>{{ glossary[wordJp] }}</td>
       </tr>
     </n-table>
 
