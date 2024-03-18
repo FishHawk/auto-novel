@@ -8,10 +8,11 @@ import { ArticleRepository } from '@/data/api';
 import avaterUrl from '@/image/avater.jpg';
 import { ArticleCategory } from '@/model/Article';
 import { runCatching } from '@/pages/result';
-import { doAction } from '@/pages/util';
+import { doAction, useIsWideScreen } from '@/pages/util';
 
 const route = useRoute();
 const router = useRouter();
+const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
 const articleId = route.params.id as string | undefined;
@@ -125,7 +126,7 @@ const formatExample: [string, string][] = [
       ref="formRef"
       :model="formValue"
       :rules="formRules"
-      label-placement="left"
+      :label-placement="isWideScreen ? 'left' : 'top'"
       label-width="auto"
       style="max-width: 800px"
     >
