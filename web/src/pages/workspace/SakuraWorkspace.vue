@@ -1,16 +1,12 @@
 <script lang="ts" setup>
-import {
-  DeleteOutlined,
-  PlusOutlined,
-  RefreshOutlined,
-} from '@vicons/material';
+import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
-import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { CachedSegRepository } from '@/data/translator';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
@@ -126,7 +122,11 @@ const notices = [
         :icon="PlusOutlined"
         @action="showCreateWorkerModal = true"
       />
-      <c-button label="清空缓存" :icon="DeleteOutlined" @action="clearCache" />
+      <c-button
+        label="清空缓存"
+        :icon="DeleteOutlineOutlined"
+        @action="clearCache"
+      />
     </section-header>
 
     <n-empty
@@ -146,7 +146,7 @@ const notices = [
     <section-header title="任务队列">
       <c-button
         label="清空队列"
-        :icon="DeleteOutlined"
+        :icon="DeleteOutlineOutlined"
         @action="deleteAllJobs()"
       />
     </section-header>
@@ -163,35 +163,7 @@ const notices = [
       </n-list-item>
     </n-list>
 
-    <section-header title="任务记录">
-      <c-button
-        label="重试失败任务"
-        :icon="RefreshOutlined"
-        @action="sakuraWorkspace.retryAllJobRecords()"
-      />
-      <c-button
-        label="清空记录"
-        :icon="DeleteOutlined"
-        @action="sakuraWorkspace.deleteAllJobRecords()"
-      />
-    </section-header>
-
-    <n-empty
-      v-if="sakuraWorkspace.uncompletedJobs.length === 0"
-      description="没有任务"
-    />
-    <n-list>
-      <n-list-item
-        v-for="job of sakuraWorkspace.uncompletedJobs"
-        :key="job.task"
-      >
-        <job-record
-          :job="job"
-          @retry-job="sakuraWorkspace.retryJobRecord(job)"
-          @delete-job="sakuraWorkspace.deleteJobRecord(job)"
-        />
-      </n-list-item>
-    </n-list>
+    <job-record-section :workspace="sakuraWorkspace" />
 
     <template #sidebar>
       <local-volume-list-specific-translation type="sakura" />

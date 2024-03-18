@@ -31,7 +31,7 @@ export interface SakuraWorker {
   useLlamaApi?: boolean;
 }
 
-export interface Workspace<T> {
+interface Workspace<T> {
   workers: T[];
   jobs: TranslateJob[];
   // 为了兼容性，仍使用 uncompletedJobs
@@ -131,6 +131,10 @@ export const useSakuraWorkspaceStore = useWorkspaceStoreFactory<SakuraWorker>(
     { id: 'AutoDL', endpoint: 'http://127.0.0.1:6006', useLlamaApi: true },
   ]
 );
+
+export type WorkspaceStore =
+  | ReturnType<typeof useGptWorkspaceStore>
+  | ReturnType<typeof useSakuraWorkspaceStore>;
 
 const buildTaskQueryString = ({
   start,

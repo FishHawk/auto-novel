@@ -1,9 +1,5 @@
 <script lang="ts" setup>
-import {
-  DeleteOutlined,
-  PlusOutlined,
-  RefreshOutlined,
-} from '@vicons/material';
+import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { useMessage } from 'naive-ui';
 import { ref } from 'vue';
 
@@ -120,7 +116,11 @@ const notices = [
         :icon="PlusOutlined"
         @action="showCreateWorkerModal = true"
       />
-      <c-button label="清空缓存" :icon="DeleteOutlined" @action="clearCache" />
+      <c-button
+        label="清空缓存"
+        :icon="DeleteOutlineOutlined"
+        @action="clearCache"
+      />
     </section-header>
 
     <n-empty
@@ -140,7 +140,7 @@ const notices = [
     <section-header title="任务队列">
       <c-button
         label="清空队列"
-        :icon="DeleteOutlined"
+        :icon="DeleteOutlineOutlined"
         @action="deleteAllJobs()"
       />
     </section-header>
@@ -157,32 +157,7 @@ const notices = [
       </n-list-item>
     </n-list>
 
-    <section-header title="任务记录">
-      <c-button
-        label="重试失败任务"
-        :icon="RefreshOutlined"
-        @action="gptWorkspace.retryAllJobRecords()"
-      />
-      <c-button
-        label="清空记录"
-        :icon="DeleteOutlined"
-        @action="gptWorkspace.deleteAllJobRecords()"
-      />
-    </section-header>
-
-    <n-empty
-      v-if="gptWorkspace.uncompletedJobs.length === 0"
-      description="没有任务"
-    />
-    <n-list>
-      <n-list-item v-for="job of gptWorkspace.uncompletedJobs" :key="job.task">
-        <job-record
-          :job="job"
-          @retry-job="gptWorkspace.retryJobRecord(job)"
-          @delete-job="gptWorkspace.deleteJobRecord(job)"
-        />
-      </n-list-item>
-    </n-list>
+    <job-record-section :workspace="gptWorkspace" />
 
     <template #sidebar>
       <local-volume-list-specific-translation type="gpt" />
