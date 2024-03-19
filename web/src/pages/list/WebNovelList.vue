@@ -56,6 +56,9 @@ const options = [
 ];
 
 const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
+  if (query !== '') {
+    document.title = '网络小说 搜索：' + query;
+  }
   const parseProviderBitFlags = (n: number): string => {
     const providerMap: { [key: string]: string } = {
       Kakuyomu: 'kakuyomu',

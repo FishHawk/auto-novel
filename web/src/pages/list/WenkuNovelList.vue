@@ -26,6 +26,9 @@ const options = userData.isOldAss
   : [];
 
 const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
+  if (query !== '') {
+    document.title = '文库小说 搜索：' + query;
+  }
   if (userData.isOldAss) {
     return runCatching(
       WenkuNovelRepository.listNovel({
