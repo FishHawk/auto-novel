@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class NovelFileLangV2 {
+enum class NovelFileMode {
     @SerialName("jp")
     Jp,
 
@@ -25,39 +25,6 @@ enum class NovelFileTranslationsMode {
 
     @SerialName("priority")
     Priority,
-}
-
-@Serializable
-enum class NovelFileLang(val value: String) {
-    @SerialName("jp")
-    JP("jp"),
-
-    @SerialName("zh-baidu")
-    ZH_BAIDU("zh-baidu"),
-
-    @SerialName("mix-baidu")
-    MIX_BAIDU("mix-baidu"),
-
-    @SerialName("zh-youdao")
-    ZH_YOUDAO("zh-youdao"),
-
-    @SerialName("mix-youdao")
-    MIX_YOUDAO("mix-youdao"),
-
-    @SerialName("zh-gpt")
-    ZH_GPT("zh-gpt"),
-
-    @SerialName("mix-gpt")
-    MIX_GPT("mix-gpt"),
-
-    @SerialName("zh-sakura")
-    ZH_SAKURA("zh-sakura"),
-
-    @SerialName("mix-sakura")
-    MIX_SAKURA("mix-sakura"),
-
-    @SerialName("mix-all")
-    MIX_ALL("mix-all")
 }
 
 @Serializable

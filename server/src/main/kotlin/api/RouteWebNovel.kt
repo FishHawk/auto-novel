@@ -76,7 +76,7 @@ private class WebNovelRes {
         @Resource("/file")
         class File(
             val parent: Id,
-            val lang: NovelFileLangV2,
+            val mode: NovelFileMode,
             val translationsMode: NovelFileTranslationsMode,
             val translations: kotlin.collections.List<TranslatorId> = emptyList(),
             val type: NovelFileType,
@@ -261,7 +261,7 @@ fun Route.routeWebNovel() {
             val path = service.updateFile(
                 providerId = loc.parent.providerId,
                 novelId = loc.parent.novelId,
-                lang = loc.lang,
+                mode = loc.mode,
                 translationsMode = loc.translationsMode,
                 translations = loc.translations,
                 type = loc.type,
@@ -782,7 +782,7 @@ class WebNovelApi(
     suspend fun updateFile(
         providerId: String,
         novelId: String,
-        lang: NovelFileLangV2,
+        mode: NovelFileMode,
         translationsMode: NovelFileTranslationsMode,
         translations: List<TranslatorId>,
         type: NovelFileType,
@@ -790,7 +790,7 @@ class WebNovelApi(
         return fileRepo.makeFile(
             providerId = providerId,
             novelId = novelId,
-            lang = lang,
+            mode = mode,
             translationsMode = translationsMode,
             translations = translations.distinct(),
             type = type,

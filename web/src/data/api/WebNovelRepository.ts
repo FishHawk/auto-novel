@@ -77,7 +77,7 @@ const updateGlossary = (
 const createFileUrl = ({
   providerId,
   novelId,
-  lang,
+  mode,
   translationsMode,
   translations,
   type,
@@ -85,15 +85,15 @@ const createFileUrl = ({
 }: {
   providerId: string;
   novelId: string;
-  lang: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';
+  mode: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';
   translationsMode: 'parallel' | 'priority';
   translations: ('sakura' | 'baidu' | 'youdao' | 'gpt')[];
   type: 'epub' | 'txt';
   title: string;
 }) => {
   const filename = [
-    lang,
-    lang === 'jp'
+    mode,
+    mode === 'jp'
       ? ''
       : (translationsMode === 'parallel' ? 'B' : 'Y') +
         translations.map((it) => it[0]).join(''),
@@ -104,7 +104,7 @@ const createFileUrl = ({
     .join('.');
 
   const params = new URLSearchParams({
-    lang,
+    mode,
     translationsMode,
     type,
     filename,

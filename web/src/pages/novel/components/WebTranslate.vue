@@ -65,7 +65,7 @@ const files = computed(() => {
     jp: WebNovelRepository.createFileUrl({
       providerId,
       novelId,
-      lang: 'jp',
+      mode: 'jp',
       translationsMode,
       translations: [],
       type,
@@ -74,7 +74,7 @@ const files = computed(() => {
     zh: WebNovelRepository.createFileUrl({
       providerId,
       novelId,
-      lang: mode,
+      mode: mode,
       translationsMode,
       translations,
       type,

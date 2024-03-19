@@ -86,25 +86,25 @@ const deleteVolume = (novelId: string, volumeId: string) =>
 const createFileUrl = ({
   novelId,
   volumeId,
-  lang,
+  mode,
   translationsMode,
   translations,
 }: {
   novelId: string;
   volumeId: string;
-  lang: 'zh' | 'zh-jp' | 'jp-zh';
+  mode: 'zh' | 'zh-jp' | 'jp-zh';
   translationsMode: 'parallel' | 'priority';
   translations: ('sakura' | 'baidu' | 'youdao' | 'gpt')[];
 }) => {
   const filename = [
-    lang,
+    mode,
     (translationsMode === 'parallel' ? 'B' : 'Y') +
       translations.map((it) => it[0]).join(''),
     volumeId,
   ].join('.');
 
   const params = new URLSearchParams({
-    lang,
+    mode,
     translationsMode,
     filename,
   });

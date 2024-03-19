@@ -53,7 +53,7 @@ const file = computed(() => {
   const { url, filename } = WenkuNovelRepository.createFileUrl({
     novelId,
     volumeId: volume.volumeId,
-    lang: mode,
+    mode,
     translationsMode,
     translations,
   });

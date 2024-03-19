@@ -275,19 +275,12 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
 
     //
     suspend fun makeTranslationVolumeFile(
-        lang: NovelFileLangV2,
+        mode: NovelFileMode,
         translationsMode: NovelFileTranslationsMode,
         translations: List<TranslatorId>,
     ) = withContext(Dispatchers.IO) {
         val zhFilename = buildString {
-            append(
-                when (lang) {
-                    NovelFileLangV2.Jp -> "jp"
-                    NovelFileLangV2.Zh -> "zh"
-                    NovelFileLangV2.JpZh -> "jp-zh"
-                    NovelFileLangV2.ZhJp -> "zh-jp"
-                }
-            )
+            append(mode.serialName())
             append('.')
             append(
                 when (translationsMode) {
@@ -296,14 +289,7 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
                 }
             )
             translations.forEach {
-                append(
-                    when (it) {
-                        TranslatorId.Baidu -> "b"
-                        TranslatorId.Youdao -> "y"
-                        TranslatorId.Gpt -> "g"
-                        TranslatorId.Sakura -> "s"
-                    }
-                )
+                append(it.serialName()[0])
             }
         }
 
@@ -333,11 +319,11 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
                         bf.appendLine("// 该分段翻译缺失。")
                     } else {
                         val jpLines = getChapter(chapterId)!!
-                        val linesList = when (lang) {
-                            NovelFileLangV2.Jp -> throw RuntimeException("文库小说不允许日语下载")
-                            NovelFileLangV2.Zh -> zhLinesList
-                            NovelFileLangV2.JpZh -> listOf(jpLines) + zhLinesList
-                            NovelFileLangV2.ZhJp -> zhLinesList + listOf(jpLines)
+                        val linesList = when (mode) {
+                            NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
+                            NovelFileMode.Zh -> zhLinesList
+                            NovelFileMode.JpZh -> listOf(jpLines) + zhLinesList
+                            NovelFileMode.ZhJp -> zhLinesList + listOf(jpLines)
                         }
                         for (i in jpLines.indices) {
                             linesList.forEach { lines ->
@@ -373,23 +359,23 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
                         doc.select("p")
                             .filter { el -> el.text().isNotBlank() }
                             .forEachIndexed { index, el ->
-                                when (lang) {
-                                    NovelFileLangV2.Jp -> throw RuntimeException("文库小说不允许日语下载")
-                                    NovelFileLangV2.Zh -> {
+                                when (mode) {
+                                    NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
+                                    NovelFileMode.Zh -> {
                                         zhLinesList.forEach { lines ->
                                             el.before("<p>${lines[index]}</p>")
                                         }
                                         el.remove()
                                     }
 
-                                    NovelFileLangV2.JpZh -> {
+                                    NovelFileMode.JpZh -> {
                                         zhLinesList.asReversed().forEach { lines ->
                                             el.after("<p>${lines[index]}</p>")
                                         }
                                         el.attr("style", "opacity:0.4;")
                                     }
 
-                                    NovelFileLangV2.ZhJp -> {
+                                    NovelFileMode.ZhJp -> {
                                         zhLinesList.forEach { lines ->
                                             el.before("<p>${lines[index]}</p>")
                                         }

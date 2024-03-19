@@ -3,6 +3,7 @@ package infra.web
 import infra.DataSourceMongo
 import infra.model.*
 import kotlinx.datetime.toKotlinInstant
+import util.serialName
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.Path
 import kotlin.io.path.div
@@ -17,7 +18,7 @@ class WebNovelFileRepository(
     suspend fun makeFile(
         providerId: String,
         novelId: String,
-        lang: NovelFileLangV2,
+        mode: NovelFileMode,
         translationsMode: NovelFileTranslationsMode,
         translations: List<TranslatorId>,
         type: NovelFileType,
@@ -29,14 +30,7 @@ class WebNovelFileRepository(
 
         val zhFilename = buildString {
             append("${providerId}.${novelId}.")
-            append(
-                when (lang) {
-                    NovelFileLangV2.Jp -> "jp"
-                    NovelFileLangV2.Zh -> "zh"
-                    NovelFileLangV2.JpZh -> "jp-zh"
-                    NovelFileLangV2.ZhJp -> "zh-jp"
-                }
-            )
+            append(mode.serialName())
             append('.')
             append(
                 when (translationsMode) {
@@ -45,21 +39,10 @@ class WebNovelFileRepository(
                 }
             )
             translations.forEach {
-                append(
-                    when (it) {
-                        TranslatorId.Baidu -> "b"
-                        TranslatorId.Youdao -> "y"
-                        TranslatorId.Gpt -> "g"
-                        TranslatorId.Sakura -> "s"
-                    }
-                )
+                append(it.serialName()[0])
             }
-            append(
-                when (type) {
-                    NovelFileType.EPUB -> ".epub"
-                    NovelFileType.TXT -> ".txt"
-                }
-            )
+            append('.')
+            append(type.serialName())
         }
 
         val zhPath = root / zhFilename
@@ -82,7 +65,7 @@ class WebNovelFileRepository(
                     ?.let {
                         generateWriteInfoFromChapter(
                             chapter = it,
-                            lang = lang,
+                            mode = mode,
                             translationsMode = translationsMode,
                             translations = translations,
                         )
@@ -96,16 +79,16 @@ class WebNovelFileRepository(
                 zhPath,
                 novel,
                 chapters,
-                jp = lang != NovelFileLangV2.Zh,
-                zh = lang != NovelFileLangV2.Jp,
+                jp = mode != NovelFileMode.Zh,
+                zh = mode != NovelFileMode.Jp,
             )
 
             NovelFileType.TXT -> makeTxtFile(
                 zhPath,
                 novel,
                 chapters,
-                jp = lang != NovelFileLangV2.Zh,
-                zh = lang != NovelFileLangV2.Jp,
+                jp = mode != NovelFileMode.Zh,
+                zh = mode != NovelFileMode.Jp,
             )
         }
         return zhFilename
@@ -125,7 +108,7 @@ data class ChapterWriteData(
 
 private fun generateWriteInfoFromChapter(
     chapter: WebNovelChapter,
-    lang: NovelFileLangV2,
+    mode: NovelFileMode,
     translationsMode: NovelFileTranslationsMode,
     translations: List<TranslatorId>,
 ): ChapterWriteData {
@@ -152,14 +135,14 @@ private fun generateWriteInfoFromChapter(
                 ?: emptyList()
     }
 
-    val paragraphs = when (lang) {
-        NovelFileLangV2.Jp -> listOf(jpParagraphs).map { ParagraphsWriteData(it, true) }
-        NovelFileLangV2.Zh -> zhParagraphsList.map { ParagraphsWriteData(it, true) }
-        NovelFileLangV2.JpZh ->
+    val paragraphs = when (mode) {
+        NovelFileMode.Jp -> listOf(jpParagraphs).map { ParagraphsWriteData(it, true) }
+        NovelFileMode.Zh -> zhParagraphsList.map { ParagraphsWriteData(it, true) }
+        NovelFileMode.JpZh ->
             listOf(jpParagraphs).map { ParagraphsWriteData(it, false) } +
                     zhParagraphsList.map { ParagraphsWriteData(it, true) }
 
-        NovelFileLangV2.ZhJp ->
+        NovelFileMode.ZhJp ->
             zhParagraphsList.map { ParagraphsWriteData(it, true) } +
                     listOf(jpParagraphs).map { ParagraphsWriteData(it, false) }
     }

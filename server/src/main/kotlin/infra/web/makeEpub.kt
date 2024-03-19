@@ -17,17 +17,17 @@ suspend fun makeEpubFile(
     zh: Boolean,
 ) {
     val language =
-        if (jp) "jp"
-        else "zh"
+        if (zh) "zh-CN"
+        else "ja"
     val title =
-        if (jp) metadata.titleJp
-        else metadata.titleZh ?: metadata.titleJp
+        if (zh) metadata.titleZh ?: metadata.titleJp
+        else metadata.titleJp
     val introduction =
-        if (jp) metadata.introductionJp
-        else metadata.introductionZh ?: metadata.introductionJp
+        if (zh) metadata.introductionZh ?: metadata.introductionJp
+        else metadata.introductionJp
     val getChapterTitle =
-        if (jp) { item: WebNovelTocItem -> item.titleJp }
-        else { item: WebNovelTocItem -> item.titleZh ?: item.titleJp }
+        if (zh) { item: WebNovelTocItem -> item.titleZh ?: item.titleJp }
+        else { item: WebNovelTocItem -> item.titleJp }
 
     val epub = EpubBook()
     val identifier = "${metadata.providerId}.${metadata.novelId}"

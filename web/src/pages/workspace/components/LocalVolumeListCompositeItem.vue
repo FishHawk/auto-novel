@@ -71,7 +71,7 @@ const downloadVolume = async () => {
   try {
     const { filename, blob } = await LocalVolumeService.getTranslationFile({
       id: props.volume.id,
-      lang: mode,
+      mode,
       translationsMode,
       translations,
     });

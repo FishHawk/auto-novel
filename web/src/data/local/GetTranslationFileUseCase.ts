@@ -6,17 +6,17 @@ import { Srt, Txt } from '@/util/file';
 
 export const getTranslationFile = async ({
   id,
-  lang,
+  mode,
   translationsMode,
   translations,
 }: {
   id: string;
-  lang: 'zh' | 'zh-jp' | 'jp-zh';
+  mode: 'zh' | 'zh-jp' | 'jp-zh';
   translationsMode: 'parallel' | 'priority';
   translations: ('sakura' | 'baidu' | 'youdao' | 'gpt')[];
 }) => {
   const filename = [
-    lang,
+    mode,
     (translationsMode === 'parallel' ? 'B' : 'Y') +
       translations.map((it) => it[0]).join(''),
     id,
@@ -53,9 +53,9 @@ export const getTranslationFile = async ({
         buffer.push('// 该分段翻译缺失。');
       } else {
         const combinedLinesList = zhLinesList;
-        if (lang === 'jp-zh') {
+        if (mode === 'jp-zh') {
           combinedLinesList.unshift(jpLines);
-        } else if (lang === 'zh-jp') {
+        } else if (mode === 'zh-jp') {
           combinedLinesList.push(jpLines);
         }
         for (let i = 0; i < combinedLinesList[0].length; i++) {
@@ -82,7 +82,7 @@ export const getTranslationFile = async ({
         const doc = await parseXHtmlBlob(blobIn);
         const { zhLinesList } = await getZhLinesList(path);
         if (zhLinesList.length === 0) return blobIn;
-        await EpubParserV1.injectTranslation(doc, lang, zhLinesList);
+        await EpubParserV1.injectTranslation(doc, mode, zhLinesList);
         return new Blob([doc.documentElement.outerHTML], {
           type: 'text/plain',
         });
@@ -121,9 +121,9 @@ export const getTranslationFile = async ({
         zhLines.splice(0, s.text.length);
       }
 
-      if (lang === 'jp-zh') {
+      if (mode === 'jp-zh') {
         texts.unshift(s.text);
-      } else if (lang === 'zh-jp') {
+      } else if (mode === 'zh-jp') {
         texts.push(s.text);
       }
 

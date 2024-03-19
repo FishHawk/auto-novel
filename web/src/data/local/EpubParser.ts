@@ -2,7 +2,7 @@ interface EpubParser {
   extractText: (doc: Document) => string[];
   injectTranslation: (
     doc: Document,
-    lang: 'zh' | 'jp-zh' | 'zh-jp',
+    mode: 'zh' | 'jp-zh' | 'zh-jp',
     zhLinesList: string[][]
   ) => Document;
 }
@@ -18,13 +18,13 @@ export const EpubParserV1: EpubParser = {
   },
   injectTranslation: (
     doc: Document,
-    lang: 'zh' | 'jp-zh' | 'zh-jp',
+    mode: 'zh' | 'jp-zh' | 'zh-jp',
     zhLinesList: string[][]
   ) => {
     Array.from(doc.body.getElementsByTagName('p'))
       .filter((el) => el.innerText.trim().length !== 0)
       .forEach((el, index) => {
-        if (lang === 'zh') {
+        if (mode === 'zh') {
           zhLinesList.forEach((lines) => {
             const p = document.createElement('p');
             const t = document.createTextNode(lines[index]);
@@ -32,7 +32,7 @@ export const EpubParserV1: EpubParser = {
             el.parentNode!!.insertBefore(p, el);
           });
           el.parentNode!!.removeChild(el);
-        } else if (lang === 'jp-zh') {
+        } else if (mode === 'jp-zh') {
           zhLinesList.forEach((lines) => {
             const p = document.createElement('p');
             const t = document.createTextNode(lines[index]);

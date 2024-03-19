@@ -55,7 +55,7 @@ private class WenkuNovelRes {
         class File(
             val parent: Id,
             val volumeId: String,
-            val lang: NovelFileLangV2,
+            val mode: NovelFileMode,
             val translationsMode: NovelFileTranslationsMode,
             val translations: List<TranslatorId>,
             val filename: String,
@@ -203,7 +203,7 @@ fun Route.routeWenkuNovel() {
             val path = service.updateFile(
                 novelId = loc.parent.novelId,
                 volumeId = loc.volumeId,
-                lang = loc.lang,
+                mode = loc.mode,
                 translationsMode = loc.translationsMode,
                 translations = loc.translations,
             )
@@ -617,7 +617,7 @@ class WenkuNovelApi(
     suspend fun updateFile(
         novelId: String,
         volumeId: String,
-        lang: NovelFileLangV2,
+        mode: NovelFileMode,
         translationsMode: NovelFileTranslationsMode,
         translations: List<TranslatorId>,
     ): String {
@@ -627,14 +627,14 @@ class WenkuNovelApi(
         if (translations.isEmpty())
             throwBadRequest("没有设置翻译类型")
 
-        if (lang == NovelFileLangV2.Jp)
+        if (mode == NovelFileMode.Jp)
             throwBadRequest("不支持的类型")
 
         val volume = volumeRepo.getVolume(novelId, volumeId)
             ?: throwNotFound("卷不存在")
 
         val newFileName = volume.makeTranslationVolumeFile(
-            lang = lang,
+            mode = mode,
             translationsMode = translationsMode,
             translations = translations.distinct(),
         )
