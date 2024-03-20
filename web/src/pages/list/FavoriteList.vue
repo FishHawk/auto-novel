@@ -185,6 +185,8 @@ const invertSelection = () => {
   }
 };
 
+const displayKeywords = ref(false);
+
 const targetFavoredId = ref<string>(favoriteId.value);
 
 const moveToFavored = async () => {
@@ -297,19 +299,29 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       >
         <n-list bordered>
           <n-list-item>
-            <c-action-wrapper title="选择">
-              <n-flex align="baseline">
-                <n-button-group size="small">
-                  <c-button label="全选" :round="false" @action="selectAll" />
-                  <c-button
-                    label="反选"
-                    :round="false"
-                    @action="invertSelection"
-                  />
-                </n-button-group>
-                <n-text depth="3"> 已选择{{ selectedSize }}本小说 </n-text>
-              </n-flex>
-            </c-action-wrapper>
+            <n-flex vertical>
+              <c-action-wrapper title="选择">
+                <n-flex align="baseline">
+                  <n-button-group size="small">
+                    <c-button label="全选" :round="false" @action="selectAll" />
+                    <c-button
+                      label="反选"
+                      :round="false"
+                      @action="invertSelection"
+                    />
+                  </n-button-group>
+                  <n-text depth="3"> 已选择{{ selectedSize }}本小说 </n-text>
+                </n-flex>
+              </c-action-wrapper>
+
+              <c-action-wrapper
+                v-if="favoriteType === 'web'"
+                title="显示标签"
+                align="center"
+              >
+                <n-switch v-model:value="displayKeywords" size="small" />
+              </c-action-wrapper>
+            </n-flex>
           </n-list-item>
 
           <n-list-item>
@@ -389,7 +401,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           ref="novelListWebRef"
           :items="page.items"
           :selectable="showOperationPanel"
-          simple
+          :simple="!displayKeywords"
         />
         <NovelListWenku
           v-if="page.type === 'wenku'"
