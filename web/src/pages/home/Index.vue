@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { ReadMoreOutlined } from '@vicons/material';
+import {
+  BookmarksOutlined,
+  ForumOutlined,
+  LanguageOutlined,
+  ReadMoreOutlined,
+} from '@vicons/material';
 
 import {
   UserRepository,
@@ -12,11 +17,13 @@ import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { notice } from '@/pages/components/NoticeBoard.vue';
+import { useIsWideScreen } from '@/pages/util';
 import { Result, runCatching } from '@/util/result';
 
 const userData = useUserDataStore();
 const router = useRouter();
 const vars = useThemeVars();
+const isWideScreen = useIsWideScreen(850);
 
 const url = ref('');
 const query = (url: string) => {
@@ -93,11 +100,9 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
 
 const notices = [
   notice(
-    '如果发现Sakura某段翻译得不准确，可以点击该段提交（需要登录），用来收集数据帮助sakura训练。'
+    '如果发现Sakura某段翻译得不准确，可以提交错误，给网站收集数据帮助sakura训练。'
   ),
-  notice(
-    '升级了网络小说目录翻译，有道翻译目录会正确处理空格了，有需要可以使用“重翻目录”。'
-  ),
+  notice('有道现在翻译目录会正确处理空格了，有需要请使用“重翻目录”。'),
   notice('工作区支持SRT字幕文件了。'),
 ];
 </script>
@@ -107,10 +112,7 @@ const notices = [
     :style="{ background: `rgba(0, 0, 0, .25) url(${bannerUrl})` }"
     style="background-blend-mode: darken"
   >
-    <div
-      class="layout-content"
-      style="max-width: 800px; padding-top: 20px; padding-bottom: 50px"
-    >
+    <div id="banner" class="layout-content">
       <n-h1
         style="
           text-align: center;
@@ -138,7 +140,43 @@ const notices = [
   </div>
 
   <div class="layout-content">
-    <notice-board :notices="notices" style="margin-top: 24px">
+    <n-flex
+      v-if="!isWideScreen"
+      :size="0"
+      justify="space-around"
+      :wrap="false"
+      style="margin: 8px 0px"
+    >
+      <router-link to="/novel-list" style="flex: 1">
+        <n-button quaternary style="width: 100%; height: 64px">
+          <n-flex align="center" vertical>
+            <n-icon size="24" :component="LanguageOutlined" />
+            网络小说
+          </n-flex>
+        </n-button>
+      </router-link>
+
+      <router-link to="/wenku-list" style="flex: 1">
+        <n-button quaternary style="width: 100%; height: 64px">
+          <n-flex align="center" vertical>
+            <n-icon size="24" :component="BookmarksOutlined" />
+            文库小说
+          </n-flex>
+        </n-button>
+      </router-link>
+
+      <router-link to="/forum" style="flex: 1">
+        <n-button quaternary style="width: 100%; height: 64px">
+          <n-flex align="center" vertical>
+            <n-icon size="24" :component="ForumOutlined" />
+            论坛
+          </n-flex>
+        </n-button>
+      </router-link>
+    </n-flex>
+    <div v-else style="height: 16px" />
+
+    <notice-board :notices="notices">
       <n-flex>
         <n-button text type="primary" @click="showHowToUseModal = true">
           使用说明
@@ -207,3 +245,17 @@ const notices = [
     </n-p>
   </c-modal>
 </template>
+
+<style scoped>
+#banner {
+  max-width: 800px;
+  padding-top: 20px;
+  padding-bottom: 50px;
+}
+@media only screen and (max-width: 600px) {
+  #banner {
+    padding-top: 10px;
+    padding-bottom: 35px;
+  }
+}
+</style>
