@@ -4,7 +4,7 @@ import { FormatListBulletedOutlined } from '@vicons/material';
 import { WebNovelRepository } from '@/data/api';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 import { useIsWideScreen } from '@/pages/util';
 
 import { Loader } from './components/NovelList.vue';

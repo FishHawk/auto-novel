@@ -1,6 +1,5 @@
 import { useWindowSize } from '@vueuse/core';
 import { MessageApi } from 'naive-ui';
-import { computed } from 'vue';
 
 import { formatError } from '@/data/api/client';
 

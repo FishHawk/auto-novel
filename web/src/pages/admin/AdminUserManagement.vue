@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { UserRepository } from '@/data/api';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 import { Page } from '@/model/Page';
 import { UserOutline, UserRole } from '@/model/User';
 

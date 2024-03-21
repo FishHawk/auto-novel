@@ -6,7 +6,7 @@ import { useWebSearchHistoryStore } from '@/data/stores/search_history';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 import { useIsWideScreen } from '@/pages/util';
 
 import { Loader } from './components/NovelList.vue';

@@ -6,7 +6,7 @@ import { useWenkuSearchHistoryStore } from '@/data/stores/search_history';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 
 import { Loader } from './components/NovelList.vue';
 

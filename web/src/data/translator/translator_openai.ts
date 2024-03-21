@@ -291,18 +291,7 @@ export class OpenAiTranslator implements SegmentTranslator {
       } else {
         this.log('　发生错误：' + message + `，暂停${delaySeconds}秒`);
       }
-      await new Promise((resolve, reject) => {
-        let timeout: number;
-        const abortHandler = () => {
-          clearTimeout(timeout);
-          reject(new DOMException('Aborted', 'AbortError'));
-        };
-        timeout = window.setTimeout(() => {
-          resolve('Promise Resolved');
-          signal?.removeEventListener('abort', abortHandler);
-        }, 1000 * delaySeconds);
-        signal?.addEventListener('abort', abortHandler);
-      });
+      await delay(delaySeconds * 1000, signal);
       return;
     } else {
       this.log('　发生错误：' + message + '，退出');

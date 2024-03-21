@@ -4,7 +4,7 @@ import { createReusableTemplate } from '@vueuse/core';
 
 import { CommentRepository } from '@/data/api';
 import { Comment1 } from '@/model/Comment';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;

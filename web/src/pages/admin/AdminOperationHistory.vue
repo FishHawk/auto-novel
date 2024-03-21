@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { OperationRepository } from '@/data/api';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 import { OperationHistory, OperationType } from '@/model/Operation';
 import { Page } from '@/model/Page';
 import { doAction } from '@/pages/util';

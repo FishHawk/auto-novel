@@ -5,7 +5,7 @@ import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 import { ArticleRepository } from '@/data/api';
 import avaterUrl from '@/image/avater.jpg';
 import { ArticleCategory } from '@/model/Article';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const route = useRoute();

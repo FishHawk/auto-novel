@@ -2,7 +2,7 @@
 import { CommentOutlined } from '@vicons/material';
 
 import { CommentRepository } from '@/data/api';
-import { Ok, Result, runCatching } from '@/pages/result';
+import { Ok, Result, runCatching } from '@/util/result';
 import { Comment1 } from '@/model/Comment';
 import { Page } from '@/model/Page';
 

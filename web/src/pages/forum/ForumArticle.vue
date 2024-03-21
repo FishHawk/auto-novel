@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ArticleRepository } from '@/data/api';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Article } from '@/model/Article';
 

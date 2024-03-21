@@ -7,7 +7,7 @@ import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import { wenkuGnid } from '@/model/Common';
 import { WenkuNovelDto } from '@/model/WenkuNovel';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 import TranslateOptions from './components/TranslateOptions.vue';

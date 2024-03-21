@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends any">
-import { Result } from '@/pages/result';
+import { Result } from '@/util/result';
 
 defineProps<{
   result?: Result<T>;

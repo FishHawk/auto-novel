@@ -8,42 +8,41 @@ import wasm from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ command, mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'LOCAL');
+  const proxy: Record<string, ProxyOptions> = {};
 
-  let proxyOptions: ProxyOptions;
-  if ('LOCAL' in env)
-    proxyOptions = {
-      target: 'http://localhost:8081',
-      changeOrigin: true,
-      rewrite: (path) => path.replace(/^\/api/, ''),
-    };
-  else
-    proxyOptions = {
-      target: 'https://books.fishhawk.top',
-      changeOrigin: true,
-      bypass(req, _res, _options) {
-        if (
-          req.url &&
-          req.url.includes('/translate/') &&
-          req.method === 'PUT'
-        ) {
-          if (req.url.includes('/chapter/')) {
-            console.log('检测到网络小说章节翻译请求，已拦截');
-            return false;
+  if (command === 'serve') {
+    const env = loadEnv(mode, process.cwd(), 'LOCAL');
+    if ('LOCAL' in env)
+      proxy['/api'] = {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      };
+    else
+      proxy['/api'] = {
+        target: 'https://books.fishhawk.top',
+        changeOrigin: true,
+        bypass(req, _res, _options) {
+          if (
+            req.url &&
+            req.url.includes('/translate/') &&
+            req.method === 'PUT'
+          ) {
+            if (req.url.includes('/chapter/')) {
+              console.log('检测到网络小说章节翻译请求，已拦截');
+              return false;
+            }
+            if (req.url.includes('/wenku/')) {
+              console.log('检测到文库小说章节翻译请求，已拦截');
+              return false;
+            }
           }
-          if (req.url.includes('/wenku/')) {
-            console.log('检测到文库小说章节翻译请求，已拦截');
-            return false;
-          }
-        }
-      },
-    };
-
+        },
+      };
+  }
   return {
     server: {
-      proxy: {
-        '/api': proxyOptions,
-      },
+      proxy,
     },
     build: {
       cssCodeSplit: false,

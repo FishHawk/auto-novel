@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Result } from '@/pages/result';
+import { Result } from '@/util/result';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 
 defineProps<{ listResult?: Result<WebNovelOutlineDto[]> }>();

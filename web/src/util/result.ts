@@ -12,7 +12,7 @@ export const Err = (error: string): Result<never> => {
   return { ok: false, error: { message: error } };
 };
 
-export function runCatching<T>(callback: Promise<T>): Promise<Result<T>> {
+export const runCatching = <T>(callback: Promise<T>): Promise<Result<T>> => {
   return callback
     .then((it) => Ok(it))
     .catch((error) => {
@@ -32,4 +32,4 @@ export function runCatching<T>(callback: Promise<T>): Promise<Result<T>> {
         return Err(`${error}`);
       }
     });
-}
+};

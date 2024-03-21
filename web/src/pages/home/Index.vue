@@ -12,7 +12,7 @@ import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { notice } from '@/pages/components/NoticeBoard.vue';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 
 const userData = useUserDataStore();
 const router = useRouter();

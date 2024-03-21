@@ -3,7 +3,7 @@ import { UploadOutlined } from '@vicons/material';
 
 import { WebNovelRepository } from '@/data/api';
 import { WebNovelDto } from '@/model/WebNovel';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const route = useRoute();

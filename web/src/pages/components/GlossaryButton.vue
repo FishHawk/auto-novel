@@ -80,7 +80,7 @@ const importGlossary = () => {
   if (importedGlossary === undefined) {
     message.error('导入失败：术语表格式不正确');
   } else {
-    message.error('导入成功');
+    message.success('导入成功');
     for (const jp in importedGlossary) {
       const zh = importedGlossary[jp];
       glossary.value[jp] = zh;

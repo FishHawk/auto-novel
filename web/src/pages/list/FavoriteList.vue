@@ -16,7 +16,7 @@ import { Page } from '@/model/Page';
 import { FavoredList } from '@/model/User';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';

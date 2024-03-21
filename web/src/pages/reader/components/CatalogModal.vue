@@ -2,7 +2,7 @@
 import { ReaderService } from '@/service';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderTocItem } from '@/model/Reader';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 
 const props = defineProps<{
   show: boolean;

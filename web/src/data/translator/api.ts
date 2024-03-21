@@ -130,18 +130,7 @@ const translateWeb = async (
       task = await getTranslateTask();
     } catch (e: any) {
       callback.log('获取翻译任务-延迟10s重试');
-      await new Promise((resolve, reject) => {
-        let timeout: number;
-        const abortHandler = () => {
-          clearTimeout(timeout);
-          reject(new DOMException('Aborted', 'AbortError'));
-        };
-        timeout = window.setTimeout(() => {
-          resolve('Promise Resolved');
-          signal?.removeEventListener('abort', abortHandler);
-        }, 1000 * 10);
-        signal?.addEventListener('abort', abortHandler);
-      });
+      await delay(10_000, signal);
       task = await getTranslateTask();
     }
   } catch (e: any) {

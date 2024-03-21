@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.30",
+    "vitest": "^1.2.0",
     "vite-bundle-visualizer": "^0.11.0"
   },
   "dependencies": {
@@ -38,12 +39,10 @@
     "unplugin-auto-import": "^0.16.7",
     "unplugin-vue-components": "^0.25.2",
     "uuid": "^9.0.1",
-    "vfonts": "^0.0.3",
     "vite": "^5.0.11",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
     "vite-tsconfig-paths": "^4.3.0",
-    "vitest": "^1.2.0",
     "vue": "^3.4.14",
     "vue-router": "^4.2.5",
     "vue-tsc": "^1.8.27"

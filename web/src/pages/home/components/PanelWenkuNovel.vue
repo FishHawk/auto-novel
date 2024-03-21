@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
-import { Result } from '@/pages/result';
+import { Result } from '@/util/result';
 
 defineProps<{ listResult?: Result<WenkuNovelOutlineDto[]> }>();
 </script>

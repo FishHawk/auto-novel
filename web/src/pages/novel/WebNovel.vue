@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { WebNovelRepository } from '@/data/api';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 import { useIsWideScreen } from '@/pages/util';
 
 import { ReadableTocItem, WebNovelVM } from './components/common';

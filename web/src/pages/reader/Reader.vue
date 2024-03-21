@@ -8,7 +8,7 @@ import { buildWebChapterUrl } from '@/data/web/url';
 import { GenericNovelId, localGnid, webGnid } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
-import { Ok, Result, runCatching } from '@/pages/result';
+import { Ok, Result, runCatching } from '@/util/result';
 import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 import { ReaderService } from '@/service';
 

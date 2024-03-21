@@ -9,7 +9,7 @@ import { presetKeywordsNonR18, presetKeywordsR18 } from '@/data/wenku/keyword';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { doAction, useIsWideScreen } from '@/pages/util';
-import { runCatching } from '@/pages/result';
+import { runCatching } from '@/util/result';
 
 const route = useRoute();
 const router = useRouter();

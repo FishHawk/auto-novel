@@ -10,7 +10,7 @@ import { ArticleRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { ArticleCategory, ArticleOutline } from '@/model/Article';
 import { Page } from '@/model/Page';
-import { Result, runCatching } from '@/pages/result';
+import { Result, runCatching } from '@/util/result';
 import { doAction } from '@/pages/util';
 
 const route = useRoute();
