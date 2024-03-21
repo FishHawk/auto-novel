@@ -1,13 +1,10 @@
 <script lang="ts" setup>
 import { UploadOutlined } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 
 import { WebNovelRepository } from '@/data/api';
 import { WebNovelDto } from '@/model/WebNovel';
-import { doAction, useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/pages/result';
+import { doAction, useIsWideScreen } from '@/pages/util';
 
 const route = useRoute();
 const router = useRouter();

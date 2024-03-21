@@ -5,15 +5,12 @@ import {
   PlusOutlined,
   PushPinOutlined,
 } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 
 import { ArticleRepository } from '@/data/api';
-import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { ArticleCategory, ArticleOutline } from '@/model/Article';
 import { Page } from '@/model/Page';
+import { Result, runCatching } from '@/pages/result';
 import { doAction } from '@/pages/util';
 
 const route = useRoute();

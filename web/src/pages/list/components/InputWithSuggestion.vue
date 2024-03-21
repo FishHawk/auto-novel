@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { SearchOutlined } from '@vicons/material';
-import { DropdownOption, NFlex, NTag } from 'naive-ui';
-import { InputWrappedRef } from 'naive-ui/es/input/src/interface';
-import { computed, h, ref } from 'vue';
+import { DropdownOption, InputInst, NFlex, NTag } from 'naive-ui';
 
 const props = defineProps<{
   value: string;
@@ -67,7 +65,7 @@ const options = computed(() => {
   return optionsBuffer;
 });
 
-const inputRef = ref<InputWrappedRef>();
+const inputRef = ref<InputInst>();
 const showSuggestions = ref(false);
 const toggleSuggestions = () => {
   // Hacky

@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
-import { useRouter } from 'vue-router';
+import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { AuthRepository } from '@/data/api';
-import { doAction } from '../util';
+import { doAction } from '@/pages/util';
 
 const router = useRouter();
 const message = useMessage();

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
 import { PlusOutlined, MinusOutlined } from '@vicons/material';
 
 const props = defineProps<{

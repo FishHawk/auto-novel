@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { ref } from 'vue';
 
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import {

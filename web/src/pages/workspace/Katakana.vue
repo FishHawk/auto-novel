@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
-import { UploadCustomRequestOptions, useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
+import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { LocalVolumeService } from '@/data/local';
 import { GlossaryService } from '@/service';

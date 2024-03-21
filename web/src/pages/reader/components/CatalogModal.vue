@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { computed, shallowRef, watch } from 'vue';
-
 import { ReaderService } from '@/service';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderTocItem } from '@/model/Reader';

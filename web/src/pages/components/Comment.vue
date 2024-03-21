@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { CommentOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
-import { useMessage } from 'naive-ui';
-import { ref, watch } from 'vue';
 
 import { CommentRepository } from '@/data/api';
 import { Comment1 } from '@/model/Comment';

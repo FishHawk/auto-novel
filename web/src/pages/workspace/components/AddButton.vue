@@ -1,10 +1,6 @@
 <script lang="ts" setup>
 import { PlusOutlined } from '@vicons/material';
-import {
-  UploadCustomRequestOptions,
-  UploadFileInfo,
-  useMessage,
-} from 'naive-ui';
+import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
 import { LocalVolumeService } from '@/data/local';
 

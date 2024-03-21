@@ -1,10 +1,9 @@
 <script lang="ts" setup generic="T extends Page<any>">
-import { ref, watch } from 'vue';
-import { LocationQuery, useRoute, useRouter } from 'vue-router';
+import { LocationQuery } from 'vue-router';
+import { onKeyStroke } from '@vueuse/core';
 
 import { Page } from '@/model/Page';
 import { Result } from '@/pages/result';
-import { onKeyStroke } from '@vueuse/core';
 
 export type Loader<T extends Page<any>> = (
   page: number,

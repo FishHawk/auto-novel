@@ -4,7 +4,6 @@ import {
   KeyboardDoubleArrowDownOutlined,
   KeyboardDoubleArrowUpOutlined,
 } from '@vicons/material';
-import { computed } from 'vue';
 
 import { TranslateJob } from '@/data/stores/workspace';
 

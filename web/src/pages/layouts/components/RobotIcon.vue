@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import { useThemeVars } from 'naive-ui';
-import { ref } from 'vue';
-
 const vars = useThemeVars();
 const showGirl = ref(false);
 </script>

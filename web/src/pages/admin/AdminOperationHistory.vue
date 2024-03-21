@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui';
-import { ref, watch } from 'vue';
-
 import { OperationRepository } from '@/data/api';
 import { Result, runCatching } from '@/pages/result';
 import { OperationHistory, OperationType } from '@/model/Operation';

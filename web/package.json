@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@types/node": "^20.11.30",
     "vite-bundle-visualizer": "^0.11.0"
   },
   "dependencies": {

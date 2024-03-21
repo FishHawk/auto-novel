@@ -1,8 +1,5 @@
 <script lang="ts" setup>
 import { ReadMoreOutlined } from '@vicons/material';
-import { useThemeVars } from 'naive-ui';
-import { ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 
 import {
   UserRepository,

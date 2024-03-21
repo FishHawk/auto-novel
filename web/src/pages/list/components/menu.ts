@@ -1,5 +1,4 @@
 import { MenuOption } from 'naive-ui';
-import { h } from 'vue';
 import { RouterLink } from 'vue-router';
 
 const menuOption = (text: string, href: string): MenuOption => ({

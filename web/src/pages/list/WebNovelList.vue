@@ -1,18 +1,16 @@
 <script lang="ts" setup>
 import { FormatListBulletedOutlined } from '@vicons/material';
-import { computed, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
 
 import { WebNovelRepository } from '@/data/api';
 import { useWebSearchHistoryStore } from '@/data/stores/search_history';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { runCatching } from '@/pages/result';
 import { useIsWideScreen } from '@/pages/util';
 
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
-import { runCatching } from '@/pages/result';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();

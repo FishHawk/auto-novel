@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { UploadOutlined } from '@vicons/material';
-import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { WenkuNovelRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';

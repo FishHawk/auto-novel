@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { ref } from 'vue';
 
 import { useGptWorkspaceStore } from '@/data/stores/workspace';
 

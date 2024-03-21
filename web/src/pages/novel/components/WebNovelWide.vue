@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { SortOutlined } from '@vicons/material';
-import { ref } from 'vue';
 
 import { WebNovelTocItemDto } from '@/model/WebNovel';
 import { useSettingStore } from '@/data/stores/setting';

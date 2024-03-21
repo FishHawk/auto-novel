@@ -1,14 +1,12 @@
 <script lang="ts" setup>
 import { PlusOutlined } from '@vicons/material';
-import { computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
 
 import { WenkuNovelRepository } from '@/data/api';
-import { runCatching } from '@/pages/result';
 import { useWenkuSearchHistoryStore } from '@/data/stores/search_history';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
+import { runCatching } from '@/pages/result';
 
 import { Loader } from './components/NovelList.vue';
 

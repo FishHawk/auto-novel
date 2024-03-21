@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { UploadOutlined } from '@vicons/material';
-import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
-import { onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { ArticleRepository } from '@/data/api';
 import avaterUrl from '@/image/avater.jpg';

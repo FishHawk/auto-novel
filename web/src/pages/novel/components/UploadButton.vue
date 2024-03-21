@@ -4,9 +4,7 @@ import {
   UploadCustomRequestOptions,
   UploadFileInfo,
   UploadInst,
-  useMessage,
 } from 'naive-ui';
-import { computed, ref } from 'vue';
 
 import { WenkuNovelRepository } from '@/data/api';
 import { useReadStateStore } from '@/data/stores/read_states';

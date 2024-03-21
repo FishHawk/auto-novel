@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
-
 import { ArticleRepository } from '@/data/api';
 import { Result, runCatching } from '@/pages/result';
 import { useUserDataStore } from '@/data/stores/user_data';

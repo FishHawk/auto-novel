@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownIt from 'markdown-it';
-import { useThemeVars } from 'naive-ui';
 
 defineProps<{ source: string }>();
 

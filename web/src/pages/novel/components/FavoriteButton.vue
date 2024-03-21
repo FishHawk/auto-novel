@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import { FavoriteBorderOutlined, FavoriteOutlined } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
 
 import { UserRepository } from '@/data/api';
 import { Favored } from '@/model/User';

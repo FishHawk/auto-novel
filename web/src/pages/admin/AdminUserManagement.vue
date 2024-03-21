@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-
 import { UserRepository } from '@/data/api';
 import { Result, runCatching } from '@/pages/result';
 import { Page } from '@/model/Page';

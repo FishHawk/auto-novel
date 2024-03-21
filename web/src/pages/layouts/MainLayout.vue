@@ -5,8 +5,7 @@ import {
   MenuOutlined,
 } from '@vicons/material';
 import { MenuOption, NIcon } from 'naive-ui';
-import { Component, computed, h, ref, watch } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { RouterLink } from 'vue-router';
 
 import { useUserDataStore } from '@/data/stores/user_data';
 import { useIsWideScreen } from '@/pages/util';

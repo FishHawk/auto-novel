@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
-import { ref, watch } from 'vue';
 
 import { tryTranslateKeyword } from '@/data/web/keyword';
 import { buildWebNovelUrl } from '@/data/web/url';

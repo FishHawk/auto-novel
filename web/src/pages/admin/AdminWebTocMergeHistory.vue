@@ -1,12 +1,9 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui';
-import { ref, watch } from 'vue';
-
 import { OperationRepository } from '@/data/api';
 import { Result, runCatching } from '@/pages/result';
 import { MergeHistoryDto } from '@/model/Operation';
 import { Page } from '@/model/Page';
-import { doAction } from '../util';
+import { doAction } from '@/pages/util';
 
 const message = useMessage();
 

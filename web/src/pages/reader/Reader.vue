@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
-import { computed, ref, shallowRef, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 
 import { UserRepository } from '@/data/api';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';

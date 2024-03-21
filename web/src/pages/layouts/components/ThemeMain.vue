@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
-import { computed } from 'vue';
 
 import { useSettingStore } from '@/data/stores/setting';
 

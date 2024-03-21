@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-
 import { localGnid } from '@/model/Common';
 
 import LocalVolumeList from './LocalVolumeList.vue';

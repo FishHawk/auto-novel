@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ErrorOutlineOutlined } from '@vicons/material';
-import { useMessage, useOsTheme } from 'naive-ui';
-import { computed } from 'vue';
+import { useOsTheme } from 'naive-ui';
 
 import { SakuraRepository } from '@/data/api';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';

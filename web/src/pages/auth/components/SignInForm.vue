@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
-import { ref } from 'vue';
+import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { AuthService } from '@/service';
 import { doAction } from '@/pages/util';

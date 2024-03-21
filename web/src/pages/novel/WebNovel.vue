@@ -1,8 +1,4 @@
 <script lang="ts" setup>
-import { useThemeVars } from 'naive-ui';
-import { computed, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-
 import { WebNovelRepository } from '@/data/api';
 import { Result, runCatching } from '@/pages/result';
 import { useIsWideScreen } from '@/pages/util';

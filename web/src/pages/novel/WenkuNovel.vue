@@ -1,9 +1,6 @@
 <script lang="ts" setup>
 import { EditNoteOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
-import { useMessage, useThemeVars } from 'naive-ui';
-import { ref } from 'vue';
-import { useRoute } from 'vue-router';
 
 import { WenkuNovelRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';

@@ -1,9 +1,6 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui';
-import { ref } from 'vue';
-
 import { CommentRepository } from '@/data/api';
-import { doAction } from '../util';
+import { doAction } from '@/pages/util';
 
 const { site, parent } = withDefaults(
   defineProps<{

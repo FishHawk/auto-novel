@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import { FileDownloadOutlined } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
 
 import { WenkuNovelRepository } from '@/data/api';
 import { useSettingStore } from '@/data/stores/setting';

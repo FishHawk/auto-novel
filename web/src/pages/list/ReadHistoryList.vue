@@ -2,9 +2,9 @@
 import { UserRepository } from '@/data/api';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { runCatching } from '@/pages/result';
 
 import { Loader } from '../list/components/NovelList.vue';
-import { runCatching } from '@/pages/result';
 
 const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, _selected) =>
   runCatching(UserRepository.listReadHistoryWeb({ page, pageSize: 30 }));

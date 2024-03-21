@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
-import { ref } from 'vue';
 
 defineProps<{
   volume: {

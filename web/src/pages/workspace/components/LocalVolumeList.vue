@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { MoreVertOutlined } from '@vicons/material';
-import { UploadFileInfo, useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
+import { UploadFileInfo } from 'naive-ui';
 
 import { LocalVolumeService } from '@/data/local';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';

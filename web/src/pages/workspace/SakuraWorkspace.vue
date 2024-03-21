@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { ref } from 'vue';
 
 import { useSettingStore } from '@/data/stores/setting';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';

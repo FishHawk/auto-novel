@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { InfoOutlined } from '@vicons/material';
-import { ref, watch } from 'vue';
 
 import {
   downloadModeOptions,

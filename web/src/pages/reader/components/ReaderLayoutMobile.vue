@@ -6,7 +6,6 @@ import {
   LibraryBooksOutlined,
   TuneOutlined,
 } from '@vicons/material';
-import { ref } from 'vue';
 
 import { WebNovelChapterDto } from '@/model/WebNovel';
 

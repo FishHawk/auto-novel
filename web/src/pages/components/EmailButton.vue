@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
-
 import { formatError } from '@/data/api/client';
 
 const message = useMessage();

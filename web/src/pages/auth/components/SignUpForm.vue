@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
-import { ref } from 'vue';
+import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { AuthRepository } from '@/data/api';
-import { AuthService } from '@/service';
 import { doAction } from '@/pages/util';
+import { AuthService } from '@/service';
 
 const emit = defineEmits<{ (e: 'signUp'): void }>();
 

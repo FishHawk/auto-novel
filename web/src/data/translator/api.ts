@@ -136,7 +136,7 @@ const translateWeb = async (
           clearTimeout(timeout);
           reject(new DOMException('Aborted', 'AbortError'));
         };
-        timeout = setTimeout(() => {
+        timeout = window.setTimeout(() => {
           resolve('Promise Resolved');
           signal?.removeEventListener('abort', abortHandler);
         }, 1000 * 10);

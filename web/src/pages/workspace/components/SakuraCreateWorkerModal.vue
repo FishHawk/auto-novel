@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { ref } from 'vue';
 
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 

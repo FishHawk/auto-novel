@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import ky from 'ky';
-import { useMessage } from 'naive-ui';
-import { computed, ref, toRaw } from 'vue';
 
 import { WebNovelRepository } from '@/data/api';
 import { LocalVolumeService } from '@/data/local';

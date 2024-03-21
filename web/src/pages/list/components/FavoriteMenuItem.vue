@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { MoreVertOutlined } from '@vicons/material';
-import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
+import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { UserRepository } from '@/data/api';
 import { doAction } from '@/pages/util';

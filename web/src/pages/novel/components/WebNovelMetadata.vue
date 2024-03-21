@@ -5,7 +5,6 @@ import {
   EditNoteOutlined,
 } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
-import { computed } from 'vue';
 
 import { tryTranslateKeyword } from '@/data/web/keyword';
 import { buildWebNovelUrl } from '@/data/web/url';

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { darkTheme, dateZhCN, zhCN, useOsTheme } from 'naive-ui';
-import { computed } from 'vue';
 
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { isDarkColor } from '@/pages/util';

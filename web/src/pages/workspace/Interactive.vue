@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui';
-import { ref, watch } from 'vue';
-
 import {
   GptWorker,
   SakuraWorker,

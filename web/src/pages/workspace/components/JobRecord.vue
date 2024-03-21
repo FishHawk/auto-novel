@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, RefreshOutlined } from '@vicons/material';
-import { computed } from 'vue';
 
 import {
   TranslateJobRecord,

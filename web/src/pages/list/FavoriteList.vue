@@ -4,23 +4,20 @@ import {
   FormatListBulletedOutlined,
   PlusOutlined,
 } from '@vicons/material';
-import { MenuOption, useMessage } from 'naive-ui';
-import { computed, h, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { MenuOption } from 'naive-ui';
 
 import { UserRepository } from '@/data/api';
-import { runCatching } from '@/pages/result';
 import {
   buildWebTranslateTask,
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
 import { Page } from '@/model/Page';
+import { FavoredList } from '@/model/User';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
+import { runCatching } from '@/pages/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
-
-import { FavoredList } from '@/model/User';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
 import { Loader } from './components/NovelList.vue';

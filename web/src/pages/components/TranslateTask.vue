@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { ScrollbarInst, useMessage } from 'naive-ui';
-import { computed, nextTick, ref, watch } from 'vue';
+import { ScrollbarInst } from 'naive-ui';
 
 import {
   TranslateTaskDesc,

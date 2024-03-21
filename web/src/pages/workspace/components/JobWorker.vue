@@ -5,10 +5,7 @@ import {
   PlayArrowOutlined,
   StopOutlined,
 } from '@vicons/material';
-import { useMessage } from 'naive-ui';
-import { computed, ref } from 'vue';
 
-import TranslateTask from '@/pages/components/TranslateTask.vue';
 import {
   GptWorker,
   SakuraWorker,
@@ -18,6 +15,7 @@ import {
 import { Translator } from '@/data/translator';
 import { TranslatorDesc } from '@/data/translator/api';
 import { SakuraTranslator } from '@/data/translator/translator_sakura';
+import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 import { parseTask } from './util';
 

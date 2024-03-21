@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { CommentOutlined } from '@vicons/material';
-import { ref, watch } from 'vue';
 
 import { CommentRepository } from '@/data/api';
 import { Ok, Result, runCatching } from '@/pages/result';
