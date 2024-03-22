@@ -105,7 +105,7 @@ export class SakuraTranslator implements SegmentTranslator {
         console.log(distance);
         return distance;
       });
-      return distanceList.some((it) => it < 0.0008);
+      return distanceList.some((it) => it < 0.001);
     }
   };
 
