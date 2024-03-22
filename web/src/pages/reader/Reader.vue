@@ -47,6 +47,17 @@ const novelUrl = (() => {
   }
 })();
 
+
+window.addEventListener('beforeunload', () => {
+  const scrollTop = window.scrollY;
+  const lastReadObj = {
+    gnid: gnid,
+    chapterId: currentChapterId.value,
+    scrollTop: scrollTop,
+  };
+  window.localStorage.setItem('lastRead', JSON.stringify(lastReadObj));
+});
+
 const loadChapter = async (chapterId: string) => {
   const chapterStored = chapters.get(chapterId);
   if (chapterStored === undefined) {

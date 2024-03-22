@@ -24,6 +24,17 @@ const paragraphs = computed(() => {
   return ReaderService.getParagraphs(props.gnid, chapter);
 });
 
+onMounted(() => {
+  const lastRead = window.localStorage.getItem('lastRead');
+  debugger;
+  if (lastRead) {
+    const lastReadObj = JSON.parse(lastRead);
+    if (lastReadObj.gnid.novelId === props.gnid.novelId &&  lastReadObj.chapterId === props.chapterId) {
+      window.scrollTo(0, lastReadObj.scrollTop);
+    }
+  }
+});
+
 const createWebIncorrectCase = async (
   index: number,
   chapter: WebNovelChapterDto
