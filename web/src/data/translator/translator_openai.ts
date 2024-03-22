@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { Glossary } from '@/model/Glossary';
+import { delay } from '@/util';
 
 import { OpenAi, OpenAiError } from './api/openai';
 import { OpenAiWeb } from './api/openai_web';

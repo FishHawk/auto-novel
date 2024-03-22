@@ -2,7 +2,7 @@
 
 import ky, { HTTPError, KyInstance, Options } from 'ky';
 
-import { parseEventStream, safeJson } from './util';
+import { parseEventStream, safeJson } from '@/util';
 
 export class OpenAi {
   id: 'openai' = 'openai';
@@ -222,7 +222,7 @@ export class OpenAiError extends Error {
         if (err instanceof Error) return err.message;
         return `${err}`;
       });
-      const errJson = safeJson(errText);
+      const errJson = safeJson<any>(errText);
       throw new OpenAiError(
         e.response.status,
         errJson?.['error']?.['code'],

@@ -1,6 +1,6 @@
 import ky, { KyInstance, Options } from 'ky';
 
-import { parseEventStream } from './util';
+import { parseEventStream } from '@/util';
 
 export class OpenAiWeb {
   id: 'openai-web' = 'openai-web';

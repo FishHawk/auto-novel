@@ -1,17 +1,10 @@
 import { GenericNovelId, gnidToString } from '@/model/Common';
+import { safeJson } from '@/util';
 
 export interface ReadPosition {
   chapterId: string;
   scrollY: number;
 }
-
-const safeJson = <T extends object>(text: string) => {
-  try {
-    return JSON.parse(text) as T;
-  } catch (err) {
-    return undefined;
-  }
-};
 
 const getItemLocalStorage = <T extends object>(
   key: string,

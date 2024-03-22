@@ -1,6 +1,6 @@
 import { Glossary } from '@/model/Glossary';
+import { safeJson } from '@/util';
 
-import { safeJson } from './api/util';
 import { Youdao } from './api/youdao';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';
 import { BaseTranslatorConfig, SegmentTranslator } from './type';
@@ -40,7 +40,7 @@ export class YoudaoTranslator implements SegmentTranslator {
 
   async translateInner(seg: string[], signal?: AbortSignal): Promise<string[]> {
     const decoded = await this.api.webtranslate(seg.join('\n'), { signal });
-    const decodedJson = safeJson(decoded);
+    const decodedJson = safeJson<any>(decoded);
 
     if (decodedJson === undefined) {
       this.log(`　错误：${decoded}`);

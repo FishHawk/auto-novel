@@ -3,6 +3,7 @@ import { client } from '@/data/api/client';
 import { LocalVolumeService } from '@/data/local';
 import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
 import { WebNovelDto } from '@/model/WebNovel';
+import { delay } from '@/util';
 
 import { Translator } from './translator';
 import { SakuraTranslator } from './translator_sakura';
