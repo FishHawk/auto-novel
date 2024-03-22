@@ -3,6 +3,7 @@ import { ErrorOutlineOutlined } from '@vicons/material';
 import { useOsTheme } from 'naive-ui';
 
 import { SakuraRepository } from '@/data/api';
+import { ReadPositionStore } from '@/data/stores/read_position';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { GenericNovelId } from '@/model/Common';
 import { WebNovelChapterDto } from '@/model/WebNovel';
@@ -22,6 +23,21 @@ const osThemeRef = useOsTheme();
 const paragraphs = computed(() => {
   const chapter = props.chapter;
   return ReaderService.getParagraphs(props.gnid, chapter);
+});
+
+window.addEventListener('beforeunload', () => {
+  ReadPositionStore.addPosition(props.gnid, {
+    chapterId: props.chapterId,
+    scrollY: window.scrollY,
+  });
+});
+
+onMounted(() => {
+  const readPosition = ReadPositionStore.getPosition(props.gnid);
+  console.log(readPosition);
+  if (readPosition && readPosition.chapterId === props.chapterId) {
+    window.scrollTo({ top: readPosition.scrollY });
+  }
 });
 
 const createWebIncorrectCase = async (
