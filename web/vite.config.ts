@@ -3,6 +3,7 @@ import AutoImport from 'unplugin-auto-import/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import Components from 'unplugin-vue-components/vite';
 import { ProxyOptions, defineConfig, loadEnv } from 'vite';
+import { createHtmlPlugin } from 'vite-plugin-html';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import wasm from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -64,6 +65,11 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       vue(),
+      createHtmlPlugin({
+        minify: {
+          minifyJS: true,
+        },
+      }),
       wasm(),
       topLevelAwait(),
       tsconfigPaths({ loose: true }),
