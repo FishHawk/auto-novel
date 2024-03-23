@@ -8,9 +8,9 @@ import { buildWebChapterUrl } from '@/data/web/url';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
-import { Ok, Result, runCatching } from '@/util/result';
 import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 import { ReaderService } from '@/service';
+import { Ok, Result, runCatching } from '@/util/result';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   label: string;
@@ -19,14 +19,11 @@ const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
 
 const route = useRoute();
 const router = useRouter();
+const message = useMessage();
 const userData = useUserDataStore();
 const setting = useReaderSettingStore();
 const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
-
-const currentChapterId = computed(() => route.params.chapterId as string);
-const chapters = new Map<string, ReaderChapter>();
-const chapterResult = shallowRef<Result<ReaderChapter>>();
 
 const gnid = ((): GenericNovelId => {
   const path = route.path;
@@ -41,26 +38,94 @@ const gnid = ((): GenericNovelId => {
   }
 })();
 
+interface ReaderChapterState {
+  value?: ReaderChapter;
+  promise: Promise<Result<ReaderChapter>>;
+}
+
+const chapters = new Map<string, ReaderChapterState>();
+
+const loadChapter = (
+  chapterId: string
+):
+  | { type: 'async'; value: Promise<Result<ReaderChapter>> }
+  | { type: 'sync'; value: Result<ReaderChapter> } => {
+  const state = chapters.get(chapterId);
+
+  if (state === undefined) {
+    const promise = runCatching(ReaderService.getChapter(gnid, chapterId));
+    const stateNew: ReaderChapterState = { promise };
+    chapters.set(chapterId, stateNew);
+    return {
+      type: 'async',
+      value: promise.then((result) => {
+        if (result.ok) {
+          stateNew.value = result.value;
+        } else {
+          chapters.delete(chapterId);
+        }
+        return result;
+      }),
+    };
+  } else if (state.value === undefined) {
+    return { type: 'async', value: state.promise };
+  } else {
+    return { type: 'sync', value: Ok(state.value) };
+  }
+};
+
+const currentChapterId = computed(() => route.params.chapterId as string);
+const chapterResult = shallowRef<Result<ReaderChapter>>();
+const loadingBar = useLoadingBar();
+const loading = ref(false);
+
 const novelUrl = (() => {
   if (gnid.type === 'web') {
     return `/novel/${gnid.providerId}/${gnid.novelId}`;
   }
 })();
 
-const loadChapter = async (chapterId: string) => {
-  const chapterStored = chapters.get(chapterId);
-  if (chapterStored === undefined) {
-    const result = await runCatching(ReaderService.getChapter(gnid, chapterId));
-    if (result.ok) {
-      chapters.set(chapterId, result.value);
-    }
-    return result;
-  } else {
-    return Ok(chapterStored);
+const navToChapter = async (chapterId: string) => {
+  if (loading.value) {
+    message.warning('加载中');
+    return;
   }
-};
 
-const navToChapter = (targetChapterId: string) => {
+  const { type, value } = loadChapter(chapterId);
+
+  let result: Result<ReaderChapter>;
+  if (type === 'sync') {
+    result = value;
+  } else {
+    loading.value = true;
+    loadingBar.start();
+
+    result = await value;
+
+    loading.value = false;
+    if (result.ok) {
+      loadingBar.finish();
+    } else {
+      loadingBar.error();
+    }
+  }
+
+  chapterResult.value = result;
+  if (result.ok) {
+    document.title = result.value.titleJp;
+    if (gnid.type === 'web' && userData.isLoggedIn) {
+      UserRepository.updateReadHistoryWeb(
+        gnid.providerId,
+        gnid.novelId,
+        chapterId
+      );
+    }
+    // 在阅读器缓存章节大于1时，再进行预加载
+    if (chapters.size > 1 && result.value.nextId) {
+      loadChapter(result.value.nextId);
+    }
+  }
+
   let prefix: string;
   if (gnid.type === 'web') {
     prefix = `/novel/${gnid.providerId}/${gnid.novelId}`;
@@ -69,32 +134,10 @@ const navToChapter = (targetChapterId: string) => {
   } else {
     prefix = `/workspace/reader/${gnid.volumeId}`;
   }
-  router.push(`${prefix}/${targetChapterId}`);
+  router.push(`${prefix}/${chapterId}`);
 };
 
-watch(
-  currentChapterId,
-  async (chapterId) => {
-    const result = await loadChapter(chapterId);
-
-    chapterResult.value = result;
-    if (result.ok) {
-      document.title = result.value.titleJp;
-      if (gnid.type === 'web' && userData.isLoggedIn) {
-        UserRepository.updateReadHistoryWeb(
-          gnid.providerId,
-          gnid.novelId,
-          chapterId
-        );
-      }
-      // 在阅读器缓存章节大于1时，再进行预加载
-      if (chapters.size > 1 && result.value.nextId) {
-        loadChapter(result.value.nextId);
-      }
-    }
-  },
-  { immediate: true }
-);
+navToChapter(currentChapterId.value);
 
 const chapterHref = computed(() => {
   const chapterId = currentChapterId.value;
@@ -158,7 +201,7 @@ onKeyStroke(['Enter'], (e) => {
       quaternary
       :focusable="false"
       :type="id ? 'primary' : 'default'"
-      @action="navToChapter(id!!)"
+      @action="()=>{navToChapter(id!!)}"
     />
   </DefineChapterLink>
 

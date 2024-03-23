@@ -42,7 +42,9 @@ const readerTheme = computed(() => {
   >
     <n-global-style />
     <n-message-provider container-style="white-space: pre-wrap">
-      <slot />
+      <n-loading-bar-provider>
+        <slot />
+      </n-loading-bar-provider>
     </n-message-provider>
   </n-config-provider>
 </template>
