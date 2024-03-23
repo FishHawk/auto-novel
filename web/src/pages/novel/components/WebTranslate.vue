@@ -9,7 +9,7 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { webGnid } from '@/model/Common';
+import { GenericNovelId } from '@/model/Common';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 import TranslateOptions from './TranslateOptions.vue';
@@ -155,7 +155,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 <template>
   <translate-options
     ref="translateOptions"
-    :gnid="webGnid(providerId, novelId)"
+    :gnid="GenericNovelId.web(providerId, novelId)"
     :glossary="glossary"
   />
 

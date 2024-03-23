@@ -5,7 +5,7 @@ import { createReusableTemplate } from '@vueuse/core';
 import { WenkuNovelRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/image/cover_placeholder.png';
-import { wenkuGnid } from '@/model/Common';
+import { GenericNovelId } from '@/model/Common';
 import { WenkuNovelDto } from '@/model/WenkuNovel';
 import { Result, runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
@@ -230,7 +230,7 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
 
       <translate-options
         ref="translateOptions"
-        :gnid="wenkuGnid(novelId)"
+        :gnid="GenericNovelId.wenku(novelId)"
         :glossary="metadata.glossary"
         style="margin-top: 16px"
       />

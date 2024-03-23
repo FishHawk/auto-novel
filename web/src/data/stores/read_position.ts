@@ -1,4 +1,4 @@
-import { GenericNovelId, gnidToString } from '@/model/Common';
+import { GenericNovelId } from '@/model/Common';
 import { safeJson } from '@/util';
 
 export interface ReadPosition {
@@ -25,13 +25,13 @@ type Store = Record<string, ReadPosition | undefined>;
 
 const addPosition = (gnid: GenericNovelId, position: ReadPosition) => {
   const store = getItemLocalStorage<Store>(key, {});
-  store[gnidToString(gnid)] = position;
+  store[GenericNovelId.toString(gnid)] = position;
   setItemLocalStorage(key, store);
 };
 
 const getPosition = (gnid: GenericNovelId) => {
   const store = getItemLocalStorage<Store>(key, {});
-  return store[gnidToString(gnid)];
+  return store[GenericNovelId.toString(gnid)];
 };
 
 export const ReadPositionStore = {

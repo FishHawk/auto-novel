@@ -6,7 +6,7 @@ import {
   useGptWorkspaceStore,
   useSakuraWorkspaceStore,
 } from '@/data/stores/workspace';
-import { localGnid } from '@/model/Common';
+import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 
 import LocalVolumeList from './LocalVolumeList.vue';
@@ -172,7 +172,7 @@ const progressFilterFunc = computed(() => {
           />
 
           <glossary-button
-            :gnid="localGnid(volume.id)"
+            :gnid="GenericNovelId.local(volume.id)"
             :value="volume.glossary"
             size="tiny"
             secondary

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { localGnid } from '@/model/Common';
+import { GenericNovelId } from '@/model/Common';
 
 import LocalVolumeList from './LocalVolumeList.vue';
 
@@ -28,7 +28,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
           />
 
           <glossary-button
-            :gnid="localGnid(volume.id)"
+            :gnid="GenericNovelId.local(volume.id)"
             :value="volume.glossary"
             size="tiny"
             secondary

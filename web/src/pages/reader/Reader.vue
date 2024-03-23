@@ -5,7 +5,7 @@ import { UserRepository } from '@/data/api';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { buildWebChapterUrl } from '@/data/web/url';
-import { GenericNovelId, localGnid, webGnid } from '@/model/Common';
+import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
 import { Ok, Result, runCatching } from '@/util/result';
@@ -34,10 +34,10 @@ const gnid = ((): GenericNovelId => {
   if (path.startsWith('/novel')) {
     const providerId = params.providerId as string;
     const novelId = params.novelId as string;
-    return webGnid(providerId, novelId);
+    return GenericNovelId.web(providerId, novelId);
   } else {
     const volumeId = params.novelId as string;
-    return localGnid(volumeId);
+    return GenericNovelId.local(volumeId);
   }
 })();
 
