@@ -3,7 +3,7 @@ import { client } from '@/data/api/client';
 import { LocalVolumeService } from '@/data/local';
 import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
 import { WebNovelDto } from '@/model/WebNovel';
-import { delay } from '@/util';
+import { delay, keepPageAlive } from '@/util';
 
 import { Translator } from './translator';
 import { SakuraTranslator } from './translator_sakura';
@@ -541,13 +541,15 @@ const translateLocal = async (
   }
 };
 
-export const translate = (
+export const translate = async (
   taskDesc: TranslateTaskDesc,
   taskParams: TranslateTaskParams,
   taskCallback: TranslateTaskCallback,
   translatorDesc: TranslatorDesc,
   signal?: AbortSignal
 ) => {
+  await keepPageAlive();
+
   if (taskDesc.type === 'web') {
     return translateWeb(
       taskDesc,
