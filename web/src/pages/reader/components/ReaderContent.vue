@@ -34,7 +34,6 @@ window.addEventListener('beforeunload', () => {
 
 onMounted(() => {
   const readPosition = ReadPositionStore.getPosition(props.gnid);
-  console.log(readPosition);
   if (readPosition && readPosition.chapterId === props.chapterId) {
     window.scrollTo({ top: readPosition.scrollY });
   }

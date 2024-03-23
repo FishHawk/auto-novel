@@ -89,14 +89,14 @@ const invertSelection = (optionIndex: number) => {
         >
           {{ tag }}
         </n-text>
-        <n-button
+
+        <c-button
           v-if="option.multiple"
+          :icon="SyncAltOutlined"
           type="primary"
           text
           @click="invertSelection(optionIndex)"
-        >
-          <n-icon :component="SyncAltOutlined" />
-        </n-button>
+        />
       </n-flex>
     </c-action-wrapper>
   </n-flex>

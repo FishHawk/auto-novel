@@ -102,8 +102,6 @@ const notices = [
   notice(
     '如果发现Sakura某段翻译得不准确，可以提交错误，给网站收集数据帮助sakura训练。'
   ),
-  notice('有道现在翻译目录会正确处理空格了，有需要请使用“重翻目录”。'),
-  notice('工作区支持SRT字幕文件了。'),
 ];
 </script>
 
@@ -127,7 +125,7 @@ const notices = [
         <n-input
           v-model:value="url"
           size="large"
-          placeholder="请输入小说链接，或者输入标题搜索本站缓存..."
+          placeholder="输入网络小说链接直接跳转，或搜索本站缓存..."
           :input-props="{ spellcheck: false }"
           @keyup.enter="query(url)"
           :style="{ 'background-color': vars.bodyColor }"

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { DeleteOutlineOutlined } from '@vicons/material';
+
 import { LocalVolumeService } from '@/data/local';
 import { downloadModeOptions, useSettingStore } from '@/data/stores/setting';
 import {
@@ -178,15 +180,17 @@ const progressFilterFunc = computed(() => {
             secondary
           />
 
+          <div style="flex: 1" />
+
           <n-popconfirm
             :show-icon="false"
             @positive-click="localVolumeListRef?.deleteVolume(volume.id)"
             :negative-text="null"
           >
             <template #trigger>
-              <c-button label="删除" type="error" size="tiny" secondary />
+              <c-icon-button :icon="DeleteOutlineOutlined" type="error" />
             </template>
-            确定删除{{ volume.id }}吗？
+            确定删除这本小说吗？
           </n-popconfirm>
         </n-flex>
       </n-flex>
