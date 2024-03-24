@@ -74,10 +74,10 @@ const loadChapter = (
   }
 };
 
-const currentChapterId = computed(() => route.params.chapterId as string);
+const targetChapterId = ref(route.params.chapterId as string);
+const currentChapterId = ref(route.params.chapterId as string);
 const chapterResult = shallowRef<Result<ReaderChapter>>();
 const loadingBar = useLoadingBar();
-const loading = ref(false);
 
 const novelUrl = (() => {
   if (gnid.type === 'web') {
@@ -86,23 +86,24 @@ const novelUrl = (() => {
 })();
 
 const navToChapter = async (chapterId: string) => {
-  if (loading.value) {
-    message.warning('加载中');
-    return;
-  }
+  targetChapterId.value = chapterId;
 
   const { type, value } = loadChapter(chapterId);
 
   let result: Result<ReaderChapter>;
   if (type === 'sync') {
     result = value;
+    if (chapterId !== targetChapterId.value) {
+      return;
+    }
   } else {
-    loading.value = true;
     loadingBar.start();
 
     result = await value;
+    if (chapterId !== targetChapterId.value) {
+      return;
+    }
 
-    loading.value = false;
     if (result.ok) {
       loadingBar.finish();
     } else {
@@ -134,10 +135,18 @@ const navToChapter = async (chapterId: string) => {
   } else {
     prefix = `/workspace/reader/${gnid.volumeId}`;
   }
+  currentChapterId.value = chapterId;
   router.push(`${prefix}/${chapterId}`);
 };
 
 navToChapter(currentChapterId.value);
+watch(route, (route) => {
+  const urlChapterId = route.params.chapterId as string;
+  if (urlChapterId !== targetChapterId.value) {
+    chapterResult.value = undefined;
+    navToChapter(urlChapterId);
+  }
+});
 
 const chapterHref = computed(() => {
   const chapterId = currentChapterId.value;
