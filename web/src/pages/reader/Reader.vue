@@ -48,8 +48,8 @@ const chapters = new Map<string, ReaderChapterState>();
 const loadChapter = (
   chapterId: string
 ):
-  | { type: 'async'; value: Promise<Result<ReaderChapter>> }
-  | { type: 'sync'; value: Result<ReaderChapter> } => {
+  | { type: 'async'; promiseOrValue: Promise<Result<ReaderChapter>> }
+  | { type: 'sync'; promiseOrValue: Result<ReaderChapter> } => {
   const state = chapters.get(chapterId);
 
   if (state === undefined) {
@@ -58,7 +58,7 @@ const loadChapter = (
     chapters.set(chapterId, stateNew);
     return {
       type: 'async',
-      value: promise.then((result) => {
+      promiseOrValue: promise.then((result) => {
         if (result.ok) {
           stateNew.value = result.value;
         } else {
@@ -68,9 +68,9 @@ const loadChapter = (
       }),
     };
   } else if (state.value === undefined) {
-    return { type: 'async', value: state.promise };
+    return { type: 'async', promiseOrValue: state.promise };
   } else {
-    return { type: 'sync', value: Ok(state.value) };
+    return { type: 'sync', promiseOrValue: Ok(state.value) };
   }
 };
 
@@ -88,55 +88,52 @@ const novelUrl = (() => {
 const navToChapter = async (chapterId: string) => {
   targetChapterId.value = chapterId;
 
-  const { type, value } = loadChapter(chapterId);
+  const { type, promiseOrValue } = loadChapter(chapterId);
 
-  let result: Result<ReaderChapter>;
-  if (type === 'sync') {
-    result = value;
-    if (chapterId !== targetChapterId.value) {
-      return;
-    }
-  } else {
+  if (type === 'async') {
     loadingBar.start();
+  }
 
-    result = await value;
-    if (chapterId !== targetChapterId.value) {
-      return;
-    }
+  const result = await promiseOrValue;
+  if (chapterId !== targetChapterId.value) {
+    return;
+  }
 
-    if (result.ok) {
-      loadingBar.finish();
-    } else {
-      loadingBar.error();
-    }
+  if (result.ok) {
+    loadingBar.finish();
+  } else {
+    loadingBar.error();
   }
 
   chapterResult.value = result;
-  if (result.ok) {
-    document.title = result.value.titleJp;
-    if (gnid.type === 'web' && userData.isLoggedIn) {
-      UserRepository.updateReadHistoryWeb(
-        gnid.providerId,
-        gnid.novelId,
-        chapterId
-      );
-    }
-    // 在阅读器缓存章节大于1时，再进行预加载
-    if (chapters.size > 1 && result.value.nextId) {
-      loadChapter(result.value.nextId);
-    }
-  }
 
-  let prefix: string;
-  if (gnid.type === 'web') {
-    prefix = `/novel/${gnid.providerId}/${gnid.novelId}`;
-  } else if (gnid.type === 'wenku') {
-    throw '不支持文库';
-  } else {
-    prefix = `/workspace/reader/${gnid.volumeId}`;
+  if (currentChapterId.value !== chapterId) {
+    if (result.ok) {
+      document.title = result.value.titleJp;
+      if (gnid.type === 'web' && userData.isLoggedIn) {
+        UserRepository.updateReadHistoryWeb(
+          gnid.providerId,
+          gnid.novelId,
+          chapterId
+        );
+      }
+      // 在阅读器缓存章节大于1时，再进行预加载
+      if (chapters.size > 1 && result.value.nextId) {
+        loadChapter(result.value.nextId);
+      }
+    }
+
+    let prefix: string;
+    if (gnid.type === 'web') {
+      prefix = `/novel/${gnid.providerId}/${gnid.novelId}`;
+    } else if (gnid.type === 'wenku') {
+      throw '不支持文库';
+    } else {
+      prefix = `/workspace/reader/${gnid.volumeId}`;
+    }
+    currentChapterId.value = chapterId;
+    router.push(`${prefix}/${chapterId}`);
   }
-  currentChapterId.value = chapterId;
-  router.push(`${prefix}/${chapterId}`);
 };
 
 navToChapter(currentChapterId.value);
