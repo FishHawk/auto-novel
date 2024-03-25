@@ -35,7 +35,7 @@ window.addEventListener('beforeunload', () => {
 onMounted(() => {
   const readPosition = ReadPositionStore.getPosition(props.gnid);
   if (readPosition && readPosition.chapterId === props.chapterId) {
-    window.scrollTo({ top: readPosition.scrollY });
+    setTimeout(() => window.scrollTo(0, readPosition.scrollY), 0);
   }
 });
 
