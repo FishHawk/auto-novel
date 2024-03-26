@@ -5,7 +5,7 @@ import api.model.asDto
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import infra.model.Page
+import domain.entity.Page
 import infra.user.UserReadHistoryWebRepository
 import infra.web.WebNovelMetadataRepository
 import io.ktor.resources.*

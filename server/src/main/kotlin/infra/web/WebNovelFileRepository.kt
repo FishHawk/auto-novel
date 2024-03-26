@@ -1,7 +1,7 @@
 package infra.web
 
+import domain.entity.*
 import infra.DataSourceMongo
-import infra.model.*
 import kotlinx.datetime.toKotlinInstant
 import util.serialName
 import java.nio.file.attribute.BasicFileAttributes

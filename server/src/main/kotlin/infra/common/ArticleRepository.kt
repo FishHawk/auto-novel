@@ -1,11 +1,10 @@
 package infra.common
 
 import com.mongodb.client.model.Aggregates
-import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.Facet
+import domain.entity.*
 import infra.DataSourceMongo
 import infra.DataSourceRedis
-import infra.model.*
 import infra.withRateLimit
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -18,44 +17,47 @@ class ArticleRepository(
     private val mongo: DataSourceMongo,
     private val redis: DataSourceRedis,
 ) {
-    suspend fun listArticle(
+    suspend fun listArticleWithUser(
         page: Int,
         pageSize: Int,
         category: ArticleCategory,
-    ): Page<ArticleOutline> {
+    ): Page<ArticleSimplifiedWithUserReadModel> {
         @Serializable
-        data class ArticlePage(val total: Int = 0, val items: List<ArticleOutline>)
+        data class ArticlePage(
+            val total: Int = 0,
+            val items: List<ArticleSimplifiedWithUserReadModel>,
+        )
 
         val doc = mongo
             .articleCollection
             .aggregate<ArticlePage>(
-                match(ArticleModel::category eq category),
+                match(Article::category eq category),
                 facet(
                     Facet("count", Aggregates.count()),
                     Facet(
                         "items",
-                        sort(descending(ArticleModel::pinned, ArticleModel::changeAt)),
+                        sort(descending(Article::pinned, Article::changeAt)),
                         skip(page * pageSize),
                         limit(pageSize),
                         lookup(
                             from = mongo.userCollectionName,
-                            localField = ArticleModel::user.path(),
+                            localField = Article::user.path(),
                             foreignField = User::id.path(),
-                            newAs = ArticleOutline::user.path(),
+                            newAs = ArticleSimplifiedWithUserReadModel::user.path(),
                         ),
-                        unwind(ArticleOutline::user.path().projection),
+                        unwind(ArticleSimplifiedWithUserReadModel::user.path().projection),
                         project(
-                            ArticleOutline::id,
-                            ArticleOutline::title,
-                            ArticleOutline::category,
-                            ArticleOutline::locked,
-                            ArticleOutline::pinned,
-                            ArticleOutline::numViews,
-                            ArticleOutline::numComments,
-                            ArticleOutline::user / UserOutline::username,
-                            ArticleOutline::user / UserOutline::role,
-                            ArticleOutline::createAt,
-                            ArticleOutline::updateAt,
+                            ArticleSimplifiedWithUserReadModel::id,
+                            ArticleSimplifiedWithUserReadModel::title,
+                            ArticleSimplifiedWithUserReadModel::category,
+                            ArticleSimplifiedWithUserReadModel::locked,
+                            ArticleSimplifiedWithUserReadModel::pinned,
+                            ArticleSimplifiedWithUserReadModel::numViews,
+                            ArticleSimplifiedWithUserReadModel::numComments,
+                            ArticleSimplifiedWithUserReadModel::user / UserOutline::username,
+                            ArticleSimplifiedWithUserReadModel::user / UserOutline::role,
+                            ArticleSimplifiedWithUserReadModel::createAt,
+                            ArticleSimplifiedWithUserReadModel::updateAt,
                         )
                     )
                 ),
@@ -76,54 +78,38 @@ class ArticleRepository(
         }
     }
 
-    suspend fun getArticle(
+    suspend fun getArticleWithUser(
         id: ObjectId,
-    ): Article? {
+    ): ArticleWithUserReadModel? {
         return mongo
             .articleCollection
-            .aggregate<Article>(
-                match(ArticleModel::id eq id),
+            .aggregate<ArticleWithUserReadModel>(
+                match(Article::id eq id),
                 lookup(
                     from = mongo.userCollectionName,
-                    localField = ArticleModel::user.path(),
+                    localField = Article::user.path(),
                     foreignField = User::id.path(),
-                    newAs = Article::user.path(),
+                    newAs = ArticleWithUserReadModel::user.path(),
                 ),
-                unwind(Article::user.path().projection),
+                unwind(ArticleWithUserReadModel::user.path().projection),
             )
             .first()
     }
 
-    suspend fun isArticleBelongUser(
+    suspend fun getArticle(
         id: ObjectId,
-        userId: ObjectId,
-    ): Boolean {
-        val count = mongo
+    ): Article? =
+        mongo
             .articleCollection
-            .countDocuments(
-                and(
-                    ArticleModel::id eq id,
-                    ArticleModel::user eq userId.toId()
-                ),
-                CountOptions().limit(1),
-            )
-        return count > 0L
-    }
+            .findOneById(id)
 
     suspend fun deleteArticle(
         id: ObjectId,
-    ): Boolean {
-        val deleteResult = mongo
+    ): Boolean =
+        mongo
             .articleCollection
-            .deleteOne(ArticleModel::id eq id)
-        val deleted = deleteResult.deletedCount > 0
-        if (deleted) {
-            mongo
-                .commentCollection
-                .deleteMany(CommentModel::site eq "article-${id.toHexString()}")
-        }
-        return deleted
-    }
+            .deleteOne(Article::id eq id)
+            .run { deletedCount > 0 }
 
     suspend fun createArticle(
         title: String,
@@ -132,10 +118,10 @@ class ArticleRepository(
         userId: ObjectId,
     ): ObjectId {
         val now = Clock.System.now()
-        val insertResult = mongo
+        return mongo
             .articleCollection
             .insertOne(
-                ArticleModel(
+                Article(
                     id = ObjectId(),
                     title = title,
                     content = content,
@@ -150,7 +136,7 @@ class ArticleRepository(
                     changeAt = now,
                 )
             )
-        return insertResult.insertedId!!.asObjectId().value
+            .run { insertedId!!.asObjectId().value }
     }
 
     suspend fun increaseNumViews(
@@ -160,67 +146,68 @@ class ArticleRepository(
         mongo
             .articleCollection
             .updateOne(
-                ArticleModel::id eq id,
-                inc(ArticleModel::numViews, 1),
+                Article::id eq id,
+                inc(Article::numViews, 1),
             )
     }
 
-    suspend fun increaseNumComments(id: ObjectId) {
+    suspend fun increaseNumComments(
+        id: ObjectId
+    ): Boolean =
         mongo
             .articleCollection
             .updateOne(
-                ArticleModel::id eq id,
+                Article::id eq id,
                 combine(
-                    inc(ArticleModel::numComments, 1),
-                    setValue(ArticleModel::changeAt, Clock.System.now()),
+                    inc(Article::numComments, 1),
+                    setValue(Article::changeAt, Clock.System.now()),
                 ),
             )
-    }
+            .run { matchedCount > 0 }
 
-    suspend fun updateArticleTitleAndContent(
+    suspend fun updateTitleAndContent(
         id: ObjectId,
         title: String,
         content: String,
         category: ArticleCategory,
-    ) {
+    ): Boolean {
         val now = Clock.System.now()
-        mongo
+        return mongo
             .articleCollection
             .updateOne(
-                ArticleModel::id eq id,
+                Article::id eq id,
                 combine(
-                    setValue(ArticleModel::title, title),
-                    setValue(ArticleModel::content, content),
-                    setValue(ArticleModel::category, category),
-                    setValue(ArticleModel::updateAt, now),
-                    setValue(ArticleModel::changeAt, now),
+                    setValue(Article::title, title),
+                    setValue(Article::content, content),
+                    setValue(Article::category, category),
+                    setValue(Article::updateAt, now),
+                    setValue(Article::changeAt, now),
                 )
             )
+            .run { matchedCount > 0 }
     }
 
     suspend fun updateArticlePinned(
         id: ObjectId,
         pinned: Boolean,
-    ): Boolean {
-        val updateResult = mongo
+    ): Boolean =
+        mongo
             .articleCollection
             .updateOne(
-                ArticleModel::id eq id,
-                setValue(ArticleModel::pinned, pinned),
+                Article::id eq id,
+                setValue(Article::pinned, pinned),
             )
-        return updateResult.matchedCount > 0
-    }
+            .run { matchedCount > 0 }
 
     suspend fun updateArticleLocked(
         id: ObjectId,
         locked: Boolean,
-    ): Boolean {
-        val updateResult = mongo
+    ): Boolean =
+        mongo
             .articleCollection
             .updateOne(
-                ArticleModel::id eq id,
-                setValue(ArticleModel::locked, locked),
+                Article::id eq id,
+                setValue(Article::locked, locked),
             )
-        return updateResult.matchedCount > 0
-    }
+            .run { matchedCount > 0 }
 }

@@ -1,8 +1,8 @@
 package infra.web
 
-import infra.model.TranslatorId
-import infra.model.WebNovelMetadata
-import infra.model.WebNovelTocItem
+import domain.entity.TranslatorId
+import domain.entity.WebNovelMetadata
+import domain.entity.WebNovelTocItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedWriter

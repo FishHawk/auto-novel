@@ -3,8 +3,8 @@ package infra
 import appModule
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.index
+import domain.entity.*
 import infra.common.SakuraJobRepository
-import infra.model.*
 import infra.user.UserRepository
 import infra.web.DataSourceWebNovelProvider
 import infra.wenku.WenkuNovelMetadataRepository
@@ -42,8 +42,8 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
         describe("test") {
             mongo.articleCollection.find().toList().forEach {
                 mongo.articleCollection.updateOne(
-                    ArticleModel::id eq it.id,
-                    setValue(ArticleModel::category, ArticleCategory.Support)
+                    Article::id eq it.id,
+                    setValue(Article::category, ArticleCategory.Support)
                 )
             }
         }

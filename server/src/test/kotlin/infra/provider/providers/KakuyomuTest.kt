@@ -1,15 +1,13 @@
 package infra.provider.providers
 
 import infra.client
-import infra.model.WebNovelAttention
-import infra.model.WebNovelType
+import domain.entity.WebNovelAttention
+import domain.entity.WebNovelType
 import infra.web.providers.Kakuyomu
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldEndWith
-import io.kotest.matchers.string.shouldStartWith
 import kotlinx.datetime.Instant
 
 class KakuyomuTest : DescribeSpec({

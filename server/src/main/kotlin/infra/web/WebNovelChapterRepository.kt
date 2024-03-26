@@ -1,7 +1,7 @@
 package infra.web
 
+import domain.entity.*
 import infra.DataSourceMongo
-import infra.model.*
 import kotlinx.datetime.Clock
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate

@@ -1,8 +1,8 @@
 package api
 
 import api.plugins.*
+import domain.entity.*
 import infra.common.OperationHistoryRepository
-import infra.model.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.resources.*

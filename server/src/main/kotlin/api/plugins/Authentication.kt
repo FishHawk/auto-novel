@@ -4,7 +4,7 @@ import api.throwUnauthorized
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.user.UserRepository
-import infra.model.User
+import domain.entity.User
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

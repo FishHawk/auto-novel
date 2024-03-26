@@ -1,8 +1,8 @@
 package infra.provider.providers
 
 import infra.client
-import infra.model.WebNovelAttention
-import infra.model.WebNovelType
+import domain.entity.WebNovelAttention
+import domain.entity.WebNovelType
 import infra.web.providers.Hameln
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldContain

@@ -2,8 +2,8 @@ package infra.common
 
 import com.mongodb.client.model.CountOptions
 import infra.DataSourceMongo
-import infra.model.SakuraJob
-import infra.model.SakuraWebIncorrectCase
+import domain.entity.SakuraJob
+import domain.entity.SakuraWebIncorrectCase
 import org.bson.types.ObjectId
 import org.litote.kmongo.and
 import org.litote.kmongo.eq

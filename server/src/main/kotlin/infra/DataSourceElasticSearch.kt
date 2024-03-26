@@ -1,8 +1,8 @@
 package infra
 
 import com.jillesvangurp.ktsearch.*
-import infra.model.WebNovelAttention
-import infra.model.WebNovelType
+import domain.entity.WebNovelAttention
+import domain.entity.WebNovelType
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 

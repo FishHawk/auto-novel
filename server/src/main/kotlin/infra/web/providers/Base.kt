@@ -1,9 +1,9 @@
 package infra.web.providers
 
-import infra.model.Page
-import infra.model.WebNovelAttention
-import infra.model.WebNovelAuthor
-import infra.model.WebNovelType
+import domain.entity.Page
+import domain.entity.WebNovelAttention
+import domain.entity.WebNovelAuthor
+import domain.entity.WebNovelType
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import kotlinx.datetime.Instant

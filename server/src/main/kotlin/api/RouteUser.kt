@@ -3,9 +3,9 @@ package api
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import infra.model.Page
-import infra.model.User
-import infra.model.UserFavored
+import domain.entity.Page
+import domain.entity.User
+import domain.entity.UserFavored
 import infra.user.UserRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*

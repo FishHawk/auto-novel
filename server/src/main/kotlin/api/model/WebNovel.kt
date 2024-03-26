@@ -1,8 +1,8 @@
 package api.model
 
-import infra.model.WebNovelAttention
-import infra.model.WebNovelMetadataOutline
-import infra.model.WebNovelType
+import domain.entity.WebNovelAttention
+import domain.entity.WebNovelMetadataOutline
+import domain.entity.WebNovelType
 import kotlinx.serialization.Serializable
 
 @Serializable

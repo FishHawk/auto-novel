@@ -1,6 +1,6 @@
 package infra.web.providers
 
-import infra.model.*
+import domain.entity.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.flow.asFlow

@@ -1,11 +1,9 @@
 package api
 
 import api.plugins.*
+import domain.entity.*
 import infra.common.ArticleRepository
-import infra.model.ArticleCategory
-import infra.model.Page
-import infra.model.User
-import infra.model.UserOutline
+import infra.common.CommentRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
@@ -17,6 +15,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
+import org.litote.kmongo.id.toId
 
 @Resource("/article")
 private class ArticleRes {
@@ -131,6 +130,7 @@ fun Route.routeArticle() {
 
 class ArticleApi(
     private val articleRepo: ArticleRepository,
+    private val commentRepo: CommentRepository,
 ) {
     @Serializable
     data class ArticleOutlineDto(
@@ -154,7 +154,7 @@ class ArticleApi(
         validatePageNumber(page)
         validatePageSize(pageSize)
         return articleRepo
-            .listArticle(
+            .listArticleWithUser(
                 page = page,
                 pageSize = pageSize,
                 category = category,
@@ -197,7 +197,7 @@ class ArticleApi(
         user: AuthenticatedUser?,
         id: String,
     ): ArticleDto {
-        val article = articleRepo.getArticle(ObjectId(id))
+        val article = articleRepo.getArticleWithUser(ObjectId(id))
             ?: throwArticleNotFound()
 
         if (user != null) {
@@ -268,16 +268,14 @@ class ArticleApi(
         validateTitle(title)
         validateContent(content)
 
-        if (
-            !articleRepo.isArticleBelongUser(
-                ObjectId(id),
-                ObjectId(user.id),
-            )
-        ) {
+        val article = articleRepo.getArticle(ObjectId(id))
+            ?: throwArticleNotFound()
+
+        if (article.user == ObjectId(user.id).toId<Article>()) {
             user.shouldBeAtLeast(User.Role.Admin)
         }
 
-        articleRepo.updateArticleTitleAndContent(
+        articleRepo.updateTitleAndContent(
             id = ObjectId(id),
             title = title,
             content = content,
@@ -294,6 +292,7 @@ class ArticleApi(
             id = ObjectId(id),
         )
         if (!isDeleted) throwArticleNotFound()
+        commentRepo.deleteCommentBySite("article-${id}")
     }
 
     suspend fun updateArticlePinned(

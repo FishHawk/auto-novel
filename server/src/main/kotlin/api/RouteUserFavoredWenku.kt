@@ -5,9 +5,9 @@ import api.model.asDto
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import infra.model.FavoredNovelListSort
-import infra.model.Page
-import infra.model.UserFavored
+import domain.entity.FavoredNovelListSort
+import domain.entity.Page
+import domain.entity.UserFavored
 import infra.user.UserFavoredWenkuRepository
 import infra.user.UserRepository
 import infra.wenku.WenkuNovelMetadataRepository

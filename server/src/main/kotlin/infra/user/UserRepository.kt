@@ -4,9 +4,9 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import infra.DataSourceMongo
 import infra.DataSourceRedis
-import infra.model.Page
-import infra.model.User
-import infra.model.UserFavored
+import domain.entity.Page
+import domain.entity.User
+import domain.entity.UserFavored
 import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.datetime.Clock
 import org.bson.types.ObjectId

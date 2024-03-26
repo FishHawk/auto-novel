@@ -2,9 +2,9 @@ package api
 
 import api.plugins.*
 import infra.common.SakuraJobRepository
-import infra.model.SakuraJob
-import infra.model.SakuraWebIncorrectCase
-import infra.model.User
+import domain.entity.SakuraJob
+import domain.entity.SakuraWebIncorrectCase
+import domain.entity.User
 import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository

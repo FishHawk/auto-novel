@@ -1,6 +1,6 @@
 package api.model
 
-import infra.model.WenkuNovelMetadataOutline
+import domain.entity.WenkuNovelMetadataOutline
 import kotlinx.serialization.Serializable
 
 @Serializable

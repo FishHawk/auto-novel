@@ -1,7 +1,7 @@
 package infra.web
 
-import infra.model.WebNovelMetadata
-import infra.model.WebNovelTocItem
+import domain.entity.WebNovelMetadata
+import domain.entity.WebNovelTocItem
 import util.epub.EpubBook
 import util.epub.Navigation
 import util.epub.createEpubXhtml

@@ -1,4 +1,4 @@
-package infra.model
+package domain.entity
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

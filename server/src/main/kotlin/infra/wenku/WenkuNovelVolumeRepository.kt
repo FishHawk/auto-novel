@@ -1,7 +1,7 @@
 package infra.wenku
 
 import infra.DataSourceFileSystem
-import infra.model.WenkuNovelVolumeList
+import domain.entity.WenkuNovelVolumeList
 import java.io.InputStream
 import kotlin.io.path.Path
 

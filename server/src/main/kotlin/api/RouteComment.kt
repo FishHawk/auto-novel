@@ -6,8 +6,9 @@ import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import infra.common.ArticleRepository
 import infra.common.CommentRepository
-import infra.model.Page
-import infra.model.UserOutline
+import domain.entity.Page
+import domain.entity.User
+import domain.entity.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
@@ -98,7 +99,7 @@ class CommentApi(
         validatePageSize(pageSize)
         validatePageSize(replyPageSize, max = 20)
         return commentRepo
-            .listComment(
+            .listCommentWithUser(
                 site = postId,
                 parent = parentId?.let { ObjectId(it) },
                 page = page,
@@ -107,7 +108,7 @@ class CommentApi(
             )
             .map {
                 val replies = if (parentId == null && it.numReplies > 0) {
-                    commentRepo.listComment(
+                    commentRepo.listCommentWithUser(
                         site = postId,
                         parent = it.id,
                         page = 0,
@@ -136,17 +137,37 @@ class CommentApi(
             }
     }
 
+    @Suppress("unused")
+    suspend fun deleteComment(
+        user: AuthenticatedUser,
+        id: String,
+    ) {
+        user.shouldBeAtLeast(User.Role.Admin)
+        val isDeleted = commentRepo.deleteComment(ObjectId(id))
+        if (!isDeleted) throwNotFound("评论不存在")
+        commentRepo.deleteCommentByParent(ObjectId(id))
+    }
+
     suspend fun createComment(
         user: AuthenticatedUser,
         site: String,
         parent: String?,
         content: String,
     ) {
-        if (content.isBlank()) throwBadRequest("回复内容不能为空")
-        if (parent != null && !commentRepo.increaseNumReplies(ObjectId(parent))) throwNotFound("回复的评论不存在")
+        if (content.isBlank()) {
+            throwBadRequest("回复内容不能为空")
+        }
+        if (
+            parent != null &&
+            !commentRepo.increaseNumReplies(ObjectId(parent))
+        ) {
+            throwNotFound("回复的评论不存在")
+        }
 
         if (site.startsWith("article-")) {
-            articleRepo.increaseNumComments(ObjectId(site.removePrefix("article-")))
+            articleRepo.increaseNumComments(
+                ObjectId(site.removePrefix("article-"))
+            )
         }
         commentRepo.createComment(
             site = site,

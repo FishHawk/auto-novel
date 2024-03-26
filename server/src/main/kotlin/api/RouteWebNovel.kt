@@ -6,8 +6,8 @@ import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import api.plugins.authenticatedUserOrNull
+import domain.entity.*
 import infra.common.OperationHistoryRepository
-import infra.model.*
 import infra.user.UserFavoredWebRepository
 import infra.user.UserReadHistoryWebRepository
 import infra.user.UserRepository

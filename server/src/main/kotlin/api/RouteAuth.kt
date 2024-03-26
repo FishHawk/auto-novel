@@ -5,7 +5,7 @@ import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import api.plugins.generateToken
 import infra.user.UserRepository
-import infra.model.User
+import domain.entity.User
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

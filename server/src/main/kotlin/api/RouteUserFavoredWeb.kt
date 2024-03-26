@@ -6,9 +6,9 @@ import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import infra.user.UserRepository
-import infra.model.FavoredNovelListSort
-import infra.model.Page
-import infra.model.UserFavored
+import domain.entity.FavoredNovelListSort
+import domain.entity.Page
+import domain.entity.UserFavored
 import infra.user.UserFavoredWebRepository
 import infra.web.WebNovelMetadataRepository
 import io.ktor.resources.*

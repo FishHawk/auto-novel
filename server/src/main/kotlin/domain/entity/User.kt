@@ -1,4 +1,4 @@
-package infra.model
+package domain.entity
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual

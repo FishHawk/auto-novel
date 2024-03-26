@@ -6,8 +6,8 @@ import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
+import domain.entity.*
 import infra.*
-import infra.model.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

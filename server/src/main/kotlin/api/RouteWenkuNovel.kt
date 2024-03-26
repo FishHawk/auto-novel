@@ -3,9 +3,9 @@ package api
 import api.model.WenkuNovelOutlineDto
 import api.model.asDto
 import api.plugins.*
+import domain.entity.*
 import infra.VolumeCreateException
 import infra.common.OperationHistoryRepository
-import infra.model.*
 import infra.user.UserFavoredWenkuRepository
 import infra.user.UserRepository
 import infra.wenku.WenkuNovelFilter

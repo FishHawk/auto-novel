@@ -6,8 +6,8 @@ import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.result.UpdateResult
+import domain.entity.*
 import infra.*
-import infra.model.*
 import infra.web.providers.Hameln
 import infra.web.providers.RemoteNovelListItem
 import infra.web.providers.Syosetu

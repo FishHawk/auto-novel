@@ -1,6 +1,6 @@
 package infra.web
 
-import infra.model.Page
+import domain.entity.Page
 import infra.web.providers.*
 import io.ktor.client.*
 import io.ktor.client.engine.*

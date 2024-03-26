@@ -1,7 +1,7 @@
 package sakura
 
+import domain.entity.*
 import infra.DataSourceMongo
-import infra.model.*
 import infra.web.WebNovelChapterRepository
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository

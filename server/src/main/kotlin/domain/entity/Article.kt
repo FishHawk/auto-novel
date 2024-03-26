@@ -1,4 +1,4 @@
-package infra.model
+package domain.entity
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
@@ -20,7 +20,23 @@ enum class ArticleCategory {
 }
 
 @Serializable
-data class ArticleOutline(
+data class Article(
+    @Contextual @SerialName("_id") val id: ObjectId,
+    val title: String,
+    val content: String,
+    val category: ArticleCategory,
+    val locked: Boolean,
+    val pinned: Boolean,
+    val numViews: Int,
+    val numComments: Int,
+    @Contextual val user: Id<User>,
+    @Contextual val createAt: Instant,
+    @Contextual val updateAt: Instant,
+    @Contextual val changeAt: Instant,
+)
+
+@Serializable
+data class ArticleSimplifiedWithUserReadModel(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
     val category: ArticleCategory,
@@ -34,7 +50,7 @@ data class ArticleOutline(
 )
 
 @Serializable
-data class Article(
+data class ArticleWithUserReadModel(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
     val content: String,
@@ -46,20 +62,4 @@ data class Article(
     @Contextual val user: UserOutline,
     @Contextual val createAt: Instant,
     @Contextual val updateAt: Instant,
-)
-
-@Serializable
-data class ArticleModel(
-    @Contextual @SerialName("_id") val id: ObjectId,
-    val title: String,
-    val content: String,
-    val category: ArticleCategory,
-    val locked: Boolean,
-    val pinned: Boolean,
-    val numViews: Int,
-    val numComments: Int,
-    @Contextual val user: Id<User>,
-    @Contextual val createAt: Instant,
-    @Contextual val updateAt: Instant,
-    @Contextual val changeAt: Instant,
 )

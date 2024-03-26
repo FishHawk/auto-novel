@@ -2,7 +2,7 @@ package infra
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.IndexOptions
-import infra.model.*
+import domain.entity.*
 import kotlinx.coroutines.runBlocking
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.path
@@ -17,9 +17,9 @@ class DataSourceMongo(host: String, port: Int?) {
 
     // Common
     val articleCollection
-        get() = database.getCollection<ArticleModel>("article")
+        get() = database.getCollection<Article>("article")
     val commentCollection
-        get() = database.getCollection<CommentModel>("comment-alt")
+        get() = database.getCollection<Comment>("comment-alt")
 
     val operationHistoryCollection
         get() = database.getCollection<OperationHistoryModel>("operation-history")
@@ -70,19 +70,19 @@ class DataSourceMongo(host: String, port: Int?) {
         runBlocking {
             // Common
             articleCollection.ensureIndex(
-                ArticleModel::updateAt,
+                Article::updateAt,
                 indexOptions = IndexOptions().partialFilterExpression(
-                    Filters.eq(ArticleModel::pinned.path(), true)
+                    Filters.eq(Article::pinned.path(), true)
                 )
             )
             articleCollection.ensureIndex(
-                ArticleModel::pinned,
-                ArticleModel::updateAt,
+                Article::pinned,
+                Article::updateAt,
             )
             commentCollection.ensureIndex(
-                CommentModel::site,
-                CommentModel::parent,
-                CommentModel::id,
+                Comment::site,
+                Comment::parent,
+                Comment::id,
             )
 
             // Sakura

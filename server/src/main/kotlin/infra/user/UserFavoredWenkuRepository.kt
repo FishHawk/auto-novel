@@ -3,8 +3,8 @@ package infra.user
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
 import com.mongodb.client.model.UpdateOptions
+import domain.entity.*
 import infra.DataSourceMongo
-import infra.model.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
