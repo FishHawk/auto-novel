@@ -1,17 +1,12 @@
 <script lang="ts" setup>
-import {
-  LockOutlined,
-  MoreVertOutlined,
-  PlusOutlined,
-  PushPinOutlined,
-} from '@vicons/material';
+import { LockOutlined, PlusOutlined, PushPinOutlined } from '@vicons/material';
 
 import { ArticleRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { ArticleCategory, ArticleOutline } from '@/model/Article';
 import { Page } from '@/model/Page';
-import { Result, runCatching } from '@/util/result';
 import { doAction } from '@/pages/util';
+import { Result, runCatching } from '@/util/result';
 
 const route = useRoute();
 const router = useRouter();
@@ -68,58 +63,44 @@ watch([category, currentPage], (_) => {
   });
 });
 
-const generateOptions = (article: ArticleOutline) => {
-  const options = [{ label: '删除文章', key: 'delete' }];
-  if (article.locked) {
-    options.unshift({ label: '解除锁定', key: 'unlock' });
-  } else {
-    options.unshift({ label: '锁定文章', key: 'lock' });
-  }
-  if (article.pinned) {
-    options.unshift({ label: '解除置顶', key: 'unpin' });
-  } else {
-    options.unshift({ label: '置顶文章', key: 'pin' });
-  }
-  return options;
-};
+const lockArticle = (article: ArticleOutline) =>
+  doAction(
+    ArticleRepository.lockArticle(article.id).then(
+      () => (article.locked = true)
+    ),
+    '锁定',
+    message
+  );
 
-const handleSelect = async (key: string | number, article: ArticleOutline) => {
-  if (key === 'lock') {
-    await doAction(
-      ArticleRepository.lockArticle(article.id).then(
-        () => (article.locked = true)
-      ),
-      '锁定',
-      message
-    );
-  } else if (key === 'unlock') {
-    await doAction(
-      ArticleRepository.unlockArticle(article.id).then(
-        () => (article.locked = false)
-      ),
-      '解除锁定',
-      message
-    );
-  } else if (key === 'pin') {
-    await doAction(
-      ArticleRepository.pinArticle(article.id).then(
-        () => (article.pinned = true)
-      ),
-      '置顶',
-      message
-    );
-  } else if (key === 'unpin') {
-    await doAction(
-      ArticleRepository.unpinArticle(article.id).then(
-        () => (article.pinned = false)
-      ),
-      '解除置顶',
-      message
-    );
-  } else if (key === 'delete') {
-    await doAction(ArticleRepository.unpinArticle(article.id), '删除', message);
-  }
-};
+const unlockArticle = (article: ArticleOutline) =>
+  doAction(
+    ArticleRepository.unlockArticle(article.id).then(
+      () => (article.locked = false)
+    ),
+    '解除锁定',
+    message
+  );
+
+const pinArticle = (article: ArticleOutline) =>
+  doAction(
+    ArticleRepository.pinArticle(article.id).then(
+      () => (article.pinned = true)
+    ),
+    '置顶',
+    message
+  );
+
+const unpinArticle = (article: ArticleOutline) =>
+  doAction(
+    ArticleRepository.unpinArticle(article.id).then(
+      () => (article.pinned = false)
+    ),
+    '解除置顶',
+    message
+  );
+
+const deleteArticle = (article: ArticleOutline) =>
+  doAction(ArticleRepository.deleteArticle(article.id), '删除', message);
 </script>
 
 <template>
@@ -185,20 +166,49 @@ const handleSelect = async (key: string | number, article: ArticleOutline) => {
                 }}于<n-time :time="article.updateAt * 1000" type="relative" />
                 by {{ article.user.username }}
               </n-text>
+
+              <n-flex v-if="userData.asAdmin" style="margin-top: 4px">
+                <c-button
+                  v-if="article.locked"
+                  size="tiny"
+                  secondary
+                  label="解除锁定"
+                  @action="unlockArticle(article)"
+                />
+                <c-button
+                  v-else
+                  size="tiny"
+                  secondary
+                  label="锁定"
+                  @action="lockArticle(article)"
+                />
+
+                <c-button
+                  v-if="article.pinned"
+                  size="tiny"
+                  secondary
+                  label="解除置顶"
+                  @action="unpinArticle(article)"
+                />
+                <c-button
+                  v-else
+                  size="tiny"
+                  secondary
+                  label="置顶"
+                  @action="pinArticle(article)"
+                />
+
+                <c-button
+                  size="tiny"
+                  secondary
+                  label="删除"
+                  type="error"
+                  @action="deleteArticle(article)"
+                />
+              </n-flex>
             </td>
             <td class="article-number">
               {{ article.numViews }}/{{ article.numComments }}
-              <br />
-              <n-dropdown
-                v-if="userData.asAdmin"
-                trigger="click"
-                :options="generateOptions(article)"
-                @select="(key: any) => handleSelect(key, article)"
-              >
-                <n-button circle size="tiny">
-                  <n-icon :component="MoreVertOutlined" />
-                </n-button>
-              </n-dropdown>
             </td>
           </tr>
         </tbody>
