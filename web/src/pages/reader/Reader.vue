@@ -74,8 +74,8 @@ const loadChapter = (
   }
 };
 
-const targetChapterId = ref(route.params.chapterId as string);
-const currentChapterId = ref(route.params.chapterId as string);
+const targetChapterId = ref('');
+const currentChapterId = ref('');
 const chapterResult = shallowRef<Result<ReaderChapter>>();
 const loadingBar = useLoadingBar();
 
@@ -136,14 +136,19 @@ const navToChapter = async (chapterId: string) => {
   }
 };
 
-navToChapter(currentChapterId.value);
-watch(route, (route) => {
-  const urlChapterId = route.params.chapterId as string;
-  if (urlChapterId !== targetChapterId.value) {
-    chapterResult.value = undefined;
-    navToChapter(urlChapterId);
+watch(
+  route,
+  (route) => {
+    const urlChapterId = route.params.chapterId as string;
+    if (urlChapterId !== targetChapterId.value) {
+      chapterResult.value = undefined;
+      navToChapter(urlChapterId);
+    }
+  },
+  {
+    immediate: true,
   }
-});
+);
 
 const chapterHref = computed(() => {
   const chapterId = currentChapterId.value;
