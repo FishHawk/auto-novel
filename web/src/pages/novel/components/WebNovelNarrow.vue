@@ -18,6 +18,8 @@ const commentListRef = ref<HTMLElement>();
 const scrollToCommentList = () => {
   commentListRef.value?.scrollIntoView({ behavior: 'instant' });
 };
+
+const showCatalogDrawer = ref(false);
 </script>
 
 <template>
@@ -44,13 +46,18 @@ const scrollToCommentList = () => {
 
   <section-header title="目录">
     <c-button
+      v-if="novel.toc.length >= 20"
+      label="展开"
+      @action="showCatalogDrawer = true"
+    />
+    <c-button
       :label="setting.tocSortReverse ? '倒序' : '正序'"
       :icon="SortOutlined"
       @action="setting.tocSortReverse = !setting.tocSortReverse"
     />
   </section-header>
 
-  <n-list style="background-color: #0000">
+  <n-list>
     <n-card
       v-if="novel.lastReadChapter"
       :bordered="false"
@@ -68,8 +75,8 @@ const scrollToCommentList = () => {
     </n-card>
     <n-list-item
       v-for="tocItem in setting.tocSortReverse
-        ? novel.toc.slice().reverse()
-        : novel.toc"
+        ? novel.toc.slice().reverse().slice(0, 20)
+        : novel.toc.slice(0, 20)"
       :key="tocItem.index"
       style="padding: 0px"
     >
@@ -81,6 +88,47 @@ const scrollToCommentList = () => {
       />
     </n-list-item>
   </n-list>
+
+  <c-button
+    v-if="novel.toc.length >= 20"
+    secondary
+    label="展开"
+    @action="showCatalogDrawer = true"
+    style="width: 100%"
+  />
+
+  <c-drawer-right
+    v-if="novel.toc.length >= 20"
+    :width="320"
+    v-model:show="showCatalogDrawer"
+    title="目录"
+    display-directive="show"
+  >
+    <template #action>
+      <c-button
+        :label="setting.tocSortReverse ? '倒序' : '正序'"
+        :icon="SortOutlined"
+        @action="setting.tocSortReverse = !setting.tocSortReverse"
+      />
+    </template>
+    <n-list style="padding: 12px">
+      <n-list-item
+        v-for="tocItem in setting.tocSortReverse
+          ? novel.toc.slice().reverse()
+          : novel.toc"
+        :key="tocItem.index"
+        style="padding: 0px"
+      >
+        <web-novel-toc-item
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :toc-item="tocItem"
+          :last-read="novel.lastReadChapterId"
+          show-last-read
+        />
+      </n-list-item>
+    </n-list>
+  </c-drawer-right>
 
   <div ref="commentListRef"></div>
   <CommentList :site="`web-${providerId}-${novelId}`" />

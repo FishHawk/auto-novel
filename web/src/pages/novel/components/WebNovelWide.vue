@@ -57,7 +57,7 @@ const scrollToCommentList = () => {
       </section-header>
 
       <n-scrollbar trigger="none" :size="24" style="flex: auto">
-        <n-list style="background-color: #0000; padding-bottom: 12px">
+        <n-list style="padding-bottom: 12px">
           <n-list-item
             v-for="tocItem in setting.tocSortReverse
               ? novel.toc.slice().reverse()
