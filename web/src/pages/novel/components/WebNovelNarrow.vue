@@ -63,6 +63,7 @@ const scrollToCommentList = () => {
         :provider-id="providerId"
         :novel-id="novelId"
         :toc-item="novel.lastReadChapter"
+        :last-read="novel.lastReadChapterId"
       />
     </n-card>
     <n-list-item
@@ -76,6 +77,7 @@ const scrollToCommentList = () => {
         :provider-id="providerId"
         :novel-id="novelId"
         :toc-item="tocItem"
+        :last-read="novel.lastReadChapterId"
       />
     </n-list-item>
   </n-list>

@@ -1,24 +1,49 @@
 <script lang="ts" setup>
-import { NA, NText } from 'naive-ui';
+import { NText } from 'naive-ui';
+import { RouterLink } from 'vue-router';
 
 import { ReadableTocItem } from './common';
 
-defineProps<{
+const props = defineProps<{
   providerId: string;
   novelId: string;
   tocItem: ReadableTocItem;
+  lastRead?: string;
+  showLastRead?: boolean;
 }>();
+
+const type = (() => {
+  if (props.tocItem.chapterId === undefined) {
+    return 'default';
+  } else if (props.tocItem.chapterId === props.lastRead) {
+    return 'warning';
+  } else {
+    return 'success';
+  }
+})();
+
+const itemRef = ref<HTMLDivElement>();
+if (props.showLastRead) {
+  onMounted(() => {
+    if (type === 'warning') {
+      itemRef.value?.scrollIntoView();
+    }
+  });
+}
 </script>
 
 <template>
   <component
-    :is="tocItem.order !== undefined ? NA : NText"
-    :href="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
+    :is="tocItem.order !== undefined ? RouterLink : 'div'"
+    :to="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
     class="toc"
     style="width: calc(100% - 12px); display: block; padding: 6px"
     :style="{ 'font-size': tocItem.order !== undefined ? '14px' : '12px' }"
   >
-    {{ tocItem.titleJp }}
+    <div ref="itemRef" />
+    <n-text :type="type">
+      {{ tocItem.titleJp }}
+    </n-text>
     <br />
     <n-text depth="3">
       {{ tocItem.titleZh }}

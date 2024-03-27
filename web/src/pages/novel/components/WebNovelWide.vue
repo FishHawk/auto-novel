@@ -56,23 +56,6 @@ const scrollToCommentList = () => {
         />
       </section-header>
 
-      <template v-if="novel.lastReadChapter">
-        <n-card
-          :bordered="false"
-          embedded
-          content-style="padding: 6px 0px 0px;"
-        >
-          <b style="padding-left: 6px">上次读到:</b>
-          <web-novel-toc-item
-            :provider-id="providerId"
-            :novel-id="novelId"
-            :toc-item="novel.lastReadChapter"
-          />
-        </n-card>
-
-        <n-divider style="margin: 16px 0" />
-      </template>
-
       <n-scrollbar trigger="none" :size="24" style="flex: auto">
         <n-list style="background-color: #0000; padding-bottom: 12px">
           <n-list-item
@@ -86,6 +69,8 @@ const scrollToCommentList = () => {
               :provider-id="providerId"
               :novel-id="novelId"
               :toc-item="tocItem"
+              :last-read="novel.lastReadChapterId"
+              show-last-read
             />
           </n-list-item>
         </n-list>
