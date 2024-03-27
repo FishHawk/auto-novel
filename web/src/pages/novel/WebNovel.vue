@@ -79,11 +79,7 @@ const visitedColor = mixColor();
 
 <template>
   <div class="layout-content">
-    <ResultView
-      :result="novelResult"
-      :showEmpty="() => false"
-      v-slot="{ value: novel }"
-    >
+    <c-result :result="novelResult" v-slot="{ value: novel }">
       <web-novel-wide
         v-if="isWideScreen"
         :provider-id="ids.providerId"
@@ -96,7 +92,7 @@ const visitedColor = mixColor();
         :novel-id="ids.novelId"
         :novel="novel"
       />
-    </ResultView>
+    </c-result>
   </div>
 </template>
 

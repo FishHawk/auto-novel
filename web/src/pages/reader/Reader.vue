@@ -19,7 +19,6 @@ const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
 
 const route = useRoute();
 const router = useRouter();
-const message = useMessage();
 const userData = useUserDataStore();
 const setting = useReaderSettingStore();
 const isWideScreen = useIsWideScreen(600);
@@ -217,11 +216,7 @@ onKeyStroke(['Enter'], (e) => {
   </DefineChapterLink>
 
   <div class="content">
-    <ResultView
-      :result="chapterResult"
-      :showEmpty="() => false"
-      v-slot="{ value: chapter }"
-    >
+    <c-result :result="chapterResult" v-slot="{ value: chapter }">
       <n-flex
         v-if="isWideScreen"
         align="center"
@@ -290,7 +285,7 @@ onKeyStroke(['Enter'], (e) => {
         <ReuseChapterLink :id="chapter.prevId" label="上一章" />
         <ReuseChapterLink :id="chapter.nextId" label="下一章" />
       </n-flex>
-    </ResultView>
+    </c-result>
 
     <reader-setting-modal v-model:show="showSettingModal" />
 

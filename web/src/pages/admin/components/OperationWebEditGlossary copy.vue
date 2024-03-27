@@ -5,9 +5,9 @@ defineProps<{ op: OperationWebEditGlossary }>();
 </script>
 
 <template>
-  <RouterNA :to="`/novel/${op.providerId}/${op.novelId}`">
+  <c-a :to="`/novel/${op.providerId}/${op.novelId}`">
     {{ `${op.providerId}/${op.novelId}` }}
-  </RouterNA>
+  </c-a>
   <table style="border-spacing: 16px 0px; font-size: 12px">
     <tr v-for="(termZh, termJp) in op.old">
       <td>{{ termJp }}</td>

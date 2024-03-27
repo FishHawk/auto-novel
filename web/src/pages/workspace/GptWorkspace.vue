@@ -92,9 +92,9 @@ const notices = [
 
     <notice-board :notices="notices">
       <n-flex>
-        <RouterNA to="/forum/64f3d63f794cbb1321145c07" target="_blank">
+        <c-a to="/forum/64f3d63f794cbb1321145c07" target="_blank">
           使用教程
-        </RouterNA>
+        </c-a>
         /
         <n-a href="https://github.com/eujc/ChatGPT" target="_blank">
           帐号注册教程

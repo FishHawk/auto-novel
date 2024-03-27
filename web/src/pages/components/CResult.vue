@@ -3,13 +3,13 @@ import { Result } from '@/util/result';
 
 defineProps<{
   result?: Result<T>;
-  showEmpty: (value: T) => boolean;
+  showEmpty?: (value: T) => boolean;
 }>();
 </script>
 
 <template>
   <template v-if="result?.ok">
-    <n-empty v-if="showEmpty(result.value)" description="空列表" />
+    <n-empty v-if="showEmpty && showEmpty(result.value)" description="空列表" />
     <slot v-else :value="result.value" />
   </template>
 

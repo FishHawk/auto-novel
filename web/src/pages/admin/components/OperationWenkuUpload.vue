@@ -5,7 +5,7 @@ defineProps<{ op: OperationWenkuUpload }>();
 </script>
 
 <template>
-  <RouterNA :to="`/wenku/${op.novelId}`">
+  <c-a :to="`/wenku/${op.novelId}`">
     {{ op.volumeId }}
-  </RouterNA>
+  </c-a>
 </template>

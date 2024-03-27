@@ -140,13 +140,13 @@ onKeyStroke(['ArrowRight'], (e) => {
   />
   <n-divider />
 
-  <ResultView
+  <c-result
     :result="novelPageResult"
-    :showEmpty="(it: T) => it.items.length === 0"
+    :show-empty="(it: T) => it.items.length === 0"
     v-slot="{ value: page }"
   >
     <slot :page="page" />
-  </ResultView>
+  </c-result>
 
   <n-divider />
   <n-pagination

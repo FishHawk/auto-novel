@@ -21,11 +21,7 @@ onMounted(async () => {
 
 <template>
   <div class="layout-content">
-    <ResultView
-      :result="articleResult"
-      :showEmpty="(it: Article) => false"
-      v-slot="{ value: article }"
-    >
+    <c-result :result="articleResult" v-slot="{ value: article }">
       <n-h1 prefix="bar">{{ article.title }}</n-h1>
       <n-p>
         {{ article.updateAt === article.createAt ? '发布' : '更新' }}于<n-time
@@ -37,9 +33,9 @@ onMounted(async () => {
           v-if="userData.username === article.user.username || userData.asAdmin"
         >
           /
-          <RouterNA
+          <c-a
             :to="`/forum-edit/${article.id}?category=${article.category}`"
-            >编辑</RouterNA
+            >编辑</c-a
           >
         </template>
       </n-p>
@@ -50,6 +46,6 @@ onMounted(async () => {
       <section>
         <CommentList :site="`article-${articleId}`" :locked="article.locked" />
       </section>
-    </ResultView>
+    </c-result>
   </div>
 </template>

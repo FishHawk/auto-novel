@@ -72,11 +72,7 @@ const onTocItemClick = (chapterId: string | undefined) => {
       </n-text>
     </template>
 
-    <ResultView
-      :result="tocResult"
-      :showEmpty="() => false"
-      v-slot="{ value: toc }"
-    >
+    <c-result :result="tocResult" v-slot="{ value: toc }">
       <n-virtual-list
         :item-size="20"
         item-resizable
@@ -111,6 +107,6 @@ const onTocItemClick = (chapterId: string | undefined) => {
           </div>
         </template>
       </n-virtual-list>
-    </ResultView>
+    </c-result>
   </c-modal>
 </template>

@@ -72,7 +72,7 @@ const signIn = async () => {
     </n-form-item-row>
   </n-form>
 
-  <RouterNA to="/reset-password">忘记密码</RouterNA>
+  <c-a to="/reset-password">忘记密码</c-a>
   <n-button type="primary" block @click="signIn" style="margin-top: 20px">
     登录
   </n-button>

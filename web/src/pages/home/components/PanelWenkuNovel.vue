@@ -6,9 +6,9 @@ defineProps<{ listResult?: Result<WenkuNovelOutlineDto[]> }>();
 </script>
 
 <template>
-  <ResultView
+  <c-result
     :result="listResult"
-    :showEmpty="(it: WenkuNovelOutlineDto[]) => it.length === 0"
+    :show-empty="(it: WenkuNovelOutlineDto[]) => it.length === 0"
     v-slot="{ value: list }"
   >
     <n-grid :x-gap="12" :y-gap="12" cols="3 600:6">
@@ -21,5 +21,5 @@ defineProps<{ listResult?: Result<WenkuNovelOutlineDto[]> }>();
         </router-link>
       </n-grid-item>
     </n-grid>
-  </ResultView>
+  </c-result>
 </template>

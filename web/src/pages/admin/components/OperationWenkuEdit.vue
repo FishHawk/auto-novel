@@ -7,9 +7,9 @@ defineProps<{ op: OperationWenkuEdit }>();
 </script>
 
 <template>
-  <RouterNA :to="`/wenku/${op.novelId}`">
+  <c-a :to="`/wenku/${op.novelId}`">
     {{ op.novelId }}
-  </RouterNA>
+  </c-a>
   <n-p v-if="op.old?.title !== op.new.title">
     标题：{{ op.old?.title }} => {{ op.new.title }}
   </n-p>

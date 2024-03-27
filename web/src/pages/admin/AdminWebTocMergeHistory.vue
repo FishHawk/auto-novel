@@ -79,9 +79,9 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   <div v-if="novelPage?.ok">
     <div v-for="item in novelPage.value.items">
       <n-p>
-        <RouterNA :to="`/novel/${item.providerId}/${item.novelId}`">
+        <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
           {{ `${item.providerId}/${item.novelId}` }}
-        </RouterNA>
+        </c-a>
         <br />
         {{ item.reason }}
       </n-p>

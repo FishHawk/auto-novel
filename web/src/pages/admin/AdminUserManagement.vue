@@ -62,9 +62,9 @@ const roleToReadableText = (role: UserRole) => {
   />
   <n-divider />
 
-  <ResultView
+  <c-result
     :result="userResult"
-    :showEmpty="(it: Page<any>) => it.items.length === 0 "
+    :show-empty="(it: Page<any>) => it.items.length === 0 "
     v-slot="{ value }"
   >
     <n-table :bordered="false">
@@ -83,7 +83,7 @@ const roleToReadableText = (role: UserRole) => {
         </tr>
       </tbody>
     </n-table>
-  </ResultView>
+  </c-result>
 
   <n-divider />
   <n-pagination

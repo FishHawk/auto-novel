@@ -82,9 +82,9 @@ defineExpose({
         "
         style="margin-right: 8px"
       />
-      <RouterNA :to="`/novel/${item.providerId}/${item.novelId}`">
+      <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
         {{ item.titleJp }}
-      </RouterNA>
+      </c-a>
       <br />
 
       <template v-if="item.titleZh">

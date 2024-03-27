@@ -5,9 +5,9 @@ defineProps<{ op: OperationWenkuEditGlossary }>();
 </script>
 
 <template>
-  <RouterNA :to="`/wenku/${op.novelId}`">
+  <c-a :to="`/wenku/${op.novelId}`">
     {{ op.novelId }}
-  </RouterNA>
+  </c-a>
   <table style="border-spacing: 16px 0px; font-size: 12px">
     <tr v-for="(termZh, termJp) in op.old">
       <td>{{ termJp }}</td>

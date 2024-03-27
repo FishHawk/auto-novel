@@ -70,9 +70,9 @@ const showInput = ref(false);
     <n-divider />
   </template>
 
-  <ResultView
+  <c-result
     :result="commentPage"
-    :showEmpty="(it: Page<Comment1>) => it.items.length === 0 && !locked"
+    :show-empty="(it: Page<Comment1>) => it.items.length === 0 && !locked"
     v-slot="{ value }"
   >
     <template v-for="comment in value.items">
@@ -87,5 +87,5 @@ const showInput = ref(false);
       :page-slot="7"
       style="margin-top: 20px"
     />
-  </ResultView>
+  </c-result>
 </template>

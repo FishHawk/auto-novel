@@ -5,9 +5,9 @@ defineProps<{ op: OperationWebEdit }>();
 </script>
 
 <template>
-  <RouterNA :to="`/novel/${op.providerId}/${op.novelId}`">
+  <c-a :to="`/novel/${op.providerId}/${op.novelId}`">
     {{ `${op.providerId}/${op.novelId}` }}
-  </RouterNA>
+  </c-a>
   <TextDiff
     v-if="op.new.titleZh"
     :zhOld="op.old.titleZh"

@@ -13,10 +13,10 @@ const notices = [
 
     <notice-board :notices="notices">
       <n-flex>
-        <RouterNA to="/workspace/katakana"> 术语表工作区 </RouterNA> /
-        <RouterNA to="/workspace/gpt"> GPT工作区 </RouterNA> /
-        <RouterNA to="/workspace/sakura"> Sakura工作区 </RouterNA> /
-        <RouterNA to="/workspace/interactive"> 交互翻译 </RouterNA>
+        <c-a to="/workspace/katakana"> 术语表工作区 </c-a> /
+        <c-a to="/workspace/gpt"> GPT工作区 </c-a> /
+        <c-a to="/workspace/sakura"> Sakura工作区 </c-a> /
+        <c-a to="/workspace/interactive"> 交互翻译 </c-a>
       </n-flex>
     </notice-board>
 

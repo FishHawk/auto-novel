@@ -73,9 +73,9 @@ watch(type, () => {
   />
   <n-divider />
 
-  <ResultView
+  <c-result
     :result="historiesResult"
-    :showEmpty="(it: Page<any>) => it.items.length === 0 "
+    :show-empty="(it: Page<any>) => it.items.length === 0 "
     v-slot="{ value }"
   >
     <n-list>
@@ -112,7 +112,7 @@ watch(type, () => {
         </n-flex>
       </n-list-item>
     </n-list>
-  </ResultView>
+  </c-result>
 
   <n-divider />
   <n-pagination

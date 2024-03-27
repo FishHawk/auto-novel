@@ -140,12 +140,7 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
   </div>
 
   <div class="layout-content">
-    <ResultView
-      :result="novelMetadataResult"
-      :showEmpty="() => false"
-      v-slot="{ value: metadata }"
-      class="layout-content"
-    >
+    <c-result :result="novelMetadataResult" v-slot="{ value: metadata }">
       <n-flex>
         <router-link :to="`/wenku-edit/${novelId}`">
           <c-button label="编辑" :icon="EditNoteOutlined" />
@@ -248,6 +243,6 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
       </n-list>
 
       <CommentList :site="`wenku-${novelId}`" />
-    </ResultView>
+    </c-result>
   </div>
 </template>

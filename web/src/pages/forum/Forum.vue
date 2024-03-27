@@ -147,9 +147,9 @@ const handleSelect = async (key: string | number, article: ArticleOutline) => {
       :page-count="pageNumber"
       :page-slot="7"
     />
-    <ResultView
+    <c-result
       :result="articlePageResult"
-      :showEmpty="(it: Page<ArticleOutline>) => it.items.length === 0"
+      :show-empty="(it: Page<ArticleOutline>) => it.items.length === 0"
       v-slot="{ value: page }"
     >
       <n-table :bordered="false" style="margin-top: 24px">
@@ -175,9 +175,9 @@ const handleSelect = async (key: string | number, article: ArticleOutline) => {
                   :component="LockOutlined"
                   style="vertical-align: middle; margin-bottom: 4px"
                 />
-                <RouterNA :to="`/forum/${article.id}`">
+                <c-a :to="`/forum/${article.id}`">
                   <b>{{ article.title }}</b>
-                </RouterNA>
+                </c-a>
               </div>
               <n-text style="font-size: 12px">
                 {{
@@ -203,7 +203,7 @@ const handleSelect = async (key: string | number, article: ArticleOutline) => {
           </tr>
         </tbody>
       </n-table>
-    </ResultView>
+    </c-result>
     <n-pagination
       v-if="pageNumber > 1"
       v-model:page="currentPage"
