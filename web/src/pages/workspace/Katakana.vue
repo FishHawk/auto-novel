@@ -164,6 +164,8 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
   }
 };
 
+const showListModal = ref(false);
+
 const notices = [
   notice('术语表辅助制作工具正在开发中，当前方案分为识别和翻译两步。'),
   notice('识别阶段：根据片假名词汇出现频率判断可能是术语的词汇。'),
@@ -180,14 +182,20 @@ const notices = [
 
     <c-action-wrapper title="载入文件">
       <n-flex vertical style="margin: 20px 0">
-        <n-flex :size="4" style="margin-bottom: 8px">
+        <n-flex style="margin-bottom: 8px">
+          <c-button
+            label="加载本地小说"
+            :icon="PlusOutlined"
+            size="small"
+            @click="showListModal = true"
+          />
           <div>
             <n-upload
               accept=".txt,.epub"
               :custom-request="customRequest"
               :show-file-list="false"
             >
-              <c-button label="添加文件" :icon="PlusOutlined" size="small" />
+              <c-button label="加载文件" :icon="PlusOutlined" size="small" />
             </n-upload>
           </div>
           <c-button
@@ -280,6 +288,16 @@ const notices = [
     <template #sidebar>
       <local-volume-list-katakana @volume-loaded="loadLocalFile" />
     </template>
+
+    <c-drawer-right
+      v-if="!isWideScreen"
+      v-model:show="showListModal"
+      title="本地小说"
+    >
+      <div style="padding: 24px 16px">
+        <local-volume-list-katakana hide-title @volume-loaded="loadLocalFile" />
+      </div>
+    </c-drawer-right>
   </c-layout>
 
   <c-modal title="选择Sakura翻译器" v-model:show="showSakuraSelectModal">

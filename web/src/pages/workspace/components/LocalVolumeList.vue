@@ -6,6 +6,7 @@ import { LocalVolumeService } from '@/data/local';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 
 const props = defineProps<{
+  hideTitle?: boolean;
   options?: { [key: string]: (volumes: LocalVolumeMetadata[]) => void };
   filter?: (volume: LocalVolumeMetadata) => boolean;
   beforeVolumeAdd?: (file: File) => void;
@@ -82,7 +83,7 @@ defineExpose({ deleteVolume });
 </script>
 
 <template>
-  <section-header title="本地小说">
+  <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
       <add-button :show-file-list="false" @finish="onFinish" />
       <n-dropdown trigger="click" :options="options" @select="handleSelect">
