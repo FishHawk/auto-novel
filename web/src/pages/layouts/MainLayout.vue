@@ -103,7 +103,7 @@ watch(
 
 <template>
   <theme-main>
-    <n-layout>
+    <n-layout style="width: 100%; min-height: 100vh">
       <n-layout-header bordered style="position: fixed; z-index: 1">
         <n-flex class="layout-content" align="center" style="height: 50px">
           <template v-if="isWideScreen">

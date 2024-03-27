@@ -30,13 +30,12 @@
     </script>
     <script>
       window.onerror = function (msg, url, lno, cno) {
-        if (window.location.href.replace(window.origin, '') === '/') {
-          var div = document.createElement('div');
-          div.innerHTML = `JS错误: ${lno}:${cno} ${msg
-            .replace('<', '&lt;')
-            .replace('>', '&gt;')} ${url}`;
-          document.body.appendChild(div);
-        }
+        var div = document.createElement('div');
+        div.innerHTML = `Error: ${lno}:${cno} ${msg
+          .replace('<', '&lt;')
+          .replace('>', '&gt;')} ${url}`;
+        div.style.position = 'fixed';
+        document.body.appendChild(div);
         return false;
       };
     </script>
