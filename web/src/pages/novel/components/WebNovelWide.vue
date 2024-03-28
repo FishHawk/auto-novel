@@ -13,11 +13,6 @@ defineProps<{
 }>();
 
 const setting = useSettingStore();
-
-const commentListRef = ref<HTMLElement>();
-const scrollToCommentList = () => {
-  commentListRef.value?.scrollIntoView({ behavior: 'instant' });
-};
 </script>
 
 <template>
@@ -26,7 +21,6 @@ const scrollToCommentList = () => {
       :provider-id="providerId"
       :novel-id="novelId"
       :novel="novel"
-      @comment-click="scrollToCommentList()"
     />
 
     <section-header title="翻译" />
@@ -44,7 +38,6 @@ const scrollToCommentList = () => {
       :glossary="novel.glossary"
     />
 
-    <div ref="commentListRef"></div>
     <CommentList :site="`web-${providerId}-${novelId}`" />
 
     <template #sidebar>

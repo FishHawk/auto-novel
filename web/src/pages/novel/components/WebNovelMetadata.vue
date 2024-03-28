@@ -1,9 +1,5 @@
 <script lang="ts" setup>
-import {
-  BookOutlined,
-  CommentOutlined,
-  EditNoteOutlined,
-} from '@vicons/material';
+import { BookOutlined, EditNoteOutlined } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
 
 import { tryTranslateKeyword } from '@/data/web/keyword';
@@ -15,10 +11,6 @@ const props = defineProps<{
   providerId: string;
   novelId: string;
   novel: WebNovelVM;
-}>();
-
-const emit = defineEmits<{
-  commentClick: [];
 }>();
 
 const labels = computed(() => {
@@ -74,12 +66,6 @@ const labels = computed(() => {
     <router-link v-if="novel.wenkuId" :to="`/wenku/${novel.wenkuId}`">
       <c-button label="文库" :icon="BookOutlined" />
     </router-link>
-
-    <c-button
-      label="评论"
-      :icon="CommentOutlined"
-      @action="emit('commentClick')"
-    />
   </n-flex>
 
   <n-divider />

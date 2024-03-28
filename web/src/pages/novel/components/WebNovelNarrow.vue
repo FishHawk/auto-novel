@@ -14,11 +14,6 @@ defineProps<{
 
 const setting = useSettingStore();
 
-const commentListRef = ref<HTMLElement>();
-const scrollToCommentList = () => {
-  commentListRef.value?.scrollIntoView({ behavior: 'instant' });
-};
-
 const showCatalogDrawer = ref(false);
 </script>
 
@@ -27,7 +22,6 @@ const showCatalogDrawer = ref(false);
     :provider-id="providerId"
     :novel-id="novelId"
     :novel="novel"
-    @comment-click="scrollToCommentList()"
   />
   <section-header title="翻译" />
   <WebTranslate
@@ -130,6 +124,5 @@ const showCatalogDrawer = ref(false);
     </n-list>
   </c-drawer-right>
 
-  <div ref="commentListRef"></div>
   <CommentList :site="`web-${providerId}-${novelId}`" />
 </template>
