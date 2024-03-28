@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {
-  BookmarksOutlined,
+  BookOutlined,
   ForumOutlined,
   LanguageOutlined,
   ReadMoreOutlined,
@@ -157,7 +157,7 @@ const notices = [
       <router-link to="/wenku-list" style="flex: 1">
         <n-button quaternary style="width: 100%; height: 64px">
           <n-flex align="center" vertical>
-            <n-icon size="24" :component="BookmarksOutlined" />
+            <n-icon size="24" :component="BookOutlined" />
             文库小说
           </n-flex>
         </n-button>

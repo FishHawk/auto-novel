@@ -12,9 +12,7 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bson.types.ObjectId
-import org.litote.kmongo.combine
-import org.litote.kmongo.inc
-import org.litote.kmongo.setValue
+import org.litote.kmongo.*
 import java.util.*
 
 object WenkuNovelFilter {
@@ -256,6 +254,30 @@ class WenkuNovelMetadataRepository(
                     setValue(WebNovelMetadata::glossaryUuid, UUID.randomUUID().toString()),
                     setValue(WebNovelMetadata::glossary, glossary)
                 ),
+            )
+    }
+
+    suspend fun addWebId(
+        novelId: String,
+        webId: String,
+    ) {
+        mongo
+            .wenkuNovelMetadataCollection
+            .updateOne(
+                WenkuNovelMetadata.byId(novelId),
+                addToSet(WenkuNovelMetadata::webIds, webId),
+            )
+    }
+
+    suspend fun removeWebId(
+        novelId: String,
+        webId: String,
+    ) {
+        mongo
+            .wenkuNovelMetadataCollection
+            .updateOne(
+                WenkuNovelMetadata.byId(novelId),
+                pull(WenkuNovelMetadata::webIds, webId),
             )
     }
 

@@ -1,4 +1,4 @@
-import { Favored } from "./User";
+import { Favored } from './User';
 
 export interface WenkuNovelOutlineDto {
   id: string;
@@ -16,6 +16,7 @@ export interface WenkuNovelDto {
   keywords: string[];
   r18: boolean;
   introduction: string;
+  webIds: string[];
   volumes: WenkuVolumeDto[];
   glossary: { [key: string]: string };
   visited: number;

@@ -531,11 +531,22 @@ class WebNovelApi(
             }
         }
 
-        metadataRepo.updateWenkuId(
-            providerId = providerId,
-            novelId = novelId,
-            wenkuId = wenkuId.takeIf { it.isNotBlank() },
-        )
+        val originWenkuId = metadata.wenkuId
+        val targetWenkuId = wenkuId.takeIf { it.isNotBlank() }
+        if (originWenkuId != targetWenkuId) {
+            metadataRepo.updateWenkuId(
+                providerId = providerId,
+                novelId = novelId,
+                wenkuId = wenkuId.takeIf { it.isNotBlank() },
+            )
+            val webId = "${providerId}/${novelId}"
+            if (targetWenkuId != null) {
+                wenkuMetadataRepo.addWebId(targetWenkuId, webId)
+            } else {
+                wenkuMetadataRepo.removeWebId(originWenkuId!!, webId)
+            }
+        }
+
         metadataRepo.updateTranslation(
             providerId = providerId,
             novelId = novelId,

@@ -21,6 +21,7 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.litote.kmongo.EMPTY_BSON
 import org.litote.kmongo.eq
+import org.litote.kmongo.id.toId
 import org.litote.kmongo.setValue
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {

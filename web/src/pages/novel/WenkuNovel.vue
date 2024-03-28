@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { EditNoteOutlined } from '@vicons/material';
+import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { WenkuNovelRepository } from '@/data/api';
@@ -56,6 +56,8 @@ const deleteVolume = (volumeId: string) =>
   );
 
 const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
+
+const showWebNovelsModal = ref(false);
 </script>
 
 <template>
@@ -151,6 +153,27 @@ const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
           :favored-list="metadata.favoredList"
           :novel="{ type: 'wenku', novelId }"
         />
+
+        <c-button
+          v-if="metadata.webIds.length > 0"
+          label="网络"
+          :icon="LanguageOutlined"
+          @action="showWebNovelsModal = true"
+        />
+
+        <c-modal
+          title="相关网络小说"
+          v-model:show="showWebNovelsModal"
+          :extra-height="100"
+        >
+          <n-ul>
+            <n-li v-for="webId of metadata.webIds">
+              <c-a :to="`/novel/${webId}`">
+                {{ webId }}
+              </c-a>
+            </n-li>
+          </n-ul>
+        </c-modal>
       </n-flex>
 
       <n-p>原名：{{ metadata.title }}</n-p>
