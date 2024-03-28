@@ -3,8 +3,11 @@ import { CommentOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { CommentRepository } from '@/data/api';
+import { useUserDataStore } from '@/data/stores/user_data';
 import { Comment1 } from '@/model/Comment';
 import { runCatching } from '@/util/result';
+
+import { doAction } from '../util';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;
@@ -18,6 +21,7 @@ const { site, comment } = defineProps<{
 }>();
 
 const message = useMessage();
+const userData = useUserDataStore();
 
 const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
@@ -48,6 +52,24 @@ function onReplied() {
   }
 }
 
+const hideComment = (comment: Comment1) =>
+  doAction(
+    CommentRepository.hideComment(comment.id).then(
+      () => (comment.hidden = true)
+    ),
+    '隐藏',
+    message
+  );
+
+const unhideComment = (comment: Comment1) =>
+  doAction(
+    CommentRepository.unhideComment(comment.id).then(
+      () => (comment.hidden = false)
+    ),
+    '解除隐藏',
+    message
+  );
+
 const showInput = ref(false);
 </script>
 
@@ -71,9 +93,31 @@ const showInput = ref(false);
         size="tiny"
         @action="showInput = !showInput"
       />
+
+      <template v-if="userData.asAdmin">
+        <c-button
+          v-if="comment.hidden"
+          label="解除隐藏"
+          quaternary
+          type="tertiary"
+          size="tiny"
+          @action="unhideComment(comment)"
+        />
+        <c-button
+          v-else
+          label="隐藏"
+          quaternary
+          type="tertiary"
+          size="tiny"
+          @action="hideComment(comment)"
+        />
+      </template>
     </n-flex>
     <n-card embedded :bordered="false" size="small">
-      <n-p style="white-space: pre-wrap">{{ comment.content }}</n-p>
+      <n-p style="white-space: pre-wrap">
+        <n-text v-if="comment.hidden" depth="3">[隐藏] </n-text>
+        {{ comment.content }}
+      </n-p>
     </n-card>
   </DefineCommentContent>
 

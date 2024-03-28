@@ -52,6 +52,7 @@ class ArticleRepository(
                             ArticleSimplifiedWithUserReadModel::category,
                             ArticleSimplifiedWithUserReadModel::locked,
                             ArticleSimplifiedWithUserReadModel::pinned,
+                            ArticleSimplifiedWithUserReadModel::hidden,
                             ArticleSimplifiedWithUserReadModel::numViews,
                             ArticleSimplifiedWithUserReadModel::numComments,
                             ArticleSimplifiedWithUserReadModel::user / UserOutline::username,
@@ -208,6 +209,18 @@ class ArticleRepository(
             .updateOne(
                 Article::id eq id,
                 setValue(Article::locked, locked),
+            )
+            .run { matchedCount > 0 }
+
+    suspend fun updateArticleHidden(
+        id: ObjectId,
+        hidden: Boolean,
+    ): Boolean =
+        mongo
+            .articleCollection
+            .updateOne(
+                Article::id eq id,
+                setValue(Article::hidden, hidden),
             )
             .run { matchedCount > 0 }
 }

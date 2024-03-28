@@ -57,6 +57,7 @@ class CommentRepository(
                             CommentWithUserReadModel::id,
                             CommentWithUserReadModel::site,
                             CommentWithUserReadModel::content,
+                            CommentWithUserReadModel::hidden,
                             CommentWithUserReadModel::numReplies,
                             CommentWithUserReadModel::user / UserOutline::username,
                             CommentWithUserReadModel::user / UserOutline::role,
@@ -134,6 +135,18 @@ class CommentRepository(
             .updateOne(
                 Comment::id eq id,
                 inc(Comment::numReplies, 1),
+            )
+            .run { matchedCount > 0 }
+
+    suspend fun updateCommentHidden(
+        id: ObjectId,
+        hidden: Boolean,
+    ): Boolean =
+        mongo
+            .commentCollection
+            .updateOne(
+                Comment::id eq id,
+                setValue(Comment::hidden, hidden),
             )
             .run { matchedCount > 0 }
 }

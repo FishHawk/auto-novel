@@ -19,6 +19,7 @@ import org.bson.types.ObjectId
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import org.litote.kmongo.EMPTY_BSON
 import org.litote.kmongo.eq
 import org.litote.kmongo.setValue
 
@@ -40,12 +41,10 @@ class BookRepositoryTest : DescribeSpec(), KoinTest {
 
     init {
         describe("test") {
-            mongo.articleCollection.find().toList().forEach {
-                mongo.articleCollection.updateOne(
-                    Article::id eq it.id,
-                    setValue(Article::category, ArticleCategory.Support)
-                )
-            }
+            mongo.commentCollection.updateMany(
+                EMPTY_BSON,
+                setValue(Comment::hidden, false)
+            )
         }
         describe("build es index") {
             @Serializable

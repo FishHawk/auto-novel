@@ -1,20 +1,16 @@
 package api
 
-import api.plugins.AuthenticatedUser
-import api.plugins.RateLimitNames
-import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
+import api.plugins.*
+import domain.entity.*
 import infra.common.ArticleRepository
 import infra.common.CommentRepository
-import domain.entity.Page
-import domain.entity.User
-import domain.entity.UserOutline
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
+import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
@@ -30,21 +26,31 @@ private class CommentRes {
         val page: Int,
         val pageSize: Int,
     )
+
+    @Resource("/{id}")
+    class Id(val parent: CommentRes, val id: String) {
+        @Resource("/hidden")
+        class Hidden(val parent: Id)
+    }
 }
 
 fun Route.routeComment() {
     val service by inject<CommentApi>()
 
-    get<CommentRes.List> { loc ->
-        call.tryRespond {
-            service.listComment(
-                postId = loc.site,
-                parentId = loc.parentId,
-                page = loc.page,
-                pageSize = loc.pageSize,
-                replyPageSize = 10,
-                reverse = loc.parentId == null,
-            )
+    authenticateDb(optional = true) {
+        get<CommentRes.List> { loc ->
+            call.tryRespond {
+                val user = call.authenticatedUserOrNull()
+                service.listComment(
+                    user = user,
+                    postId = loc.site,
+                    parentId = loc.parentId,
+                    page = loc.page,
+                    pageSize = loc.pageSize,
+                    replyPageSize = 10,
+                    reverse = loc.parentId == null,
+                )
+            }
         }
     }
 
@@ -70,6 +76,19 @@ fun Route.routeComment() {
                 }
             }
         }
+
+        put<CommentRes.Id.Hidden> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateCommentHidden(user = user, id = loc.parent.id, hidden = true)
+            }
+        }
+        delete<CommentRes.Id.Hidden> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateCommentHidden(user = user, id = loc.parent.id, hidden = false)
+            }
+        }
     }
 }
 
@@ -82,12 +101,28 @@ class CommentApi(
         val id: String,
         val user: UserOutline,
         val content: String,
+        val hidden: Boolean,
         val createAt: Long,
         val numReplies: Int,
         val replies: List<CommentDto>,
     )
 
+    private fun CommentWithUserReadModel.asDto(
+        replies: List<CommentDto>,
+        ignoreHidden: Boolean,
+    ) =
+        CommentDto(
+            id = id.toHexString(),
+            user = user,
+            content = if (ignoreHidden || !hidden) content else "",
+            hidden = hidden,
+            createAt = createAt.epochSeconds,
+            numReplies = numReplies,
+            replies = replies,
+        )
+
     suspend fun listComment(
+        user: AuthenticatedUser?,
         postId: String,
         parentId: String?,
         page: Int,
@@ -98,6 +133,9 @@ class CommentApi(
         validatePageNumber(page)
         validatePageSize(pageSize)
         validatePageSize(replyPageSize, max = 20)
+
+        val ignoreHidden = user != null && user.role atLeast User.Role.Maintainer
+
         return commentRepo
             .listCommentWithUser(
                 site = postId,
@@ -114,26 +152,12 @@ class CommentApi(
                         page = 0,
                         pageSize = replyPageSize,
                     ).items.map {
-                        CommentDto(
-                            id = it.id.toHexString(),
-                            user = it.user,
-                            content = it.content,
-                            createAt = it.createAt.epochSeconds,
-                            numReplies = 0,
-                            replies = emptyList()
-                        )
+                        it.asDto(emptyList(), ignoreHidden)
                     }
                 } else {
                     emptyList()
                 }
-                CommentDto(
-                    id = it.id.toHexString(),
-                    user = it.user,
-                    content = it.content,
-                    createAt = it.createAt.epochSeconds,
-                    numReplies = it.numReplies,
-                    replies = replies,
-                )
+                it.asDto(replies, ignoreHidden)
             }
     }
 
@@ -175,5 +199,21 @@ class CommentApi(
             user = ObjectId(user.id),
             content = content,
         )
+    }
+
+    private fun throwCommentNotFound(): Nothing =
+        throwNotFound("评论不存在")
+
+    suspend fun updateCommentHidden(
+        user: AuthenticatedUser,
+        id: String,
+        hidden: Boolean,
+    ) {
+        user.shouldBeAtLeast(User.Role.Admin)
+        val isUpdated = commentRepo.updateCommentHidden(
+            id = ObjectId(id),
+            hidden = hidden,
+        )
+        if (!isUpdated) throwCommentNotFound()
     }
 }

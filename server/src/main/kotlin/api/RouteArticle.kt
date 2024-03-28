@@ -34,23 +34,28 @@ private class ArticleRes {
 
         @Resource("/pinned")
         class Pinned(val parent: Id)
+
+        @Resource("/hidden")
+        class Hidden(val parent: Id)
     }
 }
 
 fun Route.routeArticle() {
     val service by inject<ArticleApi>()
 
-    get<ArticleRes.List> { loc ->
-        call.tryRespond {
-            service.listArticle(
-                page = loc.page,
-                pageSize = loc.pageSize,
-                category = loc.category,
-            )
-        }
-    }
-
     authenticateDb(optional = true) {
+        get<ArticleRes.List> { loc ->
+            val user = call.authenticatedUserOrNull()
+            call.tryRespond {
+                service.listArticle(
+                    user = user,
+                    page = loc.page,
+                    pageSize = loc.pageSize,
+                    category = loc.category,
+                )
+            }
+        }
+
         get<ArticleRes.Id> { loc ->
             val user = call.authenticatedUserOrNull()
             call.tryRespond {
@@ -125,6 +130,19 @@ fun Route.routeArticle() {
                 service.updateArticlePinned(user = user, id = loc.parent.id, pinned = false)
             }
         }
+
+        put<ArticleRes.Id.Hidden> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateArticleHidden(user = user, id = loc.parent.id, hidden = true)
+            }
+        }
+        delete<ArticleRes.Id.Hidden> { loc ->
+            val user = call.authenticatedUser()
+            call.tryRespond {
+                service.updateArticleHidden(user = user, id = loc.parent.id, hidden = false)
+            }
+        }
     }
 }
 
@@ -133,12 +151,13 @@ class ArticleApi(
     private val commentRepo: CommentRepository,
 ) {
     @Serializable
-    data class ArticleOutlineDto(
+    data class ArticleSimplifiedDto(
         val id: String,
         val title: String,
         val category: ArticleCategory,
         val locked: Boolean,
         val pinned: Boolean,
+        val hidden: Boolean,
         val numViews: Int,
         val numComments: Int,
         val user: UserOutline,
@@ -146,37 +165,45 @@ class ArticleApi(
         val updateAt: Long,
     )
 
+    private fun ArticleSimplifiedWithUserReadModel.asDto(
+        ignoreHidden: Boolean,
+    ) =
+        ArticleSimplifiedDto(
+            id = id.toHexString(),
+            title = if (ignoreHidden || !hidden) title else "",
+            category = category,
+            locked = locked,
+            pinned = pinned,
+            hidden = hidden,
+            numViews = numViews,
+            numComments = numComments,
+            user = user,
+            createAt = createAt.epochSeconds,
+            updateAt = updateAt.epochSeconds,
+        )
+
     suspend fun listArticle(
+        user: AuthenticatedUser?,
         page: Int,
         pageSize: Int,
         category: ArticleCategory,
-    ): Page<ArticleOutlineDto> {
+    ): Page<ArticleSimplifiedDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
+
+        val ignoreHidden = user != null && user.role atLeast User.Role.Maintainer
+
         return articleRepo
             .listArticleWithUser(
                 page = page,
                 pageSize = pageSize,
                 category = category,
             )
-            .map {
-                ArticleOutlineDto(
-                    id = it.id.toHexString(),
-                    title = it.title,
-                    category = it.category,
-                    locked = it.locked,
-                    pinned = it.pinned,
-                    numViews = it.numViews,
-                    numComments = it.numComments,
-                    user = it.user,
-                    createAt = it.createAt.epochSeconds,
-                    updateAt = it.updateAt.epochSeconds,
-                )
-            }
+            .map { it.asDto(ignoreHidden) }
     }
 
     private fun throwArticleNotFound(): Nothing =
-        throwNotFound("帖子不存在")
+        throwNotFound("文章不存在")
 
     @Serializable
     data class ArticleDto(
@@ -186,6 +213,7 @@ class ArticleApi(
         val category: ArticleCategory,
         val locked: Boolean,
         val pinned: Boolean,
+        val hidden: Boolean,
         val numViews: Int,
         val numComments: Int,
         val user: UserOutline,
@@ -193,10 +221,30 @@ class ArticleApi(
         val updateAt: Long,
     )
 
+    private fun ArticleWithUserReadModel.asDto(
+        ignoreHidden: Boolean,
+    ) =
+        ArticleDto(
+            id = id.toHexString(),
+            title = if (ignoreHidden || !hidden) title else "",
+            content = if (ignoreHidden || !hidden) content else "",
+            category = category,
+            locked = locked,
+            pinned = pinned,
+            hidden = hidden,
+            numViews = numViews,
+            numComments = numComments,
+            user = user,
+            createAt = createAt.epochSeconds,
+            updateAt = updateAt.epochSeconds,
+        )
+
     suspend fun getArticle(
         user: AuthenticatedUser?,
         id: String,
     ): ArticleDto {
+        val ignoreHidden = user != null && user.role atLeast User.Role.Maintainer
+
         val article = articleRepo.getArticleWithUser(ObjectId(id))
             ?: throwArticleNotFound()
 
@@ -207,21 +255,7 @@ class ArticleApi(
             )
         }
 
-        return article.let {
-            ArticleDto(
-                id = it.id.toHexString(),
-                title = it.title,
-                content = it.content,
-                category = it.category,
-                locked = it.locked,
-                pinned = it.pinned,
-                numViews = it.numViews,
-                numComments = it.numComments,
-                user = it.user,
-                createAt = it.createAt.epochSeconds,
-                updateAt = it.updateAt.epochSeconds,
-            )
-        }
+        return article.asDto(ignoreHidden)
     }
 
     private fun validateTitle(title: String) {
@@ -317,6 +351,19 @@ class ArticleApi(
         val isUpdated = articleRepo.updateArticleLocked(
             id = ObjectId(id),
             locked = locked,
+        )
+        if (!isUpdated) throwArticleNotFound()
+    }
+
+    suspend fun updateArticleHidden(
+        user: AuthenticatedUser,
+        id: String,
+        hidden: Boolean,
+    ) {
+        user.shouldBeAtLeast(User.Role.Admin)
+        val isUpdated = articleRepo.updateArticleHidden(
+            id = ObjectId(id),
+            hidden = hidden,
         )
         if (!isUpdated) throwArticleNotFound()
     }

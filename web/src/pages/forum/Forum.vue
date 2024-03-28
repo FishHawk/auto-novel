@@ -3,7 +3,7 @@ import { LockOutlined, PlusOutlined, PushPinOutlined } from '@vicons/material';
 
 import { ArticleRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { ArticleCategory, ArticleOutline } from '@/model/Article';
+import { ArticleCategory, ArticleSimplified } from '@/model/Article';
 import { Page } from '@/model/Page';
 import { doAction } from '@/pages/util';
 import { Result, runCatching } from '@/util/result';
@@ -23,7 +23,7 @@ const parsePage = (q: typeof route.query) => parseInt(q.page as string) || 1;
 const parseCategory = (q: typeof route.query) =>
   (q.category as ArticleCategory) || 'Guide';
 
-const articlePageResult = ref<Result<Page<ArticleOutline>>>();
+const articlePageResult = ref<Result<Page<ArticleSimplified>>>();
 const category = ref<ArticleCategory>(parseCategory(route.query));
 const currentPage = ref(parsePage(route.query));
 const pageNumber = ref(1);
@@ -63,7 +63,7 @@ watch([category, currentPage], (_) => {
   });
 });
 
-const lockArticle = (article: ArticleOutline) =>
+const lockArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.lockArticle(article.id).then(
       () => (article.locked = true)
@@ -72,7 +72,7 @@ const lockArticle = (article: ArticleOutline) =>
     message
   );
 
-const unlockArticle = (article: ArticleOutline) =>
+const unlockArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.unlockArticle(article.id).then(
       () => (article.locked = false)
@@ -81,7 +81,7 @@ const unlockArticle = (article: ArticleOutline) =>
     message
   );
 
-const pinArticle = (article: ArticleOutline) =>
+const pinArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.pinArticle(article.id).then(
       () => (article.pinned = true)
@@ -90,7 +90,7 @@ const pinArticle = (article: ArticleOutline) =>
     message
   );
 
-const unpinArticle = (article: ArticleOutline) =>
+const unpinArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.unpinArticle(article.id).then(
       () => (article.pinned = false)
@@ -99,7 +99,25 @@ const unpinArticle = (article: ArticleOutline) =>
     message
   );
 
-const deleteArticle = (article: ArticleOutline) =>
+const hideArticle = (article: ArticleSimplified) =>
+  doAction(
+    ArticleRepository.hideArticle(article.id).then(
+      () => (article.hidden = true)
+    ),
+    '隐藏',
+    message
+  );
+
+const unhideArticle = (article: ArticleSimplified) =>
+  doAction(
+    ArticleRepository.unhideArticle(article.id).then(
+      () => (article.hidden = false)
+    ),
+    '解除隐藏',
+    message
+  );
+
+const deleteArticle = (article: ArticleSimplified) =>
   doAction(ArticleRepository.deleteArticle(article.id), '删除', message);
 </script>
 
@@ -130,7 +148,7 @@ const deleteArticle = (article: ArticleOutline) =>
     />
     <c-result
       :result="articlePageResult"
-      :show-empty="(it: Page<ArticleOutline>) => it.items.length === 0"
+      :show-empty="(it: Page<ArticleSimplified>) => it.items.length === 0"
       v-slot="{ value: page }"
     >
       <n-table :bordered="false" style="margin-top: 24px">
@@ -143,23 +161,22 @@ const deleteArticle = (article: ArticleOutline) =>
         <tbody>
           <tr v-for="article of page.items">
             <td>
-              <div>
+              <n-flex :size="2" align="center" :wrap="false">
                 <n-icon
                   v-if="article.pinned"
                   size="15"
                   :component="PushPinOutlined"
-                  style="vertical-align: middle; margin-bottom: 4px"
                 />
                 <n-icon
                   v-if="article.locked"
                   size="15"
                   :component="LockOutlined"
-                  style="vertical-align: middle; margin-bottom: 4px"
                 />
                 <c-a :to="`/forum/${article.id}`">
+                  <n-text v-if="article.hidden" depth="3">[隐藏]</n-text>
                   <b>{{ article.title }}</b>
                 </c-a>
-              </div>
+              </n-flex>
               <n-text style="font-size: 12px">
                 {{
                   article.updateAt === article.createAt ? '发布' : '更新'
@@ -177,25 +194,40 @@ const deleteArticle = (article: ArticleOutline) =>
                 />
                 <c-button
                   v-else
+                  label="锁定"
                   size="tiny"
                   secondary
-                  label="锁定"
                   @action="lockArticle(article)"
                 />
 
                 <c-button
                   v-if="article.pinned"
+                  label="解除置顶"
                   size="tiny"
                   secondary
-                  label="解除置顶"
                   @action="unpinArticle(article)"
                 />
                 <c-button
                   v-else
+                  label="置顶"
                   size="tiny"
                   secondary
-                  label="置顶"
                   @action="pinArticle(article)"
+                />
+
+                <c-button
+                  v-if="article.hidden"
+                  label="解除隐藏"
+                  secondary
+                  size="tiny"
+                  @action="unhideArticle(article)"
+                />
+                <c-button
+                  v-else
+                  label="隐藏"
+                  secondary
+                  size="tiny"
+                  @action="hideArticle(article)"
                 />
 
                 <c-button

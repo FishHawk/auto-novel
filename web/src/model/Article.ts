@@ -2,12 +2,13 @@ import { UserReference } from './User';
 
 export type ArticleCategory = 'Guide' | 'General' | 'Support';
 
-export interface ArticleOutline {
+export interface ArticleSimplified {
   id: string;
   title: string;
   category: ArticleCategory;
   locked: boolean;
   pinned: boolean;
+  hidden: boolean;
   numViews: number;
   numComments: number;
   user: UserReference;
@@ -22,6 +23,7 @@ export interface Article {
   category: ArticleCategory;
   locked: boolean;
   pinned: boolean;
+  hidden: boolean;
   numViews: number;
   numComments: number;
   user: UserReference;
