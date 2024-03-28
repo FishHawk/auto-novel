@@ -2,6 +2,8 @@
 import { NText } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 
+import CA from '@/pages/components/CA.vue';
+
 import { ReadableTocItem } from './common';
 
 const props = defineProps<{
@@ -12,20 +14,13 @@ const props = defineProps<{
   showLastRead?: boolean;
 }>();
 
-const type = (() => {
-  if (props.tocItem.chapterId === undefined) {
-    return 'default';
-  } else if (props.tocItem.chapterId === props.lastRead) {
-    return 'warning';
-  } else {
-    return 'success';
-  }
-})();
+const isLastReader =
+  props.lastRead !== undefined && props.tocItem.chapterId === props.lastRead;
 
 const itemRef = ref<HTMLDivElement>();
 if (props.showLastRead) {
   onMounted(() => {
-    if (type === 'warning') {
+    if (isLastReader) {
       itemRef.value?.scrollIntoView();
     }
   });
@@ -34,16 +29,21 @@ if (props.showLastRead) {
 
 <template>
   <component
-    :is="tocItem.order !== undefined ? RouterLink : 'div'"
+    :is="tocItem.order !== undefined ? CA : 'div'"
     :to="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
     class="toc"
     style="width: calc(100% - 12px); display: block; padding: 6px"
     :style="{ 'font-size': tocItem.order !== undefined ? '14px' : '12px' }"
   >
     <div ref="itemRef" />
-    <n-text :type="type">
+
+    <template v-if="!isLastReader">
+      {{ tocItem.titleJp }}
+    </template>
+    <n-text v-else type="warning">
       {{ tocItem.titleJp }}
     </n-text>
+
     <br />
     <n-text depth="3">
       {{ tocItem.titleZh }}
