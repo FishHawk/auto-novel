@@ -94,7 +94,12 @@ const deleteFavorite = () =>
   <router-link :to="href">
     <n-flex align="center" justify="space-between">
       {{ title }}
-      <n-dropdown trigger="hover" :options="options" @select="onSelect">
+      <n-dropdown
+        trigger="hover"
+        :options="options"
+        :keyboard="false"
+        @select="onSelect"
+      >
         <n-button quaternary circle>
           <n-icon :component="MoreVertOutlined" />
         </n-button>

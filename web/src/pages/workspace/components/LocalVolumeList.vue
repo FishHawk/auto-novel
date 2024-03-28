@@ -86,7 +86,12 @@ defineExpose({ deleteVolume });
   <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
       <add-button :show-file-list="false" @finish="onFinish" />
-      <n-dropdown trigger="click" :options="options" @select="handleSelect">
+      <n-dropdown
+        trigger="click"
+        :options="options"
+        :keyboard="false"
+        @select="handleSelect"
+      >
         <n-button circle>
           <n-icon :component="MoreVertOutlined" />
         </n-button>

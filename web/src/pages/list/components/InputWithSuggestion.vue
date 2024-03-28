@@ -83,6 +83,7 @@ const handleSelect = (key: string) => {
     :disabled="options.length === 0"
     :show="showSuggestions"
     :options="options"
+    :keyboard="false"
     :animated="false"
     width="trigger"
     @select="handleSelect"

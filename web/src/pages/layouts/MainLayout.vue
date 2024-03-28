@@ -135,6 +135,7 @@ watch(
             </router-link>
             <n-dropdown
               trigger="hover"
+              :keyboard="false"
               :options="userDropdownOptions"
               @select="handleUserDropdownSelect"
             >
