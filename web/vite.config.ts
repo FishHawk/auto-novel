@@ -21,7 +21,7 @@ export default defineConfig(({ command, mode }) => {
       };
     else
       proxy['/api'] = {
-        target: 'http://192.168.9.202/',
+        target: 'https://books.fishhawk.top',
         changeOrigin: true,
         bypass(req, _res, _options) {
           if (
