@@ -1,6 +1,6 @@
 <script lang="ts" setup generic="T extends Page<any>">
 import { LocationQuery } from 'vue-router';
-import { onKeyStroke } from '@vueuse/core';
+import { onKeyDown } from '@vueuse/core';
 
 import { Page } from '@/model/Page';
 import { Result } from '@/util/result';
@@ -109,13 +109,13 @@ function detectUserInput() {
   pushPath();
 }
 
-onKeyStroke(['ArrowLeft'], (e) => {
+onKeyDown(['ArrowLeft'], (e) => {
   if (currentPage.value > 1) {
     currentPage.value = currentPage.value - 1;
     e.preventDefault();
   }
 });
-onKeyStroke(['ArrowRight'], (e) => {
+onKeyDown(['ArrowRight'], (e) => {
   if (currentPage.value < pageNumber.value) {
     currentPage.value = currentPage.value + 1;
     e.preventDefault();

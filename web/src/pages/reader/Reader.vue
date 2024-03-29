@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { createReusableTemplate, onKeyStroke } from '@vueuse/core';
+import { createReusableTemplate, onKeyDown } from '@vueuse/core';
 
 import { UserRepository } from '@/data/api';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
@@ -160,24 +160,26 @@ const chapterHref = computed(() => {
   }
 });
 
-onKeyStroke(['ArrowLeft'], (e) => {
-  if (chapterResult.value?.ok) {
-    if (chapterResult.value.value.prevId) {
-      navToChapter(chapterResult.value.value.prevId);
-      e.preventDefault();
-    }
+onKeyDown(['ArrowLeft'], (e) => {
+  if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
+    return;
+  }
+  if (chapterResult.value?.ok && chapterResult.value.value.prevId) {
+    navToChapter(chapterResult.value.value.prevId);
+    e.preventDefault();
   }
 });
-onKeyStroke(['ArrowRight'], (e) => {
-  if (chapterResult.value?.ok) {
-    if (chapterResult.value.value.nextId) {
-      navToChapter(chapterResult.value.value.nextId);
-      e.preventDefault();
-    }
+onKeyDown(['ArrowRight'], (e) => {
+  if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
+    return;
+  }
+  if (chapterResult.value?.ok && chapterResult.value.value.nextId) {
+    navToChapter(chapterResult.value.value.nextId);
+    e.preventDefault();
   }
 });
 
-onKeyStroke(['1', '2', '3', '4'], (e) => {
+onKeyDown(['1', '2', '3', '4'], (e) => {
   const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
   const translatorId = translatorIds[parseInt(e.key, 10) - 1];
   if (setting.translationsMode === 'parallel') {
@@ -197,7 +199,7 @@ onKeyStroke(['1', '2', '3', '4'], (e) => {
 const showSettingModal = ref(false);
 const showCatalogModal = ref(false);
 
-onKeyStroke(['Enter'], (e) => {
+onKeyDown(['Enter'], (e) => {
   showCatalogModal.value = !showCatalogModal.value;
   e.preventDefault();
 });
