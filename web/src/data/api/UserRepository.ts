@@ -20,6 +20,9 @@ const updateReadHistoryWeb = (
 ) =>
   client.put(`user/read-history/${providerId}/${novelId}`, { body: chapterId });
 
+const deleteReadHistoryWeb = (providerId: string, novelId: string) =>
+  client.delete(`user/read-history/${providerId}/${novelId}`);
+
 const listFavored = () => client.get('user/favored').json<FavoredList>();
 
 const createFavoredWeb = (json: { title: string }) =>
@@ -87,6 +90,7 @@ export const UserRepository = {
   //
   listReadHistoryWeb,
   updateReadHistoryWeb,
+  deleteReadHistoryWeb,
   //
   listFavored,
   //

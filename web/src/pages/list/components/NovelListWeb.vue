@@ -131,6 +131,7 @@ defineExpose({
           <br />
         </template>
       </n-text>
+      <slot name="action" v-bind="item" />
     </n-list-item>
   </n-list>
 </template>
