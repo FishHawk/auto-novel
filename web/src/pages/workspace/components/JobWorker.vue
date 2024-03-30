@@ -2,6 +2,8 @@
 import {
   DeleteOutlineOutlined,
   FlashOnOutlined,
+  FontDownloadOffOutlined,
+  FontDownloadOutlined,
   PlayArrowOutlined,
   StopOutlined,
 } from '@vicons/material';
@@ -74,6 +76,8 @@ const endpointPrefix = computed(() => {
   }
 });
 
+const enableAutoMode = ref(true);
+
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const currentJob = ref<{
   task: string;
@@ -115,7 +119,7 @@ const processTasks = async () => {
       abort: state === 'abort',
     });
 
-    if (state !== 'complete') {
+    if (state !== 'complete' || !enableAutoMode.value) {
       break;
     }
   }
@@ -209,10 +213,27 @@ const testWorker = async () => {
           @action="startWorker"
         />
 
+        <!-- <c-action-wrapper title="" align="center">
+        <n-switch size="small" />
+      </c-action-wrapper> -->
+
         <c-icon-button
           tooltip="测试"
           :icon="FlashOnOutlined"
           @action="testWorker"
+        />
+
+        <c-icon-button
+          v-if="enableAutoMode"
+          tooltip="自动翻译下个任务：已启动"
+          :icon="FontDownloadOutlined"
+          @action="enableAutoMode = false"
+        />
+        <c-icon-button
+          v-else
+          tooltip="自动翻译下个任务：已关闭"
+          :icon="FontDownloadOffOutlined"
+          @action="enableAutoMode = true"
         />
 
         <c-icon-button
