@@ -127,11 +127,14 @@ const submitJob = (id: 'gpt' | 'sakura') => {
           :show-icon="false"
           @positive-click="emit('delete')"
           :negative-text="null"
+          style="max-width: 300px"
         >
           <template #trigger>
             <c-button label="删除" type="error" size="tiny" secondary />
           </template>
-          真的要删除《{{ volume.volumeId }}》吗？
+          真的要删除吗？
+          <br />
+          {{ volume.volumeId }}
         </n-popconfirm>
       </n-flex>
     </n-flex>

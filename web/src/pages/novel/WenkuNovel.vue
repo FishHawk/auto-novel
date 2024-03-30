@@ -228,13 +228,16 @@ const showWebNovelsModal = ref(false);
             :show-icon="false"
             @positive-click="deleteVolume(volumeId)"
             :negative-text="null"
+            style="max-width: 300px"
           >
             <template #trigger>
               <n-button text type="error" style="margin-left: 16px">
                 删除
               </n-button>
             </template>
-            真的要删除《{{ volumeId }}》吗？
+            真的要删除吗？
+            <br />
+            {{ volumeId }}
           </n-popconfirm>
         </n-li>
       </n-ul>

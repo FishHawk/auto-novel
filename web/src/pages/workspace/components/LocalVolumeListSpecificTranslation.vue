@@ -186,11 +186,14 @@ const progressFilterFunc = computed(() => {
             :show-icon="false"
             @positive-click="localVolumeListRef?.deleteVolume(volume.id)"
             :negative-text="null"
+            style="max-width: 300px"
           >
             <template #trigger>
               <c-icon-button :icon="DeleteOutlineOutlined" type="error" />
             </template>
-            确定删除这本小说吗？
+            真的要删除吗？
+            <br />
+            {{ volume.id }}
           </n-popconfirm>
         </n-flex>
       </n-flex>

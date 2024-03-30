@@ -120,11 +120,18 @@ const notices = [
         :icon="PlusOutlined"
         @action="showCreateWorkerModal = true"
       />
-      <c-button
-        label="清空缓存"
-        :icon="DeleteOutlineOutlined"
-        @action="clearCache"
-      />
+
+      <n-popconfirm
+        :show-icon="false"
+        @positive-click="clearCache"
+        :negative-text="null"
+        style="max-width: 300px"
+      >
+        <template #trigger>
+          <c-button label="清空缓存" :icon="DeleteOutlineOutlined" />
+        </template>
+        真的要清空缓存吗？
+      </n-popconfirm>
     </section-header>
 
     <n-empty
@@ -142,11 +149,17 @@ const notices = [
     </n-list>
 
     <section-header title="任务队列">
-      <c-button
-        label="清空队列"
-        :icon="DeleteOutlineOutlined"
-        @action="deleteAllJobs()"
-      />
+      <n-popconfirm
+        :show-icon="false"
+        @positive-click="deleteAllJobs"
+        :negative-text="null"
+        style="max-width: 300px"
+      >
+        <template #trigger>
+          <c-button label="清空队列" :icon="DeleteOutlineOutlined" />
+        </template>
+        真的要清空队列吗？
+      </n-popconfirm>
     </section-header>
     <n-empty v-if="sakuraWorkspace.jobs.length === 0" description="没有任务" />
     <n-list>

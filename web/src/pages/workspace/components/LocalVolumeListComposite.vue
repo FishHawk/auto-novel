@@ -45,11 +45,14 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
           :show-icon="false"
           @positive-click="localVolumeListRef?.deleteVolume(volume.id)"
           :negative-text="null"
+          style="max-width: 300px"
         >
           <template #trigger>
             <c-button label="删除" type="error" size="tiny" secondary />
           </template>
-          真的要删除{{ volume.id }}吗？
+          真的要删除吗？
+          <br />
+          {{ volume.id }}
         </n-popconfirm>
       </local-volume-list-composite-item>
     </template>
