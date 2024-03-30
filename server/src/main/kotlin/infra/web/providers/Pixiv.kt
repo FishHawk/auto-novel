@@ -7,6 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -214,11 +215,46 @@ class Pixiv(
         }
     }
 
+    private val imagePattern1 = """\[uploadedimage:(\d+)]""".toRegex()
+    private val imagePattern2 = """\[pixivimage:(\d+)]""".toRegex()
+
+    private fun parseImageUrlPattern1(line: String, embeddedImages: JsonObject?): String? {
+        embeddedImages ?: return null
+        val id = imagePattern1.find(line)?.groupValues?.get(1) ?: return null
+        val url = embeddedImages.obj(id).obj("urls").string("original")
+        return url
+    }
+
+    private suspend fun parseImageUrlPattern2(line: String, chapterId: String): String? {
+        val id = imagePattern2.find(line)?.groupValues?.get(1) ?: return null
+        val fetchUrl = "https://www.pixiv.net/ajax/novel/${chapterId}/insert_illusts?id%5B%5D=${id}"
+        val body = get(fetchUrl).json().obj("body")
+        val url = body.obj(id).obj("illust").obj("images").string("original")
+        return url
+    }
+
+    private val rubyPattern = """\[\[rb:([^>]+) > ([^]]+)]]""".toRegex()
+    private fun cleanRuby(line: String): String {
+        return line.replace(rubyPattern) { it.groupValues[1] }
+    }
+
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
-        val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"
-        val doc = get(url).document()
-        val jsonRaw = doc.selectFirst("meta#meta-preload-data")!!.attr("content")
-        val obj = Json.parseToJsonElement(jsonRaw).jsonObject["novel"]!!.jsonObject[chapterId]!!.jsonObject
-        return RemoteChapter(paragraphs = obj["content"]!!.jsonPrimitive.content.lines())
+        val url = "https://www.pixiv.net/ajax/novel/$chapterId"
+        val body = get(url).json().obj("body")
+
+        val embeddedImages = body.objOrNull("textEmbeddedImages")
+        val content = body.string("content")
+
+        val paragraphs = content.lines().map { line ->
+            val imageUrl = parseImageUrlPattern1(line, embeddedImages)
+                ?: parseImageUrlPattern2(line, chapterId)
+
+            if (imageUrl == null) {
+                cleanRuby(line)
+            } else {
+                "<图片>${imageUrl}"
+            }
+        }
+        return RemoteChapter(paragraphs = paragraphs)
     }
 }

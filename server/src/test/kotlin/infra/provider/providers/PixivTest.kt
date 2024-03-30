@@ -7,6 +7,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 
 class PixivTest : DescribeSpec({
     val provider = Pixiv(client)
@@ -66,15 +67,35 @@ class PixivTest : DescribeSpec({
     describe("getEpisode") {
         it("常规") {
             // https://www.pixiv.net/novel/show.php?id=18304868
-            val episode = provider.getChapter("9406879", "18304868")
-            episode.paragraphs.first().shouldBe("「私と付き合ってください。」")
-            episode.paragraphs.last().shouldBe("俺はそれに従うしかなかった。")
+            val chapter = provider.getChapter("9406879", "18304868")
+            chapter.paragraphs.first().shouldBe("「私と付き合ってください。」")
+            chapter.paragraphs.last().shouldBe("俺はそれに従うしかなかった。")
         }
         it("常规，多页") {
             // https://www.pixiv.net/novel/show.php?id=18199707
-            val episode = provider.getChapter("870363", "18199707")
-            episode.paragraphs.first().shouldBe("　｢ふわぁ～あ～……久々に凄い暇で眠いな～……｣")
-            episode.paragraphs.last().shouldBe("　風香の叫びが青空に響いた。")
+            val chapter = provider.getChapter("870363", "18199707")
+            chapter.paragraphs.first().shouldBe("　｢ふわぁ～あ～……久々に凄い暇で眠いな～……｣")
+            chapter.paragraphs.last().shouldBe("　風香の叫びが青空に響いた。")
+        }
+        it("插图模式1") {
+            // https://www.pixiv.net/novel/show.php?id=10723739
+            // [uploadedimage:42286]
+            val chapter = provider.getChapter("s10723739", "10723739")
+            val line = chapter.paragraphs.find { it.startsWith("<图片>") }
+            line.shouldBe("<图片>https://i.pximg.net/novel-cover-original/img/2021/04/29/09/02/19/tei682410579700_b92972c74f71d56a7c436837c4f5b959.jpg")
+        }
+        it("插图模式2") {
+            // https://www.pixiv.net/novel/show.php?id=2894162
+            // [pixivimage:38959194]
+            val chapter = provider.getChapter("222297", "2894162")
+            val line = chapter.paragraphs.find { it.startsWith("<图片>") }
+            line.shouldBe("<图片>https://i.pximg.net/img-original/img/2013/10/06/21/04/43/38959194_p0.jpg")
+        }
+        it("ruby") {
+            // https://www.pixiv.net/novel/show.php?id=10618179
+            // [[rb:久世彩葉 > くぜ いろは]]
+            val chapter = provider.getChapter("s10618179", "10618179")
+            chapter.paragraphs[2].shouldStartWith("　私、久世彩葉がその")
         }
     }
 })
