@@ -72,6 +72,25 @@ const labels = computed(() => {
 
   <n-p>{{ labels }}</n-p>
 
+  <n-p>
+    <c-a
+      :to="`/novel-list?page=1&query=${encodeURIComponent(
+        novel.titleJp
+      )}&selected=63&selected=0&selected=0&selected=0&selected=2`"
+    >
+      搜索标题
+    </c-a>
+    /
+    <c-a
+      v-if="novel.authors"
+      :to="`/novel-list?page=1&query=${encodeURIComponent(
+        novel.authors[0].name
+      )}&selected=63&selected=0&selected=0&selected=0&selected=2`"
+    >
+      搜索作者
+    </c-a>
+  </n-p>
+
   <n-p style="word-break: break-all">
     {{ novel.introductionJp }}
   </n-p>
@@ -94,4 +113,6 @@ const labels = computed(() => {
       <novel-tag :tag="tryTranslateKeyword(keyword)" />
     </router-link>
   </n-flex>
+
+  <n-flex> </n-flex>
 </template>
