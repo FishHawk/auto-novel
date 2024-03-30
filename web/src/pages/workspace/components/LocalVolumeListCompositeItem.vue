@@ -123,14 +123,12 @@ const downloadVolume = async () => {
         @action="queueVolume('sakura')"
       />
 
-      <c-button
+      <router-link
         v-if="!volume.id.endsWith('.epub')"
-        label="阅读"
-        tag="a"
-        :href="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"
-        size="tiny"
-        secondary
-      />
+        :to="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"
+      >
+        <c-button label="阅读" size="tiny" secondary />
+      </router-link>
 
       <glossary-button
         :gnid="GenericNovelId.local(volume.id)"

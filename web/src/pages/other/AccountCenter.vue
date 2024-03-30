@@ -59,12 +59,9 @@ const roleToReadableText = (role: UserRole) => {
           <n-flex vertical>
             <b>控制台</b>
             <n-flex>
-              <c-button
-                label="控制台"
-                size="small"
-                tag="a"
-                href="/admin/user"
-              />
+              <router-link to="/admin/user">
+                <c-button label="控制台" size="small" />
+              </router-link>
               <c-button
                 :label="`管理员模式-${userData.asAdmin}`"
                 size="small"

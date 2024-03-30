@@ -158,14 +158,13 @@ const progressFilterFunc = computed(() => {
             @action="queueVolume(volume.id)"
           />
 
-          <c-button
+          <router-link
             v-if="!volume.id.endsWith('.epub')"
-            label="阅读"
-            tag="a"
-            :href="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"
-            size="tiny"
-            secondary
-          />
+            :to="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"
+          >
+            <c-button label="阅读" size="tiny" secondary />
+          </router-link>
+
           <c-button
             label="下载"
             size="tiny"

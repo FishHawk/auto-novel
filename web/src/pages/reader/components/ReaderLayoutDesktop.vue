@@ -27,13 +27,9 @@ const emit = defineEmits<{
         vertical
         style="margin-left: 20px; position: fixed; bottom: 20px"
       >
-        <side-button
-          v-if="novelUrl"
-          tag="a"
-          :href="novelUrl"
-          text="详情"
-          :icon="LibraryBooksOutlined"
-        />
+        <router-link v-if="novelUrl" :to="novelUrl">
+          <side-button text="详情" :icon="LibraryBooksOutlined" />
+        </router-link>
         <side-button
           text="目录"
           :icon="FormatListBulletedOutlined"

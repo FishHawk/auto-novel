@@ -69,15 +69,14 @@ const onGlobalClick = (event: MouseEvent) => {
         @click="emit('nav', chapter.prevId!!)"
         style="flex: 1"
       />
-      <side-button
-        v-if="novelUrl"
-        quaternary
-        tag="a"
-        :href="novelUrl"
-        text="详情"
-        :icon="LibraryBooksOutlined"
-        style="flex: 1"
-      />
+      <router-link v-if="novelUrl" :to="novelUrl">
+        <side-button
+          quaternary
+          text="详情"
+          :icon="LibraryBooksOutlined"
+          style="flex: 1"
+        />
+      </router-link>
       <side-button
         quaternary
         text="目录"
