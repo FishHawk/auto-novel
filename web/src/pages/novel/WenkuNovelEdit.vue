@@ -4,7 +4,7 @@ import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { WenkuNovelRepository } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { fetchMetadataFromAmazon, prettyCover } from '@/data/wenku/amazon';
+import { AmazonNovelRepository } from '@/data/amazon';
 import { presetKeywordsNonR18, presetKeywordsR18 } from '@/data/wenku/keyword';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
@@ -70,14 +70,19 @@ const formRules: FormRules = {
   ],
 };
 
+const amazonUrl = ref('');
+
 onMounted(async () => {
   if (novelId !== undefined) {
     const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
     if (result.ok) {
+      if (amazonUrl.value.length === 0) {
+        amazonUrl.value = result.value.title.replace(/[。!！]$/, '');
+      }
       formValue.value = {
         title: result.value.title,
         titleZh: result.value.titleZh,
-        cover: prettyCover(result.value.cover),
+        cover: AmazonNovelRepository.prettyCover(result.value.cover),
         authors: result.value.authors,
         artists: result.value.artists,
         r18: result.value.r18,
@@ -86,7 +91,7 @@ onMounted(async () => {
         volumes: result.value.volumes.map(({ asin, title, cover }) => ({
           asin,
           title,
-          cover: prettyCover(cover),
+          cover: AmazonNovelRepository.prettyCover(cover),
         })),
       };
       loaded = true;
@@ -147,10 +152,15 @@ const submit = async () => {
   }
 };
 
-const amazonUrl = ref('');
 const fetchMetadata = async () => {
   try {
-    const amazonMetadata = await fetchMetadataFromAmazon(amazonUrl.value);
+    const urlOrQuery = amazonUrl.value.trim();
+    if (urlOrQuery.length === 0) {
+      message.warning('导入为空');
+      return;
+    }
+
+    const amazonMetadata = await AmazonNovelRepository.getNovel(urlOrQuery);
     const volumesOld = formValue.value.volumes.map((oldV) => {
       const newV = amazonMetadata.volumes.find((it) => it.asin === oldV.asin);
       if (newV === undefined) {
@@ -331,7 +341,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
         <n-input-group>
           <n-input
             v-model:value="amazonUrl"
-            placeholder="从亚马逊导入..."
+            :placeholder="formValue.title"
             :input-props="{ spellcheck: false }"
           />
           <c-button
@@ -347,7 +357,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             tag="a"
             :href="`https://www.amazon.co.jp/s?k=${encodeURIComponent(
               formValue.title
-            )}&rh=n%3A465392`"
+            )}&i=stripbooks`"
             target="_blank"
           />
           <c-button

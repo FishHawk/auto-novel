@@ -41,3 +41,17 @@ export interface VolumeJpDto {
   gpt: number;
   sakura: number;
 }
+
+export interface AmazonNovel {
+  title: string;
+  cover: string;
+  r18: boolean;
+  authors: string[];
+  artists: string[];
+  introduction: string;
+  volumes: Array<{
+    asin: string;
+    title: string;
+    cover: string;
+  }>;
+}
