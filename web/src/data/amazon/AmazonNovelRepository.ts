@@ -28,7 +28,7 @@ const getNovelByAsin = async (asin: string): Promise<AmazonNovel> => {
       introduction: volume.introduction,
       volumes: [{ asin, title, cover }],
     };
-  } else {
+  } else if (product.type === 'serial') {
     const { total } = product.serial;
 
     const serial = await Amazon.getSerial(asin, total);
@@ -39,15 +39,21 @@ const getNovelByAsin = async (asin: string): Promise<AmazonNovel> => {
       return { asin: v.asin, title, cover };
     });
 
-    return {
-      title: volumes[0].title,
-      cover: volumes[0].cover,
-      r18: false,
-      authors: serial.authors,
-      artists: serial.artists,
-      introduction: serial.introduction,
-      volumes,
-    };
+    const metadata = await getNovelByAsin(volumes[0].asin);
+    metadata.volumes = volumes;
+    return metadata;
+  } else {
+    const volumes = product.set.volumes.map((v) => {
+      return {
+        asin: v.asin,
+        title: prettyTitle(v.title),
+        cover: prettyCover(v.cover),
+      };
+    });
+
+    const metadata = await getNovelByAsin(volumes[0].asin);
+    metadata.volumes = volumes;
+    return metadata;
   }
 };
 

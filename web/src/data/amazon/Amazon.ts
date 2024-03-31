@@ -31,18 +31,68 @@ const getHtml = async (url: string, options?: Options) => {
 const getProduct = (asin: string) => getHtml(`dp/${asin}`).then(parseProduct);
 
 const parseProduct = (doc: Document) => {
-  const serial = doc.getElementsByClassName('series-childAsin-widget').item(0);
-  if (serial === null) {
-    return {
-      type: 'volume' as 'volume',
-      volume: parseProductVolume(doc),
-    };
-  } else {
+  if (doc.getElementsByClassName('series-childAsin-widget').item(0) !== null) {
     return {
       type: 'serial' as 'serial',
       serial: parseProductSerial(doc),
     };
+  } else if (doc.getElementsByClassName('bundle-components').item(0) !== null) {
+    return {
+      type: 'set' as 'set',
+      set: parseProductSet(doc),
+    };
+  } else {
+    return {
+      type: 'volume' as 'volume',
+      volume: parseProductVolume(doc),
+    };
   }
+};
+
+const parseProductSerial = (doc: Document) => {
+  const total =
+    doc.getElementById('collection-size')?.textContent?.match(/\d+/)?.[0] ??
+    '100';
+  return { total };
+};
+
+const parseProductSet = (doc: Document) => {
+  const title = doc.getElementById('productTitle')!.textContent!;
+
+  const authors: string[] = [];
+  const artists: string[] = [];
+  Array.from(doc.getElementsByClassName('author')).forEach((element) => {
+    const contribution = element
+      .getElementsByClassName('contribution')[0]
+      .textContent?.trim()
+      ?.replace(/,$/, '');
+    const name = element.getElementsByTagName('a')![0].textContent!.trim();
+    if (contribution !== undefined) {
+      if (contribution.endsWith('(著)')) {
+        authors.push(name);
+      } else if (contribution.endsWith('(イラスト)')) {
+        artists.push(name);
+      }
+    }
+  });
+
+  const volumes = Array.from(
+    doc.getElementsByClassName('bundle-components')[0].children
+  ).map((el) => {
+    const img = el.children[0].getElementsByTagName('img')[0];
+    const a = el.children[1].children[0].getElementsByTagName('a')[0];
+
+    const asin = extractAsin(a.getAttribute('href')!)!;
+    const title = a.text;
+    const cover = img.getAttribute('src')!;
+    return { asin, title, cover };
+  });
+  return {
+    title,
+    authors,
+    artists,
+    volumes,
+  };
 };
 
 const parseProductVolume = (doc: Document) => {
@@ -82,13 +132,6 @@ const parseProductVolume = (doc: Document) => {
   };
 };
 
-const parseProductSerial = (doc: Document) => {
-  const total =
-    doc.getElementById('collection-size')?.textContent?.match(/\d+/)?.[0] ??
-    '100';
-  return { total };
-};
-
 // 获取系列页面
 const getSerial = (asin: string, total: string) =>
   getHtml('kindle-dbs/productPage/ajax/seriesAsinList', {
@@ -100,10 +143,6 @@ const getSerial = (asin: string, total: string) =>
   }).then(parseSerial);
 
 const parseSerial = (doc: Document) => {
-  const introduction = doc
-    .getElementsByClassName('a-size-base collectionDescription')
-    .item(0)!.textContent!;
-
   const authorsSet = new Set<string>();
   const artistsSet = new Set<string>();
   doc.querySelectorAll('[data-action="a-popover"]').forEach((element) => {
@@ -145,12 +184,7 @@ const parseSerial = (doc: Document) => {
     return { asin, title, cover };
   });
 
-  return {
-    authors,
-    artists,
-    introduction,
-    volumes,
-  };
+  return { authors, artists, volumes };
 };
 
 // 获取搜索页面
