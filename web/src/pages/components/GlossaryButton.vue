@@ -54,8 +54,25 @@ const submitGlossary = () =>
 const importGlossaryRaw = ref('');
 const termsToAdd = ref<[string, string]>(['', '']);
 
+const deletedTerms = ref<[string, string][]>([]);
+
+const lastDeletedTerm = computed(() => {
+  const last = deletedTerms.value[deletedTerms.value.length - 1];
+  if (last === undefined) return undefined;
+  return `${last[0]} => ${last[1]}`;
+});
+
+const undoDeleteTerm = () => {
+  if (deletedTerms.value.length === 0) return;
+  const [jp, zh] = deletedTerms.value.pop()!!;
+  glossary.value[jp] = zh;
+};
+
 const deleteTerm = (jp: string) => {
-  delete glossary.value[jp];
+  if (jp in glossary.value) {
+    deletedTerms.value.push([jp, glossary.value[jp]]);
+    delete glossary.value[jp];
+  }
 };
 
 const addTerm = () => {
@@ -145,6 +162,23 @@ const importGlossary = () => {
             @action="importGlossary"
           />
         </n-input-group>
+
+        <n-flex align="center" :wrap="false">
+          <c-button
+            :disabled="deletedTerms.length === 0"
+            label="撤销删除"
+            :round="false"
+            size="small"
+            @action="undoDeleteTerm"
+          />
+          <n-text
+            v-if="lastDeletedTerm !== undefined"
+            depth="3"
+            style="font-size: 12px"
+          >
+            {{ lastDeletedTerm }}
+          </n-text>
+        </n-flex>
       </n-flex>
     </template>
 
