@@ -305,7 +305,7 @@ class ArticleApi(
         val article = articleRepo.getArticle(ObjectId(id))
             ?: throwArticleNotFound()
 
-        if (article.user == ObjectId(user.id).toId<Article>()) {
+        if (article.user != ObjectId(user.id).toId<User>()) {
             user.shouldBeAtLeast(User.Role.Admin)
         }
 
