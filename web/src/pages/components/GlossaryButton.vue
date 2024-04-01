@@ -116,7 +116,7 @@ const importGlossary = () => {
   <c-modal
     title="编辑术语表"
     v-model:show="showGlossaryModal"
-    :extra-height="100"
+    :extra-height="120"
   >
     <template #header-extra>
       <n-flex
@@ -125,6 +125,13 @@ const importGlossary = () => {
         style="max-width: 400px; margin-bottom: 16px"
       >
         <n-text style="font-size: 12px">{{ readableGnid }}</n-text>
+
+        <n-text>
+          使用前务必先阅读
+          <c-a to="/forum/660ab4da55001f583649a621"> 术语表使用指南 </c-a>
+          ，不要滥用术语表。
+        </n-text>
+
         <n-input-group>
           <n-input
             pair
