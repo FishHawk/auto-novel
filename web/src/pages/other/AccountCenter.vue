@@ -1,8 +1,13 @@
 <script lang="ts" setup>
+import {
+  useWebSearchHistoryStore,
+  useWenkuSearchHistoryStore,
+} from '@/data/stores/search_history';
 import { themeOptions, useSettingStore } from '@/data/stores/setting';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { UserRole } from '@/model/User';
 
+const message = useMessage();
 const setting = useSettingStore();
 const userData = useUserDataStore();
 
@@ -13,6 +18,16 @@ const roleToReadableText = (role: UserRole) => {
   else if (role === 'admin') return '管理员';
   else if (role === 'banned') return '封禁用户';
   else return '未知';
+};
+
+const clearWebSearchHistory = () => {
+  useWebSearchHistoryStore().clear();
+  message.success('清空成功');
+};
+
+const clearWenkuSearchHistory = () => {
+  useWenkuSearchHistoryStore().clear();
+  message.success('清空成功');
 };
 </script>
 
@@ -52,6 +67,24 @@ const roleToReadableText = (role: UserRole) => {
           <n-flex vertical align="start">
             <b>工作区语音提醒</b>
             <n-switch size="small" v-model:value="setting.workspaceSound" />
+          </n-flex>
+        </n-list-item>
+
+        <n-list-item>
+          <n-flex vertical align="start">
+            <b>清空搜索历史</b>
+            <n-flex>
+              <c-button
+                label="清空网络搜索历史"
+                size="small"
+                @action="clearWebSearchHistory"
+              />
+              <c-button
+                label="清空文库搜索历史"
+                size="small"
+                @action="clearWenkuSearchHistory"
+              />
+            </n-flex>
           </n-flex>
         </n-list-item>
 

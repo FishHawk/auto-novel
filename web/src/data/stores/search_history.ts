@@ -35,6 +35,10 @@ const useWebSearchHistoryStoreFactory = (id: string) =>
         newQueries.unshift(query);
         this.queries = newQueries.slice(0, 8);
       },
+      clear() {
+        this.queries = [];
+        this.tags = [];
+      },
     },
     persist: true,
   });
