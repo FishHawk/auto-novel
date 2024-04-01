@@ -4,13 +4,13 @@ import { createReusableTemplate, onKeyDown } from '@vueuse/core';
 import { UserRepository } from '@/data/api';
 import { useReaderSettingStore } from '@/data/stores/reader_setting';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { buildWebChapterUrl } from '@/data/web/url';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
 import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 import { ReaderService } from '@/service';
 import { Ok, Result, runCatching } from '@/util/result';
+import { WebUtil } from '@/util/web';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   label: string;
@@ -152,7 +152,7 @@ watch(
 const chapterHref = computed(() => {
   const chapterId = currentChapterId.value;
   if (gnid.type === 'web') {
-    return buildWebChapterUrl(gnid.providerId, gnid.novelId, chapterId);
+    return WebUtil.buildChapterUrl(gnid.providerId, gnid.novelId, chapterId);
   } else if (gnid.type === 'wenku') {
     throw '不支持文库';
   } else {

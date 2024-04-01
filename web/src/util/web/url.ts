@@ -127,9 +127,7 @@ const providers: { [id: string]: Provider } = {
   novelism,
 };
 
-export function parseUrl(
-  url: string
-): { providerId: string; novelId: string } | undefined {
+export const parseUrl = (url: string) => {
   for (const providerId in providers) {
     const provider = providers[providerId];
     const novelId = provider.parseUrl(url);
@@ -138,16 +136,13 @@ export function parseUrl(
     }
   }
   return undefined;
-}
+};
 
-export function buildWebNovelUrl(providerId: string, novelId: string): string {
-  return providers[providerId].buildNovelUrl(novelId);
-}
+export const buildNovelUrl = (providerId: string, novelId: string) =>
+  providers[providerId].buildNovelUrl(novelId);
 
-export function buildWebChapterUrl(
+export const buildChapterUrl = (
   providerId: string,
   novelId: string,
   chapterId: string
-): string {
-  return providers[providerId].buildChapterUrl(novelId, chapterId);
-}
+) => providers[providerId].buildChapterUrl(novelId, chapterId);

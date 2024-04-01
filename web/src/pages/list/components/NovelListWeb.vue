@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { createReusableTemplate } from '@vueuse/core';
 
-import { tryTranslateKeyword } from '@/data/web/keyword';
-import { buildWebNovelUrl } from '@/data/web/url';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { WebUtil } from '@/util/web';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;
@@ -64,7 +63,7 @@ defineExpose({
     <router-link :to="`/novel-list?query=${tag}\$`">
       <n-text depth="3">
         <component :is="isAttention ? 'b' : 'span'">
-          {{ isAttention ? tag : tryTranslateKeyword(tag) }}
+          {{ isAttention ? tag : WebUtil.tryTranslateKeyword(tag) }}
         </component>
       </n-text>
     </router-link>
@@ -94,7 +93,7 @@ defineExpose({
 
       <n-a
         v-if="!simple"
-        :href="buildWebNovelUrl(item.providerId, item.novelId)"
+        :href="WebUtil.buildNovelUrl(item.providerId, item.novelId)"
       >
         {{ item.providerId + '.' + item.novelId }}
       </n-a>

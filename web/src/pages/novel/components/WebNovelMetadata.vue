@@ -2,8 +2,7 @@
 import { BookOutlined, EditNoteOutlined } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
 
-import { tryTranslateKeyword } from '@/data/web/keyword';
-import { buildWebNovelUrl } from '@/data/web/url';
+import { WebUtil } from '@/util/web';
 
 import { WebNovelVM } from './common';
 
@@ -49,7 +48,9 @@ const generateSearchUrl = (query: string) => {
 
 <template>
   <n-h3 prefix="bar">
-    <n-a :href="buildWebNovelUrl(providerId, novelId)">{{ novel.titleJp }}</n-a>
+    <n-a :href="WebUtil.buildNovelUrl(providerId, novelId)">{{
+      novel.titleJp
+    }}</n-a>
     <br />
     <n-text depth="3">{{ novel.titleZh }}</n-text>
   </n-h3>
@@ -108,9 +109,7 @@ const generateSearchUrl = (query: string) => {
       v-for="keyword of novel.keywords"
       :to="`/novel-list?query=${keyword}\$`"
     >
-      <novel-tag :tag="tryTranslateKeyword(keyword)" />
+      <novel-tag :tag="WebUtil.tryTranslateKeyword(keyword)" />
     </router-link>
   </n-flex>
-
-  <n-flex> </n-flex>
 </template>

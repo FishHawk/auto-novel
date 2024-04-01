@@ -12,13 +12,13 @@ import {
   WenkuNovelRepository,
 } from '@/data/api';
 import { useUserDataStore } from '@/data/stores/user_data';
-import { parseUrl } from '@/data/web/url';
 import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import { Result, runCatching } from '@/util/result';
+import { WebUtil } from '@/util/web';
 
 const userData = useUserDataStore();
 const router = useRouter();
@@ -28,7 +28,7 @@ const isWideScreen = useIsWideScreen(850);
 const url = ref('');
 const query = (url: string) => {
   if (url.length === 0) return;
-  const parseResult = parseUrl(url);
+  const parseResult = WebUtil.parseUrl(url);
   if (parseResult !== undefined) {
     const { providerId, novelId } = parseResult;
     router.push({ path: `/novel/${providerId}/${novelId}` });
