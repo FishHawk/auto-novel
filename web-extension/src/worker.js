@@ -127,12 +127,14 @@ v2.beforeSendHeaders.methods = [];
 {
   const publicCookies = {
     '.amazon.co.jp': ['session-id', 'ubid-acbjp'],
+    '.baidu.com': ['BAIDUID'],
     '.youdao.com': ['OUTFOX_SEARCH_USER_ID'],
   };
 
   function makeCookiePublic(cookie) {
     const domainToUrl = {
       '.amazon.co.jp': 'https://www.amazon.co.jp',
+      '.baidu.com': 'https://fanyi.baidu.com',
       '.youdao.com': 'https://fanyi.youdao.com',
     };
     const {
@@ -240,10 +242,64 @@ function start() {
     ],
   };
   chrome.declarativeNetRequest.updateDynamicRules(rules);
+
+  chrome.contextMenus.create({
+    title: '在当前标签页启动调试器',
+    contexts: ['browser_action'],
+    id: 'status-code-enable',
+  });
 }
 
 chrome.runtime.onStartup.addListener(start);
 chrome.runtime.onInstalled.addListener(start);
+
+const debug = async (source, method, params) => {
+  if (method === 'Fetch.requestPaused') {
+    const opts = {
+      requestId: params.requestId,
+    };
+    const status = params.responseStatusCode;
+    if (status && status >= 400 && status < 500) {
+      opts.responseCode = 200;
+      opts.responseHeaders = params.responseHeaders || [];
+    }
+
+    if (chrome.debugger) {
+      chrome.debugger.sendCommand(
+        {
+          tabId: source.tabId,
+        },
+        'Fetch.continueResponse',
+        opts
+      );
+    }
+  }
+};
+
+chrome.contextMenus.onClicked.addListener(({ menuItemId }, tab) => {
+  if (menuItemId === 'status-code-enable') {
+    chrome.debugger.onEvent.removeListener(debug);
+    chrome.debugger.onEvent.addListener(debug);
+
+    const target = { tabId: tab.id };
+
+    chrome.debugger.attach(target, '1.2', () => {
+      const { lastError } = chrome.runtime;
+      if (lastError) {
+        console.warn(lastError);
+        notify(lastError.message);
+      } else {
+        chrome.debugger.sendCommand(target, 'Fetch.enable', {
+          patterns: [
+            {
+              requestStage: 'Response',
+            },
+          ],
+        });
+      }
+    });
+  }
+});
 
 chrome.browserAction.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {

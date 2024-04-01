@@ -15,10 +15,7 @@ export class BaiduTranslator implements SegmentTranslator {
   }
 
   async init() {
-    await this.api.refreshGtkAndToken();
-    await this.api.refreshGtkAndToken();
-    if (this.api.token === '') throw Error('无法获取token');
-    if (this.api.gtk === '') throw Error('无法获取gtk');
+    await this.api.sug();
     return this;
   }
 
@@ -44,20 +41,15 @@ export class BaiduTranslator implements SegmentTranslator {
     newInput[0] = newInput[0].trimStart();
     const query = newInput.join('\n');
 
-    const json = await this.api.v2transapi(query, { signal });
+    const chunks = await this.api.translate(query, { signal });
 
-    if ('error' in json) {
-      throw Error(`百度翻译错误：${json.error}: ${json.msg}`);
-    } else if ('errno' in json) {
-      if (json.errno == 1000) {
-        throw Error(
-          `百度翻译错误：${json.errno}: ${json.errmsg}，可能是因为输入为空`
-        );
-      } else {
-        throw Error(`百度翻译错误：${json.errno}: ${json.errmsg}`);
+    const lines: string[][] = [];
+    Array.from(chunks).forEach((chunk) => {
+      if (chunk.data.event === 'Translating') {
+        lines.push(chunk.data.list.map((it) => it.dst));
       }
-    } else {
-      return json.trans_result.data.map((item: any) => item.dst);
-    }
+    });
+
+    return lines.flat();
   }
 }
