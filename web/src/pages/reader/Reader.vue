@@ -2,13 +2,13 @@
 import { createReusableTemplate, onKeyDown } from '@vueuse/core';
 
 import { UserRepository } from '@/data/api';
-import { ReaderSettingRepository } from '@/data/stores';
+import { Locator } from '@/data';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
 import { checkIsMobile, useIsWideScreen } from '@/pages/util';
-import { ReaderService } from '@/service';
+import { ReaderService } from '@/domain';
 import { Ok, Result, runCatching } from '@/util/result';
 import { WebUtil } from '@/util/web';
 
@@ -179,7 +179,7 @@ onKeyDown(['ArrowRight'], (e) => {
 });
 
 onKeyDown(['1', '2', '3', '4'], (e) => {
-  const setting = ReaderSettingRepository.ref().value;
+  const setting = Locator.readerSettingRepository().ref.value;
 
   const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
   const translatorId = translatorIds[parseInt(e.key, 10) - 1];

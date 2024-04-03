@@ -2,7 +2,7 @@
 import { SortOutlined } from '@vicons/material';
 
 import { WebNovelTocItemDto } from '@/model/WebNovel';
-import { SettingRepository } from '@/data/stores';
+import { Locator } from '@/data';
 
 import { WebNovelVM } from './common';
 
@@ -12,7 +12,7 @@ defineProps<{
   novel: WebNovelVM;
 }>();
 
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 </script>
 
 <template>

@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 
-import { notice } from '@/pages/components/NoticeBoard.vue';
+import { Locator } from '@/data';
 import {
   TranslateJob,
   migrateGptWorkspace,
   useGptWorkspaceStore,
 } from '@/data/stores/workspace';
-import { CachedSegRepository } from '@/data/translator';
+import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
@@ -72,7 +72,8 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () => {
-  await CachedSegRepository.clear('gpt-seg-cache');
+  const repo = await Locator.cachedSegRepository();
+  await repo.clear('gpt-seg-cache');
   message.success('缓存清除成功');
 };
 

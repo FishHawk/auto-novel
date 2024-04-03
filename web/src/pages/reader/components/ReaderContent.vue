@@ -3,11 +3,11 @@ import { ErrorOutlineOutlined } from '@vicons/material';
 import { useOsTheme } from 'naive-ui';
 
 import { SakuraRepository } from '@/data/api';
-import { ReadPositionRepository, ReaderSettingRepository } from '@/data/stores';
+import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { WebNovelChapterDto } from '@/model/WebNovel';
 import { doAction } from '@/pages/util';
-import { ReaderService } from '@/service';
+import { ReaderService } from '@/domain';
 
 const props = defineProps<{
   gnid: GenericNovelId;
@@ -23,8 +23,10 @@ const paragraphs = computed(() => {
   return ReaderService.getParagraphs(props.gnid, chapter);
 });
 
+const readPositionRepository = Locator.readPositionRepository();
+
 const addReadPosition = () => {
-  ReadPositionRepository.addPosition(props.gnid, {
+  readPositionRepository.addPosition(props.gnid, {
     chapterId: props.chapterId,
     scrollY: window.scrollY,
   });
@@ -36,7 +38,7 @@ window.addEventListener('beforeunload', addReadPosition);
 onBeforeUnmount(addReadPosition);
 
 onMounted(async () => {
-  const readPosition = ReadPositionRepository.getPosition(props.gnid);
+  const readPosition = readPositionRepository.getPosition(props.gnid);
   if (readPosition && readPosition.chapterId === props.chapterId) {
     // hacky: 等待段落显示完成
     await nextTick();
@@ -108,7 +110,7 @@ const createWebIncorrectCase = async (
   );
 };
 
-const setting = ReaderSettingRepository.ref();
+const setting = Locator.readerSettingRepository().ref;
 const fontColor = computed(() => {
   const theme = setting.value.theme;
   if (theme.mode === 'custom') {

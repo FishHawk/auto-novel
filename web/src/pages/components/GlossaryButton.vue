@@ -4,7 +4,7 @@ import { DeleteOutlineOutlined } from '@vicons/material';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 import { doAction } from '@/pages/util';
-import { updateGlossary } from '@/service';
+import { updateGlossary } from '@/domain';
 
 const props = defineProps<{
   gnid: GenericNovelId;

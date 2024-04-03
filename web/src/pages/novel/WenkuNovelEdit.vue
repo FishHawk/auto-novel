@@ -2,8 +2,7 @@
 import { UploadOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { AmazonNovelRepository } from '@/data/amazon';
-import { WenkuNovelRepository } from '@/data/api';
+import { Locator } from '@/data';
 import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import {
@@ -19,6 +18,7 @@ const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 const userData = useUserDataStore();
+const WenkuNovelRepository = Locator.wenkuNovelRepository;
 
 const novelId = route.params.id as string | undefined;
 let loaded = novelId === undefined;
@@ -85,7 +85,7 @@ onMounted(async () => {
       formValue.value = {
         title: result.value.title,
         titleZh: result.value.titleZh,
-        cover: AmazonNovelRepository.prettyCover(result.value.cover),
+        cover: Locator.amazonNovelRepository.prettyCover(result.value.cover),
         authors: result.value.authors,
         artists: result.value.artists,
         r18: result.value.r18,
@@ -94,7 +94,7 @@ onMounted(async () => {
         volumes: result.value.volumes.map(({ asin, title, cover }) => ({
           asin,
           title,
-          cover: AmazonNovelRepository.prettyCover(cover),
+          cover: Locator.amazonNovelRepository.prettyCover(cover),
         })),
       };
       loaded = true;
@@ -163,7 +163,9 @@ const fetchMetadata = async () => {
       return;
     }
 
-    const amazonMetadata = await AmazonNovelRepository.getNovel(urlOrQuery);
+    const amazonMetadata = await Locator.amazonNovelRepository.getNovel(
+      urlOrQuery
+    );
     const volumesOld = formValue.value.volumes.map((oldV) => {
       const newV = amazonMetadata.volumes.find((it) => it.asin === oldV.asin);
       if (newV === undefined) {

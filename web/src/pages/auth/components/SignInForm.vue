@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { AuthService } from '@/service';
+import { AuthService } from '@/domain';
 import { doAction } from '@/pages/util';
 
 const emit = defineEmits<{ (e: 'signIn'): void }>();

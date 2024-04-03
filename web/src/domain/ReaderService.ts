@@ -1,6 +1,5 @@
+import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
-import { LocalVolumeRepository } from '@/data/local';
-import { ReaderSettingRepository } from '@/data/stores';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter, ReaderParagraph, ReaderTocItem } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
@@ -15,7 +14,8 @@ export const getToc = async (
   } else if (gnid.type === 'wenku') {
     throw '不支持文库';
   } else {
-    const volume = await LocalVolumeRepository.getVolume(gnid.volumeId);
+    const repo = await Locator.localVolumeRepository();
+    const volume = await repo.getVolume(gnid.volumeId);
     if (volume === undefined) throw Error('小说不存在');
     return volume.toc.map(
       (it) =>
@@ -40,11 +40,13 @@ const getChapter = async (
   } else if (gnid.type === 'wenku') {
     throw '不支持文库';
   } else {
+    const repo = await Locator.localVolumeRepository();
+
     const volumeId = gnid.volumeId;
-    const volume = await LocalVolumeRepository.getVolume(volumeId);
+    const volume = await repo.getVolume(volumeId);
     if (volume === undefined) throw Error('小说不存在');
 
-    const chapter = await LocalVolumeRepository.getChapter(volumeId, chapterId);
+    const chapter = await repo.getChapter(volumeId, chapterId);
     if (chapter === undefined) throw Error('章节不存在');
 
     const currIndex = volume.toc.findIndex((it) => it.chapterId == chapterId);
@@ -66,7 +68,7 @@ const getParagraphs = (
   gnid: GenericNovelId,
   chapter: ReaderChapter
 ): ReaderParagraph[] => {
-  const setting = ReaderSettingRepository.ref().value;
+  const setting = Locator.readerSettingRepository().ref.value;
 
   const merged: ReaderParagraph[] = [];
   const styles: {

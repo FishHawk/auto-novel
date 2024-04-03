@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { darkTheme, dateZhCN, zhCN, useOsTheme } from 'naive-ui';
 
-import { ReaderSettingRepository } from '@/data/stores';
+import { Locator } from '@/data';
 import { isDarkColor } from '@/pages/util';
 
 const osThemeRef = useOsTheme();
 
-const setting = ReaderSettingRepository.ref();
+const setting = Locator.readerSettingRepository().ref;
 const readerTheme = computed(() => {
   const readerTheme = setting.value.theme;
 

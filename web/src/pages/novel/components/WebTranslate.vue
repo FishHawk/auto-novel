@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import ky from 'ky';
 
+import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
-import { LocalVolumeRepository } from '@/data/local';
-import { SettingRepository } from '@/data/stores';
 import {
   buildWebTranslateTask,
   useGptWorkspaceStore,
@@ -37,7 +36,7 @@ const emit = defineEmits<{
   'update:gpt': [number];
 }>();
 
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
@@ -83,10 +82,11 @@ const files = computed(() => {
 const importToWorkspace = async () => {
   const blob = await ky.get(files.value.jp.url).blob();
   const file = new File([blob], files.value.jp.filename);
-  await LocalVolumeRepository.createVolume(file)
-    .then(() =>
-      LocalVolumeRepository.updateGlossary(file.name, toRaw(props.glossary))
-    )
+
+  const repo = await Locator.localVolumeRepository();
+  await repo
+    .createVolume(file)
+    .then(() => repo.updateGlossary(file.name, toRaw(props.glossary)))
     .then(() => message.success('导入成功'))
     .catch((error) => message.error(`导入失败:${error}`));
 };

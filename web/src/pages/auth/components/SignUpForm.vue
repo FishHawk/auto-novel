@@ -3,7 +3,7 @@ import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { AuthRepository } from '@/data/api';
 import { doAction } from '@/pages/util';
-import { AuthService } from '@/service';
+import { AuthService } from '@/domain';
 
 const emit = defineEmits<{ (e: 'signUp'): void }>();
 

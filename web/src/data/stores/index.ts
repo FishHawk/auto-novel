@@ -1,11 +1,8 @@
-export { ReadPositionRepository } from './ReadPositionRepository';
-export { RuleViewedRepository } from './RuleViewedRepository';
-export { Setting, SettingRepository } from './SettingRepository';
+export { createReadPositionRepository } from './ReadPositionRepository';
+export { createReaderSettingRepository } from './ReaderSettingRepository';
+export { createRuleViewedRepository } from './RuleViewedRepository';
 export {
-  ReaderSetting,
-  ReaderSettingRepository,
-} from './ReaderSettingRepository';
-export {
-  WebSearchHistoryRepository,
-  WenkuSearchHistoryRepository,
+  createWebSearchHistoryRepository,
+  createWenkuSearchHistoryRepository,
 } from './SearchHistoryRepository';
+export { createSettingRepository } from './SettingRepository';

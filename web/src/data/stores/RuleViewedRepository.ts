@@ -1,13 +1,14 @@
-import { lazyUseLocalStorage } from '@/util/storage';
+import { useLocalStorage } from '@vueuse/core';
 
 interface RuleViewed {
   wenkuUploadRule: number;
 }
 
-const lazyStorage = lazyUseLocalStorage<RuleViewed>('readState', {
-  wenkuUploadRule: 0,
-});
-
-export const RuleViewedRepository = {
-  ref: lazyStorage.ref,
+export const createRuleViewedRepository = () => {
+  const ref = useLocalStorage<RuleViewed>('readState', {
+    wenkuUploadRule: 0,
+  });
+  return {
+    ref,
+  };
 };

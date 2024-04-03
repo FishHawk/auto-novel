@@ -5,9 +5,9 @@ import { Epub, Srt, Txt } from '@/util/file';
 import { EpubParserV1 } from './EpubParser';
 import { LocalVolumeDao } from './LocalVolumeDao';
 
-export const createVolume = async (file: File) => {
+export const createVolume = async (dao: LocalVolumeDao, file: File) => {
   const id = file.name;
-  if ((await LocalVolumeDao.getMetadata(id)) !== undefined) {
+  if ((await dao.getMetadata(id)) !== undefined) {
     throw Error('小说已经存在');
   }
 
@@ -35,13 +35,13 @@ export const createVolume = async (file: File) => {
   }
 
   for (const { chapterId, paragraphs } of chapters) {
-    await LocalVolumeDao.createChapter({
+    await dao.createChapter({
       id: `${id}/${chapterId}`,
       volumeId: id,
       paragraphs,
     });
   }
-  await LocalVolumeDao.createMetadata({
+  await dao.createMetadata({
     id,
     createAt: Date.now(),
     toc: chapters.map((it) => ({
@@ -50,5 +50,5 @@ export const createVolume = async (file: File) => {
     glossaryId: uuidv4(),
     glossary: {},
   });
-  await LocalVolumeDao.createFile(id, file);
+  await dao.createFile(id, file);
 };

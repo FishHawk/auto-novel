@@ -7,9 +7,9 @@ import {
 } from 'naive-ui';
 
 import { WenkuNovelRepository } from '@/data/api';
-import { RuleViewedRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { formatError } from '@/data/api/client';
+import { Locator } from '@/data';
 
 const { novelId, type } = defineProps<{
   novelId: string;
@@ -17,7 +17,6 @@ const { novelId, type } = defineProps<{
 }>();
 
 const emits = defineEmits<{ uploadFinished: [] }>();
-
 const userData = useUserDataStore();
 const message = useMessage();
 
@@ -78,7 +77,7 @@ const customRequest = ({
     });
 };
 
-const ruleViewed = RuleViewedRepository.ref();
+const ruleViewed = Locator.ruleViewedRepository().ref;
 const showRuleModal = ref(false);
 const haveReadRule = computed(() => {
   const durationSinceLastRead = Date.now() - ruleViewed.value.wenkuUploadRule;

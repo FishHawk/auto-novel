@@ -1,60 +1,10 @@
-import { TranslatorId } from '@/model/Translator';
+import { useLocalStorage } from '@vueuse/core';
+
+import { ReaderSetting } from '@/model/Setting';
 import { isDarkColor } from '@/pages/util';
-import { lazyUseLocalStorage } from '@/util/storage';
 
-export interface ReaderSetting {
-  mode: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';
-  translationsMode: 'parallel' | 'priority';
-  translations: TranslatorId[];
-  fontSize: number;
-  lineSpace: number;
-  theme: {
-    mode: 'light' | 'dark' | 'system' | 'custom';
-    bodyColor: string;
-    fontColor: string;
-  };
-  enableSakuraReportButton: boolean;
-  mixJpOpacity: number;
-  mixZhOpacity: number;
-}
-
-export namespace ReaderSetting {
-  export const modeOptions = [
-    { label: '日文', value: 'jp' },
-    { label: '中文', value: 'zh' },
-    { label: '中日', value: 'zh-jp' },
-    { label: '日中', value: 'jp-zh' },
-  ];
-  export const translationModeOptions = [
-    { label: '优先', value: 'priority' },
-    { label: '并列', value: 'parallel' },
-  ];
-
-  export const fontSizeOptions = [14, 16, 18, 20, 24, 30, 40];
-
-  export const lineSpaceOptions = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
-
-  export const themeModeOptions = [
-    { label: '浅色', value: 'light' },
-    { label: '深色', value: 'dark' },
-    { label: '跟随系统', value: 'system' },
-    { label: '自定义', value: 'custom' },
-  ];
-  export const themeOptions = [
-    { bodyColor: '#FFFFFF', fontColor: '#000000' },
-    { bodyColor: '#FFF2E2', fontColor: '#000000' },
-    { bodyColor: '#E3EDCD', fontColor: '#000000' },
-    { bodyColor: '#E9EBFE', fontColor: '#000000' },
-    { bodyColor: '#EAEAEF', fontColor: '#000000' },
-
-    { bodyColor: '#000000', fontColor: '#FFFFFF' },
-    { bodyColor: '#272727', fontColor: '#FFFFFF' },
-  ];
-}
-
-const lazyStorage = lazyUseLocalStorage<ReaderSetting>(
-  'readerSetting',
-  {
+export const createReaderSettingRepository = () => {
+  const ref = useLocalStorage<ReaderSetting>('readerSetting', {
     mode: 'zh-jp',
     translationsMode: 'priority',
     translations: ['sakura', 'gpt', 'youdao', 'baidu'],
@@ -64,8 +14,9 @@ const lazyStorage = lazyUseLocalStorage<ReaderSetting>(
     enableSakuraReportButton: true,
     mixJpOpacity: 0.4,
     mixZhOpacity: 0.75,
-  },
-  (ref) => {
+  });
+
+  const migrate = () => {
     const setting = ref.value;
     if (typeof setting.fontSize === 'string') {
       setting.fontSize = Number(
@@ -102,9 +53,11 @@ const lazyStorage = lazyUseLocalStorage<ReaderSetting>(
         };
       }
     }
-  }
-);
+  };
 
-export const ReaderSettingRepository = {
-  ref: lazyStorage.ref,
+  migrate();
+
+  return {
+    ref,
+  };
 };

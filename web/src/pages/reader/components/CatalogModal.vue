@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ReaderService } from '@/service';
+import { ReaderService } from '@/domain';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderTocItem } from '@/model/Reader';
 import { Result, runCatching } from '@/util/result';

@@ -2,12 +2,12 @@
 import { FormatListBulletedOutlined } from '@vicons/material';
 
 import { WebNovelRepository } from '@/data/api';
-import { WebSearchHistoryRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
-import { runCatching } from '@/util/result';
+import { Locator } from '@/data';
 import { useIsWideScreen } from '@/pages/util';
+import { runCatching } from '@/util/result';
 
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
@@ -93,12 +93,13 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
   );
 };
 
-const searchHistory = WebSearchHistoryRepository.ref();
+const webSearchHistoryRepository = Locator.webSearchHistoryRepository();
 
 const search = computed(() => {
+  const searchHistory = webSearchHistoryRepository.ref.value;
   return {
-    suggestions: searchHistory.value.queries,
-    tags: searchHistory.value.tags
+    suggestions: searchHistory.queries,
+    tags: searchHistory.tags
       .sort((a, b) => Math.log2(b.used) - Math.log2(a.used))
       .map((it) => it.tag)
       .slice(0, 8),
@@ -112,7 +113,7 @@ watch(
     if (typeof route.query.query === 'string') {
       query = route.query.query;
     }
-    WebSearchHistoryRepository.addHistory(query);
+    webSearchHistoryRepository.addHistory(query);
   },
   { immediate: true }
 );

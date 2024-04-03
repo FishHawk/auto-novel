@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 
-import { SettingRepository } from '@/data/stores';
+import { Locator } from '@/data';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
-import { CachedSegRepository } from '@/data/translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 const message = useMessage();
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
 
@@ -74,7 +73,8 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () => {
-  await CachedSegRepository.clear('sakura-seg-cache');
+  const repo = await Locator.cachedSegRepository();
+  await repo.clear('sakura-seg-cache');
   message.success('缓存清除成功');
 };
 

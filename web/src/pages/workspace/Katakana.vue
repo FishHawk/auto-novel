@@ -2,7 +2,7 @@
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions } from 'naive-ui';
 
-import { LocalVolumeRepository } from '@/data/local';
+import { Locator } from '@/data';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
@@ -84,7 +84,8 @@ const deleteVolume = (volume: LoadedVolume) => {
 };
 
 const loadLocalFile = (volumeId: string) =>
-  LocalVolumeRepository.getFile(volumeId)
+  Locator.localVolumeRepository()
+    .then((repo) => repo.getFile(volumeId))
     .then((file) => {
       if (file === undefined) {
         throw '小说不存在';

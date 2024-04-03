@@ -1,45 +1,9 @@
-import { TranslatorId } from '@/model/Translator';
-import { lazyUseLocalStorage } from '@/util/storage';
+import { useLocalStorage } from '@vueuse/core';
 
-export interface Setting {
-  theme: 'light' | 'dark' | 'system';
-  enabledTranslator: TranslatorId[];
-  tocSortReverse: boolean;
-  downloadFilenameType: 'jp' | 'zh';
-  downloadFormat: {
-    mode: 'zh' | 'zh-jp' | 'jp-zh';
-    translationsMode: 'parallel' | 'priority';
-    translations: TranslatorId[];
-    type: 'epub' | 'txt';
-  };
-  workspaceSound: boolean;
-}
+import { Setting } from '@/model/Setting';
 
-export namespace Setting {
-  export const downloadModeOptions = [
-    { label: '中文', value: 'zh' },
-    { label: '中日', value: 'zh-jp' },
-    { label: '日中', value: 'jp-zh' },
-  ];
-  export const downloadTranslationModeOptions = [
-    { label: '优先', value: 'priority' },
-    { label: '并列', value: 'parallel' },
-  ];
-  export const downloadTypeOptions = [
-    { label: 'EPUB', value: 'epub' },
-    { label: 'TXT', value: 'txt' },
-  ];
-
-  export const themeOptions = [
-    { label: '亮色主题', value: 'light' },
-    { label: '暗色主题', value: 'dark' },
-    { label: '跟随系统', value: 'system' },
-  ];
-}
-
-const lazyStorage = lazyUseLocalStorage<Setting>(
-  'setting',
-  {
+export const createSettingRepository = () => {
+  const ref = useLocalStorage<Setting>('setting', {
     theme: 'light',
     enabledTranslator: ['baidu', 'youdao', 'gpt', 'sakura'],
     tocSortReverse: false,
@@ -51,8 +15,9 @@ const lazyStorage = lazyUseLocalStorage<Setting>(
       type: 'epub',
     },
     workspaceSound: false,
-  },
-  (ref) => {
+  });
+
+  const migrate = () => {
     const setting = ref.value;
     if ((setting as any).isDark !== undefined) {
       if ((setting as any).isDark === true) {
@@ -74,9 +39,11 @@ const lazyStorage = lazyUseLocalStorage<Setting>(
     if (setting.workspaceSound === undefined) {
       setting.workspaceSound = false;
     }
-  }
-);
+  };
 
-export const SettingRepository = {
-  ref: lazyStorage.ref,
+  migrate();
+
+  return {
+    ref,
+  };
 };

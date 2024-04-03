@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
 
-import { LocalVolumeRepository } from '@/data/local';
-import { Setting, SettingRepository } from '@/data/stores';
+import { Locator } from '@/data';
 import {
   buildPersonalTranslateTask,
   useGptWorkspaceStore,
@@ -10,13 +9,14 @@ import {
 } from '@/data/stores/workspace';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
+import { Setting } from '@/model/Setting';
 
 import LocalVolumeList from './LocalVolumeList.vue';
 
 const props = defineProps<{ type: 'gpt' | 'sakura' }>();
 
 const message = useMessage();
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
@@ -75,9 +75,10 @@ const queueVolume = (volumeId: string) => {
 
 const downloadVolume = async (volumeId: string) => {
   const { mode } = setting.value.downloadFormat;
+  const repo = await Locator.localVolumeRepository();
 
   try {
-    const { filename, blob } = await LocalVolumeRepository.getTranslationFile({
+    const { filename, blob } = await repo.getTranslationFile({
       id: volumeId,
       mode,
       translationsMode: 'priority',

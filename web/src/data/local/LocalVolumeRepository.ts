@@ -10,67 +10,79 @@ import { TranslatorId } from '@/model/Translator';
 
 import { createVolume } from './CreateVolume';
 import { getTranslationFile } from './GetTranslationFile';
-import { LocalVolumeDao } from './LocalVolumeDao';
+import { LocalVolumeDao, createLocalVolumeDao } from './LocalVolumeDao';
 
-const deleteVolume = (id: string) =>
-  Promise.all([
-    LocalVolumeDao.deleteChapterByVolumeId(id),
-    LocalVolumeDao.deleteMetadata(id),
-    LocalVolumeDao.deleteFile(id),
-  ]);
+export const createLocalVolumeRepository = async () => {
+  const dao = await createLocalVolumeDao();
 
-const updateGlossary = (id: string, glossary: Glossary) =>
-  LocalVolumeDao.updateMetadata(id, (value) => {
-    value.glossary = glossary;
-    value.glossaryId = uuidv4();
-    return value;
-  });
+  const deleteVolume = (id: string) =>
+    Promise.all([
+      dao.deleteChapterByVolumeId(id),
+      dao.deleteMetadata(id),
+      dao.deleteFile(id),
+    ]);
 
-const updateTranslation = async (
-  id: string,
-  chapterId: string,
-  translatorId: TranslatorId,
-  translation: ChapterTranslation
-) => {
-  const chapter = await LocalVolumeDao.updateChapter(
-    id,
-    chapterId,
-    (value: LocalVolumeChapter) => {
-      value[translatorId] = translation;
+  const updateGlossary = (id: string, glossary: Glossary) =>
+    dao.updateMetadata(id, (value) => {
+      value.glossary = glossary;
+      value.glossaryId = uuidv4();
       return value;
-    }
-  );
-  if (chapter === undefined) {
-    throw '章节不存在';
-  }
-  const metadata = await LocalVolumeDao.updateMetadata(
-    id,
-    (value: LocalVolumeMetadata) => {
-      value.toc
-        .filter((it) => it.chapterId === chapterId)
-        .forEach((it) => (it[translatorId] = translation.glossaryId));
-      return value;
-    }
-  );
-  if (metadata === undefined) {
-    throw '小说不存在';
-  }
-  return metadata.toc.filter((it) => it[translatorId] !== undefined).length;
-};
+    });
 
-export const LocalVolumeRepository = {
-  getFile: LocalVolumeDao.getFile,
-  //
-  listVolume: LocalVolumeDao.listMetadata,
-  getVolume: LocalVolumeDao.getMetadata,
-  createVolume,
-  deleteVolume,
-  updateGlossary,
-  //
-  getChapter: LocalVolumeDao.getChapter,
-  updateTranslation,
-  //
-  deleteVolumesDb: LocalVolumeDao.clear,
-  //
-  getTranslationFile,
+  const updateTranslation = async (
+    id: string,
+    chapterId: string,
+    translatorId: TranslatorId,
+    translation: ChapterTranslation
+  ) => {
+    const chapter = await dao.updateChapter(
+      id,
+      chapterId,
+      (value: LocalVolumeChapter) => {
+        value[translatorId] = translation;
+        return value;
+      }
+    );
+    if (chapter === undefined) {
+      throw '章节不存在';
+    }
+    const metadata = await dao.updateMetadata(
+      id,
+      (value: LocalVolumeMetadata) => {
+        value.toc
+          .filter((it) => it.chapterId === chapterId)
+          .forEach((it) => (it[translatorId] = translation.glossaryId));
+        return value;
+      }
+    );
+    if (metadata === undefined) {
+      throw '小说不存在';
+    }
+    return metadata.toc.filter((it) => it[translatorId] !== undefined).length;
+  };
+
+  const bind = <Args extends Array<any>, Return>(
+    fn: (dao: LocalVolumeDao, ...args: Args) => Promise<Return>
+  ) => {
+    return async (...args: Args): Promise<Return> => {
+      return fn(dao, ...args);
+    };
+  };
+
+  return {
+    getFile: dao.getFile,
+    //
+    listVolume: dao.listMetadata,
+    getVolume: dao.getMetadata,
+    createVolume: bind(createVolume),
+    deleteVolume,
+    updateGlossary,
+    //
+    getChapter: dao.getChapter,
+    updateTranslation,
+    //
+    deleteVolumesDb: dao.clear,
+    //
+    getTranslationFile: bind(getTranslationFile),
+  };
 };

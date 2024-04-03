@@ -1,18 +1,19 @@
 <script lang="ts" setup>
 import { InfoOutlined } from '@vicons/material';
 
-import { Setting, SettingRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
+import { Setting } from '@/model/Setting';
 import { useIsWideScreen } from '@/pages/util';
+import { Locator } from '@/data';
 
 defineProps<{
   gnid: GenericNovelId;
   glossary: Glossary;
 }>();
 const userData = useUserDataStore();
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 const isWideScreen = useIsWideScreen(600);
 
 // 翻译设置

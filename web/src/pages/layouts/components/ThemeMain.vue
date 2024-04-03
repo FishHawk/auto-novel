@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
 
-import { SettingRepository } from '@/data/stores';
+import { Locator } from '@/data';
 
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 const osThemeRef = useOsTheme();
 
 const theme = computed(() => {

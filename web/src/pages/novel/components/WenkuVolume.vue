@@ -2,7 +2,6 @@
 import { FileDownloadOutlined } from '@vicons/material';
 
 import { WenkuNovelRepository } from '@/data/api';
-import { SettingRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import {
   buildWenkuTranslateTask,
@@ -11,6 +10,7 @@ import {
 } from '@/data/stores/workspace';
 import { VolumeJpDto } from '@/model/WenkuNovel';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
+import { Locator } from '@/data';
 
 const { novelId, volume, getParams } = defineProps<{
   novelId: string;
@@ -25,7 +25,7 @@ const emit = defineEmits<{ delete: [] }>();
 
 const message = useMessage();
 const userData = useUserDataStore();
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 

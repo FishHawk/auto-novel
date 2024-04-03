@@ -1,8 +1,8 @@
 import { MD5 } from 'crypto-es/lib/md5';
 
+import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
 
-import { CachedSegRepository } from './SegCacheRepository';
 import { BaiduTranslator, BaiduTranslatorConfig } from './translator_baidu';
 import { OpenAiTranslator, OpenAiTranslatorConfig } from './translator_openai';
 import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
@@ -23,10 +23,12 @@ const createSegIndexedDbCache = async (
       MD5(JSON.stringify({ seg, extra })).toString(),
 
     get: (hash: string): Promise<string[] | undefined> =>
-      CachedSegRepository.get(storeName, hash),
+      Locator.cachedSegRepository().then((repo) => repo.get(storeName, hash)),
 
     save: (hash: string, text: string[]): Promise<void> =>
-      CachedSegRepository.create(storeName, hash, text).then(() => {}),
+      Locator.cachedSegRepository()
+        .then((repo) => repo.create(storeName, hash, text))
+        .then(() => {}),
   };
 };
 

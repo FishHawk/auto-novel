@@ -1,14 +1,11 @@
 <script lang="ts" setup>
-import {
-  WebSearchHistoryRepository,
-  WenkuSearchHistoryRepository,
-} from '@/data/stores';
-import { Setting, SettingRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
+import { Setting } from '@/model/Setting';
 import { UserRole } from '@/model/User';
+import { Locator } from '@/data';
 
 const message = useMessage();
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 const userData = useUserDataStore();
 
 const roleToReadableText = (role: UserRole) => {
@@ -21,12 +18,12 @@ const roleToReadableText = (role: UserRole) => {
 };
 
 const clearWebSearchHistory = () => {
-  WebSearchHistoryRepository.clear();
+  Locator.webSearchHistoryRepository().clear();
   message.success('清空成功');
 };
 
 const clearWenkuSearchHistory = () => {
-  WenkuSearchHistoryRepository.clear();
+  Locator.wenkuSearchHistoryRepository().clear();
   message.success('清空成功');
 };
 </script>

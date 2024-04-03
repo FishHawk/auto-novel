@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { Setting, SettingRepository } from '@/data/stores';
+import { Setting } from '@/model/Setting';
+import { Locator } from '@/data';
 
 import LocalVolumeList from './LocalVolumeList.vue';
 
-const setting = SettingRepository.ref();
+const setting = Locator.settingRepository().ref;
 
 const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 </script>

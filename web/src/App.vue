@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { AuthService } from '@/service';
+import { AuthService } from '@/domain';
 
 AuthService.activate();
 </script>
