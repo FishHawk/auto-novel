@@ -12,7 +12,11 @@ const syncStorage = syncUseLocalStorage<ReaderPositions>('readPosition', {});
 
 const addPosition = (gnid: GenericNovelId, position: ReadPosition) => {
   const positions = syncStorage.get();
-  positions[GenericNovelId.toString(gnid)] = position;
+  if (position.scrollY === 0) {
+    delete positions[GenericNovelId.toString(gnid)];
+  } else {
+    positions[GenericNovelId.toString(gnid)] = position;
+  }
   syncStorage.set(positions);
 };
 

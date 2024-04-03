@@ -23,16 +23,24 @@ const paragraphs = computed(() => {
   return ReaderService.getParagraphs(props.gnid, chapter);
 });
 
-window.addEventListener('beforeunload', () => {
+const addReadPosition = () => {
   ReadPositionRepository.addPosition(props.gnid, {
     chapterId: props.chapterId,
     scrollY: window.scrollY,
   });
-});
+};
 
-onMounted(() => {
+window.removeEventListener('beforeunload', addReadPosition);
+window.addEventListener('beforeunload', addReadPosition);
+
+onBeforeUnmount(addReadPosition);
+
+onMounted(async () => {
   const readPosition = ReadPositionRepository.getPosition(props.gnid);
   if (readPosition && readPosition.chapterId === props.chapterId) {
+    // hacky: 等待段落显示完成
+    await nextTick();
+    await nextTick();
     window.scrollTo({ top: readPosition.scrollY });
   }
 });
