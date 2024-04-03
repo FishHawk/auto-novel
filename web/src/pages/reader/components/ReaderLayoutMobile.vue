@@ -61,44 +61,52 @@ const onGlobalClick = (event: MouseEvent) => {
         padding-bottom: env(safe-area-inset-bottom);
       "
     >
-      <side-button
-        quaternary
-        :disable="!chapter.prevId"
-        text="上一话"
-        :icon="ArrowBackIosOutlined"
-        @click="emit('nav', chapter.prevId!!)"
-        style="flex: 1"
-      />
-      <router-link v-if="novelUrl" :to="novelUrl">
+      <div style="flex: 1 1 0px">
+        <side-button
+          quaternary
+          :disable="!chapter.prevId"
+          text="上一话"
+          :icon="ArrowBackIosOutlined"
+          @click="emit('nav', chapter.prevId!!)"
+          style="width: 100%"
+        />
+      </div>
+      <router-link v-if="novelUrl" :to="novelUrl" style="flex: 1">
         <side-button
           quaternary
           text="详情"
           :icon="LibraryBooksOutlined"
-          style="flex: 1"
+          style="width: 100%"
         />
       </router-link>
-      <side-button
-        quaternary
-        text="目录"
-        :icon="FormatListBulletedOutlined"
-        @click="emit('requireCatalogModal')"
-        style="flex: 1"
-      />
-      <side-button
-        quaternary
-        text="设置"
-        :icon="TuneOutlined"
-        @click="emit('requireSettingModal')"
-        style="flex: 1"
-      />
-      <side-button
-        quaternary
-        :disable="!chapter.nextId"
-        text="下一话"
-        :icon="ArrowForwardIosOutlined"
-        @click="emit('nav', chapter.nextId!!)"
-        style="flex: 1"
-      />
+      <div style="flex: 1 1 0px">
+        <side-button
+          quaternary
+          text="目录"
+          :icon="FormatListBulletedOutlined"
+          @click="emit('requireCatalogModal')"
+          style="width: 100%"
+        />
+      </div>
+      <div style="flex: 1 1 0px">
+        <side-button
+          quaternary
+          text="设置"
+          :icon="TuneOutlined"
+          @click="emit('requireSettingModal')"
+          style="width: 100%"
+        />
+      </div>
+      <div style="flex: 1 1 0px">
+        <side-button
+          quaternary
+          :disable="!chapter.nextId"
+          text="下一话"
+          :icon="ArrowForwardIosOutlined"
+          @click="emit('nav', chapter.nextId!!)"
+          style="width: 100%"
+        />
+      </div>
     </n-flex>
   </n-drawer>
 </template>
