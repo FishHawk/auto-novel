@@ -2,8 +2,8 @@
 import ky from 'ky';
 
 import { WebNovelRepository } from '@/data/api';
-import { LocalVolumeService } from '@/data/local';
-import { useSettingStore } from '@/data/stores/setting';
+import { LocalVolumeRepository } from '@/data/local';
+import { SettingRepository } from '@/data/stores';
 import {
   buildWebTranslateTask,
   useGptWorkspaceStore,
@@ -37,7 +37,7 @@ const emit = defineEmits<{
   'update:gpt': [number];
 }>();
 
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 const message = useMessage();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
@@ -53,11 +53,10 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
 
 const files = computed(() => {
   const title =
-    setting.downloadFilenameType === 'jp' ? titleJp : titleZh ?? titleJp;
+    setting.value.downloadFilenameType === 'jp' ? titleJp : titleZh ?? titleJp;
 
-  const { mode, translationsMode, translations } = setting.downloadFormat;
-
-  const type = setting.downloadFormat.type;
+  const { mode, translationsMode, translations, type } =
+    setting.value.downloadFormat;
 
   return {
     jp: WebNovelRepository.createFileUrl({
@@ -84,9 +83,9 @@ const files = computed(() => {
 const importToWorkspace = async () => {
   const blob = await ky.get(files.value.jp.url).blob();
   const file = new File([blob], files.value.jp.filename);
-  await LocalVolumeService.createVolume(file)
+  await LocalVolumeRepository.createVolume(file)
     .then(() =>
-      LocalVolumeService.updateGlossary(file.name, toRaw(props.glossary))
+      LocalVolumeRepository.updateGlossary(file.name, toRaw(props.glossary))
     )
     .then(() => message.success('导入成功'))
     .catch((error) => message.error(`导入失败:${error}`));

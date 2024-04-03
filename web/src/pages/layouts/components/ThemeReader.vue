@@ -1,27 +1,29 @@
 <script lang="ts" setup>
 import { darkTheme, dateZhCN, zhCN, useOsTheme } from 'naive-ui';
 
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { ReaderSettingRepository } from '@/data/stores';
 import { isDarkColor } from '@/pages/util';
 
-const readerSetting = useReaderSettingStore();
 const osThemeRef = useOsTheme();
 
+const setting = ReaderSettingRepository.ref();
 const readerTheme = computed(() => {
+  const readerTheme = setting.value.theme;
+
   let theme: typeof darkTheme | null = null;
   let bodyColor: string | undefined = undefined;
 
-  if (readerSetting.theme.mode === 'light') {
+  if (readerTheme.mode === 'light') {
     theme = null;
-  } else if (readerSetting.theme.mode === 'dark') {
+  } else if (readerTheme.mode === 'dark') {
     theme = darkTheme;
-  } else if (readerSetting.theme.mode === 'system') {
+  } else if (readerTheme.mode === 'system') {
     if (osThemeRef.value) {
       theme = osThemeRef.value === 'dark' ? darkTheme : null;
     }
-  } else if (readerSetting.theme.mode === 'custom') {
-    theme = isDarkColor(readerSetting.theme.bodyColor) ? darkTheme : null;
-    bodyColor = readerSetting.theme.bodyColor;
+  } else if (readerTheme.mode === 'custom') {
+    theme = isDarkColor(readerTheme.bodyColor) ? darkTheme : null;
+    bodyColor = readerTheme.bodyColor;
   }
 
   return { theme, bodyColor: bodyColor ? { bodyColor } : undefined };

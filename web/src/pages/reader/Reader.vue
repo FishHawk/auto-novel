@@ -2,7 +2,7 @@
 import { createReusableTemplate, onKeyDown } from '@vueuse/core';
 
 import { UserRepository } from '@/data/api';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { ReaderSettingRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
@@ -20,7 +20,6 @@ const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
 const route = useRoute();
 const router = useRouter();
 const userData = useUserDataStore();
-const setting = useReaderSettingStore();
 const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
@@ -180,6 +179,8 @@ onKeyDown(['ArrowRight'], (e) => {
 });
 
 onKeyDown(['1', '2', '3', '4'], (e) => {
+  const setting = ReaderSettingRepository.ref().value;
+
   const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
   const translatorId = translatorIds[parseInt(e.key, 10) - 1];
   if (setting.translationsMode === 'parallel') {

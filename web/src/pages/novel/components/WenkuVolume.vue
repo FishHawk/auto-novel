@@ -2,7 +2,7 @@
 import { FileDownloadOutlined } from '@vicons/material';
 
 import { WenkuNovelRepository } from '@/data/api';
-import { useSettingStore } from '@/data/stores/setting';
+import { SettingRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import {
   buildWenkuTranslateTask,
@@ -25,7 +25,7 @@ const emit = defineEmits<{ delete: [] }>();
 
 const message = useMessage();
 const userData = useUserDataStore();
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
@@ -46,7 +46,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
 };
 
 const file = computed(() => {
-  const { mode, translationsMode, translations } = setting.downloadFormat;
+  const { mode, translationsMode, translations } = setting.value.downloadFormat;
 
   const { url, filename } = WenkuNovelRepository.createFileUrl({
     novelId,

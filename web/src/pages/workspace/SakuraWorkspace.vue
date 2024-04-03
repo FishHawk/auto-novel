@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 
-import { useSettingStore } from '@/data/stores/setting';
+import { SettingRepository } from '@/data/stores';
 import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { CachedSegRepository } from '@/data/translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
@@ -9,7 +9,7 @@ import { useIsWideScreen } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 const message = useMessage();
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
 
@@ -27,7 +27,7 @@ const getNextJob = () => {
   );
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);
-  } else if (processedJobs.value.size === 0 && setting.workspaceSound) {
+  } else if (processedJobs.value.size === 0 && setting.value.workspaceSound) {
     // 全部任务都已经完成
     new Audio(SoundAllTaskCompleted).play();
   }

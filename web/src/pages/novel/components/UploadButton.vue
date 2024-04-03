@@ -7,7 +7,7 @@ import {
 } from 'naive-ui';
 
 import { WenkuNovelRepository } from '@/data/api';
-import { useReadStateStore } from '@/data/stores/read_states';
+import { RuleViewedRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { formatError } from '@/data/api/client';
 
@@ -19,7 +19,6 @@ const { novelId, type } = defineProps<{
 const emits = defineEmits<{ uploadFinished: [] }>();
 
 const userData = useUserDataStore();
-const readState = useReadStateStore();
 const message = useMessage();
 
 function onFinish({
@@ -79,15 +78,16 @@ const customRequest = ({
     });
 };
 
+const ruleViewed = RuleViewedRepository.ref();
 const showRuleModal = ref(false);
 const haveReadRule = computed(() => {
-  const durationSinceLastRead = Date.now() - readState.wenkuUploadRule;
+  const durationSinceLastRead = Date.now() - ruleViewed.value.wenkuUploadRule;
   return durationSinceLastRead < 24 * 3600 * 1000;
 });
 const uploadRef = ref<UploadInst>();
 const uploadVolumes = () => {
   showRuleModal.value = true;
-  readState.wenkuUploadRule = Date.now();
+  ruleViewed.value.wenkuUploadRule = Date.now();
 };
 </script>
 

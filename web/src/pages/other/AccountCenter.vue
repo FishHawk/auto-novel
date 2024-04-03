@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import {
-  useWebSearchHistoryStore,
-  useWenkuSearchHistoryStore,
-} from '@/data/stores/search_history';
-import { themeOptions, useSettingStore } from '@/data/stores/setting';
+  WebSearchHistoryRepository,
+  WenkuSearchHistoryRepository,
+} from '@/data/stores';
+import { Setting, SettingRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { UserRole } from '@/model/User';
 
 const message = useMessage();
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 const userData = useUserDataStore();
 
 const roleToReadableText = (role: UserRole) => {
@@ -21,12 +21,12 @@ const roleToReadableText = (role: UserRole) => {
 };
 
 const clearWebSearchHistory = () => {
-  useWebSearchHistoryStore().clear();
+  WebSearchHistoryRepository.clear();
   message.success('清空成功');
 };
 
 const clearWenkuSearchHistory = () => {
-  useWenkuSearchHistoryStore().clear();
+  WenkuSearchHistoryRepository.clear();
   message.success('清空成功');
 };
 </script>
@@ -47,7 +47,7 @@ const clearWenkuSearchHistory = () => {
             <b>主题</b>
             <c-radio-group
               v-model:value="setting.theme"
-              :options="themeOptions"
+              :options="Setting.themeOptions"
               size="small"
             />
           </n-flex>

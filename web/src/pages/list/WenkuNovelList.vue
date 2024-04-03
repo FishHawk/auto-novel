@@ -2,7 +2,7 @@
 import { PlusOutlined } from '@vicons/material';
 
 import { WenkuNovelRepository } from '@/data/api';
-import { useWenkuSearchHistoryStore } from '@/data/stores/search_history';
+import { WenkuSearchHistoryRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
@@ -12,7 +12,6 @@ import { Loader } from './components/NovelList.vue';
 
 const userData = useUserDataStore();
 const route = useRoute();
-const searchHistory = useWenkuSearchHistoryStore();
 
 const options = userData.isOldAss
   ? [
@@ -48,10 +47,12 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
   }
 };
 
+const searchHistory = WenkuSearchHistoryRepository.ref();
+
 const search = computed(() => {
   return {
-    suggestions: searchHistory.queries,
-    tags: searchHistory.tags
+    suggestions: searchHistory.value.queries,
+    tags: searchHistory.value.tags
       .sort((a, b) => Math.log2(b.used) - Math.log2(a.used))
       .map((it) => it.tag)
       .slice(0, 8),
@@ -65,7 +66,7 @@ watch(
     if (typeof route.query.query === 'string') {
       query = route.query.query;
     }
-    searchHistory.addHistory(query);
+    WenkuSearchHistoryRepository.addHistory(query);
   },
   { immediate: true }
 );

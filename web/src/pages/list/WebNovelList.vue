@@ -2,7 +2,7 @@
 import { FormatListBulletedOutlined } from '@vicons/material';
 
 import { WebNovelRepository } from '@/data/api';
-import { useWebSearchHistoryStore } from '@/data/stores/search_history';
+import { WebSearchHistoryRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
@@ -15,7 +15,6 @@ import { menuOptions } from './components/menu';
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 const userData = useUserDataStore();
-const searchHistory = useWebSearchHistoryStore();
 
 const oldAssOptions = userData.isOldAss
   ? [
@@ -94,10 +93,12 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
   );
 };
 
+const searchHistory = WebSearchHistoryRepository.ref();
+
 const search = computed(() => {
   return {
-    suggestions: searchHistory.queries,
-    tags: searchHistory.tags
+    suggestions: searchHistory.value.queries,
+    tags: searchHistory.value.tags
       .sort((a, b) => Math.log2(b.used) - Math.log2(a.used))
       .map((it) => it.tag)
       .slice(0, 8),
@@ -111,7 +112,7 @@ watch(
     if (typeof route.query.query === 'string') {
       query = route.query.query;
     }
-    searchHistory.addHistory(query);
+    WebSearchHistoryRepository.addHistory(query);
   },
   { immediate: true }
 );

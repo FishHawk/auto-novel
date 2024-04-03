@@ -2,7 +2,7 @@
 import { MoreVertOutlined } from '@vicons/material';
 import { UploadFileInfo } from 'naive-ui';
 
-import { LocalVolumeService } from '@/data/local';
+import { LocalVolumeRepository } from '@/data/local';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 
 const props = defineProps<{
@@ -17,7 +17,7 @@ const message = useMessage();
 const volumes = ref<LocalVolumeMetadata[]>();
 
 const loadVolumes = async () => {
-  volumes.value = await LocalVolumeService.listVolume();
+  volumes.value = await LocalVolumeRepository.listVolume();
 };
 loadVolumes();
 
@@ -49,7 +49,7 @@ const handleSelect = (key: string) => {
 
 const showClearModal = ref(false);
 const deleteAllVolumes = () =>
-  LocalVolumeService.deleteVolumesDb()
+  LocalVolumeRepository.deleteVolumesDb()
     .then(loadVolumes)
     .then(() => (showClearModal.value = false))
     .catch((error) => {
@@ -74,7 +74,7 @@ const sortedVolumes = computed(() => {
 });
 
 const deleteVolume = (volumeId: string) =>
-  LocalVolumeService.deleteVolume(volumeId)
+  LocalVolumeRepository.deleteVolume(volumeId)
     .then(() => message.info('删除成功'))
     .then(() => loadVolumes())
     .catch((error) => message.error(`删除失败：${error}`));

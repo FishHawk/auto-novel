@@ -1,15 +1,16 @@
 <script lang="ts" setup>
 import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
 
-import { useSettingStore } from '@/data/stores/setting';
+import { SettingRepository } from '@/data/stores';
 
-const setting = useSettingStore();
-
+const setting = SettingRepository.ref();
 const osThemeRef = useOsTheme();
+
 const theme = computed(() => {
+  const theme = setting.value.theme;
   let specificTheme: 'light' | 'dark' = 'light';
-  if (setting.theme !== 'system') {
-    specificTheme = setting.theme;
+  if (theme !== 'system') {
+    specificTheme = theme;
   } else if (osThemeRef.value) {
     specificTheme = osThemeRef.value;
   }

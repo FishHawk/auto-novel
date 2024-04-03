@@ -1,6 +1,6 @@
 import { WebNovelRepository } from '@/data/api';
 import { client } from '@/data/api/client';
-import { LocalVolumeService } from '@/data/local';
+import { LocalVolumeRepository } from '@/data/local';
 import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
 import { WebNovelDto } from '@/model/WebNovel';
 import { delay, keepPageAlive } from '@/util';
@@ -440,13 +440,13 @@ const translateLocal = async (
   signal?: AbortSignal
 ) => {
   // Api
-  const getVolume = () => LocalVolumeService.getVolume(volumeId);
+  const getVolume = () => LocalVolumeRepository.getVolume(volumeId);
 
   const getChapter = (chapterId: string) =>
-    LocalVolumeService.getChapter(volumeId, chapterId);
+    LocalVolumeRepository.getChapter(volumeId, chapterId);
 
   const updateTranslation = (chapterId: string, json: ChapterTranslation) =>
-    LocalVolumeService.updateTranslation(
+    LocalVolumeRepository.updateTranslation(
       volumeId,
       chapterId,
       translatorDesc.id,

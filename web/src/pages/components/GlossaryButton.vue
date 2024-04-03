@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { GlossaryService } from '@/service';
+import { DeleteOutlineOutlined } from '@vicons/material';
+
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 import { doAction } from '@/pages/util';
-import { DeleteOutlineOutlined } from '@vicons/material';
+import { updateGlossary } from '@/service';
 
 const props = defineProps<{
   gnid: GenericNovelId;
@@ -36,17 +37,15 @@ const readableGnid = computed(() => {
 
 const submitGlossary = () =>
   doAction(
-    GlossaryService.updateGlossary(props.gnid, toRaw(glossary.value)).then(
-      () => {
-        // 触发组件外的术语表本体更新。有点傻，但够用。
-        for (const key in props.value) {
-          delete props.value[key];
-        }
-        for (const key in glossary.value) {
-          props.value[key] = glossary.value[key];
-        }
+    updateGlossary(props.gnid, toRaw(glossary.value)).then(() => {
+      // 触发组件外的术语表本体更新。有点傻，但够用。
+      for (const key in props.value) {
+        delete props.value[key];
       }
-    ),
+      for (const key in glossary.value) {
+        props.value[key] = glossary.value[key];
+      }
+    }),
     '术语表提交',
     message
   );
@@ -84,16 +83,12 @@ const addTerm = () => {
 };
 
 const exportGlossary = () => {
-  navigator.clipboard.writeText(
-    GlossaryService.exportGlossaryToText(glossary.value)
-  );
+  navigator.clipboard.writeText(Glossary.encodeToText(glossary.value));
   message.info('导出成功，已经将术语表复制到剪切板');
 };
 
 const importGlossary = () => {
-  const importedGlossary = GlossaryService.parseGlossaryFromText(
-    importGlossaryRaw.value
-  );
+  const importedGlossary = Glossary.decodeFromText(importGlossaryRaw.value);
   if (importedGlossary === undefined) {
     message.error('导入失败：术语表格式不正确');
   } else {

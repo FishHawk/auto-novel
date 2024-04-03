@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { SortOutlined } from '@vicons/material';
 
-import { useSettingStore } from '@/data/stores/setting';
+import { SettingRepository } from '@/data/stores';
 import { WebNovelTocItemDto } from '@/model/WebNovel';
 
 import { WebNovelVM } from './common';
@@ -12,7 +12,7 @@ defineProps<{
   novel: WebNovelVM;
 }>();
 
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 
 const showCatalogDrawer = ref(false);
 </script>

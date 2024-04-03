@@ -1,6 +1,6 @@
 import { WebNovelRepository } from '@/data/api';
 import { LocalVolumeRepository } from '@/data/local';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { ReaderSettingRepository } from '@/data/stores';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter, ReaderParagraph, ReaderTocItem } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
@@ -15,9 +15,9 @@ export const getToc = async (
   } else if (gnid.type === 'wenku') {
     throw '不支持文库';
   } else {
-    const metadata = await LocalVolumeRepository.getMetadata(gnid.volumeId);
-    if (metadata === undefined) throw Error('小说不存在');
-    return metadata.toc.map(
+    const volume = await LocalVolumeRepository.getVolume(gnid.volumeId);
+    if (volume === undefined) throw Error('小说不存在');
+    return volume.toc.map(
       (it) =>
         <ReaderTocItem>{
           titleJp: it.chapterId,
@@ -41,18 +41,18 @@ const getChapter = async (
     throw '不支持文库';
   } else {
     const volumeId = gnid.volumeId;
-    const metadata = await LocalVolumeRepository.getMetadata(volumeId);
-    if (metadata === undefined) throw Error('小说不存在');
+    const volume = await LocalVolumeRepository.getVolume(volumeId);
+    if (volume === undefined) throw Error('小说不存在');
 
     const chapter = await LocalVolumeRepository.getChapter(volumeId, chapterId);
     if (chapter === undefined) throw Error('章节不存在');
 
-    const currIndex = metadata.toc.findIndex((it) => it.chapterId == chapterId);
+    const currIndex = volume.toc.findIndex((it) => it.chapterId == chapterId);
     return <ReaderChapter>{
       titleJp: `${volumeId} - ${chapterId}`,
       titleZh: undefined,
-      prevId: metadata.toc[currIndex - 1]?.chapterId,
-      nextId: metadata.toc[currIndex + 1]?.chapterId,
+      prevId: volume.toc[currIndex - 1]?.chapterId,
+      nextId: volume.toc[currIndex + 1]?.chapterId,
       paragraphs: chapter.paragraphs,
       baiduParagraphs: chapter.baidu?.paragraphs,
       youdaoParagraphs: chapter.youdao?.paragraphs,
@@ -66,7 +66,7 @@ const getParagraphs = (
   gnid: GenericNovelId,
   chapter: ReaderChapter
 ): ReaderParagraph[] => {
-  const setting = useReaderSettingStore();
+  const setting = ReaderSettingRepository.ref().value;
 
   const merged: ReaderParagraph[] = [];
   const styles: {

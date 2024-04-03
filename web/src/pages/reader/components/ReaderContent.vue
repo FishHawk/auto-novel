@@ -3,8 +3,7 @@ import { ErrorOutlineOutlined } from '@vicons/material';
 import { useOsTheme } from 'naive-ui';
 
 import { SakuraRepository } from '@/data/api';
-import { ReadPositionStore } from '@/data/stores/read_position';
-import { useReaderSettingStore } from '@/data/stores/reader_setting';
+import { ReadPositionRepository, ReaderSettingRepository } from '@/data/stores';
 import { GenericNovelId } from '@/model/Common';
 import { WebNovelChapterDto } from '@/model/WebNovel';
 import { doAction } from '@/pages/util';
@@ -16,7 +15,6 @@ const props = defineProps<{
   chapter: WebNovelChapterDto;
 }>();
 
-const setting = useReaderSettingStore();
 const message = useMessage();
 const osThemeRef = useOsTheme();
 
@@ -26,14 +24,14 @@ const paragraphs = computed(() => {
 });
 
 window.addEventListener('beforeunload', () => {
-  ReadPositionStore.addPosition(props.gnid, {
+  ReadPositionRepository.addPosition(props.gnid, {
     chapterId: props.chapterId,
     scrollY: window.scrollY,
   });
 });
 
 onMounted(() => {
-  const readPosition = ReadPositionStore.getPosition(props.gnid);
+  const readPosition = ReadPositionRepository.getPosition(props.gnid);
   if (readPosition && readPosition.chapterId === props.chapterId) {
     window.scrollTo({ top: readPosition.scrollY });
   }
@@ -102,13 +100,15 @@ const createWebIncorrectCase = async (
   );
 };
 
+const setting = ReaderSettingRepository.ref();
 const fontColor = computed(() => {
-  if (setting.theme.mode === 'custom') {
-    return setting.theme.fontColor;
+  const theme = setting.value.theme;
+  if (theme.mode === 'custom') {
+    return theme.fontColor;
   } else {
     let specificTheme: 'light' | 'dark' = 'light';
-    if (setting.theme.mode !== 'system') {
-      specificTheme = setting.theme.mode;
+    if (theme.mode !== 'system') {
+      specificTheme = theme.mode;
     } else if (osThemeRef.value) {
       specificTheme = osThemeRef.value;
     }
@@ -170,3 +170,4 @@ const fontColor = computed(() => {
   opacity: v-bind('setting.mixJpOpacity');
 }
 </style>
+@/data/stores/ReadPosition

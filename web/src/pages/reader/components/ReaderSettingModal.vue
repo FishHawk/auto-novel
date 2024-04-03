@@ -1,34 +1,31 @@
 <script lang="ts" setup>
-import {
-  fontSizeOptions,
-  lineSpaceOptions,
-  modeOptions,
-  themeModeOptions,
-  themeOptions,
-  translationModeOptions,
-  useReaderSettingStore,
-} from '@/data/stores/reader_setting';
+import { ReaderSetting, ReaderSettingRepository } from '@/data/stores';
 import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(600);
-const setting = useReaderSettingStore();
+const setting = ReaderSettingRepository.ref();
 
-const setCustomBodyColor = (color: string) => (setting.theme.bodyColor = color);
-const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
+const setCustomBodyColor = (color: string) =>
+  (setting.value.theme.bodyColor = color);
+const setCustomFontColor = (color: string) =>
+  (setting.value.theme.fontColor = color);
 </script>
 
 <template>
   <c-modal title="设置">
     <n-flex vertical size="large" style="width: 100%">
       <c-action-wrapper title="语言">
-        <c-radio-group v-model:value="setting.mode" :options="modeOptions" />
+        <c-radio-group
+          v-model:value="setting.mode"
+          :options="ReaderSetting.modeOptions"
+        />
       </c-action-wrapper>
 
       <c-action-wrapper title="翻译">
         <n-flex>
           <c-radio-group
             v-model:value="setting.translationsMode"
-            :options="translationModeOptions"
+            :options="ReaderSetting.translationModeOptions"
           />
           <translator-check
             v-model:value="setting.translations"
@@ -41,7 +38,7 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
       <c-action-wrapper title="字体">
         <c-select-number
           v-model:value="setting.fontSize"
-          :options="fontSizeOptions"
+          :options="ReaderSetting.fontSizeOptions"
           :format="(value: number) => `${value}px`"
         />
       </c-action-wrapper>
@@ -49,7 +46,7 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
       <c-action-wrapper title="行距">
         <c-select-number
           v-model:value="setting.lineSpace"
-          :options="lineSpaceOptions"
+          :options="ReaderSetting.lineSpaceOptions"
           :format="(value: number) => value.toFixed(1)"
         />
       </c-action-wrapper>
@@ -58,12 +55,12 @@ const setCustomFontColor = (color: string) => (setting.theme.fontColor = color);
         <n-flex size="large" vertical>
           <c-radio-group
             v-model:value="setting.theme.mode"
-            :options="themeModeOptions"
+            :options="ReaderSetting.themeModeOptions"
           />
           <template v-if="setting.theme.mode === 'custom'">
             <n-flex>
               <n-radio
-                v-for="theme of themeOptions"
+                v-for="theme of ReaderSetting.themeOptions"
                 :checked="theme.bodyColor == setting.theme.bodyColor"
                 @update:checked="setting.theme = { mode: 'custom', ...theme }"
               >

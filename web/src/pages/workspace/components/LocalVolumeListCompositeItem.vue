@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { LocalVolumeService } from '@/data/local';
-import { useSettingStore } from '@/data/stores/setting';
+import { LocalVolumeRepository } from '@/data/local';
+import { SettingRepository } from '@/data/stores';
 import {
   buildPersonalTranslateTask,
   useGptWorkspaceStore,
@@ -14,7 +14,7 @@ import TranslateTask from '@/pages/components/TranslateTask.vue';
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
 const message = useMessage();
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
@@ -63,10 +63,10 @@ const queueVolume = (translatorId: 'gpt' | 'sakura') => {
 };
 
 const downloadVolume = async () => {
-  const { mode, translationsMode, translations } = setting.downloadFormat;
+  const { mode, translationsMode, translations } = setting.value.downloadFormat;
 
   try {
-    const { filename, blob } = await LocalVolumeService.getTranslationFile({
+    const { filename, blob } = await LocalVolumeRepository.getTranslationFile({
       id: props.volume.id,
       mode,
       translationsMode,

@@ -2,7 +2,7 @@
 import { PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
-import { LocalVolumeService } from '@/data/local';
+import { LocalVolumeRepository } from '@/data/local';
 
 const message = useMessage();
 
@@ -28,7 +28,7 @@ const customRequest = ({
   onFinish,
   onError,
 }: UploadCustomRequestOptions) => {
-  LocalVolumeService.createVolume(file.file!!)
+  LocalVolumeRepository.createVolume(file.file!!)
     .then(onFinish)
     .catch((error) => {
       message.error(`上传失败:${error}\n文件名: ${file.name}`);

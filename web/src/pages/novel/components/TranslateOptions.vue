@@ -1,12 +1,7 @@
 <script lang="ts" setup>
 import { InfoOutlined } from '@vicons/material';
 
-import {
-  downloadModeOptions,
-  downloadTranslationModeOptions,
-  downloadTypeOptions,
-  useSettingStore,
-} from '@/data/stores/setting';
+import { Setting, SettingRepository } from '@/data/stores';
 import { useUserDataStore } from '@/data/stores/user_data';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
@@ -17,7 +12,7 @@ defineProps<{
   glossary: Glossary;
 }>();
 const userData = useUserDataStore();
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 const isWideScreen = useIsWideScreen(600);
 
 // 翻译设置
@@ -41,13 +36,7 @@ defineExpose({
   }),
 });
 
-// 下载设置
 const showDownloadModal = ref(false);
-const tryUseChineseTitleAsFilename = ref(setting.downloadFilenameType === 'zh');
-watch(
-  tryUseChineseTitleAsFilename,
-  (it) => (setting.downloadFilenameType = it ? 'zh' : 'jp')
-);
 </script>
 
 <template>
@@ -152,7 +141,7 @@ watch(
         <c-action-wrapper title="语言">
           <c-radio-group
             v-model:value="setting.downloadFormat.mode"
-            :options="downloadModeOptions"
+            :options="Setting.downloadModeOptions"
           />
         </c-action-wrapper>
 
@@ -160,7 +149,7 @@ watch(
           <n-flex>
             <c-radio-group
               v-model:value="setting.downloadFormat.translationsMode"
-              :options="downloadTranslationModeOptions"
+              :options="Setting.downloadTranslationModeOptions"
             />
             <translator-check
               v-model:value="setting.downloadFormat.translations"
@@ -173,7 +162,7 @@ watch(
         <c-action-wrapper v-if="gnid.type === 'web'" title="文件">
           <c-radio-group
             v-model:value="setting.downloadFormat.type"
-            :options="downloadTypeOptions"
+            :options="Setting.downloadTypeOptions"
           />
         </c-action-wrapper>
 
@@ -182,7 +171,13 @@ watch(
           title="中文文件名"
           align="center"
         >
-          <n-switch size="small" v-model:value="tryUseChineseTitleAsFilename" />
+          <n-switch
+            size="small"
+            :value="setting.downloadFilenameType === 'zh'"
+            @update-value="
+              (it: boolean) => (setting.downloadFilenameType = it ? 'zh' : 'jp')
+            "
+          />
         </c-action-wrapper>
 
         <n-text depth="3" style="font-size: 12px">

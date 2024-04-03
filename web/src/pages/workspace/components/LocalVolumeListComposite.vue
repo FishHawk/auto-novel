@@ -1,13 +1,9 @@
 <script lang="ts" setup>
-import {
-  downloadModeOptions,
-  downloadTranslationModeOptions,
-  useSettingStore,
-} from '@/data/stores/setting';
+import { Setting, SettingRepository } from '@/data/stores';
 
 import LocalVolumeList from './LocalVolumeList.vue';
 
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 
 const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 </script>
@@ -18,7 +14,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
       <c-action-wrapper title="语言">
         <c-radio-group
           v-model:value="setting.downloadFormat.mode"
-          :options="downloadModeOptions"
+          :options="Setting.downloadModeOptions"
           size="small"
         />
       </c-action-wrapper>
@@ -27,7 +23,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
         <n-flex>
           <c-radio-group
             v-model:value="setting.downloadFormat.translationsMode"
-            :options="downloadTranslationModeOptions"
+            :options="Setting.downloadTranslationModeOptions"
             size="small"
           />
           <translator-check

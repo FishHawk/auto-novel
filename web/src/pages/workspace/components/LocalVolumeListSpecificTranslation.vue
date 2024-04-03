@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
 
-import { LocalVolumeService } from '@/data/local';
-import { downloadModeOptions, useSettingStore } from '@/data/stores/setting';
+import { LocalVolumeRepository } from '@/data/local';
+import { Setting, SettingRepository } from '@/data/stores';
 import {
   buildPersonalTranslateTask,
   useGptWorkspaceStore,
@@ -16,7 +16,7 @@ import LocalVolumeList from './LocalVolumeList.vue';
 const props = defineProps<{ type: 'gpt' | 'sakura' }>();
 
 const message = useMessage();
-const setting = useSettingStore();
+const setting = SettingRepository.ref();
 const gptWorkspace = useGptWorkspaceStore();
 const sakuraWorkspace = useSakuraWorkspaceStore();
 
@@ -74,10 +74,10 @@ const queueVolume = (volumeId: string) => {
 };
 
 const downloadVolume = async (volumeId: string) => {
-  const { mode } = setting.downloadFormat;
+  const { mode } = setting.value.downloadFormat;
 
   try {
-    const { filename, blob } = await LocalVolumeService.getTranslationFile({
+    const { filename, blob } = await LocalVolumeRepository.getTranslationFile({
       id: volumeId,
       mode,
       translationsMode: 'priority',
@@ -134,7 +134,7 @@ const progressFilterFunc = computed(() => {
       <c-action-wrapper title="语言">
         <c-radio-group
           v-model:value="setting.downloadFormat.mode"
-          :options="downloadModeOptions"
+          :options="Setting.downloadModeOptions"
           size="small"
         />
       </c-action-wrapper>

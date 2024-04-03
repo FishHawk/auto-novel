@@ -1,19 +1,7 @@
 <script lang="ts" setup>
 import { AuthService } from '@/service';
-import {
-  migrateReaderSetting,
-  useReaderSettingStore,
-} from '@/data/stores/reader_setting';
-import { migrateSetting, useSettingStore } from '@/data/stores/setting';
 
 AuthService.activate();
-
-// 设置格式迁移
-const setting = useSettingStore();
-migrateSetting(setting);
-
-const readerSetting = useReaderSettingStore();
-migrateReaderSetting(readerSetting);
 </script>
 
 <template>

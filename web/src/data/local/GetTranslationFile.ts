@@ -1,8 +1,7 @@
-import { Epub } from '@/util/file/epub';
+import { Epub, Srt, Txt } from '@/util/file';
 
 import { EpubParserV1 } from './EpubParser';
-import { LocalVolumeRepository } from './LocalVolumeRepository';
-import { Srt, Txt } from '@/util/file';
+import { LocalVolumeDao } from './LocalVolumeDao';
 
 export const getTranslationFile = async ({
   id,
@@ -22,11 +21,11 @@ export const getTranslationFile = async ({
     id,
   ].join('.');
 
-  const metadata = await LocalVolumeRepository.getMetadata(id);
+  const metadata = await LocalVolumeDao.getMetadata(id);
   if (metadata === undefined) throw Error('小说不存在');
 
   const getZhLinesList = async (chapterId: string) => {
-    const chapter = await LocalVolumeRepository.getChapter(id, chapterId);
+    const chapter = await LocalVolumeDao.getChapter(id, chapterId);
     if (chapter === undefined) throw Error('章节不存在');
 
     const jpLines = chapter.paragraphs;
@@ -68,7 +67,7 @@ export const getTranslationFile = async ({
       blob: Txt.writeContent(buffer),
     };
   } else if (id.endsWith('.epub')) {
-    const file = await LocalVolumeRepository.getFile(id);
+    const file = await LocalVolumeDao.getFile(id);
     if (file === undefined) throw Error('原始文件不存在');
 
     const parseXHtmlBlob = async (blob: Blob) => {
@@ -107,7 +106,7 @@ export const getTranslationFile = async ({
       blob: generated,
     };
   } else if (id.endsWith('.srt')) {
-    const file = await LocalVolumeRepository.getFile(id);
+    const file = await LocalVolumeDao.getFile(id);
     if (file === undefined) throw Error('原始文件不存在');
 
     const { zhLinesList } = await getZhLinesList('0');

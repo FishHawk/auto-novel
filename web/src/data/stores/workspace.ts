@@ -1,3 +1,4 @@
+import { lazyUseLocalStorage } from '@/util/storage';
 import { defineStore } from 'pinia';
 
 export interface TranslateJob {
@@ -37,6 +38,16 @@ interface Workspace<T> {
   // 为了兼容性，仍使用 uncompletedJobs
   uncompletedJobs: TranslateJobRecord[];
 }
+const factory = <W extends GptWorker | SakuraWorker>(
+  key: string,
+  workers: W[]
+) => {
+  const lazyStorage = lazyUseLocalStorage<Workspace<W>>(key, {
+    workers,
+    jobs: [],
+    uncompletedJobs: [],
+  });
+};
 
 const useWorkspaceStoreFactory = <W extends GptWorker | SakuraWorker>(
   id: string,

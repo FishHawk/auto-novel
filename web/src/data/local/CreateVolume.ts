@@ -3,11 +3,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { Epub, Srt, Txt } from '@/util/file';
 
 import { EpubParserV1 } from './EpubParser';
-import { LocalVolumeRepository } from './LocalVolumeRepository';
+import { LocalVolumeDao } from './LocalVolumeDao';
 
 export const createVolume = async (file: File) => {
   const id = file.name;
-  if ((await LocalVolumeRepository.getMetadata(id)) !== undefined) {
+  if ((await LocalVolumeDao.getMetadata(id)) !== undefined) {
     throw Error('小说已经存在');
   }
 
@@ -35,13 +35,13 @@ export const createVolume = async (file: File) => {
   }
 
   for (const { chapterId, paragraphs } of chapters) {
-    await LocalVolumeRepository.createChapter({
+    await LocalVolumeDao.createChapter({
       id: `${id}/${chapterId}`,
       volumeId: id,
       paragraphs,
     });
   }
-  await LocalVolumeRepository.createMetadata({
+  await LocalVolumeDao.createMetadata({
     id,
     createAt: Date.now(),
     toc: chapters.map((it) => ({
@@ -50,12 +50,5 @@ export const createVolume = async (file: File) => {
     glossaryId: uuidv4(),
     glossary: {},
   });
-  await LocalVolumeRepository.createFile(id, file);
+  await LocalVolumeDao.createFile(id, file);
 };
-
-export const deleteVolume = (id: string) =>
-  Promise.all([
-    LocalVolumeRepository.deleteChapterByVolumeId(id),
-    LocalVolumeRepository.deleteMetadata(id),
-    LocalVolumeRepository.deleteFile(id),
-  ]);

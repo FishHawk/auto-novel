@@ -2,11 +2,11 @@
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions } from 'naive-ui';
 
-import { LocalVolumeService } from '@/data/local';
-import { GlossaryService } from '@/service';
+import { LocalVolumeRepository } from '@/data/local';
 import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
+import { Glossary } from '@/model/Glossary';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import { Epub, Txt } from '@/util/file';
@@ -25,6 +25,20 @@ interface LoadedVolume {
 }
 
 const loadedVolumes = ref<LoadedVolume[]>([]);
+
+const countKatakana = (content: string) => {
+  const regexp = /[\u30A0-\u30FF]{2,}/g;
+  const matches = content.matchAll(regexp);
+  const katakanaCounter = new Map<string, number>();
+  for (const match of matches) {
+    const w = match[0];
+    katakanaCounter.set(w, (katakanaCounter.get(w) || 0) + 1);
+  }
+  const sortedKatakanaCounter = new Map(
+    [...katakanaCounter].sort(([_w1, c1], [_w2, c2]) => c2 - c1)
+  );
+  return sortedKatakanaCounter;
+};
 
 const loadVolume = async (
   source: 'tmp' | 'local',
@@ -59,7 +73,7 @@ const loadVolume = async (
     source,
     filename,
     content,
-    katakanas: GlossaryService.countKatakana(content),
+    katakanas: countKatakana(content),
   });
 };
 
@@ -70,7 +84,7 @@ const deleteVolume = (volume: LoadedVolume) => {
 };
 
 const loadLocalFile = (volumeId: string) =>
-  LocalVolumeService.getFile(volumeId)
+  LocalVolumeRepository.getFile(volumeId)
     .then((file) => {
       if (file === undefined) {
         throw '小说不存在';
@@ -118,7 +132,7 @@ const copyTranslationJson = async () => {
       katakanaTranslations.value[key] ?? '',
     ])
   );
-  const jsonString = GlossaryService.exportGlossaryToText(obj);
+  const jsonString = Glossary.encodeToText(obj);
   navigator.clipboard.writeText(jsonString);
   message.info('已经将翻译结果复制到剪切板');
 };
