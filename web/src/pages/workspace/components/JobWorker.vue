@@ -8,15 +8,11 @@ import {
   StopOutlined,
 } from '@vicons/material';
 
-import {
-  GptWorker,
-  SakuraWorker,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
+import { Locator } from '@/data';
 import { Translator } from '@/data/translator';
 import { TranslatorDesc } from '@/data/translator/api';
 import { SakuraTranslator } from '@/data/translator/translator_sakura';
+import { GptWorker, SakuraWorker } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 import { parseTask } from './util';
@@ -41,10 +37,6 @@ const emit = defineEmits<{
 }>();
 
 const message = useMessage();
-const workspace =
-  worker.translatorId === 'gpt'
-    ? useGptWorkspaceStore()
-    : useSakuraWorkspaceStore();
 
 const translatorDesc = computed(() => {
   if (worker.translatorId === 'gpt') {
@@ -136,6 +128,10 @@ const stopWorker = () => {
 };
 const deleteWorker = () => {
   abortHandler();
+  const workspace =
+    worker.translatorId === 'gpt'
+      ? Locator.gptWorkspaceRepository()
+      : Locator.sakuraWorkspaceRepository();
   workspace.deleteWorker(worker.id);
 };
 

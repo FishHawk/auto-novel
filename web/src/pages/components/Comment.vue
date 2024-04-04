@@ -2,8 +2,8 @@
 import { CommentOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
+import { Locator } from '@/data';
 import { CommentRepository } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
 import { Comment1 } from '@/model/Comment';
 import { runCatching } from '@/util/result';
 
@@ -21,7 +21,7 @@ const { site, comment } = defineProps<{
 }>();
 
 const message = useMessage();
-const userData = useUserDataStore();
+const asAdmin = Locator.userDataRepository().asAdmin;
 
 const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
@@ -94,7 +94,7 @@ const showInput = ref(false);
         @action="showInput = !showInput"
       />
 
-      <template v-if="userData.asAdmin">
+      <template v-if="asAdmin">
         <c-button
           v-if="comment.hidden"
           label="解除隐藏"

@@ -7,13 +7,14 @@ import {
 import { MenuOption, NIcon } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 
-import { useUserDataStore } from '@/data/stores/user_data';
+import { Locator } from '@/data';
 import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 const router = useRouter();
-const userData = useUserDataStore();
+
+const { userData, isSignedIn, deleteProfile } = Locator.userDataRepository();
 
 const menuOption = (
   text: string,
@@ -69,11 +70,10 @@ const menuKey = computed(() => {
 });
 
 const collapsedMenuOptions = computed(() => {
-  const signed = userData.info !== undefined;
   return [
     menuOption('首页', '/'),
-    menuOption('我的收藏', '/favorite', signed),
-    menuOption('阅读历史', '/read-history', signed),
+    menuOption('我的收藏', '/favorite', isSignedIn.value),
+    menuOption('阅读历史', '/read-history', isSignedIn.value),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
     menuOption('工作区', '/workspace'),
@@ -89,7 +89,7 @@ const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'account') {
     router.push('/account');
   } else if (key === 'signOut') {
-    userData.deleteProfile();
+    deleteProfile();
   }
 };
 
@@ -126,7 +126,7 @@ watch(
 
           <div style="flex: 1"></div>
 
-          <template v-if="userData.username">
+          <template v-if="isSignedIn">
             <router-link v-if="isWideScreen" to="/read-history">
               <n-button :focusable="false" quaternary>历史</n-button>
             </router-link>
@@ -140,7 +140,7 @@ watch(
               @select="handleUserDropdownSelect"
             >
               <n-button :focusable="false" quaternary>
-                @{{ userData.username }}
+                @{{ userData.info?.username }}
               </n-button>
             </n-dropdown>
           </template>

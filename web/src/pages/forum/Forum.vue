@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { LockOutlined, PlusOutlined, PushPinOutlined } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { ArticleRepository } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
 import { ArticleCategory, ArticleSimplified } from '@/model/Article';
 import { Page } from '@/model/Page';
 import { doAction } from '@/pages/util';
@@ -11,7 +11,8 @@ import { Result, runCatching } from '@/util/result';
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
-const userData = useUserDataStore();
+
+const { asAdmin } = Locator.userDataRepository();
 
 const articleCategoryOptions = [
   { value: 'Guide', label: '使用指南' },
@@ -184,7 +185,7 @@ const deleteArticle = (article: ArticleSimplified) =>
                 by {{ article.user.username }}
               </n-text>
 
-              <n-flex v-if="userData.asAdmin" style="margin-top: 4px">
+              <n-flex v-if="asAdmin" style="margin-top: 4px">
                 <c-button
                   v-if="article.locked"
                   size="tiny"

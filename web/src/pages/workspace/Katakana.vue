@@ -3,7 +3,6 @@ import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
-import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
 import { Translator } from '@/data/translator';
 import { TranslatorConfig } from '@/data/translator/translator';
 import { Glossary } from '@/model/Glossary';
@@ -15,7 +14,7 @@ import LoadedVolume from './components/LoadedVolume.vue';
 
 const message = useMessage();
 const isWideScreen = useIsWideScreen(850);
-const sakuraWorkspace = useSakuraWorkspaceStore();
+const sakuraWorkspace = Locator.sakuraWorkspaceRepository().ref;
 
 interface LoadedVolume {
   source: 'tmp' | 'local';
@@ -139,14 +138,14 @@ const copyTranslationJson = async () => {
 };
 
 const showSakuraSelectModal = ref(false);
-const selectedSakuraWorkerId = ref(sakuraWorkspace.workers.at(0)?.id);
+const selectedSakuraWorkerId = ref(sakuraWorkspace.value.workers.at(0)?.id);
 
 const katakanaTranslations = ref<{ [key: string]: string }>({});
 const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
   const jpWords = [...katakanas.value.keys()];
   let config: TranslatorConfig;
   if (id === 'sakura') {
-    const worker = sakuraWorkspace.workers.find(
+    const worker = sakuraWorkspace.value.workers.find(
       (it) => it.id === selectedSakuraWorkerId.value
     );
     if (worker === undefined) {

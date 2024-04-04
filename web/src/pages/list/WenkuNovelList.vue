@@ -1,19 +1,19 @@
 <script lang="ts" setup>
 import { PlusOutlined } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { WenkuNovelRepository } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
-import { Locator } from '@/data';
 import { runCatching } from '@/util/result';
 
 import { Loader } from './components/NovelList.vue';
 
-const userData = useUserDataStore();
 const route = useRoute();
 
-const options = userData.isOldAss
+const { createAtLeastOneMonth } = Locator.userDataRepository();
+
+const options = createAtLeastOneMonth.value
   ? [
       {
         label: '分级',
@@ -26,25 +26,15 @@ const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
   if (query !== '') {
     document.title = '文库小说 搜索：' + query;
   }
-  if (userData.isOldAss) {
-    return runCatching(
-      WenkuNovelRepository.listNovel({
-        page,
-        pageSize: 24,
-        query,
-        level: selected[0] + 1,
-      })
-    );
-  } else {
-    return runCatching(
-      WenkuNovelRepository.listNovel({
-        page,
-        pageSize: 24,
-        query,
-        level: 1,
-      })
-    );
-  }
+  const level = createAtLeastOneMonth.value ? selected[0] + 1 : 1;
+  return runCatching(
+    WenkuNovelRepository.listNovel({
+      page,
+      pageSize: 24,
+      query,
+      level,
+    })
+  );
 };
 
 const wenkuSearchHistoryRepository = Locator.wenkuSearchHistoryRepository();

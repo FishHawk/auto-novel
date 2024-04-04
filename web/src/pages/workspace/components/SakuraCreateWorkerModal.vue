@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import { Locator } from '@/data';
 
-const sakuraWorkspace = useSakuraWorkspaceStore();
+const workspace = Locator.sakuraWorkspaceRepository();
+const workspaceRef = workspace.ref;
 
 const formRef = ref<FormInst>();
 const formValue = ref({
@@ -20,7 +21,7 @@ const formRules: FormRules = {
     },
     {
       validator: (rule: FormItemRule, value: string) =>
-        sakuraWorkspace.workers.find(({ id }) => id === value) === undefined,
+        workspaceRef.value.workers.find(({ id }) => id === value) === undefined,
       message: '名字不能重复',
       trigger: 'input',
     },
@@ -46,7 +47,7 @@ const createSakuraWorker = async () => {
   const worker = { ...formValue.value };
   worker.id = worker.id.trim();
   worker.endpoint = worker.endpoint.trim();
-  sakuraWorkspace.addWorker(worker);
+  workspace.addWorker(worker);
 };
 </script>
 

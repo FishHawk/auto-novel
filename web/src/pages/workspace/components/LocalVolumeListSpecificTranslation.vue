@@ -2,14 +2,10 @@
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
-import {
-  buildPersonalTranslateTask,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { Setting } from '@/model/Setting';
+import { TranslateTaskDescriptor } from '@/model/Translator';
 
 import LocalVolumeList from './LocalVolumeList.vue';
 
@@ -17,8 +13,6 @@ const props = defineProps<{ type: 'gpt' | 'sakura' }>();
 
 const message = useMessage();
 const setting = Locator.settingRepository().ref;
-const gptWorkspace = useGptWorkspaceStore();
-const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 
@@ -51,16 +45,18 @@ const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
 };
 
 const queueVolume = (volumeId: string) => {
-  const task = buildPersonalTranslateTask(volumeId, {
+  const task = TranslateTaskDescriptor.workspace(volumeId, {
     start: 0,
     end: 65535,
     expire: true,
   });
 
-  const addJob =
-    props.type === 'gpt' ? gptWorkspace.addJob : sakuraWorkspace.addJob;
+  const workspace =
+    props.type === 'gpt'
+      ? Locator.gptWorkspaceRepository()
+      : Locator.sakuraWorkspaceRepository();
 
-  const success = addJob({
+  const success = workspace.addJob({
     task,
     description: volumeId,
     createAt: Date.now(),

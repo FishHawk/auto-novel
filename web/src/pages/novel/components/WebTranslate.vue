@@ -3,12 +3,8 @@ import ky from 'ky';
 
 import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
-import {
-  buildWebTranslateTask,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
 import { GenericNovelId } from '@/model/Common';
+import { TranslateTaskDescriptor } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 import TranslateOptions from './TranslateOptions.vue';
@@ -38,8 +34,6 @@ const emit = defineEmits<{
 
 const setting = Locator.settingRepository().ref;
 const message = useMessage();
-const gptWorkspace = useGptWorkspaceStore();
-const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
@@ -113,7 +107,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       const start = Math.round(startIndex + i * taskSize);
       const end = Math.round(startIndex + (i + 1) * taskSize);
       if (end > start) {
-        const task = buildWebTranslateTask(providerId, novelId, {
+        const task = TranslateTaskDescriptor.web(providerId, novelId, {
           start,
           end,
           expire: translateExpireChapter,
@@ -123,7 +117,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       }
     }
   } else {
-    const task = buildWebTranslateTask(providerId, novelId, {
+    const task = TranslateTaskDescriptor.web(providerId, novelId, {
       start: startIndex,
       end: endIndex,
       expire: translateExpireChapter,
@@ -132,7 +126,10 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     tasks.push(task);
   }
 
-  const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+  const workspace =
+    id === 'gpt'
+      ? Locator.gptWorkspaceRepository()
+      : Locator.sakuraWorkspaceRepository();
   const results = tasks.map((task) => {
     const job = {
       task,

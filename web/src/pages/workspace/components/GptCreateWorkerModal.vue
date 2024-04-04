@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { useGptWorkspaceStore } from '@/data/stores/workspace';
+import { Locator } from '@/data';
 
-const gptWorkspace = useGptWorkspaceStore();
+const workspace = Locator.gptWorkspaceRepository();
+const workspaceRef = workspace.ref;
 
 const formRef = ref<FormInst>();
 const formValue = ref<{
@@ -35,7 +36,7 @@ const formRules: FormRules = {
     emptyCheck('名字'),
     {
       validator: (rule: FormItemRule, value: string) =>
-        gptWorkspace.workers.find(({ id }) => id === value) === undefined,
+        workspaceRef.value.workers.find(({ id }) => id === value) === undefined,
       message: '名字不能重复',
       trigger: 'input',
     },
@@ -48,7 +49,8 @@ const formRules: FormRules = {
     emptyCheck('Key'),
     {
       validator: (rule: FormItemRule, value: string) =>
-        gptWorkspace.workers.find(({ key }) => key === value) === undefined,
+        workspaceRef.value.workers.find(({ key }) => key === value) ===
+        undefined,
       message: 'Key不能重复',
       trigger: 'input',
     },
@@ -79,7 +81,7 @@ const createGptWorker = async () => {
       worker.key = obj.accessToken;
     }
   } catch {}
-  gptWorkspace.addWorker(worker);
+  workspace.addWorker(worker);
 };
 </script>
 

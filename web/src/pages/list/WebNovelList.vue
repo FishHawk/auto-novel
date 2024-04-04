@@ -1,11 +1,10 @@
 <script lang="ts" setup>
 import { FormatListBulletedOutlined } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
-import { Locator } from '@/data';
 import { useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/util/result';
 
@@ -14,9 +13,10 @@ import { menuOptions } from './components/menu';
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
-const userData = useUserDataStore();
 
-const oldAssOptions = userData.isOldAss
+const { createAtLeastOneMonth } = Locator.userDataRepository();
+
+const oldAssOptions = createAtLeastOneMonth.value
   ? [
       {
         label: '分级',
@@ -78,7 +78,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
       query,
       provider: parseProviderBitFlags(0),
       type: selected[1],
-      ...(userData.isOldAss
+      ...(createAtLeastOneMonth.value
         ? {
             level: selected[2],
             translate: selected[3],

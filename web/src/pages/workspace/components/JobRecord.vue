@@ -1,10 +1,7 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, RefreshOutlined } from '@vicons/material';
 
-import {
-  TranslateJobRecord,
-  isTranslateJobFinished,
-} from '@/data/stores/workspace';
+import { TranslateJob, TranslateJobRecord } from '@/model/Translator';
 
 import { parseTaskUrl } from './util';
 
@@ -15,7 +12,7 @@ const emit = defineEmits<{
   retryJob: [];
   deleteJob: [];
 }>();
-const isFinished = computed(() => isTranslateJobFinished(props.job));
+const isFinished = computed(() => TranslateJob.isFinished(props.job));
 
 const url = computed(() => parseTaskUrl(props.job.task));
 </script>

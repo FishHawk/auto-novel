@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { AuthRepository } from '@/data/api';
+import { Locator } from '@/data';
+
 import { doAction } from '@/pages/util';
-import { AuthService } from '@/domain';
 
 const emit = defineEmits<{ (e: 'signUp'): void }>();
 
@@ -70,12 +70,17 @@ const signUp = async () => {
   }
 
   await doAction(
-    AuthService.signUp({
-      email: formValue.value.email,
-      emailCode: formValue.value.emailCode,
-      username: formValue.value.username,
-      password: formValue.value.password,
-    }).then(() => emit('signUp')),
+    Locator.authRepository
+      .signUp({
+        email: formValue.value.email,
+        emailCode: formValue.value.emailCode,
+        username: formValue.value.username,
+        password: formValue.value.password,
+      })
+      .then((profile) => {
+        Locator.userDataRepository().setProfile(profile);
+        emit('signUp');
+      }),
     '注册',
     message
   );
@@ -88,7 +93,8 @@ const allowSendEmail = () => {
   return allow;
 };
 
-const sendEmail = () => AuthRepository.verifyEmail(formValue.value.email);
+const sendEmail = () =>
+  Locator.authRepository.verifyEmail(formValue.value.email);
 </script>
 
 <template>

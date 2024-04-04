@@ -2,15 +2,17 @@
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { TranslateJob, useSakuraWorkspaceStore } from '@/data/stores/workspace';
+import { TranslateJob } from '@/model/Translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 const message = useMessage();
 const setting = Locator.settingRepository().ref;
-const sakuraWorkspace = useSakuraWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
+
+const workspace = Locator.gptWorkspaceRepository();
+const workspaceRef = workspace.ref;
 
 const showCreateWorkerModal = ref(false);
 
@@ -21,7 +23,7 @@ type ProcessedJob = TranslateJob & {
 const processedJobs = ref<Map<string, ProcessedJob>>(new Map());
 
 const getNextJob = () => {
-  const job = sakuraWorkspace.jobs.find(
+  const job = workspaceRef.value.jobs.find(
     (it) => !processedJobs.value.has(it.task)
   );
   if (job !== undefined) {
@@ -38,14 +40,14 @@ const deleteJob = (task: string) => {
     message.error('任务被翻译器占用');
     return;
   }
-  sakuraWorkspace.deleteJob(task);
+  workspace.deleteJob(task);
 };
 const deleteAllJobs = () => {
-  sakuraWorkspace.jobs.forEach((job) => {
+  workspaceRef.value.jobs.forEach((job) => {
     if (processedJobs.value.has(job.task)) {
       return;
     }
-    sakuraWorkspace.deleteJob(job.task);
+    workspace.deleteJob(job.task);
   });
 };
 
@@ -59,8 +61,8 @@ const onProgressUpdated = (
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
     if (!state.abort) {
-      sakuraWorkspace.addJobRecord(job as any);
-      sakuraWorkspace.deleteJob(task);
+      workspace.addJobRecord(job as any);
+      workspace.deleteJob(task);
     }
   } else {
     const job = processedJobs.value.get(task)!!;
@@ -135,11 +137,11 @@ const notices = [
     </section-header>
 
     <n-empty
-      v-if="sakuraWorkspace.workers.length === 0"
+      v-if="workspaceRef.workers.length === 0"
       description="没有翻译器"
     />
     <n-list>
-      <n-list-item v-for="worker of sakuraWorkspace.workers" :key="worker.id">
+      <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
         <job-worker
           :worker="{ translatorId: 'sakura', ...worker }"
           :get-next-job="getNextJob"
@@ -161,20 +163,20 @@ const notices = [
         真的要清空队列吗？
       </n-popconfirm>
     </section-header>
-    <n-empty v-if="sakuraWorkspace.jobs.length === 0" description="没有任务" />
+    <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
     <n-list>
-      <n-list-item v-for="job of sakuraWorkspace.jobs" :key="job.task">
+      <n-list-item v-for="job of workspaceRef.jobs" :key="job.task">
         <job-queue
           :job="job"
           :progress="processedJobs.get(job.task)?.progress"
-          @top-job="sakuraWorkspace.topJob(job)"
-          @bottom-job="sakuraWorkspace.bottomJob(job)"
+          @top-job="workspace.topJob(job)"
+          @bottom-job="workspace.bottomJob(job)"
           @delete-job="deleteJob(job.task)"
         />
       </n-list-item>
     </n-list>
 
-    <job-record-section :workspace="sakuraWorkspace" />
+    <job-record-section id="sakura" />
 
     <template #sidebar>
       <local-volume-list-specific-translation type="sakura" />

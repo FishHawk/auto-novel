@@ -1,21 +1,14 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
-import {
-  buildPersonalTranslateTask,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { TranslatorId } from '@/model/Translator';
+import { TranslatorId, TranslateTaskDescriptor } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
 const message = useMessage();
 const setting = Locator.settingRepository().ref;
-const gptWorkspace = useGptWorkspaceStore();
-const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const calculateFinished = (translatorId: TranslatorId) =>
   props.volume.toc.filter((it) => it[translatorId]).length;
@@ -40,13 +33,16 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   );
 
 const queueVolume = (translatorId: 'gpt' | 'sakura') => {
-  const task = buildPersonalTranslateTask(props.volume.id, {
+  const task = TranslateTaskDescriptor.workspace(props.volume.id, {
     start: 0,
     end: 65535,
     expire: true,
   });
 
-  const workspace = translatorId === 'gpt' ? gptWorkspace : sakuraWorkspace;
+  const workspace =
+    translatorId === 'gpt'
+      ? Locator.gptWorkspaceRepository()
+      : Locator.sakuraWorkspaceRepository();
 
   const success = workspace.addJob({
     task,

@@ -1,13 +1,7 @@
 <script lang="ts" setup>
-import {
-  GptWorker,
-  SakuraWorker,
-  migrateGptWorkspace,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
+import { Locator } from '@/data';
 import { Translator, TranslatorConfig } from '@/data/translator/translator';
-import { TranslatorId } from '@/model/Translator';
+import { GptWorker, SakuraWorker, TranslatorId } from '@/model/Translator';
 
 const message = useMessage();
 
@@ -29,13 +23,11 @@ watch(translatorId, () => {
   textZh.value = '';
 });
 
-const gptWorkspace = useGptWorkspaceStore();
-const selectedGptWorkerId = ref(gptWorkspace.workers.at(0)?.id);
+const gptWorkspaceRef = Locator.gptWorkspaceRepository().ref;
+const selectedGptWorkerId = ref(gptWorkspaceRef.value.workers.at(0)?.id);
 
-const sakuraWorkspace = useSakuraWorkspaceStore();
-const selectedSakuraWorkerId = ref(sakuraWorkspace.workers.at(0)?.id);
-
-migrateGptWorkspace(gptWorkspace);
+const sakuraWorkspaceRef = Locator.sakuraWorkspaceRepository().ref;
+const selectedSakuraWorkerId = ref(sakuraWorkspaceRef.value.workers.at(0)?.id);
 
 interface SavedTranslation {
   id: TranslatorId;
@@ -51,7 +43,7 @@ const translate = async () => {
   let selectedWorker: GptWorker | SakuraWorker | undefined;
   const id = translatorId.value;
   if (id === 'gpt') {
-    const worker = gptWorkspace.workers.find(
+    const worker = gptWorkspaceRef.value.workers.find(
       (it) => it.id === selectedGptWorkerId.value
     );
     if (worker === undefined) {
@@ -68,7 +60,7 @@ const translate = async () => {
       key: worker.key,
     };
   } else if (id === 'sakura') {
-    const worker = sakuraWorkspace.workers.find(
+    const worker = sakuraWorkspaceRef.value.workers.find(
       (it) => it.id === selectedSakuraWorkerId.value
     );
     if (worker === undefined) {
@@ -138,7 +130,7 @@ const clearSavedTranslation = () => {
           >
             <n-flex vertical>
               <n-radio
-                v-for="worker of gptWorkspace.workers"
+                v-for="worker of gptWorkspaceRef.workers"
                 :key="worker.id"
                 :value="worker.id"
               >
@@ -158,7 +150,7 @@ const clearSavedTranslation = () => {
           >
             <n-flex vertical>
               <n-radio
-                v-for="worker of sakuraWorkspace.workers"
+                v-for="worker of sakuraWorkspaceRef.workers"
                 :key="worker.id"
                 :value="worker.id"
               >

@@ -1,11 +1,12 @@
 <script lang="ts" setup>
+import { Locator } from '@/data';
 import { ArticleRepository } from '@/data/api';
-import { Result, runCatching } from '@/util/result';
-import { useUserDataStore } from '@/data/stores/user_data';
 import { Article } from '@/model/Article';
+import { Result, runCatching } from '@/util/result';
 
 const route = useRoute();
-const userData = useUserDataStore();
+
+const { userData, asAdmin } = Locator.userDataRepository();
 
 const articleId = route.params.id as string;
 const articleResult = ref<Result<Article>>();
@@ -31,7 +32,7 @@ onMounted(async () => {
         />
         by {{ article.user.username }}
         <template
-          v-if="userData.username === article.user.username || userData.asAdmin"
+          v-if="userData.info?.username === article.user.username || asAdmin"
         >
           /
           <c-a :to="`/forum-edit/${article.id}?category=${article.category}`">

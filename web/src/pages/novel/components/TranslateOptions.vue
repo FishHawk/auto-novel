@@ -1,20 +1,20 @@
 <script lang="ts" setup>
 import { InfoOutlined } from '@vicons/material';
 
-import { useUserDataStore } from '@/data/stores/user_data';
+import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 import { Setting } from '@/model/Setting';
 import { useIsWideScreen } from '@/pages/util';
-import { Locator } from '@/data';
 
 defineProps<{
   gnid: GenericNovelId;
   glossary: Glossary;
 }>();
-const userData = useUserDataStore();
 const setting = Locator.settingRepository().ref;
 const isWideScreen = useIsWideScreen(600);
+
+const { isSignedIn } = Locator.userDataRepository();
 
 // 翻译设置
 const translateExpireChapter = ref(false);
@@ -66,7 +66,7 @@ const showDownloadModal = ref(false);
         </n-checkbox>
 
         <n-checkbox
-          v-if="gnid.type === 'web' && userData.passWeek"
+          v-if="gnid.type === 'web' && isSignedIn"
           v-model:checked="syncFromProvider"
         >
           <n-tooltip trigger="hover" style="max-width: 200px">

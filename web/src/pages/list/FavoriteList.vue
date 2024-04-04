@@ -7,17 +7,14 @@ import {
 import { MenuOption } from 'naive-ui';
 
 import { UserRepository } from '@/data/api';
-import {
-  buildWebTranslateTask,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
+import { Locator } from '@/data';
 import { Page } from '@/model/Page';
+import { TranslateTaskDescriptor } from '@/model/Translator';
 import { FavoredList } from '@/model/User';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
-import { runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
+import { runCatching } from '@/util/result';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
 import { Loader } from './components/NovelList.vue';
@@ -29,8 +26,6 @@ const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
-const gptWorkspace = useGptWorkspaceStore();
-const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const favoriteType = computed(() => (route.query.type ?? 'web') as string);
 const favoriteId = computed(() => (route.query.fid ?? 'default') as string);
@@ -255,13 +250,16 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   const expire = queueTaskSize.value === 'full-expire';
 
   novelsSorted.forEach((it) => {
-    const task = buildWebTranslateTask(it.providerId, it.novelId, {
+    const task = TranslateTaskDescriptor.web(it.providerId, it.novelId, {
       start: 0,
       end,
       expire,
       toc: false,
     });
-    const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+    const workspace =
+      id === 'gpt'
+        ? Locator.gptWorkspaceRepository()
+        : Locator.sakuraWorkspaceRepository();
     workspace.addJob({
       task,
       description: it.titleJp,

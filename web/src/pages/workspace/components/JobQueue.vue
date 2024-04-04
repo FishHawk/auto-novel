@@ -5,7 +5,7 @@ import {
   KeyboardDoubleArrowUpOutlined,
 } from '@vicons/material';
 
-import { TranslateJob } from '@/data/stores/workspace';
+import { TranslateJob } from '@/model/Translator';
 
 import { parseTaskUrl } from './util';
 

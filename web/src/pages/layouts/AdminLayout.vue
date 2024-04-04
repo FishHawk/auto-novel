@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
 
-import { useUserDataStore } from '@/data/stores/user_data';
+import { Locator } from '@/data';
 
 const router = useRouter();
 const route = useRoute();
-const userData = useUserDataStore();
+
+const { isSignedIn } = Locator.userDataRepository();
 
 const path = route.path;
 const handleUpdateValue = (path: string) => router.push({ path });
@@ -13,7 +14,7 @@ const handleUpdateValue = (path: string) => router.push({ path });
 
 <template>
   <div class="layout-content">
-    <template v-if="userData.isLoggedIn">
+    <template v-if="isSignedIn">
       <n-h1>控制台</n-h1>
       <n-tabs
         type="line"

@@ -1,16 +1,11 @@
 <script lang="ts" setup>
 import { FileDownloadOutlined } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { WenkuNovelRepository } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
-import {
-  buildWenkuTranslateTask,
-  useGptWorkspaceStore,
-  useSakuraWorkspaceStore,
-} from '@/data/stores/workspace';
+import { TranslateTaskDescriptor } from '@/model/Translator';
 import { VolumeJpDto } from '@/model/WenkuNovel';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
-import { Locator } from '@/data';
 
 const { novelId, volume, getParams } = defineProps<{
   novelId: string;
@@ -24,10 +19,10 @@ const { novelId, volume, getParams } = defineProps<{
 const emit = defineEmits<{ delete: [] }>();
 
 const message = useMessage();
-const userData = useUserDataStore();
+
+const { atLeastMaintainer } = Locator.userDataRepository();
+
 const setting = Locator.settingRepository().ref;
-const gptWorkspace = useGptWorkspaceStore();
-const sakuraWorkspace = useSakuraWorkspaceStore();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
@@ -60,12 +55,15 @@ const file = computed(() => {
 
 const submitJob = (id: 'gpt' | 'sakura') => {
   const { translateExpireChapter, autoTop } = getParams();
-  const task = buildWenkuTranslateTask(novelId, volume.volumeId, {
+  const task = TranslateTaskDescriptor.wenku(novelId, volume.volumeId, {
     start: 0,
     end: 65535,
     expire: translateExpireChapter,
   });
-  const workspace = id === 'gpt' ? gptWorkspace : sakuraWorkspace;
+  const workspace =
+    id === 'gpt'
+      ? Locator.gptWorkspaceRepository()
+      : Locator.sakuraWorkspaceRepository();
   const job = {
     task,
     description: volume.volumeId,
@@ -123,7 +121,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         />
 
         <n-popconfirm
-          v-if="userData.isMaintainer"
+          v-if="atLeastMaintainer"
           :show-icon="false"
           @positive-click="emit('delete')"
           :negative-text="null"

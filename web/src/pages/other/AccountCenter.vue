@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { useUserDataStore } from '@/data/stores/user_data';
+import { Locator } from '@/data';
 import { Setting } from '@/model/Setting';
 import { UserRole } from '@/model/User';
-import { Locator } from '@/data';
 
 const message = useMessage();
 const setting = Locator.settingRepository().ref;
-const userData = useUserDataStore();
+
+const { userData, isSignedIn, atLeastAdmin, asAdmin, toggleAdminMode } =
+  Locator.userDataRepository();
 
 const roleToReadableText = (role: UserRole) => {
   if (role === 'normal') return '普通用户';
@@ -30,11 +31,11 @@ const clearWenkuSearchHistory = () => {
 
 <template>
   <div class="layout-content">
-    <template v-if="userData.isLoggedIn">
+    <template v-if="isSignedIn">
       <n-h1>
-        @{{ userData.username }}
+        @{{ userData.info?.username }}
         <n-tag :bordered="false" size="small" style="margin-left: 4px">
-          {{ roleToReadableText(userData.role!!) }}
+          {{ roleToReadableText(userData.info!!.role) }}
         </n-tag>
       </n-h1>
 
@@ -85,7 +86,7 @@ const clearWenkuSearchHistory = () => {
           </n-flex>
         </n-list-item>
 
-        <n-list-item v-if="userData.isAdmin">
+        <n-list-item v-if="atLeastAdmin">
           <n-flex vertical>
             <b>控制台</b>
             <n-flex>
@@ -93,9 +94,9 @@ const clearWenkuSearchHistory = () => {
                 <c-button label="控制台" size="small" />
               </router-link>
               <c-button
-                :label="`管理员模式-${userData.asAdmin}`"
+                :label="`管理员模式-${asAdmin}`"
                 size="small"
-                @action="userData.toggleAdminMode()"
+                @action="toggleAdminMode()"
               />
             </n-flex>
           </n-flex>

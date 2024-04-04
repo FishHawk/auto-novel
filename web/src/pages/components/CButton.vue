@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useUserDataStore } from '@/data/stores/user_data';
+import { Locator } from '@/data';
 
 const props = defineProps<{
   label?: string;
@@ -8,7 +8,6 @@ const props = defineProps<{
   onAction?: (e: MouseEvent) => any;
 }>();
 
-const userData = useUserDataStore();
 const message = useMessage();
 
 const running = ref(false);
@@ -16,7 +15,10 @@ const running = ref(false);
 const onClick = async (e: MouseEvent) => {
   if (!props.onAction) return;
 
-  if (props.requireLogin === true && !userData.isLoggedIn) {
+  if (
+    props.requireLogin === true &&
+    !Locator.userDataRepository().isSignedIn.value
+  ) {
     message.info('请先登录');
     return;
   }

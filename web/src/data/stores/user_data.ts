@@ -1,6 +1,5 @@
-import { defineStore } from 'pinia';
-
 import { UserProfile, UserRole } from '@/model/User';
+import { useLocalStorage } from '@vueuse/core';
 
 interface UserData {
   info?: UserProfile;
@@ -8,83 +7,71 @@ interface UserData {
   adminMode: boolean;
 }
 
-const validExpires = (info: UserProfile | undefined) => {
-  if (info) {
-    if (Date.now() / 1000 > info.expiresAt) {
-      return undefined;
-    } else {
-      return info;
+export const createUserDataRepository = () => {
+  const ref = useLocalStorage<UserData>('authInfo', {
+    info: undefined,
+    renewedAt: undefined,
+    adminMode: false,
+  });
+
+  if (ref.value.info && Date.now() / 1000 > ref.value.info.expiresAt) {
+    ref.value.info = undefined;
+  }
+
+  const isSignedIn = computed(() => ref.value.info !== undefined);
+
+  const createAtLeast = (days: number) => {
+    const createAt = ref.value.info?.createAt;
+    if (!createAt) {
+      return false;
     }
-  } else {
-    return undefined;
-  }
-};
+    return Date.now() / 1000 - createAt > days * 24 * 3600;
+  };
 
-const userRoleAtLeast = (info: UserProfile | undefined, role: UserRole) => {
-  const myRole = validExpires(info)?.role;
-  if (!myRole) {
-    return false;
-  }
+  const createAtLeastOneMonth = computed(() => createAtLeast(30));
 
-  const roleToNumber: Map<UserRole, number> = new Map([
-    ['admin', 4],
-    ['maintainer', 3],
-    ['trusted', 2],
-    ['normal', 1],
-    ['banned', 0],
-  ]);
-  if (myRole === undefined) {
-    return false;
-  } else {
+  const userRoleAtLeast = (role: UserRole) => {
+    const myRole = ref.value.info?.role;
+    if (!myRole) {
+      return false;
+    }
+    const roleToNumber: Map<UserRole, number> = new Map([
+      ['admin', 4],
+      ['maintainer', 3],
+      ['trusted', 2],
+      ['normal', 1],
+      ['banned', 0],
+    ]);
     return roleToNumber.get(myRole)! >= roleToNumber.get(role)!;
-  }
-};
+  };
 
-export const useUserDataStore = defineStore('authInfo', {
-  state: () =>
-    <UserData>{
-      info: undefined,
-      renewedAt: undefined,
-      adminMode: false,
-    },
-  getters: {
-    isLoggedIn: ({ info }) => validExpires(info) !== undefined,
-    username: ({ info }) => validExpires(info)?.username,
-    token: ({ info }) => validExpires(info)?.token,
-    role: ({ info }) => validExpires(info)?.role,
-    passWeek: ({ info }) => {
-      const createAt = validExpires(info)?.createAt;
-      if (createAt) {
-        return Date.now() / 1000 - createAt > 7 * 24 * 3600;
-      } else {
-        return false;
-      }
-    },
-    isOldAss: ({ info }) => {
-      const createAt = validExpires(info)?.createAt;
-      if (createAt) {
-        return Date.now() / 1000 - createAt > 30 * 24 * 3600;
-      } else {
-        return false;
-      }
-    },
-    isAdmin: ({ info }) => userRoleAtLeast(info, 'admin'),
-    isMaintainer: ({ info }) => userRoleAtLeast(info, 'maintainer'),
-    isTrusted: ({ info }) => userRoleAtLeast(info, 'trusted'),
-    asAdmin: ({ adminMode, info }) =>
-      adminMode && userRoleAtLeast(info, 'admin'),
-  },
-  actions: {
-    setProfile(profile: UserProfile) {
-      this.renewedAt = Date.now();
-      this.info = profile;
-    },
-    deleteProfile() {
-      this.info = undefined;
-    },
-    toggleAdminMode() {
-      this.adminMode = !this.adminMode;
-    },
-  },
-  persist: true,
-});
+  const atLeastAdmin = computed(() => userRoleAtLeast('admin'));
+  const atLeastMaintainer = computed(() => userRoleAtLeast('maintainer'));
+  const asAdmin = computed(() => atLeastAdmin.value && ref.value.adminMode);
+
+  const setProfile = (profile: UserProfile) => {
+    ref.value.renewedAt = Date.now();
+    ref.value.info = profile;
+  };
+  const deleteProfile = () => {
+    ref.value.info = undefined;
+  };
+  const toggleAdminMode = () => {
+    ref.value.adminMode = !ref.value.adminMode;
+  };
+
+  return {
+    userData: ref,
+    isSignedIn,
+    //
+    createAtLeastOneMonth,
+    //
+    atLeastAdmin,
+    atLeastMaintainer,
+    asAdmin,
+    //
+    setProfile,
+    deleteProfile,
+    toggleAdminMode,
+  };
+};

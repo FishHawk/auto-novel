@@ -2,8 +2,8 @@
 import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
+import { Locator } from '@/data';
 import { WenkuNovelRepository } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import { GenericNovelId } from '@/model/Common';
 import { WenkuNovelDto } from '@/model/WenkuNovel';
@@ -19,9 +19,10 @@ const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
 
 const isWideScreen = useIsWideScreen(600);
 const message = useMessage();
-const userData = useUserDataStore();
 const vars = useThemeVars();
 const route = useRoute();
+
+const { atLeastMaintainer } = Locator.userDataRepository();
 
 const novelId = route.params.novelId as string;
 
@@ -224,7 +225,7 @@ const showWebNovelsModal = ref(false);
           </n-a>
 
           <n-popconfirm
-            v-if="userData.isMaintainer"
+            v-if="atLeastMaintainer"
             :show-icon="false"
             @positive-click="deleteVolume(volumeId)"
             :negative-text="null"

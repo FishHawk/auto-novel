@@ -11,14 +11,19 @@ import {
 } from './api';
 import { createLocalVolumeRepository } from './local';
 import {
+  createGptWorkspaceRepository,
   createReadPositionRepository,
   createReaderSettingRepository,
   createRuleViewedRepository,
+  createSakuraWorkspaceRepository,
   createSettingRepository,
+  createUserDataRepository,
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
 } from './stores';
 import { createCachedSegRepository } from './translator';
+
+export { formatError } from './api';
 
 const lazy = <T>(factory: () => T) => {
   let value: T;
@@ -51,6 +56,9 @@ export const Locator = {
   readerSettingRepository: lazy(createReaderSettingRepository),
   webSearchHistoryRepository: lazy(createWebSearchHistoryRepository),
   wenkuSearchHistoryRepository: lazy(createWenkuSearchHistoryRepository),
+  gptWorkspaceRepository: lazy(createGptWorkspaceRepository),
+  sakuraWorkspaceRepository: lazy(createSakuraWorkspaceRepository),
+  userDataRepository: lazy(createUserDataRepository),
   //
   cachedSegRepository: lazyAsync(createCachedSegRepository),
   //

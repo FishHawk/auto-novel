@@ -2,19 +2,15 @@
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
-import {
-  TranslateJob,
-  migrateGptWorkspace,
-  useGptWorkspaceStore,
-} from '@/data/stores/workspace';
+import { TranslateJob } from '@/model/Translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
-const gptWorkspace = useGptWorkspaceStore();
 const isWideScreen = useIsWideScreen(850);
 
-migrateGptWorkspace(gptWorkspace);
+const workspace = Locator.gptWorkspaceRepository();
+const workspaceRef = workspace.ref;
 
 const showCreateWorkerModal = ref(false);
 
@@ -25,7 +21,9 @@ type ProcessedJob = TranslateJob & {
 const processedJobs = ref<Map<string, ProcessedJob>>(new Map());
 
 const getNextJob = () => {
-  const job = gptWorkspace.jobs.find((it) => !processedJobs.value.has(it.task));
+  const job = workspace.ref.value.jobs.find(
+    (it) => !processedJobs.value.has(it.task)
+  );
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);
   }
@@ -37,14 +35,14 @@ const deleteJob = (task: string) => {
     message.error('任务被翻译器占用');
     return;
   }
-  gptWorkspace.deleteJob(task);
+  workspace.deleteJob(task);
 };
 const deleteAllJobs = () => {
-  gptWorkspace.jobs.forEach((job) => {
+  workspaceRef.value.jobs.forEach((job) => {
     if (processedJobs.value.has(job.task)) {
       return;
     }
-    gptWorkspace.deleteJob(job.task);
+    workspace.deleteJob(job.task);
   });
 };
 
@@ -58,8 +56,8 @@ const onProgressUpdated = (
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
     if (!state.abort) {
-      gptWorkspace.addJobRecord(job);
-      gptWorkspace.deleteJob(task);
+      workspace.addJobRecord(job);
+      workspace.deleteJob(task);
     }
   } else {
     const job = processedJobs.value.get(task)!!;
@@ -123,11 +121,11 @@ const notices = [
     </section-header>
 
     <n-empty
-      v-if="gptWorkspace.workers.length === 0"
+      v-if="workspaceRef.workers.length === 0"
       description="没有翻译器"
     />
     <n-list>
-      <n-list-item v-for="worker of gptWorkspace.workers" :key="worker.id">
+      <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
         <job-worker
           :worker="{ translatorId: 'gpt', ...worker }"
           :get-next-job="getNextJob"
@@ -143,20 +141,20 @@ const notices = [
         @action="deleteAllJobs()"
       />
     </section-header>
-    <n-empty v-if="gptWorkspace.jobs.length === 0" description="没有任务" />
+    <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
     <n-list>
-      <n-list-item v-for="job of gptWorkspace.jobs" :key="job.task">
+      <n-list-item v-for="job of workspaceRef.jobs" :key="job.task">
         <job-queue
           :job="job"
           :progress="processedJobs.get(job.task)?.progress"
-          @top-job="gptWorkspace.topJob(job)"
-          @bottom-job="gptWorkspace.bottomJob(job)"
+          @top-job="workspace.topJob(job)"
+          @bottom-job="workspace.bottomJob(job)"
           @delete-job="deleteJob(job.task)"
         />
       </n-list-item>
     </n-list>
 
-    <job-record-section :workspace="gptWorkspace" />
+    <job-record-section id="gpt" />
 
     <template #sidebar>
       <local-volume-list-specific-translation type="gpt" />

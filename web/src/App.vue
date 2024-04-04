@@ -1,7 +1,37 @@
 <script lang="ts" setup>
-import { AuthService } from '@/domain';
+import { Locator, formatError } from '@/data';
 
-AuthService.activate();
+const { userData, setProfile } = Locator.userDataRepository();
+const { renew, updateToken } = Locator.authRepository;
+
+// 订阅Token
+watch(userData, (userData) => updateToken(userData.info?.token), {
+  immediate: true,
+});
+
+// 更新Token，冷却时间为24小时
+const renewToken = async () => {
+  const renewCooldown = 24 * 3600 * 1000;
+  if (userData.value.info) {
+    const sinceLoggedIn = Date.now() - (userData.value.renewedAt ?? 0);
+    if (sinceLoggedIn > renewCooldown) {
+      try {
+        const profile = await renew();
+        setProfile(profile);
+      } catch (e) {
+        console.warn('更新授权失败：' + (await formatError(e)));
+      }
+    }
+  }
+};
+renewToken();
+
+// 清理pinia留下的垃圾
+Object.keys(window.localStorage).forEach((key) => {
+  if (key.startsWith('pubkey')) {
+    window.localStorage.removeItem(key);
+  }
+});
 </script>
 
 <template>

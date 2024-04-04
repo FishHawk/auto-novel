@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { createReusableTemplate, onKeyDown } from '@vueuse/core';
 
-import { UserRepository } from '@/data/api';
 import { Locator } from '@/data';
-import { useUserDataStore } from '@/data/stores/user_data';
+import { UserRepository } from '@/data/api';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
@@ -19,9 +18,10 @@ const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
 
 const route = useRoute();
 const router = useRouter();
-const userData = useUserDataStore();
 const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
+
+const { isSignedIn } = Locator.userDataRepository();
 
 const gnid = ((): GenericNovelId => {
   const path = route.path;
@@ -108,7 +108,7 @@ const navToChapter = async (chapterId: string) => {
   if (currentChapterId.value !== chapterId) {
     if (result.ok) {
       document.title = result.value.titleJp;
-      if (gnid.type === 'web' && userData.isLoggedIn) {
+      if (gnid.type === 'web' && isSignedIn) {
         UserRepository.updateReadHistoryWeb(
           gnid.providerId,
           gnid.novelId,

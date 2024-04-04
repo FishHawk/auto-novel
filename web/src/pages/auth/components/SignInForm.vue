@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { AuthService } from '@/domain';
+import { Locator } from '@/data';
+
 import { doAction } from '@/pages/util';
 
 const emit = defineEmits<{ (e: 'signIn'): void }>();
@@ -39,7 +40,10 @@ const signIn = async () => {
     return;
   }
   await doAction(
-    AuthService.signIn(formValue.value).then(() => emit('signIn')),
+    Locator.authRepository.signIn(formValue.value).then((profile) => {
+      Locator.userDataRepository().setProfile(profile);
+      emit('signIn');
+    }),
     '登录',
     message
   );

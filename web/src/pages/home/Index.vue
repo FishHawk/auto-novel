@@ -6,12 +6,12 @@ import {
   ReadMoreOutlined,
 } from '@vicons/material';
 
+import { Locator } from '@/data';
 import {
   UserRepository,
   WebNovelRepository,
   WenkuNovelRepository,
 } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
 import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
@@ -20,10 +20,11 @@ import { useIsWideScreen } from '@/pages/util';
 import { Result, runCatching } from '@/util/result';
 import { WebUtil } from '@/util/web';
 
-const userData = useUserDataStore();
 const router = useRouter();
 const vars = useThemeVars();
 const isWideScreen = useIsWideScreen(850);
+
+const { isSignedIn } = Locator.userDataRepository();
 
 const url = ref('');
 const query = (url: string) => {
@@ -193,7 +194,7 @@ const notices = [
       </n-flex>
     </notice-board>
 
-    <template v-if="userData.isLoggedIn">
+    <template v-if="isSignedIn">
       <section-header title="我的收藏">
         <router-link to="/favorite">
           <c-button label="更多" :icon="ReadMoreOutlined" />

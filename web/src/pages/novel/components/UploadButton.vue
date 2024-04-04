@@ -6,10 +6,7 @@ import {
   UploadInst,
 } from 'naive-ui';
 
-import { WenkuNovelRepository } from '@/data/api';
-import { useUserDataStore } from '@/data/stores/user_data';
-import { formatError } from '@/data/api/client';
-import { Locator } from '@/data';
+import { Locator, formatError } from '@/data';
 
 const { novelId, type } = defineProps<{
   novelId: string;
@@ -17,8 +14,9 @@ const { novelId, type } = defineProps<{
 }>();
 
 const emits = defineEmits<{ uploadFinished: [] }>();
-const userData = useUserDataStore();
 const message = useMessage();
+
+const { userData, isSignedIn } = Locator.userDataRepository();
 
 function onFinish({
   file,
@@ -31,7 +29,7 @@ function onFinish({
 }
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
-  if (!userData.isLoggedIn) {
+  if (!isSignedIn.value) {
     message.info('请先登录');
     return false;
   }
@@ -56,18 +54,19 @@ const customRequest = ({
   onError,
   onProgress,
 }: UploadCustomRequestOptions) => {
-  if (userData.token === undefined) {
+  if (userData.value.info === undefined) {
     onError();
     return;
   }
-  WenkuNovelRepository.createVolume(
-    novelId,
-    file.name,
-    type,
-    file.file as File,
-    userData.token,
-    (p) => onProgress({ percent: p })
-  )
+  Locator.wenkuNovelRepository
+    .createVolume(
+      novelId,
+      file.name,
+      type,
+      file.file as File,
+      userData.value.info.token,
+      (p) => onProgress({ percent: p })
+    )
     .then(() => {
       onFinish();
     })

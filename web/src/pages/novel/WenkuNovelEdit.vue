@@ -3,7 +3,6 @@ import { UploadOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { Locator } from '@/data';
-import { useUserDataStore } from '@/data/stores/user_data';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import {
   presetKeywordsNonR18,
@@ -17,8 +16,9 @@ const route = useRoute();
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
-const userData = useUserDataStore();
 const WenkuNovelRepository = Locator.wenkuNovelRepository;
+
+const { atLeastMaintainer } = Locator.userDataRepository();
 
 const novelId = route.params.id as string | undefined;
 let loaded = novelId === undefined;
@@ -356,7 +356,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             @action="fetchMetadata"
           />
         </n-input-group>
-        <n-flex v-if="userData.isMaintainer">
+        <n-flex v-if="atLeastMaintainer">
           <c-button
             label="在亚马逊搜索"
             tag="a"

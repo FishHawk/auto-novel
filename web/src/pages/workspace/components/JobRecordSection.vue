@@ -1,14 +1,18 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, RefreshOutlined } from '@vicons/material';
 
-import {
-  WorkspaceStore,
-  isTranslateJobFinished,
-} from '@/data/stores/workspace';
+import { Locator } from '@/data';
+import { TranslateJob } from '@/model/Translator';
 
 const props = defineProps<{
-  workspace: WorkspaceStore;
+  id: 'gpt' | 'sakura';
 }>();
+
+const workspace =
+  props.id === 'gpt'
+    ? Locator.gptWorkspaceRepository()
+    : Locator.sakuraWorkspaceRepository();
+const workspaceRef = workspace.ref;
 
 const progressFilter = ref<'all' | 'finished' | 'unfinished'>('all');
 const progressFilterOptions = [
@@ -18,11 +22,11 @@ const progressFilterOptions = [
 ];
 
 const records = computed(() => {
-  const recordsAll = props.workspace.uncompletedJobs;
+  const recordsAll = workspaceRef.value.uncompletedJobs;
   if (progressFilter.value === 'finished') {
-    return recordsAll.filter((it) => isTranslateJobFinished(it));
+    return recordsAll.filter((it) => TranslateJob.isFinished(it));
   } else if (progressFilter.value === 'unfinished') {
-    return recordsAll.filter((it) => !isTranslateJobFinished(it));
+    return recordsAll.filter((it) => !TranslateJob.isFinished(it));
   } else {
     return recordsAll;
   }

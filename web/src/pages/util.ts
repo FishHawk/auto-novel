@@ -1,7 +1,7 @@
 import { useWindowSize } from '@vueuse/core';
 import { MessageApi } from 'naive-ui';
 
-import { formatError } from '@/data/api/client';
+import { formatError } from '@/data';
 
 export const useIsWideScreen = (limit: number) => {
   const { width } = useWindowSize();
