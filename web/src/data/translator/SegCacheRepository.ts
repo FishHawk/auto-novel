@@ -14,14 +14,18 @@ interface SegCacheDBSchema extends DBSchema {
 type CachedSegType = 'gpt-seg-cache' | 'sakura-seg-cache';
 
 export const createCachedSegRepository = async () => {
-  const db = await openDB<SegCacheDBSchema>('volumes', 1, {
+  const db = await openDB<SegCacheDBSchema>('test', 3, {
     upgrade(db, _oldVersion, _newVersion, _transaction, _event) {
       try {
         db.createObjectStore('gpt-seg-cache', { keyPath: 'hash' });
-      } catch (e) {}
+      } catch (e) {
+        console.log(e);
+      }
       try {
         db.createObjectStore('sakura-seg-cache', { keyPath: 'hash' });
-      } catch (e) {}
+      } catch (e) {
+        console.log(e);
+      }
     },
   });
 

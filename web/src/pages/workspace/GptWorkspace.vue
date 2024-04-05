@@ -4,7 +4,7 @@ import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { TranslateJob } from '@/model/Translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
-import { useIsWideScreen } from '@/pages/util';
+import { doAction, useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
 const isWideScreen = useIsWideScreen(850);
@@ -69,11 +69,12 @@ const onProgressUpdated = (
   }
 };
 
-const clearCache = async () => {
-  const repo = await Locator.cachedSegRepository();
-  await repo.clear('gpt-seg-cache');
-  message.success('缓存清除成功');
-};
+const clearCache = async () =>
+  doAction(
+    Locator.cachedSegRepository().then((repo) => repo.clear('gpt-seg-cache')),
+    '缓存清除',
+    message
+  );
 
 const notices = [
   notice(

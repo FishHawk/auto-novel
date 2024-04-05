@@ -4,8 +4,8 @@ import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { TranslateJob } from '@/model/Translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
-import { useIsWideScreen } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
+import { doAction, useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
 const setting = Locator.settingRepository().ref;
@@ -74,11 +74,14 @@ const onProgressUpdated = (
   }
 };
 
-const clearCache = async () => {
-  const repo = await Locator.cachedSegRepository();
-  await repo.clear('sakura-seg-cache');
-  message.success('缓存清除成功');
-};
+const clearCache = async () =>
+  doAction(
+    Locator.cachedSegRepository().then((repo) =>
+      repo.clear('sakura-seg-cache')
+    ),
+    '缓存清除',
+    message
+  );
 
 const notices = [
   notice('目前允许的模型： v0.9b-Q4_K_M 及以上。'),
