@@ -2,6 +2,7 @@
 import { Locator } from '@/data';
 import { Setting } from '@/model/Setting';
 import { UserRole } from '@/model/User';
+import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 const message = useMessage();
 const setting = Locator.settingRepository().ref;
@@ -65,6 +66,10 @@ const clearWenkuSearchHistory = () => {
           <n-flex vertical align="start">
             <b>工作区语音提醒</b>
             <n-switch size="small" v-model:value="setting.workspaceSound" />
+            <audio controls style="height: 40px">
+              <source :src="SoundAllTaskCompleted" type="audio/mpeg" />
+              浏览器不支持音频格式
+            </audio>
           </n-flex>
         </n-list-item>
 
