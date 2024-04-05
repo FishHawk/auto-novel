@@ -5,8 +5,6 @@ import { Locator } from '@/data';
 
 import { doAction } from '@/pages/util';
 
-const emit = defineEmits<{ (e: 'signUp'): void }>();
-
 const message = useMessage();
 
 const formRef = ref<FormInst>();
@@ -25,21 +23,21 @@ const emailRegex =
 const formRules: FormRules = {
   email: [
     {
-      validator: (rule: FormItemRule, value: string) => emailRegex.test(value),
+      validator: (_rule: FormItemRule, value: string) => emailRegex.test(value),
       message: '邮箱不合法',
       trigger: 'input',
     },
   ],
   emailCode: [
     {
-      validator: (rule: FormItemRule, value: string) => /^\d{6}$/.test(value),
+      validator: (_rule: FormItemRule, value: string) => /^\d{6}$/.test(value),
       message: '邮箱验证码应当为6位数字',
       trigger: 'input',
     },
   ],
   username: [
     {
-      validator: (rule: FormItemRule, value: string) =>
+      validator: (_rule: FormItemRule, value: string) =>
         value.length >= 3 && value.length <= 15,
       message: '用户名应当为3～15个字符',
       trigger: 'input',
@@ -47,14 +45,14 @@ const formRules: FormRules = {
   ],
   password: [
     {
-      validator: (rule: FormItemRule, value: string) => value.length >= 8,
+      validator: (_rule: FormItemRule, value: string) => value.length >= 8,
       message: '密码至少为8个字符',
       trigger: 'input',
     },
   ],
   reenteredPassword: [
     {
-      validator: (rule: FormItemRule, value: string) =>
+      validator: (_rule: FormItemRule, value: string) =>
         value === formValue.value.password,
       message: '两次密码输入不一致',
       trigger: 'input',
@@ -79,7 +77,6 @@ const signUp = async () => {
       })
       .then((profile) => {
         Locator.userDataRepository().setProfile(profile);
-        emit('signUp');
       }),
     '注册',
     message

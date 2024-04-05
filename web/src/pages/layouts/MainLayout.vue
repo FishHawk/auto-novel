@@ -147,7 +147,7 @@ watch(
 
           <router-link
             v-else
-            :to="`/sign-in?from=${encodeURIComponent(route.path)}`"
+            :to="{ name: 'sign-in', query: { from: route.fullPath } }"
           >
             <n-button quaternary>登录/注册</n-button>
           </router-link>

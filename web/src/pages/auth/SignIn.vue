@@ -1,14 +1,26 @@
 <script lang="ts" setup>
-const route = useRoute();
+import { Locator } from '@/data';
+
+const props = defineProps<{ from?: string }>();
+
 const router = useRouter();
-const navToContent = () => {
-  const from = route.query.from;
-  if (typeof from === 'string' && from.startsWith('/')) {
-    router.push(from);
-  } else {
-    router.push('/');
-  }
-};
+
+const { isSignedIn } = Locator.userDataRepository();
+
+watch(
+  isSignedIn,
+  (isSignedIn) => {
+    if (isSignedIn) {
+      const from = props.from;
+      if (from) {
+        router.replace(from);
+      } else {
+        router.replace('/');
+      }
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -23,13 +35,13 @@ const navToContent = () => {
     >
       <n-tab-pane name="signin" tab="登录">
         <div style="padding: 20px">
-          <sign-in-form @sign-in="navToContent" />
+          <sign-in-form />
         </div>
       </n-tab-pane>
 
       <n-tab-pane name="signup" tab="注册">
         <div style="padding: 20px">
-          <sign-up-form @sign-up="navToContent" />
+          <sign-up-form />
         </div>
       </n-tab-pane>
     </n-tabs>

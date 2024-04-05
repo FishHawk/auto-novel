@@ -1,5 +1,7 @@
 <script lang="ts" setup>
-defineProps<{ to: string }>();
+import { RouteLocationRaw } from 'vue-router';
+
+defineProps<{ to: RouteLocationRaw }>();
 </script>
 
 <template>
