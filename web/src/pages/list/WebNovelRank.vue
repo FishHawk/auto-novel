@@ -1,20 +1,19 @@
 <script lang="ts" setup>
 import { FormatListBulletedOutlined } from '@vicons/material';
 
-import { WebNovelRepository } from '@/data/api';
+import { Locator } from '@/data';
 import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { runCatching } from '@/util/result';
-import { useIsWideScreen } from '@/pages/util';
 
+import { useIsWideScreen } from '@/pages/util';
 import { Loader } from './components/NovelList.vue';
 import { menuOptions } from './components/menu';
 
+const props = defineProps<{ providerId: string; typeId: string }>();
+
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
-
-const providerId = route.params.providerId as string;
-const typeId = route.params.typeId as string;
 
 type Descriptor = {
   [key: string]: {
@@ -125,11 +124,16 @@ const descriptiors: { [key: string]: Descriptor } = {
   kakuyomu: descriptorsKakuyomu,
 };
 
-const descriptior = descriptiors[providerId][typeId];
+const descriptior = computed(
+  () => descriptiors[props.providerId][props.typeId]
+);
 
 const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
   const optionNth = (n: number): string =>
-    descriptior.options[n].tags[selected[n]];
+    descriptior.value.options[n].tags[selected[n]];
+
+  const providerId = props.providerId;
+  const typeId = props.typeId;
 
   let filters = {};
   if (providerId == 'syosetu') {
@@ -147,7 +151,7 @@ const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
   } else if (providerId == 'kakuyomu') {
     filters = { genre: optionNth(0), range: optionNth(1) };
   }
-  return runCatching(WebNovelRepository.listRank(providerId, filters));
+  return runCatching(Locator.webNovelRepository.listRank(providerId, filters));
 };
 
 const showListModal = ref(false);

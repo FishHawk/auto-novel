@@ -92,8 +92,10 @@ const router = createRouter({
         },
         {
           path: '/novel-rank/:providerId/:typeId',
+          name: 'web-rank',
           meta: { title: '排行榜' },
           component: () => import('./pages/list/WebNovelRank.vue'),
+          props: true,
         },
 
         {
