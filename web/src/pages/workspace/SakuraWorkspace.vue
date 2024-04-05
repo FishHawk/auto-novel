@@ -11,7 +11,7 @@ const message = useMessage();
 const setting = Locator.settingRepository().ref;
 const isWideScreen = useIsWideScreen(850);
 
-const workspace = Locator.gptWorkspaceRepository();
+const workspace = Locator.sakuraWorkspaceRepository();
 const workspaceRef = workspace.ref;
 
 const showCreateWorkerModal = ref(false);
