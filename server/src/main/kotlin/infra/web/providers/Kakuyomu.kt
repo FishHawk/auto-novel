@@ -178,6 +178,10 @@ class Kakuyomu(
         val doc = client.get(url).document()
         doc.select("rp").remove()
         doc.select("rt").remove()
-        return RemoteChapter(paragraphs = doc.select("div.widget-episodeBody > p").map { it.text() })
+        val paragraphs = doc.select("div.widget-episodeBody > p").map { it.text() }
+        if (paragraphs.isEmpty()) {
+            throw RuntimeException("付费章节，无法获取")
+        }
+        return RemoteChapter(paragraphs = paragraphs)
     }
 }
