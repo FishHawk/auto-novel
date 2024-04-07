@@ -12,7 +12,8 @@ import {
 import { doAction, useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/util/result';
 
-const route = useRoute();
+const { novelId } = defineProps<{ novelId?: string }>();
+
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
@@ -20,7 +21,6 @@ const WenkuNovelRepository = Locator.wenkuNovelRepository;
 
 const { atLeastMaintainer } = Locator.userDataRepository();
 
-const novelId = route.params.id as string | undefined;
 let loaded = novelId === undefined;
 
 const formRef = ref<FormInst>();

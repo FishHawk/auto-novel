@@ -5,21 +5,16 @@ import { useIsWideScreen } from '@/pages/util';
 
 import { ReadableTocItem, WebNovelVM } from './components/common';
 
+const props = defineProps<{ providerId: string; novelId: string }>();
+
 const isWideScreen = useIsWideScreen(850);
 const vars = useThemeVars();
 const router = useRouter();
 
-const route = useRoute();
-
-const ids = computed(() => ({
-  providerId: route.params.providerId as string,
-  novelId: route.params.novelId as string,
-}));
-
 const novelResult = ref<Result<WebNovelVM>>();
 
 watch(
-  ids,
+  props,
   async ({ providerId, novelId }) => {
     novelResult.value = undefined;
     const result = await runCatching(
@@ -82,14 +77,14 @@ const visitedColor = mixColor();
     <c-result :result="novelResult" v-slot="{ value: novel }">
       <web-novel-wide
         v-if="isWideScreen"
-        :provider-id="ids.providerId"
-        :novel-id="ids.novelId"
+        :provider-id="providerId"
+        :novel-id="novelId"
         :novel="novel"
       />
       <web-novel-narrow
         v-else
-        :provider-id="ids.providerId"
-        :novel-id="ids.novelId"
+        :provider-id="providerId"
+        :novel-id="novelId"
         :novel="novel"
       />
     </c-result>

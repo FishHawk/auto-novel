@@ -6,13 +6,11 @@ import { WebNovelDto } from '@/model/WebNovel';
 import { runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
-const route = useRoute();
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
-const providerId = route.params.providerId as string;
-const novelId = route.params.novelId as string;
+const props = defineProps<{ providerId: string; novelId: string }>();
 
 const novel = ref<WebNovelDto>();
 
@@ -23,37 +21,45 @@ const formValue = ref({
   toc: <{ jp: string; zh: string }[]>[],
 });
 
-onMounted(async () => {
-  const result = await runCatching(
-    WebNovelRepository.getNovel(providerId, novelId)
-  );
-  if (result.ok) {
-    novel.value = result.value;
+watch(
+  props,
+  async ({ providerId, novelId }) => {
+    const result = await runCatching(
+      WebNovelRepository.getNovel(providerId, novelId)
+    );
+    if (result.ok) {
+      novel.value = result.value;
 
-    const tocSet = new Set();
-    formValue.value = {
-      title: result.value.titleZh ?? '',
-      introduction: result.value.introductionZh ?? '',
-      wenkuId: result.value.wenkuId ?? '',
-      toc: result.value.toc
-        .filter((item) => {
-          const inSet = tocSet.has(item.titleJp);
-          if (!inSet) tocSet.add(item.titleJp);
-          return !inSet;
-        })
-        .map((item) => ({
-          jp: item.titleJp,
-          zh: item.titleZh ?? '',
-        })),
-    };
-  } else {
-    message.error('载入失败');
-  }
-});
+      const tocSet = new Set();
+      formValue.value = {
+        title: result.value.titleZh ?? '',
+        introduction: result.value.introductionZh ?? '',
+        wenkuId: result.value.wenkuId ?? '',
+        toc: result.value.toc
+          .filter((item) => {
+            const inSet = tocSet.has(item.titleJp);
+            if (!inSet) tocSet.add(item.titleJp);
+            return !inSet;
+          })
+          .map((item) => ({
+            jp: item.titleJp,
+            zh: item.titleZh ?? '',
+          })),
+      };
+    } else {
+      message.error('载入失败');
+    }
+  },
+  { immediate: true }
+);
 
 const submit = async () => {
-  if (novel.value === undefined) return;
+  if (novel.value === undefined) {
+    message.warning('载入未完成');
+    return;
+  }
 
+  const { providerId, novelId } = props;
   await doAction(
     WebNovelRepository.updateNovel(providerId, novelId, {
       title: formValue.value.title.trim(),

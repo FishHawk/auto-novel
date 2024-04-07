@@ -12,6 +12,8 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 
 import TranslateOptions from './components/TranslateOptions.vue';
 
+const props = defineProps<{ novelId: string }>();
+
 const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   label: string;
   tags: string[];
@@ -20,16 +22,15 @@ const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
 const isWideScreen = useIsWideScreen(600);
 const message = useMessage();
 const vars = useThemeVars();
-const route = useRoute();
 
 const { atLeastMaintainer } = Locator.userDataRepository();
-
-const novelId = route.params.novelId as string;
 
 const novelMetadataResult = ref<Result<WenkuNovelDto>>();
 
 const getNovel = async () => {
-  const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
+  const result = await runCatching(
+    WenkuNovelRepository.getNovel(props.novelId)
+  );
   if (result.ok) {
     result.value.volumeZh = result.value.volumeZh.sort((a, b) =>
       a.localeCompare(b)
@@ -43,13 +44,14 @@ const getNovel = async () => {
     document.title = result.value.title;
   }
 };
-getNovel();
+
+watch(props, getNovel, { immediate: true });
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
 const deleteVolume = (volumeId: string) =>
   doAction(
-    WenkuNovelRepository.deleteVolume(novelId, volumeId).then(() => {
+    WenkuNovelRepository.deleteVolume(props.novelId, volumeId).then(() => {
       getNovel();
     }),
     '删除',

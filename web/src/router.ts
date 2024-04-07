@@ -118,26 +118,31 @@ const router = createRouter({
         {
           path: '/novel/:providerId/:novelId',
           component: () => import('./pages/novel/WebNovel.vue'),
+          props: true,
         },
         {
           path: '/novel-edit/:providerId/:novelId',
           meta: { title: '编辑网络小说' },
           component: () => import('./pages/novel/WebNovelEdit.vue'),
+          props: true,
         },
 
         {
           path: '/wenku/:novelId',
           component: () => import('./pages/novel/WenkuNovel.vue'),
+          props: true,
         },
         {
           path: '/wenku-edit',
           meta: { title: '新建文库小说' },
           component: () => import('./pages/novel/WenkuNovelEdit.vue'),
+          props: true,
         },
         {
-          path: '/wenku-edit/:id',
+          path: '/wenku-edit/:novelId',
           meta: { title: '编辑文库小说' },
           component: () => import('./pages/novel/WenkuNovelEdit.vue'),
+          props: true,
         },
 
         {
@@ -146,18 +151,21 @@ const router = createRouter({
           component: () => import('./pages/forum/Forum.vue'),
         },
         {
-          path: '/forum/:id',
+          path: '/forum/:articleId',
           component: () => import('./pages/forum/ForumArticle.vue'),
+          props: true,
         },
         {
           path: '/forum-edit',
           meta: { title: '发布文章' },
           component: () => import('./pages/forum/ForumArticleEdit.vue'),
+          props: true,
         },
         {
-          path: '/forum-edit/:id',
+          path: '/forum-edit/:articleId',
           meta: { title: '编辑文章' },
           component: () => import('./pages/forum/ForumArticleEdit.vue'),
+          props: true,
         },
 
         {

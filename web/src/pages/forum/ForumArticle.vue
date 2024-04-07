@@ -1,18 +1,18 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
-import { ArticleRepository } from '@/data/api';
 import { Article } from '@/model/Article';
 import { Result, runCatching } from '@/util/result';
 
-const route = useRoute();
+const { articleId } = defineProps<{ articleId: string }>();
 
 const { userData, asAdmin } = Locator.userDataRepository();
 
-const articleId = route.params.id as string;
 const articleResult = ref<Result<Article>>();
 
 onMounted(async () => {
-  const result = await runCatching(ArticleRepository.getArticle(articleId));
+  const result = await runCatching(
+    Locator.articleRepository.getArticle(articleId)
+  );
   articleResult.value = result;
   if (result.ok) {
     document.title = result.value.title;

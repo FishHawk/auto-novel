@@ -2,18 +2,19 @@
 import { UploadOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { ArticleRepository } from '@/data/api';
+import { Locator } from '@/data';
 import avaterUrl from '@/image/avater.jpg';
 import { ArticleCategory } from '@/model/Article';
 import { runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
+
+const { articleId } = defineProps<{ articleId?: string }>();
 
 const route = useRoute();
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
-const articleId = route.params.id as string | undefined;
 let loaded = articleId === undefined;
 
 const articleCategoryOptions = [
@@ -59,7 +60,9 @@ const formRules: FormRules = {
 
 onMounted(async () => {
   if (articleId !== undefined) {
-    const article = await runCatching(ArticleRepository.getArticle(articleId));
+    const article = await runCatching(
+      Locator.articleRepository.getArticle(articleId)
+    );
     if (article.ok) {
       formValue.value.title = article.value.title;
       formValue.value.category = article.value.category;
@@ -87,17 +90,17 @@ const submit = async () => {
 
   if (articleId === undefined) {
     await doAction(
-      ArticleRepository.createArticle(formValue.value).then((id) =>
-        router.push({ path: `/forum/${id}` })
-      ),
+      Locator.articleRepository
+        .createArticle(formValue.value)
+        .then((id) => router.push({ path: `/forum/${id}` })),
       '发布',
       message
     );
   } else {
     await doAction(
-      ArticleRepository.updateArticle(articleId, formValue.value).then(() =>
-        router.push({ path: `/forum/${articleId}` })
-      ),
+      Locator.articleRepository
+        .updateArticle(articleId, formValue.value)
+        .then(() => router.push({ path: `/forum/${articleId}` })),
       '更新',
       message
     );
