@@ -23,7 +23,7 @@ const isWideScreen = useIsWideScreen(600);
 const message = useMessage();
 const vars = useThemeVars();
 
-const { atLeastMaintainer } = Locator.userDataRepository();
+const { isSignedIn, atLeastMaintainer } = Locator.userDataRepository();
 
 const novelMetadataResult = ref<Result<WenkuNovelDto>>();
 
@@ -246,30 +246,36 @@ const showWebNovelsModal = ref(false);
       </n-ul>
 
       <section-header title="日文章节" />
-      <upload-button
-        type="jp"
-        :novel-id="novelId"
-        @upload-finished="getNovel()"
-      />
+      <template v-if="isSignedIn">
+        <upload-button
+          type="jp"
+          :novel-id="novelId"
+          @upload-finished="getNovel()"
+        />
 
-      <translate-options
-        ref="translateOptions"
-        :gnid="GenericNovelId.wenku(novelId)"
-        :glossary="metadata.glossary"
-        style="margin-top: 16px"
-      />
-      <n-divider style="margin: 16px 0 0" />
+        <translate-options
+          ref="translateOptions"
+          :gnid="GenericNovelId.wenku(novelId)"
+          :glossary="metadata.glossary"
+          style="margin-top: 16px"
+        />
+        <n-divider style="margin: 16px 0 0" />
 
-      <n-list>
-        <n-list-item v-for="volume of metadata.volumeJp" :key="volume.volumeId">
-          <WenkuVolume
-            :novel-id="novelId"
-            :volume="volume"
-            :get-params="() => translateOptions!!.getTranslationOptions()"
-            @delete="deleteVolume(volume.volumeId)"
-          />
-        </n-list-item>
-      </n-list>
+        <n-list>
+          <n-list-item
+            v-for="volume of metadata.volumeJp"
+            :key="volume.volumeId"
+          >
+            <WenkuVolume
+              :novel-id="novelId"
+              :volume="volume"
+              :get-params="() => translateOptions!!.getTranslationOptions()"
+              @delete="deleteVolume(volume.volumeId)"
+            />
+          </n-list-item>
+        </n-list>
+      </template>
+      <n-p v-else>游客无法使用该功能，请先登录。</n-p>
 
       <CommentList :site="`wenku-${novelId}`" />
     </c-result>

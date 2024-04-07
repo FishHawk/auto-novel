@@ -12,6 +12,7 @@ defineProps<{
   novel: WebNovelVM;
 }>();
 
+const { isSignedIn } = Locator.userDataRepository();
 const setting = Locator.settingRepository().ref;
 
 const showCatalogDrawer = ref(false);
@@ -24,7 +25,8 @@ const showCatalogDrawer = ref(false);
     :novel="novel"
   />
   <section-header title="翻译" />
-  <WebTranslate
+  <web-translate
+    v-if="isSignedIn"
     :provider-id="providerId"
     :novel-id="novelId"
     :title-jp="novel.titleJp"
@@ -37,6 +39,7 @@ const showCatalogDrawer = ref(false);
     :sakura="novel.sakura"
     :glossary="novel.glossary"
   />
+  <n-p v-else>游客无法使用该功能，请先登录。</n-p>
 
   <section-header title="目录">
     <c-button

@@ -154,46 +154,46 @@ fun Route.routeWenkuNovel() {
                 )
             }
         }
-    }
 
-    // Translate
-    get<WenkuNovelRes.Id.Translate> { loc ->
-        call.tryRespond {
-            service.getTranslateTask(
-                novelId = loc.parent.novelId,
-                translatorId = loc.translatorId,
-                volumeId = loc.volumeId,
-            )
+        // Translate
+        get<WenkuNovelRes.Id.Translate> { loc ->
+            call.tryRespond {
+                service.getTranslateTask(
+                    novelId = loc.parent.novelId,
+                    translatorId = loc.translatorId,
+                    volumeId = loc.volumeId,
+                )
+            }
         }
-    }
-    get<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-        call.tryRespond {
-            service.getChapterToTranslate(
-                novelId = loc.parent.parent.novelId,
-                volumeId = loc.parent.volumeId,
-                chapterId = loc.chapterId,
-            )
+        get<WenkuNovelRes.Id.Translate.Chapter> { loc ->
+            call.tryRespond {
+                service.getChapterToTranslate(
+                    novelId = loc.parent.parent.novelId,
+                    volumeId = loc.parent.volumeId,
+                    chapterId = loc.chapterId,
+                )
+            }
         }
-    }
-    put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-        @Serializable
-        class Body(
-            val glossaryUuid: String? = null,
-            val paragraphsZh: List<String>,
-            val sakuraVersion: String? = null,
-        )
+        put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
+            @Serializable
+            class Body(
+                val glossaryUuid: String? = null,
+                val paragraphsZh: List<String>,
+                val sakuraVersion: String? = null,
+            )
 
-        val body = call.receive<Body>()
-        call.tryRespond {
-            service.updateChapterTranslation(
-                novelId = loc.parent.parent.novelId,
-                translatorId = loc.parent.translatorId,
-                volumeId = loc.parent.volumeId,
-                chapterId = loc.chapterId,
-                glossaryUuid = body.glossaryUuid,
-                paragraphsZh = body.paragraphsZh,
-                sakuraVersion = body.sakuraVersion,
-            )
+            val body = call.receive<Body>()
+            call.tryRespond {
+                service.updateChapterTranslation(
+                    novelId = loc.parent.parent.novelId,
+                    translatorId = loc.parent.translatorId,
+                    volumeId = loc.parent.volumeId,
+                    chapterId = loc.chapterId,
+                    glossaryUuid = body.glossaryUuid,
+                    paragraphsZh = body.paragraphsZh,
+                    sakuraVersion = body.sakuraVersion,
+                )
+            }
         }
     }
 
