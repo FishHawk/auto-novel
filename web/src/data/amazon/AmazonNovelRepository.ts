@@ -32,7 +32,7 @@ const getNovelByAsin = async (asin: string): Promise<AmazonNovel> => {
     const cover = prettyCover(volume.cover);
     return {
       title,
-      r18: false,
+      r18: volume.r18,
       authors: volume.authors,
       artists: volume.artists,
       introduction: volume.introduction,

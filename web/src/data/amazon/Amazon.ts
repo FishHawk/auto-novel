@@ -97,6 +97,8 @@ const parseProductSet = (doc: Document) => {
 
 const parseProductVolume = (doc: Document) => {
   const title = doc.getElementById('productTitle')!.textContent!;
+  const subtitle = doc.getElementById('productSubtitle')?.textContent ?? '';
+  const r18 = subtitle.includes('成人') || subtitle.includes('アダルト');
 
   const authors: string[] = [];
   const artists: string[] = [];
@@ -175,6 +177,7 @@ const parseProductVolume = (doc: Document) => {
     introduction,
     publisher,
     publishAt,
+    r18,
   };
 };
 

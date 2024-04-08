@@ -240,7 +240,7 @@ const getNovelFromAmazon = async () => {
         ? formValue.value.title
         : amazonMetadata.title,
       titleZh: formValue.value.titleZh,
-      cover: formValue.value.volumes.at(0)?.cover,
+      cover: amazonMetadata.volumes.at(0)?.cover,
       authors:
         formValue.value.authors.length > 0
           ? formValue.value.authors
@@ -261,6 +261,7 @@ const getNovelFromAmazon = async () => {
     message.error(`导入失败:${e}`);
   }
   await getVolumesFromAmazon(false);
+  formValue.value.cover = formValue.value.volumes.at(0)?.cover;
 };
 
 const submitCurrentStep = ref(1);
