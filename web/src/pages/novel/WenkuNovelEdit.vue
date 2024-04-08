@@ -155,9 +155,10 @@ const submit = async () => {
   }
 };
 
-const getVolumesFromAmazon = async () => {
+const getVolumesFromAmazon = async (force: boolean) => {
   const volumes = formValue.value.volumes.filter(
-    (it) => it.coverHires === undefined
+    ({ coverHires, publishAt }) =>
+      [coverHires, publishAt].some((it) => it === undefined) || force
   );
   const size = volumes.length;
 
@@ -259,7 +260,7 @@ const getNovelFromAmazon = async () => {
   } catch (e) {
     message.error(`导入失败:${e}`);
   }
-  await getVolumesFromAmazon();
+  await getVolumesFromAmazon(false);
 };
 
 const submitCurrentStep = ref(1);
@@ -424,7 +425,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
           <c-button
             secondary
             label="获取分卷信息"
-            @action="getVolumesFromAmazon"
+            @action="getVolumesFromAmazon(true)"
           />
           <c-button
             v-if="atLeastMaintainer"
