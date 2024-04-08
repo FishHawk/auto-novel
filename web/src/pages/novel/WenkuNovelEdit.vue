@@ -11,6 +11,7 @@ import {
   WenkuVolumeDto,
 } from '@/model/WenkuNovel';
 import { doAction, useIsWideScreen } from '@/pages/util';
+import { delay, parallelExec } from '@/util';
 import { runCatching } from '@/util/result';
 
 const { novelId } = defineProps<{ novelId?: string }>();
@@ -81,12 +82,12 @@ onMounted(async () => {
     const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
     if (result.ok) {
       if (amazonUrl.value.length === 0) {
-        amazonUrl.value = result.value.title.replace(/[。!！]$/, '');
+        amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
       }
       formValue.value = {
         title: result.value.title,
         titleZh: result.value.titleZh,
-        cover: result.value.cover,
+        cover: Locator.amazonNovelRepository.prettyCover(result.value.cover),
         authors: result.value.authors,
         artists: result.value.artists,
         r18: result.value.r18,
@@ -155,80 +156,27 @@ const submit = async () => {
   }
 };
 
-const getVolumesFromAmazon = async (force: boolean) => {
-  const volumes = formValue.value.volumes.filter(
-    ({ coverHires, publishAt }) =>
-      [coverHires, publishAt].some((it) => it === undefined) || force
-  );
-  const size = volumes.length;
+const populateNovelFromAmazon = async (
+  urlOrQuery: string,
+  forcePopulateVolumes: boolean
+) => {
+  const messageReactive = message.create('', {
+    type: 'loading',
+    duration: 0,
+  });
 
-  if (size === 0) {
-    message.info('没有分卷需要获取信息');
-    return;
-  }
+  // 导入小说
+  urlOrQuery = urlOrQuery.trim();
+  if (urlOrQuery.length !== 0) {
+    messageReactive.content = '导入小说';
 
-  const batchRequest = async (batchSize = 1) => {
-    let finished = 0;
-    const promises = new Map<number, Promise<void>>();
-
-    const messageReactive = message.create('', {
-      type: 'loading',
-      duration: 0,
-    });
-
-    const updateMessageContent = () => {
-      const processed = [...promises.keys()].join(', ');
-      messageReactive.content = `获取分卷详细信息 ${finished}/${size} 正在获取：${processed}`;
-    };
-
-    for (const [index, { asin }] of volumes.entries()) {
-      promises.set(
-        index,
-        Locator.amazonNovelRepository
-          .getVolume(asin)
-          .then((newVolume) => {
-            const index = formValue.value.volumes.findIndex(
-              (it) => it.asin === asin
-            );
-            if (index >= 0) {
-              formValue.value.volumes[index] = newVolume;
-            }
-          })
-          .catch(() => {
-            message.error(`获取分卷详细信息 ${index + 1} ASIN:${asin} 失败`);
-          })
-          .finally(() => {
-            finished += 1;
-            promises.delete(index);
-          })
-      );
-      if (promises.size === batchSize) {
-        updateMessageContent();
-        await Promise.race([...promises.values()]);
-      }
+    let amazonMetadata;
+    try {
+      amazonMetadata = await Locator.amazonNovelRepository.getNovel(urlOrQuery);
+    } catch (e) {
+      message.error(`导入小说失败:${e}`);
+      return;
     }
-    while (promises.size > 0) {
-      updateMessageContent();
-      await Promise.race([...promises.values()]);
-    }
-    messageReactive.destroy();
-  };
-
-  await batchRequest(5);
-  message.info('获取分卷详细信息 完成');
-};
-
-const getNovelFromAmazon = async () => {
-  const urlOrQuery = amazonUrl.value.trim();
-  if (urlOrQuery.length === 0) {
-    message.warning('导入为空');
-    return;
-  }
-
-  try {
-    const amazonMetadata = await Locator.amazonNovelRepository.getNovel(
-      urlOrQuery
-    );
     const volumesOld = formValue.value.volumes;
     const volumesNew = amazonMetadata.volumes.filter(
       (newV) => !formValue.value.volumes.some((oldV) => oldV.asin === newV.asin)
@@ -256,12 +204,49 @@ const getNovelFromAmazon = async () => {
         : amazonMetadata.introduction,
       volumes,
     };
-    message.info('导入成功');
-  } catch (e) {
-    message.error(`导入失败:${e}`);
   }
-  await getVolumesFromAmazon(false);
-  formValue.value.cover = formValue.value.volumes.at(0)?.cover;
+
+  // 导入分卷
+  {
+    const volumes = formValue.value.volumes.filter(
+      ({ coverHires, publishAt }) =>
+        [coverHires, publishAt].some((it) => it === undefined) ||
+        forcePopulateVolumes
+    );
+
+    await parallelExec(
+      volumes.map(({ asin }) => {
+        return () =>
+          Locator.amazonNovelRepository
+            .getVolume(asin)
+            .then((newVolume) => {
+              const index = formValue.value.volumes.findIndex(
+                (it) => it.asin === asin
+              );
+              if (index >= 0) {
+                formValue.value.volumes[index] = newVolume;
+              }
+            })
+            .catch((e) => {
+              message.error(`导入分卷失败 ${asin} ${e}`);
+            });
+      }),
+      5,
+      (context) => {
+        const processing = context.promises.length;
+        const finished = context.finished;
+        const size = volumes.length;
+        messageReactive.content = `导入分卷[${finished}/${size}] ${processing}本处理中`;
+      }
+    );
+
+    formValue.value.cover = formValue.value.volumes.at(0)?.cover;
+  }
+
+  // 结束
+  messageReactive.content = '导入完成';
+  messageReactive.type = 'info';
+  delay(3000).then(() => messageReactive.destroy());
 };
 
 const submitCurrentStep = ref(1);
@@ -410,7 +395,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             label="导入"
             :round="false"
             type="primary"
-            @action="getNovelFromAmazon"
+            @action="populateNovelFromAmazon(amazonUrl, false)"
           />
         </n-input-group>
         <n-flex>
@@ -426,7 +411,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
           <c-button
             secondary
             label="获取分卷信息"
-            @action="getVolumesFromAmazon(true)"
+            @action="populateNovelFromAmazon('', true)"
           />
           <c-button
             v-if="atLeastMaintainer"

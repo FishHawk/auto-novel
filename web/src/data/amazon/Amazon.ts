@@ -131,7 +131,7 @@ const parseProductVolume = (doc: Document) => {
 
   const getElementContain = (tag: string, content: string) => {
     return doc.evaluate(
-      `//${tag}[contains(., '${content}')]`,
+      `//${tag}[text()='${content}']`,
       doc,
       null,
       XPathResult.FIRST_ORDERED_NODE_TYPE,
@@ -282,6 +282,10 @@ const parseSearch = (doc: Document) => {
         .find((asin) => asin);
 
       return { asin, title, cover, serialAsin };
+    })
+    .filter(({ title }) => {
+      // 排除试读，例如：https://www.amazon.co.jp/dp/B0BTDKR5LZ
+      return !title.includes('試し読');
     });
 };
 
