@@ -14,7 +14,7 @@ data class WenkuNovelMetadataOutline(
     val id: String,
     val title: String,
     val titleZh: String,
-    val cover: String,
+    val cover: String?,
 )
 
 @Serializable
@@ -22,10 +22,13 @@ data class WenkuNovelMetadata(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
     val titleZh: String,
-    val cover: String,
+    val cover: String? = null,
     val authors: List<String>,
     val artists: List<String>,
     val keywords: List<String>,
+    val publisher: String? = null,
+    val imprint: String? = null,
+    @Contextual val latestPublishAt: Instant? = null,
     val r18: Boolean = false,
     val introduction: String,
     val webIds: List<String> = emptyList(),
@@ -46,6 +49,10 @@ data class WenkuNovelVolume(
     val title: String,
     val titleZh: String? = null,
     val cover: String,
+    val coverHires: String? = null,
+    val publisher: String? = null,
+    val imprint: String? = null,
+    val publishAt: Long? = null,
 )
 
 data class WenkuNovelVolumeList(

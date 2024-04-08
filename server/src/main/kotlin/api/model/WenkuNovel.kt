@@ -8,7 +8,7 @@ data class WenkuNovelOutlineDto(
     val id: String,
     val title: String,
     val titleZh: String,
-    val cover: String,
+    val cover: String?,
 )
 
 fun WenkuNovelMetadataOutline.asDto() =

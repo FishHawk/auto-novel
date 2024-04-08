@@ -138,6 +138,13 @@ const showWebNovelsModal = ref(false);
               label="插图"
               :tags="novelMetadataResult.value.artists"
             />
+            <ReuseTagGroup
+              label="出版"
+              :tags="[
+                novelMetadataResult.value.publisher ?? '未知出版商',
+                novelMetadataResult.value.imprint ?? '未知文库',
+              ]"
+            />
           </n-flex>
         </n-flex>
       </div>
@@ -180,6 +187,10 @@ const showWebNovelsModal = ref(false);
       </n-flex>
 
       <n-p>原名：{{ metadata.title }}</n-p>
+      <n-p v-if="metadata.latestPublishAt">
+        最新出版于
+        <n-time :time="metadata.latestPublishAt * 1000" type="date" />
+      </n-p>
       <n-p v-html="metadata.introduction.replace(/\n/g, '<br />')" />
 
       <n-flex :size="[4, 4]">
@@ -200,6 +211,7 @@ const showWebNovelsModal = ref(false);
                 v-for="volume of metadata.volumes"
                 width="104"
                 :src="volume.cover"
+                :preview-src="volume.coverHires ?? volume.cover"
                 :alt="volume.asin"
                 lazy
                 style="border-radius: 2px"

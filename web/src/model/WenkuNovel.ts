@@ -14,6 +14,9 @@ export interface WenkuNovelDto {
   authors: string[];
   artists: string[];
   keywords: string[];
+  publisher?: string;
+  imprint?: string;
+  latestPublishAt?: number;
   r18: boolean;
   introduction: string;
   webIds: string[];
@@ -31,6 +34,10 @@ export interface WenkuVolumeDto {
   title: string;
   titleZh?: string;
   cover: string;
+  coverHires?: string;
+  publisher?: string;
+  imprint?: string;
+  publishAt?: number;
 }
 
 export interface VolumeJpDto {
@@ -44,16 +51,11 @@ export interface VolumeJpDto {
 
 export interface AmazonNovel {
   title: string;
-  cover: string;
   r18: boolean;
   authors: string[];
   artists: string[];
   introduction: string;
-  volumes: Array<{
-    asin: string;
-    title: string;
-    cover: string;
-  }>;
+  volumes: Array<WenkuVolumeDto>;
 }
 
 type PresetKeywordsGroup = {

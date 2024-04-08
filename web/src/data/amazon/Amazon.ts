@@ -123,12 +123,58 @@ const parseProductVolume = (doc: Document) => {
 
   const cover = doc.getElementById('landingImage')!.getAttribute('src')!;
 
+  const coverHires = doc
+    .querySelector('img[data-old-hires]')!
+    .getAttribute('data-old-hires')!;
+
+  const getElementContain = (tag: string, content: string) => {
+    return doc.evaluate(
+      `//${tag}[contains(., '${content}')]`,
+      doc,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue;
+  };
+
+  const getCarouselElement = (label: string) =>
+    getElementContain('span', label)?.parentElement?.nextElementSibling
+      ?.nextElementSibling?.textContent;
+
+  const getPublisher = () => getCarouselElement('出版社') ?? undefined;
+
+  const getPublishAt = () => {
+    const dateStr =
+      getCarouselElement('出版日期') ?? getCarouselElement('発売日');
+    if (!dateStr) return;
+
+    const regex1 = /(\d+)年 (\d+)月 (\d+)日/; // 2018年 6月 9日
+    const regex2 = /(\d+)\/(\d+)\/(\d+)/; // 2018/6/9
+
+    const match = dateStr.match(regex1) ?? dateStr.match(regex2);
+    if (match) {
+      const [, yearStr, monthStr, dayStr] = match;
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10) - 1; // JavaScript月份从0开始
+      const day = parseInt(dayStr, 10);
+      const date = new Date(year, month, day);
+      return date.getTime() / 1000;
+    }
+    return;
+  };
+
+  const publisher = getPublisher()?.trim();
+  const publishAt = getPublishAt();
+
   return {
     title,
     cover,
+    coverHires,
     authors,
     artists,
     introduction,
+    publisher,
+    publishAt,
   };
 };
 

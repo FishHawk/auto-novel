@@ -8,6 +8,7 @@ import {
   presetKeywordsNonR18,
   presetKeywordsR18,
   WenkuNovelOutlineDto,
+  WenkuVolumeDto,
 } from '@/model/WenkuNovel';
 import { doAction, useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/util/result';
@@ -28,13 +29,13 @@ const formRef = ref<FormInst>();
 const formValue = ref({
   title: '',
   titleZh: '',
-  cover: '',
+  cover: '' as string | undefined,
   authors: [] as string[],
   artists: [] as string[],
   r18: false,
   keywords: [] as string[],
   introduction: '',
-  volumes: [] as { asin: string; title: string; cover: string }[],
+  volumes: [] as WenkuVolumeDto[],
 });
 
 const formRules: FormRules = {
@@ -85,17 +86,16 @@ onMounted(async () => {
       formValue.value = {
         title: result.value.title,
         titleZh: result.value.titleZh,
-        cover: Locator.amazonNovelRepository.prettyCover(result.value.cover),
+        cover: result.value.cover,
         authors: result.value.authors,
         artists: result.value.artists,
         r18: result.value.r18,
         keywords: result.value.keywords,
         introduction: result.value.introduction,
-        volumes: result.value.volumes.map(({ asin, title, cover }) => ({
-          asin,
-          title,
-          cover: Locator.amazonNovelRepository.prettyCover(cover),
-        })),
+        volumes: result.value.volumes.map((it) => {
+          it.cover = Locator.amazonNovelRepository.prettyCover(it.cover);
+          return it;
+        }),
       };
       loaded = true;
     } else {
@@ -155,25 +155,80 @@ const submit = async () => {
   }
 };
 
-const fetchMetadata = async () => {
-  try {
-    const urlOrQuery = amazonUrl.value.trim();
-    if (urlOrQuery.length === 0) {
-      message.warning('导入为空');
-      return;
-    }
+const getVolumesFromAmazon = async () => {
+  const volumes = formValue.value.volumes.filter(
+    (it) => it.coverHires === undefined
+  );
+  const size = volumes.length;
 
+  if (size === 0) {
+    message.info('没有分卷需要获取信息');
+    return;
+  }
+
+  const batchRequest = async (batchSize = 1) => {
+    let finished = 0;
+    const promises = new Map<number, Promise<void>>();
+
+    const messageReactive = message.create('', {
+      type: 'loading',
+      duration: 0,
+    });
+
+    const updateMessageContent = () => {
+      const processed = [...promises.keys()].join(', ');
+      messageReactive.content = `获取分卷详细信息 ${finished}/${size} 正在获取：${processed}`;
+    };
+
+    for (const [index, { asin }] of volumes.entries()) {
+      promises.set(
+        index,
+        Locator.amazonNovelRepository
+          .getVolume(asin)
+          .then((newVolume) => {
+            const index = formValue.value.volumes.findIndex(
+              (it) => it.asin === asin
+            );
+            if (index >= 0) {
+              formValue.value.volumes[index] = newVolume;
+            }
+          })
+          .catch(() => {
+            message.error(`获取分卷详细信息 ${index + 1} ASIN:${asin} 失败`);
+          })
+          .finally(() => {
+            finished += 1;
+            promises.delete(index);
+          })
+      );
+      if (promises.size === batchSize) {
+        updateMessageContent();
+        await Promise.race([...promises.values()]);
+      }
+    }
+    while (promises.size > 0) {
+      updateMessageContent();
+      await Promise.race([...promises.values()]);
+    }
+    messageReactive.destroy();
+  };
+
+  await batchRequest(5);
+  message.info('获取分卷详细信息 完成');
+};
+
+const getNovelFromAmazon = async () => {
+  const urlOrQuery = amazonUrl.value.trim();
+  if (urlOrQuery.length === 0) {
+    message.warning('导入为空');
+    return;
+  }
+
+  try {
     const amazonMetadata = await Locator.amazonNovelRepository.getNovel(
       urlOrQuery
     );
-    const volumesOld = formValue.value.volumes.map((oldV) => {
-      const newV = amazonMetadata.volumes.find((it) => it.asin === oldV.asin);
-      if (newV === undefined) {
-        return oldV;
-      } else {
-        return newV;
-      }
-    });
+    const volumesOld = formValue.value.volumes;
     const volumesNew = amazonMetadata.volumes.filter(
       (newV) => !formValue.value.volumes.some((oldV) => oldV.asin === newV.asin)
     );
@@ -184,7 +239,7 @@ const fetchMetadata = async () => {
         ? formValue.value.title
         : amazonMetadata.title,
       titleZh: formValue.value.titleZh,
-      cover: amazonMetadata.cover,
+      cover: formValue.value.volumes.at(0)?.cover,
       authors:
         formValue.value.authors.length > 0
           ? formValue.value.authors
@@ -204,6 +259,7 @@ const fetchMetadata = async () => {
   } catch (e) {
     message.error(`导入失败:${e}`);
   }
+  await getVolumesFromAmazon();
 };
 
 const submitCurrentStep = ref(1);
@@ -262,9 +318,9 @@ const bottomVolume = (asin: string) => {
     return a.asin == asin ? 1 : b.asin == asin ? -1 : 0;
   });
 };
-const deleteVolume = (index: number) => {
+const deleteVolume = (asin: string) => {
   formValue.value.volumes = formValue.value.volumes.filter(
-    (it, i) => i !== index
+    (it) => it.asin !== asin
   );
 };
 
@@ -272,7 +328,7 @@ const markAsDuplicate = () => {
   formValue.value = {
     title: '重复，待删除',
     titleZh: '重复，待删除',
-    cover: '',
+    cover: undefined,
     authors: [],
     artists: [],
     r18: formValue.value.r18,
@@ -315,14 +371,13 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
         <n-li>
           文库小说只允许已经发行单行本的小说，原则上以亚马逊上可以买到为准。
         </n-li>
-        <n-li> 导入时优先导入系列链接，系列小说不要导入单本。 </n-li>
-        <n-li> 导入时请注意不要导入漫画。 </n-li>
-        <n-li> 请确定文库小说列表里面没有这本，不要重复创建。 </n-li>
+        <n-li> 不要导入漫画。系列小说不要导入单本。 </n-li>
+        <n-li> 不要重复创建，请确定文库小说列表里面没有这本。 </n-li>
         <n-li>
-          请正常填写中文标题，没有公认的标题可以尝试自行翻译，禁止复制日文标题作为中文标题。
+          请正常填写中文标题，没有公认的标题可以尝试自行翻译，不要复制日文标题作为中文标题。
         </n-li>
         <n-li>
-          请不要创建空的文库页，尤其是不要创建文库页再去寻找资源，最后发现资源用不了。
+          不要创建空的文库页，尤其是不要创建文库页再去寻找资源，最后发现资源用不了。
         </n-li>
         <n-li>如果你搜不了R18，就不要创建R18页面，因为创建了也看不了。</n-li>
       </n-ul>
@@ -353,12 +408,13 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             label="导入"
             :round="false"
             type="primary"
-            @action="fetchMetadata"
+            @action="getNovelFromAmazon"
           />
         </n-input-group>
-        <n-flex v-if="atLeastMaintainer">
+        <n-flex>
           <c-button
             label="在亚马逊搜索"
+            secondary
             tag="a"
             :href="`https://www.amazon.co.jp/s?k=${encodeURIComponent(
               formValue.title
@@ -366,6 +422,12 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             target="_blank"
           />
           <c-button
+            secondary
+            label="获取分卷信息"
+            @action="getVolumesFromAmazon"
+          />
+          <c-button
+            v-if="atLeastMaintainer"
             type="error"
             secondary
             label="标记重复"
@@ -482,6 +544,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
               <n-image
                 width="104"
                 :src="volume.cover"
+                :preview-src="volume.coverHires ?? volume.cover"
                 :alt="volume.asin"
                 lazy
                 style="border-radius: 2px"
@@ -489,19 +552,36 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             </div>
 
             <n-flex vertical style="flex: auto">
-              <n-a :href="`https://www.amazon.co.jp/-/zh/dp/${volume.asin}`">
-                ASIN: {{ volume.asin }}
-              </n-a>
-              <n-input
-                v-model:value="volume.title"
-                placeholder="日文标题"
-                :input-props="{ spellcheck: false }"
-              />
-              <n-input
-                v-model:value="volume.cover"
-                placeholder="封面链接"
-                :input-props="{ spellcheck: false }"
-              />
+              <n-flex align="center" :size="0" :wrap="false">
+                <n-text style="word-break: keep-all">日文标题：</n-text>
+                <n-input
+                  v-model:value="volume.title"
+                  placeholder="日文标题"
+                  :input-props="{ spellcheck: false }"
+                />
+              </n-flex>
+
+              <n-text>
+                ASIN：
+                <n-a :href="`https://www.amazon.co.jp/zh/dp/${volume.asin}`">
+                  {{ volume.asin }}
+                </n-a>
+              </n-text>
+              <n-text>封面-缩略：{{ volume.cover }}</n-text>
+              <n-text>封面-高清：{{ volume.coverHires }}</n-text>
+              <n-text>
+                出版：
+                {{ volume.publisher ?? '未知出版商' }}
+                /
+                {{ volume.imprint ?? '未知文库' }}
+                /
+                <n-time
+                  v-if="volume.publishAt"
+                  :time="volume.publishAt * 1000"
+                  type="date"
+                />
+              </n-text>
+
               <n-flex>
                 <c-button
                   label="上移"
@@ -527,7 +607,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
                   label="删除"
                   secondary
                   type="error"
-                  @action="deleteVolume(index)"
+                  @action="deleteVolume(volume.asin)"
                 />
               </n-flex>
             </n-flex>

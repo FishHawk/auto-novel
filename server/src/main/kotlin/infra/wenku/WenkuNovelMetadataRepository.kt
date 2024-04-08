@@ -9,6 +9,7 @@ import com.mongodb.client.model.ReturnDocument
 import domain.entity.*
 import infra.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bson.types.ObjectId
@@ -142,7 +143,7 @@ class WenkuNovelMetadataRepository(
     suspend fun create(
         title: String,
         titleZh: String,
-        cover: String,
+        cover: String?,
         authors: List<String>,
         artists: List<String>,
         r18: Boolean,
@@ -159,6 +160,10 @@ class WenkuNovelMetadataRepository(
             artists = artists,
             introduction = introduction,
             keywords = keywords,
+            publisher = volumes.firstNotNullOfOrNull { it.publisher },
+            imprint = volumes.firstNotNullOfOrNull { it.imprint },
+            latestPublishAt = volumes.mapNotNull { it.publishAt }.maxOrNull()
+                ?.let { Instant.fromEpochSeconds(it) },
             r18 = r18,
             volumes = volumes,
             visited = 0,
@@ -175,7 +180,7 @@ class WenkuNovelMetadataRepository(
         novelId: String,
         title: String,
         titleZh: String,
-        cover: String,
+        cover: String?,
         authors: List<String>,
         artists: List<String>,
         r18: Boolean,
@@ -194,6 +199,13 @@ class WenkuNovelMetadataRepository(
                         setValue(WenkuNovelMetadata::cover, cover),
                         setValue(WenkuNovelMetadata::authors, authors),
                         setValue(WenkuNovelMetadata::artists, artists),
+                        setValue(WenkuNovelMetadata::publisher, volumes.firstNotNullOfOrNull { it.publisher }),
+                        setValue(WenkuNovelMetadata::imprint, volumes.firstNotNullOfOrNull { it.imprint }),
+                        setValue(
+                            WenkuNovelMetadata::latestPublishAt,
+                            volumes.mapNotNull { it.publishAt }.maxOrNull()
+                                ?.let { Instant.fromEpochSeconds(it) },
+                        ),
                         setValue(WenkuNovelMetadata::r18, r18),
                         setValue(WenkuNovelMetadata::introduction, introduction),
                         setValue(WenkuNovelMetadata::keywords, keywords),
@@ -235,6 +247,9 @@ class WenkuNovelMetadataRepository(
                 authors = metadata.authors,
                 artists = metadata.artists,
                 keywords = metadata.keywords,
+                publisher = metadata.publisher,
+                imprint = metadata.imprint,
+                latestPublishAt = metadata.latestPublishAt?.epochSeconds,
                 r18 = metadata.r18,
                 updateAt = metadata.updateAt.epochSeconds,
             ),

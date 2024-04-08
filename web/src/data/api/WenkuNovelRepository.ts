@@ -28,7 +28,7 @@ const getNovel = (novelId: string) =>
 interface WenkuNovelCreateBody {
   title: string;
   titleZh: string;
-  cover: string;
+  cover?: string;
   authors: string[];
   artists: string[];
   r18: boolean;

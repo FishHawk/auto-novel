@@ -21,6 +21,8 @@ import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
@@ -253,10 +255,13 @@ class WenkuNovelApi(
     data class WenkuNovelDto(
         val title: String,
         val titleZh: String,
-        val cover: String,
+        val cover: String?,
         val authors: List<String>,
         val artists: List<String>,
         val keywords: List<String>,
+        val publisher: String?,
+        val imprint: String?,
+        val latestPublishAt: Long?,
         val r18: Boolean,
         val introduction: String,
         val glossary: Map<String, String>,
@@ -300,6 +305,9 @@ class WenkuNovelApi(
             authors = metadata.authors,
             artists = metadata.artists,
             keywords = metadata.keywords,
+            publisher = metadata.publisher,
+            imprint = metadata.imprint,
+            latestPublishAt = metadata.latestPublishAt?.epochSeconds,
             r18 = metadata.r18,
             introduction = metadata.introduction,
             webIds = metadata.webIds,
@@ -330,7 +338,7 @@ class WenkuNovelApi(
     class MetadataCreateBody(
         val title: String,
         val titleZh: String,
-        val cover: String,
+        val cover: String?,
         val authors: List<String>,
         val artists: List<String>,
         val r18: Boolean,
