@@ -82,6 +82,9 @@ const parseImprint = (title: string) => {
     const [, imprint] = matched;
 
     const kanaRegex = /[\u3040-\u30ff]/;
+    if (imprint.includes('特典')) {
+      continue;
+    }
     if (
       imprint.includes('文庫') ||
       imprint.toLowerCase().includes('book') ||
