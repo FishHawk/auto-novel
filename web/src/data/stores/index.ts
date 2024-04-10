@@ -3,12 +3,11 @@ export { createReaderSettingRepository } from './ReaderSettingRepository';
 export { createRuleViewedRepository } from './RuleViewedRepository';
 export {
   createWebSearchHistoryRepository,
-  createWenkuSearchHistoryRepository
+  createWenkuSearchHistoryRepository,
 } from './SearchHistoryRepository';
 export { createSettingRepository } from './SettingRepository';
+export { createUserDataRepository } from './UserDataRepository';
 export {
   createGptWorkspaceRepository,
-  createSakuraWorkspaceRepository
+  createSakuraWorkspaceRepository,
 } from './WorkspaceRepository';
-export { createUserDataRepository } from './user_data';
-
