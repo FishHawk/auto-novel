@@ -90,53 +90,57 @@ const formRules: FormRules = {
 
 const amazonUrl = ref('');
 
-watch(props, async ({ novelId }) => {
-  formValue.value = defaultFormValue;
+watch(
+  props,
+  async ({ novelId }) => {
+    formValue.value = defaultFormValue;
 
-  if (novelId !== undefined) {
-    allowSubmit.value = false;
-    const result = await runCatching(
-      Locator.wenkuNovelRepository.getNovel(novelId)
-    );
+    if (novelId !== undefined) {
+      allowSubmit.value = false;
+      const result = await runCatching(
+        Locator.wenkuNovelRepository.getNovel(novelId)
+      );
 
-    if (props.novelId !== novelId) return;
+      if (props.novelId !== novelId) return;
 
-    if (result.ok) {
-      const {
-        title,
-        titleZh,
-        cover,
-        authors,
-        artists,
-        r18,
-        keywords,
-        introduction,
-      } = result.value;
-      formValue.value = {
-        title,
-        titleZh,
-        cover: prettyCover(cover),
-        authors,
-        artists,
-        r18,
-        keywords,
-        introduction,
-        volumes: result.value.volumes.map((it) => {
-          it.cover = prettyCover(it.cover);
-          return it;
-        }),
-      };
-      allowSubmit.value = true;
-      if (amazonUrl.value.length === 0) {
-        amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
+      if (result.ok) {
+        const {
+          title,
+          titleZh,
+          cover,
+          authors,
+          artists,
+          r18,
+          keywords,
+          introduction,
+        } = result.value;
+        formValue.value = {
+          title,
+          titleZh,
+          cover: prettyCover(cover),
+          authors,
+          artists,
+          r18,
+          keywords,
+          introduction,
+          volumes: result.value.volumes.map((it) => {
+            it.cover = prettyCover(it.cover);
+            return it;
+          }),
+        };
+        allowSubmit.value = true;
+        if (amazonUrl.value.length === 0) {
+          amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
+        }
+      } else {
+        message.error('载入失败');
       }
     } else {
-      message.error('载入失败');
+      allowSubmit.value = true;
     }
-  } else {
-    allowSubmit.value = true;
-  }
-});
+  },
+  { immediate: true }
+);
 
 const submit = async () => {
   if (!allowSubmit.value) {
