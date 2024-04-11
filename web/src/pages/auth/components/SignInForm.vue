@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { Locator } from '@/data';
+import { Locator, formatError } from '@/data';
 
-import { doAction } from '@/pages/util';
-
+const loadingBar = useLoadingBar();
 const message = useMessage();
 
 const formRef = ref<FormInst>();
@@ -37,13 +36,15 @@ const signIn = async () => {
   } catch (e) {
     return;
   }
-  await doAction(
-    Locator.authRepository.signIn(formValue.value).then((profile) => {
-      Locator.userDataRepository().setProfile(profile);
-    }),
-    '登录',
-    message
-  );
+  loadingBar.start();
+  try {
+    const profile = await Locator.authRepository.signIn(formValue.value);
+    Locator.userDataRepository().setProfile(profile);
+    loadingBar.finish();
+  } catch (e) {
+    loadingBar.error();
+    message.error('登录失败:' + (await formatError(e)));
+  }
 };
 </script>
 

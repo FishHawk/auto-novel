@@ -5,9 +5,11 @@ const { userData, setProfile } = Locator.userDataRepository();
 const { renew, updateToken } = Locator.authRepository;
 
 // 订阅Token
-watch(userData, (userData) => updateToken(userData.info?.token), {
-  immediate: true,
-});
+watch(
+  () => userData.value.info?.token,
+  (token) => updateToken(token),
+  { immediate: true }
+);
 
 // 更新Token，冷却时间为24小时
 const renewToken = async () => {

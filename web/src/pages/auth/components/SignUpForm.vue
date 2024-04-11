@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { Locator } from '@/data';
+import { Locator, formatError } from '@/data';
 
-import { doAction } from '@/pages/util';
-
+const loadingBar = useLoadingBar();
 const message = useMessage();
 
 const formRef = ref<FormInst>();
@@ -66,21 +65,20 @@ const signUp = async () => {
   } catch (e) {
     return;
   }
-
-  await doAction(
-    Locator.authRepository
-      .signUp({
-        email: formValue.value.email,
-        emailCode: formValue.value.emailCode,
-        username: formValue.value.username,
-        password: formValue.value.password,
-      })
-      .then((profile) => {
-        Locator.userDataRepository().setProfile(profile);
-      }),
-    '注册',
-    message
-  );
+  loadingBar.start();
+  try {
+    const profile = await Locator.authRepository.signUp({
+      email: formValue.value.email,
+      emailCode: formValue.value.emailCode,
+      username: formValue.value.username,
+      password: formValue.value.password,
+    });
+    Locator.userDataRepository().setProfile(profile);
+    loadingBar.finish();
+  } catch (e) {
+    loadingBar.error();
+    message.error('注册失败:' + (await formatError(e)));
+  }
 };
 
 const allowSendEmail = () => {
