@@ -10,35 +10,48 @@ import {
   WenkuNovelOutlineDto,
   WenkuVolumeDto,
 } from '@/model/WenkuNovel';
-import { doAction, useIsWideScreen } from '@/pages/util';
 import { delay, parallelExec } from '@/util';
 import { runCatching } from '@/util/result';
 
-const { novelId } = defineProps<{ novelId?: string }>();
+import { doAction, useIsWideScreen } from '@/pages/util';
+
+const props = defineProps<{
+  novelId?: string;
+}>();
 
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
-const WenkuNovelRepository = Locator.wenkuNovelRepository;
 
 const { atLeastMaintainer } = Locator.userDataRepository();
+const { prettyCover } = Locator.amazonNovelRepository;
 
-let loaded = novelId === undefined;
-
-const formRef = ref<FormInst>();
-
-const formValue = ref({
+interface FormValue {
+  title: string;
+  titleZh: string;
+  cover?: string;
+  authors: string[];
+  artists: string[];
+  r18: boolean;
+  keywords: string[];
+  introduction: string;
+  volumes: WenkuVolumeDto[];
+}
+const defaultFormValue: FormValue = {
   title: '',
   titleZh: '',
-  cover: '' as string | undefined,
-  authors: [] as string[],
-  artists: [] as string[],
+  cover: '',
+  authors: [],
+  artists: [],
   r18: false,
-  keywords: [] as string[],
+  keywords: [],
   introduction: '',
-  volumes: [] as WenkuVolumeDto[],
-});
+  volumes: [],
+};
 
+const allowSubmit = ref(false);
+const formRef = ref<FormInst>();
+const formValue = ref(defaultFormValue);
 const formRules: FormRules = {
   title: [
     {
@@ -77,47 +90,65 @@ const formRules: FormRules = {
 
 const amazonUrl = ref('');
 
-onMounted(async () => {
+watch(props, async ({ novelId }) => {
+  formValue.value = defaultFormValue;
+
   if (novelId !== undefined) {
-    const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
+    allowSubmit.value = false;
+    const result = await runCatching(
+      Locator.wenkuNovelRepository.getNovel(novelId)
+    );
+
+    if (props.novelId !== novelId) return;
+
     if (result.ok) {
-      if (amazonUrl.value.length === 0) {
-        amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
-      }
+      const {
+        title,
+        titleZh,
+        cover,
+        authors,
+        artists,
+        r18,
+        keywords,
+        introduction,
+      } = result.value;
       formValue.value = {
-        title: result.value.title,
-        titleZh: result.value.titleZh,
-        cover: Locator.amazonNovelRepository.prettyCover(result.value.cover),
-        authors: result.value.authors,
-        artists: result.value.artists,
-        r18: result.value.r18,
-        keywords: result.value.keywords,
-        introduction: result.value.introduction,
+        title,
+        titleZh,
+        cover: prettyCover(cover),
+        authors,
+        artists,
+        r18,
+        keywords,
+        introduction,
         volumes: result.value.volumes.map((it) => {
-          it.cover = Locator.amazonNovelRepository.prettyCover(it.cover);
+          it.cover = prettyCover(it.cover);
           return it;
         }),
       };
-      loaded = true;
+      allowSubmit.value = true;
+      if (amazonUrl.value.length === 0) {
+        amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
+      }
     } else {
       message.error('载入失败');
     }
+  } else {
+    allowSubmit.value = true;
   }
 });
 
 const submit = async () => {
-  if (!loaded) {
-    message.warning('小说未载入');
+  if (!allowSubmit.value) {
+    message.warning('文章未载入，无法提交');
     return;
   }
 
-  const validated = await new Promise<boolean>(function (resolve, _reject) {
-    formRef.value?.validate((errors) => {
-      if (errors) resolve(false);
-      else resolve(true);
-    });
-  });
-  if (!validated) return;
+  try {
+    await formRef.value?.validate();
+  } catch (e) {
+    return;
+  }
 
   const allPresetKeywords = presetKeywords.value.groups.flatMap(
     (it) => it.presetKeywords
@@ -137,19 +168,20 @@ const submit = async () => {
     volumes: formValue.value.volumes,
   };
 
+  const { novelId } = props;
   if (novelId === undefined) {
     await doAction(
-      WenkuNovelRepository.createNovel(body).then((id) =>
-        router.push({ path: `/wenku/${id}` })
-      ),
+      Locator.wenkuNovelRepository
+        .createNovel(body)
+        .then((id) => router.push({ path: `/wenku/${id}` })),
       '新建文库',
       message
     );
   } else {
     await doAction(
-      WenkuNovelRepository.updateNovel(novelId, body).then(() =>
-        router.push({ path: `/wenku/${novelId}` })
-      ),
+      Locator.wenkuNovelRepository
+        .updateNovel(novelId, body)
+        .then(() => router.push({ path: `/wenku/${novelId}` })),
       '编辑文库',
       message
     );
@@ -263,7 +295,7 @@ const findSimilarNovels = async () => {
     2
   )[0];
   const result = await runCatching(
-    WenkuNovelRepository.listNovel({
+    Locator.wenkuNovelRepository.listNovel({
       page: 0,
       pageSize: 6,
       query,

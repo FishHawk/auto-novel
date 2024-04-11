@@ -3,13 +3,18 @@ import { FormatListBulletedOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
-import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/util/result';
 
-import { Loader } from './components/NovelList.vue';
+import { Loader } from './components/NovelPage.vue';
 import { menuOptions } from './components/menu';
+
+defineProps<{
+  page: number;
+  query: string;
+  selected: number[];
+}>();
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
@@ -52,7 +57,7 @@ const options = [
   },
 ];
 
-const loader: Loader<Page<WebNovelOutlineDto>> = (page, query, selected) => {
+const loader: Loader<WebNovelOutlineDto> = (page, query, selected) => {
   if (query !== '') {
     document.title = '网络小说 搜索：' + query;
   }
@@ -134,14 +139,17 @@ const showListModal = ref(false);
       />
     </div>
 
-    <NovelList
+    <novel-page
+      :page="page"
+      :query="query"
+      :selected="selected"
+      :loader="loader"
       :search="search"
       :options="options"
-      :loader="loader"
-      v-slot="{ page }"
+      v-slot="{ items }"
     >
-      <NovelListWeb :items="page.items" />
-    </NovelList>
+      <novel-list-web :items="items" />
+    </novel-page>
 
     <template #sidebar>
       <n-menu :value="route.path" :options="menuOptions" />

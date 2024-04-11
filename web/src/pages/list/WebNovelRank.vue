@@ -2,15 +2,19 @@
 import { FormatListBulletedOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { Page } from '@/model/Page';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { runCatching } from '@/util/result';
 
 import { useIsWideScreen } from '@/pages/util';
-import { Loader } from './components/NovelList.vue';
+import { Loader } from './components/NovelPage.vue';
 import { menuOptions } from './components/menu';
 
-const props = defineProps<{ providerId: string; typeId: string }>();
+const props = defineProps<{
+  providerId: string;
+  typeId: string;
+  page: number;
+  selected: number[];
+}>();
 
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
@@ -128,7 +132,7 @@ const descriptior = computed(
   () => descriptiors[props.providerId][props.typeId]
 );
 
-const loader: Loader<Page<WebNovelOutlineDto>> = (page, _query, selected) => {
+const loader: Loader<WebNovelOutlineDto> = (page, _query, selected) => {
   const optionNth = (n: number): string =>
     descriptior.value.options[n].tags[selected[n]];
 
@@ -171,7 +175,10 @@ FormatListBulletedOutlined;
       />
     </div>
 
-    <NovelList
+    <novel-page
+      :page="page"
+      :selected="selected"
+      :loader="loader"
       :search="
         descriptior.search
           ? {
@@ -181,11 +188,11 @@ FormatListBulletedOutlined;
           : undefined
       "
       :options="descriptior.options"
-      :loader="loader"
-      v-slot="{ page }"
+      v-slot="{ items }"
     >
-      <NovelListWeb :items="page.items" />
-    </NovelList>
+      <novel-list-web :items="items" />
+    </novel-page>
+
     <template #sidebar>
       <n-menu :value="route.path" :options="menuOptions" />
     </template>

@@ -6,16 +6,18 @@ import { Locator } from '@/data';
 import avaterUrl from '@/image/avater.jpg';
 import { ArticleCategory } from '@/model/Article';
 import { runCatching } from '@/util/result';
+
 import { doAction, useIsWideScreen } from '@/pages/util';
 
-const { articleId } = defineProps<{ articleId?: string }>();
+const props = defineProps<{
+  articleId?: string;
+  category?: ArticleCategory;
+}>();
 
 const route = useRoute();
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
-
-let loaded = articleId === undefined;
 
 const articleCategoryOptions = [
   { value: 'Guide', label: '使用指南' },
@@ -23,12 +25,20 @@ const articleCategoryOptions = [
   { value: 'Support', label: '反馈与建议' },
 ];
 
-const formRef = ref<FormInst>();
-const formValue = ref({
+interface FormValue {
+  title: string;
+  content: string;
+  category: ArticleCategory;
+}
+const defaultFormValue: FormValue = {
   title: '',
   content: '',
   category: (route.query.category || 'General') as ArticleCategory,
-});
+};
+
+const allowSubmit = ref(false);
+const formRef = ref<FormInst>();
+const formValue = ref(defaultFormValue);
 const formRules: FormRules = {
   title: [
     {
@@ -58,36 +68,50 @@ const formRules: FormRules = {
   ],
 };
 
-onMounted(async () => {
-  if (articleId !== undefined) {
-    const article = await runCatching(
-      Locator.articleRepository.getArticle(articleId)
-    );
-    if (article.ok) {
-      formValue.value.title = article.value.title;
-      formValue.value.category = article.value.category;
-      formValue.value.content = article.value.content;
-      loaded = true;
+watch(
+  props,
+  async ({ articleId }) => {
+    formValue.value = defaultFormValue;
+
+    if (articleId !== undefined) {
+      allowSubmit.value = false;
+      const result = await runCatching(
+        Locator.articleRepository.getArticle(articleId)
+      );
+
+      if (articleId !== props.articleId) return;
+
+      if (result.ok) {
+        const { title, content, category } = result.value;
+        formValue.value = {
+          title,
+          content,
+          category,
+        };
+        allowSubmit.value = true;
+      } else {
+        message.error('载入失败');
+      }
     } else {
-      message.error('载入失败');
+      allowSubmit.value = true;
     }
-  }
-});
+  },
+  { immediate: true }
+);
 
 const submit = async () => {
-  if (!loaded) {
-    message.warning('小说未载入');
+  if (!allowSubmit.value) {
+    message.warning('文章未载入，无法提交');
     return;
   }
 
-  const validated = await new Promise<boolean>(function (resolve, _reject) {
-    formRef.value?.validate((errors) => {
-      if (errors) resolve(false);
-      else resolve(true);
-    });
-  });
-  if (!validated) return;
+  try {
+    await formRef.value?.validate();
+  } catch (e) {
+    return;
+  }
 
+  const { articleId } = props;
   if (articleId === undefined) {
     await doAction(
       Locator.articleRepository

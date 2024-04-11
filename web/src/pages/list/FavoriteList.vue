@@ -17,18 +17,20 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/util/result';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
-import { Loader } from './components/NovelList.vue';
+import { Loader } from './components/NovelPage.vue';
 import NovelListWeb from './components/NovelListWeb.vue';
 import NovelListWenku from './components/NovelListWenku.vue';
 
-const isWideScreen = useIsWideScreen(850);
+const props = defineProps<{
+  page: number;
+  selected: number[];
+  favoriteType: 'web' | 'wenku';
+  favoriteId: string;
+}>();
 
-const route = useRoute();
+const isWideScreen = useIsWideScreen(850);
 const router = useRouter();
 const message = useMessage();
-
-const favoriteType = computed(() => (route.query.type ?? 'web') as string);
-const favoriteId = computed(() => (route.query.fid ?? 'default') as string);
 
 const options = [
   {
@@ -37,39 +39,46 @@ const options = [
   },
 ];
 
-const loader: Loader<
-  | (Page<WebNovelOutlineDto> & { type: 'web' })
-  | (Page<WenkuNovelOutlineDto> & { type: 'wenku' })
-> = (page, _query, selected) => {
-  function optionNth(n: number): string {
-    return options[n].tags[selected[n]];
-  }
-  function optionSort() {
+const loaderWeb: Loader<WebNovelOutlineDto> = (page, _query, selected) => {
+  const optionNth = (n: number): string => options[n].tags[selected[n]];
+  const optionSort = () => {
     const option = optionNth(0);
     if (option === '更新时间') {
       return 'update';
     } else {
       return 'create';
     }
-  }
+  };
 
-  if (favoriteType.value === 'web') {
-    return runCatching(
-      UserRepository.listFavoredWebNovel(favoriteId.value, {
-        page,
-        pageSize: 30,
-        sort: optionSort(),
-      }).then((it) => ({ type: 'web', ...it }))
-    );
-  } else {
-    return runCatching(
-      UserRepository.listFavoredWenkuNovel(favoriteId.value, {
-        page,
-        pageSize: 24,
-        sort: optionSort(),
-      }).then((it) => ({ type: 'wenku', ...it }))
-    );
-  }
+  const { favoriteId } = props;
+  return runCatching(
+    UserRepository.listFavoredWebNovel(favoriteId, {
+      page,
+      pageSize: 30,
+      sort: optionSort(),
+    }).then((it) => ({ type: 'web', ...it }))
+  );
+};
+
+const loaderWenku: Loader<WenkuNovelOutlineDto> = (page, _query, selected) => {
+  const optionNth = (n: number): string => options[n].tags[selected[n]];
+  const optionSort = () => {
+    const option = optionNth(0);
+    if (option === '更新时间') {
+      return 'update';
+    } else {
+      return 'create';
+    }
+  };
+
+  const { favoriteId } = props;
+  return runCatching(
+    UserRepository.listFavoredWenkuNovel(favoriteId, {
+      page,
+      pageSize: 24,
+      sort: optionSort(),
+    }).then((it) => ({ type: 'wenku', ...it }))
+  );
 };
 
 const favoredList = ref<FavoredList>({
@@ -78,14 +87,15 @@ const favoredList = ref<FavoredList>({
 });
 
 const loadFavoredList = async () => {
+  const { favoriteType, favoriteId } = props;
   const result = await runCatching(UserRepository.listFavored());
   if (result.ok) {
     favoredList.value = result.value;
     const ids = (
-      favoriteType.value === 'web' ? result.value.web : result.value.wenku
+      favoriteType === 'web' ? result.value.web : result.value.wenku
     ).map((it) => it.id);
-    if (!ids.includes(favoriteId.value)) {
-      router.push({ path: `favorite?type=${favoriteType.value}` });
+    if (!ids.includes(favoriteId)) {
+      router.push({ path: `favorite?type=${favoriteType}` });
     }
   } else {
     message.error('收藏夹加载失败:' + result.error.message);
@@ -109,7 +119,7 @@ const favoriteMenuOption = (
   key: type + id,
 });
 
-const currentMenuKey = computed(() => favoriteType.value + favoriteId.value);
+const currentMenuKey = computed(() => props.favoriteType + props.favoriteId);
 const menuOptions = computed(() => [
   {
     type: 'group',
@@ -140,7 +150,7 @@ const novelListWebRef = ref<InstanceType<typeof NovelListWeb>>();
 const novelListWenkuRef = ref<InstanceType<typeof NovelListWenku>>();
 
 const selectedSize = computed(() => {
-  if (favoriteType.value === 'web') {
+  if (props.favoriteType === 'web') {
     return novelListWebRef.value?.getSelectedNovels()?.length ?? 0;
   } else {
     return novelListWenkuRef.value?.getSelectedNovels()?.length ?? 0;
@@ -148,7 +158,7 @@ const selectedSize = computed(() => {
 });
 
 const getSelectedNovels = () => {
-  if (favoriteType.value === 'web') {
+  if (props.favoriteType === 'web') {
     const novels = novelListWebRef.value?.getSelectedNovels();
     if (novels !== undefined && novels.length > 0) {
       return { type: 'web' as 'web', novels };
@@ -163,14 +173,14 @@ const getSelectedNovels = () => {
   return undefined;
 };
 const selectAll = () => {
-  if (favoriteType.value === 'web') {
+  if (props.favoriteType === 'web') {
     novelListWebRef.value?.selectAll();
   } else {
     novelListWenkuRef.value?.selectAll();
   }
 };
 const invertSelection = () => {
-  if (favoriteType.value === 'web') {
+  if (props.favoriteType === 'web') {
     novelListWebRef.value?.invertSelection();
   } else {
     novelListWenkuRef.value?.invertSelection();
@@ -179,12 +189,12 @@ const invertSelection = () => {
 
 const displayKeywords = ref(false);
 
-const targetFavoredId = ref<string>(favoriteId.value);
+const targetFavoredId = ref<string>(props.favoriteId);
 
 const moveToFavored = async () => {
   const selectedNovels = getSelectedNovels();
   if (selectedNovels === undefined) return;
-  if (targetFavoredId.value === favoriteId.value) {
+  if (targetFavoredId.value === props.favoriteId) {
     message.info('无需移动');
     return;
   }
@@ -199,7 +209,7 @@ const moveToFavored = async () => {
               novel.novelId
             )
           : UserRepository.unfavoriteWebNovel(
-              favoriteId.value,
+              props.favoriteId,
               novel.providerId,
               novel.novelId
             ),
@@ -390,22 +400,38 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         </n-list>
       </n-collapse-transition>
 
-      <NovelList :options="options" :loader="loader" v-slot="{ page }">
-        <NovelListWeb
-          v-if="page.type === 'web'"
+      <novel-page
+        v-if="favoriteType === 'web'"
+        :page="page"
+        :selected="selected"
+        :loader="loaderWeb"
+        :options="options"
+        v-slot="{ items }"
+      >
+        <novel-list-web
           ref="novelListWebRef"
-          :items="page.items"
+          :items="items"
           :selectable="showOperationPanel"
           :simple="!displayKeywords"
         />
-        <NovelListWenku
-          v-if="page.type === 'wenku'"
+      </novel-page>
+
+      <novel-page
+        v-else
+        :page="page"
+        :selected="selected"
+        :loader="loaderWenku"
+        :options="options"
+        v-slot="{ items }"
+      >
+        <novel-list-wenku
           ref="novelListWenkuRef"
-          :items="page.items"
+          :items="items"
           :selectable="showOperationPanel"
         />
-      </NovelList>
+      </novel-page>
     </div>
+
     <template #sidebar>
       <section-header title="收藏夹">
         <c-button

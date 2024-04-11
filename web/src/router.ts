@@ -1,4 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { LocationQuery, createRouter, createWebHistory } from 'vue-router';
+
+const parseSelected = (q: LocationQuery) => {
+  const selected = <number[]>[];
+  if (typeof q.selected === 'string') {
+    selected[0] = Number(q.selected) || 0;
+  } else if (q.selected) {
+    q.selected.forEach((it, index) => {
+      selected[index] = Number(it ?? '') || 0;
+    });
+  }
+  return selected;
+};
 
 const router = createRouter({
   history: createWebHistory(),
@@ -89,30 +101,54 @@ const router = createRouter({
           path: '/novel-list',
           meta: { title: '网络小说' },
           component: () => import('./pages/list/WebNovelList.vue'),
+          props: (route) => ({
+            page: Number(route.query.page) || 1,
+            query: route.query.query || '',
+            selected: parseSelected(route.query),
+          }),
         },
         {
           path: '/novel-rank/:providerId/:typeId',
           name: 'web-rank',
           meta: { title: '排行榜' },
           component: () => import('./pages/list/WebNovelRank.vue'),
-          props: true,
+          props: (route) => ({
+            providerId: route.params.providerId as string,
+            typeId: route.params.typeId as string,
+            page: Number(route.query.page) || 1,
+            selected: parseSelected(route.query),
+          }),
         },
 
         {
           path: '/wenku-list',
           meta: { title: '文库小说' },
           component: () => import('./pages/list/WenkuNovelList.vue'),
+          props: (route) => ({
+            page: Number(route.query.page) || 1,
+            query: route.query.query || '',
+            selected: parseSelected(route.query),
+          }),
         },
 
         {
           path: '/favorite',
           meta: { title: '我的收藏' },
           component: () => import('./pages/list/FavoriteList.vue'),
+          props: (route) => ({
+            page: Number(route.query.page) || 1,
+            selected: parseSelected(route.query),
+            favoriteType: route.query.type || 'web',
+            favoriteId: route.query.fid || 'default',
+          }),
         },
         {
           path: '/read-history',
           meta: { title: '阅读历史' },
           component: () => import('./pages/list/ReadHistoryList.vue'),
+          props: (route) => ({
+            page: Number(route.query.page) || 1,
+          }),
         },
 
         {
@@ -149,6 +185,10 @@ const router = createRouter({
           path: '/forum',
           meta: { title: '论坛' },
           component: () => import('./pages/forum/Forum.vue'),
+          props: (route) => ({
+            page: Number(route.query.page) || 1,
+            category: route.query.category || 'Guide',
+          }),
         },
         {
           path: '/forum/:articleId',

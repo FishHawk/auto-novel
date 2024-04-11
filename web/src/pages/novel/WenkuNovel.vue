@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
+import {
+  AssignmentIndFilled,
+  EditNoteOutlined,
+  LanguageOutlined,
+} from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { Locator } from '@/data';
@@ -25,12 +29,15 @@ const vars = useThemeVars();
 
 const { isSignedIn, atLeastMaintainer } = Locator.userDataRepository();
 
-const novelMetadataResult = ref<Result<WenkuNovelDto>>();
+const novelResult = ref<Result<WenkuNovelDto>>();
 
-const getNovel = async () => {
-  const result = await runCatching(
-    WenkuNovelRepository.getNovel(props.novelId)
-  );
+const reload = async () => {
+  const { novelId } = props;
+  novelResult.value = undefined;
+  const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
+
+  if (novelId !== props.novelId) return;
+
   if (result.ok) {
     result.value.volumeZh = result.value.volumeZh.sort((a, b) =>
       a.localeCompare(b)
@@ -39,20 +46,20 @@ const getNovel = async () => {
       a.volumeId.localeCompare(b.volumeId)
     );
   }
-  novelMetadataResult.value = result;
+  novelResult.value = result;
   if (result.ok) {
     document.title = result.value.title;
   }
 };
 
-watch(props, getNovel, { immediate: true });
+watch(props, reload, { immediate: true });
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
 const deleteVolume = (volumeId: string) =>
   doAction(
     WenkuNovelRepository.deleteVolume(props.novelId, volumeId).then(() => {
-      getNovel();
+      reload();
     }),
     '删除',
     message
@@ -78,9 +85,9 @@ const showWebNovelsModal = ref(false);
   </DefineTagGroup>
 
   <div
-    v-if="novelMetadataResult?.ok"
+    v-if="novelResult?.ok"
     :style="{
-      background: `url(${novelMetadataResult.value.cover})`,
+      background: `url(${novelResult.value.cover})`,
     }"
     style="
       width: 100%;
@@ -103,8 +110,8 @@ const showWebNovelsModal = ref(false);
             <n-image
               width="160"
               :src="
-                novelMetadataResult.value.cover
-                  ? novelMetadataResult.value.cover
+                novelResult.value.cover
+                  ? novelResult.value.cover
                   : coverPlaceholder
               "
               alt="cover"
@@ -120,29 +127,21 @@ const showWebNovelsModal = ref(false);
             >
               <b>
                 {{
-                  novelMetadataResult.value.titleZh
-                    ? novelMetadataResult.value.titleZh
-                    : novelMetadataResult.value.title
+                  novelResult.value.titleZh
+                    ? novelResult.value.titleZh
+                    : novelResult.value.title
                 }}
-                <n-text v-if="novelMetadataResult.value.r18" depth="3">
-                  [成人]
-                </n-text>
+                <n-text v-if="novelResult.value.r18" depth="3"> [成人] </n-text>
               </b>
             </n-h2>
 
-            <ReuseTagGroup
-              label="作者"
-              :tags="novelMetadataResult.value.authors"
-            />
-            <ReuseTagGroup
-              label="插图"
-              :tags="novelMetadataResult.value.artists"
-            />
+            <ReuseTagGroup label="作者" :tags="novelResult.value.authors" />
+            <ReuseTagGroup label="插图" :tags="novelResult.value.artists" />
             <ReuseTagGroup
               label="出版"
               :tags="[
-                novelMetadataResult.value.publisher ?? '未知出版商',
-                novelMetadataResult.value.imprint ?? '未知文库',
+                novelResult.value.publisher ?? '未知出版商',
+                novelResult.value.imprint ?? '未知文库',
               ]"
             />
           </n-flex>
@@ -152,7 +151,7 @@ const showWebNovelsModal = ref(false);
   </div>
 
   <div class="layout-content">
-    <c-result :result="novelMetadataResult" v-slot="{ value: metadata }">
+    <c-result :result="novelResult" v-slot="{ value: metadata }">
       <n-flex>
         <router-link :to="`/wenku-edit/${novelId}`">
           <c-button label="编辑" :icon="EditNoteOutlined" />
@@ -225,7 +224,7 @@ const showWebNovelsModal = ref(false);
       <upload-button
         type="zh"
         :novel-id="novelId"
-        @upload-finished="getNovel()"
+        @upload-finished="reload()"
       />
 
       <n-ul>
@@ -262,7 +261,7 @@ const showWebNovelsModal = ref(false);
         <upload-button
           type="jp"
           :novel-id="novelId"
-          @upload-finished="getNovel()"
+          @upload-finished="reload()"
         />
 
         <translate-options

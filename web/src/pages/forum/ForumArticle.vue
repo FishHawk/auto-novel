@@ -1,23 +1,32 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
 import { Article } from '@/model/Article';
+
 import { Result, runCatching } from '@/util/result';
 
-const { articleId } = defineProps<{ articleId: string }>();
+const props = defineProps<{ articleId: string }>();
 
 const { userData, asAdmin } = Locator.userDataRepository();
 
 const articleResult = ref<Result<Article>>();
 
-onMounted(async () => {
-  const result = await runCatching(
-    Locator.articleRepository.getArticle(articleId)
-  );
-  articleResult.value = result;
-  if (result.ok) {
-    document.title = result.value.title;
-  }
-});
+watch(
+  props,
+  async ({ articleId }) => {
+    articleResult.value = undefined;
+    const result = await runCatching(
+      Locator.articleRepository.getArticle(articleId)
+    );
+
+    if (articleId !== props.articleId) return;
+
+    articleResult.value = result;
+    if (result.ok) {
+      document.title = result.value.title;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>

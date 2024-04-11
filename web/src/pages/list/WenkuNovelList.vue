@@ -3,11 +3,16 @@ import { PlusOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { WenkuNovelRepository } from '@/data/api';
-import { Page } from '@/model/Page';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { runCatching } from '@/util/result';
 
-import { Loader } from './components/NovelList.vue';
+import { Loader } from './components/NovelPage.vue';
+
+defineProps<{
+  page: number;
+  query: string;
+  selected: number[];
+}>();
 
 const route = useRoute();
 
@@ -22,7 +27,7 @@ const options = createAtLeastOneMonth.value
     ]
   : [];
 
-const loader: Loader<Page<WenkuNovelOutlineDto>> = (page, query, selected) => {
+const loader: Loader<WenkuNovelOutlineDto> = (page, query, selected) => {
   if (query !== '') {
     document.title = '文库小说 搜索：' + query;
   }
@@ -75,14 +80,17 @@ watch(
       />
     </router-link>
 
-    <NovelList
+    <novel-page
+      :page="page"
+      :query="query"
+      :selected="selected"
+      :loader="loader"
       :search="search"
       :options="options"
-      :loader="loader"
-      v-slot="{ page }"
+      v-slot="{ items }"
     >
-      <NovelListWenku :items="page.items" />
-    </NovelList>
+      <novel-list-wenku :items="items" />
+    </novel-page>
   </div>
 </template>
 

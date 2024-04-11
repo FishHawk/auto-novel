@@ -40,6 +40,8 @@ watch(
       })
     );
 
+    if (props.providerId !== providerId || props.novelId !== novelId) return;
+
     if (!result.ok) {
       const message = result.error.message;
       if (message.includes('小说ID不合适，应当使用：')) {

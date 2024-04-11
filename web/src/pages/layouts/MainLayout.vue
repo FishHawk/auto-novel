@@ -155,7 +155,12 @@ watch(
       </n-layout-header>
 
       <n-layout-content style="margin-top: 50px; z-index: 0">
-        <router-view />
+        <!-- <router-view /> -->
+        <router-view v-slot="{ Component }">
+          <keep-alive>
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
       </n-layout-content>
 
       <n-layout-footer style="height: 64px; background-color: transparent" />

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { UploadOutlined } from '@vicons/material';
 
-import { WebNovelRepository } from '@/data/api';
-import { WebNovelDto } from '@/model/WebNovel';
+import { Locator } from '@/data';
 import { runCatching } from '@/util/result';
+
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const router = useRouter();
@@ -12,10 +12,11 @@ const message = useMessage();
 
 const props = defineProps<{ providerId: string; novelId: string }>();
 
-const novel = ref<WebNovelDto>();
-
+const allowSubmit = ref(false);
 const formValue = ref({
+  titleJp: '',
   title: '',
+  introductionJp: '',
   introduction: '',
   wenkuId: '',
   toc: <{ jp: string; zh: string }[]>[],
@@ -24,15 +25,27 @@ const formValue = ref({
 watch(
   props,
   async ({ providerId, novelId }) => {
-    const result = await runCatching(
-      WebNovelRepository.getNovel(providerId, novelId)
-    );
-    if (result.ok) {
-      novel.value = result.value;
+    formValue.value = {
+      titleJp: '',
+      title: '',
+      introduction: '',
+      introductionJp: '',
+      wenkuId: '',
+      toc: [],
+    };
 
+    const result = await runCatching(
+      Locator.webNovelRepository.getNovel(providerId, novelId)
+    );
+
+    if (props.providerId !== providerId || props.novelId !== novelId) return;
+
+    if (result.ok) {
       const tocSet = new Set();
       formValue.value = {
+        titleJp: result.value.titleJp,
         title: result.value.titleZh ?? '',
+        introductionJp: result.value.introductionJp,
         introduction: result.value.introductionZh ?? '',
         wenkuId: result.value.wenkuId ?? '',
         toc: result.value.toc
@@ -54,24 +67,26 @@ watch(
 );
 
 const submit = async () => {
-  if (novel.value === undefined) {
-    message.warning('载入未完成');
+  if (!allowSubmit.value) {
+    message.warning('小说未载入，无法提交');
     return;
   }
 
   const { providerId, novelId } = props;
   await doAction(
-    WebNovelRepository.updateNovel(providerId, novelId, {
-      title: formValue.value.title.trim(),
-      introduction: formValue.value.introduction.trim(),
-      wenkuId: formValue.value.wenkuId.trim(),
-      toc: Object.assign(
-        {},
-        ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh }))
-      ),
-    }).then(() => {
-      router.push({ path: `/novel/${providerId}/${novelId}` });
-    }),
+    Locator.webNovelRepository
+      .updateNovel(providerId, novelId, {
+        title: formValue.value.title.trim(),
+        introduction: formValue.value.introduction.trim(),
+        wenkuId: formValue.value.wenkuId.trim(),
+        toc: Object.assign(
+          {},
+          ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh }))
+        ),
+      })
+      .then(() => {
+        router.push({ path: `/novel/${providerId}/${novelId}` });
+      }),
     '编辑',
     message
   );
@@ -100,23 +115,23 @@ const submit = async () => {
       </n-form-item>
 
       <n-form-item label="日文标题">
-        {{ novel?.titleJp }}
+        {{ formValue.titleJp }}
       </n-form-item>
       <n-form-item path="title" label="中文标题">
         <n-input
           v-model:value="formValue.title"
-          :placeholder="novel?.titleJp"
+          :placeholder="formValue.titleJp"
           :input-props="{ spellcheck: false }"
         />
       </n-form-item>
 
       <n-form-item label="日文简介">
-        {{ novel?.introductionJp }}
+        {{ formValue.introductionJp }}
       </n-form-item>
       <n-form-item path="introduction" label="中文简介">
         <n-input
           v-model:value="formValue.introduction"
-          :placeholder="novel?.introductionJp"
+          :placeholder="formValue.introductionJp"
           :input-props="{ spellcheck: false }"
           :autosize="{ minRows: 3, maxRows: 10 }"
           type="textarea"

@@ -4,9 +4,13 @@ import { LockOutlined, PlusOutlined, PushPinOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { ArticleRepository } from '@/data/api';
 import { ArticleCategory, ArticleSimplified } from '@/model/Article';
-import { Page } from '@/model/Page';
 import { doAction } from '@/pages/util';
-import { Result, runCatching } from '@/util/result';
+import { runCatching } from '@/util/result';
+
+const props = defineProps<{
+  page: number;
+  category: ArticleCategory;
+}>();
 
 const route = useRoute();
 const router = useRouter();
@@ -20,48 +24,21 @@ const articleCategoryOptions = [
   { value: 'Support', label: '反馈与建议' },
 ];
 
-const parsePage = (q: typeof route.query) => parseInt(q.page as string) || 1;
-const parseCategory = (q: typeof route.query) =>
-  (q.category as ArticleCategory) || 'Guide';
+const onUpdateCategory = (category: ArticleCategory) => {
+  const query = { ...route.query, category, page: 1 };
+  router.push({ path: route.path, query });
+};
 
-const articlePageResult = ref<Result<Page<ArticleSimplified>>>();
-const category = ref<ArticleCategory>(parseCategory(route.query));
-const currentPage = ref(parsePage(route.query));
-const pageNumber = ref(1);
-
-watch(category, () => {
-  currentPage.value = 1;
-});
-
-watch(
-  route,
-  async (_) => {
-    const newPage = currentPage.value;
-    const newCategory = category.value;
-
-    articlePageResult.value = undefined;
-    const result = await runCatching(
+const loader = computed(() => {
+  const category = props.category;
+  return (page: number) =>
+    runCatching(
       ArticleRepository.listArticle({
-        page: newPage - 1,
+        page,
         pageSize: 20,
-        category: newCategory,
+        category,
       })
     );
-    if (currentPage.value === newPage) {
-      articlePageResult.value = result;
-      if (result.ok) {
-        pageNumber.value = result.value.pageNumber;
-      }
-    }
-  },
-  { immediate: true }
-);
-
-watch([category, currentPage], (_) => {
-  router.push({
-    path: route.path,
-    query: { page: currentPage.value, category: category.value },
-  });
 });
 
 const lockArticle = (article: ArticleSimplified) =>
@@ -136,22 +113,13 @@ const deleteArticle = (article: ArticleSimplified) =>
 
     <c-action-wrapper title="版块" style="margin-bottom: 20px">
       <c-radio-group
-        v-model:value="category"
+        :value="category"
+        @update-value="onUpdateCategory"
         :options="articleCategoryOptions"
       />
     </c-action-wrapper>
 
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-    />
-    <c-result
-      :result="articlePageResult"
-      :show-empty="(it: Page<ArticleSimplified>) => it.items.length === 0"
-      v-slot="{ value: page }"
-    >
+    <c-page :page="page" :loader="loader" v-slot="{ items }">
       <n-table :bordered="false" style="margin-top: 24px">
         <thead>
           <tr>
@@ -160,7 +128,7 @@ const deleteArticle = (article: ArticleSimplified) =>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="article of page.items">
+          <tr v-for="article of items" :key="article.id">
             <td>
               <n-flex :size="2" align="center" :wrap="false">
                 <n-icon
@@ -246,14 +214,7 @@ const deleteArticle = (article: ArticleSimplified) =>
           </tr>
         </tbody>
       </n-table>
-    </c-result>
-    <n-pagination
-      v-if="pageNumber > 1"
-      v-model:page="currentPage"
-      :page-count="pageNumber"
-      :page-slot="7"
-      style="margin-top: 20px"
-    />
+    </c-page>
   </div>
 </template>
 
