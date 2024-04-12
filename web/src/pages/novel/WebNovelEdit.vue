@@ -59,6 +59,7 @@ watch(
             zh: item.titleZh ?? '',
           })),
       };
+      allowSubmit.value = true;
     } else {
       message.error('载入失败');
     }
