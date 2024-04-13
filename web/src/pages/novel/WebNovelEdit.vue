@@ -41,6 +41,7 @@ watch(
     if (props.providerId !== providerId || props.novelId !== novelId) return;
 
     if (result.ok) {
+      allowSubmit.value = false;
       const tocSet = new Set();
       formValue.value = {
         titleJp: result.value.titleJp,
