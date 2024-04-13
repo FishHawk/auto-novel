@@ -1,4 +1,4 @@
-import { TranslatorId } from "./Translator";
+import { TranslatorId } from './Translator';
 
 export interface Setting {
   theme: 'light' | 'dark' | 'system';
@@ -47,6 +47,7 @@ export interface ReaderSetting {
     bodyColor: string;
     fontColor: string;
   };
+  speakLanguages: string[];
   enableSakuraReportButton: boolean;
   mixJpOpacity: number;
   mixZhOpacity: number;
@@ -83,5 +84,10 @@ export namespace ReaderSetting {
 
     { bodyColor: '#000000', fontColor: '#FFFFFF' },
     { bodyColor: '#272727', fontColor: '#FFFFFF' },
+  ];
+
+  export const speakLanguagesOptions = [
+    { label: '中文', value: 'zh' },
+    { label: '日文', value: 'jp' },
   ];
 }

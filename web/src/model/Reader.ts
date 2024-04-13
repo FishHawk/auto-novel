@@ -18,6 +18,6 @@ export interface ReaderChapter {
 }
 
 export type ReaderParagraph =
-  | { text: string; secondary: boolean; popover?: number }
+  | { text: string; secondary: boolean; needSpeak: boolean, popover?: number }
   | { imageUrl: string }
   | null;

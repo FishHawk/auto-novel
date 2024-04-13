@@ -4,17 +4,22 @@ import { ReaderSetting } from '@/model/Setting';
 import { isDarkColor } from '@/pages/util';
 
 export const createReaderSettingRepository = () => {
-  const ref = useLocalStorage<ReaderSetting>('readerSetting', {
-    mode: 'zh-jp',
-    translationsMode: 'priority',
-    translations: ['sakura', 'gpt', 'youdao', 'baidu'],
-    fontSize: 14,
-    lineSpace: 1.0,
-    theme: { mode: 'light', bodyColor: '#FFFFFF', fontColor: '#000000' },
-    enableSakuraReportButton: true,
-    mixJpOpacity: 0.4,
-    mixZhOpacity: 0.75,
-  });
+  const ref = useLocalStorage<ReaderSetting>(
+    'readerSetting',
+    {
+      mode: 'zh-jp',
+      translationsMode: 'priority',
+      translations: ['sakura', 'gpt', 'youdao', 'baidu'],
+      fontSize: 14,
+      lineSpace: 1.0,
+      theme: { mode: 'light', bodyColor: '#FFFFFF', fontColor: '#000000' },
+      speakLanguages: ['jp'],
+      enableSakuraReportButton: true,
+      mixJpOpacity: 0.4,
+      mixZhOpacity: 0.75,
+    },
+    { mergeDefaults: true }
+  );
 
   const migrate = () => {
     const setting = ref.value;

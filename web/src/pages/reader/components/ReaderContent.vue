@@ -133,7 +133,11 @@ const fontColor = computed(() => {
       v-for="(p, index) of paragraphs"
       :key="`${chapter.prevId}/${index}`"
     >
-      <n-p v-if="p && 'text' in p" :class="{ secondary: p.secondary }">
+      <n-p
+        v-if="p && 'text' in p"
+        :class="{ secondary: p.secondary }"
+        :aria-hidden="!p.needSpeak"
+      >
         {{ p.text }}
         <n-popconfirm
           v-if="p.popover !== undefined"

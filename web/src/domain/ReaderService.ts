@@ -75,13 +75,26 @@ const getParagraphs = (
     paragraphs: string[];
     secondary: boolean;
     popover?: boolean;
+    needSpeak: boolean;
   }[] = [];
+  const needSpeakJp =
+    setting.mode === 'jp' || setting.speakLanguages.includes('jp');
+  const needSpeakZh =
+    setting.mode === 'zh' || setting.speakLanguages.includes('zh');
 
   if (setting.mode === 'jp') {
-    styles.push({ paragraphs: chapter.paragraphs, secondary: false });
+    styles.push({
+      paragraphs: chapter.paragraphs,
+      secondary: false,
+      needSpeak: needSpeakJp,
+    });
   } else {
     if (setting.mode === 'jp-zh') {
-      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
+      styles.push({
+        paragraphs: chapter.paragraphs,
+        secondary: true,
+        needSpeak: needSpeakJp,
+      });
     }
 
     const paragraphsWithLabel = (
@@ -106,6 +119,7 @@ const getParagraphs = (
           styles.push({
             paragraphs,
             secondary: false,
+            needSpeak: needSpeakZh,
             popover:
               setting.enableSakuraReportButton &&
               gnid.type === 'web' &&
@@ -113,29 +127,44 @@ const getParagraphs = (
           });
           break;
         } else {
-          merged.push({ text: label + '翻译不存在', secondary: true });
+          merged.push({
+            text: label + '翻译不存在',
+            secondary: true,
+            needSpeak: true,
+          });
         }
       }
       if (!hasAnyTranslation) {
         return merged;
       }
     } else {
+      let i = 0;
       for (const t of setting.translations) {
         const [label, paragraphs] = paragraphsWithLabel(t);
         if (paragraphs) {
           styles.push({
             paragraphs,
             secondary: false,
+            needSpeak: needSpeakZh && i === 0,
             popover: setting.enableSakuraReportButton && t === 'sakura',
           });
         } else {
-          merged.push({ text: label + '翻译不存在', secondary: true });
+          merged.push({
+            text: label + '翻译不存在',
+            secondary: true,
+            needSpeak: true,
+          });
         }
+        i++;
       }
     }
 
     if (setting.mode === 'zh-jp') {
-      styles.push({ paragraphs: chapter.paragraphs, secondary: true });
+      styles.push({
+        paragraphs: chapter.paragraphs,
+        secondary: true,
+        needSpeak: needSpeakJp,
+      });
     }
   }
 
@@ -149,6 +178,7 @@ const getParagraphs = (
         merged.push({
           text: style.paragraphs[i],
           secondary: style.secondary,
+          needSpeak: style.needSpeak,
           popover: style.popover === true ? i : undefined,
         });
       }

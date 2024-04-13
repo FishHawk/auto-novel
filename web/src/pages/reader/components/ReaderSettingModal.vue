@@ -103,6 +103,14 @@ const setCustomFontColor = (color: string) =>
         </n-flex>
       </c-action-wrapper>
 
+      <c-action-wrapper title="朗读">
+        <c-radio-group
+          :value="setting.speakLanguages[0]"
+          @update-value="(it) => (setting.speakLanguages = [it])"
+          :options="ReaderSetting.speakLanguagesOptions"
+        />
+      </c-action-wrapper>
+
       <c-action-wrapper title="报错按钮-Sakura" align="center">
         <n-switch
           v-model:value="setting.enableSakuraReportButton"
