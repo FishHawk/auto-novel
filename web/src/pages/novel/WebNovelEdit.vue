@@ -41,6 +41,7 @@ watch(
     if (props.providerId !== providerId || props.novelId !== novelId) return;
 
     if (result.ok) {
+      allowSubmit.value = false;
       const tocSet = new Set();
       formValue.value = {
         titleJp: result.value.titleJp,
@@ -59,6 +60,7 @@ watch(
             zh: item.titleZh ?? '',
           })),
       };
+      allowSubmit.value = true;
     } else {
       message.error('载入失败');
     }
