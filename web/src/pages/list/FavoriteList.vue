@@ -8,7 +8,6 @@ import { MenuOption } from 'naive-ui';
 
 import { UserRepository } from '@/data/api';
 import { Locator } from '@/data';
-import { Page } from '@/model/Page';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 import { FavoredList } from '@/model/User';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
@@ -39,47 +38,49 @@ const options = [
   },
 ];
 
-const loaderWeb: Loader<WebNovelOutlineDto> = (page, _query, selected) => {
-  const optionNth = (n: number): string => options[n].tags[selected[n]];
-  const optionSort = () => {
-    const option = optionNth(0);
-    if (option === '更新时间') {
-      return 'update';
-    } else {
-      return 'create';
-    }
-  };
-
+const loaderWeb = computed<Loader<WebNovelOutlineDto>>(() => {
   const { favoriteId } = props;
-  return runCatching(
-    UserRepository.listFavoredWebNovel(favoriteId, {
-      page,
-      pageSize: 30,
-      sort: optionSort(),
-    }).then((it) => ({ type: 'web', ...it }))
-  );
-};
-
-const loaderWenku: Loader<WenkuNovelOutlineDto> = (page, _query, selected) => {
-  const optionNth = (n: number): string => options[n].tags[selected[n]];
-  const optionSort = () => {
-    const option = optionNth(0);
-    if (option === '更新时间') {
-      return 'update';
-    } else {
-      return 'create';
-    }
+  return (page, _query, selected) => {
+    const optionNth = (n: number): string => options[n].tags[selected[n]];
+    const optionSort = () => {
+      const option = optionNth(0);
+      if (option === '更新时间') {
+        return 'update';
+      } else {
+        return 'create';
+      }
+    };
+    return runCatching(
+      UserRepository.listFavoredWebNovel(favoriteId, {
+        page,
+        pageSize: 30,
+        sort: optionSort(),
+      }).then((it) => ({ type: 'web', ...it }))
+    );
   };
+});
 
+const loaderWenku = computed<Loader<WenkuNovelOutlineDto>>(() => {
   const { favoriteId } = props;
-  return runCatching(
-    UserRepository.listFavoredWenkuNovel(favoriteId, {
-      page,
-      pageSize: 24,
-      sort: optionSort(),
-    }).then((it) => ({ type: 'wenku', ...it }))
-  );
-};
+  return (page, _query, selected) => {
+    const optionNth = (n: number): string => options[n].tags[selected[n]];
+    const optionSort = () => {
+      const option = optionNth(0);
+      if (option === '更新时间') {
+        return 'update';
+      } else {
+        return 'create';
+      }
+    };
+    return runCatching(
+      UserRepository.listFavoredWenkuNovel(favoriteId, {
+        page,
+        pageSize: 24,
+        sort: optionSort(),
+      }).then((it) => ({ type: 'wenku', ...it }))
+    );
+  };
+});
 
 const favoredList = ref<FavoredList>({
   web: [{ id: 'default', title: '默认收藏夹' }],
