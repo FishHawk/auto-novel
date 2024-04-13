@@ -211,7 +211,9 @@ const populateNovelFromAmazon = async (
     try {
       amazonMetadata = await Locator.amazonNovelRepository.getNovel(urlOrQuery);
     } catch (e) {
-      message.error(`导入小说失败:${e}`);
+      messageReactive.content = `导入小说失败:${e}`;
+      messageReactive.type = 'error';
+      delay(3000).then(() => messageReactive.destroy());
       return;
     }
     const volumesOld = formValue.value.volumes;
