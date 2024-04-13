@@ -1,19 +1,13 @@
 <script lang="ts" setup>
-import {
-  AssignmentIndFilled,
-  EditNoteOutlined,
-  LanguageOutlined,
-} from '@vicons/material';
+import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { Locator } from '@/data';
-import { WenkuNovelRepository } from '@/data/api';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import { GenericNovelId } from '@/model/Common';
-import { WenkuNovelDto } from '@/model/WenkuNovel';
-import { Result, runCatching } from '@/util/result';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
+import { useWenkuNovelStore } from './WenkuNovelStore';
 import TranslateOptions from './components/TranslateOptions.vue';
 
 const props = defineProps<{ novelId: string }>();
@@ -23,44 +17,34 @@ const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   tags: string[];
 }>();
 
+const { novelResult, load } = useWenkuNovelStore();
+
 const isWideScreen = useIsWideScreen(600);
 const message = useMessage();
 const vars = useThemeVars();
 
 const { isSignedIn, atLeastMaintainer } = Locator.userDataRepository();
 
-const novelResult = ref<Result<WenkuNovelDto>>();
-
-const reload = async () => {
-  const { novelId } = props;
-  novelResult.value = undefined;
-  const result = await runCatching(WenkuNovelRepository.getNovel(novelId));
-
-  if (novelId !== props.novelId) return;
-
-  if (result.ok) {
-    result.value.volumeZh = result.value.volumeZh.sort((a, b) =>
-      a.localeCompare(b)
-    );
-    result.value.volumeJp = result.value.volumeJp.sort((a, b) =>
-      a.volumeId.localeCompare(b.volumeId)
-    );
-  }
-  novelResult.value = result;
-  if (result.ok) {
-    document.title = result.value.title;
-  }
-};
-
-watch(props, reload, { immediate: true });
+watch(
+  props,
+  ({ novelId }) =>
+    load(novelId).then((result) => {
+      if (result?.ok) {
+        document.title = result.value.title;
+      }
+    }),
+  { immediate: true }
+);
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
 const deleteVolume = (volumeId: string) =>
   doAction(
-    WenkuNovelRepository.deleteVolume(props.novelId, volumeId).then(() => {
-      reload();
-    }),
+    Locator.wenkuNovelRepository
+      .deleteVolume(props.novelId, volumeId)
+      .then(() => {
+        load(props.novelId);
+      }),
     '删除',
     message
   );
@@ -224,7 +208,7 @@ const showWebNovelsModal = ref(false);
       <upload-button
         type="zh"
         :novel-id="novelId"
-        @upload-finished="reload()"
+        @upload-finished="load(novelId)"
       />
 
       <n-ul>
@@ -261,7 +245,7 @@ const showWebNovelsModal = ref(false);
         <upload-button
           type="jp"
           :novel-id="novelId"
-          @upload-finished="reload()"
+          @upload-finished="load(novelId)"
         />
 
         <translate-options

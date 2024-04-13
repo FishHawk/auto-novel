@@ -2,15 +2,17 @@
 import { UploadOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { runCatching } from '@/util/result';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
+import { useWebNovelStore } from './WebNovelStore';
 
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
 const props = defineProps<{ providerId: string; novelId: string }>();
+
+const { load } = useWebNovelStore();
 
 const allowSubmit = ref(false);
 const formValue = ref({
@@ -34,11 +36,14 @@ watch(
       toc: [],
     };
 
-    const result = await runCatching(
-      Locator.webNovelRepository.getNovel(providerId, novelId)
-    );
+    const result = await load(providerId, novelId);
 
-    if (props.providerId !== providerId || props.novelId !== novelId) return;
+    if (
+      result === undefined ||
+      props.providerId !== providerId ||
+      props.novelId !== novelId
+    )
+      return;
 
     if (result.ok) {
       allowSubmit.value = false;
@@ -87,6 +92,7 @@ const submit = async () => {
         ),
       })
       .then(() => {
+        load(providerId, novelId, true);
         router.push({ path: `/novel/${providerId}/${novelId}` });
       }),
     '编辑',

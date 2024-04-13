@@ -1,19 +1,30 @@
 <script lang="ts" setup>
 import { SortOutlined } from '@vicons/material';
 
-import { WebNovelTocItemDto } from '@/model/WebNovel';
 import { Locator } from '@/data';
+import { WebNovelTocItemDto, WebNovelDto } from '@/model/WebNovel';
 
-import { WebNovelVM } from './common';
+import { ReadableTocItem } from './common';
 
-defineProps<{
+const props = defineProps<{
   providerId: string;
   novelId: string;
-  novel: WebNovelVM;
+  novel: WebNovelDto;
 }>();
 
 const { isSignedIn } = Locator.userDataRepository();
 const setting = Locator.settingRepository().ref;
+
+const toc = computed(() => {
+  const { novel } = props;
+  const novelToc = novel.toc as ReadableTocItem[];
+  let order = 0;
+  for (const it of novelToc) {
+    it.order = it.chapterId ? order : undefined;
+    if (it.chapterId) order += 1;
+  }
+  return novelToc;
+});
 </script>
 
 <template>
@@ -56,9 +67,9 @@ const setting = Locator.settingRepository().ref;
         <n-list style="padding-bottom: 12px">
           <n-list-item
             v-for="tocItem in setting.tocSortReverse
-              ? novel.toc.slice().reverse()
-              : novel.toc"
-            :key="tocItem.index"
+              ? toc.slice().reverse()
+              : toc"
+            :key="`${tocItem.chapterId}/${tocItem.titleJp}`"
             style="padding: 0px"
           >
             <web-novel-toc-item

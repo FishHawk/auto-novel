@@ -2,18 +2,36 @@
 import { SortOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { WebNovelTocItemDto } from '@/model/WebNovel';
+import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
-import { WebNovelVM } from './common';
+import { ReadableTocItem } from './common';
 
-defineProps<{
+const props = defineProps<{
   providerId: string;
   novelId: string;
-  novel: WebNovelVM;
+  novel: WebNovelDto;
 }>();
 
 const { isSignedIn } = Locator.userDataRepository();
 const setting = Locator.settingRepository().ref;
+
+const lastReadChapter = computed(() => {
+  const { novel } = props;
+  if (novel.lastReadChapterId) {
+    return novel.toc.find((it) => it.chapterId === novel.lastReadChapterId);
+  }
+});
+
+const toc = computed(() => {
+  const { novel } = props;
+  const novelToc = novel.toc as ReadableTocItem[];
+  let order = 0;
+  for (const it of novelToc) {
+    it.order = it.chapterId ? order : undefined;
+    if (it.chapterId) order += 1;
+  }
+  return novelToc;
+});
 
 const showCatalogDrawer = ref(false);
 </script>
@@ -56,7 +74,7 @@ const showCatalogDrawer = ref(false);
 
   <n-list>
     <n-card
-      v-if="novel.lastReadChapter"
+      v-if="lastReadChapter"
       :bordered="false"
       embedded
       style="margin-bottom: 8px"
@@ -66,15 +84,15 @@ const showCatalogDrawer = ref(false);
       <web-novel-toc-item
         :provider-id="providerId"
         :novel-id="novelId"
-        :toc-item="novel.lastReadChapter"
+        :toc-item="lastReadChapter"
         :last-read="novel.lastReadChapterId"
       />
     </n-card>
     <n-list-item
       v-for="tocItem in setting.tocSortReverse
-        ? novel.toc.slice().reverse().slice(0, 20)
-        : novel.toc.slice(0, 20)"
-      :key="tocItem.index"
+        ? toc.slice().reverse().slice(0, 20)
+        : toc.slice(0, 20)"
+      :key="`${tocItem.chapterId}/${tocItem.titleJp}`"
       style="padding: 0px"
     >
       <web-novel-toc-item
@@ -110,10 +128,8 @@ const showCatalogDrawer = ref(false);
     </template>
     <n-list style="padding: 12px">
       <n-list-item
-        v-for="tocItem in setting.tocSortReverse
-          ? novel.toc.slice().reverse()
-          : novel.toc"
-        :key="tocItem.index"
+        v-for="tocItem in setting.tocSortReverse ? toc.slice().reverse() : toc"
+        :key="`${tocItem.chapterId}/${tocItem.titleJp}`"
         style="padding: 0px"
       >
         <web-novel-toc-item

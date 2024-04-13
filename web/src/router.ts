@@ -263,6 +263,8 @@ const router = createRouter({
 router.beforeEach((to, _from) => {
   if (to.meta.title) {
     document.title = (to.meta.title as string) + ' | 轻小说机翻机器人';
+  } else {
+    document.title = '轻小说机翻机器人';
   }
 });
 

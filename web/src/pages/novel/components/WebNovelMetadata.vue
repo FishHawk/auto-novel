@@ -2,14 +2,13 @@
 import { BookOutlined, EditNoteOutlined } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
 
+import { WebNovelDto } from '@/model/WebNovel';
 import { WebUtil } from '@/util/web';
-
-import { WebNovelVM } from './common';
 
 const props = defineProps<{
   providerId: string;
   novelId: string;
-  novel: WebNovelVM;
+  novel: WebNovelDto;
 }>();
 
 const labels = computed(() => {

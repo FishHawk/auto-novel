@@ -5,9 +5,9 @@ import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 import { Locator } from '@/data';
 import avaterUrl from '@/image/avater.jpg';
 import { ArticleCategory } from '@/model/Article';
-import { runCatching } from '@/util/result';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
+import { useForumArticleStore } from './ForumArticleStore';
 
 const props = defineProps<{
   articleId?: string;
@@ -18,6 +18,8 @@ const route = useRoute();
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
+
+const { load } = useForumArticleStore();
 
 const articleCategoryOptions = [
   { value: 'Guide', label: '使用指南' },
@@ -75,11 +77,9 @@ watch(
 
     if (articleId !== undefined) {
       allowSubmit.value = false;
-      const result = await runCatching(
-        Locator.articleRepository.getArticle(articleId)
-      );
+      const result = await load(articleId);
 
-      if (articleId !== props.articleId) return;
+      if (result === undefined || articleId !== props.articleId) return;
 
       if (result.ok) {
         const { title, content, category } = result.value;
@@ -124,7 +124,10 @@ const submit = async () => {
     await doAction(
       Locator.articleRepository
         .updateArticle(articleId, formValue.value)
-        .then(() => router.push({ path: `/forum/${articleId}` })),
+        .then(() => {
+          load(articleId, true);
+          router.push({ path: `/forum/${articleId}` });
+        }),
       '更新',
       message
     );

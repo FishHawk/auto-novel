@@ -1,9 +1,6 @@
 <script lang="ts" setup>
-import { WebNovelRepository } from '@/data/api';
-import { Result, runCatching } from '@/util/result';
 import { useIsWideScreen } from '@/pages/util';
-
-import { ReadableTocItem, WebNovelVM } from './components/common';
+import { useWebNovelStore } from './WebNovelStore';
 
 const props = defineProps<{ providerId: string; novelId: string }>();
 
@@ -11,51 +8,25 @@ const isWideScreen = useIsWideScreen(850);
 const vars = useThemeVars();
 const router = useRouter();
 
-const novelResult = ref<Result<WebNovelVM>>();
+const { novelResult, load } = useWebNovelStore();
 
 watch(
   props,
-  async ({ providerId, novelId }) => {
-    novelResult.value = undefined;
-    const result = await runCatching(
-      WebNovelRepository.getNovel(providerId, novelId).then((novel) => {
-        const novelToc = novel.toc as ReadableTocItem[];
-        let order = 0;
-        let index = 0;
-        for (const it of novelToc) {
-          it.index = index;
-          it.order = it.chapterId ? order : undefined;
-          if (it.chapterId) order += 1;
-          index += 1;
+  ({ providerId, novelId }) =>
+    load(providerId, novelId).then((result) => {
+      if (result && !result.ok) {
+        const message = result.error.message;
+        if (message.includes('小说ID不合适，应当使用：')) {
+          const targetNovelPath = message.split('小说ID不合适，应当使用：')[1];
+          router.push({ path: `/novel${targetNovelPath}` });
+          return;
         }
-
-        novel.toc = [];
-        return <WebNovelVM>{
-          ...novel,
-          toc: novelToc,
-          lastReadChapter: novel.lastReadChapterId
-            ? novelToc.find((it) => it.chapterId === novel.lastReadChapterId)
-            : undefined,
-        };
-      })
-    );
-
-    if (props.providerId !== providerId || props.novelId !== novelId) return;
-
-    if (!result.ok) {
-      const message = result.error.message;
-      if (message.includes('小说ID不合适，应当使用：')) {
-        const targetNovelPath = message.split('小说ID不合适，应当使用：')[1];
-        router.push({ path: `/novel${targetNovelPath}` });
-        return;
       }
-    }
 
-    novelResult.value = result;
-    if (result.ok) {
-      document.title = result.value.titleJp;
-    }
-  },
+      if (result?.ok) {
+        document.title = result.value.titleJp;
+      }
+    }),
   { immediate: true }
 );
 

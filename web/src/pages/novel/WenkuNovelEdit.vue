@@ -14,10 +14,13 @@ import { delay, parallelExec } from '@/util';
 import { runCatching } from '@/util/result';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
+import { useWenkuNovelStore } from './WenkuNovelStore';
 
 const props = defineProps<{
   novelId?: string;
 }>();
+
+const { load } = useWenkuNovelStore();
 
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
@@ -97,11 +100,8 @@ watch(
 
     if (novelId !== undefined) {
       allowSubmit.value = false;
-      const result = await runCatching(
-        Locator.wenkuNovelRepository.getNovel(novelId)
-      );
-
-      if (props.novelId !== novelId) return;
+      const result = await load(novelId);
+      if (result === undefined || props.novelId !== novelId) return;
 
       if (result.ok) {
         const {
@@ -175,17 +175,18 @@ const submit = async () => {
   const { novelId } = props;
   if (novelId === undefined) {
     await doAction(
-      Locator.wenkuNovelRepository
-        .createNovel(body)
-        .then((id) => router.push({ path: `/wenku/${id}` })),
+      Locator.wenkuNovelRepository.createNovel(body).then((id) => {
+        router.push({ path: `/wenku/${id}` });
+      }),
       '新建文库',
       message
     );
   } else {
     await doAction(
-      Locator.wenkuNovelRepository
-        .updateNovel(novelId, body)
-        .then(() => router.push({ path: `/wenku/${novelId}` })),
+      Locator.wenkuNovelRepository.updateNovel(novelId, body).then(() => {
+        load(novelId, true);
+        router.push({ path: `/wenku/${novelId}` });
+      }),
       '编辑文库',
       message
     );
