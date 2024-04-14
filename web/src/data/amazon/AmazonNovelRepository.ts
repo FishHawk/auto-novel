@@ -3,6 +3,9 @@ import { AmazonNovel, WenkuVolumeDto } from '@/model/WenkuNovel';
 import { Amazon, extractAsin } from './Amazon';
 
 const parseTitle = (title: string) => {
+  // 替换全角空格
+  title.replaceAll('　', ' ');
+
   const irrelevantKeywords = [
     '特典',
     '限定', // 例如：【電子書籍限定書き下ろしSS付き】 https://www.amazon.co.jp/zh/dp/B0CJ2G42MK
@@ -27,16 +30,27 @@ const parseTitle = (title: string) => {
     '濃蜜ラブルージュ',
   ];
 
+  const includeIrrelevantKeywords = (s: string) =>
+    irrelevantKeywords.some((it) => s.includes(it));
+  const includeImprintKeywords = (s: string) =>
+    imprintKeywords.some((it) => s.toLocaleLowerCase().includes(it));
+
   let imprint;
-  const regex = /[【（(]([^)）】]*)[)）】]/g;
-  for (const [matched, content] of title.matchAll(regex)) {
-    if (irrelevantKeywords.some((it) => content.includes(it))) {
+  for (const [matched, content] of title.matchAll(
+    /[【（(]([^)）】]*)[)）】]/g
+  )) {
+    if (includeIrrelevantKeywords(content)) {
       title = title.replace(matched, '');
-    } else if (
-      imprintKeywords.some((it) => content.toLocaleLowerCase().includes(it))
-    ) {
+    } else if (includeImprintKeywords(content)) {
       title = title.replace(matched, '');
-      imprint = content.trim();
+      // 例如：(電撃文庫 か 5-17) https://www.amazon.co.jp/-/zh/dp/4840224072
+      imprint = content.trim().replace(/\s+[\u3040-\u30FF]\s+\d+-\d+/, '');
+    }
+  }
+  for (const part of title.split(' ')) {
+    if (includeImprintKeywords(part)) {
+      title = title.replace(part, '');
+      imprint = part;
     }
   }
   title = title.trim();
