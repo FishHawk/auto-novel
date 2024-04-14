@@ -29,32 +29,21 @@ const message = useMessage();
 const { atLeastMaintainer } = Locator.userDataRepository();
 const { prettyCover } = Locator.amazonNovelRepository;
 
-interface FormValue {
-  title: string;
-  titleZh: string;
-  cover?: string;
-  authors: string[];
-  artists: string[];
-  r18: boolean;
-  keywords: string[];
-  introduction: string;
-  volumes: WenkuVolumeDto[];
-}
-const defaultFormValue: FormValue = {
+const defaultFormValue = () => ({
   title: '',
   titleZh: '',
   cover: '',
-  authors: [],
-  artists: [],
+  authors: <string[]>[],
+  artists: <string[]>[],
   r18: false,
-  keywords: [],
+  keywords: <string[]>[],
   introduction: '',
-  volumes: [],
-};
+  volumes: <WenkuVolumeDto[]>[],
+});
 
 const allowSubmit = ref(false);
 const formRef = ref<FormInst>();
-const formValue = ref(defaultFormValue);
+const formValue = ref(defaultFormValue());
 const formRules: FormRules = {
   title: [
     {
@@ -93,54 +82,51 @@ const formRules: FormRules = {
 
 const amazonUrl = ref('');
 
-watch(
-  props,
-  async ({ novelId }) => {
-    formValue.value = defaultFormValue;
+onActivated(async () => {
+  const { novelId } = props;
+  formValue.value = defaultFormValue();
 
-    if (novelId !== undefined) {
-      allowSubmit.value = false;
-      const result = await load(novelId);
-      if (result === undefined || props.novelId !== novelId) return;
+  if (novelId !== undefined) {
+    allowSubmit.value = false;
+    const result = await load(novelId);
+    if (result === undefined || props.novelId !== novelId) return;
 
-      if (result.ok) {
-        const {
-          title,
-          titleZh,
-          cover,
-          authors,
-          artists,
-          r18,
-          keywords,
-          introduction,
-        } = result.value;
-        formValue.value = {
-          title,
-          titleZh,
-          cover: prettyCover(cover),
-          authors,
-          artists,
-          r18,
-          keywords,
-          introduction,
-          volumes: result.value.volumes.map((it) => {
-            it.cover = prettyCover(it.cover);
-            return it;
-          }),
-        };
-        allowSubmit.value = true;
-        if (amazonUrl.value.length === 0) {
-          amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
-        }
-      } else {
-        message.error('载入失败');
+    if (result.ok) {
+      const {
+        title,
+        titleZh,
+        cover,
+        authors,
+        artists,
+        r18,
+        keywords,
+        introduction,
+      } = result.value;
+      formValue.value = {
+        title,
+        titleZh,
+        cover: prettyCover(cover),
+        authors,
+        artists,
+        r18,
+        keywords,
+        introduction,
+        volumes: result.value.volumes.map((it) => {
+          it.cover = prettyCover(it.cover);
+          return it;
+        }),
+      };
+      allowSubmit.value = true;
+      if (amazonUrl.value.length === 0) {
+        amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
       }
     } else {
-      allowSubmit.value = true;
+      message.error('载入失败');
     }
-  },
-  { immediate: true }
-);
+  } else {
+    allowSubmit.value = true;
+  }
+});
 
 const submit = async () => {
   if (!allowSubmit.value) {
@@ -354,7 +340,7 @@ const markAsDuplicate = () => {
   formValue.value = {
     title: '重复，待删除',
     titleZh: '重复，待删除',
-    cover: undefined,
+    cover: '',
     authors: [],
     artists: [],
     r18: formValue.value.r18,

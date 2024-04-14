@@ -27,20 +27,15 @@ const articleCategoryOptions = [
   { value: 'Support', label: '反馈与建议' },
 ];
 
-interface FormValue {
-  title: string;
-  content: string;
-  category: ArticleCategory;
-}
-const defaultFormValue: FormValue = {
+const defaultFormValue = () => ({
   title: '',
   content: '',
   category: (route.query.category || 'General') as ArticleCategory,
-};
+});
 
 const allowSubmit = ref(false);
 const formRef = ref<FormInst>();
-const formValue = ref(defaultFormValue);
+const formValue = ref(defaultFormValue());
 const formRules: FormRules = {
   title: [
     {
@@ -70,34 +65,31 @@ const formRules: FormRules = {
   ],
 };
 
-watch(
-  props,
-  async ({ articleId }) => {
-    formValue.value = defaultFormValue;
+onActivated(async () => {
+  const { articleId } = props;
+  formValue.value = defaultFormValue();
 
-    if (articleId !== undefined) {
-      allowSubmit.value = false;
-      const result = await load(articleId);
+  if (articleId !== undefined) {
+    allowSubmit.value = false;
+    const result = await load(articleId);
 
-      if (result === undefined || articleId !== props.articleId) return;
+    if (result === undefined || articleId !== props.articleId) return;
 
-      if (result.ok) {
-        const { title, content, category } = result.value;
-        formValue.value = {
-          title,
-          content,
-          category,
-        };
-        allowSubmit.value = true;
-      } else {
-        message.error('载入失败');
-      }
-    } else {
+    if (result.ok) {
+      const { title, content, category } = result.value;
+      formValue.value = {
+        title,
+        content,
+        category,
+      };
       allowSubmit.value = true;
+    } else {
+      message.error('载入失败');
     }
-  },
-  { immediate: true }
-);
+  } else {
+    allowSubmit.value = true;
+  }
+});
 
 const submit = async () => {
   if (!allowSubmit.value) {

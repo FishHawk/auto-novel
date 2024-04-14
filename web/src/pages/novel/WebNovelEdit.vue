@@ -14,8 +14,7 @@ const props = defineProps<{ providerId: string; novelId: string }>();
 
 const { load } = useWebNovelStore();
 
-const allowSubmit = ref(false);
-const formValue = ref({
+const defaultFormValue = () => ({
   titleJp: '',
   title: '',
   introductionJp: '',
@@ -24,54 +23,47 @@ const formValue = ref({
   toc: <{ jp: string; zh: string }[]>[],
 });
 
-watch(
-  props,
-  async ({ providerId, novelId }) => {
+const allowSubmit = ref(false);
+const formValue = ref(defaultFormValue());
+
+onActivated(async () => {
+  const { providerId, novelId } = props;
+  formValue.value = defaultFormValue();
+
+  const result = await load(providerId, novelId);
+
+  if (
+    result === undefined ||
+    props.providerId !== providerId ||
+    props.novelId !== novelId
+  )
+    return;
+
+  if (result.ok) {
+    allowSubmit.value = false;
+    const tocSet = new Set();
     formValue.value = {
-      titleJp: '',
-      title: '',
-      introduction: '',
-      introductionJp: '',
-      wenkuId: '',
-      toc: [],
+      titleJp: result.value.titleJp,
+      title: result.value.titleZh ?? '',
+      introductionJp: result.value.introductionJp,
+      introduction: result.value.introductionZh ?? '',
+      wenkuId: result.value.wenkuId ?? '',
+      toc: result.value.toc
+        .filter((item) => {
+          const inSet = tocSet.has(item.titleJp);
+          if (!inSet) tocSet.add(item.titleJp);
+          return !inSet;
+        })
+        .map((item) => ({
+          jp: item.titleJp,
+          zh: item.titleZh ?? '',
+        })),
     };
-
-    const result = await load(providerId, novelId);
-
-    if (
-      result === undefined ||
-      props.providerId !== providerId ||
-      props.novelId !== novelId
-    )
-      return;
-
-    if (result.ok) {
-      allowSubmit.value = false;
-      const tocSet = new Set();
-      formValue.value = {
-        titleJp: result.value.titleJp,
-        title: result.value.titleZh ?? '',
-        introductionJp: result.value.introductionJp,
-        introduction: result.value.introductionZh ?? '',
-        wenkuId: result.value.wenkuId ?? '',
-        toc: result.value.toc
-          .filter((item) => {
-            const inSet = tocSet.has(item.titleJp);
-            if (!inSet) tocSet.add(item.titleJp);
-            return !inSet;
-          })
-          .map((item) => ({
-            jp: item.titleJp,
-            zh: item.titleZh ?? '',
-          })),
-      };
-      allowSubmit.value = true;
-    } else {
-      message.error('载入失败');
-    }
-  },
-  { immediate: true }
-);
+    allowSubmit.value = true;
+  } else {
+    message.error('载入失败');
+  }
+});
 
 const submit = async () => {
   if (!allowSubmit.value) {
