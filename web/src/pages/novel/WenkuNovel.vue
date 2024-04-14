@@ -208,7 +208,7 @@ const showWebNovelsModal = ref(false);
       <upload-button
         type="zh"
         :novel-id="novelId"
-        @upload-finished="load(novelId)"
+        @upload-finished="load(novelId, true)"
       />
 
       <n-ul>
@@ -245,7 +245,7 @@ const showWebNovelsModal = ref(false);
         <upload-button
           type="jp"
           :novel-id="novelId"
-          @upload-finished="load(novelId)"
+          @upload-finished="load(novelId, true)"
         />
 
         <translate-options
