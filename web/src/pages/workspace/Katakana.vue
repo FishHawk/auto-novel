@@ -138,7 +138,7 @@ const copyTranslationJson = async () => {
 };
 
 const showSakuraSelectModal = ref(false);
-const selectedSakuraWorkerId = ref(sakuraWorkspace.value.workers.at(0)?.id);
+const selectedSakuraWorkerId = ref(sakuraWorkspace.value.workers[0]?.id);
 
 const katakanaTranslations = ref<{ [key: string]: string }>({});
 const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {

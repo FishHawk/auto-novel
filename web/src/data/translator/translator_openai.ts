@@ -318,7 +318,7 @@ const askApi = (
     )
     .then((completionStream) => {
       const answer = Array.from(completionStream)
-        .map((chunk) => chunk.choices.at(0)?.delta.content)
+        .map((chunk) => chunk.choices[0]?.delta.content)
         .filter((content) => typeof content === 'string')
         .join('');
       return { answer };

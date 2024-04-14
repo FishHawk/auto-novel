@@ -227,7 +227,7 @@ const populateNovelFromAmazon = async (
         ? formValue.value.title
         : amazonMetadata.title,
       titleZh: formValue.value.titleZh,
-      cover: amazonMetadata.volumes.at(0)?.cover,
+      cover: amazonMetadata.volumes[0]?.cover,
       authors:
         formValue.value.authors.length > 0
           ? formValue.value.authors
@@ -279,7 +279,7 @@ const populateNovelFromAmazon = async (
       }
     );
 
-    formValue.value.cover = formValue.value.volumes.at(0)?.cover;
+    formValue.value.cover = formValue.value.volumes[0]?.cover;
   }
 
   // 结束

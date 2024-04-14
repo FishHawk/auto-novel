@@ -24,10 +24,10 @@ watch(translatorId, () => {
 });
 
 const gptWorkspaceRef = Locator.gptWorkspaceRepository().ref;
-const selectedGptWorkerId = ref(gptWorkspaceRef.value.workers.at(0)?.id);
+const selectedGptWorkerId = ref(gptWorkspaceRef.value.workers[0]?.id);
 
 const sakuraWorkspaceRef = Locator.sakuraWorkspaceRepository().ref;
-const selectedSakuraWorkerId = ref(sakuraWorkspaceRef.value.workers.at(0)?.id);
+const selectedSakuraWorkerId = ref(sakuraWorkspaceRef.value.workers[0]?.id);
 
 interface SavedTranslation {
   id: TranslatorId;

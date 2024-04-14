@@ -49,7 +49,7 @@ watch(
   ({ options, selected }) => {
     const newSelected = options.map(({ tags, multiple }, index) => {
       const defaultSelected = multiple ? 2 ** tags.length - 1 : 0;
-      return selected?.at(index) ?? defaultSelected;
+      return selected?.[index] ?? defaultSelected;
     });
     const isEqual = (a: number[], b: number[]) => {
       if (a.length !== b.length) return false;

@@ -101,7 +101,7 @@ export class SakuraTranslator implements SegmentTranslator {
         let d = 0;
         for (let i = 0; i < a.length; i++) {
           const numA = a[i];
-          const numB = b.at(i) ?? 0;
+          const numB = b[i] ?? 0;
           d += Math.abs(numA - numB) ** 2;
         }
         return d;
