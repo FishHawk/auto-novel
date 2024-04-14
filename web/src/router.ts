@@ -6,7 +6,7 @@ const parseSelected = (q: LocationQuery) => {
     selected[0] = Number(q.selected) || 0;
   } else if (q.selected) {
     q.selected.forEach((it, index) => {
-      selected[index] = Number(it ?? '') || 0;
+      selected[index] = Number(it) || 0;
     });
   }
   return selected;
