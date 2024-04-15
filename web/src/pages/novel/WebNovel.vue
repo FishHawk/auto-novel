@@ -5,7 +5,6 @@ import { useWebNovelStore } from './WebNovelStore';
 const props = defineProps<{ providerId: string; novelId: string }>();
 
 const isWideScreen = useIsWideScreen(850);
-const vars = useThemeVars();
 const router = useRouter();
 
 const { novelResult, load } = useWebNovelStore();
@@ -30,6 +29,7 @@ watch(
   { immediate: true }
 );
 
+const vars = useThemeVars();
 const mixColor = () => {
   const color = vars.value.primaryColor;
   const r = parseInt(color.substring(1, 3), 16);

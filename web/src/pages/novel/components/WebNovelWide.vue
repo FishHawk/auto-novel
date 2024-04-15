@@ -19,11 +19,19 @@ const toc = computed(() => {
   const { novel } = props;
   const novelToc = novel.toc as ReadableTocItem[];
   let order = 0;
-  for (const it of novelToc) {
+  for (const [index, it] of novelToc.entries()) {
+    it.key = index;
     it.order = it.chapterId ? order : undefined;
     if (it.chapterId) order += 1;
   }
   return novelToc;
+});
+
+const lastReadChapter = computed(() => {
+  const { novel } = props;
+  if (novel.lastReadChapterId) {
+    return toc.value.find((it) => it.chapterId === novel.lastReadChapterId);
+  }
 });
 </script>
 
@@ -63,25 +71,29 @@ const toc = computed(() => {
         />
       </section-header>
 
-      <n-scrollbar trigger="none" :size="24" style="flex: auto">
-        <n-list style="padding-bottom: 12px">
-          <n-list-item
-            v-for="tocItem in setting.tocSortReverse
-              ? toc.slice().reverse()
-              : toc"
-            :key="`${tocItem.chapterId}/${tocItem.titleJp}`"
-            style="padding: 0px"
+      <n-virtual-list
+        :item-size="78"
+        :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
+        item-resizable
+        :default-scroll-key="lastReadChapter?.key"
+        :scrollbar-props="{ trigger: 'none' }"
+        style="flex: 1"
+      >
+        <template #default="{ item }">
+          <div
+            :key="
+              item.chapterId === undefined ? `/${item.titleJp}` : item.chapterId
+            "
           >
             <web-novel-toc-item
               :provider-id="providerId"
               :novel-id="novelId"
-              :toc-item="tocItem"
+              :toc-item="item"
               :last-read="novel.lastReadChapterId"
-              show-last-read
             />
-          </n-list-item>
-        </n-list>
-      </n-scrollbar>
+          </div>
+        </template>
+      </n-virtual-list>
     </template>
   </c-layout>
 </template>

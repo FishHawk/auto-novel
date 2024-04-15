@@ -15,22 +15,25 @@ const props = defineProps<{
 const { isSignedIn } = Locator.userDataRepository();
 const setting = Locator.settingRepository().ref;
 
-const lastReadChapter = computed(() => {
-  const { novel } = props;
-  if (novel.lastReadChapterId) {
-    return novel.toc.find((it) => it.chapterId === novel.lastReadChapterId);
-  }
-});
+const displayTocItemSize = 5;
 
 const toc = computed(() => {
   const { novel } = props;
   const novelToc = novel.toc as ReadableTocItem[];
   let order = 0;
-  for (const it of novelToc) {
+  for (const [index, it] of novelToc.entries()) {
+    it.key = index;
     it.order = it.chapterId ? order : undefined;
     if (it.chapterId) order += 1;
   }
   return novelToc;
+});
+
+const lastReadChapter = computed(() => {
+  const { novel } = props;
+  if (novel.lastReadChapterId) {
+    return toc.value.find((it) => it.chapterId === novel.lastReadChapterId);
+  }
 });
 
 const showCatalogDrawer = ref(false);
@@ -61,7 +64,7 @@ const showCatalogDrawer = ref(false);
 
   <section-header title="目录">
     <c-button
-      v-if="novel.toc.length >= 20"
+      v-if="novel.toc.length >= displayTocItemSize"
       label="展开"
       @action="showCatalogDrawer = true"
     />
@@ -90,8 +93,8 @@ const showCatalogDrawer = ref(false);
     </n-card>
     <n-list-item
       v-for="tocItem in setting.tocSortReverse
-        ? toc.slice().reverse().slice(0, 20)
-        : toc.slice(0, 20)"
+        ? toc.slice().reverse().slice(0, displayTocItemSize)
+        : toc.slice(0, displayTocItemSize)"
       :key="`${tocItem.chapterId}/${tocItem.titleJp}`"
       style="padding: 0px"
     >
@@ -105,7 +108,7 @@ const showCatalogDrawer = ref(false);
   </n-list>
 
   <c-button
-    v-if="novel.toc.length >= 20"
+    v-if="novel.toc.length >= displayTocItemSize"
     secondary
     label="展开"
     @action="showCatalogDrawer = true"
@@ -113,11 +116,10 @@ const showCatalogDrawer = ref(false);
   />
 
   <c-drawer-right
-    v-if="novel.toc.length >= 20"
+    v-if="novel.toc.length >= displayTocItemSize"
     :width="320"
     v-model:show="showCatalogDrawer"
     title="目录"
-    display-directive="show"
   >
     <template #action>
       <c-button
@@ -126,21 +128,26 @@ const showCatalogDrawer = ref(false);
         @action="setting.tocSortReverse = !setting.tocSortReverse"
       />
     </template>
-    <n-list style="padding: 12px">
-      <n-list-item
-        v-for="tocItem in setting.tocSortReverse ? toc.slice().reverse() : toc"
-        :key="`${tocItem.chapterId}/${tocItem.titleJp}`"
-        style="padding: 0px"
-      >
-        <web-novel-toc-item
-          :provider-id="providerId"
-          :novel-id="novelId"
-          :toc-item="tocItem"
-          :last-read="novel.lastReadChapterId"
-          show-last-read
-        />
-      </n-list-item>
-    </n-list>
+
+    <n-virtual-list
+      :item-size="78"
+      :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
+      item-resizable
+      :default-scroll-key="lastReadChapter?.key"
+      :scrollbar-props="{ trigger: 'none' }"
+      style="height: calc(100vh - 68px)"
+    >
+      <template #default="{ item }">
+        <div :key="item.key" style="padding-left: 8px; padding-right: 8px">
+          <web-novel-toc-item
+            :provider-id="providerId"
+            :novel-id="novelId"
+            :toc-item="item"
+            :last-read="novel.lastReadChapterId"
+          />
+        </div>
+      </template>
+    </n-virtual-list>
   </c-drawer-right>
 
   <CommentList :site="`web-${providerId}-${novelId}`" />

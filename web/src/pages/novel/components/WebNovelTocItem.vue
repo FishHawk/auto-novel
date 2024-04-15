@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { NText } from 'naive-ui';
-import { RouterLink } from 'vue-router';
 
 import CA from '@/pages/components/CA.vue';
 
@@ -11,20 +10,10 @@ const props = defineProps<{
   novelId: string;
   tocItem: ReadableTocItem;
   lastRead?: string;
-  showLastRead?: boolean;
 }>();
 
 const isLastReader =
   props.lastRead !== undefined && props.tocItem.chapterId === props.lastRead;
-
-const itemRef = ref<HTMLDivElement>();
-if (props.showLastRead) {
-  onMounted(() => {
-    if (isLastReader) {
-      itemRef.value?.scrollIntoView();
-    }
-  });
-}
 </script>
 
 <template>
@@ -35,8 +24,6 @@ if (props.showLastRead) {
     style="width: calc(100% - 12px); display: block; padding: 6px"
     :style="{ 'font-size': tocItem.order !== undefined ? '14px' : '12px' }"
   >
-    <div ref="itemRef" />
-
     <template v-if="!isLastReader">
       {{ tocItem.titleJp }}
     </template>
