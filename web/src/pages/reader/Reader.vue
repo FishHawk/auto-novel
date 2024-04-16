@@ -6,10 +6,11 @@ import { UserRepository } from '@/data/api';
 import { GenericNovelId } from '@/model/Common';
 import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
-import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 import { ReaderService } from '@/domain';
 import { Ok, Result, runCatching } from '@/util/result';
 import { WebUtil } from '@/util/web';
+
+import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   label: string;

@@ -5,11 +5,15 @@ import { NA, NText } from 'naive-ui';
 import { WebNovelDto } from '@/model/WebNovel';
 import { WebUtil } from '@/util/web';
 
+import { useIsWideScreen } from '@/pages/util';
+
 const props = defineProps<{
   providerId: string;
   novelId: string;
   novel: WebNovelDto;
 }>();
+
+const isWideScreen = useIsWideScreen(850);
 
 const labels = computed(() => {
   const readableNumber = (num: number | undefined) => {
@@ -89,12 +93,19 @@ const generateSearchUrl = (query: string) => {
     </template>
   </n-p>
 
-  <n-p style="word-break: break-all">
+  <n-ellipsis
+    :expand-trigger="isWideScreen ? undefined : 'click'"
+    :line-clamp="isWideScreen ? 999 : 5"
+    :tooltip="false"
+    style="word-break: break-all; margin-bottom: 0"
+  >
+    <template v-if="novel.introductionZh !== undefined">
+      {{ novel.introductionZh }}
+      <br />
+      <br />
+    </template>
     {{ novel.introductionJp }}
-  </n-p>
-  <n-p v-if="novel.introductionZh !== undefined" style="word-break: break-all">
-    {{ novel.introductionZh }}
-  </n-p>
+  </n-ellipsis>
 
   <n-flex :size="[4, 4]">
     <router-link

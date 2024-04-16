@@ -4,6 +4,7 @@ import { SortOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
+import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 import { ReadableTocItem } from './common';
 
 const props = defineProps<{
@@ -11,6 +12,8 @@ const props = defineProps<{
   novelId: string;
   novel: WebNovelDto;
 }>();
+
+const isMobile = checkIsMobile();
 
 const { isSignedIn } = Locator.userDataRepository();
 const setting = Locator.settingRepository().ref;
@@ -37,6 +40,7 @@ const lastReadChapter = computed(() => {
 });
 
 const showCatalogDrawer = ref(false);
+const showTranslateSection = ref(!isMobile);
 </script>
 
 <template>
@@ -45,21 +49,29 @@ const showCatalogDrawer = ref(false);
     :novel-id="novelId"
     :novel="novel"
   />
-  <section-header title="翻译" />
-  <web-translate
-    v-if="isSignedIn"
-    :provider-id="providerId"
-    :novel-id="novelId"
-    :title-jp="novel.titleJp"
-    :title-zh="novel.titleZh"
-    :total="novel.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
-    v-model:jp="novel.jp"
-    v-model:baidu="novel.baidu"
-    v-model:youdao="novel.youdao"
-    v-model:gpt="novel.gpt"
-    :sakura="novel.sakura"
-    :glossary="novel.glossary"
-  />
+
+  <section-header title="翻译">
+    <c-button
+      v-if="isMobile"
+      :label="showTranslateSection ? '折叠' : '展开'"
+      @action="showTranslateSection = !showTranslateSection"
+    />
+  </section-header>
+  <n-collapse-transition v-if="isSignedIn" :show="showTranslateSection">
+    <web-translate
+      :provider-id="providerId"
+      :novel-id="novelId"
+      :title-jp="novel.titleJp"
+      :title-zh="novel.titleZh"
+      :total="novel.toc.filter((it: WebNovelTocItemDto) => it.chapterId).length"
+      v-model:jp="novel.jp"
+      v-model:baidu="novel.baidu"
+      v-model:youdao="novel.youdao"
+      v-model:gpt="novel.gpt"
+      :sakura="novel.sakura"
+      :glossary="novel.glossary"
+    />
+  </n-collapse-transition>
   <n-p v-else>游客无法使用该功能，请先登录。</n-p>
 
   <section-header title="目录">
