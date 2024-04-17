@@ -115,29 +115,31 @@ class WebNovelChapterRepository(
         glossary: Glossary?,
         paragraphsZh: List<String>,
     ): Long {
+        val glossaryUuid = glossary?.id ?: "no glossary"
+        val glossaryContent = glossary?.map ?: emptyMap()
         val updateBson = when (translatorId) {
             TranslatorId.Baidu -> combine(
-                setValue(WebNovelChapter::baiduGlossaryUuid, glossary?.id),
-                setValue(WebNovelChapter::baiduGlossary, glossary?.map ?: emptyMap()),
+                setValue(WebNovelChapter::baiduGlossaryUuid, glossaryUuid),
+                setValue(WebNovelChapter::baiduGlossary, glossaryContent),
                 setValue(WebNovelChapter::baiduParagraphs, paragraphsZh)
             )
 
             TranslatorId.Youdao -> combine(
-                setValue(WebNovelChapter::youdaoGlossaryUuid, glossary?.id),
-                setValue(WebNovelChapter::youdaoGlossary, glossary?.map ?: emptyMap()),
+                setValue(WebNovelChapter::youdaoGlossaryUuid, glossaryUuid),
+                setValue(WebNovelChapter::youdaoGlossary, glossaryContent),
                 setValue(WebNovelChapter::youdaoParagraphs, paragraphsZh)
             )
 
             TranslatorId.Gpt -> combine(
-                setValue(WebNovelChapter::gptGlossaryUuid, glossary?.id),
-                setValue(WebNovelChapter::gptGlossary, glossary?.map ?: emptyMap()),
+                setValue(WebNovelChapter::gptGlossaryUuid, glossaryUuid),
+                setValue(WebNovelChapter::gptGlossary, glossaryContent),
                 setValue(WebNovelChapter::gptParagraphs, paragraphsZh)
             )
 
             TranslatorId.Sakura -> combine(
                 setValue(WebNovelChapter::sakuraVersion, "0.9"),
-                setValue(WebNovelChapter::sakuraGlossaryUuid, glossary?.id),
-                setValue(WebNovelChapter::sakuraGlossary, glossary?.map ?: emptyMap()),
+                setValue(WebNovelChapter::sakuraGlossaryUuid, glossaryUuid),
+                setValue(WebNovelChapter::sakuraGlossary, glossaryContent),
                 setValue(WebNovelChapter::sakuraParagraphs, paragraphsZh)
             )
         }

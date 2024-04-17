@@ -77,7 +77,7 @@ class WebNovelMetadata(
     val totalCharacters: Int? = null,
     val introductionJp: String,
     val introductionZh: String? = null,
-    val glossaryUuid: String? = null,
+    val glossaryUuid: String? = "no glossary",
     val glossary: Map<String, String> = emptyMap(),
     val toc: List<WebNovelTocItem>,
     // Translate state

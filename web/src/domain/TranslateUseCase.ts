@@ -1,61 +1,19 @@
-import { WebNovelRepository } from '@/data/api';
-import { client } from '@/data/api/client';
 import { Locator } from '@/data';
+import { Translator } from '@/data/translator';
+import { SakuraTranslator } from '@/data/translator/translator_sakura';
 import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
-import { WebNovelDto } from '@/model/WebNovel';
+import {
+  PersonalTranslateTaskDesc,
+  TranslateTaskCallback,
+  TranslateTaskDesc,
+  TranslateTaskParams,
+  TranslatorDesc,
+  WebTranslateTask,
+  WebTranslateTaskDesc,
+  WenkuTranslateTask,
+  WenkuTranslateTaskDesc,
+} from '@/model/Translator';
 import { delay, keepPageAlive } from '@/util';
-
-import { Translator } from './translator';
-import { SakuraTranslator } from './translator_sakura';
-
-type WebTranslateTaskDesc = {
-  type: 'web';
-  providerId: string;
-  novelId: string;
-};
-
-type WenkuTranslateTaskDesc = {
-  type: 'wenku';
-  novelId: string;
-  volumeId: string;
-};
-
-type PersonalTranslateTaskDesc = {
-  type: 'personal';
-  volumeId: string;
-};
-
-export type TranslateTaskDesc =
-  | WebTranslateTaskDesc
-  | WenkuTranslateTaskDesc
-  | PersonalTranslateTaskDesc;
-
-export type TranslateTaskParams = {
-  translateExpireChapter: boolean;
-  overriteToc: boolean;
-  syncFromProvider: boolean;
-  startIndex: number;
-  endIndex: number;
-};
-
-export type TranslateTaskCallback = {
-  onStart: (total: number) => void;
-  onChapterSuccess: (state: { jp?: number; zh?: number }) => void;
-  onChapterFailure: () => void;
-  log: (message: string, detail?: string[]) => void;
-};
-
-export type TranslatorDesc =
-  | { id: 'baidu' }
-  | { id: 'youdao' }
-  | {
-      id: 'gpt';
-      type: 'web' | 'api';
-      model: string;
-      endpoint: string;
-      key: string;
-    }
-  | { id: 'sakura'; endpoint: string; useLlamaApi: boolean };
 
 const translateWeb = async (
   { providerId, novelId }: WebTranslateTaskDesc,
@@ -70,61 +28,22 @@ const translateWeb = async (
   translatorDesc: TranslatorDesc,
   signal?: AbortSignal
 ) => {
-  // Api
-  const endpoint = `novel/${providerId}/${novelId}/translate/${translatorDesc.id}`;
-
-  interface TranslateTaskDto {
-    title?: string;
-    introduction?: string;
-    toc: string[];
-    glossaryUuid?: string;
-    glossary: { [key: string]: string };
-    chapters: {
-      id: string;
-      state: 'untranslated' | 'translated' | 'expired';
-    }[];
-  }
-
-  interface MetadataUpdateBody {
-    title?: string;
-    introduction?: string;
-    toc: { [key: string]: string };
-  }
-
-  const getTranslateTask = () =>
-    client.get(endpoint, { signal }).json<TranslateTaskDto>();
-
-  const updateMetadataTranslation = (json: MetadataUpdateBody) =>
-    client.post(`${endpoint}/metadata`, { json, signal }).text();
-
-  const checkChapter = (chapterId: string) =>
-    client
-      .post(`${endpoint}/check-chapter/${chapterId}`, {
-        searchParams: { sync: syncFromProvider },
-        signal,
-      })
-      .json<string[]>();
-
-  const updateChapterTranslation = (
-    chapterId: string,
-    json: {
-      glossaryUuid?: string;
-      paragraphsZh: string[];
-    }
-  ) =>
-    client
-      .put(`${endpoint}/chapter/${chapterId}`, {
-        json: { ...json, sakuraVersion: '0.9' },
-        signal,
-      })
-      .json<{ jp: number; zh: number }>();
+  const {
+    getTranslateTask,
+    updateMetadataTranslation,
+    checkChapter,
+    updateChapterTranslation,
+  } = Locator.webNovelRepository.createTranslationApi(
+    providerId,
+    novelId,
+    translatorDesc.id,
+    syncFromProvider,
+    signal
+  );
 
   // Task
-  let novel: WebNovelDto;
-  let task: TranslateTaskDto;
+  let task: WebTranslateTask;
   try {
-    callback.log('获取元数据');
-    novel = await WebNovelRepository.getNovel(providerId, novelId);
     callback.log('获取翻译任务');
     // 临时手段解决timeout，等数据库大修完成后删去
     try {
@@ -169,13 +88,13 @@ const translateWeb = async (
   try {
     const encodeMetadataToTranslate = () => {
       const query = [];
-      if (!novel.titleZh) {
-        query.push(novel.titleJp);
+      if (!task.titleZh) {
+        query.push(task.titleJp);
       }
-      if (!novel.introductionZh) {
-        query.push(novel.introductionJp);
+      if (!task.introductionZh) {
+        query.push(task.introductionJp);
       }
-      const toc = novel.toc
+      const toc = task.toc
         .filter((it) => overriteToc || !it.titleZh)
         .map((it) => it.titleJp);
       const tocWords = toc
@@ -187,15 +106,19 @@ const translateWeb = async (
     };
 
     const decodeAsMetadataTranslated = (translated: string[]) => {
-      const obj: MetadataUpdateBody = { toc: {} };
+      const obj: {
+        title?: string;
+        introduction?: string;
+        toc: { [key: string]: string };
+      } = { toc: {} };
 
-      if (!novel.titleZh) {
+      if (!task.titleZh) {
         obj.title = translated.shift();
       }
-      if (!novel.introductionZh) {
+      if (!task.introductionZh) {
         obj.introduction = translated.shift();
       }
-      const toc = novel.toc
+      const toc = task.toc
         .filter((it) => overriteToc || !it.titleZh)
         .map((it) => it.titleJp);
 
@@ -258,13 +181,17 @@ const translateWeb = async (
     }
   }
 
-  const chapters = task.chapters
-    .map(({ id, state }, index) => ({ index, chapterId: id, state }))
+  const chapters = task.toc
+    .map(({ chapterId, glossaryUuid }, index) => ({
+      index,
+      chapterId,
+      glossaryUuid,
+    }))
     .slice(startIndex, endIndex)
-    .filter(({ state }) => {
-      if (state === 'untranslated') {
+    .filter(({ glossaryUuid }) => {
+      if (glossaryUuid === undefined) {
         return true;
-      } else if (state === 'expired') {
+      } else if (glossaryUuid !== task.glossaryUuid) {
         return translateExpireChapter || syncFromProvider;
       } else {
         return syncFromProvider;
@@ -325,34 +252,16 @@ const translateWenku = async (
   translatorDesc: TranslatorDesc,
   signal?: AbortSignal
 ) => {
-  // Api
-  const endpoint = `wenku/${novelId}/translate/${translatorDesc.id}/${volumeId}`;
-
-  interface TranslateTaskDto {
-    glossaryUuid?: string;
-    glossary: { [key: string]: string };
-    untranslatedChapters: string[];
-    expiredChapters: string;
-  }
-  const getTranslateTask = () =>
-    client.get(endpoint, { signal }).json<TranslateTaskDto>();
-
-  const getChapterToTranslate = (chapterId: string) =>
-    client.get(`${endpoint}/${chapterId}`, { signal }).json<string[]>();
-
-  const updateChapterTranslation = (
-    chapterId: string,
-    json: { glossaryUuid: string | undefined; paragraphsZh: string[] }
-  ) =>
-    client
-      .put(`${endpoint}/${chapterId}`, {
-        json: { ...json, sakuraVersion: '0.9' },
-        signal,
-      })
-      .json<number>();
+  const { getTranslateTask, getChapterToTranslate, updateChapterTranslation } =
+    Locator.wenkuNovelRepository.createTranslationApi(
+      novelId,
+      volumeId,
+      translatorDesc.id,
+      signal
+    );
 
   // Task
-  let task: TranslateTaskDto;
+  let task: WenkuTranslateTask;
   try {
     callback.log(`获取未翻译章节 ${volumeId}`);
     task = await getTranslateTask();

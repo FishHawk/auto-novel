@@ -165,5 +165,6 @@ val appModule = module {
     singleOf(::UserReadHistoryWebApi) { createdAtStart() }
 
     singleOf(::WebNovelApi) { createdAtStart() }
+    singleOf(::WebNovelTranslateV2Api) { createdAtStart() }
     singleOf(::WenkuNovelApi) { createdAtStart() }
 }

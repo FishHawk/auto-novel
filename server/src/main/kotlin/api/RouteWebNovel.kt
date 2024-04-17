@@ -73,6 +73,9 @@ private class WebNovelRes {
             class Chapter(val parent: Translate, val chapterId: String)
         }
 
+        @Resource("/translate-v2/{translatorId}")
+        class TranslateV2(val parent: Id, val translatorId: TranslatorId)
+
         @Resource("/file")
         class File(
             val parent: Id,
@@ -87,6 +90,7 @@ private class WebNovelRes {
 
 fun Route.routeWebNovel() {
     val service by inject<WebNovelApi>()
+    val translateV2Service by inject<WebNovelTranslateV2Api>()
 
     authenticateDb(optional = true) {
         get<WebNovelRes.List> { loc ->
@@ -253,6 +257,17 @@ fun Route.routeWebNovel() {
                 )
             }
         }
+
+        // TranslateV2
+        get<WebNovelRes.Id.TranslateV2> { loc ->
+            call.tryRespond {
+                translateV2Service.getTranslateTask(
+                    providerId = loc.parent.providerId,
+                    novelId = loc.parent.novelId,
+                    translatorId = loc.translatorId,
+                )
+            }
+        }
     }
 
     // File
@@ -269,6 +284,15 @@ fun Route.routeWebNovel() {
             val encodedFilename = loc.filename.encodeURLParameter(spaceToPlus = true)
             "../../../../../../../files-web/${path}?filename=${encodedFilename}"
         }
+    }
+}
+
+private fun throwNovelNotFound(): Nothing =
+    throwNotFound("小说不存在")
+
+private fun validateId(providerId: String, novelId: String) {
+    if (providerId == Syosetu.id && novelId != novelId.lowercase()) {
+        throw BadRequestException("成为小说家id应当小写")
     }
 }
 
@@ -333,15 +357,6 @@ class WebNovelApi(
     }
 
     // Get
-    private fun throwNovelNotFound(): Nothing =
-        throwNotFound("小说不存在")
-
-    private fun validateId(providerId: String, novelId: String) {
-        if (providerId == Syosetu.id && novelId != novelId.lowercase()) {
-            throw BadRequestException("成为小说家id应当小写")
-        }
-    }
-
     @Serializable
     data class NovelTocItemDto(
         val titleJp: String,
@@ -806,5 +821,77 @@ class WebNovelApi(
             translations = translations.distinct(),
             type = type,
         ) ?: throwNovelNotFound()
+    }
+}
+
+class WebNovelTranslateV2Api(
+    private val metadataRepo: WebNovelMetadataRepository,
+    private val chapterRepo: WebNovelChapterRepository,
+) {
+    @Serializable
+    data class TranslateTaskDto(
+        val titleJp: String,
+        val titleZh: String?,
+        val introductionJp: String,
+        val introductionZh: String?,
+        val glossaryUuid: String,
+        val glossary: Map<String, String>,
+        val toc: List<TocItem>,
+    ) {
+        @Serializable
+        data class TocItem(
+            val chapterId: String,
+            val titleJp: String,
+            val titleZh: String?,
+            val glossaryUuid: String?,
+        )
+    }
+
+    suspend fun getTranslateTask(
+        providerId: String,
+        novelId: String,
+        translatorId: TranslatorId,
+    ): TranslateTaskDto {
+        validateId(providerId, novelId)
+
+        val novel = metadataRepo.getNovelAndSave(providerId, novelId, 10)
+            .getOrElse { throwInternalServerError("从源站获取失败:" + it.message) }
+
+        val chapterTranslationOutlines = chapterRepo.getTranslationOutlines(
+            providerId = providerId,
+            novelId = novelId,
+            translatorId = translatorId,
+        )
+        val toc = novel.toc
+            .filter { it.chapterId !== null }
+            .map { item ->
+                val chapterTranslationOutline = chapterTranslationOutlines.find {
+                    it.chapterId == item.chapterId
+                }
+                val glossaryUuid = if (chapterTranslationOutline?.translated != true) {
+                    null
+                } else if (
+                    translatorId == TranslatorId.Sakura && chapterTranslationOutline.sakuraVersion != "0.9"
+                ) {
+                    "sakura outdated"
+                } else {
+                    chapterTranslationOutline.glossaryUuid ?: "no glossary"
+                }
+                TranslateTaskDto.TocItem(
+                    chapterId = item.chapterId!!,
+                    titleJp = item.titleJp,
+                    titleZh = item.titleZh,
+                    glossaryUuid = glossaryUuid
+                )
+            }
+        return TranslateTaskDto(
+            titleJp = novel.titleJp,
+            titleZh = novel.titleZh,
+            introductionJp = novel.introductionJp,
+            introductionZh = novel.introductionZh,
+            glossaryUuid = novel.glossaryUuid ?: "no glossary",
+            glossary = novel.glossary,
+            toc = toc,
+        )
     }
 }

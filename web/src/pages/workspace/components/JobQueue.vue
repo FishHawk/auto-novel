@@ -5,9 +5,7 @@ import {
   KeyboardDoubleArrowUpOutlined,
 } from '@vicons/material';
 
-import { TranslateJob } from '@/model/Translator';
-
-import { parseTaskUrl } from './util';
+import { TranslateJob, TranslateTaskDescriptor } from '@/model/Translator';
 
 const props = defineProps<{
   job: TranslateJob;
@@ -19,7 +17,7 @@ const emit = defineEmits<{
   deleteJob: [];
 }>();
 
-const url = computed(() => parseTaskUrl(props.job.task));
+const url = computed(() => TranslateTaskDescriptor.parseUrl(props.job.task));
 
 const percentage = computed(() => {
   if (props.progress === undefined) {

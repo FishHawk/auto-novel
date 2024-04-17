@@ -1,4 +1,5 @@
 import { Page } from '@/model/Page';
+import { TranslatorId, WenkuTranslateTask } from '@/model/Translator';
 import {
   WenkuNovelDto,
   WenkuNovelOutlineDto,
@@ -83,6 +84,40 @@ const createVolume = (
 const deleteVolume = (novelId: string, volumeId: string) =>
   client.delete(`wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`);
 
+//Translate
+const createTranslationApi = (
+  novelId: string,
+  volumeId: string,
+  translatorId: TranslatorId,
+  signal?: AbortSignal
+) => {
+  const endpoint = `wenku/${novelId}/translate/${translatorId}/${volumeId}`;
+
+  const getTranslateTask = () =>
+    client.get(endpoint, { signal }).json<WenkuTranslateTask>();
+
+  const getChapterToTranslate = (chapterId: string) =>
+    client.get(`${endpoint}/${chapterId}`, { signal }).json<string[]>();
+
+  const updateChapterTranslation = (
+    chapterId: string,
+    json: { glossaryUuid: string | undefined; paragraphsZh: string[] }
+  ) =>
+    client
+      .put(`${endpoint}/${chapterId}`, {
+        json: { ...json, sakuraVersion: '0.9' },
+        signal,
+      })
+      .json<number>();
+
+  return {
+    getTranslateTask,
+    getChapterToTranslate,
+    updateChapterTranslation,
+  };
+};
+
+// File
 const createFileUrl = ({
   novelId,
   volumeId,
@@ -123,6 +158,8 @@ export const WenkuNovelRepository = {
   updateGlossary,
   createVolume,
   deleteVolume,
+  //
+  createTranslationApi,
   //
   createFileUrl,
 };

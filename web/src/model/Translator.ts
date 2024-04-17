@@ -1,3 +1,5 @@
+import { Glossary } from './Glossary';
+
 export type TranslatorId = 'sakura' | 'baidu' | 'youdao' | 'gpt';
 
 export interface GptWorker {
@@ -32,6 +34,56 @@ export namespace TranslateJob {
   export const isFinished = (job: TranslateJobRecord) =>
     job.progress !== undefined && job.progress.finished >= job.progress.total;
 }
+
+//
+export type WebTranslateTaskDesc = {
+  type: 'web';
+  providerId: string;
+  novelId: string;
+};
+
+export type WenkuTranslateTaskDesc = {
+  type: 'wenku';
+  novelId: string;
+  volumeId: string;
+};
+
+export type PersonalTranslateTaskDesc = {
+  type: 'personal';
+  volumeId: string;
+};
+
+export type TranslateTaskDesc =
+  | WebTranslateTaskDesc
+  | WenkuTranslateTaskDesc
+  | PersonalTranslateTaskDesc;
+
+export type TranslateTaskParams = {
+  translateExpireChapter: boolean;
+  overriteToc: boolean;
+  syncFromProvider: boolean;
+  startIndex: number;
+  endIndex: number;
+};
+
+export type TranslateTaskCallback = {
+  onStart: (total: number) => void;
+  onChapterSuccess: (state: { jp?: number; zh?: number }) => void;
+  onChapterFailure: () => void;
+  log: (message: string, detail?: string[]) => void;
+};
+
+export type TranslatorDesc =
+  | { id: 'baidu' }
+  | { id: 'youdao' }
+  | {
+      id: 'gpt';
+      type: 'web' | 'api';
+      model: string;
+      endpoint: string;
+      key: string;
+    }
+  | { id: 'sakura'; endpoint: string; useLlamaApi: boolean };
 
 type TranslateTaskDescriptor = string;
 
@@ -85,4 +137,76 @@ export namespace TranslateTaskDescriptor {
       expire: boolean;
     }
   ) => `personal/${volumeId}` + buildTaskQueryString(params);
+
+  export const parse = (task: string) => {
+    const [taskString, queryString] = task.split('?');
+    const { start, end, expire, toc } = Object.fromEntries(
+      new URLSearchParams(queryString) as any
+    );
+
+    let desc: TranslateTaskDesc;
+    if (taskString.startsWith('web/')) {
+      const [type, providerId, novelId] = taskString.split('/');
+      desc = { type: type as any, providerId, novelId };
+    } else if (taskString.startsWith('wenku/')) {
+      const [type, novelId, volumeId] = taskString.split('/');
+      desc = { type: type as any, novelId, volumeId };
+    } else if (
+      taskString.startsWith('personal/') ||
+      taskString.startsWith('personal2/')
+    ) {
+      const [_type, volumeId] = taskString.split('/');
+      desc = { type: 'personal', volumeId };
+    } else {
+      throw 'quit';
+    }
+
+    const parseIntWithDefault = (str: string, defaultValue: number) => {
+      const num = parseInt(str, 10);
+      return isNaN(num) ? defaultValue : num;
+    };
+
+    const params: TranslateTaskParams = {
+      translateExpireChapter: expire === 'true',
+      overriteToc: toc === 'true',
+      syncFromProvider: false,
+      startIndex: parseIntWithDefault(start, 0),
+      endIndex: parseIntWithDefault(end, 65535),
+    };
+
+    return { desc, params };
+  };
+
+  export const parseUrl = (task: string) => {
+    const { desc } = parse(task);
+    if (desc.type === 'web') {
+      return `/novel/${desc.providerId}/${desc.novelId}`;
+    } else if (desc.type === 'wenku') {
+      return `/wenku/${desc.novelId}`;
+    } else {
+      return undefined;
+    }
+  };
+}
+
+export interface WebTranslateTask {
+  titleJp: string;
+  titleZh?: string;
+  introductionJp: string;
+  introductionZh?: string;
+  glossaryUuid: string;
+  glossary: Glossary;
+  toc: {
+    chapterId: string;
+    titleJp: string;
+    titleZh?: string;
+    glossaryUuid?: string;
+  }[];
+}
+
+export interface WenkuTranslateTask {
+  glossaryUuid?: string;
+  glossary: { [key: string]: string };
+  untranslatedChapters: string[];
+  expiredChapters: string;
 }

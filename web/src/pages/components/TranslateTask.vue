@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { ScrollbarInst } from 'naive-ui';
 
+import { translate } from '@/domain';
 import {
   TranslateTaskDesc,
   TranslateTaskParams,
   TranslatorDesc,
-  translate,
-} from '@/data/translator/api';
+} from '@/model/Translator';
 
 type LogLine = { message: string; detail?: string[] };
 
@@ -194,8 +194,8 @@ const showDetail = (message: string, detail: string[]) => {
         <div v-for="log of logs">
           {{ log.message }}
           <span
-            v-if="log.detail !== undefined"
-            @click="showDetail(log.message, log.detail)"
+            v-if="log.detail"
+            @click="showDetail(log.message, log.detail!!)"
           >
             [详细]
           </span>

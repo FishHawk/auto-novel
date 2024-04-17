@@ -1,4 +1,5 @@
 import { Page } from '@/model/Page';
+import { TranslatorId, WebTranslateTask } from '@/model/Translator';
 import {
   WebNovelChapterDto,
   WebNovelDto,
@@ -74,6 +75,57 @@ const updateGlossary = (
   json: { [key: string]: string }
 ) => client.put(`novel/${providerId}/${novelId}/glossary`, { json });
 
+// Translate
+const createTranslationApi = (
+  providerId: string,
+  novelId: string,
+  translatorId: TranslatorId,
+  syncFromProvider: boolean,
+  signal?: AbortSignal
+) => {
+  const endpoint = `novel/${providerId}/${novelId}/translate/${translatorId}`;
+  const endpointV2 = `novel/${providerId}/${novelId}/translate-v2/${translatorId}`;
+
+  const getTranslateTask = () =>
+    client.get(endpointV2, { signal }).json<WebTranslateTask>();
+
+  const updateMetadataTranslation = (json: {
+    title?: string;
+    introduction?: string;
+    toc: { [key: string]: string };
+  }) => client.post(`${endpoint}/metadata`, { json, signal }).text();
+
+  const checkChapter = (chapterId: string) =>
+    client
+      .post(`${endpoint}/check-chapter/${chapterId}`, {
+        searchParams: { sync: syncFromProvider },
+        signal,
+      })
+      .json<string[]>();
+
+  const updateChapterTranslation = (
+    chapterId: string,
+    json: {
+      glossaryUuid?: string;
+      paragraphsZh: string[];
+    }
+  ) =>
+    client
+      .put(`${endpoint}/chapter/${chapterId}`, {
+        json: { ...json, sakuraVersion: '0.9' },
+        signal,
+      })
+      .json<{ jp: number; zh: number }>();
+
+  return {
+    getTranslateTask,
+    updateMetadataTranslation,
+    checkChapter,
+    updateChapterTranslation,
+  };
+};
+
+// File
 const createFileUrl = ({
   providerId,
   novelId,
@@ -124,6 +176,8 @@ export const WebNovelRepository = {
 
   updateNovel,
   updateGlossary,
+
+  createTranslationApi,
 
   createFileUrl,
 };

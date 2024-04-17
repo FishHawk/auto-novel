@@ -10,12 +10,14 @@ import {
 
 import { Locator } from '@/data';
 import { Translator } from '@/data/translator';
-import { TranslatorDesc } from '@/data/translator/api';
 import { SakuraTranslator } from '@/data/translator/translator_sakura';
-import { GptWorker, SakuraWorker } from '@/model/Translator';
+import {
+  GptWorker,
+  SakuraWorker,
+  TranslateTaskDescriptor,
+  TranslatorDesc,
+} from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
-
-import { parseTask } from './util';
 
 const { worker, getNextJob } = defineProps<{
   worker:
@@ -90,7 +92,7 @@ const processTasks = async () => {
     currentJob.value = job;
 
     if (job === undefined) break;
-    const { desc, params } = parseTask(job.task);
+    const { desc, params } = TranslateTaskDescriptor.parse(job.task);
 
     const state = await translateTask.value!!.startTask(
       desc,

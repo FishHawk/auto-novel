@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, RefreshOutlined } from '@vicons/material';
 
-import { TranslateJob, TranslateJobRecord } from '@/model/Translator';
-
-import { parseTaskUrl } from './util';
+import {
+  TranslateJob,
+  TranslateJobRecord,
+  TranslateTaskDescriptor,
+} from '@/model/Translator';
 
 const props = defineProps<{
   job: TranslateJobRecord;
@@ -14,7 +16,7 @@ const emit = defineEmits<{
 }>();
 const isFinished = computed(() => TranslateJob.isFinished(props.job));
 
-const url = computed(() => parseTaskUrl(props.job.task));
+const url = computed(() => TranslateTaskDescriptor.parseUrl(props.job.task));
 </script>
 
 <template>
