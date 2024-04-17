@@ -111,7 +111,7 @@ const notices = [
         </n-a>
         /
         <n-a
-          href="https://www.kaggle.com/code/scratchpad/notebookb5b9fe84c5/edit"
+          href="https://www.kaggle.com/code/scratchpad/notebook74bdddc4b6/edit"
           target="_blank"
         >
           Kaggle脚本
