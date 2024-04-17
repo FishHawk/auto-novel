@@ -756,7 +756,7 @@ class WebNovelApi(
 
         return if (
             translated != null &&
-            oldGlossaryUuid == novel.glossaryUuid &&
+            (oldGlossaryUuid ?: "no glossary") == (novel.glossaryUuid ?: "no glossary") &&
             (translatorId != TranslatorId.Sakura || chapter.sakuraVersion == "0.9")
         ) {
             emptyList()
@@ -783,7 +783,7 @@ class WebNovelApi(
 
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
-        if (glossaryUuid != novel.glossaryUuid) {
+        if ((glossaryUuid ?: "no glossary") != (novel.glossaryUuid ?: "no glossary")) {
             throwBadRequest("术语表uuid失效")
         }
 
