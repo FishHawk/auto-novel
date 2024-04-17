@@ -47,6 +47,28 @@ const generateSearchUrl = (query: string) => {
   }
   return `/novel-list?query=${encodeURIComponent(query)}`;
 };
+
+const startRead = computed(() => {
+  const { novel } = props;
+
+  const lastReadChapterId =
+    novel.lastReadChapterId !== undefined
+      ? novel.toc.find((it) => it.chapterId === novel.lastReadChapterId)
+          ?.chapterId
+      : undefined;
+  if (lastReadChapterId !== undefined) {
+    return { chapterId: lastReadChapterId, type: 'continue' };
+  }
+
+  const firstChapterId = novel.toc.find(
+    (it) => it.chapterId !== undefined
+  )?.chapterId;
+  if (firstChapterId !== undefined) {
+    return { chapterId: firstChapterId, type: 'first' };
+  }
+
+  return undefined;
+});
 </script>
 
 <template>
@@ -66,6 +88,16 @@ const generateSearchUrl = (query: string) => {
   </n-p>
 
   <n-flex>
+    <router-link
+      v-if="startRead !== undefined"
+      :to="`/novel/${providerId}/${novelId}/${startRead.chapterId}`"
+    >
+      <c-button
+        :label="startRead.type === 'continue' ? '继续阅读' : '开始阅读'"
+      />
+    </router-link>
+    <c-button v-else label="开始阅读" disabled />
+
     <router-link :to="`/novel-edit/${providerId}/${novelId}`">
       <c-button label="编辑" :icon="EditNoteOutlined" />
     </router-link>

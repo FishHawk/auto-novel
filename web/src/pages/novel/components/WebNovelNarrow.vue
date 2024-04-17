@@ -4,7 +4,7 @@ import { SortOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
-import { checkIsMobile, useIsWideScreen } from '@/pages/util';
+import { checkIsMobile } from '@/pages/util';
 import { ReadableTocItem } from './common';
 
 const props = defineProps<{
@@ -80,29 +80,9 @@ const showTranslateSection = ref(!isMobile);
       label="展开"
       @action="showCatalogDrawer = true"
     />
-    <c-button
-      :label="setting.tocSortReverse ? '倒序' : '正序'"
-      :icon="SortOutlined"
-      @action="setting.tocSortReverse = !setting.tocSortReverse"
-    />
   </section-header>
 
   <n-list>
-    <n-card
-      v-if="lastReadChapter"
-      :bordered="false"
-      embedded
-      style="margin-bottom: 8px"
-      content-style="padding: 6px 0px 0px;"
-    >
-      <b style="padding-left: 6px">上次读到:</b>
-      <web-novel-toc-item
-        :provider-id="providerId"
-        :novel-id="novelId"
-        :toc-item="lastReadChapter"
-        :last-read="novel.lastReadChapterId"
-      />
-    </n-card>
     <n-list-item
       v-for="tocItem in setting.tocSortReverse
         ? toc.slice().reverse().slice(0, displayTocItemSize)
