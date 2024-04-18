@@ -5,11 +5,10 @@
     "lib": [
       "ESNext"
     ],
-    "moduleResolution": "node16",
     "rootDir": ".",
     "outDir": "dist",
     "strict": true,
-    "sourceMap": true,
+    "sourceMap": true
   },
   "include": [
     "src/**/*",
