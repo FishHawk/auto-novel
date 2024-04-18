@@ -155,9 +155,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     :glossary="glossary"
   />
 
-  <n-divider style="margin: 24px 0 16px" />
-
-  <n-flex vertical>
+  <n-flex vertical style="margin-top: 20px">
     <n-text>
       总计 {{ total }} / 百度 {{ baidu }} / 有道 {{ youdao }} / GPT {{ gpt }} /
       Sakura {{ sakura }}

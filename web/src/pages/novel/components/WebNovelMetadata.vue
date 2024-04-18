@@ -48,23 +48,20 @@ const generateSearchUrl = (query: string) => {
   return `/novel-list?query=${encodeURIComponent(query)}`;
 };
 
-const startRead = computed(() => {
+const startReadChapter = computed(() => {
   const { novel } = props;
-
-  const lastReadChapterId =
-    novel.lastReadChapterId !== undefined
-      ? novel.toc.find((it) => it.chapterId === novel.lastReadChapterId)
-          ?.chapterId
-      : undefined;
-  if (lastReadChapterId !== undefined) {
-    return { chapterId: lastReadChapterId, type: 'continue' };
+  if (novel.lastReadChapterId !== undefined) {
+    const lastReadChapter = novel.toc.find(
+      (it) => it.chapterId === novel.lastReadChapterId
+    );
+    if (lastReadChapter !== undefined) {
+      return { chapter: lastReadChapter, type: 'continue' };
+    }
   }
 
-  const firstChapterId = novel.toc.find(
-    (it) => it.chapterId !== undefined
-  )?.chapterId;
-  if (firstChapterId !== undefined) {
-    return { chapterId: firstChapterId, type: 'first' };
+  const firstChapter = novel.toc.find((it) => it.chapterId !== undefined);
+  if (firstChapter !== undefined) {
+    return { chapter: firstChapter, type: 'first' };
   }
 
   return undefined;
@@ -89,11 +86,11 @@ const startRead = computed(() => {
 
   <n-flex>
     <router-link
-      v-if="startRead !== undefined"
-      :to="`/novel/${providerId}/${novelId}/${startRead.chapterId}`"
+      v-if="startReadChapter !== undefined"
+      :to="`/novel/${providerId}/${novelId}/${startReadChapter.chapter}`"
     >
       <c-button
-        :label="startRead.type === 'continue' ? '继续阅读' : '开始阅读'"
+        :label="startReadChapter.type === 'continue' ? '继续阅读' : '开始阅读'"
       />
     </router-link>
     <c-button v-else label="开始阅读" disabled />

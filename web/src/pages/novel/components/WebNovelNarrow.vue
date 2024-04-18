@@ -38,6 +38,12 @@ const lastReadChapter = computed(() => {
     return toc.value.find((it) => it.chapterId === novel.lastReadChapterId);
   }
 });
+const startReadChapter = computed(() => {
+  if (lastReadChapter.value !== undefined) {
+    return lastReadChapter.value;
+  }
+  return toc.value.find((it) => it.chapterId !== undefined);
+});
 
 const showCatalogDrawer = ref(false);
 const showTranslateSection = ref(!isMobile);
@@ -50,13 +56,14 @@ const showTranslateSection = ref(!isMobile);
     :novel="novel"
   />
 
-  <section-header title="翻译">
-    <c-button
-      v-if="isMobile"
-      :label="showTranslateSection ? '折叠' : '展开'"
-      @action="showTranslateSection = !showTranslateSection"
-    />
-  </section-header>
+  <n-divider />
+
+  <c-button
+    v-if="isMobile"
+    :label="showTranslateSection ? '折叠翻译' : '展开翻译'"
+    @action="showTranslateSection = !showTranslateSection"
+  />
+
   <n-collapse-transition v-if="isSignedIn" :show="showTranslateSection">
     <web-translate
       :provider-id="providerId"
@@ -74,35 +81,19 @@ const showTranslateSection = ref(!isMobile);
   </n-collapse-transition>
   <n-p v-else>游客无法使用该功能，请先登录。</n-p>
 
-  <section-header title="目录">
-    <c-button
-      v-if="novel.toc.length >= displayTocItemSize"
-      label="展开"
-      @action="showCatalogDrawer = true"
-    />
-  </section-header>
+  <n-divider />
 
-  <n-list>
-    <n-list-item
-      v-for="tocItem in setting.tocSortReverse
-        ? toc.slice().reverse().slice(0, displayTocItemSize)
-        : toc.slice(0, displayTocItemSize)"
-      :key="`${tocItem.chapterId}/${tocItem.titleJp}`"
-      style="padding: 0px"
-    >
-      <web-novel-toc-item
-        :provider-id="providerId"
-        :novel-id="novelId"
-        :toc-item="tocItem"
-        :last-read="novel.lastReadChapterId"
-      />
-    </n-list-item>
-  </n-list>
-
+  <web-novel-toc-item
+    v-if="startReadChapter !== undefined"
+    :provider-id="providerId"
+    :novel-id="novelId"
+    :toc-item="startReadChapter"
+    :last-read="novel.lastReadChapterId"
+  />
   <c-button
-    v-if="novel.toc.length >= displayTocItemSize"
+    v-if="novel.toc.length > 1"
     secondary
-    label="展开"
+    label="展开目录"
     @action="showCatalogDrawer = true"
     style="width: 100%"
   />

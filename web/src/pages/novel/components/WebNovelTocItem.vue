@@ -12,8 +12,20 @@ const props = defineProps<{
   lastRead?: string;
 }>();
 
-const isLastReader =
-  props.lastRead !== undefined && props.tocItem.chapterId === props.lastRead;
+const type = computed(() => {
+  const { tocItem, lastRead } = props;
+  if (tocItem.chapterId === undefined) {
+    return undefined;
+  } else {
+    const isLastReader =
+      lastRead !== undefined && tocItem.chapterId === lastRead;
+    if (isLastReader) {
+      return 'warning';
+    } else {
+      return 'success';
+    }
+  }
+});
 </script>
 
 <template>
@@ -24,13 +36,9 @@ const isLastReader =
     style="width: calc(100% - 12px); display: block; padding: 6px"
     :style="{ 'font-size': tocItem.order !== undefined ? '14px' : '12px' }"
   >
-    <template v-if="!isLastReader">
-      {{ tocItem.titleJp }}
-    </template>
-    <n-text v-else type="warning">
+    <n-text :class="{ 'toc-title': type !== undefined }" :type="type">
       {{ tocItem.titleJp }}
     </n-text>
-
     <br />
     <n-text depth="3">
       {{ tocItem.titleZh }}
@@ -50,3 +58,9 @@ const isLastReader =
     </n-text>
   </component>
 </template>
+
+<style>
+.toc:hover .toc-title {
+  text-decoration: underline;
+}
+</style>

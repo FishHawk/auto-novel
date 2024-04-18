@@ -43,7 +43,8 @@ const lastReadChapter = computed(() => {
       :novel="novel"
     />
 
-    <section-header title="翻译" />
+    <n-divider />
+
     <web-translate
       v-if="isSignedIn"
       :provider-id="providerId"
