@@ -4,6 +4,10 @@
 # Sakura launcher
 sakura-launcher/build/
 
+# Script
+script/dist/
+script/node_modules/
+
 # Server
 server/.gradle/
 server/build/

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "lib": [
+      "ESNext"
+    ],
+    "moduleResolution": "node16",
+    "rootDir": ".",
+    "outDir": "dist",
+    "strict": true,
+    "sourceMap": true,
+  },
+  "include": [
+    "src/**/*",
+    "__tests__/**/*"
+  ]
+}
