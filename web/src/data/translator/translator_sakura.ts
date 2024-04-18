@@ -88,6 +88,19 @@ export class SakuraTranslator implements SegmentTranslator {
           0.016017984598875046, 0.014246690087020397, 0.012377738952636719,
           0.010341987945139408,
         ],
+        [
+          0.5695551633834839, 0.26602110266685486, 0.037017278373241425,
+          0.023593876510858536, 0.019706768915057182, 0.018498677760362625,
+          0.01830877549946308, 0.018086310476064682, 0.01600310392677784,
+          0.013208990916609764,
+        ],
+        [
+          0.5865097045898438, 0.2559467554092407, 0.03481026366353035,
+          0.022377753630280495, 0.021618124097585678, 0.017949266359210014,
+          0.01727847382426262, 0.01687248796224594, 0.013742952607572079,
+          0.012894189916551113,
+        ],
+
         // qwen2beta v0.9 IQ4_XS rocm
         [
           0.5755994319915771, 0.29531994462013245, 0.027012469246983528,
@@ -229,6 +242,23 @@ interface SakuraModel {
   fingerprint?: number[] | 'placeholder-allow';
 }
 
+const checkModelString = (model: string) => {
+  const version: '0.8' | '0.9' = model.includes('0.9') ? '0.9' : '0.8';
+  const allow = [
+    '0.9-Q4',
+    '0.9-Q5',
+    '0.9-Q6',
+    '0.9-Q8',
+    '0.9b-Q4',
+    '0.9b-Q5',
+    '0.9b-Q6',
+    '0.9b-Q8',
+    '0.9-iq4',
+    '0.9-IQ4',
+  ].some((it) => model.includes(it));
+  return { version, allow };
+};
+
 namespace SakuraLlamacpp {
   const makePrompt = (text: string, version: '0.8' | '0.9') => {
     if (version === '0.9') {
@@ -255,14 +285,13 @@ namespace SakuraLlamacpp {
         }
       )
       .then((completion) => {
-        const version: '0.8' | '0.9' = completion.model.includes('0.9')
-          ? '0.9'
-          : '0.8';
+        const { version, allow } = checkModelString(completion.model);
 
         if (
           completion.completion_probabilities === undefined ||
           completion.completion_probabilities.length === 0 ||
-          version === '0.8'
+          version === '0.8' ||
+          !allow
         ) {
           return { version };
         }
@@ -349,20 +378,7 @@ namespace SakuraOpenai {
     createChatCompletions(api, '国境の長いトンネルを抜けると雪国であった', {
       max_tokens: 20,
     }).then((completion) => {
-      const version: '0.8' | '0.9' = completion.model.includes('0.9')
-        ? '0.9'
-        : '0.8';
-      // TODO: 等待sakura支持返回概率
-      const allow = [
-        '0.9-Q4',
-        '0.9-Q5',
-        '0.9-Q6',
-        '0.9-Q8',
-        '0.9b-Q4',
-        '0.9b-Q5',
-        '0.9b-Q6',
-        '0.9b-Q8',
-      ].some((it) => completion.model.includes(it));
+      const { version, allow } = checkModelString(completion.model);
       return {
         version,
         fingerprint: allow ? 'placeholder-allow' : undefined,

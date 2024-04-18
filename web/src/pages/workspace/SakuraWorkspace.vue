@@ -85,7 +85,7 @@ const clearCache = async () =>
 
 const notices = [
   notice('目前允许的模型： v0.9b-Q4_K_M 及以上。'),
-  notice('AWQ量化版本目前有bug，请不要使用。'),
+  notice('低于Q4的量化模型即使能通过检查，显示允许上传，也不要使用。'),
 ];
 </script>
 
@@ -111,7 +111,7 @@ const notices = [
         </n-a>
         /
         <n-a
-          href="https://www.kaggle.com/code/scratchpad/notebook74bdddc4b6/edit"
+          href="https://kaggle.com/kernels/welcome?src=https://github.com/Isotr0py/SakuraLLM-Notebooks/blob/main/Sakura-13B-Galgame-Kaggle-llama.cpp.ipynb"
           target="_blank"
         >
           Kaggle脚本
