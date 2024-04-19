@@ -17,13 +17,14 @@ const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   tags: string[];
 }>();
 
-const { novelResult, load } = useWenkuNovelStore();
-
 const isWideScreen = useIsWideScreen(600);
 const message = useMessage();
 const vars = useThemeVars();
 
+const { setting } = Locator.settingRepository();
 const { isSignedIn, atLeastMaintainer } = Locator.userDataRepository();
+
+const { novelResult, load } = useWenkuNovelStore();
 
 watch(
   props,
@@ -272,7 +273,10 @@ const showWebNovelsModal = ref(false);
       </template>
       <n-p v-else>游客无法使用该功能，请先登录。</n-p>
 
-      <CommentList :site="`wenku-${novelId}`" />
+      <comment-list
+        v-if="!setting.hideCommmentWenkuNovel"
+        :site="`wenku-${novelId}`"
+      />
     </c-result>
   </div>
 </template>

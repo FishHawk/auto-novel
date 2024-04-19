@@ -5,8 +5,8 @@ import { UserRole } from '@/model/User';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 const message = useMessage();
-const setting = Locator.settingRepository().ref;
 
+const { setting } = Locator.settingRepository();
 const { userData, isSignedIn, atLeastAdmin, asAdmin, toggleAdminMode } =
   Locator.userDataRepository();
 
@@ -27,6 +27,10 @@ const clearWebSearchHistory = () => {
 const clearWenkuSearchHistory = () => {
   Locator.wenkuSearchHistoryRepository().clear();
   message.success('清空成功');
+};
+
+const playSound = (source: string) => {
+  return new Audio(source).play();
 };
 </script>
 
@@ -54,6 +58,23 @@ const clearWenkuSearchHistory = () => {
 
         <n-list-item>
           <n-flex vertical>
+            <b>自定义UI</b>
+            <n-flex vertical>
+              <n-checkbox v-model:checked="setting.tocCollapseInNarrowScreen">
+                移动端折叠网络小说目录
+              </n-checkbox>
+              <n-checkbox v-model:checked="setting.hideCommmentWebNovel">
+                隐藏网络小说评论
+              </n-checkbox>
+              <n-checkbox v-model:checked="setting.hideCommmentWenkuNovel">
+                隐藏文库小说评论
+              </n-checkbox>
+            </n-flex>
+          </n-flex>
+        </n-list-item>
+
+        <n-list-item>
+          <n-flex vertical>
             <b>显示的翻译按钮</b>
             <translator-check
               v-model:value="setting.enabledTranslator"
@@ -63,13 +84,20 @@ const clearWenkuSearchHistory = () => {
         </n-list-item>
 
         <n-list-item>
-          <n-flex vertical align="start">
+          <n-flex vertical>
             <b>工作区语音提醒</b>
-            <n-switch size="small" v-model:value="setting.workspaceSound" />
-            <audio controls style="height: 40px">
-              <source :src="SoundAllTaskCompleted" type="audio/mpeg" />
-              浏览器不支持音频格式
-            </audio>
+            <n-flex :wrap="false" :size="0">
+              <n-checkbox v-model:checked="setting.workspaceSound">
+                任务全部完成
+              </n-checkbox>
+
+              [<c-button
+                label="点击播放"
+                text
+                type="primary"
+                @action="playSound(SoundAllTaskCompleted)"
+              />]
+            </n-flex>
           </n-flex>
         </n-list-item>
 

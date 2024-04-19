@@ -4,7 +4,7 @@ import { Locator } from '@/data';
 
 import LocalVolumeList from './LocalVolumeList.vue';
 
-const setting = Locator.settingRepository().ref;
+const { setting } = Locator.settingRepository();
 
 const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 </script>

@@ -12,8 +12,7 @@ const props = defineProps<{
   novel: WebNovelDto;
 }>();
 
-const { isSignedIn } = Locator.userDataRepository();
-const setting = Locator.settingRepository().ref;
+const { setting } = Locator.settingRepository();
 
 const toc = computed(() => {
   const { novel } = props;
@@ -46,7 +45,6 @@ const lastReadChapter = computed(() => {
     <n-divider />
 
     <web-translate
-      v-if="isSignedIn"
       :provider-id="providerId"
       :novel-id="novelId"
       :title-jp="novel.titleJp"
@@ -59,9 +57,11 @@ const lastReadChapter = computed(() => {
       :sakura="novel.sakura"
       :glossary="novel.glossary"
     />
-    <n-p v-else>游客无法使用该功能，请先登录。</n-p>
 
-    <CommentList :site="`web-${providerId}-${novelId}`" />
+    <comment-list
+      v-if="!setting.hideCommmentWebNovel"
+      :site="`web-${providerId}-${novelId}`"
+    />
 
     <template #sidebar>
       <section-header title="目录">

@@ -5,8 +5,9 @@ import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
 import { GenericNovelId } from '@/model/Common';
 import { TranslateTaskDescriptor } from '@/model/Translator';
-import TranslateTask from '@/pages/components/TranslateTask.vue';
 
+import TranslateTask from '@/pages/components/TranslateTask.vue';
+import { checkIsMobile } from '@/pages/util';
 import TranslateOptions from './TranslateOptions.vue';
 
 const props = defineProps<{
@@ -32,8 +33,11 @@ const emit = defineEmits<{
   'update:gpt': [number];
 }>();
 
-const setting = Locator.settingRepository().ref;
+const isMobile = checkIsMobile();
 const message = useMessage();
+
+const { isSignedIn } = Locator.userDataRepository();
+const { setting } = Locator.settingRepository();
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
@@ -146,14 +150,26 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     message.success('排队成功');
   }
 };
+const showTranslateSection = ref(!isMobile);
 </script>
 
 <template>
-  <translate-options
-    ref="translateOptions"
-    :gnid="GenericNovelId.web(providerId, novelId)"
-    :glossary="glossary"
-  />
+  <template v-if="isSignedIn">
+    <c-button
+      v-if="isMobile && !showTranslateSection"
+      label="翻译选项"
+      @action="showTranslateSection = true"
+    />
+
+    <translate-options
+      v-show="showTranslateSection"
+      ref="translateOptions"
+      :gnid="GenericNovelId.web(providerId, novelId)"
+      :glossary="glossary"
+    />
+  </template>
+
+  <n-p v-else>游客无法使用翻译功能，请先登录。</n-p>
 
   <n-flex vertical style="margin-top: 20px">
     <n-text>
@@ -161,33 +177,35 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       Sakura {{ sakura }}
     </n-text>
 
-    <n-button-group v-if="setting.enabledTranslator.length > 0">
-      <c-button
-        v-if="setting.enabledTranslator.includes('baidu')"
-        label="更新百度"
-        :round="false"
-        @action="startTranslateTask('baidu')"
-      />
-      <c-button
-        v-if="setting.enabledTranslator.includes('youdao')"
-        label="更新有道"
-        :round="false"
-        @action="startTranslateTask('youdao')"
-      />
-      <c-button
-        v-if="setting.enabledTranslator.includes('gpt')"
-        label="排队GPT"
-        :round="false"
-        @action="submitJob('gpt')"
-      />
-      <c-button
-        v-if="setting.enabledTranslator.includes('sakura')"
-        label="排队Sakura"
-        :round="false"
-        @action="submitJob('sakura')"
-      />
-    </n-button-group>
-    <n-text v-else>没有翻译器启用</n-text>
+    <template v-if="isSignedIn">
+      <n-button-group v-if="setting.enabledTranslator.length > 0">
+        <c-button
+          v-if="setting.enabledTranslator.includes('baidu')"
+          label="更新百度"
+          :round="false"
+          @action="startTranslateTask('baidu')"
+        />
+        <c-button
+          v-if="setting.enabledTranslator.includes('youdao')"
+          label="更新有道"
+          :round="false"
+          @action="startTranslateTask('youdao')"
+        />
+        <c-button
+          v-if="setting.enabledTranslator.includes('gpt')"
+          label="排队GPT"
+          :round="false"
+          @action="submitJob('gpt')"
+        />
+        <c-button
+          v-if="setting.enabledTranslator.includes('sakura')"
+          label="排队Sakura"
+          :round="false"
+          @action="submitJob('sakura')"
+        />
+      </n-button-group>
+      <n-text v-else>没有翻译器启用</n-text>
+    </template>
 
     <n-button-group>
       <c-button

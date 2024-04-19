@@ -12,7 +12,8 @@ import LocalVolumeList from './LocalVolumeList.vue';
 const props = defineProps<{ type: 'gpt' | 'sakura' }>();
 
 const message = useMessage();
-const setting = Locator.settingRepository().ref;
+
+const { setting } = Locator.settingRepository();
 
 const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 

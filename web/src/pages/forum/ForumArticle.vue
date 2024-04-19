@@ -45,9 +45,7 @@ watch(
 
       <Markdown :source="article.content" />
 
-      <section>
-        <CommentList :site="`article-${articleId}`" :locked="article.locked" />
-      </section>
+      <comment-list :site="`article-${articleId}`" :locked="article.locked" />
     </c-result>
   </div>
 </template>

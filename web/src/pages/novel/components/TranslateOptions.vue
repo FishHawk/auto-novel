@@ -11,9 +11,9 @@ defineProps<{
   gnid: GenericNovelId;
   glossary: Glossary;
 }>();
-const setting = Locator.settingRepository().ref;
 const isWideScreen = useIsWideScreen(600);
 
+const { setting } = Locator.settingRepository();
 const { isSignedIn } = Locator.userDataRepository();
 
 // 翻译设置

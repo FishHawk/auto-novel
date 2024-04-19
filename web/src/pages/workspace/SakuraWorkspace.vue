@@ -8,8 +8,9 @@ import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
-const setting = Locator.settingRepository().ref;
 const isWideScreen = useIsWideScreen(850);
+
+const { setting } = Locator.settingRepository();
 
 const workspace = Locator.sakuraWorkspaceRepository();
 const workspaceRef = workspace.ref;

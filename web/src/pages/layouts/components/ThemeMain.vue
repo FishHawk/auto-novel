@@ -3,8 +3,9 @@ import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
 
 import { Locator } from '@/data';
 
-const setting = Locator.settingRepository().ref;
 const osThemeRef = useOsTheme();
+
+const { setting } = Locator.settingRepository();
 
 const theme = computed(() => {
   const theme = setting.value.theme;

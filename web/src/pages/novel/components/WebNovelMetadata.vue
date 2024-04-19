@@ -87,7 +87,7 @@ const startReadChapter = computed(() => {
   <n-flex>
     <router-link
       v-if="startReadChapter !== undefined"
-      :to="`/novel/${providerId}/${novelId}/${startReadChapter.chapter}`"
+      :to="`/novel/${providerId}/${novelId}/${startReadChapter.chapter.chapterId}`"
     >
       <c-button
         :label="startReadChapter.type === 'continue' ? '继续阅读' : '开始阅读'"

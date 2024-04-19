@@ -8,7 +8,8 @@ import TranslateTask from '@/pages/components/TranslateTask.vue';
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
 const message = useMessage();
-const setting = Locator.settingRepository().ref;
+
+const { setting } = Locator.settingRepository();
 
 const calculateFinished = (translatorId: TranslatorId) =>
   props.volume.toc.filter((it) => it[translatorId]).length;
