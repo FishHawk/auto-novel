@@ -70,8 +70,6 @@ export default defineConfig(({ command, mode }) => {
           minifyJS: true,
         },
       }),
-      wasm(),
-      topLevelAwait(),
       tsconfigPaths({ loose: true }),
       AutoImport({
         imports: [
