@@ -85,6 +85,7 @@ const amazonUrl = ref('');
 onActivated(async () => {
   const { novelId } = props;
   formValue.value = defaultFormValue();
+  amazonUrl.value = '';
 
   if (novelId !== undefined) {
     allowSubmit.value = false;
@@ -116,10 +117,8 @@ onActivated(async () => {
           return it;
         }),
       };
+      amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
       allowSubmit.value = true;
-      if (amazonUrl.value.length === 0) {
-        amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
-      }
     } else {
       message.error('载入失败');
     }
