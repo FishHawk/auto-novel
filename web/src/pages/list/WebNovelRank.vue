@@ -132,34 +132,37 @@ const descriptior = computed(
   () => descriptiors[props.providerId][props.typeId]
 );
 
-const loader: Loader<WebNovelOutlineDto> = (page, _query, selected) => {
-  const optionNth = (n: number): string =>
-    descriptior.value.options[n].tags[selected[n]];
-
+const loader = computed<Loader<WebNovelOutlineDto>>(() => {
   const providerId = props.providerId;
   const typeId = props.typeId;
 
-  let filters = {};
-  if (providerId == 'syosetu') {
-    const types: { [key: string]: string } = {
-      '1': '流派',
-      '2': '综合',
-      '3': '异世界转生/转移',
-    };
-    filters = {
-      type: types[typeId],
-      genre: optionNth(0),
-      range: optionNth(1),
-      page,
-    };
-  } else if (providerId == 'kakuyomu') {
-    filters = { genre: optionNth(0), range: optionNth(1) };
-  }
-  return runCatching(Locator.webNovelRepository.listRank(providerId, filters));
-};
+  return (page, _query, selected) => {
+    const optionNth = (n: number): string =>
+      descriptior.value.options[n].tags[selected[n]];
+
+    let filters = {};
+    if (providerId == 'syosetu') {
+      const types: { [key: string]: string } = {
+        '1': '流派',
+        '2': '综合',
+        '3': '异世界转生/转移',
+      };
+      filters = {
+        type: types[typeId],
+        genre: optionNth(0),
+        range: optionNth(1),
+        page,
+      };
+    } else if (providerId == 'kakuyomu') {
+      filters = { genre: optionNth(0), range: optionNth(1) };
+    }
+    return runCatching(
+      Locator.webNovelRepository.listRank(providerId, filters)
+    );
+  };
+});
 
 const showListModal = ref(false);
-FormatListBulletedOutlined;
 </script>
 
 <template>

@@ -33,6 +33,12 @@ const loader = computed(() => {
 });
 
 const queryEdit = ref(props.query ?? '');
+watch(
+  () => props.query,
+  (query) => {
+    queryEdit.value = props.query ?? '';
+  }
+);
 
 const onUpdateQuery = (query: string) => {
   queryEdit.value = query;
