@@ -177,7 +177,6 @@ const translateWeb = async (
       return 'abort';
     } else {
       callback.log(`发生错误，跳过：${e}`);
-      callback.onChapterFailure();
     }
   }
 
