@@ -106,7 +106,7 @@ onActivated(async () => {
       formValue.value = {
         title,
         titleZh,
-        cover: prettyCover(cover),
+        cover: prettyCover(cover ?? ''),
         authors,
         artists,
         r18,

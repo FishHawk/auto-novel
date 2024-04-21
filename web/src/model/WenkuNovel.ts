@@ -10,7 +10,7 @@ export interface WenkuNovelOutlineDto {
 export interface WenkuNovelDto {
   title: string;
   titleZh: string;
-  cover: string;
+  cover?: string;
   authors: string[];
   artists: string[];
   keywords: string[];
