@@ -36,13 +36,11 @@ export class BaiduTranslator implements SegmentTranslator {
     input: string[],
     signal?: AbortSignal
   ): Promise<string[]> {
-    console.log(input);
     const query = input.join('\n');
     const chunks = await this.api.translate(query, { signal });
 
     const lineParts: { paraIdx: number; dst: string }[] = [];
     Array.from(chunks).forEach((chunk) => {
-      console.log(chunk);
       if (chunk.data.event === 'Translating') {
         lineParts.push(...chunk.data.list);
       }

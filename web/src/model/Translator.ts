@@ -197,7 +197,7 @@ export interface WebTranslateTask {
   glossaryUuid: string;
   glossary: Glossary;
   toc: {
-    chapterId: string;
+    chapterId?: string;
     titleJp: string;
     titleZh?: string;
     glossaryUuid?: string;

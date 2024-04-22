@@ -86,86 +86,108 @@ const translateWeb = async (
   }
 
   try {
-    const encodeMetadataToTranslate = () => {
-      const query = [];
+    const createMetadataCoder = () => {
+      const encoded: string[] = [];
       if (!task.titleZh) {
-        query.push(task.titleJp);
+        encoded.push(task.titleJp);
       }
       if (!task.introductionZh) {
-        query.push(task.introductionJp);
-      }
-      const toc = task.toc
-        .filter((it) => overriteToc || !it.titleZh)
-        .map((it) => it.titleJp);
-      const tocWords = toc
-        .map((it) => it.split(/[\s　]+/))
-        .filter((it) => it.length > 0)
-        .flat();
-      query.push(...new Set(tocWords));
-      return query;
-    };
-
-    const decodeAsMetadataTranslated = (translated: string[]) => {
-      const obj: {
-        title?: string;
-        introduction?: string;
-        toc: { [key: string]: string };
-      } = { toc: {} };
-
-      if (!task.titleZh) {
-        obj.title = translated.shift();
-      }
-      if (!task.introductionZh) {
-        obj.introduction = translated.shift();
+        encoded.push(task.introductionJp);
       }
       const toc = task.toc
         .filter((it) => overriteToc || !it.titleZh)
         .map((it) => it.titleJp);
 
       const tocWordsDict: { [key: string]: string } = {};
-      const tocWords = toc
-        .map((it) => it.split(/[\s　]+/))
-        .filter((it) => it.length > 0)
-        .flat();
-      for (const textJp of [...new Set(tocWords)]) {
-        tocWordsDict[textJp] = translated.shift()!!;
-      }
+      const tocWords = Array.from(
+        new Set(
+          toc
+            .map((it) => it.split(/[\s　]+/))
+            .filter((it) => it.length > 0)
+            .flat()
+        )
+      );
 
-      new Set(toc).forEach((it) => {
-        const spaces = it.split(/[^\s　]+/).filter((it) => it.length > 0);
-        obj.toc[it] = it
-          .split(/[\s　]+/)
-          .map((it) => {
-            if (it.length === 0) {
-              return [spaces.shift() ?? ''];
-            } else {
-              return [tocWordsDict[it], spaces.shift() ?? ''];
-            }
-          })
-          .flat()
-          .join('');
+      const preTranslateTocWord = (wordJp: string) => {
+        if (/^第?[０-９0-9]+話?$/.test(wordJp)) {
+          return wordJp.replace('話', '话');
+        } else if (wordJp === '閑話') {
+          return '闲话';
+        } else if (wordJp === '幕間') {
+          return '幕间';
+        }
+      };
+      const tocWordsNeedTranslate = tocWords.filter((wordJp) => {
+        const wordZh = preTranslateTocWord(wordJp);
+        if (wordZh !== undefined) {
+          tocWordsDict[wordJp] = wordZh;
+          return false;
+        } else {
+          return true;
+        }
       });
-      return obj;
+      encoded.push(...tocWordsNeedTranslate);
+
+      const recover = (translated: string[]) => {
+        const obj: {
+          title?: string;
+          introduction?: string;
+          toc: { [key: string]: string };
+        } = { toc: {} };
+
+        if (!task.titleZh) {
+          obj.title = translated.shift();
+        }
+        if (!task.introductionZh) {
+          obj.introduction = translated.shift();
+        }
+        for (const wordJp of tocWordsNeedTranslate) {
+          tocWordsDict[wordJp] = translated.shift()!!;
+        }
+
+        new Set(toc).forEach((it) => {
+          const spaces = it.split(/[^\s　]+/).filter((it) => it.length > 0);
+          obj.toc[it] = it
+            .split(/[\s　]+/)
+            .map((it) => {
+              if (it.length === 0) {
+                return [spaces.shift() ?? ''];
+              } else {
+                return [tocWordsDict[it], spaces.shift() ?? ''];
+              }
+            })
+            .flat()
+            .join('');
+        });
+        return obj;
+      };
+
+      return {
+        encoded,
+        needUpload: encoded.length > 0 || toc.length > 0,
+        recover,
+      };
     };
+
+    const coder = createMetadataCoder();
 
     if (overriteToc) {
       callback.log('重新翻译目录');
     }
 
-    const textsSrc = encodeMetadataToTranslate();
-    if (textsSrc.length > 0) {
+    if (coder.needUpload) {
       if (translatorDesc.id === 'gpt') {
         callback.log('目前GPT翻译目录超级不稳定，跳过');
       } else {
         callback.log('翻译元数据');
         const textsDst = await translator.translate(
-          textsSrc,
+          coder.encoded,
           task.glossary,
           signal
         );
 
         callback.log(`上传元数据`);
-        await updateMetadataTranslation(decodeAsMetadataTranslated(textsDst));
+        await updateMetadataTranslation(coder.recover(textsDst));
       }
     }
   } catch (e: any) {
@@ -181,9 +203,10 @@ const translateWeb = async (
   }
 
   const chapters = task.toc
+    .filter(({ chapterId }) => chapterId !== undefined)
     .map(({ chapterId, glossaryUuid }, index) => ({
       index,
-      chapterId,
+      chapterId: chapterId!,
       glossaryUuid,
     }))
     .slice(startIndex, endIndex)

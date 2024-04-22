@@ -840,7 +840,7 @@ class WebNovelTranslateV2Api(
     ) {
         @Serializable
         data class TocItem(
-            val chapterId: String,
+            val chapterId: String?,
             val titleJp: String,
             val titleZh: String?,
             val glossaryUuid: String?,
@@ -862,28 +862,35 @@ class WebNovelTranslateV2Api(
             novelId = novelId,
             translatorId = translatorId,
         )
-        val toc = novel.toc
-            .filter { it.chapterId !== null }
-            .map { item ->
-                val chapterTranslationOutline = chapterTranslationOutlines.find {
-                    it.chapterId == item.chapterId
-                }
-                val glossaryUuid = if (chapterTranslationOutline?.translated != true) {
-                    null
-                } else if (
-                    translatorId == TranslatorId.Sakura && chapterTranslationOutline.sakuraVersion != "0.9"
-                ) {
-                    "sakura outdated"
-                } else {
-                    chapterTranslationOutline.glossaryUuid ?: "no glossary"
-                }
-                TranslateTaskDto.TocItem(
-                    chapterId = item.chapterId!!,
+        val toc = novel.toc.map { item ->
+            if (item.chapterId == null) {
+                return@map TranslateTaskDto.TocItem(
+                    chapterId = null,
                     titleJp = item.titleJp,
                     titleZh = item.titleZh,
-                    glossaryUuid = glossaryUuid
+                    glossaryUuid = null,
                 )
             }
+
+            val chapterTranslationOutline = chapterTranslationOutlines.find {
+                it.chapterId == item.chapterId
+            }
+            val glossaryUuid = if (chapterTranslationOutline?.translated != true) {
+                null
+            } else if (
+                translatorId == TranslatorId.Sakura && chapterTranslationOutline.sakuraVersion != "0.9"
+            ) {
+                "sakura outdated"
+            } else {
+                chapterTranslationOutline.glossaryUuid ?: "no glossary"
+            }
+            TranslateTaskDto.TocItem(
+                chapterId = item.chapterId,
+                titleJp = item.titleJp,
+                titleZh = item.titleZh,
+                glossaryUuid = glossaryUuid
+            )
+        }
         return TranslateTaskDto(
             titleJp = novel.titleJp,
             titleZh = novel.titleZh,
