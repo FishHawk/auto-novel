@@ -103,6 +103,9 @@ export class Translator {
       glossary,
       signal
     );
+    if (segOutput.length !== seg.length) {
+      throw new Error('翻译器行数不匹配，请反馈给站长');
+    }
 
     if (this.segCache && cacheKey !== null) {
       try {

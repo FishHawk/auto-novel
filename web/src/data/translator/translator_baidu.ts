@@ -36,20 +36,32 @@ export class BaiduTranslator implements SegmentTranslator {
     input: string[],
     signal?: AbortSignal
   ): Promise<string[]> {
-    // 开头的空格似乎会导致998错误
-    const newInput = input.slice();
-    newInput[0] = newInput[0].trimStart();
-    const query = newInput.join('\n');
-
+    console.log(input);
+    const query = input.join('\n');
     const chunks = await this.api.translate(query, { signal });
 
-    const lines: string[][] = [];
+    const lineParts: { paraIdx: number; dst: string }[] = [];
     Array.from(chunks).forEach((chunk) => {
+      console.log(chunk);
       if (chunk.data.event === 'Translating') {
-        lines.push(chunk.data.list.map((it) => it.dst));
+        lineParts.push(...chunk.data.list);
       }
     });
 
-    return lines.flat();
+    const lines: string[] = [];
+    let currentParaIdx = 0;
+    let currentLine = '';
+    lineParts.forEach(({ paraIdx, dst }) => {
+      if (paraIdx === currentParaIdx) {
+        currentLine = currentLine + dst;
+      } else {
+        lines.push(currentLine);
+        currentParaIdx = paraIdx;
+        currentLine = dst;
+      }
+    });
+    lines.push(currentLine);
+
+    return lines;
   }
 }
