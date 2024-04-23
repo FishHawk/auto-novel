@@ -1,0 +1,1 @@
+export { AmazonRepository } from './AmazonRepository';

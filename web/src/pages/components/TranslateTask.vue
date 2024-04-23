@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { ScrollbarInst } from 'naive-ui';
-
 import { translate } from '@/domain';
 import {
   TranslateTaskDesc,
@@ -8,7 +6,7 @@ import {
   TranslatorDesc,
 } from '@/model/Translator';
 
-type LogLine = { message: string; detail?: string[] };
+import CTaskCard from './CTaskCard.vue';
 
 const emit = defineEmits<{
   'update:jp': [number];
@@ -20,39 +18,19 @@ const emit = defineEmits<{
 
 const message = useMessage();
 
-const show = ref<boolean>(false);
-const running = ref<boolean>(false);
-
-const label = ref('');
+const title = ref('');
 const chapterTotal = ref<number>();
-const chapterFinished = ref<number>(0);
-const chapterError = ref<number>(0);
-const logs = ref<LogLine[]>([]);
-
-const logRef = ref<ScrollbarInst>();
-const enableAutoScroll = ref(true);
-const expandLog = ref(false);
-
-const pushLog = (message: any, detail?: string[]) =>
-  logs.value.push({ message, detail });
-
-watch(
-  logs,
-  () => {
-    if (enableAutoScroll.value) {
-      nextTick(() => {
-        logRef.value?.scrollTo({ top: Number.MAX_SAFE_INTEGER });
-      });
-    }
-  },
-  { deep: true }
-);
+const chapterFinished = ref(0);
+const chapterError = ref(0);
 
 const percentage = computed(() => {
   const processed = chapterFinished.value + chapterError.value;
   const total = chapterTotal.value ?? 1;
   return total === 0 ? 100 : Math.round((1000 * processed) / total) / 10;
 });
+
+const running = ref(false);
+const cardRef = ref<InstanceType<typeof CTaskCard>>();
 
 const startTask = async (
   desc: TranslateTaskDesc,
@@ -84,14 +62,14 @@ const startTask = async (
     if (params.syncFromProvider) label += '[强制同步]';
     return label;
   };
+
   running.value = true;
-  label.value = buildLabel();
+  cardRef.value!.clearLog();
+
+  title.value = buildLabel();
   chapterTotal.value = undefined;
   chapterFinished.value = 0;
   chapterError.value = 0;
-  logs.value = [];
-
-  show.value = true;
 
   const onProgressUpdated = () =>
     callback?.onProgressUpdated({
@@ -129,15 +107,14 @@ const startTask = async (
         onProgressUpdated();
       },
       log: (message: string, detail?: string[]) => {
-        logs.value.push({ message: `${message}`, detail });
+        cardRef.value!.pushLog({ message, detail });
       },
     },
     translatorDesc,
     signal
   );
 
-  pushLog('\n结束');
-  logs.value.push();
+  cardRef.value!.pushLog({ message: '\n结束' });
   running.value = false;
 
   if (state === 'abort') {
@@ -153,71 +130,17 @@ const startTask = async (
 };
 
 defineExpose({ startTask });
-
-const showLogDetailModal = ref(false);
-const selectedLogDetail = ref([] as string[]);
-const selectedLogMessage = ref('');
-const showDetail = (message: string, detail: string[]) => {
-  selectedLogMessage.value = message.trim();
-  selectedLogDetail.value = detail;
-  showLogDetailModal.value = true;
-};
 </script>
 
 <template>
-  <n-card
-    v-show="show"
-    :title="`${label} [${running ? '运行中' : '已结束'}]`"
-    embedded
-    :bordered="false"
-  >
-    <template #header-extra>
-      <n-flex align="center">
-        <c-button
-          :label="enableAutoScroll ? '暂停滚动' : '自动滚动'"
-          size="small"
-          @action="enableAutoScroll = !enableAutoScroll"
-        />
-        <c-button
-          :label="expandLog ? '收起日志' : '展开日志'"
-          size="small"
-          @action="expandLog = !expandLog"
-        />
-      </n-flex>
-    </template>
-    <n-flex :wrap="false">
-      <n-scrollbar
-        ref="logRef"
-        style="flex: auto; white-space: pre-wrap"
-        :style="{ height: expandLog ? '540px' : '180px' }"
-      >
-        <div v-for="log of logs">
-          {{ log.message }}
-          <span
-            v-if="log.detail"
-            @click="showDetail(log.message, log.detail!!)"
-          >
-            [详细]
-          </span>
-        </div>
-      </n-scrollbar>
-      <n-flex align="center" vertical size="large" style="flex: none">
-        <n-progress type="circle" :percentage="percentage" />
-        <n-text>
-          成功 {{ chapterFinished }}/{{ chapterTotal ?? '-' }}
-          <br />
-          失败 {{ chapterError }}/{{ chapterTotal ?? '-' }}
-        </n-text>
-      </n-flex>
+  <c-task-card ref="cardRef" :title="title" :running="running">
+    <n-flex align="center" vertical size="large" style="flex: none">
+      <n-progress type="circle" :percentage="percentage" />
+      <n-text>
+        成功 {{ chapterFinished }}/{{ chapterTotal ?? '-' }}
+        <br />
+        失败 {{ chapterError }}/{{ chapterTotal ?? '-' }}
+      </n-text>
     </n-flex>
-
-    <c-modal
-      :title="`日志详情 - ${selectedLogMessage}`"
-      v-model:show="showLogDetailModal"
-    >
-      <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
-        {{ line }}
-      </n-p>
-    </c-modal>
-  </n-card>
+  </c-task-card>
 </template>

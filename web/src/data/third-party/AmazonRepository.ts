@@ -1,9 +1,15 @@
 import ky, { Options } from 'ky';
 
-export const extractAsin = (url: string) => {
+const extractAsin = (url: string) => {
   const asinRegex = /(?:[/dp/]|$)([A-Z0-9]{10})/g;
   return asinRegex.exec(url)?.[1];
 };
+
+const prettyCover = (cover: string) =>
+  cover
+    .replace('_PJku-sticker-v7,TopRight,0,-50.', '')
+    .replace('m.media-amazon.com', 'images-cn.ssl-images-amazon.cn')
+    .replace(/\.[A-Z0-9_]+\.jpg$/, '.jpg');
 
 const getHtml = async (url: string, options?: Options) => {
   const response = await ky.get(url, {
@@ -50,10 +56,12 @@ const parseProduct = (doc: Document) => {
 };
 
 const parseProductSerial = (doc: Document) => {
+  const title = doc.getElementById('collection-title')?.textContent?.trim();
+
   const total =
     doc.getElementById('collection-size')?.textContent?.match(/\d+/)?.[0] ??
     '100';
-  return { total };
+  return { title, total };
 };
 
 const parseProductSet = (doc: Document) => {
@@ -168,6 +176,18 @@ const parseProductVolume = (doc: Document) => {
   const publisher = getPublisher()?.trim();
   const publishAt = getPublishAt();
 
+  const breadcrumbs =
+    doc
+      .getElementById('wayfinding-breadcrumbs_container')
+      ?.textContent?.split('›')
+      ?.pop()
+      ?.trim() ?? '';
+
+  const otherVersion = Array.from(
+    doc.getElementById('tmmSwatches')?.getElementsByClassName('slot-title') ??
+      []
+  ).map((el) => el.textContent?.trim() ?? '');
+
   return {
     title,
     cover,
@@ -178,6 +198,8 @@ const parseProductVolume = (doc: Document) => {
     publisher,
     publishAt,
     r18,
+    breadcrumbs,
+    otherVersion,
   };
 };
 
@@ -282,15 +304,13 @@ const parseSearch = (doc: Document) => {
         .find((asin) => asin);
 
       return { asin, title, cover, serialAsin };
-    })
-    .filter(({ title }) => {
-      // 排除试读，例如：https://www.amazon.co.jp/dp/B0BTDKR5LZ
-      return !title.includes('試し読');
     });
 };
 
-export const Amazon = {
+export const AmazonRepository = {
   getProduct,
   getSerial,
   search,
+  prettyCover,
+  extractAsin,
 };

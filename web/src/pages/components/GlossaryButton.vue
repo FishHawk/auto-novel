@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
+
 import { doAction } from '@/pages/util';
-import { updateGlossary } from '@/domain';
 
 const props = defineProps<{
   gnid: GenericNovelId;
@@ -34,6 +35,21 @@ const readableGnid = computed(() => {
     return `local/${gnid.volumeId}`;
   }
 });
+
+const updateGlossary = async (gnid: GenericNovelId, glossary: Glossary) => {
+  if (gnid.type === 'web') {
+    await Locator.webNovelRepository.updateGlossary(
+      gnid.providerId,
+      gnid.novelId,
+      glossary
+    );
+  } else if (gnid.type === 'wenku') {
+    await Locator.wenkuNovelRepository.updateGlossary(gnid.novelId, glossary);
+  } else {
+    const repo = await Locator.localVolumeRepository();
+    await repo.updateGlossary(gnid.volumeId, glossary);
+  }
+};
 
 const submitGlossary = () =>
   doAction(

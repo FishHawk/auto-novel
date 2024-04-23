@@ -1,4 +1,3 @@
-import { AmazonNovelRepository } from './amazon';
 import {
   ArticleRepository,
   AuthRepository,
@@ -21,6 +20,7 @@ import {
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
 } from './stores';
+import { AmazonRepository } from './third-party';
 import { createCachedSegRepository } from './translator';
 
 export { formatError } from './api';
@@ -62,7 +62,7 @@ export const Locator = {
   //
   cachedSegRepository: lazyAsync(createCachedSegRepository),
   //
-  amazonNovelRepository: AmazonNovelRepository,
+  amazonRepository: AmazonRepository,
   //
   articleRepository: ArticleRepository,
   authRepository: AuthRepository,

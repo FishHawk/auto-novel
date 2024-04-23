@@ -3,6 +3,7 @@ import { UploadOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { Locator } from '@/data';
+import { smartImport } from '@/domain';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import {
   presetKeywordsNonR18,
@@ -10,10 +11,10 @@ import {
   WenkuNovelOutlineDto,
   WenkuVolumeDto,
 } from '@/model/WenkuNovel';
-import { delay, parallelExec } from '@/util';
 import { runCatching } from '@/util/result';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
+import CTaskCard from '@/pages/components/CTaskCard.vue';
 import { useWenkuNovelStore } from './WenkuNovelStore';
 
 const props = defineProps<{
@@ -27,7 +28,7 @@ const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
 const { atLeastMaintainer } = Locator.userDataRepository();
-const { prettyCover } = Locator.amazonNovelRepository;
+const { prettyCover } = Locator.amazonRepository;
 
 const defaultFormValue = () => ({
   title: '',
@@ -86,6 +87,7 @@ onActivated(async () => {
   const { novelId } = props;
   formValue.value = defaultFormValue();
   amazonUrl.value = '';
+  cardRef.value!.hide();
 
   if (novelId !== undefined) {
     allowSubmit.value = false;
@@ -178,99 +180,63 @@ const submit = async () => {
   }
 };
 
+const running = ref(false);
+const cardRef = ref<InstanceType<typeof CTaskCard>>();
+
 const populateNovelFromAmazon = async (
   urlOrQuery: string,
   forcePopulateVolumes: boolean
 ) => {
-  const messageReactive = message.create('', {
-    type: 'loading',
-    duration: 0,
-  });
+  if (running.value) {
+    message.info('已有任务在运行。');
+    return 'fail';
+  }
 
-  // 导入小说
-  urlOrQuery = urlOrQuery.trim();
-  if (urlOrQuery.length !== 0) {
-    messageReactive.content = '导入小说';
+  running.value = true;
+  cardRef.value!.clearLog();
 
-    let amazonMetadata;
-    try {
-      amazonMetadata = await Locator.amazonNovelRepository.getNovel(urlOrQuery);
-    } catch (e) {
-      messageReactive.content = `导入小说失败:${e}`;
-      messageReactive.type = 'error';
-      delay(3000).then(() => messageReactive.destroy());
-      return;
+  await smartImport(
+    urlOrQuery.trim(),
+    formValue.value.volumes,
+    forcePopulateVolumes,
+    {
+      log: (message) => {
+        cardRef.value!.pushLog({ message });
+      },
+      populateNovel: (novel) => {
+        formValue.value = {
+          title: formValue.value.title ? formValue.value.title : novel.title,
+          titleZh: formValue.value.titleZh,
+          cover: novel.volumes[0]?.cover,
+          authors:
+            formValue.value.authors.length > 0
+              ? formValue.value.authors
+              : novel.authors,
+          artists:
+            formValue.value.artists.length > 0
+              ? formValue.value.artists
+              : novel.artists,
+          r18: novel.r18,
+          keywords: formValue.value.keywords,
+          introduction: formValue.value.introduction
+            ? formValue.value.introduction
+            : novel.introduction,
+          volumes: novel.volumes,
+        };
+      },
+      populateVolume: (volume) => {
+        const index = formValue.value.volumes.findIndex(
+          (it) => it.asin === volume.asin
+        );
+        if (index >= 0) {
+          formValue.value.volumes[index] = volume;
+        }
+      },
     }
-    const volumesOld = formValue.value.volumes;
-    const volumesNew = amazonMetadata.volumes.filter(
-      (newV) => !formValue.value.volumes.some((oldV) => oldV.asin === newV.asin)
-    );
+  );
 
-    const volumes = volumesOld.concat(volumesNew);
-    formValue.value = {
-      title: formValue.value.title
-        ? formValue.value.title
-        : amazonMetadata.title,
-      titleZh: formValue.value.titleZh,
-      cover: amazonMetadata.volumes[0]?.cover,
-      authors:
-        formValue.value.authors.length > 0
-          ? formValue.value.authors
-          : amazonMetadata.authors,
-      artists:
-        formValue.value.artists.length > 0
-          ? formValue.value.artists
-          : amazonMetadata.artists,
-      r18: amazonMetadata.r18,
-      keywords: formValue.value.keywords,
-      introduction: formValue.value.introduction
-        ? formValue.value.introduction
-        : amazonMetadata.introduction,
-      volumes,
-    };
-  }
-
-  // 导入分卷
-  {
-    const volumes = formValue.value.volumes.filter(
-      ({ coverHires, publishAt }) =>
-        [coverHires, publishAt].some((it) => it === undefined) ||
-        forcePopulateVolumes
-    );
-
-    await parallelExec(
-      volumes.map(({ asin }) => {
-        return () =>
-          Locator.amazonNovelRepository
-            .getVolume(asin)
-            .then((newVolume) => {
-              const index = formValue.value.volumes.findIndex(
-                (it) => it.asin === asin
-              );
-              if (index >= 0) {
-                formValue.value.volumes[index] = newVolume;
-              }
-            })
-            .catch((e) => {
-              message.error(`导入分卷失败 ${asin} ${e}`);
-            });
-      }),
-      5,
-      (context) => {
-        const processing = context.promises.length;
-        const finished = context.finished;
-        const size = volumes.length;
-        messageReactive.content = `导入分卷[${finished}/${size}] ${processing}本处理中`;
-      }
-    );
-
-    formValue.value.cover = formValue.value.volumes[0]?.cover;
-  }
-
-  // 结束
-  messageReactive.content = '导入完成';
-  messageReactive.type = 'info';
-  delay(3000).then(() => messageReactive.destroy());
+  formValue.value.cover = formValue.value.volumes[0]?.cover;
+  running.value = false;
 };
 
 const submitCurrentStep = ref(1);
@@ -369,21 +335,19 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
   <div class="layout-content">
     <n-h1>{{ novelId === undefined ? '新建' : '编辑' }}文库小说</n-h1>
 
-    <n-card
-      v-if="novelId === undefined"
-      embedded
-      :bordered="false"
-      style="margin-bottom: 20px"
-    >
+    <n-card embedded :bordered="false" style="margin-bottom: 20px">
       <n-text type="error">
         <b>创建文库小说注意事项：</b>
       </n-text>
       <n-ul>
         <n-li>
-          文库小说只允许已经发行单行本的小说，原则上以亚马逊上可以买到为准。
+          文库小说只允许已经发行单行本的小说，原则上以亚马逊上可以买到为准，系列小说不要分开导入。
         </n-li>
-        <n-li> 不要导入漫画。系列小说不要导入单本。 </n-li>
-        <n-li> 不要重复创建，请确定文库小说列表里面没有这本。 </n-li>
+        <n-li>
+          可以使用智能导入功能，输入亚马逊系列/单本链接直接导入，或是输入小说标题搜索导入。
+        </n-li>
+        <n-li>导入R18书需要安装插件，并在亚马逊上点过“已满18岁”。</n-li>
+        <n-li>不要重复创建，请确定文库小说列表里面没有这本。 </n-li>
         <n-li>
           请正常填写中文标题，没有公认的标题可以尝试自行翻译，不要复制日文标题作为中文标题。
         </n-li>
@@ -394,8 +358,8 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
       </n-ul>
     </n-card>
 
-    <n-flex style="margin-bottom: 24px">
-      <div>
+    <n-flex style="margin-bottom: 48px; width: 100%">
+      <div v-if="isWideScreen">
         <n-image
           width="160"
           :src="formValue.cover ? formValue.cover : coverPlaceholder"
@@ -403,12 +367,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
         />
       </div>
 
-      <n-flex size="large" vertical style="max-width: 530px">
-        <n-text>
-          可以通过亚马逊系列链接/单本链接导入，你也可以输入小说标题从搜索导入。
-          <br />
-          导入R18书需要安装v1.0.7以上的版本的插件，并在亚马逊上点过“已满18岁”。
-        </n-text>
+      <n-flex size="large" vertical style="flex: auto">
         <n-input-group>
           <n-input
             v-model:value="amazonUrl"
@@ -434,7 +393,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
           />
           <c-button
             secondary
-            label="获取分卷信息"
+            label="刷新分卷"
             @action="populateNovelFromAmazon('', true)"
           />
           <c-button
@@ -445,6 +404,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             @action="markAsDuplicate"
           />
         </n-flex>
+        <c-task-card ref="cardRef" title="智能导入" :running="running" />
       </n-flex>
     </n-flex>
 
@@ -454,7 +414,6 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
       :rules="formRules"
       :label-placement="isWideScreen ? 'left' : 'top'"
       label-width="auto"
-      style="max-width: 800px"
     >
       <n-form-item-row path="title" label="日文标题">
         <n-input
