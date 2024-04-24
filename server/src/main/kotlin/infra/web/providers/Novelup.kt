@@ -103,7 +103,7 @@ class Novelup(
                             chapterId = it.attr("href").substringAfterLast("/"),
                             createAt = parseJapanDateString(
                                 "yyyy/M/dd HH:mm",
-                                li.selectFirst("div.update_date > p > span > span")!!.text()
+                                li.selectFirst("p.episodeMeta_columnItem")!!.child(1).text()
                             ),
                         )
                     } ?: RemoteNovelMetadata.TocItem(
