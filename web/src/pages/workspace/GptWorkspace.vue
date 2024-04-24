@@ -9,6 +9,8 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 const message = useMessage();
 const isWideScreen = useIsWideScreen(850);
 
+const { setting } = Locator.settingRepository();
+
 const workspace = Locator.gptWorkspaceRepository();
 const workspaceRef = workspace.ref;
 
@@ -87,7 +89,11 @@ const notices = [
 </script>
 
 <template>
-  <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
+  <c-layout
+    :sidebar="isWideScreen && !setting.hideLocalVolumeListInWorkspace"
+    :sidebar-width="320"
+    class="layout-content"
+  >
     <n-h1>GPT工作区</n-h1>
 
     <notice-board :notices="notices">

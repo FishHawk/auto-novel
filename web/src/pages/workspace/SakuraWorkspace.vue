@@ -91,7 +91,11 @@ const notices = [
 </script>
 
 <template>
-  <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
+  <c-layout
+    :sidebar="isWideScreen && !setting.hideLocalVolumeListInWorkspace"
+    :sidebar-width="320"
+    class="layout-content"
+  >
     <n-h1>Sakura工作区</n-h1>
 
     <notice-board :notices="notices">

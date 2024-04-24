@@ -7,6 +7,7 @@ export interface Setting {
   tocCollapseInNarrowScreen: boolean;
   hideCommmentWebNovel: boolean;
   hideCommmentWenkuNovel: boolean;
+  hideLocalVolumeListInWorkspace: boolean;
   downloadFilenameType: 'jp' | 'zh';
   downloadFormat: {
     mode: 'zh' | 'zh-jp' | 'jp-zh';

@@ -12,6 +12,7 @@ export const createSettingRepository = () => {
       tocCollapseInNarrowScreen: true,
       hideCommmentWebNovel: false,
       hideCommmentWenkuNovel: false,
+      hideLocalVolumeListInWorkspace: false,
       downloadFilenameType: 'zh',
       downloadFormat: {
         mode: 'zh-jp',
