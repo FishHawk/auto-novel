@@ -31,6 +31,12 @@ class Syosetu(
             "每年" to "yearly",
             "总计" to "total",
         )
+        private val statusIds = mapOf(
+            "全部" to "total",
+            "短篇" to "t",
+            "连载" to "r",
+            "完结" to "er",
+        )
         private val genreIdsV1 = mapOf(
             "恋爱：异世界" to "101",
             "恋爱：现实世界" to "102",
@@ -53,12 +59,6 @@ class Syosetu(
             "其他：其他" to "9999",
         )
         private val genreIdsV2 = mapOf(
-            "全部" to "total",
-            "短篇" to "t",
-            "连载" to "r",
-            "完结" to "er",
-        )
-        private val genreIdsV3 = mapOf(
             "恋爱" to "1",
             "幻想" to "2",
             "文学/科幻/其他" to "o",
@@ -66,25 +66,28 @@ class Syosetu(
     }
 
     override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
-        val genreFilter = options["genre"] ?: return emptyPage()
+        val genreFilter = options["genre"]
         val rangeFilter = options["range"] ?: return emptyPage()
-        val page = options["page"]?.toIntOrNull()?.plus(1) ?: 1
+        val statusFilter = options["status"] ?: return emptyPage()
 
         val rangeId = rangeIds[rangeFilter] ?: return emptyPage()
+        val statusId = statusIds[statusFilter] ?: return emptyPage()
+
+        val page = options["page"]?.toIntOrNull()?.plus(1) ?: 1
+
         val path = when (options["type"]) {
             "流派" -> {
                 val genreId = genreIdsV1[genreFilter] ?: return emptyPage()
-                "genrelist/type/${rangeId}_${genreId}"
+                "genrelist/type/${rangeId}_${genreId}_${statusId}"
             }
 
             "综合" -> {
-                val genreId = genreIdsV2[genreFilter] ?: return emptyPage()
-                "list/type/${rangeId}_${genreId}"
+                "list/type/${rangeId}_${statusId}"
             }
 
             "异世界转生/转移" -> {
-                val genreId = genreIdsV3[genreFilter] ?: return emptyPage()
-                "isekailist/type/${rangeId}_${genreId}"
+                val genreId = genreIdsV2[genreFilter] ?: return emptyPage()
+                "isekailist/type/${rangeId}_${genreId}_${statusId}"
             }
 
             else -> return emptyPage()
@@ -106,13 +109,13 @@ class Syosetu(
                     .removeSuffix("/")
                     .substringAfterLast("/")
 
-                val elKeyword = item.selectFirst("div.p-ranklist-item__keyword")!!
                 val attentions = mutableListOf<WebNovelAttention>()
                 val keywords = mutableListOf<String>()
-                elKeyword
-                    .getElementsByTag("a")
-                    .map { it.text() }
-                    .forEach {
+                item
+                    .selectFirst("div.p-ranklist-item__keyword")
+                    ?.getElementsByTag("a")
+                    ?.map { it.text() }
+                    ?.forEach {
                         when (it) {
                             "R15" -> attentions.add(WebNovelAttention.R15)
                             "残酷な描写あり" -> attentions.add(WebNovelAttention.残酷描写)

@@ -2,6 +2,7 @@ package infra.provider.providers
 
 import infra.client
 import infra.web.providers.Syosetu
+import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -14,13 +15,15 @@ class SyosetuTest : DescribeSpec({
 
     describe("getRank") {
         it("常规") {
-            val rank = provider.getRank(
-                mapOf(
-                    "type" to "流派",
-                    "genre" to "恋爱：异世界",
-                    "range" to "总计",
+            shouldNotThrow<Throwable> {
+                provider.getRank(
+                    mapOf(
+                        "type" to "流派",
+                        "genre" to "恋爱：异世界",
+                        "range" to "每月",
+                    )
                 )
-            )
+            }
         }
     }
 

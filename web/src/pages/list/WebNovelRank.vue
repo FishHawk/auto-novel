@@ -58,6 +58,16 @@ const descriptorsKakuyomu: Descriptor = {
   },
 };
 
+const commonOptionsSyosetu = [
+  {
+    label: '范围',
+    tags: ['总计', '每年', '季度', '每月', '每周', '每日'],
+  },
+  {
+    label: '状态',
+    tags: ['全部', '短篇', '连载', '完结'],
+  },
+];
 const descriptorsSyosetu: Descriptor = {
   '1': {
     title: '成为小说家：流派',
@@ -87,38 +97,23 @@ const descriptorsSyosetu: Descriptor = {
           '其他：其他',
         ],
       },
-      {
-        label: '范围',
-        tags: ['每年', '季度', '每月', '每周', '每日'],
-      },
+      ...commonOptionsSyosetu,
     ],
   },
   '2': {
     title: '成为小说家：综合',
     search: false,
-    options: [
-      {
-        label: '状态',
-        tags: ['全部', '短篇', '连载', '完结'],
-      },
-      {
-        label: '范围',
-        tags: ['总计', '每年', '季度', '每月', '每周', '每日'],
-      },
-    ],
+    options: commonOptionsSyosetu,
   },
   '3': {
     title: '成为小说家：异世界转移/转生',
     search: false,
     options: [
       {
-        label: '状态',
+        label: '流派',
         tags: ['恋爱', '幻想', '文学/科幻/其他'],
       },
-      {
-        label: '范围',
-        tags: ['每年', '季度', '每月', '每周', '每日'],
-      },
+      ...commonOptionsSyosetu,
     ],
   },
 };
@@ -147,12 +142,22 @@ const loader = computed<Loader<WebNovelOutlineDto>>(() => {
         '2': '综合',
         '3': '异世界转生/转移',
       };
-      filters = {
-        type: types[typeId],
-        genre: optionNth(0),
-        range: optionNth(1),
-        page,
-      };
+      if (typeId === '2') {
+        filters = {
+          type: types[typeId],
+          range: optionNth(0),
+          status: optionNth(1),
+          page,
+        };
+      } else {
+        filters = {
+          type: types[typeId],
+          genre: optionNth(0),
+          range: optionNth(1),
+          status: optionNth(2),
+          page,
+        };
+      }
     } else if (providerId == 'kakuyomu') {
       filters = { genre: optionNth(0), range: optionNth(1) };
     }
