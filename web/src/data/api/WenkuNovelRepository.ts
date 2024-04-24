@@ -91,7 +91,9 @@ const createTranslationApi = (
   translatorId: TranslatorId,
   signal?: AbortSignal
 ) => {
-  const endpoint = `wenku/${novelId}/translate/${translatorId}/${volumeId}`;
+  const endpoint = `wenku/${novelId}/translate/${translatorId}/${encodeURIComponent(
+    volumeId
+  )}`;
 
   const getTranslateTask = () =>
     client.get(endpoint, { signal }).json<WenkuTranslateTask>();
@@ -144,7 +146,9 @@ const createFileUrl = ({
     filename,
   });
   translations.forEach((it) => params.append('translations', it));
-  const url = `/api/wenku/${novelId}/file/${volumeId}?${params}`;
+  const url = `/api/wenku/${novelId}/file/${encodeURIComponent(
+    volumeId
+  )}?${params}`;
   return { url, filename };
 };
 
