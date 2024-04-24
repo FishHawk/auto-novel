@@ -4,7 +4,6 @@ import { DeleteOutlineOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { Setting } from '@/model/Setting';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 
 import LocalVolumeList from './LocalVolumeList.vue';
@@ -125,14 +124,6 @@ const progressFilterFunc = computed(() => {
         <c-radio-group
           v-model:value="progressFilter"
           :options="progressFilterOptions"
-          size="small"
-        />
-      </c-action-wrapper>
-
-      <c-action-wrapper title="语言">
-        <c-radio-group
-          v-model:value="setting.downloadFormat.mode"
-          :options="Setting.downloadModeOptions"
           size="small"
         />
       </c-action-wrapper>

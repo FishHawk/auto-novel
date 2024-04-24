@@ -4,8 +4,11 @@ import { UploadFileInfo } from 'naive-ui';
 
 import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
+import { PlusOutlined } from '@vicons/material';
+import { UploadCustomRequestOptions } from 'naive-ui';
 
 const props = defineProps<{
+  dropzone?: boolean;
   hideTitle?: boolean;
   options?: { [key: string]: (volumes: LocalVolumeMetadata[]) => void };
   filter?: (volume: LocalVolumeMetadata) => boolean;
@@ -21,13 +24,6 @@ const loadVolumes = async () => {
   volumes.value = await repo.listVolume();
 };
 loadVolumes();
-
-const onFinish = ({ file }: { file: UploadFileInfo }) => {
-  if (props.beforeVolumeAdd) {
-    props.beforeVolumeAdd(file.file!!);
-  }
-  loadVolumes();
-};
 
 const options = computed(() => {
   const options =
@@ -83,12 +79,63 @@ const deleteVolume = (volumeId: string) =>
     .catch((error) => message.error(`删除失败：${error}`));
 
 defineExpose({ deleteVolume });
+
+// Add volume
+const onFinish = ({ file }: { file: UploadFileInfo }) => {
+  if (props.beforeVolumeAdd) {
+    props.beforeVolumeAdd(file.file!!);
+  }
+  loadVolumes();
+};
+
+const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
+  if (
+    !(
+      file.name.endsWith('.txt') ||
+      file.name.endsWith('.srt') ||
+      file.name.endsWith('.epub')
+    )
+  ) {
+    message.error(`上传失败:文件类型不允许\n文件名： ${file.name}`);
+    return false;
+  }
+  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
+    message.error(`上传失败:文件大小不能超过40MB\n文件名: ${file.name}`);
+    return false;
+  }
+};
+
+const customRequest = ({
+  file,
+  onFinish,
+  onError,
+}: UploadCustomRequestOptions) => {
+  Locator.localVolumeRepository()
+    .then((repo) => repo.createVolume(file.file!!))
+    .then(onFinish)
+    .catch((error) => {
+      message.error(`上传失败:${error}\n文件名: ${file.name}`);
+      onError();
+    });
+};
 </script>
 
 <template>
   <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
-      <add-button :show-file-list="false" @finish="onFinish" />
+      <n-upload
+        v-if="!dropzone"
+        :show-file-list="false"
+        accept=".txt,.epub,.srt"
+        multiple
+        directory-dnd
+        :custom-request="customRequest"
+        @before-upload="beforeUpload"
+        @finish="onFinish"
+      >
+        <c-button label="添加文件" :icon="PlusOutlined" />
+      </n-upload>
+
       <n-dropdown
         trigger="click"
         :options="options"
@@ -115,6 +162,22 @@ defineExpose({ deleteVolume });
   </n-flex>
 
   <n-divider style="margin: 16px 0 8px" />
+
+  <n-upload
+    v-if="dropzone"
+    :show-file-list="false"
+    @finish="onFinish"
+    :trigger-style="{ width: '100%' }"
+    accept=".txt,.epub,.srt"
+    multiple
+    directory-dnd
+    :custom-request="customRequest"
+    @before-upload="beforeUpload"
+  >
+    <n-upload-dragger>
+      <n-text> 点击或者拖动文件到该区域来添加小说 </n-text>
+    </n-upload-dragger>
+  </n-upload>
 
   <n-spin v-if="sortedVolumes === undefined" style="margin-top: 20px" />
 
