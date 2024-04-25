@@ -1,29 +1,36 @@
-import { createGlobalState } from '@vueuse/core';
-
 import { Locator } from '@/data';
 import { Article } from '@/model/Article';
 import { Result, runCatching } from '@/util/result';
 
-export const useForumArticleStore = createGlobalState(() => {
-  // state
-  const articleResult = ref<Result<Article>>();
-  const id = ref<string>();
+const repo = Locator.articleRepository;
 
-  // actions
-  const load = async (articleId: string, force = false) => {
-    if (!force && id.value === articleId && articleResult.value?.ok) {
-      return articleResult.value;
-    }
+type ArticleStore = {
+  articleResult: Result<Article> | undefined;
+};
 
-    articleResult.value = undefined;
-    id.value = articleId;
-    const result = await runCatching(
-      Locator.articleRepository.getArticle(articleId)
-    );
-    if (articleId !== id.value) return;
-    articleResult.value = result;
-    return result;
-  };
+export const useArticleStore = (articleId: string) => {
+  return defineStore(`Article/${articleId}`, {
+    state: () =>
+      <ArticleStore>{
+        articleResult: undefined,
+      },
+    actions: {
+      async loadArticle(force = false) {
+        if (!force && this.articleResult?.ok) {
+          return this.articleResult;
+        }
 
-  return { articleResult, load };
-});
+        this.articleResult = undefined;
+        const result = await runCatching(repo.getArticle(articleId));
+        this.articleResult = result;
+
+        return this.articleResult;
+      },
+
+      async updateArticle(json: Parameters<typeof repo.updateArticle>[1]) {
+        await repo.updateArticle(articleId, json);
+        this.loadArticle(true);
+      },
+    },
+  })();
+};

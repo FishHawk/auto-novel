@@ -7,19 +7,20 @@ import avaterUrl from '@/image/avater.jpg';
 import { ArticleCategory } from '@/model/Article';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
-import { useForumArticleStore } from './ForumArticleStore';
+import { useArticleStore } from './ForumArticleStore';
 
-const props = defineProps<{
+const { articleId, category } = defineProps<{
   articleId?: string;
   category?: ArticleCategory;
 }>();
+console.log(articleId);
+console.log(category);
 
-const route = useRoute();
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
-const { load } = useForumArticleStore();
+const store = articleId !== undefined ? useArticleStore(articleId) : undefined;
 
 const articleCategoryOptions = [
   { value: 'Guide', label: '使用指南' },
@@ -27,15 +28,13 @@ const articleCategoryOptions = [
   { value: 'Support', label: '反馈与建议' },
 ];
 
-const defaultFormValue = () => ({
+const allowSubmit = ref(articleId === undefined);
+const formRef = ref<FormInst>();
+const formValue = ref({
   title: '',
   content: '',
-  category: (route.query.category || 'General') as ArticleCategory,
+  category: category ?? 'General',
 });
-
-const allowSubmit = ref(false);
-const formRef = ref<FormInst>();
-const formValue = ref(defaultFormValue());
 const formRules: FormRules = {
   title: [
     {
@@ -65,29 +64,17 @@ const formRules: FormRules = {
   ],
 };
 
-onActivated(async () => {
-  const { articleId } = props;
-  formValue.value = defaultFormValue();
-
-  if (articleId !== undefined) {
-    allowSubmit.value = false;
-    const result = await load(articleId);
-
-    if (result === undefined || articleId !== props.articleId) return;
-
-    if (result.ok) {
-      const { title, content, category } = result.value;
-      formValue.value = {
-        title,
-        content,
-        category,
-      };
-      allowSubmit.value = true;
-    } else {
-      message.error('载入失败');
-    }
-  } else {
+store?.loadArticle()?.then((result) => {
+  if (result.ok) {
+    const { title, content, category } = result.value;
+    formValue.value = {
+      title,
+      content,
+      category,
+    };
     allowSubmit.value = true;
+  } else {
+    message.error('载入失败');
   }
 });
 
@@ -103,8 +90,7 @@ const submit = async () => {
     return;
   }
 
-  const { articleId } = props;
-  if (articleId === undefined) {
+  if (store === undefined) {
     await doAction(
       Locator.articleRepository
         .createArticle(formValue.value)
@@ -114,12 +100,9 @@ const submit = async () => {
     );
   } else {
     await doAction(
-      Locator.articleRepository
-        .updateArticle(articleId, formValue.value)
-        .then(() => {
-          load(articleId, true);
-          router.push({ path: `/forum/${articleId}` });
-        }),
+      store.updateArticle(formValue.value).then(() => {
+        router.push({ path: `/forum/${articleId}` });
+      }),
       '更新',
       message
     );

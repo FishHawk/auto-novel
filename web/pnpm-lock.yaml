@@ -56,6 +56,9 @@ dependencies:
   nanoid:
     specifier: ^5.0.7
     version: 5.0.7
+  pinia:
+    specifier: ^2.1.7
+    version: 2.1.7(typescript@5.4.5)(vue@3.4.23)
   typescript:
     specifier: ^5.4.5
     version: 5.4.5
@@ -1708,6 +1711,24 @@ packages:
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+
+  /pinia@2.1.7(typescript@5.4.5)(vue@3.4.23):
+    resolution: {integrity: sha512-+C2AHFtcFqjPih0zpYuvof37SFxMQ7OEG2zV9jRI12i9BOy3YQVAHwdKtyyc8pDcDyIc33WCIsZaCFWU7WWxGQ==}
+    peerDependencies:
+      '@vue/composition-api': ^1.4.0
+      typescript: '>=4.4.4'
+      vue: ^2.6.14 || ^3.3.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+      typescript:
+        optional: true
+    dependencies:
+      '@vue/devtools-api': 6.6.1
+      typescript: 5.4.5
+      vue: 3.4.23(typescript@5.4.5)
+      vue-demi: 0.14.7(vue@3.4.23)
+    dev: false
 
   /pkg-types@1.1.0:
     resolution: {integrity: sha512-/RpmvKdxKf8uILTtoOhAgf30wYbP2Qw+L9p3Rvshx1JZVX+XQNZQFjlbmGHEGIm4CkVPlSn+NXmIM8+9oWQaSA==}

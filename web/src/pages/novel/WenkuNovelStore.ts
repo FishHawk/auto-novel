@@ -1,38 +1,56 @@
-import { createGlobalState } from '@vueuse/core';
-
 import { Locator } from '@/data';
 import { WenkuNovelDto } from '@/model/WenkuNovel';
 import { Result, runCatching } from '@/util/result';
 
-export const useWenkuNovelStore = createGlobalState(() => {
-  // state
-  const novelResult = ref<Result<WenkuNovelDto>>();
-  const id = ref<string>();
+const repo = Locator.wenkuNovelRepository;
 
-  // actions
-  const load = async (novelId: string, force = false) => {
-    if (!force && id.value === novelId && novelResult.value?.ok) {
-      return novelResult.value;
-    }
+type WenkuNovelStore = {
+  novelResult: Result<WenkuNovelDto> | undefined;
+};
 
-    novelResult.value = undefined;
-    id.value = novelId;
-    const result = await runCatching(
-      Locator.wenkuNovelRepository.getNovel(novelId)
-    );
-    if (novelId !== id.value) return;
+export const useWenkuNovelStore = (novelId: string) => {
+  return defineStore(`WenkuNovel/${novelId}`, {
+    state: () =>
+      <WenkuNovelStore>{
+        novelResult: undefined,
+      },
+    actions: {
+      async loadNovel(force = false) {
+        if (!force && this.novelResult?.ok) {
+          return this.novelResult;
+        }
 
-    if (result.ok) {
-      result.value.volumeZh = result.value.volumeZh.sort((a, b) =>
-        a.localeCompare(b)
-      );
-      result.value.volumeJp = result.value.volumeJp.sort((a, b) =>
-        a.volumeId.localeCompare(b.volumeId)
-      );
-    }
-    novelResult.value = result;
-    return result;
-  };
+        this.novelResult = undefined;
+        const result = await runCatching(repo.getNovel(novelId));
+        if (result.ok) {
+          result.value.volumeZh = result.value.volumeZh.sort((a, b) =>
+            a.localeCompare(b)
+          );
+          result.value.volumeJp = result.value.volumeJp.sort((a, b) =>
+            a.volumeId.localeCompare(b.volumeId)
+          );
+        }
+        this.novelResult = result;
 
-  return { novelResult, load };
-});
+        return this.novelResult;
+      },
+
+      async updateNovel(json: Parameters<typeof repo.updateNovel>[1]) {
+        await Locator.wenkuNovelRepository.updateNovel(novelId, json);
+        this.loadNovel(true);
+      },
+
+      async deleteVolume(volumeId: string) {
+        await repo.deleteVolume(novelId, volumeId);
+        if (this.novelResult?.ok) {
+          this.novelResult.value.volumeJp =
+            this.novelResult.value.volumeJp.filter(
+              (it) => it.volumeId !== volumeId
+            );
+          this.novelResult.value.volumeZh =
+            this.novelResult.value.volumeZh.filter((it) => it !== volumeId);
+        }
+      },
+    },
+  })();
+};

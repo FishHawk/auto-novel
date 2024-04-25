@@ -4,8 +4,6 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import Components from 'unplugin-vue-components/vite';
 import { ProxyOptions, defineConfig, loadEnv } from 'vite';
 import { createHtmlPlugin } from 'vite-plugin-html';
-import topLevelAwait from 'vite-plugin-top-level-await';
-import wasm from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ command, mode }) => {
@@ -75,6 +73,7 @@ export default defineConfig(({ command, mode }) => {
         imports: [
           'vue',
           'vue-router',
+          'pinia',
           {
             'naive-ui': [
               'useDialog',

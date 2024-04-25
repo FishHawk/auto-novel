@@ -1,20 +1,22 @@
 <script lang="ts" setup>
 import { UploadOutlined } from '@vicons/material';
 
-import { Locator } from '@/data';
-
 import { doAction, useIsWideScreen } from '@/pages/util';
 import { useWebNovelStore } from './WebNovelStore';
+
+const { providerId, novelId } = defineProps<{
+  providerId: string;
+  novelId: string;
+}>();
 
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
-const props = defineProps<{ providerId: string; novelId: string }>();
+const store = useWebNovelStore(providerId, novelId);
 
-const { load } = useWebNovelStore();
-
-const defaultFormValue = () => ({
+const allowSubmit = ref(false);
+const formValue = ref({
   titleJp: '',
   title: '',
   introductionJp: '',
@@ -23,24 +25,8 @@ const defaultFormValue = () => ({
   toc: <{ jp: string; zh: string }[]>[],
 });
 
-const allowSubmit = ref(false);
-const formValue = ref(defaultFormValue());
-
-onActivated(async () => {
-  const { providerId, novelId } = props;
-  formValue.value = defaultFormValue();
-
-  const result = await load(providerId, novelId);
-
-  if (
-    result === undefined ||
-    props.providerId !== providerId ||
-    props.novelId !== novelId
-  )
-    return;
-
+store.loadNovel().then((result) => {
   if (result.ok) {
-    allowSubmit.value = false;
     const tocSet = new Set();
     formValue.value = {
       titleJp: result.value.titleJp,
@@ -71,10 +57,9 @@ const submit = async () => {
     return;
   }
 
-  const { providerId, novelId } = props;
   await doAction(
-    Locator.webNovelRepository
-      .updateNovel(providerId, novelId, {
+    store
+      .updateNovel({
         title: formValue.value.title.trim(),
         introduction: formValue.value.introduction.trim(),
         wenkuId: formValue.value.wenkuId.trim(),
@@ -84,7 +69,6 @@ const submit = async () => {
         ),
       })
       .then(() => {
-        load(providerId, novelId, true);
         router.push({ path: `/novel/${providerId}/${novelId}` });
       }),
     '编辑',

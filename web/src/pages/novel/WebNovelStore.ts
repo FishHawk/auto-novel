@@ -1,34 +1,36 @@
-import { createGlobalState } from '@vueuse/core';
-
 import { Locator } from '@/data';
 import { WebNovelDto } from '@/model/WebNovel';
 import { Result, runCatching } from '@/util/result';
 
-export const useWebNovelStore = createGlobalState(() => {
-  // state
-  const novelResult = ref<Result<WebNovelDto>>();
-  const ids = ref<[string, string]>();
+const repo = Locator.webNovelRepository;
 
-  // actions
-  const load = async (providerId: string, novelId: string, force = false) => {
-    if (
-      !force &&
-      ids.value?.[0] === providerId &&
-      ids.value?.[1] === novelId &&
-      novelResult.value?.ok
-    ) {
-      return novelResult.value;
-    }
+type WebNovelStore = {
+  novelResult: Result<WebNovelDto> | undefined;
+};
 
-    novelResult.value = undefined;
-    ids.value = [providerId, novelId];
-    const result = await runCatching(
-      Locator.webNovelRepository.getNovel(providerId, novelId)
-    );
-    if (ids.value?.[0] !== providerId || ids.value?.[1] !== novelId) return;
-    novelResult.value = result;
-    return result;
-  };
+export const useWebNovelStore = (providerId: string, novelId: string) => {
+  return defineStore(`WebNovel/${providerId}/${novelId}`, {
+    state: () =>
+      <WebNovelStore>{
+        novelResult: undefined,
+      },
+    actions: {
+      async loadNovel(force = false) {
+        if (!force && this.novelResult?.ok) {
+          return this.novelResult;
+        }
 
-  return { novelResult, load };
-});
+        this.novelResult = undefined;
+        const result = await runCatching(repo.getNovel(providerId, novelId));
+        this.novelResult = result;
+
+        return this.novelResult;
+      },
+
+      async updateNovel(json: Parameters<typeof repo.updateNovel>[2]) {
+        await repo.updateNovel(providerId, novelId, json);
+        this.loadNovel(true);
+      },
+    },
+  })();
+};

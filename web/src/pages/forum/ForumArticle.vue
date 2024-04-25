@@ -1,24 +1,20 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
 
-import { useForumArticleStore } from './ForumArticleStore';
+import { useArticleStore } from './ForumArticleStore';
 
-const props = defineProps<{ articleId: string }>();
+const { articleId } = defineProps<{ articleId: string }>();
 
 const { userData, asAdmin } = Locator.userDataRepository();
 
-const { articleResult, load } = useForumArticleStore();
+const store = useArticleStore(articleId);
+const { articleResult } = storeToRefs(store);
 
-watch(
-  props,
-  ({ articleId }) =>
-    load(articleId).then((result) => {
-      if (result?.ok) {
-        document.title = result.value.title;
-      }
-    }),
-  { immediate: true }
-);
+store.loadArticle().then((result) => {
+  if (result?.ok) {
+    document.title = result.value.title;
+  }
+});
 </script>
 
 <template>

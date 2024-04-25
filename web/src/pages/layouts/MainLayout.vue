@@ -155,9 +155,18 @@ watch(
       </n-layout-header>
 
       <n-layout-content style="margin-top: 50px; z-index: 0">
-        <!-- <router-view /> -->
         <router-view v-slot="{ Component }">
-          <keep-alive>
+          <keep-alive
+            :include="[
+              'Forum',
+              'Index',
+              'FavoriteList',
+              'ReadHistoryList',
+              'WebNovelList',
+              'WebNovelRank',
+              'WenkuNovelList',
+            ]"
+          >
             <component :is="Component" />
           </keep-alive>
         </router-view>

@@ -17,11 +17,11 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 import CTaskCard from '@/pages/components/CTaskCard.vue';
 import { useWenkuNovelStore } from './WenkuNovelStore';
 
-const props = defineProps<{
+const { novelId } = defineProps<{
   novelId?: string;
 }>();
 
-const { load } = useWenkuNovelStore();
+const store = novelId !== undefined ? useWenkuNovelStore(novelId) : undefined;
 
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
@@ -30,7 +30,9 @@ const message = useMessage();
 const { atLeastMaintainer } = Locator.userDataRepository();
 const { prettyCover } = Locator.amazonRepository;
 
-const defaultFormValue = () => ({
+const allowSubmit = ref(novelId === undefined);
+const formRef = ref<FormInst>();
+const formValue = ref({
   title: '',
   titleZh: '',
   cover: '',
@@ -41,10 +43,6 @@ const defaultFormValue = () => ({
   introduction: '',
   volumes: <WenkuVolumeDto[]>[],
 });
-
-const allowSubmit = ref(false);
-const formRef = ref<FormInst>();
-const formValue = ref(defaultFormValue());
 const formRules: FormRules = {
   title: [
     {
@@ -83,49 +81,36 @@ const formRules: FormRules = {
 
 const amazonUrl = ref('');
 
-onActivated(async () => {
-  const { novelId } = props;
-  formValue.value = defaultFormValue();
-  amazonUrl.value = '';
-  cardRef.value!.hide();
-
-  if (novelId !== undefined) {
-    allowSubmit.value = false;
-    const result = await load(novelId);
-    if (result === undefined || props.novelId !== novelId) return;
-
-    if (result.ok) {
-      const {
-        title,
-        titleZh,
-        cover,
-        authors,
-        artists,
-        r18,
-        keywords,
-        introduction,
-      } = result.value;
-      formValue.value = {
-        title,
-        titleZh,
-        cover: prettyCover(cover ?? ''),
-        authors,
-        artists,
-        r18,
-        keywords,
-        introduction,
-        volumes: result.value.volumes.map((it) => {
-          it.cover = prettyCover(it.cover);
-          return it;
-        }),
-      };
-      amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
-      allowSubmit.value = true;
-    } else {
-      message.error('载入失败');
-    }
-  } else {
+store?.loadNovel()?.then((result) => {
+  if (result.ok) {
+    const {
+      title,
+      titleZh,
+      cover,
+      authors,
+      artists,
+      r18,
+      keywords,
+      introduction,
+    } = result.value;
+    formValue.value = {
+      title,
+      titleZh,
+      cover: prettyCover(cover ?? ''),
+      authors,
+      artists,
+      r18,
+      keywords,
+      introduction,
+      volumes: result.value.volumes.map((it) => {
+        it.cover = prettyCover(it.cover);
+        return it;
+      }),
+    };
+    amazonUrl.value = result.value.title.replace(/[?？。!！]$/, '');
     allowSubmit.value = true;
+  } else {
+    message.error('载入失败');
   }
 });
 
@@ -159,8 +144,7 @@ const submit = async () => {
     volumes: formValue.value.volumes,
   };
 
-  const { novelId } = props;
-  if (novelId === undefined) {
+  if (store === undefined) {
     await doAction(
       Locator.wenkuNovelRepository.createNovel(body).then((id) => {
         router.push({ path: `/wenku/${id}` });
@@ -170,8 +154,7 @@ const submit = async () => {
     );
   } else {
     await doAction(
-      Locator.wenkuNovelRepository.updateNovel(novelId, body).then(() => {
-        load(novelId, true);
+      store.updateNovel(body).then(() => {
         router.push({ path: `/wenku/${novelId}` });
       }),
       '编辑文库',

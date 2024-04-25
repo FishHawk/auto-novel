@@ -10,7 +10,7 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 import { useWenkuNovelStore } from './WenkuNovelStore';
 import TranslateOptions from './components/TranslateOptions.vue';
 
-const props = defineProps<{ novelId: string }>();
+const { novelId } = defineProps<{ novelId: string }>();
 
 const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
   label: string;
@@ -24,31 +24,19 @@ const vars = useThemeVars();
 const { setting } = Locator.settingRepository();
 const { isSignedIn, atLeastMaintainer } = Locator.userDataRepository();
 
-const { novelResult, load } = useWenkuNovelStore();
+const store = useWenkuNovelStore(novelId);
+const { novelResult } = storeToRefs(store);
 
-watch(
-  props,
-  ({ novelId }) =>
-    load(novelId).then((result) => {
-      if (result?.ok) {
-        document.title = result.value.title;
-      }
-    }),
-  { immediate: true }
-);
+store.loadNovel().then((result) => {
+  if (result?.ok) {
+    document.title = result.value.title;
+  }
+});
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
 const deleteVolume = (volumeId: string) =>
-  doAction(
-    Locator.wenkuNovelRepository
-      .deleteVolume(props.novelId, volumeId)
-      .then(() => {
-        load(props.novelId);
-      }),
-    '删除',
-    message
-  );
+  doAction(store.deleteVolume(volumeId), '删除', message);
 
 const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
 
@@ -209,7 +197,7 @@ const showWebNovelsModal = ref(false);
       <upload-button
         type="zh"
         :novel-id="novelId"
-        @upload-finished="load(novelId, true)"
+        @upload-finished="store.loadNovel(true)"
       />
 
       <n-ul>
@@ -246,7 +234,7 @@ const showWebNovelsModal = ref(false);
         <upload-button
           type="jp"
           :novel-id="novelId"
-          @upload-finished="load(novelId, true)"
+          @upload-finished="store.loadNovel(true)"
         />
 
         <translate-options

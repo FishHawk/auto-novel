@@ -2,32 +2,31 @@
 import { useIsWideScreen } from '@/pages/util';
 import { useWebNovelStore } from './WebNovelStore';
 
-const props = defineProps<{ providerId: string; novelId: string }>();
+const { providerId, novelId } = defineProps<{
+  providerId: string;
+  novelId: string;
+}>();
 
 const isWideScreen = useIsWideScreen(850);
 const router = useRouter();
 
-const { novelResult, load } = useWebNovelStore();
+const store = useWebNovelStore(providerId, novelId);
+const { novelResult } = storeToRefs(store);
 
-watch(
-  props,
-  ({ providerId, novelId }) =>
-    load(providerId, novelId).then((result) => {
-      if (result && !result.ok) {
-        const message = result.error.message;
-        if (message.includes('小说ID不合适，应当使用：')) {
-          const targetNovelPath = message.split('小说ID不合适，应当使用：')[1];
-          router.push({ path: `/novel${targetNovelPath}` });
-          return;
-        }
-      }
+store.loadNovel().then((result) => {
+  if (result && !result.ok) {
+    const message = result.error.message;
+    if (message.includes('小说ID不合适，应当使用：')) {
+      const targetNovelPath = message.split('小说ID不合适，应当使用：')[1];
+      router.push({ path: `/novel${targetNovelPath}` });
+      return;
+    }
+  }
 
-      if (result?.ok) {
-        document.title = result.value.titleJp;
-      }
-    }),
-  { immediate: true }
-);
+  if (result?.ok) {
+    document.title = result.value.titleJp;
+  }
+});
 
 const vars = useThemeVars();
 const mixColor = () => {
