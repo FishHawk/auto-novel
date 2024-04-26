@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
+import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
 import { TranslateJob } from '@/model/Translator';
@@ -149,13 +150,15 @@ const notices = [
       description="没有翻译器"
     />
     <n-list>
-      <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
-        <job-worker
-          :worker="{ translatorId: 'sakura', ...worker }"
-          :get-next-job="getNextJob"
-          @update:progress="onProgressUpdated"
-        />
-      </n-list-item>
+      <vue-draggable v-model="workspaceRef.workers" :animation="150">
+        <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
+          <job-worker
+            :worker="{ translatorId: 'sakura', ...worker }"
+            :get-next-job="getNextJob"
+            @update:progress="onProgressUpdated"
+          />
+        </n-list-item>
+      </vue-draggable>
     </n-list>
 
     <section-header title="任务队列">
@@ -173,15 +176,17 @@ const notices = [
     </section-header>
     <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
     <n-list>
-      <n-list-item v-for="job of workspaceRef.jobs" :key="job.task">
-        <job-queue
-          :job="job"
-          :progress="processedJobs.get(job.task)?.progress"
-          @top-job="workspace.topJob(job)"
-          @bottom-job="workspace.bottomJob(job)"
-          @delete-job="deleteJob(job.task)"
-        />
-      </n-list-item>
+      <vue-draggable v-model="workspaceRef.jobs" :animation="150">
+        <n-list-item v-for="job of workspaceRef.jobs" :key="job.task">
+          <job-queue
+            :job="job"
+            :progress="processedJobs.get(job.task)?.progress"
+            @top-job="workspace.topJob(job)"
+            @bottom-job="workspace.bottomJob(job)"
+            @delete-job="deleteJob(job.task)"
+          />
+        </n-list-item>
+      </vue-draggable>
     </n-list>
 
     <job-record-section id="sakura" />

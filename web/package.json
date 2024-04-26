@@ -41,6 +41,7 @@
     "vite-plugin-html": "^3.2.2",
     "vite-tsconfig-paths": "^4.3.2",
     "vue": "^3.4.23",
+    "vue-draggable-plus": "^0.4.0",
     "vue-router": "^4.3.2",
     "vue-tsc": "^1.8.27"
   }

@@ -70,4 +70,7 @@ li {
 .n-drawer-header__main {
   flex: 1;
 }
+.sortable-ghost {
+  opacity: 0.7;
+}
 </style>
