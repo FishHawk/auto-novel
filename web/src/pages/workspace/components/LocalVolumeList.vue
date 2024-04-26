@@ -287,6 +287,7 @@ const handleDrop = (e: DragEvent) => {
   justify-content: center;
   align-items: center;
   color: #fff;
+  background-color: transparent;
   font-size: 24px;
   border-radius: 12px;
   border-width: 2px !important;
