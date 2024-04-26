@@ -1,4 +1,5 @@
 import { LocationQuery, createRouter, createWebHistory } from 'vue-router';
+import { delay } from './util';
 
 const parseSelected = (q: LocationQuery) => {
   const selected = <number[]>[];
@@ -246,6 +247,12 @@ const router = createRouter({
     return { top: savedPosition?.top ?? 0 };
   },
 });
+
+// https://github.com/reactjs/react.dev/blob/e45ac5552c13fc50832624b7deb0c6f631d461bf/src/pages/_app.tsx#L30
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+if (isSafari) {
+  window.history.scrollRestoration = 'auto';
+}
 
 router.beforeEach((to, _from) => {
   if (to.meta.title) {
