@@ -1,5 +1,4 @@
 import { LocationQuery, createRouter, createWebHistory } from 'vue-router';
-import { delay } from './util';
 
 const parseSelected = (q: LocationQuery) => {
   const selected = <number[]>[];
