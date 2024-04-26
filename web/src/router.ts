@@ -251,6 +251,11 @@ const router = createRouter({
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 if (isSafari) {
   window.history.scrollRestoration = 'auto';
+
+  // 禁用浏览器聚焦时的自动缩放，但浏览器还是会允许用户手动缩放
+  const meta = document.querySelector('meta[name="viewport"]')!;
+  const content = meta.getAttribute('content')!;
+  meta.setAttribute('content', `${content}, user-scalable=no`);
 }
 
 router.beforeEach((to, _from) => {
