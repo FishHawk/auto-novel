@@ -132,7 +132,7 @@ const notices = [
           placeholder="输入网络小说链接直接跳转，或搜索本站缓存..."
           :input-props="{ spellcheck: false }"
           @keyup.enter="query(url)"
-          :style="{ 'background-color': vars.bodyColor }"
+          :style="{ 'background-color': vars.bodyColor , fontSize: '16px' }"
         />
         <n-button size="large" type="primary" @click="query(url)">
           搜索

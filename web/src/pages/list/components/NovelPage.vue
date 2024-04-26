@@ -127,7 +127,7 @@ const invertSelection = (optionIndex: number) => {
         :suggestions="search.suggestions"
         :tags="search.tags"
         :placeholder="`中/日文标题或作者`"
-        style="flex: 0 1 400px; margin-right: 8px"
+        style="flex: 0 1 400px; margin-right: 8px; font-size: 16px;"
         :input-props="{ spellcheck: false }"
         @select="onUpdateQuery"
       />
