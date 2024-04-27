@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   DeleteOutlineOutlined,
+  DragIndicatorOutlined,
   KeyboardDoubleArrowDownOutlined,
   KeyboardDoubleArrowUpOutlined,
 } from '@vicons/material';
@@ -34,6 +35,18 @@ const percentage = computed(() => {
 
 <template>
   <n-thing>
+    <template #avatar>
+      <n-flex vertical justify="center" style="height: 100%">
+        <n-icon
+          class="drag-trigger"
+          :size="18"
+          :depth="2"
+          :component="DragIndicatorOutlined"
+          style="cursor: move"
+        />
+      </n-flex>
+    </template>
+
     <template #header>
       <router-link v-if="url" :to="url">
         <n-text depth="3" underline style="font-size: 12px">

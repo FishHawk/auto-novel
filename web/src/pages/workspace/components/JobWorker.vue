@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import {
+  DragIndicatorOutlined,
   DeleteOutlineOutlined,
   FlashOnOutlined,
   FontDownloadOffOutlined,
@@ -175,7 +176,13 @@ const testWorker = async () => {
 <template>
   <n-thing content-indented>
     <template #avatar>
-      <n-icon-wrapper :size="12" :border-radius="0" style="margin-top: 5px" />
+      <n-icon
+        class="drag-trigger"
+        :size="18"
+        :depth="2"
+        :component="DragIndicatorOutlined"
+        style="cursor: move"
+      />
     </template>
 
     <template #header>
