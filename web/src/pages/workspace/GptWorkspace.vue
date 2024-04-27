@@ -133,12 +133,16 @@ const notices = [
       description="没有翻译器"
     />
     <n-list>
-      <vue-draggable v-model="workspaceRef.workers" :animation="150">
+      <vue-draggable
+        v-model="workspaceRef.workers"
+        :animation="150"
+        handle=".drag-trigger"
+      >
         <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
           <job-worker
-          :worker="{ translatorId: 'gpt', ...worker }"
-          :get-next-job="getNextJob"
-          @update:progress="onProgressUpdated"
+            :worker="{ translatorId: 'gpt', ...worker }"
+            :get-next-job="getNextJob"
+            @update:progress="onProgressUpdated"
           />
         </n-list-item>
       </vue-draggable>
@@ -153,14 +157,18 @@ const notices = [
     </section-header>
     <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
     <n-list>
-      <vue-draggable v-model="workspaceRef.jobs" :animation="150">
+      <vue-draggable
+        v-model="workspaceRef.jobs"
+        :animation="150"
+        handle=".drag-trigger"
+      >
         <n-list-item v-for="job of workspaceRef.jobs" :key="job.task">
           <job-queue
-          :job="job"
-          :progress="processedJobs.get(job.task)?.progress"
-          @top-job="workspace.topJob(job)"
-          @bottom-job="workspace.bottomJob(job)"
-          @delete-job="deleteJob(job.task)"
+            :job="job"
+            :progress="processedJobs.get(job.task)?.progress"
+            @top-job="workspace.topJob(job)"
+            @bottom-job="workspace.bottomJob(job)"
+            @delete-job="deleteJob(job.task)"
           />
         </n-list-item>
       </vue-draggable>
