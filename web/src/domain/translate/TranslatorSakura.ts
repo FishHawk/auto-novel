@@ -195,6 +195,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
     // 进入逐行翻译模式
     this.log(`分段${segInfo.index + 1}/${segInfo.size}[逐行翻译]`);
+    let degradationLineCount = 0;
     const resultPerLine = [];
     for (const line of seg) {
       const { text, hasDegradation } = await this.translatePrompt(
@@ -204,7 +205,13 @@ export class SakuraTranslator implements SegmentTranslator {
         signal
       );
       if (hasDegradation) {
-        throw Error('发生单行退化，Sakura翻译器可能存在异常');
+        degradationLineCount += 1;
+        this.log(`  单行退化 ${degradationLineCount}次`, [line, text]);
+        if (degradationLineCount >= 2) {
+          throw Error('单个分段有2行退化，Sakura翻译器可能存在异常');
+        } else {
+          resultPerLine.push(line);
+        }
       } else {
         resultPerLine.push(text.replaceAll('<|im_end|>', ''));
       }
