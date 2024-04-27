@@ -1,9 +1,11 @@
 import { Glossary } from '@/model/Glossary';
 
-import { Llamacpp } from './api/llamacpp';
-import { OpenAi } from './api/openai';
+import { Locator } from '@/data';
 import { createLengthSegmentor } from './common';
 import { BaseTranslatorConfig, SegmentTranslator } from './type';
+
+type OpenAi = ReturnType<typeof Locator.openAiRepositoryFactory>;
+type Llamacpp = ReturnType<typeof Locator.llamacppRepositoryFactory>;
 
 export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
   endpoint: string;
@@ -19,9 +21,9 @@ export class SakuraTranslator implements SegmentTranslator {
   constructor({ log, endpoint, useLlamaApi }: SakuraTranslatorConfig) {
     this.log = log;
     if (useLlamaApi) {
-      this.api = new Llamacpp(endpoint);
+      this.api = Locator.llamacppRepositoryFactory(endpoint);
     } else {
-      this.api = new OpenAi(endpoint, 'no-key');
+      this.api = Locator.openAiRepositoryFactory(endpoint, 'no-key');
     }
   }
 
@@ -29,7 +31,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   async init() {
     let model: SakuraModel;
-    if (this.api.id === 'llamacpp') {
+    if ('createCompletion' in this.api) {
       model = await SakuraLlamacpp.detectModel(this.api);
     } else {
       model = await SakuraOpenai.detectModel(this.api);
@@ -216,7 +218,7 @@ export class SakuraTranslator implements SegmentTranslator {
     tryFixDegradation: boolean,
     signal?: AbortSignal
   ) {
-    if (this.api.id === 'llamacpp') {
+    if ('createCompletion' in this.api) {
       return SakuraLlamacpp.translateText(
         this.api,
         this.model.version,

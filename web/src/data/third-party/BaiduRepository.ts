@@ -2,23 +2,25 @@ import ky, { Options } from 'ky';
 
 import { parseEventStream } from '@/util';
 
-export class Baidu {
-  id: 'baidu' = 'baidu';
-  client = ky.create({
+export const createBaiduRepository = () => {
+  const client = ky.create({
     prefixUrl: 'https://fanyi.baidu.com',
     credentials: 'include',
+    retry: 0,
   });
 
-  sug = () => {
+  const sug = () => {
     const formData = new FormData();
     formData.append('kw', 'test');
-    return this.client.post('sug', {
-      body: formData,
-    });
+    return client
+      .post('sug', {
+        body: formData,
+      })
+      .text();
   };
 
-  translate = (query: string, options: Options) =>
-    this.client
+  const translate = (query: string, options: Options) => {
+    return client
       .post('ait/text/translate', {
         headers: {
           accept: 'text/event-stream',
@@ -38,9 +40,14 @@ export class Baidu {
       })
       .text()
       .then(parseEventStream<TranslateChunk>);
-}
+  };
+  return {
+    sug,
+    translate,
+  };
+};
 
-type TranslateChunk = {
+export type TranslateChunk = {
   errno: number;
   errmsg: string;
   data:

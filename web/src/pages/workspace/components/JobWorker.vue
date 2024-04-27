@@ -9,8 +9,7 @@ import {
 } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { Translator } from '@/data/translator';
-import { SakuraTranslator } from '@/data/translator/translator_sakura';
+import { Translator, SakuraTranslator } from '@/domain/translate';
 import {
   GptWorker,
   SakuraWorker,

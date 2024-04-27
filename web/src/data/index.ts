@@ -1,3 +1,4 @@
+import { createCachedSegRepository } from './CachedSegRepository';
 import {
   ArticleRepository,
   AuthRepository,
@@ -20,8 +21,15 @@ import {
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
 } from './stores';
-import { AmazonRepository } from './third-party';
-import { createCachedSegRepository } from './translator';
+import {
+  createAmazonRepository,
+  createBaiduRepository,
+  createLlamacppRepository,
+  createOpenAiRepository,
+  createOpenAiWebRepository,
+  createYoudaoRepository,
+} from './third-party';
+export { OpenAiError } from './third-party/OpenAiRepository';
 
 export { formatError } from './api';
 
@@ -50,6 +58,8 @@ const lazyAsync = <T>(factory: () => Promise<T>) => {
 export const Locator = {
   localVolumeRepository: lazyAsync(createLocalVolumeRepository),
   //
+  cachedSegRepository: lazyAsync(createCachedSegRepository),
+  //
   ruleViewedRepository: lazy(createRuleViewedRepository),
   readPositionRepository: lazy(createReadPositionRepository),
   settingRepository: lazy(createSettingRepository),
@@ -60,9 +70,12 @@ export const Locator = {
   sakuraWorkspaceRepository: lazy(createSakuraWorkspaceRepository),
   userDataRepository: lazy(createUserDataRepository),
   //
-  cachedSegRepository: lazyAsync(createCachedSegRepository),
-  //
-  amazonRepository: AmazonRepository,
+  amazonRepository: lazy(createAmazonRepository),
+  baiduRepository: lazy(createBaiduRepository),
+  youdaoRepository: lazy(createYoudaoRepository),
+  openAiRepositoryFactory: createOpenAiRepository,
+  openAiWebRepositoryFactory: createOpenAiWebRepository,
+  llamacppRepositoryFactory: createLlamacppRepository,
   //
   articleRepository: ArticleRepository,
   authRepository: AuthRepository,

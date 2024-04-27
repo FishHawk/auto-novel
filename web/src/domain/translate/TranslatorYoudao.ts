@@ -1,7 +1,7 @@
+import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
 import { safeJson } from '@/util';
 
-import { Youdao } from './api/youdao';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';
 import { BaseTranslatorConfig, SegmentTranslator } from './type';
 
@@ -9,7 +9,7 @@ export type YoudaoTranslatorConfig = BaseTranslatorConfig;
 
 export class YoudaoTranslator implements SegmentTranslator {
   log: (message: string) => void;
-  private api = new Youdao();
+  private api = Locator.youdaoRepository();
 
   constructor({ log }: YoudaoTranslatorConfig) {
     this.log = log;

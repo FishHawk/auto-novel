@@ -1,6 +1,6 @@
 import { Glossary } from '@/model/Glossary';
 
-import { Baidu } from './api/baidu';
+import { Locator } from '@/data';
 import { createGlossaryWrapper, createLengthSegmentor } from './common';
 import { BaseTranslatorConfig, SegmentTranslator } from './type';
 
@@ -8,7 +8,7 @@ export type BaiduTranslatorConfig = BaseTranslatorConfig;
 
 export class BaiduTranslator implements SegmentTranslator {
   log: (message: string) => void;
-  private api = new Baidu();
+  private api = Locator.baiduRepository();
 
   constructor({ log }: BaiduTranslatorConfig) {
     this.log = log;

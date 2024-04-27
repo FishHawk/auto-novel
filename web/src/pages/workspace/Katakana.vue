@@ -3,8 +3,7 @@ import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
-import { Translator } from '@/data/translator';
-import { TranslatorConfig } from '@/data/translator/translator';
+import { Translator, TranslatorConfig } from '@/domain/translate';
 import { Glossary } from '@/model/Glossary';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';

@@ -1,12 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { Locator, OpenAiError } from '@/data';
 import { Glossary } from '@/model/Glossary';
 import { delay } from '@/util';
 
-import { OpenAi, OpenAiError } from './api/openai';
-import { OpenAiWeb } from './api/openai_web';
 import { createLengthSegmentor } from './common';
 import { BaseTranslatorConfig, SegmentTranslator } from './type';
+
+type OpenAi = ReturnType<typeof Locator.openAiRepositoryFactory>;
+type OpenAiWeb = ReturnType<typeof Locator.openAiWebRepositoryFactory>;
 
 export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
   type: 'web' | 'api';
@@ -24,9 +26,9 @@ export class OpenAiTranslator implements SegmentTranslator {
     this.log = log;
     this.model = model;
     if (type === 'web') {
-      this.api = new OpenAiWeb(endpoint, key);
+      this.api = Locator.openAiRepositoryFactory(endpoint, key);
     } else {
-      this.api = new OpenAi(endpoint, key);
+      this.api = Locator.openAiWebRepositoryFactory(endpoint, key);
     }
   }
 
@@ -209,7 +211,7 @@ export class OpenAiTranslator implements SegmentTranslator {
     };
 
     const messages = buildMessages(lines, glossary, enableBypass);
-    if (this.api.id === 'openai') {
+    if ('createChatCompletionsStream' in this.api) {
       return askApi(this.api, this.model, messages, signal)
         .then((it) => ({
           answer: parseAnswer(it.answer),

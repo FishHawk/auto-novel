@@ -1,25 +1,25 @@
-import ky, { KyInstance, Options } from 'ky';
+import ky, { Options } from 'ky';
 
-export class Llamacpp {
-  id: 'llamacpp' = 'llamacpp';
-  client: KyInstance;
+export const createLlamacppRepository = (endpoint: string) => {
+  const client = ky.create({
+    prefixUrl: endpoint,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    timeout: 600_000,
+    retry: 0,
+  });
 
-  constructor(endpoint: string) {
-    this.client = ky.create({
-      prefixUrl: endpoint,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      timeout: 600_000,
-    });
-  }
-
-  createCompletion = (json: LlamaCompletion, options?: Options) =>
-    this.client
+  const createCompletion = (json: LlamaCompletion, options?: Options) =>
+    client
       .post('completion', { json, ...options })
       .json<LlamaCompletionResponse>();
-}
+
+  return {
+    createCompletion,
+  };
+};
 
 interface LlamaCompletion {
   prompt: string;

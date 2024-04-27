@@ -1,42 +1,42 @@
 // Copyright 2023 OpenAI
-
-import ky, { HTTPError, KyInstance, Options } from 'ky';
+import ky, { HTTPError, Options } from 'ky';
 
 import { parseEventStream, safeJson } from '@/util';
 
-export class OpenAi {
-  id: 'openai' = 'openai';
-  client: KyInstance;
+export const createOpenAiRepository = (endpoint: string, key: string) => {
+  const client = ky.create({
+    prefixUrl: endpoint,
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    timeout: 600_000,
+    retry: 0,
+  });
 
-  constructor(endpoint: string, key: string) {
-    this.client = ky.create({
-      prefixUrl: endpoint,
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 600_000,
-    });
-  }
-
-  createChatCompletionsStream = (
+  const createChatCompletionsStream = (
     json: ChatCompletion.Params & { stream: true },
     options?: Options
   ): Promise<Generator<ChatCompletionChunk>> =>
-    this.client
+    client
       .post('v1/chat/completions', { json, ...options })
       .text()
       .then(parseEventStream<ChatCompletionChunk>);
 
-  createChatCompletions = (
+  const createChatCompletions = (
     json: ChatCompletion.Params & { stream?: false },
     options?: Options
   ): Promise<ChatCompletion> =>
-    this.client
+    client
       .post('v1/chat/completions', { json, ...options })
       .json<ChatCompletion>();
-}
+
+  return {
+    createChatCompletionsStream,
+    createChatCompletions,
+  };
+};
 
 interface ChatCompletionChunk {
   id: string;

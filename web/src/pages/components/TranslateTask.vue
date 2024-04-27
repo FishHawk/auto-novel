@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { translate } from '@/domain';
+import { translate } from '@/domain/translate';
 import {
   TranslateTaskDesc,
   TranslateTaskParams,

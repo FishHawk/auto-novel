@@ -2,26 +2,25 @@ import ky, { KyInstance, Options } from 'ky';
 
 import { parseEventStream } from '@/util';
 
-export class OpenAiWeb {
-  id: 'openai-web' = 'openai-web';
-  client: KyInstance;
+export const createOpenAiWebRepository = (
+  endpoint: string,
+  accessToken: string
+) => {
+  const client = ky.create({
+    prefixUrl: endpoint,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    timeout: 100_000,
+    retry: 0,
+  });
 
-  constructor(endpoint: string, accessToken: string) {
-    this.client = ky.create({
-      prefixUrl: endpoint,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 100_000,
-    });
-  }
-
-  createConversation = (
+  const createConversation = (
     json: Conversation.Params,
     options?: Options
   ): Promise<Generator<ConversationChunk>> =>
-    this.client
+    client
       .post('conversation', {
         json,
         headers: { accept: 'text/event-stream' },
@@ -59,31 +58,17 @@ export class OpenAiWeb {
       })
       .then(parseEventStream<ConversationChunk>);
 
-  getConversation = (
+  const getConversation = (
     conversationId: string,
     options?: Options
   ): Promise<Conversation> =>
-    this.client
-      .get(`conversation/${conversationId}`, options)
-      .json<Conversation>();
-}
+    client.get(`conversation/${conversationId}`, options).json<Conversation>();
 
-function* parseWss<T>(text: string) {
-  for (const line of text.split('\n')) {
-    if (line == '[DONE]') {
-      return;
-    } else if (!line.trim() || line.startsWith(': ping')) {
-      continue;
-    } else {
-      try {
-        const obj: T = JSON.parse(line.replace(/^data\:/, '').trim());
-        yield obj;
-      } catch {
-        continue;
-      }
-    }
-  }
-}
+  return {
+    createConversation,
+    getConversation,
+  };
+};
 
 interface Conversation {
   title: string;

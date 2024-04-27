@@ -3,10 +3,10 @@ import { MD5 } from 'crypto-es/lib/md5';
 import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
 
-import { BaiduTranslator, BaiduTranslatorConfig } from './translator_baidu';
-import { OpenAiTranslator, OpenAiTranslatorConfig } from './translator_openai';
-import { SakuraTranslator, SakuraTranslatorConfig } from './translator_sakura';
-import { YoudaoTranslator, YoudaoTranslatorConfig } from './translator_youdao';
+import { BaiduTranslator, BaiduTranslatorConfig } from './TranslatorBaidu';
+import { OpenAiTranslator, OpenAiTranslatorConfig } from './TranslatorOpenAi';
+import { SakuraTranslator, SakuraTranslatorConfig } from './TranslatorSakura';
+import { YoudaoTranslator, YoudaoTranslatorConfig } from './TranslatorYoudao';
 import { SegmentTranslator } from './type';
 
 interface SegmentCache {

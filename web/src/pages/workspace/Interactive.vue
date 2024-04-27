@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
-import { Translator, TranslatorConfig } from '@/data/translator/translator';
+import { Translator, TranslatorConfig } from '@/domain/translate';
 import { GptWorker, SakuraWorker, TranslatorId } from '@/model/Translator';
 
 const message = useMessage();

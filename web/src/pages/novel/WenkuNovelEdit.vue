@@ -28,7 +28,7 @@ const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
 const { atLeastMaintainer } = Locator.userDataRepository();
-const { prettyCover } = Locator.amazonRepository;
+const { prettyCover } = Locator.amazonRepository();
 
 const allowSubmit = ref(novelId === undefined);
 const formRef = ref<FormInst>();
