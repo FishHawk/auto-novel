@@ -387,10 +387,10 @@ namespace SakuraOpenai {
     createChatCompletions(api, '国境の長いトンネルを抜けると雪国であった', {
       max_tokens: 20,
     }).then((completion) => {
-      const { version, allow } = checkModelString(completion.model);
+      const { version } = checkModelString(completion.model);
       return {
         version,
-        fingerprint: allow ? 'placeholder-allow' : undefined,
+        fingerprint: undefined,
       };
     });
 

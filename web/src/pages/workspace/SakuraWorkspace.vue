@@ -88,6 +88,11 @@ const clearCache = async () =>
 const notices = [
   notice('目前允许的模型： v0.9b-Q4_K_M 及以上。'),
   notice('低于Q4的量化模型即使能通过检查，显示允许上传，也不要使用。'),
+  notice('禁止一切伪装Sakura模型来突破上传检查的行为。'),
+  notice(
+    '由于有人尝试将Gemini伪装成Sakura来上传，所以现在禁止旧的kaggle脚本上传。请点击上面的链接使用新的脚本，并在添加翻译器的时候打开LlamaApi。',
+    true
+  ),
 ];
 </script>
 
@@ -117,7 +122,7 @@ const notices = [
         </n-a>
         /
         <n-a
-          href="https://kaggle.com/kernels/welcome?src=https://github.com/Isotr0py/SakuraLLM-Notebooks/blob/main/Sakura-13B-Galgame-Kaggle-llama.cpp.ipynb"
+          href="https://kaggle.com/kernels/welcome?src=https://github.com/FishHawk/auto-novel/blob/main/sakura-launcher/kaggle.ipynb"
           target="_blank"
         >
           Kaggle脚本
