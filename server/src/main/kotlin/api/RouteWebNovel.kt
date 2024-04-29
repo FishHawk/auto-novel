@@ -129,9 +129,10 @@ fun Route.routeWebNovel() {
     }
     get<WebNovelRes.Rank> { loc ->
         val options = call.request.queryParameters.toMap().mapValues { it.value.first() }
-        call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 3600 * 2))
         call.tryRespond {
-            service.listRank(providerId = loc.providerId, options = options)
+            val rank = service.listRank(providerId = loc.providerId, options = options)
+            call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 3600 * 2))
+            rank
         }
     }
 
