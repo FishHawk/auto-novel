@@ -26,9 +26,9 @@ export class OpenAiTranslator implements SegmentTranslator {
     this.log = log;
     this.model = model;
     if (type === 'web') {
-      this.api = Locator.openAiRepositoryFactory(endpoint, key);
-    } else {
       this.api = Locator.openAiWebRepositoryFactory(endpoint, key);
+    } else {
+      this.api = Locator.openAiRepositoryFactory(endpoint, key);
     }
   }
 
