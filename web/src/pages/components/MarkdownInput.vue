@@ -40,9 +40,9 @@ const vars = useThemeVars();
 
 .markdown-input .tabs .n-tabs-tab:not(.n-tabs-tab--active) {
   --n-tab-color: transparent;
-    border-top-color: transparent !important;
-    border-left-color: transparent !important;
-    border-right-color: transparent !important;
+  border-top-color: transparent !important;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
 }
 
 .markdown-input .tabs .n-tabs-tab--active {
