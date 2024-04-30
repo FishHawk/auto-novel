@@ -51,12 +51,12 @@ const formRules: FormRules = {
     {
       validator: (_rule: FormItemRule, value: string) =>
         value.trim().length >= 2,
-      message: '内容长度不能少于2个字符',
+      message: '正文长度不能少于2个字符',
       trigger: 'input',
     },
     {
       validator: (_rule: FormItemRule, value: string) => value.length <= 20_000,
-      message: '内容长度不能超过2万个字符',
+      message: '正文长度不能超过2万个字符',
       trigger: 'input',
     },
   ],
@@ -129,7 +129,6 @@ const formatExample: [string, string][] = [
       :rules="formRules"
       :label-placement="isWideScreen ? 'left' : 'top'"
       label-width="auto"
-      style="max-width: 800px"
     >
       <n-form-item-row path="title" label="标题">
         <n-input
@@ -146,17 +145,18 @@ const formatExample: [string, string][] = [
           :options="articleCategoryOptions"
         />
       </n-form-item-row>
-      <markdown-input
-        v-model:value="formValue.content"
-        type="textarea"
-        placeholder="请输入正文"
-        :autosize="{
-          minRows: 8,
-        }"
-        maxlength="20000"
-        show-count
-        :input-props="{ spellcheck: false }"
-      />
+      <n-form-item-row path="content" label="正文">
+        <markdown-input
+          v-model:value="formValue.content"
+          type="textarea"
+          placeholder="请输入正文"
+          :autosize="{ minRows: 8 }"
+          maxlength="20000"
+          show-count
+          :input-props="{ spellcheck: false }"
+          style="width: 100%"
+        />
+      </n-form-item-row>
     </n-form>
 
     <c-button
