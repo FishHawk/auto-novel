@@ -39,9 +39,10 @@ const vars = useThemeVars();
 }
 
 .markdown-input .tabs .n-tabs-tab:not(.n-tabs-tab--active) {
-  border-top-color: v-bind('vars.tabColor') !important;
-  border-left-color: v-bind('vars.tabColor') !important;
-  border-right-color: v-bind('vars.tabColor') !important;
+  --n-tab-color: transparent;
+    border-top-color: transparent !important;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
 }
 
 .markdown-input .tabs .n-tabs-tab--active {
