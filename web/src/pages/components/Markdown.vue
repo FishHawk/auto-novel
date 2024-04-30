@@ -4,9 +4,10 @@ import MarkdownIt from 'markdown-it';
 
 defineProps<{ source: string }>();
 
-const md = new MarkdownIt({ breaks: true, linkify: true, html: true }).use(
-  MarkdownItAnchor
-);
+const md = new MarkdownIt({
+  breaks: true,
+  linkify: true,
+}).use(MarkdownItAnchor);
 const vars = useThemeVars();
 </script>
 
