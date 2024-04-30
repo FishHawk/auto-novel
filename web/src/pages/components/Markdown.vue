@@ -15,6 +15,12 @@ const vars = useThemeVars();
 </template>
 
 <style>
+.markdown>*:first-child {
+  margin-top: 0 !important;
+}
+.markdown>*:last-child {
+  margin-bottom: 0 !important;
+}
 .markdown a {
   transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
   cursor: pointer;

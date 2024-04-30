@@ -149,7 +149,7 @@ const formatExample: [string, string][] = [
         />
       </n-form-item-row>
       <n-form-item-row path="content" label="内容">
-        <n-input
+        <markdown-input
           v-model:value="formValue.content"
           type="textarea"
           placeholder="内容"
@@ -175,11 +175,6 @@ const formatExample: [string, string][] = [
     />
 
     <n-divider />
-
-    <template v-if="formValue.content.trim()">
-      <section-header title="预览" />
-      <markdown :source="formValue.content" />
-    </template>
 
     <section-header title="格式帮助" />
     <n-table :bordered="false">
