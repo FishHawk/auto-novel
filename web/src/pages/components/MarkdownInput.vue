@@ -45,8 +45,8 @@ const vars = useThemeVars();
 }
 
 .markdown-input .tabs .n-tabs-tab--active {
-  background-color: v-bind('vars.baseColor') !important;
-  border-bottom-color: v-bind('vars.baseColor') !important;
+  background-color: v-bind('vars.bodyColor') !important;
+  border-bottom-color: v-bind('vars.bodyColor') !important;
 }
 
 .markdown-input .input-wrap {
