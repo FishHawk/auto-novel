@@ -114,8 +114,10 @@ const showInput = ref(false);
       </template>
     </n-flex>
     <n-card embedded :bordered="false" size="small">
-      <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
-      <markdown :source="comment.content" />
+      <n-p style="white-space: pre-wrap">
+        <n-text v-if="comment.hidden" depth="3">[隐藏] </n-text>
+        {{ comment.content }}
+      </n-p>
     </n-card>
   </DefineCommentContent>
 

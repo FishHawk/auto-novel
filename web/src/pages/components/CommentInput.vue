@@ -39,7 +39,7 @@ const reply = async () => {
 </script>
 
 <template>
-  <markdown-input
+  <n-input
     v-model:value="content"
     type="textarea"
     :placeholder="placeholder"

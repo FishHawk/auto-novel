@@ -4,9 +4,10 @@ import MarkdownIt from 'markdown-it';
 
 defineProps<{ source: string }>();
 
-const md = new MarkdownIt({ breaks: true, linkify: true, html: true }).use(
-  MarkdownItAnchor
-);
+const md = new MarkdownIt({
+  breaks: true,
+  linkify: true,
+}).use(MarkdownItAnchor);
 const vars = useThemeVars();
 </script>
 
@@ -15,12 +16,6 @@ const vars = useThemeVars();
 </template>
 
 <style>
-.markdown>*:first-child {
-  margin-top: 0 !important;
-}
-.markdown>*:last-child {
-  margin-bottom: 0 !important;
-}
 .markdown a {
   transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
   cursor: pointer;
