@@ -13,8 +13,6 @@ const { articleId, category } = defineProps<{
   articleId?: string;
   category?: ArticleCategory;
 }>();
-console.log(articleId);
-console.log(category);
 
 const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
@@ -136,7 +134,7 @@ const formatExample: [string, string][] = [
       <n-form-item-row path="title" label="标题">
         <n-input
           v-model:value="formValue.title"
-          placeholder="标题"
+          placeholder="请输入标题"
           maxlength="80"
           show-count
           :input-props="{ spellcheck: false }"
@@ -148,20 +146,17 @@ const formatExample: [string, string][] = [
           :options="articleCategoryOptions"
         />
       </n-form-item-row>
-      <n-form-item-row path="content" label="内容">
-        <markdown-input
-          v-model:value="formValue.content"
-          type="textarea"
-          placeholder="内容"
-          :autosize="{
-            minRows: 8,
-            maxRows: 24,
-          }"
-          maxlength="20000"
-          show-count
-          :input-props="{ spellcheck: false }"
-        />
-      </n-form-item-row>
+      <markdown-input
+        v-model:value="formValue.content"
+        type="textarea"
+        placeholder="请输入正文"
+        :autosize="{
+          minRows: 8,
+        }"
+        maxlength="20000"
+        show-count
+        :input-props="{ spellcheck: false }"
+      />
     </n-form>
 
     <c-button
