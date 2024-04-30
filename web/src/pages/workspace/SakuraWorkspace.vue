@@ -110,23 +110,31 @@ const notices = [
           本地部署教程
         </c-a>
         /
-        <c-a to="/forum/65719bf16843e12bd3a4dc98" target="_blank">
-          租用显卡教程
-        </c-a>
+        <span>
+          <c-a to="/forum/65719bf16843e12bd3a4dc98" target="_blank">
+            AutoDL教程
+          </c-a>
+          :
+          <n-a
+            href="https://www.autodl.com/console/instance/list"
+            target="_blank"
+          >
+            控制台
+          </n-a>
+        </span>
         /
-        <n-a
-          href="https://www.autodl.com/console/instance/list"
-          target="_blank"
-        >
-          AutoDL控制台
-        </n-a>
-        /
-        <n-a
-          href="https://kaggle.com/kernels/welcome?src=https://github.com/FishHawk/auto-novel/blob/main/sakura-launcher/kaggle.ipynb"
-          target="_blank"
-        >
-          Kaggle脚本
-        </n-a>
+        <span>
+          <c-a to="/forum/6630f091c92d3f7ad7f50f23" target="_blank">
+            Kaggle教程
+          </c-a>
+          :
+          <n-a
+            href="https://kaggle.com/kernels/welcome?src=https://github.com/FishHawk/auto-novel/blob/main/sakura-launcher/kaggle.ipynb"
+            target="_blank"
+          >
+            脚本
+          </n-a>
+        </span>
       </n-flex>
     </notice-board>
 
