@@ -71,6 +71,12 @@ const unhideComment = (comment: Comment1) =>
   );
 
 const showInput = ref(false);
+
+const splitByLinks = (text: string): [string, boolean][] => {
+  const regExp =
+    /((?:http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(?:\/\S*)?)/g;
+  return text.split(regExp).map((part) => [part, regExp.test(part)]);
+};
 </script>
 
 <template>
@@ -79,7 +85,7 @@ const showInput = ref(false);
       <n-text>
         <b>{{ comment.user.username }}</b>
       </n-text>
-      <n-text depth="3">
+      <n-text depth="3" style="font-size: 12px">
         <n-time :time="comment.createAt * 1000" type="relative" />
       </n-text>
 
@@ -113,10 +119,14 @@ const showInput = ref(false);
         />
       </template>
     </n-flex>
-    <n-card embedded :bordered="false" size="small">
+
+    <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
       <n-p style="white-space: pre-wrap">
         <n-text v-if="comment.hidden" depth="3">[隐藏] </n-text>
-        {{ comment.content }}
+        <template v-for="[part, isLink] in splitByLinks(comment.content)">
+          <n-a v-if="isLink" :href="part" target="_blank">{{ part }}</n-a>
+          <template v-else>{{ part }}</template>
+        </template>
       </n-p>
     </n-card>
   </DefineCommentContent>
