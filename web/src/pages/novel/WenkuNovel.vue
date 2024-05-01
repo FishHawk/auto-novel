@@ -194,11 +194,7 @@ const showWebNovelsModal = ref(false);
       </template>
 
       <section-header title="中文章节" />
-      <upload-button
-        type="zh"
-        :novel-id="novelId"
-        @upload-finished="store.loadNovel(true)"
-      />
+      <upload-button type="zh" :novel-id="novelId" />
 
       <n-ul>
         <n-li v-for="volumeId in metadata.volumeZh" :key="volumeId">
@@ -231,11 +227,7 @@ const showWebNovelsModal = ref(false);
 
       <section-header title="日文章节" />
       <template v-if="isSignedIn">
-        <upload-button
-          type="jp"
-          :novel-id="novelId"
-          @upload-finished="store.loadNovel(true)"
-        />
+        <upload-button type="jp" :novel-id="novelId" />
 
         <translate-options
           ref="translateOptions"

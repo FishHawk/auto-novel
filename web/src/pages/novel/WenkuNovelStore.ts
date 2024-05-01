@@ -40,6 +40,44 @@ export const useWenkuNovelStore = (novelId: string) => {
         this.loadNovel(true);
       },
 
+      async createVolume(
+        volumeId: string,
+        type: 'jp' | 'zh',
+        file: File,
+        onProgress: (p: number) => void
+      ) {
+        const total = await repo.createVolume(
+          novelId,
+          volumeId,
+          type,
+          file,
+          onProgress
+        );
+
+        if (this.novelResult?.ok) {
+          if (type === 'jp') {
+            this.novelResult.value.volumeJp.push({
+              volumeId,
+              total: Number(total),
+              baidu: 0,
+              youdao: 0,
+              gpt: 0,
+              sakura: 0,
+            });
+            this.novelResult.value.volumeJp =
+              this.novelResult.value.volumeJp.sort((a, b) =>
+                a.volumeId.localeCompare(b.volumeId)
+              );
+          } else {
+            this.novelResult.value.volumeZh.push(volumeId);
+            this.novelResult.value.volumeZh =
+              this.novelResult.value.volumeZh.sort((a, b) =>
+                a.localeCompare(b)
+              );
+          }
+        }
+      },
+
       async deleteVolume(volumeId: string) {
         await repo.deleteVolume(novelId, volumeId);
         if (this.novelResult?.ok) {

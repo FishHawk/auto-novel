@@ -6,7 +6,7 @@ import {
   WenkuVolumeDto,
 } from '@/model/WenkuNovel';
 
-import { client } from './client';
+import { client, uploadFile } from './client';
 
 const listNovel = ({
   page,
@@ -52,34 +52,14 @@ const createVolume = (
   volumeId: string,
   type: 'jp' | 'zh',
   file: File,
-  token: string,
   onProgress: (p: number) => void
 ) =>
-  new Promise<void>(function (resolve, reject) {
-    const formData = new FormData();
-    formData.append(type, file as File);
-
-    let xhr = new XMLHttpRequest();
-
-    xhr.open(
-      'POST',
-      `/api/wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`
-    );
-
-    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        resolve();
-      } else {
-        reject(new Error(xhr.responseText));
-      }
-    };
-    xhr.upload.addEventListener('progress', (e) => {
-      const percent = e.lengthComputable ? (e.loaded / e.total) * 100 : 0;
-      onProgress(Math.ceil(percent));
-    });
-    xhr.send(formData);
-  });
+  uploadFile(
+    `/api/wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`,
+    type,
+    file,
+    onProgress
+  );
 
 const deleteVolume = (novelId: string, volumeId: string) =>
   client.delete(`wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`);

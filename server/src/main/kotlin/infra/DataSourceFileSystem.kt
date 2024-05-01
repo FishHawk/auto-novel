@@ -98,6 +98,8 @@ class DataSourceFileSystem {
         if (unpack) {
             try {
                 unpackVolume(volumesDir, volumeId)
+                val volume = getVolume(volumesDir, volumeId)
+                return@withContext volume?.listChapter()?.size
             } catch (e: Throwable) {
                 e.printStackTrace()
                 val unpackPath = volumesDir / "$volumeId.unpack"
@@ -106,6 +108,7 @@ class DataSourceFileSystem {
                 throw VolumeCreateException.VolumeUnpackFailure(e)
             }
         }
+        return@withContext null
     }
 
     private suspend fun unpackVolume(

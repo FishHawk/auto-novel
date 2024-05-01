@@ -7,26 +7,18 @@ import {
 } from 'naive-ui';
 
 import { Locator, formatError } from '@/data';
+import { useWenkuNovelStore } from '../WenkuNovelStore';
 
 const { novelId, type } = defineProps<{
   novelId: string;
   type: 'jp' | 'zh';
 }>();
 
-const emits = defineEmits<{ uploadFinished: [] }>();
 const message = useMessage();
 
 const { userData, isSignedIn } = Locator.userDataRepository();
 
-function onFinish({
-  file,
-  event,
-}: {
-  file: UploadFileInfo;
-  event?: ProgressEvent;
-}) {
-  emits('uploadFinished');
-}
+const store = useWenkuNovelStore(novelId);
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
   if (!isSignedIn.value) {
@@ -58,14 +50,9 @@ const customRequest = ({
     onError();
     return;
   }
-  Locator.wenkuNovelRepository
-    .createVolume(
-      novelId,
-      file.name,
-      type,
-      file.file as File,
-      userData.value.info.token,
-      (p) => onProgress({ percent: p })
+  store
+    .createVolume(file.name, type, file.file as File, (percent) =>
+      onProgress({ percent })
     )
     .then(() => {
       onFinish();
@@ -102,7 +89,6 @@ const uploadVolumes = () => {
     multiple
     :custom-request="customRequest"
     :show-trigger="haveReadRule"
-    @finish="onFinish"
     @before-upload="beforeUpload"
   >
     <c-button label="上传" :icon="PlusOutlined" />

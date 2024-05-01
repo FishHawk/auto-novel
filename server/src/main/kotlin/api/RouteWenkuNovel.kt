@@ -473,11 +473,11 @@ class WenkuNovelApi(
         volumeId: String,
         inputStream: InputStream,
         unpack: Boolean,
-    ) {
+    ): Int {
         validateNovelId(novelId)
         validateVolumeId(volumeId)
 
-        try {
+        val total = try {
             volumeRepo.createVolume(
                 novelId = novelId,
                 volumeId = volumeId,
@@ -499,6 +499,8 @@ class WenkuNovelApi(
             )
         )
         metadataRepo.notifyUpdate(novelId)
+
+        return total ?: 0
     }
 
     suspend fun deleteVolume(
