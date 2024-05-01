@@ -188,7 +188,7 @@ const customRequest = ({
   />
 
   <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
-    <n-list style="padding-bottom: 48px">
+    <n-list style="padding-bottom: 48px; padding-right: 12px">
       <n-list-item v-for="volume of sortedVolumes ?? []" :key="volume.id">
         <slot name="volume" v-bind="volume" />
       </n-list-item>
