@@ -12,6 +12,9 @@ export const EpubParserV1: EpubParser = {
     Array.from(doc.getElementsByTagName('rt')).forEach((node) =>
       node.parentNode!!.removeChild(node)
     );
+    Array.from(doc.getElementsByTagName('rp')).forEach((node) =>
+      node.parentNode!!.removeChild(node)
+    );
     return Array.from(doc.body.getElementsByTagName('p'))
       .map((el) => el.innerText)
       .filter((it) => it.trim().length !== 0);
