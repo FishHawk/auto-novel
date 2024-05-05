@@ -9,7 +9,6 @@ import {
 import { delay } from '@/util';
 
 import { Translator } from './Translator';
-import { SakuraTranslator } from './TranslatorSakura';
 
 export const translateWeb = async (
   { providerId, novelId }: WebTranslateTaskDesc,
@@ -27,7 +26,7 @@ export const translateWeb = async (
   const {
     getTranslateTask,
     updateMetadataTranslation,
-    checkChapter,
+    getChapterTranslateTask,
     updateChapterTranslation,
   } = Locator.webNovelRepository.createTranslationApi(
     providerId,
@@ -73,10 +72,7 @@ export const translateWeb = async (
     return;
   }
 
-  if (
-    translator.segTranslator instanceof SakuraTranslator &&
-    !translator.segTranslator.allowUpload()
-  ) {
+  if (!translator.allowUpload()) {
     callback.log('发生错误，当前Sakura版本不允许上传翻译');
     return;
   }
@@ -176,11 +172,10 @@ export const translateWeb = async (
         callback.log('目前GPT翻译目录超级不稳定，跳过');
       } else {
         callback.log('翻译元数据');
-        const textsDst = await translator.translate(
-          coder.encoded,
-          task.glossary,
-          signal
-        );
+        const textsDst = await translator.translate(coder.encoded, {
+          glossary: task.glossary,
+          signal,
+        });
 
         callback.log(`上传元数据`);
         await updateMetadataTranslation(coder.recover(textsDst));
@@ -229,21 +224,25 @@ export const translateWeb = async (
     const logSuffix = `[${index}] ${providerId}/${novelId}/${chapterId}`;
     try {
       callback.log('\n获取章节' + logSuffix);
-      const textsJp = await checkChapter(chapterId);
+      const chapterTranslateTask = await getChapterTranslateTask(chapterId);
 
-      if (textsJp.length === 0) {
+      if (chapterTranslateTask === '') {
         callback.log(`无需翻译`);
         callback.onChapterSuccess({});
       } else {
         callback.log('翻译章节' + logSuffix);
         const textsZh = await translator.translate(
-          textsJp,
-          task.glossary,
-          signal
+          chapterTranslateTask.paragraphJp,
+          {
+            glossary: chapterTranslateTask.glossary,
+            oldTextZh: chapterTranslateTask.oldParagraphZh,
+            oldGlossary: chapterTranslateTask.oldGlossary,
+            signal,
+          }
         );
         callback.log('上传章节' + logSuffix);
         const { jp, zh } = await updateChapterTranslation(chapterId, {
-          glossaryUuid: task.glossaryUuid,
+          glossaryUuid: chapterTranslateTask.glossaryId,
           paragraphsZh: textsZh,
         });
         callback.onChapterSuccess({ jp, zh });

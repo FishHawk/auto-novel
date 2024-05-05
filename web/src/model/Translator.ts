@@ -204,6 +204,14 @@ export interface WebTranslateTask {
   }[];
 }
 
+export interface WebChapterTranslateTask {
+  paragraphJp: string[];
+  oldParagraphZh?: string[];
+  glossaryId: string;
+  glossary: Glossary;
+  oldGlossary: Glossary;
+}
+
 export interface WenkuTranslateTask {
   glossaryUuid?: string;
   glossary: { [key: string]: string };

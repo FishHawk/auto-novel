@@ -139,7 +139,7 @@ data class WebNovelChapter(
     val youdaoParagraphs: List<String>? = null,
 
     val gptGlossaryUuid: String? = null,
-    val gptGlossary: Map<String, String?> = emptyMap(),
+    val gptGlossary: Map<String, String>? = emptyMap(),
     val gptParagraphs: List<String>? = null,
 
     val sakuraVersion: String? = null,

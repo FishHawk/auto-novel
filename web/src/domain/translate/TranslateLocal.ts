@@ -91,11 +91,10 @@ export const translateLocal = async (
       const textsJp = chapter?.paragraphs;
 
       callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(
-        textsJp,
-        metadata.glossary,
-        signal
-      );
+      const textsZh = await translator.translate(textsJp, {
+        glossary: metadata.glossary,
+        signal,
+      });
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await updateTranslation(chapterId, {

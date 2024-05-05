@@ -1,16 +1,18 @@
+import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
 
-import { Locator } from '@/data';
-import { createGlossaryWrapper, createLengthSegmentor } from './common';
-import { BaseTranslatorConfig, SegmentTranslator } from './type';
-
-export type BaiduTranslatorConfig = BaseTranslatorConfig;
+import {
+  BaseTranslatorConfig,
+  SegmentTranslator,
+  createGlossaryWrapper,
+  createLengthSegmentor,
+} from './common';
 
 export class BaiduTranslator implements SegmentTranslator {
   log: (message: string) => void;
   private api = Locator.baiduRepository();
 
-  constructor({ log }: BaiduTranslatorConfig) {
+  constructor({ log }: BaiduTranslator.Config) {
     this.log = log;
   }
 
@@ -19,7 +21,7 @@ export class BaiduTranslator implements SegmentTranslator {
     return this;
   }
 
-  createSegments = createLengthSegmentor(3500);
+  segmentor = createLengthSegmentor(3500);
 
   async translate(
     seg: string[],
@@ -32,11 +34,8 @@ export class BaiduTranslator implements SegmentTranslator {
     );
   }
 
-  async translateInner(
-    input: string[],
-    signal?: AbortSignal
-  ): Promise<string[]> {
-    const query = input.join('\n');
+  async translateInner(seg: string[], signal?: AbortSignal): Promise<string[]> {
+    const query = seg.join('\n');
     const chunks = await this.api.translate(query, { signal });
 
     const lineParts: { paraIdx: number; dst: string }[] = [];
@@ -62,4 +61,9 @@ export class BaiduTranslator implements SegmentTranslator {
 
     return lines;
   }
+}
+
+export namespace BaiduTranslator {
+  export type Config = BaseTranslatorConfig;
+  export const create = (config: Config) => new BaiduTranslator(config).init();
 }

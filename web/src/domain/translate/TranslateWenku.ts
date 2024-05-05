@@ -8,7 +8,6 @@ import {
 } from '@/model/Translator';
 
 import { Translator } from './Translator';
-import { SakuraTranslator } from './TranslatorSakura';
 
 export const translateWenku = async (
   { novelId, volumeId }: WenkuTranslateTaskDesc,
@@ -54,10 +53,7 @@ export const translateWenku = async (
     return;
   }
 
-  if (
-    translator.segTranslator instanceof SakuraTranslator &&
-    !translator.segTranslator.allowUpload()
-  ) {
+  if (!translator.allowUpload()) {
     callback.log('发生错误，当前Sakura版本不允许上传翻译');
     return;
   }
@@ -79,11 +75,10 @@ export const translateWenku = async (
       const textsJp = await getChapterToTranslate(chapterId);
 
       callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(
-        textsJp,
-        task.glossary,
-        signal
-      );
+      const textsZh = await translator.translate(textsJp, {
+        glossary: task.glossary,
+        signal,
+      });
 
       callback.log(`上传章节 ${volumeId}/${chapterId}`);
       const state = await updateChapterTranslation(chapterId, {

@@ -8,6 +8,8 @@ import infra.VolumeCreateException
 import infra.common.OperationHistoryRepository
 import infra.user.UserFavoredWenkuRepository
 import infra.user.UserRepository
+import infra.web.WebNovelChapterRepository
+import infra.web.WebNovelMetadataRepository
 import infra.wenku.WenkuNovelFilter
 import infra.wenku.WenkuNovelMetadataRepository
 import infra.wenku.WenkuNovelVolumeRepository
@@ -49,6 +51,12 @@ private class WenkuNovelRes {
 
         @Resource("/translate/{translatorId}/{volumeId}")
         class Translate(val parent: Id, val translatorId: TranslatorId, val volumeId: String) {
+            @Resource("/{chapterId}")
+            class Chapter(val parent: Translate, val chapterId: String)
+        }
+
+        @Resource("/translate-v2/{translatorId}/{volumeId}")
+        class TranslateV2(val parent: Id, val translatorId: TranslatorId, val volumeId: String) {
             @Resource("/{chapterId}")
             class Chapter(val parent: Translate, val chapterId: String)
         }
@@ -215,6 +223,14 @@ fun Route.routeWenkuNovel() {
     }
 }
 
+private fun throwNovelNotFound(): Nothing =
+    throwNotFound("小说不存在")
+
+private fun validateVolumeId(volumeId: String) {
+    if (!volumeId.endsWith("txt") && !volumeId.endsWith("epub"))
+        throwBadRequest("不支持的文件格式")
+}
+
 class WenkuNovelApi(
     private val userRepo: UserRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
@@ -247,9 +263,6 @@ class WenkuNovelApi(
             )
             .map { it.asDto() }
     }
-
-    private fun throwNovelNotFound(): Nothing =
-        throwNotFound("小说不存在")
 
     @Serializable
     data class WenkuNovelDto(
@@ -462,11 +475,6 @@ class WenkuNovelApi(
             throwNovelNotFound()
     }
 
-    private fun validateVolumeId(volumeId: String) {
-        if (!volumeId.endsWith("txt") && !volumeId.endsWith("epub"))
-            throwBadRequest("不支持的文件格式")
-    }
-
     suspend fun createVolume(
         user: AuthenticatedUser,
         novelId: String,
@@ -651,5 +659,76 @@ class WenkuNovelApi(
             translations = translations.distinct(),
         )
         return "files-wenku/${novelId}/${volumeId.encodeURLPathPart()}.unpack/$newFileName"
+    }
+}
+
+class WenkuNovelTranslateV2Api(
+    private val metadataRepo: WenkuNovelMetadataRepository,
+    private val volumeRepo: WenkuNovelVolumeRepository,
+) {
+    private suspend fun validateNovelId(novelId: String) {
+        if (!metadataRepo.exist(novelId))
+            throwNovelNotFound()
+    }
+
+
+    @Serializable
+    data class TranslateTaskDto(
+        val glossaryId: String,
+        val glossary: Map<String, String>,
+        val toc: List<TocItem>
+    ) {
+        @Serializable
+        data class TocItem(
+            val chapterId: String,
+            val glossaryId: String?,
+        )
+    }
+
+    suspend fun getTranslateTask(
+        novelId: String,
+        translatorId: TranslatorId,
+        volumeId: String,
+    ): TranslateTaskDto {
+        val novel = metadataRepo.get(novelId)
+            ?: throwNovelNotFound()
+        val volume = volumeRepo.getVolume(novelId, volumeId)
+            ?: throwNotFound("卷不存在")
+
+        val untranslatedChapterIds = mutableListOf<String>()
+        val expiredChapterIds = mutableListOf<String>()
+        volume.listChapter().forEach {
+            if (!volume.translationExist(translatorId, it)) {
+                untranslatedChapterIds.add(it)
+            } else {
+                val chapterGlossary = volume.getChapterGlossary(translatorId, it)
+                if (
+                    chapterGlossary?.uuid != novel.glossaryUuid ||
+                    (translatorId == TranslatorId.Sakura && chapterGlossary?.sakuraVersion != "0.9")
+                ) {
+                    expiredChapterIds.add(it)
+                }
+            }
+        }
+        return TranslateTaskDto(
+            glossaryId = novel.glossaryUuid,
+            glossary = novel.glossary,
+            untranslatedChapters = untranslatedChapterIds,
+            expiredChapters = expiredChapterIds,
+        )
+    }
+
+    suspend fun getChapterToTranslate(
+        novelId: String,
+        volumeId: String,
+        chapterId: String,
+    ): List<String> {
+        validateNovelId(novelId)
+        validateVolumeId(volumeId)
+
+        val volume = volumeRepo.getVolume(novelId, volumeId)
+            ?: throwNotFound("卷不存在")
+        return volume.getChapter(chapterId)
+            ?: throwNotFound("章节不存在")
     }
 }

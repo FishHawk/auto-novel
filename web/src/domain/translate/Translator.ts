@@ -1,42 +1,22 @@
-import { MD5 } from 'crypto-es/lib/md5';
+import { isEqual } from 'lodash-es';
 
-import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
 
-import { BaiduTranslator, BaiduTranslatorConfig } from './TranslatorBaidu';
-import { OpenAiTranslator, OpenAiTranslatorConfig } from './TranslatorOpenAi';
-import { SakuraTranslator, SakuraTranslatorConfig } from './TranslatorSakura';
-import { YoudaoTranslator, YoudaoTranslatorConfig } from './TranslatorYoudao';
-import { SegmentTranslator } from './type';
-
-interface SegmentCache {
-  cacheKey(segIndex: number, seg: string[], extra?: any): string;
-  get(cacheKey: string): Promise<string[] | undefined>;
-  save(cacheKey: string, output: string[]): Promise<void>;
-}
-
-const createSegIndexedDbCache = async (
-  storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
-) => {
-  return <SegmentCache>{
-    cacheKey: (_segIndex: number, seg: string[], extra?: any): string =>
-      MD5(JSON.stringify({ seg, extra })).toString(),
-
-    get: (hash: string): Promise<string[] | undefined> =>
-      Locator.cachedSegRepository().then((repo) => repo.get(storeName, hash)),
-
-    save: (hash: string, text: string[]): Promise<void> =>
-      Locator.cachedSegRepository()
-        .then((repo) => repo.create(storeName, hash, text))
-        .then(() => {}),
-  };
-};
+import { BaiduTranslator } from './TranslatorBaidu';
+import { OpenAiTranslator } from './TranslatorOpenAi';
+import { SakuraTranslator } from './TranslatorSakura';
+import { YoudaoTranslator } from './TranslatorYoudao';
+import {
+  SegmentCache,
+  SegmentTranslator,
+  createSegIndexedDbCache,
+} from './common';
 
 export type TranslatorConfig =
-  | ({ id: 'baidu' } & BaiduTranslatorConfig)
-  | ({ id: 'youdao' } & YoudaoTranslatorConfig)
-  | ({ id: 'gpt' } & OpenAiTranslatorConfig)
-  | ({ id: 'sakura' } & SakuraTranslatorConfig);
+  | ({ id: 'baidu' } & BaiduTranslator.Config)
+  | ({ id: 'youdao' } & YoudaoTranslator.Config)
+  | ({ id: 'gpt' } & OpenAiTranslator.Config)
+  | ({ id: 'sakura' } & SakuraTranslator.Config);
 
 export class Translator {
   segTranslator: SegmentTranslator;
@@ -47,28 +27,72 @@ export class Translator {
     this.segCache = segCache;
   }
 
-  async translate(
-    input: string[],
-    glossary: Glossary,
-    signal?: AbortSignal
-  ): Promise<string[]> {
-    return emptyLineFilterWrapper(input, async (input) => {
-      if (input.length === 0) return [];
+  allowUpload() {
+    return !(
+      this.segTranslator instanceof SakuraTranslator &&
+      !this.segTranslator.allowUpload()
+    );
+  }
 
-      let output: string[][] = [];
-      const segs = this.segTranslator.createSegments(input);
-      const size = segs.length;
-      for (const [index, seg] of segs.entries()) {
-        const segOutput = await this.translateSeg(
-          seg,
+  sakuraVersion() {
+    if (this.segTranslator instanceof SakuraTranslator) {
+      return this.segTranslator.model.version;
+    } else {
+      return '';
+    }
+  }
+
+  async translate(
+    textJp: string[],
+    extra?: {
+      glossary?: Glossary;
+      oldTextZh?: string[] | undefined;
+      oldGlossary?: Glossary;
+      signal?: AbortSignal;
+    }
+  ): Promise<string[]> {
+    let { glossary, oldTextZh, oldGlossary, signal } = extra || {};
+    glossary = glossary || {};
+    oldGlossary = oldGlossary || {};
+
+    if (oldTextZh !== undefined && textJp.length !== oldTextZh.length) {
+      throw new Error('旧版翻译行数不匹配。不应当出现，请反馈给站长。');
+    }
+
+    const textZh = await emptyLineFilterWrapper(textJp, async (textJp) => {
+      if (textJp.length === 0) return [];
+
+      const resultsZh: string[][] = [];
+      const segsJp = this.segTranslator.segmentor(textJp);
+      const size = segsJp.length;
+      for (const [index, [segJp, oldSegZh]] of segsJp.entries()) {
+        if (oldSegZh !== undefined) {
+          const segGlossary = filterGlossary(glossary, segJp);
+          const segOldGlossary = filterGlossary(oldGlossary, segJp);
+          if (isEqual(segGlossary, segOldGlossary)) {
+            // 该分段术语表无变化，无需重新翻译
+            resultsZh.push(oldSegZh);
+            continue;
+          }
+        }
+        const segZh = await this.translateSeg(
+          segJp,
           { index, size },
           glossary,
           signal
         );
-        output.push(segOutput);
+        if (segJp.length !== segZh.length) {
+          throw new Error('翻译结果行数不匹配。不应当出现，请反馈给站长。');
+        }
+        if (segZh.some((it) => it.trim().length === 0)) {
+          throw new Error('翻译结果存在空行。不应当出现，请反馈给站长。');
+        }
+        resultsZh.push(segZh);
       }
-      return output.flat();
+      return resultsZh.flat();
     });
+
+    return textZh;
   }
 
   async translateSeg(
@@ -77,7 +101,7 @@ export class Translator {
     glossary: Glossary,
     signal?: AbortSignal
   ) {
-    let cacheKey: string | null = null;
+    let cacheKey: string | undefined;
     if (this.segCache) {
       try {
         let extra: any = { glossary };
@@ -107,7 +131,7 @@ export class Translator {
       throw new Error('翻译器行数不匹配，请反馈给站长');
     }
 
-    if (this.segCache && cacheKey !== null) {
+    if (this.segCache && cacheKey !== undefined) {
       try {
         await this.segCache.save(cacheKey, segOutput);
       } catch (e) {
@@ -117,23 +141,25 @@ export class Translator {
 
     return segOutput;
   }
+}
 
-  static async createSegmentTranslator(
+export namespace Translator {
+  const createSegmentTranslator = async (
     config: TranslatorConfig
-  ): Promise<SegmentTranslator> {
+  ): Promise<SegmentTranslator> => {
     if (config.id === 'baidu') {
-      return await new BaiduTranslator(config).init();
+      return BaiduTranslator.create(config);
     } else if (config.id === 'youdao') {
-      return await new YoudaoTranslator(config).init();
+      return YoudaoTranslator.create(config);
     } else if (config.id === 'gpt') {
-      return new OpenAiTranslator(config);
+      return OpenAiTranslator.create(config);
     } else {
-      return await new SakuraTranslator(config).init();
+      return SakuraTranslator.create(config);
     }
-  }
+  };
 
-  static async create(config: TranslatorConfig, cache: boolean) {
-    const segTranslator = await this.createSegmentTranslator(config);
+  export const create = async (config: TranslatorConfig, cache: boolean) => {
+    const segTranslator = await createSegmentTranslator(config);
     let segCache: SegmentCache | undefined = undefined;
     if (cache) {
       if (config.id === 'gpt') {
@@ -143,35 +169,42 @@ export class Translator {
       }
     }
     return new Translator(segTranslator, segCache);
-  }
+  };
 }
 
-const filterInput = (input: string[]) =>
-  input
-    .map((line) => line.replace(/\r?\n|\r/g, ''))
-    .filter((line) => !(line.trim() === '' || line.startsWith('<图片>')));
-
-const recoverOutput = (input: string[], output: string[]) => {
-  const recoveredOutput: string[] = [];
-  for (const line of input) {
-    const realLine = line.replace(/\r?\n|\r/g, '');
-    if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
-      recoveredOutput.push(line);
-    } else {
-      const outputLine = output.shift();
-      recoveredOutput.push(outputLine!);
+const filterGlossary = (glossary: Glossary, text: string[]) => {
+  const filteredGlossary: Glossary = {};
+  for (const wordJp in glossary) {
+    if (text.some((it) => it.includes(wordJp))) {
+      filteredGlossary[wordJp] = glossary[wordJp];
     }
   }
-  if (recoveredOutput.length !== input.length) {
-    throw Error('重建翻译长度不匹配，不应当出现');
-  }
-  return recoveredOutput;
+  return filteredGlossary;
 };
 
 const emptyLineFilterWrapper = async (
   input: string[],
   callback: (input: string[]) => Promise<string[]>
 ) => {
+  const filterInput = (input: string[]) =>
+    input
+      .map((line) => line.replace(/\r?\n|\r/g, ''))
+      .filter((line) => !(line.trim() === '' || line.startsWith('<图片>')));
+
+  const recoverOutput = (input: string[], output: string[]) => {
+    const recoveredOutput: string[] = [];
+    for (const line of input) {
+      const realLine = line.replace(/\r?\n|\r/g, '');
+      if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
+        recoveredOutput.push(line);
+      } else {
+        const outputLine = output.shift();
+        recoveredOutput.push(outputLine!);
+      }
+    }
+    return recoveredOutput;
+  };
+
   const filteredInput = filterInput(input);
   const output = await callback(filteredInput);
   const recoveredOutput = recoverOutput(input, output);

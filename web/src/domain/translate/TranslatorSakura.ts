@@ -1,16 +1,14 @@
+import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
 
-import { Locator } from '@/data';
-import { createLengthSegmentor } from './common';
-import { BaseTranslatorConfig, SegmentTranslator } from './type';
+import {
+  BaseTranslatorConfig,
+  SegmentTranslator,
+  createLengthSegmentor,
+} from './common';
 
 type OpenAi = ReturnType<typeof Locator.openAiRepositoryFactory>;
 type Llamacpp = ReturnType<typeof Locator.llamacppRepositoryFactory>;
-
-export interface SakuraTranslatorConfig extends BaseTranslatorConfig {
-  endpoint: string;
-  useLlamaApi: boolean;
-}
 
 export class SakuraTranslator implements SegmentTranslator {
   log: (message: string, detail?: string[]) => void;
@@ -18,7 +16,7 @@ export class SakuraTranslator implements SegmentTranslator {
   private api: Llamacpp | OpenAi;
   model: SakuraModel = { version: '0.8' };
 
-  constructor({ log, endpoint, useLlamaApi }: SakuraTranslatorConfig) {
+  constructor({ log, endpoint, useLlamaApi }: SakuraTranslator.Config) {
     this.log = log;
     if (useLlamaApi) {
       this.api = Locator.llamacppRepositoryFactory(endpoint);
@@ -27,7 +25,7 @@ export class SakuraTranslator implements SegmentTranslator {
     }
   }
 
-  createSegments = createLengthSegmentor(500);
+  segmentor = createLengthSegmentor(500);
 
   async init() {
     let model: SakuraModel;
@@ -37,6 +35,8 @@ export class SakuraTranslator implements SegmentTranslator {
       model = await SakuraOpenai.detectModel(this.api);
     }
     this.model = model;
+    console.log('模型指纹');
+    console.log(model.fingerprint);
     return this;
   }
 
@@ -244,6 +244,14 @@ export class SakuraTranslator implements SegmentTranslator {
       );
     }
   }
+}
+
+export namespace SakuraTranslator {
+  export interface Config extends BaseTranslatorConfig {
+    endpoint: string;
+    useLlamaApi: boolean;
+  }
+  export const create = (config: Config) => new SakuraTranslator(config).init();
 }
 
 interface SakuraModel {

@@ -10,7 +10,7 @@ import {
 } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { Translator, SakuraTranslator } from '@/domain/translate';
+import { Translator } from '@/domain/translate';
 import {
   GptWorker,
   SakuraWorker,
@@ -138,8 +138,9 @@ const deleteWorker = () => {
 };
 
 const testWorker = async () => {
-  const input =
-    '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。';
+  const textJp = [
+    '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。',
+  ];
   try {
     const translator = await Translator.create(
       {
@@ -148,21 +149,20 @@ const testWorker = async () => {
       },
       false
     );
-    const result = await translator.translate([input], {});
-    const output = result[0];
+    const textZh = await translator.translate(textJp);
+
+    const lineJp = textJp[0];
+    const lineZh = textZh[0];
 
     if (worker.translatorId === 'gpt') {
-      message.success(`原文：${input}\n译文：${output}`);
+      message.success(`原文：${lineJp}\n译文：${lineZh}`);
     } else {
-      const segTranslator = translator.segTranslator as any as SakuraTranslator;
-      console.log('模型指纹');
-      console.log(segTranslator.model.fingerprint);
       message.success(
         [
-          `原文：${input}`,
-          `译文：${output}`,
-          `版本：${segTranslator.model.version} ${
-            segTranslator.allowUpload() ? '允许上传' : '禁止上传'
+          `原文：${lineJp}`,
+          `译文：${lineZh}`,
+          `版本：${translator.sakuraVersion()} ${
+            translator.allowUpload() ? '允许上传' : '禁止上传'
           }`,
         ].join('\n')
       );

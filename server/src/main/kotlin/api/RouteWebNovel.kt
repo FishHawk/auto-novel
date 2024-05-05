@@ -30,7 +30,6 @@ import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
@@ -74,7 +73,16 @@ private class WebNovelRes {
         }
 
         @Resource("/translate-v2/{translatorId}")
-        class TranslateV2(val parent: Id, val translatorId: TranslatorId)
+        class TranslateV2(val parent: Id, val translatorId: TranslatorId) {
+            @Resource("/metadata")
+            class Metadata(val parent: Translate)
+
+            @Resource("/check-chapter/{chapterId}")
+            class CheckChapter(val parent: Translate, val chapterId: String, val sync: Boolean)
+
+            @Resource("/chapter/{chapterId}")
+            class Chapter(val parent: Translate, val chapterId: String)
+        }
 
         @Resource("/file")
         class File(
@@ -198,15 +206,6 @@ fun Route.routeWebNovel() {
         }
 
         // Translate
-        get<WebNovelRes.Id.Translate> { loc ->
-            call.tryRespond {
-                service.getTranslateTask(
-                    providerId = loc.parent.providerId,
-                    novelId = loc.parent.novelId,
-                    translatorId = loc.translatorId,
-                )
-            }
-        }
         post<WebNovelRes.Id.Translate.Metadata> { loc ->
             @Serializable
             class Body(
@@ -266,6 +265,17 @@ fun Route.routeWebNovel() {
                     providerId = loc.parent.providerId,
                     novelId = loc.parent.novelId,
                     translatorId = loc.translatorId,
+                )
+            }
+        }
+        post<WebNovelRes.Id.TranslateV2.CheckChapter> { loc ->
+            call.tryRespond {
+                translateV2Service.checkIfChapterNeedTranslate(
+                    providerId = loc.parent.parent.providerId,
+                    novelId = loc.parent.parent.novelId,
+                    translatorId = loc.parent.translatorId,
+                    chapterId = loc.chapterId,
+                    sync = loc.sync,
                 )
             }
         }
@@ -616,87 +626,6 @@ class WebNovelApi(
     }
 
     // Translate
-    @Serializable
-    data class TranslateTaskDto(
-        val title: String? = null,
-        val introduction: String? = null,
-        val toc: List<String>,
-        val glossaryUuid: String?,
-        val glossary: Map<String, String>,
-        val chapters: List<ChapterIdWithState>,
-    ) {
-        @Serializable
-        data class ChapterIdWithState(
-            val id: String,
-            val state: ChapterState,
-        )
-
-        @Serializable
-        enum class ChapterState {
-            @SerialName("untranslated")
-            Untranslated,
-
-            @SerialName("translated")
-            Translated,
-
-            @SerialName("expired")
-            TranslatedAndExpired,
-        }
-    }
-
-    suspend fun getTranslateTask(
-        providerId: String,
-        novelId: String,
-        translatorId: TranslatorId,
-    ): TranslateTaskDto {
-        validateId(providerId, novelId)
-
-        val novel = metadataRepo.getNovelAndSave(providerId, novelId, 10)
-            .getOrElse { throwInternalServerError("从源站获取失败:" + it.message) }
-
-        val title = novel.titleJp.takeIf { novel.titleZh == null }
-        val introduction = novel.introductionJp.takeIf { novel.introductionZh == null }
-        val toc = novel.toc
-            .mapNotNull { tocItem -> tocItem.titleJp.takeIf { tocItem.titleZh == null } }
-            .distinct()
-
-        val chapterTranslationOutlines = chapterRepo.getTranslationOutlines(
-            providerId = providerId,
-            novelId = novelId,
-            translatorId = translatorId,
-        )
-        val chapters = novel.toc
-            .mapNotNull { it.chapterId }
-            .map { chapterId ->
-                val chapterTranslationOutline = chapterTranslationOutlines.find {
-                    it.chapterId == chapterId
-                }
-                val chapterState = if (chapterTranslationOutline?.translated != true) {
-                    TranslateTaskDto.ChapterState.Untranslated
-                } else if (
-                    chapterTranslationOutline.glossaryUuid != novel.glossaryUuid ||
-                    (translatorId == TranslatorId.Sakura && chapterTranslationOutline.sakuraVersion != "0.9")
-                ) {
-                    TranslateTaskDto.ChapterState.TranslatedAndExpired
-                } else {
-                    TranslateTaskDto.ChapterState.Translated
-                }
-                TranslateTaskDto.ChapterIdWithState(
-                    id = chapterId,
-                    state = chapterState,
-                )
-            }
-
-        return TranslateTaskDto(
-            title = title,
-            introduction = introduction,
-            toc = toc,
-            glossaryUuid = novel.glossaryUuid,
-            glossary = novel.glossary,
-            chapters = chapters,
-        )
-    }
-
     suspend fun updateMetadataTranslation(
         providerId: String,
         novelId: String,
@@ -901,5 +830,59 @@ class WebNovelTranslateV2Api(
             glossary = novel.glossary,
             toc = toc,
         )
+    }
+
+    @Serializable
+    data class ChapterTranslateTaskDto(
+        val paragraphJp: List<String>,
+        val oldParagraphZh: List<String>?,
+        val glossaryId: String,
+        val glossary: Map<String, String>,
+        val oldGlossary: Map<String, String>,
+    )
+
+    suspend fun checkIfChapterNeedTranslate(
+        providerId: String,
+        novelId: String,
+        translatorId: TranslatorId,
+        chapterId: String,
+        sync: Boolean,
+    ): ChapterTranslateTaskDto? {
+        val novel = metadataRepo.get(providerId, novelId)
+            ?: throwNovelNotFound()
+
+        val chapter = chapterRepo.getOrSyncRemote(
+            providerId = providerId,
+            novelId = novelId,
+            chapterId = chapterId,
+            forceSync = sync,
+        ).getOrElse {
+            throwInternalServerError("从源站获取失败:" + it.message)
+        }
+
+        val (oldGlossaryId, oldGlossary, oldTranslation) = chapter.run {
+            when (translatorId) {
+                TranslatorId.Baidu -> Triple(baiduGlossaryUuid, baiduGlossary, baiduParagraphs)
+                TranslatorId.Youdao -> Triple(youdaoGlossaryUuid, youdaoGlossary, youdaoParagraphs)
+                TranslatorId.Gpt -> Triple(gptGlossaryUuid, gptGlossary, gptParagraphs)
+                TranslatorId.Sakura -> Triple(sakuraGlossaryUuid, sakuraGlossary, sakuraParagraphs)
+            }
+        }
+
+        return if (
+            oldTranslation != null &&
+            (oldGlossaryId ?: "no glossary") == (novel.glossaryUuid ?: "no glossary") &&
+            (translatorId != TranslatorId.Sakura || chapter.sakuraVersion == "0.9")
+        ) {
+            null
+        } else {
+            return ChapterTranslateTaskDto(
+                paragraphJp = chapter.paragraphs,
+                glossaryId = novel.glossaryUuid ?: "no glossary",
+                glossary = novel.glossary,
+                oldParagraphZh = oldTranslation,
+                oldGlossary = oldGlossary ?: emptyMap(),
+            )
+        }
     }
 }

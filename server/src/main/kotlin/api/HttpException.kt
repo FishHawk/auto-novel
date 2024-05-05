@@ -41,10 +41,10 @@ suspend inline fun ApplicationCall.doOrRespondError(block: () -> Unit) {
     }
 }
 
-suspend inline fun <reified T : Any> ApplicationCall.tryRespond(block: () -> T) =
+suspend inline fun <reified T : Any?> ApplicationCall.tryRespond(block: () -> T) =
     doOrRespondError {
         val message = block()
-        if (message is Unit) {
+        if (message is Unit || message == null) {
             response.status(HttpStatusCode.OK)
         } else {
             respond(message)

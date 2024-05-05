@@ -1,5 +1,9 @@
 import { Page } from '@/model/Page';
-import { TranslatorId, WebTranslateTask } from '@/model/Translator';
+import {
+  TranslatorId,
+  WebChapterTranslateTask,
+  WebTranslateTask,
+} from '@/model/Translator';
 import {
   WebNovelChapterDto,
   WebNovelDto,
@@ -95,13 +99,13 @@ const createTranslationApi = (
     toc: { [key: string]: string };
   }) => client.post(`${endpoint}/metadata`, { json, signal }).text();
 
-  const checkChapter = (chapterId: string) =>
+  const getChapterTranslateTask = (chapterId: string) =>
     client
-      .post(`${endpoint}/check-chapter/${chapterId}`, {
+      .post(`${endpointV2}/check-chapter/${chapterId}`, {
         searchParams: { sync: syncFromProvider },
         signal,
       })
-      .json<string[]>();
+      .json<WebChapterTranslateTask | ''>();
 
   const updateChapterTranslation = (
     chapterId: string,
@@ -120,7 +124,7 @@ const createTranslationApi = (
   return {
     getTranslateTask,
     updateMetadataTranslation,
-    checkChapter,
+    getChapterTranslateTask,
     updateChapterTranslation,
   };
 };

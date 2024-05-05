@@ -1,104 +1,147 @@
+import { MD5 } from 'crypto-es/lib/md5';
 import { customAlphabet } from 'nanoid';
 
+import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
 
-import { Segmentor } from './type';
+export type Segmentor = (
+  textJp: string[],
+  textZh?: string[]
+) => [string[], string[]?][];
+
+export interface BaseTranslatorConfig {
+  log: (message: string, detail?: string[]) => void;
+}
+
+export interface SegmentTranslator {
+  segmentor: Segmentor;
+  translate: (
+    seg: string[],
+    segInfo: { index: number; size: number },
+    glossary: Glossary,
+    signal?: AbortSignal
+  ) => Promise<string[]>;
+  log: (message: string, detail?: string[]) => void;
+}
 
 export const createGlossaryWrapper = (glossary: Glossary) => {
   const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 4);
-  const generateUuid = () => {
+  const generateToken = () => {
     while (true) {
       const uuid = nanoid();
       if (/(.)\1/.test(uuid)) return uuid;
     }
   };
 
-  const glossaryJpToUuid: Glossary = {};
-  const glossaryUuidToZh: Glossary = {};
+  const wordJpToToken: Glossary = {};
+  const tokenToWordZh: Glossary = {};
   for (const wordJp of Object.keys(glossary).sort(
     (a, b) => b.length - a.length
   )) {
     const wordZh = glossary[wordJp];
-    const uuid = generateUuid();
-    glossaryJpToUuid[wordJp] = uuid;
-    glossaryUuidToZh[uuid] = wordZh;
+    const token = generateToken();
+    wordJpToToken[wordJp] = token;
+    tokenToWordZh[token] = wordZh;
   }
 
-  const encode = (input: string[]): string[] => {
-    return input.map((text) => {
-      for (const wordSrc in glossaryJpToUuid) {
-        const wordDst = glossaryJpToUuid[wordSrc];
-        text = text.replaceAll(wordSrc, wordDst);
+  const encode = (text: string[]): string[] => {
+    return text.map((line) => {
+      for (const wordJp in wordJpToToken) {
+        const token = wordJpToToken[wordJp];
+        line = line.replaceAll(wordJp, token);
       }
-      return text;
+      return line;
     });
   };
 
-  const decode = (input: string[]): string[] => {
-    return input.map((text) => {
-      for (const wordSrc in glossaryUuidToZh) {
-        const wordDst = glossaryUuidToZh[wordSrc];
-        text = text.replaceAll(wordSrc, wordDst);
+  const decode = (text: string[]): string[] => {
+    return text.map((line) => {
+      for (const token in tokenToWordZh) {
+        const wordZh = tokenToWordZh[token];
+        line = line.replaceAll(token, wordZh);
       }
-      return text;
+      return line;
     });
   };
 
   return async (
-    input: string[],
+    textJp: string[],
     callback: (input: string[]) => Promise<string[]>
   ) => {
-    const encodedInput = encode(input);
-    const output = await callback(encodedInput);
-    const decodedOutput = decode(output);
-    return decodedOutput;
+    const textJpEncoded = encode(textJp);
+    const textZh = await callback(textJpEncoded);
+    const textZhDecoded = decode(textZh);
+    return textZhDecoded;
   };
 };
 
 export const createLengthSegmentor = (
   maxLength: number,
-  extra?: {
-    maxLine?: number;
-    lastSegMinLength?: number;
-  }
+  maxLine?: number
 ): Segmentor => {
-  const maxLine = extra?.maxLine ?? 65536;
-  const lastSegMinLength = extra?.lastSegMinLength;
+  maxLine = maxLine ?? 65536;
 
-  return (input: string[]) => {
-    const segs: string[][] = [];
-    let seg: string[] = [];
+  return (textJp: string[], textZh?: string[]) => {
+    type Seg = [string[], string[]?];
+    const segs: Seg[] = [];
+    let segJp: string[] = [];
+    let segZh: string[] = [];
     let segSize = 0;
 
-    for (const line of input) {
-      const lineSize = line.length;
-      if (
-        (segSize + lineSize > maxLength || seg.length >= maxLine) &&
-        seg.length > 0
-      ) {
-        segs.push(seg);
-        seg = [line];
-        segSize = lineSize;
+    for (let i = 0; i < textJp.length; i++) {
+      const lineJp = textJp[i];
+      const lineJpSize = lineJp.length;
+
+      if (segSize + lineJpSize > maxLength || segJp.length >= maxLine) {
+        if (textZh === undefined) {
+          segs.push([segJp]);
+        } else {
+          segs.push([segJp, segZh]);
+          segZh = [];
+        }
+        segJp = [];
+        segSize = 0;
+      }
+
+      if (textZh !== undefined) {
+        const lineZh = textZh[i];
+        segZh.push(lineZh);
+      }
+
+      segJp.push(lineJp);
+      segSize += lineJpSize;
+    }
+
+    if (segJp.length > 0) {
+      if (textZh === undefined) {
+        segs.push([segJp]);
       } else {
-        seg.push(line);
-        segSize += lineSize;
+        segs.push([segJp, segZh]);
       }
     }
-    if (seg.length > 0) {
-      segs.push(seg);
-    }
-
-    // 如果最后的分段过小，与上一个分段合并。
-    if (lastSegMinLength !== undefined && segs.length >= 2) {
-      const last1Seg = segs[segs.length - 1];
-      const last1TokenSize = last1Seg.reduce((a, b) => a + b.length, 0);
-      if (last1Seg.length <= 5 && last1TokenSize <= lastSegMinLength) {
-        const last2Seg = segs[segs.length - 2];
-        last2Seg.push(...last1Seg);
-        segs.pop();
-      }
-    }
-
     return segs;
+  };
+};
+
+export interface SegmentCache {
+  cacheKey(segIndex: number, seg: string[], extra?: any): string;
+  get(cacheKey: string): Promise<string[] | undefined>;
+  save(cacheKey: string, output: string[]): Promise<void>;
+}
+
+export const createSegIndexedDbCache = async (
+  storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
+) => {
+  return <SegmentCache>{
+    cacheKey: (_segIndex: number, seg: string[], extra?: any): string =>
+      MD5(JSON.stringify({ seg, extra })).toString(),
+
+    get: (hash: string): Promise<string[] | undefined> =>
+      Locator.cachedSegRepository().then((repo) => repo.get(storeName, hash)),
+
+    save: (hash: string, text: string[]): Promise<void> =>
+      Locator.cachedSegRepository()
+        .then((repo) => repo.create(storeName, hash, text))
+        .then(() => {}),
   };
 };

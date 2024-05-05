@@ -4,25 +4,21 @@ import { Locator, OpenAiError } from '@/data';
 import { Glossary } from '@/model/Glossary';
 import { delay } from '@/util';
 
-import { createLengthSegmentor } from './common';
-import { BaseTranslatorConfig, SegmentTranslator } from './type';
+import {
+  BaseTranslatorConfig,
+  SegmentTranslator,
+  createLengthSegmentor,
+} from './common';
 
 type OpenAi = ReturnType<typeof Locator.openAiRepositoryFactory>;
 type OpenAiWeb = ReturnType<typeof Locator.openAiWebRepositoryFactory>;
-
-export interface OpenAiTranslatorConfig extends BaseTranslatorConfig {
-  type: 'web' | 'api';
-  model: string;
-  endpoint: string;
-  key: string;
-}
 
 export class OpenAiTranslator implements SegmentTranslator {
   log: (message: string) => void;
   private api: OpenAi | OpenAiWeb;
   private model: string;
 
-  constructor({ log, type, model, endpoint, key }: OpenAiTranslatorConfig) {
+  constructor({ log, type, model, endpoint, key }: OpenAiTranslator.Config) {
     this.log = log;
     this.model = model;
     if (type === 'web') {
@@ -32,10 +28,7 @@ export class OpenAiTranslator implements SegmentTranslator {
     }
   }
 
-  createSegments = createLengthSegmentor(1500, {
-    maxLine: 30,
-    lastSegMinLength: 500,
-  });
+  segmentor = createLengthSegmentor(1500, 30);
 
   async translate(
     seg: string[],
@@ -301,6 +294,16 @@ export class OpenAiTranslator implements SegmentTranslator {
       throw 'quit';
     }
   }
+}
+
+export namespace OpenAiTranslator {
+  export interface Config extends BaseTranslatorConfig {
+    type: 'web' | 'api';
+    model: string;
+    endpoint: string;
+    key: string;
+  }
+  export const create = (config: Config) => new OpenAiTranslator(config);
 }
 
 const askApi = (
