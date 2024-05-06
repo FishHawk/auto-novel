@@ -168,7 +168,7 @@ const notices = [
         :animation="150"
         handle=".drag-trigger"
       >
-        <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
+        <n-list-item v-for="worker of workspaceRef.workers">
           <job-worker
             :worker="{ translatorId: 'sakura', ...worker }"
             :get-next-job="getNextJob"
@@ -217,5 +217,5 @@ const notices = [
     </template>
   </c-layout>
 
-  <sakura-create-worker-modal v-model:show="showCreateWorkerModal" />
+  <sakura-worker-modal v-model:show="showCreateWorkerModal" />
 </template>

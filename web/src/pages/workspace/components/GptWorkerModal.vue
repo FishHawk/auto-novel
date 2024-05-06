@@ -2,12 +2,20 @@
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { Locator } from '@/data';
+import { GptWorker } from '@/model/Translator';
+
+const props = defineProps<{
+  show: boolean;
+  worker?: GptWorker;
+}>();
+const emit = defineEmits<{
+  (e: 'update:show', show: boolean): void;
+}>();
 
 const workspace = Locator.gptWorkspaceRepository();
 const workspaceRef = workspace.ref;
 
-const formRef = ref<FormInst>();
-const formValue = ref<{
+const initFormValue = (): {
   id: string;
   type: 'web' | 'api';
   modelWeb: string;
@@ -15,15 +23,38 @@ const formValue = ref<{
   endpointWeb: string;
   endpointApi: string;
   key: string;
-}>({
-  id: '',
-  type: 'web',
-  modelWeb: 'text-davinci-002-render-sha',
-  modelApi: 'gpt-3.5-turbo',
-  endpointWeb: 'https://chat.openai.com/backend-api',
-  endpointApi: 'https://api.openai.com',
-  key: '',
-});
+} => {
+  const worker = props.worker;
+  if (worker === undefined) {
+    return {
+      id: '',
+      type: 'web',
+      modelWeb: 'text-davinci-002-render-sha',
+      modelApi: 'gpt-3.5-turbo',
+      endpointWeb: 'https://chat.openai.com/backend-api',
+      endpointApi: 'https://api.openai.com',
+      key: '',
+    };
+  } else {
+    return {
+      id: worker.id,
+      type: worker.type,
+      modelWeb:
+        worker.type === 'web' ? worker.model : 'text-davinci-002-render-sha',
+      modelApi: worker.type === 'api' ? worker.model : 'gpt-3.5-turbo',
+      endpointWeb:
+        worker.type === 'web'
+          ? worker.endpoint
+          : 'https://chat.openai.com/backend-api',
+      endpointApi:
+        worker.type === 'api' ? worker.endpoint : 'https://api.openai.com',
+      key: worker.key,
+    };
+  }
+};
+
+const formRef = ref<FormInst>();
+const formValue = ref(initFormValue());
 
 const emptyCheck = (name: string) => ({
   validator: (rule: FormItemRule, value: string) => value.trim().length > 0,
@@ -36,7 +67,9 @@ const formRules: FormRules = {
     emptyCheck('名字'),
     {
       validator: (rule: FormItemRule, value: string) =>
-        workspaceRef.value.workers.find(({ id }) => id === value) === undefined,
+        workspaceRef.value.workers
+          .filter(({ id }) => id !== props.worker?.id)
+          .find(({ id }) => id === value) === undefined,
       message: '名字不能重复',
       trigger: 'input',
     },
@@ -49,15 +82,16 @@ const formRules: FormRules = {
     emptyCheck('Key'),
     {
       validator: (rule: FormItemRule, value: string) =>
-        workspaceRef.value.workers.find(({ key }) => key === value) ===
-        undefined,
+        workspaceRef.value.workers
+          .filter(({ id }) => id !== props.worker?.id)
+          .find(({ key }) => key === value) === undefined,
       message: 'Key不能重复',
       trigger: 'input',
     },
   ],
 };
 
-const createGptWorker = async () => {
+const submit = async () => {
   const validated = await new Promise<boolean>(function (resolve, _reject) {
     formRef.value?.validate((errors) => {
       if (errors) resolve(false);
@@ -81,12 +115,27 @@ const createGptWorker = async () => {
       worker.key = obj.accessToken;
     }
   } catch {}
-  workspace.addWorker(worker);
+
+  if (props.worker === undefined) {
+    workspace.addWorker(worker);
+  } else {
+    const index = workspaceRef.value.workers.findIndex(
+      ({ id }) => id === props.worker?.id
+    );
+    workspaceRef.value.workers[index] = worker;
+    emit('update:show', false);
+  }
 };
+
+const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
 </script>
 
 <template>
-  <c-modal title="添加GPT翻译器">
+  <c-modal
+    :show="show"
+    @update:show="$emit('update:show', $event)"
+    :title="verb + 'GPT翻译器'"
+  >
     <n-form
       ref="formRef"
       :model="formValue"
@@ -165,7 +214,7 @@ const createGptWorker = async () => {
     </n-form>
 
     <template #action>
-      <c-button label="添加" type="primary" @action="createGptWorker" />
+      <c-button label="添加" type="primary" @action="submit" />
     </template>
   </c-modal>
 </template>

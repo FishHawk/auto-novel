@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import {
-  DragIndicatorOutlined,
   DeleteOutlineOutlined,
+  DragIndicatorOutlined,
   FlashOnOutlined,
   FontDownloadOffOutlined,
   FontDownloadOutlined,
   PlayArrowOutlined,
+  SettingsOutlined,
   StopOutlined,
 } from '@vicons/material';
 
@@ -19,7 +20,7 @@ import {
 } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
-const { worker, getNextJob } = defineProps<{
+const props = defineProps<{
   worker:
     | ({ translatorId: 'sakura' } & SakuraWorker)
     | ({ translatorId: 'gpt' } & GptWorker);
@@ -41,6 +42,7 @@ const emit = defineEmits<{
 const message = useMessage();
 
 const translatorDesc = computed(() => {
+  const worker = props.worker;
   if (worker.translatorId === 'gpt') {
     return <TranslatorDesc & { id: 'gpt' }>{
       id: 'gpt',
@@ -59,6 +61,7 @@ const translatorDesc = computed(() => {
 });
 
 const endpointPrefix = computed(() => {
+  const worker = props.worker;
   if (worker.translatorId === 'gpt') {
     if (worker.type === 'web') {
       return `web[${worker.key.slice(-4)}]@`;
@@ -88,7 +91,7 @@ const processTasks = async () => {
   abortHandler = () => controller.abort();
 
   while (true) {
-    const job = getNextJob();
+    const job = props.getNextJob();
     currentJob.value = job;
 
     if (job === undefined) break;
@@ -129,6 +132,7 @@ const stopWorker = () => {
   abortHandler();
 };
 const deleteWorker = () => {
+  const worker = props.worker;
   abortHandler();
   const workspace =
     worker.translatorId === 'gpt'
@@ -138,6 +142,7 @@ const deleteWorker = () => {
 };
 
 const testWorker = async () => {
+  const worker = props.worker;
   const textJp = [
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。',
   ];
@@ -171,6 +176,8 @@ const testWorker = async () => {
     message.error(`翻译器错误：${e}`);
   }
 };
+
+const showEditWorkerModal = ref(false);
 </script>
 
 <template>
@@ -217,14 +224,16 @@ const testWorker = async () => {
           @action="startWorker"
         />
 
-        <!-- <c-action-wrapper title="" align="center">
-        <n-switch size="small" />
-      </c-action-wrapper> -->
-
         <c-icon-button
           tooltip="测试"
           :icon="FlashOnOutlined"
           @action="testWorker"
+        />
+
+        <c-icon-button
+          tooltip="设置"
+          :icon="SettingsOutlined"
+          @action="showEditWorkerModal = !showEditWorkerModal"
         />
 
         <c-icon-button
@@ -250,5 +259,16 @@ const testWorker = async () => {
     </template>
   </n-thing>
 
-  <TranslateTask ref="translateTask" style="margin-top: 20px" />
+  <translate-task ref="translateTask" style="margin-top: 20px" />
+
+  <sakura-worker-modal
+    v-if="worker.translatorId === 'sakura'"
+    v-model:show="showEditWorkerModal"
+    :worker="worker"
+  />
+  <gpt-worker-modal
+    v-else
+    v-model:show="showEditWorkerModal"
+    :worker="worker"
+  />
 </template>

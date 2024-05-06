@@ -2,16 +2,34 @@
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import { Locator } from '@/data';
+import { SakuraWorker } from '@/model/Translator';
+
+const props = defineProps<{
+  show: boolean;
+  worker?: SakuraWorker;
+}>();
+const emit = defineEmits<{
+  (e: 'update:show', show: boolean): void;
+}>();
 
 const workspace = Locator.sakuraWorkspaceRepository();
 const workspaceRef = workspace.ref;
 
+const initFormValue = () => {
+  const worker = props.worker;
+  if (worker === undefined) {
+    return {
+      id: '',
+      endpoint: '',
+      useLlamaApi: true,
+    };
+  } else {
+    return { ...worker };
+  }
+};
+
 const formRef = ref<FormInst>();
-const formValue = ref({
-  id: '',
-  endpoint: '',
-  useLlamaApi: true,
-});
+const formValue = ref(initFormValue());
 const formRules: FormRules = {
   id: [
     {
@@ -21,7 +39,9 @@ const formRules: FormRules = {
     },
     {
       validator: (rule: FormItemRule, value: string) =>
-        workspaceRef.value.workers.find(({ id }) => id === value) === undefined,
+        workspaceRef.value.workers
+          .filter(({ id }) => id !== props.worker?.id)
+          .find(({ id }) => id === value) === undefined,
       message: '名字不能重复',
       trigger: 'input',
     },
@@ -35,24 +55,39 @@ const formRules: FormRules = {
   ],
 };
 
-const createSakuraWorker = async () => {
+const submit = async () => {
   const validated = await new Promise<boolean>(function (resolve, _reject) {
     formRef.value?.validate((errors) => {
       if (errors) resolve(false);
       else resolve(true);
     });
   });
-  if (!validated) return;
 
+  if (!validated) return;
   const worker = { ...formValue.value };
   worker.id = worker.id.trim();
   worker.endpoint = worker.endpoint.trim();
-  workspace.addWorker(worker);
+
+  if (props.worker === undefined) {
+    workspace.addWorker(worker);
+  } else {
+    const index = workspaceRef.value.workers.findIndex(
+      ({ id }) => id === props.worker?.id
+    );
+    workspaceRef.value.workers[index] = worker;
+    emit('update:show', false);
+  }
 };
+
+const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
 </script>
 
 <template>
-  <c-modal title="添加Sakura翻译器">
+  <c-modal
+    :show="show"
+    @update:show="$emit('update:show', $event)"
+    :title="verb + 'Sakura翻译器'"
+  >
     <n-form
       ref="formRef"
       :model="formValue"
@@ -84,7 +119,7 @@ const createSakuraWorker = async () => {
     </n-form>
 
     <template #action>
-      <c-button label="添加" type="primary" @action="createSakuraWorker" />
+      <c-button :label="verb" type="primary" @action="submit" />
     </template>
   </c-modal>
 </template>
