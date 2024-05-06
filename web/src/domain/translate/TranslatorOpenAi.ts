@@ -9,6 +9,7 @@ import {
   SegmentTranslator,
   createLengthSegmentor,
 } from './common';
+import { PartyModeSharp } from '@vicons/material';
 
 type OpenAi = ReturnType<typeof Locator.openAiRepositoryFactory>;
 type OpenAiWeb = ReturnType<typeof Locator.openAiWebRepositoryFactory>;
@@ -32,7 +33,6 @@ export class OpenAiTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    segInfo: { index: number; size: number },
     glossary: Glossary,
     signal?: AbortSignal
   ): Promise<string[]> {
@@ -49,26 +49,26 @@ export class OpenAiTranslator implements SegmentTranslator {
       lineNumber?: [number, number];
       suffix?: string;
     }) => {
-      let message = `分段${segInfo.index + 1}/${segInfo.size}`;
+      const parts: string[] = [];
       if (retry !== undefined) {
-        message += `　第${retry + 1}次`;
+        parts.push(`第${retry + 1}次`);
       }
       if (binaryRange !== undefined) {
         const [left, right] = binaryRange;
         if (right - left === 1) {
-          message += `　翻译第${left + 1}行`;
+          parts.push(`翻译第${left + 1}行`);
         } else {
-          message += `　翻译${left + 1}到${right}行`;
+          parts.push(`翻译${left + 1}到${right}行`);
         }
       }
       if (lineNumber !== undefined) {
         const [input, output] = lineNumber;
-        message += `　原文/输出：${input}/${output}行`;
+        parts.push(`原文/输出：${input}/${output}行`);
       }
       if (suffix !== undefined) {
-        message += `　${suffix}`;
+        parts.push(suffix);
       }
-      this.log(message);
+      this.log(parts.join('　'));
     };
 
     let retry = 0;
@@ -82,13 +82,14 @@ export class OpenAiTranslator implements SegmentTranslator {
       );
 
       if (result === 'censored') {
-        logSegInfo({ retry, lineNumber: [seg.length, NaN] });
-        if (!enableBypass) {
-          enableBypass = true;
-          this.log('　违规，而且恢复失败，启用咒语来尝试绕过审查');
-        } else {
-          this.log('　违规，而且恢复失败');
-        }
+        logSegInfo({
+          retry,
+          lineNumber: [seg.length, NaN],
+          suffix: enableBypass
+            ? '违规，而且恢复失败'
+            : '违规，而且恢复失败，启用咒语来尝试绕过审查',
+        });
+        enableBypass = true;
       } else if ('answer' in result) {
         const isChinese = detectChinese(result.answer.join(' '));
 
@@ -96,7 +97,7 @@ export class OpenAiTranslator implements SegmentTranslator {
           logSegInfo({
             retry,
             lineNumber: [seg.length, result.answer.length],
-            suffix: '　违规，但是成功恢复',
+            suffix: '违规，但是成功恢复',
           });
         } else {
           logSegInfo({ retry, lineNumber: [seg.length, result.answer.length] });
@@ -104,9 +105,9 @@ export class OpenAiTranslator implements SegmentTranslator {
 
         if (seg.length !== result.answer.length) {
           failBecasueLineNumberNotMatch += 1;
-          this.log(`　输出错误：输出行数不匹配`);
+          this.log('输出错误：输出行数不匹配');
         } else if (!isChinese) {
-          this.log(`　输出错误：输出语言不是中文`);
+          this.log('输出错误：输出语言不是中文');
         } else {
           return result.answer;
         }
@@ -118,7 +119,7 @@ export class OpenAiTranslator implements SegmentTranslator {
       retry += 1;
       if (retry >= 3) {
         if (failBecasueLineNumberNotMatch === 3 && seg.length > 1) {
-          this.log(`　连续三次行数不匹配，启动二分翻译`);
+          this.log('连续三次行数不匹配，启动二分翻译');
           break;
         } else {
           throw Error('重试次数太多');
@@ -162,13 +163,13 @@ export class OpenAiTranslator implements SegmentTranslator {
       }
 
       if (right - left > 1) {
-        this.log('　失败，继续二分');
+        this.log('失败，继续二分');
         const mid = Math.floor((left + right) / 2);
         const partLeft = await binaryTranslateSegment(left, mid);
         const partRight = await binaryTranslateSegment(mid, right);
         return partLeft.concat(partRight);
       } else {
-        this.log('　失败，无法继续，退出');
+        this.log('失败，无法继续，退出');
         throw Error('重试次数太多');
       }
     };
@@ -280,17 +281,17 @@ export class OpenAiTranslator implements SegmentTranslator {
     signal?: AbortSignal
   ) {
     if (delaySeconds === undefined) {
-      this.log(`　未知错误，请反馈给站长：${message}`);
+      this.log(`未知错误，请反馈给站长：${message}`);
     } else if (delaySeconds > 0) {
       if (delaySeconds > 60) {
-        this.log('　发生错误：' + message + `，暂停${delaySeconds / 60}分钟`);
+        this.log('发生错误：' + message + `，暂停${delaySeconds / 60}分钟`);
       } else {
-        this.log('　发生错误：' + message + `，暂停${delaySeconds}秒`);
+        this.log('发生错误：' + message + `，暂停${delaySeconds}秒`);
       }
       await delay(delaySeconds * 1000, signal);
       return;
     } else {
-      this.log('　发生错误：' + message + '，退出');
+      this.log('发生错误：' + message + '，退出');
       throw 'quit';
     }
   }

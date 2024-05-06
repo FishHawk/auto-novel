@@ -1,5 +1,9 @@
 import { Page } from '@/model/Page';
-import { TranslatorId, WenkuTranslateTask } from '@/model/Translator';
+import {
+  TranslatorId,
+  WenkuChapterTranslateTask,
+  WenkuTranslateTask,
+} from '@/model/Translator';
 import {
   WenkuNovelDto,
   WenkuNovelOutlineDto,
@@ -71,22 +75,24 @@ const createTranslationApi = (
   translatorId: TranslatorId,
   signal?: AbortSignal
 ) => {
-  const endpoint = `wenku/${novelId}/translate/${translatorId}/${encodeURIComponent(
+  const endpointV2 = `wenku/${novelId}/translate-v2/${translatorId}/${encodeURIComponent(
     volumeId
   )}`;
 
   const getTranslateTask = () =>
-    client.get(endpoint, { signal }).json<WenkuTranslateTask>();
+    client.get(endpointV2, { signal }).json<WenkuTranslateTask>();
 
-  const getChapterToTranslate = (chapterId: string) =>
-    client.get(`${endpoint}/${chapterId}`, { signal }).json<string[]>();
+  const getChapterTranslateTask = (chapterId: string) =>
+    client
+      .get(`${endpointV2}/chapter-task/${chapterId}`, { signal })
+      .json<WenkuChapterTranslateTask | ''>();
 
   const updateChapterTranslation = (
     chapterId: string,
-    json: { glossaryUuid: string | undefined; paragraphsZh: string[] }
+    json: { glossaryId: string | undefined; paragraphsZh: string[] }
   ) =>
     client
-      .put(`${endpoint}/${chapterId}`, {
+      .post(`${endpointV2}/chapter/${chapterId}`, {
         json: { ...json, sakuraVersion: '0.9' },
         signal,
       })
@@ -94,7 +100,7 @@ const createTranslationApi = (
 
   return {
     getTranslateTask,
-    getChapterToTranslate,
+    getChapterTranslateTask,
     updateChapterTranslation,
   };
 };

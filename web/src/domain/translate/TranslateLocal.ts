@@ -1,4 +1,4 @@
-import { Locator } from '@/data';
+import { Locator, formatError } from '@/data';
 import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
 import {
   PersonalTranslateTaskDesc,
@@ -50,7 +50,7 @@ export const translateLocal = async (
   try {
     translator = await Translator.create(
       {
-        log: (message, detail) => callback.log('　　' + message, detail),
+        log: (message, detail) => callback.log('　' + message, detail),
         ...translatorDesc,
       },
       true
@@ -83,20 +83,19 @@ export const translateLocal = async (
 
   for (const chapterId of chapters) {
     try {
-      callback.log(`\n获取章节 ${volumeId}/${chapterId}`);
+      callback.log(`\n[${0}] ${volumeId}/${chapterId}`);
       const chapter = await getChapter(chapterId);
       if (chapter === undefined) {
         throw new Error('章节不存在');
       }
       const textsJp = chapter?.paragraphs;
 
-      callback.log(`翻译章节 ${volumeId}/${chapterId}`);
       const textsZh = await translator.translate(textsJp, {
         glossary: metadata.glossary,
         signal,
       });
 
-      callback.log(`上传章节 ${volumeId}/${chapterId}`);
+      callback.log('上传章节');
       const state = await updateTranslation(chapterId, {
         glossaryId: metadata.glossaryId,
         glossary: metadata.glossary,
@@ -111,7 +110,7 @@ export const translateLocal = async (
         callback.log(`中止翻译任务`);
         return 'abort';
       } else {
-        callback.log(`发生错误，跳过：${e}`);
+        callback.log(`发生错误，跳过：${await formatError(e)}`);
         callback.onChapterFailure();
       }
     }

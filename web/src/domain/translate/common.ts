@@ -17,7 +17,6 @@ export interface SegmentTranslator {
   segmentor: Segmentor;
   translate: (
     seg: string[],
-    segInfo: { index: number; size: number },
     glossary: Glossary,
     signal?: AbortSignal
   ) => Promise<string[]>;
@@ -124,7 +123,7 @@ export const createLengthSegmentor = (
 };
 
 export interface SegmentCache {
-  cacheKey(segIndex: number, seg: string[], extra?: any): string;
+  cacheKey(seg: string[], extra?: any): string;
   get(cacheKey: string): Promise<string[] | undefined>;
   save(cacheKey: string, output: string[]): Promise<void>;
 }
@@ -133,7 +132,7 @@ export const createSegIndexedDbCache = async (
   storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
 ) => {
   return <SegmentCache>{
-    cacheKey: (_segIndex: number, seg: string[], extra?: any): string =>
+    cacheKey: (seg: string[], extra?: any): string =>
       MD5(JSON.stringify({ seg, extra })).toString(),
 
     get: (hash: string): Promise<string[] | undefined> =>

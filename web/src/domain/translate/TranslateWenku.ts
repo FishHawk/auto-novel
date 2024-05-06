@@ -1,4 +1,4 @@
-import { Locator } from '@/data';
+import { Locator, formatError } from '@/data';
 import {
   TranslateTaskCallback,
   TranslateTaskParams,
@@ -16,13 +16,16 @@ export const translateWenku = async (
   translatorDesc: TranslatorDesc,
   signal?: AbortSignal
 ) => {
-  const { getTranslateTask, getChapterToTranslate, updateChapterTranslation } =
-    Locator.wenkuNovelRepository.createTranslationApi(
-      novelId,
-      volumeId,
-      translatorDesc.id,
-      signal
-    );
+  const {
+    getTranslateTask,
+    getChapterTranslateTask,
+    updateChapterTranslation,
+  } = Locator.wenkuNovelRepository.createTranslationApi(
+    novelId,
+    volumeId,
+    translatorDesc.id,
+    signal
+  );
 
   // Task
   let task: WenkuTranslateTask;
@@ -43,7 +46,7 @@ export const translateWenku = async (
   try {
     translator = await Translator.create(
       {
-        log: (message, detail) => callback.log('　　' + message, detail),
+        log: (message, detail) => callback.log('　' + message, detail),
         ...translatorDesc,
       },
       true
@@ -58,34 +61,53 @@ export const translateWenku = async (
     return;
   }
 
-  const chapters = (
-    translateExpireChapter
-      ? task.untranslatedChapters.concat(task.expiredChapters)
-      : task.untranslatedChapters
-  ).sort((a, b) => a.localeCompare(b));
+  const chapters = task.toc
+    .filter(({ chapterId }) => chapterId !== undefined)
+    .map(({ chapterId, glossaryId }, index) => ({
+      index,
+      chapterId: chapterId!,
+      glossaryId,
+    }))
+    .filter(({ glossaryId }) => {
+      if (glossaryId === undefined) {
+        return true;
+      } else if (glossaryId !== task.glossaryId) {
+        return translateExpireChapter;
+      } else {
+        return false;
+      }
+    });
 
   callback.onStart(chapters.length);
   if (chapters.length === 0) {
     callback.log(`没有需要更新的章节`);
   }
 
-  for (const chapterId of chapters) {
+  for (const { index, chapterId } of chapters) {
     try {
-      callback.log(`\n获取章节 ${volumeId}/${chapterId}`);
-      const textsJp = await getChapterToTranslate(chapterId);
+      callback.log(`\n[${index}] ${volumeId}/${chapterId}`);
+      const chapterTranslateTask = await getChapterTranslateTask(chapterId);
 
-      callback.log(`翻译章节 ${volumeId}/${chapterId}`);
-      const textsZh = await translator.translate(textsJp, {
-        glossary: task.glossary,
-        signal,
-      });
-
-      callback.log(`上传章节 ${volumeId}/${chapterId}`);
-      const state = await updateChapterTranslation(chapterId, {
-        glossaryUuid: task.glossaryUuid,
-        paragraphsZh: textsZh,
-      });
-      callback.onChapterSuccess({ zh: state });
+      if (chapterTranslateTask === '') {
+        callback.log(`无需翻译`);
+        callback.onChapterSuccess({});
+      } else {
+        const textsZh = await translator.translate(
+          chapterTranslateTask.paragraphJp,
+          {
+            glossary: chapterTranslateTask.glossary,
+            oldTextZh: chapterTranslateTask.oldParagraphZh,
+            oldGlossary: chapterTranslateTask.oldGlossary,
+            signal,
+          }
+        );
+        callback.log('上传章节');
+        const state = await updateChapterTranslation(chapterId, {
+          glossaryId: chapterTranslateTask.glossaryId,
+          paragraphsZh: textsZh,
+        });
+        callback.onChapterSuccess({ zh: state });
+      }
     } catch (e: any) {
       if (e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
@@ -94,7 +116,7 @@ export const translateWenku = async (
         callback.log(`中止翻译任务`);
         return 'abort';
       } else {
-        callback.log(`发生错误，跳过：${e}`);
+        callback.log(`发生错误，跳过：${await formatError(e)}`);
         callback.onChapterFailure();
       }
     }

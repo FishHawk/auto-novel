@@ -213,8 +213,17 @@ export interface WebChapterTranslateTask {
 }
 
 export interface WenkuTranslateTask {
-  glossaryUuid?: string;
-  glossary: { [key: string]: string };
-  untranslatedChapters: string[];
-  expiredChapters: string;
+  glossaryId: string;
+  toc: {
+    chapterId: string;
+    glossaryId?: string;
+  }[];
+}
+
+export interface WenkuChapterTranslateTask {
+  paragraphJp: string[];
+  oldParagraphZh?: string[];
+  glossaryId: string;
+  glossary: Glossary;
+  oldGlossary: Glossary;
 }

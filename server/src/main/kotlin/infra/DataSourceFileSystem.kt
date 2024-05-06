@@ -231,7 +231,7 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
             return@withContext path.exists()
         }
 
-    private suspend fun getTranslation(translatorId: TranslatorId, chapterId: String) =
+    suspend fun getTranslation(translatorId: TranslatorId, chapterId: String) =
         withContext(Dispatchers.IO) {
             val path = translationPath(translatorId, chapterId)
             return@withContext path.readLinesOrNull()

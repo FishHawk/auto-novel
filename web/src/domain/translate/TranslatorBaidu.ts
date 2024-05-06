@@ -25,7 +25,6 @@ export class BaiduTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    _segInfo: { index: number; size: number },
     glossary: Glossary,
     signal?: AbortSignal
   ): Promise<string[]> {

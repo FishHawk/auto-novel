@@ -133,7 +133,6 @@ export class SakuraTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    segInfo: { index: number; size: number },
     glossary: Glossary,
     signal?: AbortSignal
   ): Promise<string[]> {
@@ -154,14 +153,10 @@ export class SakuraTranslator implements SegmentTranslator {
         }
         return text;
       });
-    return this.translateInner(newSeg, segInfo, signal);
+    return this.translateInner(newSeg, signal);
   }
 
-  async translateInner(
-    seg: string[],
-    segInfo: { index: number; size: number },
-    signal?: AbortSignal
-  ): Promise<string[]> {
+  async translateInner(seg: string[], signal?: AbortSignal): Promise<string[]> {
     const maxNewToken = 1000;
     const concatedSeg = seg.join('\n');
 
@@ -179,14 +174,19 @@ export class SakuraTranslator implements SegmentTranslator {
       if (extra !== undefined) {
         detail.push(JSON.stringify(extra, null, 2));
       }
-      this.log(
-        `分段${segInfo.index + 1}/${segInfo.size}[${retry}] ${
-          hasDegradation ? ' 退化' : ''
-        }`,
-        detail
-      );
 
-      if (!hasDegradation && seg.length === splitText.length) {
+      const parts: string[] = [`第${retry + 1}次`];
+      const linesNotMatched = seg.length !== splitText.length;
+      if (hasDegradation) {
+        parts.push('退化');
+      } else if (linesNotMatched) {
+        parts.push('行数不匹配');
+      } else {
+        parts.push('成功');
+      }
+      this.log(parts.join('　'), detail);
+
+      if (!hasDegradation && !linesNotMatched) {
         return splitText;
       } else {
         retry += 1;
@@ -194,7 +194,7 @@ export class SakuraTranslator implements SegmentTranslator {
     }
 
     // 进入逐行翻译模式
-    this.log(`分段${segInfo.index + 1}/${segInfo.size}[逐行翻译]`);
+    this.log('逐行翻译');
     let degradationLineCount = 0;
     const resultPerLine = [];
     for (const line of seg) {
@@ -206,7 +206,7 @@ export class SakuraTranslator implements SegmentTranslator {
       );
       if (hasDegradation) {
         degradationLineCount += 1;
-        this.log(`  单行退化 ${degradationLineCount}次`, [line, text]);
+        this.log(`单行退化${degradationLineCount}次`, [line, text]);
         if (degradationLineCount >= 2) {
           throw Error('单个分段有2行退化，Sakura翻译器可能存在异常');
         } else {

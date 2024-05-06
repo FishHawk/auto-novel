@@ -1,4 +1,4 @@
-import { Locator } from '@/data';
+import { Locator, formatError } from '@/data';
 import {
   TranslateTaskCallback,
   TranslateTaskParams,
@@ -25,8 +25,8 @@ export const translateWeb = async (
 ) => {
   const {
     getTranslateTask,
-    updateMetadataTranslation,
     getChapterTranslateTask,
+    updateMetadataTranslation,
     updateChapterTranslation,
   } = Locator.webNovelRepository.createTranslationApi(
     providerId,
@@ -62,7 +62,7 @@ export const translateWeb = async (
   try {
     translator = await Translator.create(
       {
-        log: (message, detail) => callback.log('　　' + message, detail),
+        log: (message, detail) => callback.log('　' + message, detail),
         ...translatorDesc,
       },
       true
@@ -189,7 +189,7 @@ export const translateWeb = async (
       callback.log(`中止翻译任务`);
       return 'abort';
     } else {
-      callback.log(`发生错误，跳过：${e}`);
+      callback.log(`发生错误，跳过：${await formatError(e)}`);
     }
   }
 
@@ -217,20 +217,14 @@ export const translateWeb = async (
   }
 
   for (const { index, chapterId } of chapters) {
-    if (index < startIndex || index >= endIndex) {
-      continue;
-    }
-
-    const logSuffix = `[${index}] ${providerId}/${novelId}/${chapterId}`;
     try {
-      callback.log('\n获取章节' + logSuffix);
+      callback.log(`\n[${index}] ${providerId}/${novelId}/${chapterId}`);
       const chapterTranslateTask = await getChapterTranslateTask(chapterId);
 
       if (chapterTranslateTask === '') {
         callback.log(`无需翻译`);
         callback.onChapterSuccess({});
       } else {
-        callback.log('翻译章节' + logSuffix);
         const textsZh = await translator.translate(
           chapterTranslateTask.paragraphJp,
           {
@@ -240,9 +234,8 @@ export const translateWeb = async (
             signal,
           }
         );
-        callback.log('上传章节' + logSuffix);
         const { jp, zh } = await updateChapterTranslation(chapterId, {
-          glossaryUuid: chapterTranslateTask.glossaryId,
+          glossaryId: chapterTranslateTask.glossaryId,
           paragraphsZh: textsZh,
         });
         callback.onChapterSuccess({ jp, zh });
@@ -255,7 +248,7 @@ export const translateWeb = async (
         callback.log(`中止翻译任务`);
         return 'abort';
       } else {
-        callback.log(`发生错误，跳过：${e}`);
+        callback.log(`发生错误，跳过：${await formatError(e)}`);
         callback.onChapterFailure();
       }
     }

@@ -19,10 +19,16 @@ export type TranslatorConfig =
   | ({ id: 'sakura' } & SakuraTranslator.Config);
 
 export class Translator {
+  log: (message: string) => void;
   segTranslator: SegmentTranslator;
   segCache?: SegmentCache;
 
-  constructor(segTranslator: SegmentTranslator, segCache?: SegmentCache) {
+  constructor(
+    log: (message: string) => void,
+    segTranslator: SegmentTranslator,
+    segCache?: SegmentCache
+  ) {
+    this.log = log;
     this.segTranslator = segTranslator;
     this.segCache = segCache;
   }
@@ -44,63 +50,75 @@ export class Translator {
 
   async translate(
     textJp: string[],
-    extra?: {
+    context?: {
       glossary?: Glossary;
       oldTextZh?: string[] | undefined;
       oldGlossary?: Glossary;
       signal?: AbortSignal;
     }
   ): Promise<string[]> {
-    let { glossary, oldTextZh, oldGlossary, signal } = extra || {};
-    glossary = glossary || {};
-    oldGlossary = oldGlossary || {};
-
+    const oldTextZh = context?.oldTextZh;
     if (oldTextZh !== undefined && textJp.length !== oldTextZh.length) {
-      throw new Error('旧版翻译行数不匹配。不应当出现，请反馈给站长。');
+      throw new Error('旧翻译行数不匹配。不应当出现，请反馈给站长。');
     }
 
-    const textZh = await emptyLineFilterWrapper(textJp, async (textJp) => {
-      if (textJp.length === 0) return [];
+    const textZh = await emptyLineFilterWrapper(
+      textJp,
+      oldTextZh,
+      async (textJp, oldTextZh) => {
+        if (textJp.length === 0) return [];
 
-      const resultsZh: string[][] = [];
-      const segsJp = this.segTranslator.segmentor(textJp);
-      const size = segsJp.length;
-      for (const [index, [segJp, oldSegZh]] of segsJp.entries()) {
-        if (oldSegZh !== undefined) {
-          const segGlossary = filterGlossary(glossary, segJp);
-          const segOldGlossary = filterGlossary(oldGlossary, segJp);
-          if (isEqual(segGlossary, segOldGlossary)) {
-            // 该分段术语表无变化，无需重新翻译
-            resultsZh.push(oldSegZh);
-            continue;
+        const resultsZh: string[][] = [];
+        const segs = this.segTranslator.segmentor(textJp, oldTextZh);
+        const size = segs.length;
+        for (const [index, [segJp, oldSegZh]] of segs.entries()) {
+          const segZh = await this.translateSeg(segJp, {
+            logPrefix: `分段${index + 1}/${size}`,
+            ...context,
+            oldSegZh,
+          });
+          if (segJp.length !== segZh.length) {
+            throw new Error('翻译结果行数不匹配。不应当出现，请反馈给站长。');
           }
+          resultsZh.push(segZh);
         }
-        const segZh = await this.translateSeg(
-          segJp,
-          { index, size },
-          glossary,
-          signal
-        );
-        if (segJp.length !== segZh.length) {
-          throw new Error('翻译结果行数不匹配。不应当出现，请反馈给站长。');
-        }
-        if (segZh.some((it) => it.trim().length === 0)) {
-          throw new Error('翻译结果存在空行。不应当出现，请反馈给站长。');
-        }
-        resultsZh.push(segZh);
+        return resultsZh.flat();
       }
-      return resultsZh.flat();
-    });
-
+    );
+    this.segTranslator.log('完成');
     return textZh;
   }
 
-  async translateSeg(
+  private async translateSeg(
     seg: string[],
-    segInfo: { index: number; size: number },
-    glossary: Glossary,
-    signal?: AbortSignal
+    {
+      logPrefix,
+      glossary,
+      oldSegZh,
+      oldGlossary,
+      signal,
+    }: {
+      logPrefix: string;
+      glossary?: Glossary;
+      oldSegZh?: string[];
+      oldGlossary?: Glossary;
+      signal?: AbortSignal;
+    }
   ) {
+    glossary = glossary || {};
+    oldGlossary = oldGlossary || {};
+
+    // 检测分段是否需要重新翻译
+    const segGlossary = filterGlossary(glossary, seg);
+    if (oldSegZh !== undefined) {
+      const segOldGlossary = filterGlossary(oldGlossary, seg);
+      if (isEqual(segGlossary, segOldGlossary)) {
+        this.log(logPrefix + '　术语表无变化，无需翻译');
+        return oldSegZh;
+      }
+    }
+
+    // 检测是否有分段缓存存在
     let cacheKey: string | undefined;
     if (this.segCache) {
       try {
@@ -108,34 +126,32 @@ export class Translator {
         if (this.segTranslator instanceof SakuraTranslator) {
           extra.model = this.segTranslator.model;
         }
-        cacheKey = this.segCache.cacheKey(segInfo.index, seg, extra);
+        cacheKey = this.segCache.cacheKey(seg, extra);
         const cachedSegOutput = await this.segCache.get(cacheKey);
         if (cachedSegOutput && cachedSegOutput.length === seg.length) {
-          this.segTranslator.log(
-            `分段${segInfo.index + 1}/${segInfo.size} 从缓存恢复`
-          );
+          this.log(logPrefix + '　从缓存恢复');
           return cachedSegOutput;
         }
       } catch (e) {
-        this.segTranslator.log(`缓存读取失败：${e}`);
+        console.error('缓存读取失败');
+        console.error(e);
       }
     }
 
-    const segOutput = await this.segTranslator.translate(
-      seg,
-      segInfo,
-      glossary,
-      signal
-    );
+    // 翻译
+    this.log(logPrefix);
+    const segOutput = await this.segTranslator.translate(seg, glossary, signal);
     if (segOutput.length !== seg.length) {
-      throw new Error('翻译器行数不匹配，请反馈给站长');
+      throw new Error('分段翻译结果行数不匹配，请反馈给站长');
     }
 
+    // 保存分段缓存
     if (this.segCache && cacheKey !== undefined) {
       try {
         await this.segCache.save(cacheKey, segOutput);
       } catch (e) {
-        this.segTranslator.log(`缓存保存失败：${e}`);
+        console.error('缓存保存失败');
+        console.error(e);
       }
     }
 
@@ -159,6 +175,8 @@ export namespace Translator {
   };
 
   export const create = async (config: TranslatorConfig, cache: boolean) => {
+    const log = config.log;
+    config.log = (message, detail) => log('　' + message, detail);
     const segTranslator = await createSegmentTranslator(config);
     let segCache: SegmentCache | undefined = undefined;
     if (cache) {
@@ -168,7 +186,7 @@ export namespace Translator {
         segCache = await createSegIndexedDbCache('sakura-seg-cache');
       }
     }
-    return new Translator(segTranslator, segCache);
+    return new Translator(log, segTranslator, segCache);
   };
 }
 
@@ -183,30 +201,40 @@ const filterGlossary = (glossary: Glossary, text: string[]) => {
 };
 
 const emptyLineFilterWrapper = async (
-  input: string[],
-  callback: (input: string[]) => Promise<string[]>
+  textJp: string[],
+  oldTextZh: string[] | undefined,
+  callback: (
+    textJp: string[],
+    oldTextZh: string[] | undefined
+  ) => Promise<string[]>
 ) => {
-  const filterInput = (input: string[]) =>
-    input
-      .map((line) => line.replace(/\r?\n|\r/g, ''))
-      .filter((line) => !(line.trim() === '' || line.startsWith('<图片>')));
-
-  const recoverOutput = (input: string[], output: string[]) => {
-    const recoveredOutput: string[] = [];
-    for (const line of input) {
-      const realLine = line.replace(/\r?\n|\r/g, '');
-      if (realLine.trim() === '' || realLine.startsWith('<图片>')) {
-        recoveredOutput.push(line);
-      } else {
-        const outputLine = output.shift();
-        recoveredOutput.push(outputLine!);
+  const textJpFiltered: string[] = [];
+  const oldTextZhFiltered: string[] = [];
+  for (let i = 0; i < textJp.length; i++) {
+    const lineJp = textJp[i].replace(/\r?\n|\r/g, '');
+    if (!(lineJp.trim() === '' || lineJp.startsWith('<图片>'))) {
+      textJpFiltered.push(lineJp);
+      if (oldTextZh !== undefined) {
+        const lineZh = oldTextZh[i];
+        oldTextZhFiltered.push(lineZh);
       }
     }
-    return recoveredOutput;
-  };
+  }
 
-  const filteredInput = filterInput(input);
-  const output = await callback(filteredInput);
-  const recoveredOutput = recoverOutput(input, output);
-  return recoveredOutput;
+  const textZh = await callback(
+    textJpFiltered,
+    oldTextZh === undefined ? undefined : oldTextZhFiltered
+  );
+
+  const recoveredTextZh: string[] = [];
+  for (const lineJp of textJp) {
+    const realLineJp = lineJp.replace(/\r?\n|\r/g, '');
+    if (realLineJp.trim() === '' || realLineJp.startsWith('<图片>')) {
+      recoveredTextZh.push(lineJp);
+    } else {
+      const outputLine = textZh.shift();
+      recoveredTextZh.push(outputLine!);
+    }
+  }
+  return recoveredTextZh;
 };

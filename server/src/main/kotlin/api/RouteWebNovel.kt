@@ -74,14 +74,15 @@ private class WebNovelRes {
 
         @Resource("/translate-v2/{translatorId}")
         class TranslateV2(val parent: Id, val translatorId: TranslatorId) {
-            @Resource("/metadata")
-            class Metadata(val parent: Translate)
 
-            @Resource("/check-chapter/{chapterId}")
-            class CheckChapter(val parent: Translate, val chapterId: String, val sync: Boolean)
+            @Resource("/chapter-task/{chapterId}")
+            class ChapterTask(val parent: TranslateV2, val chapterId: String, val sync: Boolean)
+
+            @Resource("/metadata")
+            class Metadata(val parent: TranslateV2)
 
             @Resource("/chapter/{chapterId}")
-            class Chapter(val parent: Translate, val chapterId: String)
+            class Chapter(val parent: TranslateV2, val chapterId: String)
         }
 
         @Resource("/file")
@@ -236,7 +237,7 @@ fun Route.routeWebNovel() {
                 )
             }
         }
-        put<WebNovelRes.Id.Translate.Chapter> { loc ->
+        post<WebNovelRes.Id.Translate.Chapter> { loc ->
             @Serializable
             class Body(
                 val glossaryUuid: String? = null,
@@ -268,14 +269,54 @@ fun Route.routeWebNovel() {
                 )
             }
         }
-        post<WebNovelRes.Id.TranslateV2.CheckChapter> { loc ->
+        post<WebNovelRes.Id.TranslateV2.ChapterTask> { loc ->
             call.tryRespond {
-                translateV2Service.checkIfChapterNeedTranslate(
+                translateV2Service.getChapterTranslateTask(
                     providerId = loc.parent.parent.providerId,
                     novelId = loc.parent.parent.novelId,
                     translatorId = loc.parent.translatorId,
                     chapterId = loc.chapterId,
                     sync = loc.sync,
+                )
+            }
+        }
+        post<WebNovelRes.Id.TranslateV2.Metadata> { loc ->
+            @Serializable
+            class Body(
+                val title: String? = null,
+                val introduction: String? = null,
+                val toc: Map<String, String>,
+            )
+
+            val body = call.receive<Body>()
+            call.tryRespond {
+                translateV2Service.updateMetadataTranslation(
+                    providerId = loc.parent.parent.providerId,
+                    novelId = loc.parent.parent.novelId,
+                    title = body.title,
+                    introduction = body.introduction,
+                    toc = body.toc,
+                )
+            }
+        }
+        post<WebNovelRes.Id.TranslateV2.Chapter> { loc ->
+            @Serializable
+            class Body(
+                val glossaryId: String? = null,
+                val paragraphsZh: List<String>,
+                val sakuraVersion: String? = null,
+            )
+
+            val body = call.receive<Body>()
+            call.tryRespond {
+                translateV2Service.updateChapterTranslation(
+                    providerId = loc.parent.parent.providerId,
+                    novelId = loc.parent.parent.novelId,
+                    translatorId = loc.parent.translatorId,
+                    chapterId = loc.chapterId,
+                    glossaryId = body.glossaryId,
+                    paragraphsZh = body.paragraphsZh,
+                    sakuraVersion = body.sakuraVersion,
                 )
             }
         }
@@ -841,7 +882,7 @@ class WebNovelTranslateV2Api(
         val oldGlossary: Map<String, String>,
     )
 
-    suspend fun checkIfChapterNeedTranslate(
+    suspend fun getChapterTranslateTask(
         providerId: String,
         novelId: String,
         translatorId: TranslatorId,
@@ -869,20 +910,97 @@ class WebNovelTranslateV2Api(
             }
         }
 
+        val sakuraOutdated =
+            (translatorId == TranslatorId.Sakura && chapter.sakuraVersion != "0.9")
         return if (
             oldTranslation != null &&
             (oldGlossaryId ?: "no glossary") == (novel.glossaryUuid ?: "no glossary") &&
-            (translatorId != TranslatorId.Sakura || chapter.sakuraVersion == "0.9")
+            !sakuraOutdated
         ) {
+            // 无需翻译
             null
         } else {
             return ChapterTranslateTaskDto(
                 paragraphJp = chapter.paragraphs,
+                oldParagraphZh = oldTranslation.takeIf { !sakuraOutdated },
                 glossaryId = novel.glossaryUuid ?: "no glossary",
                 glossary = novel.glossary,
-                oldParagraphZh = oldTranslation,
                 oldGlossary = oldGlossary ?: emptyMap(),
             )
         }
+    }
+
+    suspend fun updateMetadataTranslation(
+        providerId: String,
+        novelId: String,
+        title: String?,
+        introduction: String?,
+        toc: Map<String, String>,
+    ) {
+        val metadata = metadataRepo.get(providerId, novelId)
+            ?: return
+
+        val tocZh = mutableMapOf<Int, String>()
+        metadata.toc.forEachIndexed { index, item ->
+            val newTitleZh = toc[item.titleJp]
+            if (newTitleZh != null) {
+                tocZh[index] = newTitleZh
+            }
+        }
+
+        if (title == null &&
+            introduction == null &&
+            tocZh.isEmpty()
+        ) return
+
+        metadataRepo.updateTranslation(
+            providerId = providerId,
+            novelId = novelId,
+            titleZh = title ?: metadata.titleZh,
+            introductionZh = introduction ?: metadata.introductionZh,
+            tocZh = tocZh,
+        )
+    }
+
+    @Serializable
+    data class TranslateStateDto(
+        val jp: Long,
+        val zh: Long,
+    )
+
+    suspend fun updateChapterTranslation(
+        providerId: String,
+        novelId: String,
+        chapterId: String,
+        translatorId: TranslatorId,
+        glossaryId: String?,
+        paragraphsZh: List<String>,
+        sakuraVersion: String?,
+    ): TranslateStateDto {
+        if (translatorId == TranslatorId.Sakura && sakuraVersion != "0.9") {
+            throwBadRequest("旧版本Sakura不再允许上传")
+        }
+
+        val novel = metadataRepo.get(providerId, novelId)
+            ?: throwNovelNotFound()
+        if ((glossaryId ?: "no glossary") != (novel.glossaryUuid ?: "no glossary")) {
+            throwBadRequest("术语表失效")
+        }
+
+        val chapter = chapterRepo.get(providerId, novelId, chapterId)
+            ?: throwNotFound("章节不存在")
+        if (chapter.paragraphs.size != paragraphsZh.size) {
+            throwBadRequest("翻译文本长度不匹配")
+        }
+
+        val zh = chapterRepo.updateTranslation(
+            providerId = providerId,
+            novelId = novelId,
+            chapterId = chapterId,
+            translatorId = translatorId,
+            glossary = novel.glossaryUuid?.let { Glossary(it, novel.glossary) },
+            paragraphsZh = paragraphsZh,
+        )
+        return TranslateStateDto(jp = novel.jp, zh = zh)
     }
 }

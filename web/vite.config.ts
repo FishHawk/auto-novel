@@ -11,33 +11,29 @@ export default defineConfig(({ command, mode }) => {
 
   if (command === 'serve') {
     const env = loadEnv(mode, process.cwd(), 'LOCAL');
+    let proxyOptions: ProxyOptions;
     if ('LOCAL' in env)
-      proxy['/api'] = {
+      proxyOptions = {
         target: 'http://localhost:8081',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       };
     else
-      proxy['/api'] = {
+      proxyOptions = {
         target: 'https://books.fishhawk.top',
         changeOrigin: true,
-        bypass(req, _res, _options) {
-          if (
-            req.url &&
-            req.url.includes('/translate/') &&
-            req.method === 'PUT'
-          ) {
-            if (req.url.includes('/chapter/')) {
-              console.log('检测到网络小说章节翻译请求，已拦截');
-              return false;
-            }
-            if (req.url.includes('/wenku/')) {
-              console.log('检测到文库小说章节翻译请求，已拦截');
-              return false;
-            }
-          }
-        },
       };
+    proxy['/api'] = {
+      ...proxyOptions,
+      bypass(req, _res, _options) {
+        if (req.url && req.url.includes('/translate-v2/')) {
+          if (req.url.includes('/chapter/')) {
+            console.log('检测到小说章节翻译请求，已拦截');
+            return false;
+          }
+        }
+      },
+    };
   }
   return {
     server: {
