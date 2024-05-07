@@ -72,7 +72,6 @@ const translate = async () => {
       id,
       log: () => {},
       endpoint: worker.endpoint,
-      useLlamaApi: worker.useLlamaApi ?? false,
     };
   } else {
     config = {

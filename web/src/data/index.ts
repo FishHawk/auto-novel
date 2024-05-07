@@ -24,7 +24,6 @@ import {
 import {
   createAmazonRepository,
   createBaiduRepository,
-  createLlamacppRepository,
   createOpenAiRepository,
   createOpenAiWebRepository,
   createYoudaoRepository,
@@ -75,7 +74,6 @@ export const Locator = {
   youdaoRepository: lazy(createYoudaoRepository),
   openAiRepositoryFactory: createOpenAiRepository,
   openAiWebRepositoryFactory: createOpenAiWebRepository,
-  llamacppRepositoryFactory: createLlamacppRepository,
   //
   articleRepository: ArticleRepository,
   authRepository: AuthRepository,

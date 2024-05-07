@@ -21,7 +21,6 @@ const initFormValue = () => {
     return {
       id: '',
       endpoint: '',
-      useLlamaApi: true,
     };
   } else {
     return { ...worker };
@@ -108,9 +107,6 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           placeholder="翻译器的链接"
           :input-props="{ spellcheck: false }"
         />
-      </n-form-item-row>
-      <n-form-item-row path="useLlamaApi" label="LlamaApi">
-        <n-switch v-model:value="formValue.useLlamaApi" />
       </n-form-item-row>
 
       <n-text depth="3" style="font-size: 12px">

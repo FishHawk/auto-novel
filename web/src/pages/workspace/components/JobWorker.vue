@@ -55,7 +55,6 @@ const translatorDesc = computed(() => {
     return <TranslatorDesc & { id: 'sakura' }>{
       id: 'sakura',
       endpoint: worker.endpoint,
-      useLlamaApi: worker.useLlamaApi ?? false,
     };
   }
 });
@@ -69,7 +68,7 @@ const endpointPrefix = computed(() => {
       return `${worker.model}[${worker.key.slice(-4)}]@`;
     }
   } else {
-    return worker.useLlamaApi ? '' : 'OAI@';
+    return '';
   }
 });
 

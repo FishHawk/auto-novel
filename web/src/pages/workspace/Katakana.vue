@@ -155,7 +155,6 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
       id,
       log: () => {},
       endpoint: worker.endpoint,
-      useLlamaApi: worker.useLlamaApi ?? false,
     };
   } else {
     config = {

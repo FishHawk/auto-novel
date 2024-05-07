@@ -32,9 +32,37 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
       .post('v1/chat/completions', { json, ...options })
       .json<ChatCompletion>();
 
+  // llamacpp特有
+  const llamacppCheck = (
+    json: {
+      prompt: string;
+      n_predict?: number;
+      temperature?: number;
+      top_k?: number;
+      top_p?: number;
+      repeat_penalty?: number;
+      frequency_penalty?: number;
+      n_probs?: number;
+      min_keep?: number;
+      seed?: number;
+    },
+    options?: Options
+  ) =>
+    client.post('completion', { json, ...options }).json<{
+      completion_probabilities?: Array<{
+        content: string;
+        probs: Array<{
+          prob: number;
+          tok_str: string;
+        }>;
+      }>;
+      model: string;
+    }>();
+
   return {
     createChatCompletionsStream,
     createChatCompletions,
+    llamacppCheck,
   };
 };
 
@@ -71,6 +99,14 @@ interface ChatCompletion {
       content: string | null;
       role: 'system' | 'user' | 'assistant' | 'function';
     };
+  }>;
+  // llamacpp特有
+  completion_probabilities?: Array<{
+    content: string;
+    probs: Array<{
+      prob: number;
+      tok_str: string;
+    }>;
   }>;
 }
 
@@ -137,6 +173,20 @@ namespace ChatCompletion {
     logit_bias?: Record<string, number> | null;
 
     /**
+     * Whether to return log probabilities of the output tokens or not. If true,
+     * returns the log probabilities of each output token returned in the `content` of
+     * `message`.
+     */
+    logprobs?: boolean | null;
+
+    /**
+     * An integer between 0 and 20 specifying the number of most likely tokens to
+     * return at each token position, each with an associated log probability.
+     * `logprobs` must be set to `true` if this parameter is used.
+     */
+    top_logprobs?: number | null;
+
+    /**
      * The maximum number of [tokens](/tokenizer) to generate in the chat completion.
      *
      * The total length of input tokens and generated tokens is limited by the model's
@@ -159,6 +209,15 @@ namespace ChatCompletion {
      * [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/gpt/parameter-details)
      */
     presence_penalty?: number | null;
+
+    /**
+     * This feature is in Beta. If specified, our system will make a best effort to
+     * sample deterministically, such that repeated requests with the same `seed` and
+     * parameters should return the same result. Determinism is not guaranteed, and you
+     * should refer to the `system_fingerprint` response parameter to monitor changes
+     * in the backend.
+     */
+    seed?: number | null;
 
     /**
      * Up to 4 sequences where the API will stop generating further tokens.

@@ -7,46 +7,34 @@ import {
   createLengthSegmentor,
 } from './common';
 
-type OpenAi = ReturnType<typeof Locator.openAiRepositoryFactory>;
-type Llamacpp = ReturnType<typeof Locator.llamacppRepositoryFactory>;
-
 export class SakuraTranslator implements SegmentTranslator {
   log: (message: string, detail?: string[]) => void;
 
-  private api: Llamacpp | OpenAi;
-  model: SakuraModel = { version: '0.8' };
+  private api;
+  version: string = '0.8';
+  fingerprint?: number[];
 
-  constructor({ log, endpoint, useLlamaApi }: SakuraTranslator.Config) {
+  constructor({ log, endpoint }: SakuraTranslator.Config) {
     this.log = log;
-    if (useLlamaApi) {
-      this.api = Locator.llamacppRepositoryFactory(endpoint);
-    } else {
-      this.api = Locator.openAiRepositoryFactory(endpoint, 'no-key');
-    }
+    this.api = Locator.openAiRepositoryFactory(endpoint, 'no-key');
   }
 
   segmentor = createLengthSegmentor(500);
 
   async init() {
-    let model: SakuraModel;
-    if ('createCompletion' in this.api) {
-      model = await SakuraLlamacpp.detectModel(this.api);
-    } else {
-      model = await SakuraOpenai.detectModel(this.api);
-    }
-    this.model = model;
+    const { version, fingerprint } = await this.detectModel();
+    this.version = version;
+    this.fingerprint = fingerprint;
     console.log('模型指纹');
-    console.log(model.fingerprint);
+    console.log(this.fingerprint);
     return this;
   }
 
   allowUpload = () => {
-    if (this.model.fingerprint === undefined) {
+    if (this.fingerprint === undefined) {
       return false;
-    } else if (this.model.fingerprint === 'placeholder-allow') {
-      return true;
     } else {
-      const fingerprint = this.model.fingerprint;
+      const fingerprint = this.fingerprint;
       const fingerprintKnownList = [
         // V9Q4
         [
@@ -162,18 +150,13 @@ export class SakuraTranslator implements SegmentTranslator {
 
     let retry = 0;
     while (retry < 2) {
-      const { text, hasDegradation, extra } = await this.translatePrompt(
+      const { text, hasDegradation } = await this.translatePrompt(
         concatedSeg,
         maxNewToken,
         retry > 0,
         signal
       );
       const splitText = text.replaceAll('<|im_end|>', '').split('\n');
-
-      const detail = [seg.join('\n'), text];
-      if (extra !== undefined) {
-        detail.push(JSON.stringify(extra, null, 2));
-      }
 
       const parts: string[] = [`第${retry + 1}次`];
       const linesNotMatched = seg.length !== splitText.length;
@@ -184,6 +167,7 @@ export class SakuraTranslator implements SegmentTranslator {
       } else {
         parts.push('成功');
       }
+      const detail = [seg.join('\n'), text];
       this.log(parts.join('　'), detail);
 
       if (!hasDegradation && !linesNotMatched) {
@@ -219,151 +203,84 @@ export class SakuraTranslator implements SegmentTranslator {
     return resultPerLine;
   }
 
-  private translatePrompt(
+  private async translatePrompt(
     text: string,
     maxNewToken: number,
     tryFixDegradation: boolean,
     signal?: AbortSignal
   ) {
-    if ('createCompletion' in this.api) {
-      return SakuraLlamacpp.translateText(
-        this.api,
-        this.model.version,
-        text,
-        maxNewToken,
-        tryFixDegradation,
-        signal
-      );
-    } else {
-      return SakuraOpenai.translateText(
-        this.api,
-        text,
-        maxNewToken,
-        tryFixDegradation,
-        signal
-      );
-    }
-  }
-}
-
-export namespace SakuraTranslator {
-  export interface Config extends BaseTranslatorConfig {
-    endpoint: string;
-    useLlamaApi: boolean;
-  }
-  export const create = (config: Config) => new SakuraTranslator(config).init();
-}
-
-interface SakuraModel {
-  version: '0.8' | '0.9';
-  fingerprint?: number[] | 'placeholder-allow';
-}
-
-const checkModelString = (model: string) => {
-  const version: '0.8' | '0.9' = model.includes('0.9') ? '0.9' : '0.8';
-  const allow = [
-    '0.9-Q4',
-    '0.9-Q5',
-    '0.9-Q6',
-    '0.9-Q8',
-    '0.9b-Q4',
-    '0.9b-Q5',
-    '0.9b-Q6',
-    '0.9b-Q8',
-    '0.9-iq4',
-    '0.9-IQ4',
-  ].some((it) => model.includes(it));
-  return { version, allow };
-};
-
-namespace SakuraLlamacpp {
-  const makePrompt = (text: string, version: '0.8' | '0.9') => {
-    if (version === '0.9') {
-      return `<|im_start|>system\n你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文 ，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。<|im_end|>\n<|im_start|>user\n将下面的日文文本翻译成中文：${text}<|im_end|>\n<|im_start|>assistant\n`;
-    } else {
-      return `<reserved_106>将下面的日文文本翻译成中文：${text}<reserved_107>`;
-    }
-  };
-
-  export const detectModel = (api: Llamacpp): Promise<SakuraModel> =>
-    api
-      .createCompletion(
-        {
-          prompt: makePrompt('国境の長いトンネルを抜けると雪国であった', '0.9'),
-          temperature: 1,
-          top_p: 1,
-          n_predict: 1,
-          n_probs: 10,
-          min_keep: 10,
-          seed: 0,
-        },
-        {
-          timeout: false,
-        }
-      )
-      .then((completion) => {
-        const { version, allow } = checkModelString(completion.model);
-
-        if (
-          completion.completion_probabilities === undefined ||
-          completion.completion_probabilities.length === 0 ||
-          version === '0.8' ||
-          !allow
-        ) {
-          return { version };
-        }
-
-        const fingerprint = completion.completion_probabilities[0].probs.map(
-          (it) => it.prob
-        );
-
-        return { version, fingerprint };
-      });
-
-  export const translateText = (
-    api: Llamacpp,
-    version: '0.8' | '0.9',
-    text: string,
-    maxNewToken: number,
-    tryFixDegradation: boolean,
-    signal?: AbortSignal
-  ) =>
-    api
-      .createCompletion(
-        {
-          prompt: makePrompt(text, version),
-          n_predict: maxNewToken,
-          temperature: 0.1,
-          top_p: 0.3,
-          top_k: 40,
-          repeat_penalty: 1.0,
-          frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
-        },
-        {
-          signal,
-          timeout: false,
-        }
-      )
-      .then(({ prompt, generation_settings, content, stopped_limit }) => ({
-        text: content,
-        hasDegradation: stopped_limit,
-        extra: {
-          prompt,
-          generation_settings,
-        },
-      }));
-}
-
-namespace SakuraOpenai {
-  const createChatCompletions = (
-    api: OpenAi,
-    text: string,
-    config: { max_tokens: number; frequency_penalty?: number },
-    signal?: AbortSignal
-  ) =>
-    api.createChatCompletions(
+    const completion = await this.createChatCompletions(
+      text,
       {
-        model: 'sukinishiro',
+        max_tokens: maxNewToken,
+        frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
+      },
+      signal
+    );
+    return {
+      text: completion.choices[0].message.content!!,
+      hasDegradation: completion.choices[0].finish_reason !== 'stop',
+    };
+  }
+
+  private async detectModel() {
+    const text = '国境の長いトンネルを抜けると雪国であった';
+    const completion = await this.api.llamacppCheck(
+      {
+        prompt: `<|im_start|>system\n你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文 ，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。<|im_end|>\n<|im_start|>user\n将下面的日文文本翻译成中文：${text}<|im_end|>\n<|im_start|>assistant\n`,
+        temperature: 1,
+        top_p: 1,
+        n_predict: 1,
+        n_probs: 10,
+        min_keep: 10,
+        seed: 0,
+      },
+      { throwHttpErrors: false }
+    );
+    if ('error' in completion) {
+      return { version: '0.9' };
+    }
+
+    const version: '0.8' | '0.9' = completion.model.includes('0.9')
+      ? '0.9'
+      : '0.8';
+    const allow = [
+      '0.9-Q4',
+      '0.9-Q5',
+      '0.9-Q6',
+      '0.9-Q8',
+      '0.9b-Q4',
+      '0.9b-Q5',
+      '0.9b-Q6',
+      '0.9b-Q8',
+      '0.9-iq4',
+      '0.9-IQ4',
+    ].some((it) => completion.model.includes(it));
+
+    if (
+      completion.completion_probabilities === undefined ||
+      completion.completion_probabilities.length === 0 ||
+      version !== '0.9' ||
+      !allow
+    ) {
+      return { version };
+    }
+
+    const fingerprint = completion.completion_probabilities[0].probs.map(
+      (it) => it.prob
+    );
+
+    return { version, fingerprint };
+  }
+
+  private createChatCompletions(
+    text: string,
+    config: Partial<Parameters<typeof this.api.createChatCompletions>[0]>,
+    signal?: AbortSignal
+  ) {
+    return this.api.createChatCompletions(
+      {
+        model: '',
         messages: [
           {
             role: 'system',
@@ -378,48 +295,18 @@ namespace SakuraOpenai {
         temperature: 0.1,
         top_p: 0.3,
         ...config,
-
-        //
-        do_sample: true,
-        top_k: 40,
-        num_beams: 1,
-        repetition_penalty: 1.0,
-      } as any,
+      },
       {
         signal,
         timeout: false,
       }
     );
+  }
+}
 
-  export const detectModel = (api: OpenAi): Promise<SakuraModel> =>
-    createChatCompletions(api, '国境の長いトンネルを抜けると雪国であった', {
-      max_tokens: 20,
-    }).then((completion) => {
-      const { version } = checkModelString(completion.model);
-      return {
-        version,
-        fingerprint: undefined,
-      };
-    });
-
-  export const translateText = (
-    api: OpenAi,
-    text: string,
-    maxNewToken: number,
-    tryFixDegradation: boolean,
-    signal?: AbortSignal
-  ) =>
-    createChatCompletions(
-      api,
-      text,
-      {
-        max_tokens: maxNewToken,
-        frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
-      },
-      signal
-    ).then((completion) => ({
-      text: completion.choices[0].message.content!!,
-      hasDegradation: completion.choices[0].finish_reason !== 'stop',
-      extra: undefined,
-    }));
+export namespace SakuraTranslator {
+  export interface Config extends BaseTranslatorConfig {
+    endpoint: string;
+  }
+  export const create = (config: Config) => new SakuraTranslator(config).init();
 }

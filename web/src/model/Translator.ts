@@ -13,7 +13,6 @@ export interface GptWorker {
 export interface SakuraWorker {
   id: string;
   endpoint: string;
-  useLlamaApi?: boolean;
 }
 
 export interface TranslateJob {
@@ -83,7 +82,7 @@ export type TranslatorDesc =
       endpoint: string;
       key: string;
     }
-  | { id: 'sakura'; endpoint: string; useLlamaApi: boolean };
+  | { id: 'sakura'; endpoint: string };
 
 type TranslateTaskDescriptor = string;
 
