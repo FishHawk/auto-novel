@@ -37,6 +37,7 @@ const router = createRouter({
 
     {
       path: '/*',
+      meta: { isReader: true },
       component: () => import('./pages/layouts/ReaderLayout.vue'),
       children: [
         {
@@ -282,11 +283,16 @@ if (isSafari) {
   meta.setAttribute('content', `${content}, user-scalable=no`);
 }
 
-router.beforeEach((to, _from) => {
-  if (to.meta.title) {
-    document.title = (to.meta.title as string) + ' | 轻小说机翻机器人';
-  } else {
-    document.title = '轻小说机翻机器人';
+router.afterEach((to, from) => {
+  // 章节之间标题依靠手动切换，这里跳过
+  if (!(to.meta.isReader && from.meta.isReader)) {
+    const defaultTitle = '轻小说机翻机器人';
+    const title = to.meta.title;
+    if (title !== undefined) {
+      document.title = title + ' | ' + defaultTitle;
+    } else {
+      document.title = defaultTitle;
+    }
   }
 });
 
