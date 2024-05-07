@@ -154,31 +154,47 @@ const router = createRouter({
         {
           path: '/novel/:providerId/:novelId',
           component: () => import('./pages/novel/WebNovel.vue'),
-          props: true,
+          props: (route) => ({
+            providerId: route.params.providerId,
+            novelId: route.params.novelId,
+            key: route.path,
+          }),
         },
         {
           path: '/novel-edit/:providerId/:novelId',
           meta: { title: '编辑网络小说' },
           component: () => import('./pages/novel/WebNovelEdit.vue'),
-          props: true,
+          props: (route) => ({
+            providerId: route.params.providerId,
+            novelId: route.params.novelId,
+            key: route.path,
+          }),
         },
 
         {
           path: '/wenku/:novelId',
           component: () => import('./pages/novel/WenkuNovel.vue'),
-          props: true,
+          props: (route) => ({
+            novelId: route.params.novelId,
+            key: route.path,
+          }),
         },
         {
           path: '/wenku-edit',
           meta: { title: '新建文库小说' },
           component: () => import('./pages/novel/WenkuNovelEdit.vue'),
-          props: true,
+          props: (route) => ({
+            key: route.path,
+          }),
         },
         {
           path: '/wenku-edit/:novelId',
           meta: { title: '编辑文库小说' },
           component: () => import('./pages/novel/WenkuNovelEdit.vue'),
-          props: true,
+          props: (route) => ({
+            novelId: route.params.novelId,
+            key: route.path,
+          }),
         },
 
         {
@@ -193,19 +209,27 @@ const router = createRouter({
         {
           path: '/forum/:articleId',
           component: () => import('./pages/forum/ForumArticle.vue'),
-          props: true,
+          props: (route) => ({
+            articleId: route.params.articleId,
+            key: route.path,
+          }),
         },
         {
           path: '/forum-edit',
           meta: { title: '发布文章' },
           component: () => import('./pages/forum/ForumArticleEdit.vue'),
-          props: true,
+          props: (route) => ({
+            key: route.path,
+          }),
         },
         {
           path: '/forum-edit/:articleId',
           meta: { title: '编辑文章' },
           component: () => import('./pages/forum/ForumArticleEdit.vue'),
-          props: true,
+          props: (route) => ({
+            articleId: route.params.articleId,
+            key: route.path,
+          }),
         },
 
         {
