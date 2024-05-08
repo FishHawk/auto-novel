@@ -14,7 +14,6 @@ export interface SakuraWorker {
   id: string;
   endpoint: string;
   testSegLength?: number;
-  testContext?: boolean;
 }
 
 export interface TranslateJob {

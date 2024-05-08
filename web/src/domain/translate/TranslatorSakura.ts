@@ -14,21 +14,17 @@ export class SakuraTranslator implements SegmentTranslator {
   version: string = '0.8';
   fingerprint?: number[];
   segmentor = createLengthSegmentor(500);
-  enablePrevSeg = false;
   segLength = 500;
 
   constructor(
     log: Logger,
-    { endpoint, testSegLength, testContext }: SakuraTranslator.Config
+    { endpoint, testSegLength }: SakuraTranslator.Config
   ) {
     this.log = log;
     this.api = Locator.openAiRepositoryFactory(endpoint, 'no-key');
     if (testSegLength !== undefined) {
       this.segmentor = createLengthSegmentor(testSegLength);
       this.segLength = testSegLength;
-    }
-    if (testContext === true) {
-      this.enablePrevSeg = true;
     }
   }
 
@@ -42,7 +38,7 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   allowUpload = () => {
-    if (this.segLength !== 500 && this.enablePrevSeg !== false) {
+    if (this.segLength !== 500) {
       return false;
     }
     if (this.fingerprint === undefined) {
@@ -135,7 +131,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    { glossary, prevSegZh, signal }: SegmentContext
+    { glossary, prevSegs, signal }: SegmentContext
   ): Promise<string[]> {
     // 替换术语表词汇
     seg = seg
@@ -158,10 +154,10 @@ export class SakuraTranslator implements SegmentTranslator {
 
     const maxNewToken = this.segLength * 2;
     const concatedSeg = seg.join('\n');
-    let concatedPrevSeg = prevSegZh?.join('\n');
-    if (!this.enablePrevSeg) {
-      concatedPrevSeg = undefined;
-    }
+    const concatedPrevSeg = prevSegs
+      .slice(-Math.ceil(1000 / this.segLength))
+      .flat()
+      .join('\n');
 
     let retry = 0;
     while (retry < 2) {
@@ -200,7 +196,7 @@ export class SakuraTranslator implements SegmentTranslator {
     for (const line of seg) {
       const { text, hasDegradation } = await this.translatePrompt(
         line,
-        undefined,
+        [concatedPrevSeg, ...resultPerLine].join('\n'),
         maxNewToken,
         true,
         signal
@@ -338,7 +334,6 @@ export namespace SakuraTranslator {
   export interface Config {
     endpoint: string;
     testSegLength?: number;
-    testContext?: boolean;
   }
   export const create = (log: Logger, config: Config) =>
     new SakuraTranslator(log, config).init();

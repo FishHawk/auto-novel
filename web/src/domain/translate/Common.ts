@@ -14,7 +14,7 @@ export type Logger = (message: string, detail?: string[]) => void;
 
 export type SegmentContext = {
   glossary: Glossary;
-  prevSegZh?: string[];
+  prevSegs: string[][];
   signal?: AbortSignal;
 };
 

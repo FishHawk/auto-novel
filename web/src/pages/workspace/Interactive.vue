@@ -71,7 +71,6 @@ const translate = async () => {
       id,
       endpoint: worker.endpoint,
       testSegLength: worker.testSegLength,
-      testContext: worker.testContext,
     };
   } else {
     config = {

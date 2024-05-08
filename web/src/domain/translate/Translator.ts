@@ -72,22 +72,22 @@ export class Translator {
       async (textJp, oldTextZh) => {
         if (textJp.length === 0) return [];
 
-        const resultsZh: string[][] = [];
+        const segsZh: string[][] = [];
         const segs = this.segTranslator.segmentor(textJp, oldTextZh);
         const size = segs.length;
         for (const [index, [segJp, oldSegZh]] of segs.entries()) {
           const segZh = await this.translateSeg(segJp, {
             logPrefix: `分段${index + 1}/${size}`,
             ...context,
-            prevSegZh: resultsZh[resultsZh.length - 1],
+            prevSegs: segsZh,
             oldSegZh,
           });
           if (segJp.length !== segZh.length) {
             throw new Error('翻译结果行数不匹配。不应当出现，请反馈给站长。');
           }
-          resultsZh.push(segZh);
+          segsZh.push(segZh);
         }
-        return resultsZh.flat();
+        return segsZh.flat();
       }
     );
     this.segTranslator.log('完成');
@@ -101,14 +101,14 @@ export class Translator {
       glossary,
       oldSegZh,
       oldGlossary,
-      prevSegZh,
+      prevSegs,
       signal,
     }: {
       logPrefix: string;
       glossary?: Glossary;
       oldSegZh?: string[];
       oldGlossary?: Glossary;
-      prevSegZh?: string[];
+      prevSegs: string[][];
       signal?: AbortSignal;
     }
   ) {
@@ -150,7 +150,7 @@ export class Translator {
     this.log(logPrefix);
     const segOutput = await this.segTranslator.translate(seg, {
       glossary,
-      prevSegZh,
+      prevSegs,
       signal,
     });
     if (segOutput.length !== seg.length) {

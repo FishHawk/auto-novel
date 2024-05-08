@@ -55,7 +55,6 @@ const translatorConfig = computed(() => {
       id: 'sakura',
       endpoint: worker.endpoint,
       testSegLength: worker.testSegLength,
-      testContext: worker.testContext,
     };
   }
 });
@@ -69,7 +68,7 @@ const endpointPrefix = computed(() => {
       return `${worker.model}[${worker.key.slice(-4)}]@`;
     }
   } else {
-    return `${worker.testContext ? 'C' : 'NC'}${worker.testSegLength ?? 500}@`;
+    return `${worker.testSegLength ?? 500}@`;
   }
 });
 
