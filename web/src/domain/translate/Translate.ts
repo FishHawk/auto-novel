@@ -2,37 +2,50 @@ import {
   TranslateTaskCallback,
   TranslateTaskDesc,
   TranslateTaskParams,
-  TranslatorDesc,
 } from '@/model/Translator';
 import { keepPageAlive } from '@/util';
 
 import { translateLocal } from './TranslateLocal';
 import { translateWeb } from './TranslateWeb';
 import { translateWenku } from './TranslateWenku';
+import { Translator, TranslatorConfig } from './Translator';
 
 export const translate = async (
   taskDesc: TranslateTaskDesc,
   taskParams: TranslateTaskParams,
   taskCallback: TranslateTaskCallback,
-  translatorDesc: TranslatorDesc,
+  translatorConfig: TranslatorConfig,
   signal?: AbortSignal
 ) => {
   await keepPageAlive();
 
-  if (taskDesc.type === 'web') {
-    return translateWeb(
-      taskDesc,
-      taskParams,
-      taskCallback,
-      translatorDesc,
-      signal
+  let translator: Translator;
+  try {
+    translator = await Translator.create(
+      translatorConfig,
+      true,
+      (message, detail) => taskCallback.log('　' + message, detail)
     );
+  } catch (e: any) {
+    taskCallback.log(`发生错误，无法创建翻译器：${e}`);
+    return;
+  }
+
+  if (taskDesc.type === 'web' || taskDesc.type === 'wenku') {
+    if (!translator.allowUpload()) {
+      taskCallback.log('发生错误，当前Sakura版本不允许上传翻译');
+      return;
+    }
+  }
+
+  if (taskDesc.type === 'web') {
+    return translateWeb(taskDesc, taskParams, taskCallback, translator, signal);
   } else if (taskDesc.type === 'wenku') {
     return translateWenku(
       taskDesc,
       taskParams,
       taskCallback,
-      translatorDesc,
+      translator,
       signal
     );
   } else {
@@ -40,7 +53,7 @@ export const translate = async (
       taskDesc,
       taskParams,
       taskCallback,
-      translatorDesc,
+      translator,
       signal
     );
   }

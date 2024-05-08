@@ -5,21 +5,25 @@ import { Glossary } from '@/model/Glossary';
 import { delay } from '@/util';
 
 import {
-  BaseTranslatorConfig,
+  Logger,
+  SegmentContext,
   SegmentTranslator,
   createLengthSegmentor,
-} from './common';
-import { PartyModeSharp } from '@vicons/material';
+} from './Common';
 
 type OpenAi = ReturnType<typeof Locator.openAiRepositoryFactory>;
 type OpenAiWeb = ReturnType<typeof Locator.openAiWebRepositoryFactory>;
 
 export class OpenAiTranslator implements SegmentTranslator {
-  log: (message: string) => void;
+  id = <const>'gpt';
+  log: Logger;
   private api: OpenAi | OpenAiWeb;
   private model: string;
 
-  constructor({ log, type, model, endpoint, key }: OpenAiTranslator.Config) {
+  constructor(
+    log: Logger,
+    { type, model, endpoint, key }: OpenAiTranslator.Config
+  ) {
     this.log = log;
     this.model = model;
     if (type === 'web') {
@@ -33,8 +37,7 @@ export class OpenAiTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    glossary: Glossary,
-    signal?: AbortSignal
+    { glossary, signal }: SegmentContext
   ): Promise<string[]> {
     let enableBypass = false;
 
@@ -298,13 +301,14 @@ export class OpenAiTranslator implements SegmentTranslator {
 }
 
 export namespace OpenAiTranslator {
-  export interface Config extends BaseTranslatorConfig {
+  export interface Config {
     type: 'web' | 'api';
     model: string;
     endpoint: string;
     key: string;
   }
-  export const create = (config: Config) => new OpenAiTranslator(config);
+  export const create = (log: Logger, config: Config) =>
+    new OpenAiTranslator(log, config);
 }
 
 const askApi = (

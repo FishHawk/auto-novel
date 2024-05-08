@@ -2,7 +2,6 @@ import { Locator, formatError } from '@/data';
 import {
   TranslateTaskCallback,
   TranslateTaskParams,
-  TranslatorDesc,
   WenkuTranslateTask,
   WenkuTranslateTaskDesc,
 } from '@/model/Translator';
@@ -13,7 +12,7 @@ export const translateWenku = async (
   { novelId, volumeId }: WenkuTranslateTaskDesc,
   { translateExpireChapter }: TranslateTaskParams,
   callback: TranslateTaskCallback,
-  translatorDesc: TranslatorDesc,
+  translator: Translator,
   signal?: AbortSignal
 ) => {
   const {
@@ -23,7 +22,7 @@ export const translateWenku = async (
   } = Locator.wenkuNovelRepository.createTranslationApi(
     novelId,
     volumeId,
-    translatorDesc.id,
+    translator.id,
     signal
   );
 
@@ -40,25 +39,6 @@ export const translateWenku = async (
       callback.log(`发生错误，结束翻译任务：${e}`);
       return;
     }
-  }
-
-  let translator: Translator;
-  try {
-    translator = await Translator.create(
-      {
-        log: (message, detail) => callback.log('　' + message, detail),
-        ...translatorDesc,
-      },
-      true
-    );
-  } catch (e: any) {
-    callback.log(`发生错误，无法创建翻译器：${e}`);
-    return;
-  }
-
-  if (!translator.allowUpload()) {
-    callback.log('发生错误，当前Sakura版本不允许上传翻译');
-    return;
   }
 
   const chapters = task.toc

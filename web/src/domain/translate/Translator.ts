@@ -1,36 +1,40 @@
 import { isEqual } from 'lodash-es';
 
 import { Glossary } from '@/model/Glossary';
+import { TranslatorId } from '@/model/Translator';
 
 import { BaiduTranslator } from './TranslatorBaidu';
 import { OpenAiTranslator } from './TranslatorOpenAi';
 import { SakuraTranslator } from './TranslatorSakura';
 import { YoudaoTranslator } from './TranslatorYoudao';
 import {
+  Logger,
   SegmentCache,
   SegmentTranslator,
   createSegIndexedDbCache,
-} from './common';
+} from './Common';
 
 export type TranslatorConfig =
-  | ({ id: 'baidu' } & BaiduTranslator.Config)
-  | ({ id: 'youdao' } & YoudaoTranslator.Config)
+  | { id: 'baidu' }
+  | { id: 'youdao' }
   | ({ id: 'gpt' } & OpenAiTranslator.Config)
   | ({ id: 'sakura' } & SakuraTranslator.Config);
 
 export class Translator {
+  id: TranslatorId;
   log: (message: string) => void;
   segTranslator: SegmentTranslator;
   segCache?: SegmentCache;
 
   constructor(
-    log: (message: string) => void,
     segTranslator: SegmentTranslator,
-    segCache?: SegmentCache
+    segCache?: SegmentCache,
+    log?: (message: string) => void
   ) {
-    this.log = log;
+    this.id = segTranslator.id;
     this.segTranslator = segTranslator;
     this.segCache = segCache;
+    this.log = log ?? (() => {});
   }
 
   allowUpload() {
@@ -75,6 +79,7 @@ export class Translator {
           const segZh = await this.translateSeg(segJp, {
             logPrefix: `分段${index + 1}/${size}`,
             ...context,
+            prevSegZh: resultsZh[resultsZh.length - 1],
             oldSegZh,
           });
           if (segJp.length !== segZh.length) {
@@ -96,12 +101,14 @@ export class Translator {
       glossary,
       oldSegZh,
       oldGlossary,
+      prevSegZh,
       signal,
     }: {
       logPrefix: string;
       glossary?: Glossary;
       oldSegZh?: string[];
       oldGlossary?: Glossary;
+      prevSegZh?: string[];
       signal?: AbortSignal;
     }
   ) {
@@ -141,7 +148,11 @@ export class Translator {
 
     // 翻译
     this.log(logPrefix);
-    const segOutput = await this.segTranslator.translate(seg, glossary, signal);
+    const segOutput = await this.segTranslator.translate(seg, {
+      glossary,
+      prevSegZh,
+      signal,
+    });
     if (segOutput.length !== seg.length) {
       throw new Error('分段翻译结果行数不匹配，请反馈给站长');
     }
@@ -162,23 +173,30 @@ export class Translator {
 
 export namespace Translator {
   const createSegmentTranslator = async (
+    log: Logger,
     config: TranslatorConfig
   ): Promise<SegmentTranslator> => {
     if (config.id === 'baidu') {
-      return BaiduTranslator.create(config);
+      return BaiduTranslator.create(log);
     } else if (config.id === 'youdao') {
-      return YoudaoTranslator.create(config);
+      return YoudaoTranslator.create(log);
     } else if (config.id === 'gpt') {
-      return OpenAiTranslator.create(config);
+      return OpenAiTranslator.create(log, config);
     } else {
-      return SakuraTranslator.create(config);
+      return SakuraTranslator.create(log, config);
     }
   };
 
-  export const create = async (config: TranslatorConfig, cache: boolean) => {
-    const log = config.log;
-    config.log = (message, detail) => log('　' + message, detail);
-    const segTranslator = await createSegmentTranslator(config);
+  export const create = async (
+    config: TranslatorConfig,
+    cache: boolean = false,
+    log?: Logger
+  ) => {
+    log = log ?? (() => {});
+    const segTranslator = await createSegmentTranslator(
+      (message, detail) => log?.('　' + message, detail),
+      config
+    );
     let segCache: SegmentCache | undefined = undefined;
     if (cache) {
       if (config.id === 'gpt') {
@@ -187,7 +205,7 @@ export namespace Translator {
         segCache = await createSegIndexedDbCache('sakura-seg-cache');
       }
     }
-    return new Translator(log, segTranslator, segCache);
+    return new Translator(segTranslator, segCache, log);
   };
 }
 

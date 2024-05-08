@@ -53,7 +53,6 @@ const translate = async () => {
     selectedWorker = worker;
     config = {
       id,
-      log: () => {},
       type: worker.type,
       model: worker.model,
       endpoint: worker.endpoint,
@@ -70,13 +69,13 @@ const translate = async () => {
     selectedWorker = worker;
     config = {
       id,
-      log: () => {},
       endpoint: worker.endpoint,
+      testSegLength: worker.testSegLength,
+      testContext: worker.testContext,
     };
   } else {
     config = {
       id,
-      log: () => {},
     };
   }
 

@@ -3,23 +3,25 @@ import { customAlphabet } from 'nanoid';
 
 import { Locator } from '@/data';
 import { Glossary } from '@/model/Glossary';
+import { TranslatorId } from '@/model/Translator';
 
 export type Segmentor = (
   textJp: string[],
   textZh?: string[]
 ) => [string[], string[]?][];
 
-export interface BaseTranslatorConfig {
-  log: (message: string, detail?: string[]) => void;
-}
+export type Logger = (message: string, detail?: string[]) => void;
+
+export type SegmentContext = {
+  glossary: Glossary;
+  prevSegZh?: string[];
+  signal?: AbortSignal;
+};
 
 export interface SegmentTranslator {
+  id: TranslatorId;
   segmentor: Segmentor;
-  translate: (
-    seg: string[],
-    glossary: Glossary,
-    signal?: AbortSignal
-  ) => Promise<string[]>;
+  translate: (seg: string[], context: SegmentContext) => Promise<string[]>;
   log: (message: string, detail?: string[]) => void;
 }
 

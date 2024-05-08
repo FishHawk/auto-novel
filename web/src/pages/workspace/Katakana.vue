@@ -153,14 +153,12 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
     }
     config = {
       id,
-      log: () => {},
       endpoint: worker.endpoint,
+      testSegLength: worker.testSegLength,
+      testContext: worker.testContext,
     };
   } else {
-    config = {
-      id,
-      log: () => {},
-    };
+    config = { id };
   }
   try {
     const translator = await Translator.create(config, false);

@@ -1,18 +1,19 @@
 import { Locator } from '@/data';
-import { Glossary } from '@/model/Glossary';
 
 import {
-  BaseTranslatorConfig,
+  Logger,
+  SegmentContext,
   SegmentTranslator,
   createGlossaryWrapper,
   createLengthSegmentor,
-} from './common';
+} from './Common';
 
 export class BaiduTranslator implements SegmentTranslator {
+  id = <const>'baidu';
   log: (message: string) => void;
   private api = Locator.baiduRepository();
 
-  constructor({ log }: BaiduTranslator.Config) {
+  constructor(log: Logger) {
     this.log = log;
   }
 
@@ -25,8 +26,7 @@ export class BaiduTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    glossary: Glossary,
-    signal?: AbortSignal
+    { glossary, signal }: SegmentContext
   ): Promise<string[]> {
     return createGlossaryWrapper(glossary)(seg, (seg) =>
       this.translateInner(seg, signal)
@@ -63,6 +63,5 @@ export class BaiduTranslator implements SegmentTranslator {
 }
 
 export namespace BaiduTranslator {
-  export type Config = BaseTranslatorConfig;
-  export const create = (config: Config) => new BaiduTranslator(config).init();
+  export const create = (log: Logger) => new BaiduTranslator(log).init();
 }

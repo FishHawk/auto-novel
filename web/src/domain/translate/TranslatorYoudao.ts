@@ -1,19 +1,20 @@
 import { Locator } from '@/data';
-import { Glossary } from '@/model/Glossary';
 import { safeJson } from '@/util';
 
 import {
-  BaseTranslatorConfig,
+  Logger,
+  SegmentContext,
   SegmentTranslator,
   createGlossaryWrapper,
   createLengthSegmentor,
-} from './common';
+} from './Common';
 
 export class YoudaoTranslator implements SegmentTranslator {
-  log: (message: string) => void;
+  id = <const>'youdao';
+  log: Logger;
   private api = Locator.youdaoRepository();
 
-  constructor({ log }: YoudaoTranslator.Config) {
+  constructor(log: Logger) {
     this.log = log;
   }
 
@@ -31,8 +32,7 @@ export class YoudaoTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    glossary: Glossary,
-    signal?: AbortSignal
+    { glossary, signal }: SegmentContext
   ): Promise<string[]> {
     return createGlossaryWrapper(glossary)(seg, (seg) =>
       this.translateInner(seg, signal)
@@ -61,6 +61,5 @@ export class YoudaoTranslator implements SegmentTranslator {
 }
 
 export namespace YoudaoTranslator {
-  export type Config = BaseTranslatorConfig;
-  export const create = (config: Config) => new YoudaoTranslator(config).init();
+  export const create = (log: Logger) => new YoudaoTranslator(log).init();
 }

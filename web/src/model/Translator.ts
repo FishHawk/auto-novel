@@ -13,6 +13,8 @@ export interface GptWorker {
 export interface SakuraWorker {
   id: string;
   endpoint: string;
+  testSegLength?: number;
+  testContext?: boolean;
 }
 
 export interface TranslateJob {
@@ -71,18 +73,6 @@ export type TranslateTaskCallback = {
   onChapterFailure: () => void;
   log: (message: string, detail?: string[]) => void;
 };
-
-export type TranslatorDesc =
-  | { id: 'baidu' }
-  | { id: 'youdao' }
-  | {
-      id: 'gpt';
-      type: 'web' | 'api';
-      model: string;
-      endpoint: string;
-      key: string;
-    }
-  | { id: 'sakura'; endpoint: string };
 
 type TranslateTaskDescriptor = string;
 

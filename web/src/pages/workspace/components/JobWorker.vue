@@ -11,12 +11,11 @@ import {
 } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { Translator } from '@/domain/translate';
+import { Translator, TranslatorConfig } from '@/domain/translate';
 import {
   GptWorker,
   SakuraWorker,
   TranslateTaskDescriptor,
-  TranslatorDesc,
 } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
@@ -41,10 +40,10 @@ const emit = defineEmits<{
 
 const message = useMessage();
 
-const translatorDesc = computed(() => {
+const translatorConfig = computed(() => {
   const worker = props.worker;
   if (worker.translatorId === 'gpt') {
-    return <TranslatorDesc & { id: 'gpt' }>{
+    return <TranslatorConfig & { id: 'gpt' }>{
       id: 'gpt',
       type: worker.type,
       model: worker.model,
@@ -52,9 +51,11 @@ const translatorDesc = computed(() => {
       key: worker.key,
     };
   } else {
-    return <TranslatorDesc & { id: 'sakura' }>{
+    return <TranslatorConfig & { id: 'sakura' }>{
       id: 'sakura',
       endpoint: worker.endpoint,
+      testSegLength: worker.testSegLength,
+      testContext: worker.testContext,
     };
   }
 });
@@ -68,7 +69,7 @@ const endpointPrefix = computed(() => {
       return `${worker.model}[${worker.key.slice(-4)}]@`;
     }
   } else {
-    return '';
+    return `${worker.testContext ? 'C' : 'NC'}${worker.testSegLength ?? 500}@`;
   }
 });
 
@@ -99,7 +100,7 @@ const processTasks = async () => {
     const state = await translateTask.value!!.startTask(
       desc,
       params,
-      translatorDesc.value,
+      translatorConfig.value,
       {
         onProgressUpdated: (progress) => {
           emit('update:progress', job.task, {
@@ -146,13 +147,7 @@ const testWorker = async () => {
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。',
   ];
   try {
-    const translator = await Translator.create(
-      {
-        log: () => {},
-        ...translatorDesc.value,
-      },
-      false
-    );
+    const translator = await Translator.create(translatorConfig.value);
     const textZh = await translator.translate(textJp);
 
     const lineJp = textJp[0];
@@ -194,7 +189,7 @@ const showEditWorkerModal = ref(false);
     <template #header>
       {{ worker.id }}
       <n-text depth="3" style="font-size: 12px; padding-left: 2px">
-        {{ endpointPrefix }}{{ translatorDesc.endpoint }}
+        {{ endpointPrefix }}{{ translatorConfig.endpoint }}
       </n-text>
     </template>
 

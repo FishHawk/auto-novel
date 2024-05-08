@@ -1,25 +1,36 @@
 import { Locator } from '@/data';
-import { Glossary } from '@/model/Glossary';
 
 import {
-  BaseTranslatorConfig,
+  Logger,
+  SegmentContext,
   SegmentTranslator,
   createLengthSegmentor,
-} from './common';
+} from './Common';
 
 export class SakuraTranslator implements SegmentTranslator {
+  id = <const>'sakura';
   log: (message: string, detail?: string[]) => void;
-
   private api;
   version: string = '0.8';
   fingerprint?: number[];
+  segmentor = createLengthSegmentor(500);
+  enablePrevSeg = false;
+  segLength = 500;
 
-  constructor({ log, endpoint }: SakuraTranslator.Config) {
+  constructor(
+    log: Logger,
+    { endpoint, testSegLength, testContext }: SakuraTranslator.Config
+  ) {
     this.log = log;
     this.api = Locator.openAiRepositoryFactory(endpoint, 'no-key');
+    if (testSegLength !== undefined) {
+      this.segmentor = createLengthSegmentor(testSegLength);
+      this.segLength = testSegLength;
+    }
+    if (testContext === true) {
+      this.enablePrevSeg = true;
+    }
   }
-
-  segmentor = createLengthSegmentor(500);
 
   async init() {
     const { version, fingerprint } = await this.detectModel();
@@ -31,6 +42,9 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   allowUpload = () => {
+    if (this.segLength !== 500 && this.enablePrevSeg !== false) {
+      return false;
+    }
     if (this.fingerprint === undefined) {
       return false;
     } else {
@@ -121,10 +135,10 @@ export class SakuraTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    glossary: Glossary,
-    signal?: AbortSignal
+    { glossary, prevSegZh, signal }: SegmentContext
   ): Promise<string[]> {
-    const newSeg = seg
+    // 替换术语表词汇
+    seg = seg
       .map((text) =>
         // 全角数字转换成半角数字
         text.replace(/[\uff10-\uff19]/g, (ch) =>
@@ -141,17 +155,19 @@ export class SakuraTranslator implements SegmentTranslator {
         }
         return text;
       });
-    return this.translateInner(newSeg, signal);
-  }
 
-  async translateInner(seg: string[], signal?: AbortSignal): Promise<string[]> {
-    const maxNewToken = 1000;
+    const maxNewToken = this.segLength * 2;
     const concatedSeg = seg.join('\n');
+    let concatedPrevSeg = prevSegZh?.join('\n');
+    if (!this.enablePrevSeg) {
+      concatedPrevSeg = undefined;
+    }
 
     let retry = 0;
     while (retry < 2) {
       const { text, hasDegradation } = await this.translatePrompt(
         concatedSeg,
+        concatedPrevSeg,
         maxNewToken,
         retry > 0,
         signal
@@ -184,6 +200,7 @@ export class SakuraTranslator implements SegmentTranslator {
     for (const line of seg) {
       const { text, hasDegradation } = await this.translatePrompt(
         line,
+        undefined,
         maxNewToken,
         true,
         signal
@@ -205,12 +222,14 @@ export class SakuraTranslator implements SegmentTranslator {
 
   private async translatePrompt(
     text: string,
+    prevText: string | undefined,
     maxNewToken: number,
     tryFixDegradation: boolean,
     signal?: AbortSignal
   ) {
     const completion = await this.createChatCompletions(
       text,
+      prevText,
       {
         max_tokens: maxNewToken,
         frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
@@ -275,23 +294,34 @@ export class SakuraTranslator implements SegmentTranslator {
 
   private createChatCompletions(
     text: string,
+    prevText: string | undefined,
     config: Partial<Parameters<typeof this.api.createChatCompletions>[0]>,
     signal?: AbortSignal
   ) {
+    const messages: {
+      role: 'system' | 'user' | 'assistant';
+      content: string;
+    }[] = [
+      {
+        role: 'system',
+        content:
+          '你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。',
+      },
+      {
+        role: 'user',
+        content: '将下面的日文文本翻译成中文：' + text,
+      },
+    ];
+    if (prevText !== undefined) {
+      messages.splice(1, 0, {
+        role: 'assistant',
+        content: prevText,
+      });
+    }
     return this.api.createChatCompletions(
       {
         model: '',
-        messages: [
-          {
-            role: 'system',
-            content:
-              '你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。',
-          },
-          {
-            role: 'user',
-            content: '将下面的日文文本翻译成中文：' + text,
-          },
-        ],
+        messages,
         temperature: 0.1,
         top_p: 0.3,
         ...config,
@@ -305,8 +335,11 @@ export class SakuraTranslator implements SegmentTranslator {
 }
 
 export namespace SakuraTranslator {
-  export interface Config extends BaseTranslatorConfig {
+  export interface Config {
     endpoint: string;
+    testSegLength?: number;
+    testContext?: boolean;
   }
-  export const create = (config: Config) => new SakuraTranslator(config).init();
+  export const create = (log: Logger, config: Config) =>
+    new SakuraTranslator(log, config).init();
 }

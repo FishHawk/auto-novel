@@ -1,10 +1,6 @@
 <script lang="ts" setup>
-import { translate } from '@/domain/translate';
-import {
-  TranslateTaskDesc,
-  TranslateTaskParams,
-  TranslatorDesc,
-} from '@/model/Translator';
+import { TranslatorConfig, translate } from '@/domain/translate';
+import { TranslateTaskDesc, TranslateTaskParams } from '@/model/Translator';
 
 import CTaskCard from './CTaskCard.vue';
 
@@ -35,7 +31,7 @@ const cardRef = ref<InstanceType<typeof CTaskCard>>();
 const startTask = async (
   desc: TranslateTaskDesc,
   params: TranslateTaskParams,
-  translatorDesc: TranslatorDesc,
+  translatorDesc: TranslatorConfig,
   callback?: {
     onProgressUpdated: (progress: {
       finished: number;

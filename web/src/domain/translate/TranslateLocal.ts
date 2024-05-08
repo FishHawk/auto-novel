@@ -4,7 +4,6 @@ import {
   PersonalTranslateTaskDesc,
   TranslateTaskCallback,
   TranslateTaskParams,
-  TranslatorDesc,
 } from '@/model/Translator';
 
 import { Translator } from './Translator';
@@ -13,7 +12,7 @@ export const translateLocal = async (
   { volumeId }: PersonalTranslateTaskDesc,
   { translateExpireChapter }: TranslateTaskParams,
   callback: TranslateTaskCallback,
-  translatorDesc: TranslatorDesc,
+  translator: Translator,
   signal?: AbortSignal
 ) => {
   const localVolumeRepository = await Locator.localVolumeRepository();
@@ -27,7 +26,7 @@ export const translateLocal = async (
     localVolumeRepository.updateTranslation(
       volumeId,
       chapterId,
-      translatorDesc.id,
+      translator.id,
       json
     );
 
@@ -46,28 +45,14 @@ export const translateLocal = async (
     return;
   }
 
-  let translator: Translator;
-  try {
-    translator = await Translator.create(
-      {
-        log: (message, detail) => callback.log('　' + message, detail),
-        ...translatorDesc,
-      },
-      true
-    );
-  } catch (e: any) {
-    callback.log(`发生错误，无法创建翻译器：${e}`);
-    return;
-  }
-
   const untranslatedChapters = metadata.toc
-    .filter((it) => it[translatorDesc.id] === undefined)
+    .filter((it) => it[translator.id] === undefined)
     .map((it) => it.chapterId);
   const expiredChapters = metadata.toc
     .filter(
       (it) =>
-        it[translatorDesc.id] !== undefined &&
-        it[translatorDesc.id] !== metadata.glossaryId
+        it[translator.id] !== undefined &&
+        it[translator.id] !== metadata.glossaryId
     )
     .map((it) => it.chapterId);
   const chapters = (

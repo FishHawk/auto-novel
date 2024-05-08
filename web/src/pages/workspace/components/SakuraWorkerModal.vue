@@ -21,6 +21,8 @@ const initFormValue = () => {
     return {
       id: '',
       endpoint: '',
+      testSegLength: 500,
+      testContext: false,
     };
   } else {
     return { ...worker };
@@ -109,7 +111,23 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
         />
       </n-form-item-row>
 
+      <n-form-item-row path="testSegLength" label="分段长度">
+        <n-input-number
+          v-model:value="formValue.testSegLength"
+          :show-button="false"
+          :min="500"
+        />
+      </n-form-item-row>
+
+      <n-form-item-row path="testContext" label="上文提示">
+        <n-switch v-model:value="formValue.testContext" size="small" />
+      </n-form-item-row>
+
       <n-text depth="3" style="font-size: 12px">
+        # 分段长度和上文提示都是测试功能
+        <br />
+        # 非默认值（即分段500，上文提示关闭）以外的翻译器无法上传
+        <br />
         # 链接例子：http://127.0.0.1:8080
       </n-text>
     </n-form>
