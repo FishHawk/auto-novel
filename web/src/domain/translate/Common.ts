@@ -26,11 +26,35 @@ export interface SegmentTranslator {
 }
 
 export const createGlossaryWrapper = (glossary: Glossary) => {
+  const presetTokens = [
+    '∀kie',
+    '∀rgx',
+    '∀wfv',
+    '∀oyg',
+    '∀yhs',
+    '∀rvy',
+    '∀dpt',
+    '∀wkj',
+    '∀gzg',
+    '∀xef',
+    '∀efx',
+    '∀ugx',
+    '∀woz',
+    '∀peh',
+    '∀rjp',
+    '∀eon',
+    '∀ayj',
+    '∀gkp',
+    '∀wie',
+    '∀yla',
+  ];
   const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 4);
   const generateToken = () => {
+    const presetToken = presetTokens.shift();
+    if (presetToken !== undefined) return presetToken;
     while (true) {
-      const uuid = nanoid();
-      if (/(.)\1/.test(uuid)) return uuid;
+      const token = nanoid();
+      if (!/(.)\1/.test(token)) return '∀' + token;
     }
   };
 
