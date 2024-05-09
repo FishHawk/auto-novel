@@ -240,8 +240,8 @@ export class SakuraTranslator implements SegmentTranslator {
 
   private async detectModel() {
     const text = '国境の長いトンネルを抜けると雪国であった';
-    const completion = await this.api.llamacppCheck(
-      {
+    const completion = await this.api
+      .llamacppCheck({
         prompt: `<|im_start|>system\n你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文 ，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。<|im_end|>\n<|im_start|>user\n将下面的日文文本翻译成中文：${text}<|im_end|>\n<|im_start|>assistant\n`,
         temperature: 1,
         top_p: 1,
@@ -249,10 +249,10 @@ export class SakuraTranslator implements SegmentTranslator {
         n_probs: 10,
         min_keep: 10,
         seed: 0,
-      },
-      { throwHttpErrors: false }
-    );
-    if ('error' in completion) {
+      })
+      .catch(() => undefined);
+
+    if (completion === undefined) {
       return { version: '0.9' };
     }
 
