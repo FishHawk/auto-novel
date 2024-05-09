@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useKeyModifier } from '@vueuse/core';
 import ky from 'ky';
 
 import { Locator } from '@/data';
@@ -89,6 +90,7 @@ const importToWorkspace = async () => {
     .catch((error) => message.error(`导入失败:${error}`));
 };
 
+const shouldTopJob = useKeyModifier('Control');
 const submitJob = (id: 'gpt' | 'sakura') => {
   const { startIndex, endIndex, expire, sync, forceMetadata, forceSeg } =
     translateOptions.value!!.getTranslateTaskParams();
@@ -139,7 +141,11 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       description: titleJp,
       createAt: Date.now(),
     };
-    return workspace.addJob(job);
+    const success = workspace.addJob(job);
+    if (shouldTopJob.value) {
+      workspace.topJob(job);
+    }
+    return success;
   });
   if (results.length === 1 && !results[0]) {
     message.error('排队失败：翻译任务已经存在');
