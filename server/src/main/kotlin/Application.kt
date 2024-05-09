@@ -37,7 +37,6 @@ import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
-import sakura.SakuraWorkerManager
 
 fun main() {
     embeddedServer(Netty, 8081) {
@@ -131,7 +130,6 @@ val appModule = module {
     singleOf(::CommentRepository)
     singleOf(::OperationHistoryRepository)
 
-    singleOf(::SakuraWorkerManager)
     singleOf(::SakuraJobRepository)
 
     singleOf(::UserRepository)

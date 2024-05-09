@@ -25,18 +25,8 @@ class DataSourceMongo(host: String, port: Int?) {
         get() = database.getCollection<OperationHistoryModel>("operation-history")
 
     // Sakura
-    val sakuraJobCollection
-        get() = database.getCollection<SakuraJob>("gpu-job")
-    val sakuraJobResultCollection
-        get() = database.getCollection<SakuraJobResult>("gpu-job-result")
-    val sakuraServerCollection
-        get() = database.getCollection<SakuraServer>("sakura-server")
     val sakuraWebIncorrectCaseCollection
         get() = database.getCollection<SakuraWebIncorrectCase>("sakura-incorrect-case")
-    val sakuraWebFailCaseCollection
-        get() = database.getCollection<SakuraWebFailCase>("sakura-fail-case")
-    val sakuraWenkuFailCaseCollection
-        get() = database.getCollection<SakuraWenkuFailCase>("sakura-wenku-fail-case")
 
     // User
     val userCollectionName = "user"
@@ -85,13 +75,6 @@ class DataSourceMongo(host: String, port: Int?) {
                 Comment::id,
             )
 
-            // Sakura
-            sakuraServerCollection.ensureUniqueIndex(
-                SakuraServer::endpoint,
-            )
-            sakuraJobCollection.ensureUniqueIndex(
-                SakuraJob::task,
-            )
             operationHistoryCollection.ensureIndex(
                 OperationHistoryModel::createAt,
             )

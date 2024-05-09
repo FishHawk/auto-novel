@@ -31,7 +31,7 @@ object Email {
             val from = "no-reply@notify.fishhawk.top"
             message.setFrom(InternetAddress(from))
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
-            message.setSubject(subject)
+            message.subject = subject
             message.setText(text)
 
             Transport.send(message)

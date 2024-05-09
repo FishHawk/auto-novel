@@ -45,12 +45,6 @@ private class WenkuNovelRes {
         @Resource("/volume/{volumeId}")
         class Volume(val parent: Id, val volumeId: String)
 
-        @Resource("/translate/{translatorId}/{volumeId}")
-        class Translate(val parent: Id, val translatorId: TranslatorId, val volumeId: String) {
-            @Resource("/{chapterId}")
-            class Chapter(val parent: Translate, val chapterId: String)
-        }
-
         @Resource("/translate-v2/{translatorId}/{volumeId}")
         class TranslateV2(val parent: Id, val translatorId: TranslatorId, val volumeId: String) {
             @Resource("/chapter-task/{chapterId}")
@@ -161,47 +155,6 @@ fun Route.routeWenkuNovel() {
                     user = user,
                     novelId = loc.parent.novelId,
                     volumeId = loc.volumeId,
-                )
-            }
-        }
-
-        // Translate
-        get<WenkuNovelRes.Id.Translate> { loc ->
-            call.tryRespond {
-                service.getTranslateTask(
-                    novelId = loc.parent.novelId,
-                    translatorId = loc.translatorId,
-                    volumeId = loc.volumeId,
-                )
-            }
-        }
-        get<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-            call.tryRespond {
-                service.getChapterToTranslate(
-                    novelId = loc.parent.parent.novelId,
-                    volumeId = loc.parent.volumeId,
-                    chapterId = loc.chapterId,
-                )
-            }
-        }
-        put<WenkuNovelRes.Id.Translate.Chapter> { loc ->
-            @Serializable
-            class Body(
-                val glossaryUuid: String? = null,
-                val paragraphsZh: List<String>,
-                val sakuraVersion: String? = null,
-            )
-
-            val body = call.receive<Body>()
-            call.tryRespond {
-                service.updateChapterTranslation(
-                    novelId = loc.parent.parent.novelId,
-                    translatorId = loc.parent.translatorId,
-                    volumeId = loc.parent.volumeId,
-                    chapterId = loc.chapterId,
-                    glossaryUuid = body.glossaryUuid,
-                    paragraphsZh = body.paragraphsZh,
-                    sakuraVersion = body.sakuraVersion,
                 )
             }
         }
@@ -567,112 +520,6 @@ class WenkuNovelApi(
             novelId = novelId,
             volumeId = volumeId,
         )
-    }
-
-    // Translate
-    @Serializable
-    data class TranslateTaskDto(
-        val glossaryUuid: String?,
-        val glossary: Map<String, String>,
-        val untranslatedChapters: List<String>,
-        val expiredChapters: List<String>,
-    )
-
-    suspend fun getTranslateTask(
-        novelId: String,
-        translatorId: TranslatorId,
-        volumeId: String,
-    ): TranslateTaskDto {
-        validateVolumeId(volumeId)
-
-        val novel = metadataRepo.get(novelId)
-            ?: throwNovelNotFound()
-        val volume = volumeRepo.getVolume(novelId, volumeId)
-            ?: throwNotFound("卷不存在")
-
-        val untranslatedChapterIds = mutableListOf<String>()
-        val expiredChapterIds = mutableListOf<String>()
-        volume.listChapter().forEach {
-            if (!volume.translationExist(translatorId, it)) {
-                untranslatedChapterIds.add(it)
-            } else {
-                val chapterGlossary = volume.getChapterGlossary(translatorId, it)
-                if (
-                    chapterGlossary?.uuid != novel.glossaryUuid ||
-                    (translatorId == TranslatorId.Sakura && chapterGlossary?.sakuraVersion != "0.9")
-                ) {
-                    expiredChapterIds.add(it)
-                }
-            }
-        }
-        return TranslateTaskDto(
-            glossaryUuid = novel.glossaryUuid,
-            glossary = novel.glossary,
-            untranslatedChapters = untranslatedChapterIds,
-            expiredChapters = expiredChapterIds,
-        )
-    }
-
-    suspend fun getChapterToTranslate(
-        novelId: String,
-        volumeId: String,
-        chapterId: String,
-    ): List<String> {
-        validateNovelId(novelId)
-        validateVolumeId(volumeId)
-
-        val volume = volumeRepo.getVolume(novelId, volumeId)
-            ?: throwNotFound("卷不存在")
-        return volume.getChapter(chapterId)
-            ?: throwNotFound("章节不存在")
-    }
-
-    suspend fun updateChapterTranslation(
-        novelId: String,
-        translatorId: TranslatorId,
-        volumeId: String,
-        chapterId: String,
-        glossaryUuid: String?,
-        paragraphsZh: List<String>,
-        sakuraVersion: String?,
-    ): Int {
-        if (translatorId == TranslatorId.Sakura && sakuraVersion != "0.9") {
-            throwBadRequest("旧版本Sakura不再允许上传")
-        }
-
-        validateVolumeId(volumeId)
-
-        val novel = metadataRepo.get(novelId)
-            ?: throwNovelNotFound()
-        if (glossaryUuid != novel.glossaryUuid) {
-            throwBadRequest("术语表uuid失效")
-        }
-
-        val volume = volumeRepo.getVolume(novelId, volumeId)
-            ?: throwNotFound("卷不存在")
-
-        val jpLines = volume.getChapter(chapterId)
-            ?: throwNotFound("章节不存在")
-
-        if (jpLines.size != paragraphsZh.size)
-            throwBadRequest("翻译行数不匹配")
-
-        volume.setTranslation(
-            translatorId = translatorId,
-            chapterId = chapterId,
-            lines = paragraphsZh,
-        )
-        volume.setChapterGlossary(
-            translatorId = translatorId,
-            chapterId = chapterId,
-            glossaryUuid = glossaryUuid,
-            glossary = novel.glossary,
-            sakuraVersion = sakuraVersion?.takeIf { translatorId == TranslatorId.Sakura }
-        )
-
-        return volume.listTranslation(
-            translatorId = translatorId,
-        ).size
     }
 
     // File
