@@ -5,6 +5,7 @@ import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 import { Setting } from '@/model/Setting';
+import { TranslateTaskParams } from '@/model/Translator';
 import { useIsWideScreen } from '@/pages/util';
 
 defineProps<{
@@ -14,27 +15,26 @@ defineProps<{
 const isWideScreen = useIsWideScreen(600);
 
 const { setting } = Locator.settingRepository();
-const { isSignedIn } = Locator.userDataRepository();
 
 // 翻译设置
-const translateExpireChapter = ref(false);
-const overriteToc = ref(false);
-const syncFromProvider = ref(false);
-const autoTop = ref(false);
+const expire = ref(false);
+const forceMetadata = ref(false);
+const forceSeg = ref(false);
+const sync = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
 const taskNumber = ref<number | null>(1);
 
 defineExpose({
-  getTranslationOptions: () => ({
-    translateExpireChapter: translateExpireChapter.value,
-    overriteToc: overriteToc.value,
-    syncFromProvider: syncFromProvider.value,
+  getTranslateTaskParams: (): TranslateTaskParams => ({
+    expire: expire.value,
+    sync: sync.value,
+    forceMetadata: forceMetadata.value,
+    forceSeg: forceSeg.value,
     startIndex: startIndex.value ?? 0,
     endIndex: endIndex.value ?? 65536,
-    taskNumber: taskNumber.value ?? 1,
-    autoTop: autoTop.value,
   }),
+  getTaskNumber: () => taskNumber.value ?? 1,
 });
 
 const showDownloadModal = ref(false);
@@ -43,37 +43,41 @@ const showDownloadModal = ref(false);
 <template>
   <n-flex vertical>
     <c-action-wrapper title="选项">
-      <n-flex>
-        <n-checkbox v-model:checked="translateExpireChapter">
-          <n-tooltip trigger="hover" style="max-width: 200px">
-            <template #trigger>过期章节</template>
-            翻译术语表过期的章节。
-          </n-tooltip>
-        </n-checkbox>
+      <n-flex size="small">
+        <n-tooltip trigger="hover" style="max-width: 200px">
+          <template #trigger>
+            <n-tag v-model:checked="expire" checkable size="small">
+              过期章节
+            </n-tag>
+          </template>
+          翻译术语表过期的章节。
+        </n-tooltip>
 
-        <n-checkbox v-model:checked="autoTop">
-          <n-tooltip trigger="hover">
-            <template #trigger>排队置顶</template>
-            GPT/Sakura任务排队的时候，自动置顶。
-          </n-tooltip>
-        </n-checkbox>
-
-        <n-checkbox v-if="gnid.type === 'web'" v-model:checked="overriteToc">
-          <n-tooltip trigger="hover" style="max-width: 200px">
-            <template #trigger>重翻目录</template>
-            重新翻译整个目录，覆盖已经翻译的结果。
-          </n-tooltip>
-        </n-checkbox>
-
-        <n-checkbox
-          v-if="gnid.type === 'web' && isSignedIn"
-          v-model:checked="syncFromProvider"
+        <n-tag
+          v-if="gnid.type === 'web'"
+          v-model:checked="forceMetadata"
+          checkable
+          size="small"
         >
-          <n-tooltip trigger="hover" style="max-width: 200px">
-            <template #trigger>源站同步</template>
-            强行同步已缓存章节，与源站不一致会删除现有翻译，慎用！!
-          </n-tooltip>
-        </n-checkbox>
+          重翻目录
+        </n-tag>
+
+        <n-tag v-model:checked="forceSeg" checkable size="small">
+          重翻分段
+        </n-tag>
+
+        <n-tooltip
+          v-if="gnid.type === 'web'"
+          trigger="hover"
+          style="max-width: 200px"
+        >
+          <template #trigger>
+            <n-tag v-model:checked="sync" checkable size="small">
+              源站同步
+            </n-tag>
+          </template>
+          同步已缓存章节，与源站不一致会删除现有翻译，慎用！!
+        </n-tooltip>
       </n-flex>
     </c-action-wrapper>
 

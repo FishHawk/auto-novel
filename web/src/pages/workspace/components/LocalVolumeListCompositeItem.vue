@@ -22,22 +22,26 @@ const sakura = ref(calculateFinished('sakura'));
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   translateTask?.value?.startTask(
-    { type: 'personal', volumeId: props.volume.id },
+    { type: 'local', volumeId: props.volume.id },
     {
-      translateExpireChapter: true,
-      overriteToc: false,
-      syncFromProvider: false,
       startIndex: 0,
       endIndex: 65535,
+      expire: true,
+      sync: false,
+      forceMetadata: false,
+      forceSeg: false,
     },
     { id: translatorId }
   );
 
 const queueVolume = (translatorId: 'gpt' | 'sakura') => {
   const task = TranslateTaskDescriptor.workspace(props.volume.id, {
-    start: 0,
-    end: 65535,
+    startIndex: 0,
+    endIndex: 65535,
     expire: true,
+    sync: false,
+    forceMetadata: false,
+    forceSeg: false,
   });
 
   const workspace =

@@ -607,6 +607,7 @@ class WenkuNovelTranslateV2Api(
         val oldParagraphZh: List<String>?,
         val glossaryId: String,
         val glossary: Map<String, String>,
+        val oldGlossaryId: String?,
         val oldGlossary: Map<String, String>,
     )
 
@@ -625,17 +626,26 @@ class WenkuNovelTranslateV2Api(
         val chapter = volume.getChapter(chapterId)
             ?: throwNotFound("章节不存在")
 
-        val oldParagraphZh = volume.getTranslation(translatorId, chapterId)
+        val oldTranslation = volume.getTranslation(translatorId, chapterId)
         val chapterGlossary = volume.getChapterGlossary(translatorId, chapterId)
 
         val sakuraOutdated =
             translatorId == TranslatorId.Sakura && chapterGlossary?.sakuraVersion != "0.9"
 
+        val oldGlossaryId = if (oldTranslation == null) {
+            null
+        } else if (sakuraOutdated) {
+            "sakura outdated"
+        } else {
+            chapterGlossary?.uuid ?: "no glossary"
+        }
+
         return ChapterTranslateTaskDto(
             paragraphJp = chapter,
-            oldParagraphZh = oldParagraphZh.takeIf { !sakuraOutdated },
+            oldParagraphZh = oldTranslation.takeIf { !sakuraOutdated },
             glossaryId = novel.glossaryUuid ?: "no glossary",
             glossary = novel.glossary,
+            oldGlossaryId = oldGlossaryId,
             oldGlossary = chapterGlossary?.glossary ?: emptyMap(),
         )
     }

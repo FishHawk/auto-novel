@@ -85,7 +85,7 @@ const createTranslationApi = (
   const getChapterTranslateTask = (chapterId: string) =>
     client
       .get(`${endpointV2}/chapter-task/${chapterId}`, { signal })
-      .json<WenkuChapterTranslateTask | ''>();
+      .json<WenkuChapterTranslateTask>();
 
   const updateChapterTranslation = (
     chapterId: string,

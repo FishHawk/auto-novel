@@ -12,9 +12,10 @@ import { Translator } from './Translator';
 export const translateWeb = async (
   { providerId, novelId }: WebTranslateTaskDesc,
   {
-    translateExpireChapter,
-    overriteToc,
-    syncFromProvider,
+    expire,
+    sync,
+    forceMetadata,
+    forceSeg,
     startIndex,
     endIndex,
   }: TranslateTaskParams,
@@ -36,7 +37,7 @@ export const translateWeb = async (
     providerId,
     novelId,
     translator.id,
-    syncFromProvider,
+    sync,
     signal
   );
 
@@ -72,7 +73,7 @@ export const translateWeb = async (
         encoded.push(task.introductionJp);
       }
       const toc = task.toc
-        .filter((it) => overriteToc || !it.titleZh)
+        .filter((it) => forceMetadata || !it.titleZh)
         .map((it) => it.titleJp);
 
       const tocWordsDict: { [key: string]: string } = {};
@@ -148,7 +149,7 @@ export const translateWeb = async (
 
     const coder = createMetadataCoder();
 
-    if (overriteToc) {
+    if (forceMetadata) {
       callback.log('重新翻译目录');
     }
 
@@ -190,9 +191,9 @@ export const translateWeb = async (
       if (glossaryUuid === undefined) {
         return true;
       } else if (glossaryUuid !== task.glossaryUuid) {
-        return translateExpireChapter || syncFromProvider;
+        return expire || sync;
       } else {
-        return syncFromProvider;
+        return sync;
       }
     });
 
@@ -204,23 +205,23 @@ export const translateWeb = async (
   for (const { index, chapterId } of chapters) {
     try {
       callback.log(`\n[${index}] ${providerId}/${novelId}/${chapterId}`);
-      const chapterTranslateTask = await getChapterTranslateTask(chapterId);
+      const cTask = await getChapterTranslateTask(chapterId);
 
-      if (chapterTranslateTask === '') {
+      if (!forceSeg && cTask.glossaryId === cTask.oldGlossaryId) {
         callback.log(`无需翻译`);
+
         callback.onChapterSuccess({});
       } else {
-        const textsZh = await translator.translate(
-          chapterTranslateTask.paragraphJp,
-          {
-            glossary: chapterTranslateTask.glossary,
-            oldTextZh: chapterTranslateTask.oldParagraphZh,
-            oldGlossary: chapterTranslateTask.oldGlossary,
-            signal,
-          }
-        );
+        const textsZh = await translator.translate(cTask.paragraphJp, {
+          glossary: cTask.glossary,
+          oldTextZh: cTask.oldParagraphZh,
+          oldGlossary: cTask.oldGlossary,
+          force: forceSeg,
+          signal,
+        });
+        callback.log(`上传章节`);
         const { jp, zh } = await updateChapterTranslation(chapterId, {
-          glossaryId: chapterTranslateTask.glossaryId,
+          glossaryId: cTask.glossaryId,
           paragraphsZh: textsZh,
         });
         callback.onChapterSuccess({ jp, zh });

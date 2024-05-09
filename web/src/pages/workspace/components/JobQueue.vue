@@ -6,7 +6,7 @@ import {
   KeyboardDoubleArrowUpOutlined,
 } from '@vicons/material';
 
-import { TranslateJob, TranslateTaskDescriptor } from '@/model/Translator';
+import { TranslateJob } from '@/model/Translator';
 
 const props = defineProps<{
   job: TranslateJob;
@@ -17,8 +17,6 @@ const emit = defineEmits<{
   bottomJob: [];
   deleteJob: [];
 }>();
-
-const url = computed(() => TranslateTaskDescriptor.parseUrl(props.job.task));
 
 const percentage = computed(() => {
   if (props.progress === undefined) {
@@ -48,14 +46,7 @@ const percentage = computed(() => {
     </template>
 
     <template #header>
-      <router-link v-if="url" :to="url">
-        <n-text depth="3" underline style="font-size: 12px">
-          {{ job.task }}
-        </n-text>
-      </router-link>
-      <n-text v-else depth="3" style="font-size: 12px">
-        {{ job.task }}
-      </n-text>
+      <job-task-link :task="job.task" />
     </template>
     <template #header-extra>
       <n-flex :size="6" :wrap="false">

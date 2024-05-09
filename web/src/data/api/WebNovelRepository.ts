@@ -98,7 +98,7 @@ const createTranslationApi = (
         searchParams: { sync: syncFromProvider },
         signal,
       })
-      .json<WebChapterTranslateTask | ''>();
+      .json<WebChapterTranslateTask>();
 
   const updateMetadataTranslation = (json: {
     title?: string;

@@ -245,7 +245,7 @@ const showWebNovelsModal = ref(false);
             <WenkuVolume
               :novel-id="novelId"
               :volume="volume"
-              :get-params="() => translateOptions!!.getTranslationOptions()"
+              :get-params="() => translateOptions!!.getTranslateTaskParams()"
               @delete="deleteVolume(volume.volumeId)"
             />
           </n-list-item>

@@ -58,6 +58,7 @@ export class Translator {
       glossary?: Glossary;
       oldTextZh?: string[] | undefined;
       oldGlossary?: Glossary;
+      force?: boolean;
       signal?: AbortSignal;
     }
   ): Promise<string[]> {
@@ -90,7 +91,6 @@ export class Translator {
         return segsZh.flat();
       }
     );
-    this.segTranslator.log('完成');
     return textZh;
   }
 
@@ -102,6 +102,7 @@ export class Translator {
       oldSegZh,
       oldGlossary,
       prevSegs,
+      force,
       signal,
     }: {
       logPrefix: string;
@@ -109,6 +110,7 @@ export class Translator {
       oldSegZh?: string[];
       oldGlossary?: Glossary;
       prevSegs: string[][];
+      force?: boolean;
       signal?: AbortSignal;
     }
   ) {
@@ -117,7 +119,7 @@ export class Translator {
 
     // 检测分段是否需要重新翻译
     const segGlossary = filterGlossary(glossary, seg);
-    if (oldSegZh !== undefined) {
+    if (!force && oldSegZh !== undefined) {
       const segOldGlossary = filterGlossary(oldGlossary, seg);
       if (isEqual(segGlossary, segOldGlossary)) {
         this.log(logPrefix + '　术语表无变化，无需翻译');

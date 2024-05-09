@@ -10,7 +10,7 @@ import { Translator } from './Translator';
 
 export const translateWenku = async (
   { novelId, volumeId }: WenkuTranslateTaskDesc,
-  { translateExpireChapter }: TranslateTaskParams,
+  { expire, forceSeg }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
   signal?: AbortSignal
@@ -52,7 +52,7 @@ export const translateWenku = async (
       if (glossaryId === undefined) {
         return true;
       } else if (glossaryId !== task.glossaryId) {
-        return translateExpireChapter;
+        return expire;
       } else {
         return false;
       }
@@ -66,24 +66,22 @@ export const translateWenku = async (
   for (const { index, chapterId } of chapters) {
     try {
       callback.log(`\n[${index}] ${volumeId}/${chapterId}`);
-      const chapterTranslateTask = await getChapterTranslateTask(chapterId);
+      const cTask = await getChapterTranslateTask(chapterId);
 
-      if (chapterTranslateTask === '') {
+      if (!forceSeg && cTask.glossaryId === cTask.oldGlossaryId) {
         callback.log(`无需翻译`);
         callback.onChapterSuccess({});
       } else {
-        const textsZh = await translator.translate(
-          chapterTranslateTask.paragraphJp,
-          {
-            glossary: chapterTranslateTask.glossary,
-            oldTextZh: chapterTranslateTask.oldParagraphZh,
-            oldGlossary: chapterTranslateTask.oldGlossary,
-            signal,
-          }
-        );
+        const textsZh = await translator.translate(cTask.paragraphJp, {
+          glossary: cTask.glossary,
+          oldTextZh: cTask.oldParagraphZh,
+          oldGlossary: cTask.oldGlossary,
+          force: forceSeg,
+          signal,
+        });
         callback.log('上传章节');
         const state = await updateChapterTranslation(chapterId, {
-          glossaryId: chapterTranslateTask.glossaryId,
+          glossaryId: cTask.glossaryId,
           paragraphsZh: textsZh,
         });
         callback.onChapterSuccess({ zh: state });

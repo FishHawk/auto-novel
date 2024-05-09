@@ -1,7 +1,7 @@
 import { Locator, formatError } from '@/data';
 import { ChapterTranslation, LocalVolumeMetadata } from '@/model/LocalVolume';
 import {
-  PersonalTranslateTaskDesc,
+  LocalTranslateTaskDesc,
   TranslateTaskCallback,
   TranslateTaskParams,
 } from '@/model/Translator';
@@ -9,8 +9,8 @@ import {
 import { Translator } from './Translator';
 
 export const translateLocal = async (
-  { volumeId }: PersonalTranslateTaskDesc,
-  { translateExpireChapter }: TranslateTaskParams,
+  { volumeId }: LocalTranslateTaskDesc,
+  { expire, forceSeg }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
   signal?: AbortSignal
@@ -56,9 +56,7 @@ export const translateLocal = async (
     )
     .map((it) => it.chapterId);
   const chapters = (
-    translateExpireChapter
-      ? untranslatedChapters.concat(expiredChapters)
-      : untranslatedChapters
+    expire ? untranslatedChapters.concat(expiredChapters) : untranslatedChapters
   ).sort((a, b) => a.localeCompare(b));
 
   callback.onStart(chapters.length);
@@ -77,6 +75,7 @@ export const translateLocal = async (
 
       const textsZh = await translator.translate(textsJp, {
         glossary: metadata.glossary,
+        force: forceSeg,
         signal,
       });
 

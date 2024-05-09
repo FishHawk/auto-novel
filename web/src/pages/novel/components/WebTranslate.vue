@@ -44,7 +44,7 @@ const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   translateTask?.value?.startTask(
     { type: 'web', providerId, novelId },
-    translateOptions.value!!.getTranslationOptions(),
+    translateOptions.value!!.getTranslateTaskParams(),
     { id: translatorId }
   );
 
@@ -90,14 +90,9 @@ const importToWorkspace = async () => {
 };
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const {
-    startIndex,
-    endIndex,
-    translateExpireChapter,
-    overriteToc,
-    taskNumber,
-    autoTop,
-  } = translateOptions.value!!.getTranslationOptions();
+  const { startIndex, endIndex, expire, sync, forceMetadata, forceSeg } =
+    translateOptions.value!!.getTranslateTaskParams();
+  const taskNumber = translateOptions.value!!.getTaskNumber();
 
   if (endIndex <= startIndex || startIndex >= total) {
     message.error('排队失败：没有选中章节');
@@ -112,20 +107,24 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       const end = Math.round(startIndex + (i + 1) * taskSize);
       if (end > start) {
         const task = TranslateTaskDescriptor.web(providerId, novelId, {
-          start,
-          end,
-          expire: translateExpireChapter,
-          toc: overriteToc,
+          startIndex: start,
+          endIndex: end,
+          expire,
+          sync,
+          forceMetadata,
+          forceSeg,
         });
         tasks.push(task);
       }
     }
   } else {
     const task = TranslateTaskDescriptor.web(providerId, novelId, {
-      start: startIndex,
-      end: endIndex,
-      expire: translateExpireChapter,
-      toc: overriteToc,
+      startIndex,
+      endIndex,
+      expire,
+      sync,
+      forceMetadata,
+      forceSeg,
     });
     tasks.push(task);
   }
@@ -140,9 +139,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       description: titleJp,
       createAt: Date.now(),
     };
-    const success = workspace.addJob(job);
-    if (autoTop) workspace.topJob(job);
-    return success;
+    return workspace.addJob(job);
   });
   if (results.length === 1 && !results[0]) {
     message.error('排队失败：翻译任务已经存在');

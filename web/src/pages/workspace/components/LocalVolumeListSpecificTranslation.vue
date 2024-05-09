@@ -47,9 +47,12 @@ const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
 
 const queueVolume = (volumeId: string) => {
   const task = TranslateTaskDescriptor.workspace(volumeId, {
-    start: 0,
-    end: 65535,
+    startIndex: 0,
+    endIndex: 65535,
     expire: true,
+    sync: false,
+    forceMetadata: false,
+    forceSeg: false,
   });
 
   const workspace =

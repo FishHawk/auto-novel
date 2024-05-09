@@ -48,20 +48,21 @@ export type WenkuTranslateTaskDesc = {
   volumeId: string;
 };
 
-export type PersonalTranslateTaskDesc = {
-  type: 'personal';
+export type LocalTranslateTaskDesc = {
+  type: 'local';
   volumeId: string;
 };
 
 export type TranslateTaskDesc =
   | WebTranslateTaskDesc
   | WenkuTranslateTaskDesc
-  | PersonalTranslateTaskDesc;
+  | LocalTranslateTaskDesc;
 
 export type TranslateTaskParams = {
-  translateExpireChapter: boolean;
-  overriteToc: boolean;
-  syncFromProvider: boolean;
+  expire: boolean; // 是否翻译过期章节
+  sync: boolean; // 是否与源站同步
+  forceMetadata: boolean; // 强制重翻元数据
+  forceSeg: boolean; // 强制重翻分段
   startIndex: number;
   endIndex: number;
 };
@@ -77,21 +78,21 @@ type TranslateTaskDescriptor = string;
 
 export namespace TranslateTaskDescriptor {
   const buildTaskQueryString = ({
-    start,
-    end,
+    startIndex,
+    endIndex,
     expire,
-    toc,
-  }: {
-    start: number;
-    end: number;
-    expire: boolean;
-    toc?: boolean;
-  }) => {
-    const searchParamsInit: { [key: string]: string } = {};
-    if (start > 0) searchParamsInit['start'] = start.toString();
-    if (end < 65535) searchParamsInit['end'] = end.toString();
-    if (expire) searchParamsInit['expire'] = expire.toString();
-    if (toc) searchParamsInit['toc'] = expire.toString();
+    sync,
+    forceMetadata,
+    forceSeg,
+  }: TranslateTaskParams) => {
+    const searchParamsInit: { [key: string]: string } = {
+      startIndex: startIndex.toString(),
+      endIndex: endIndex.toString(),
+      expire: expire.toString(),
+      sync: sync.toString(),
+      forceMetadata: forceMetadata.toString(),
+      forceSeg: forceSeg.toString(),
+    };
     const searchParams = new URLSearchParams(searchParamsInit).toString();
     return searchParams ? `?${searchParams}` : '';
   };
@@ -99,81 +100,66 @@ export namespace TranslateTaskDescriptor {
   export const web = (
     providerId: string,
     novelId: string,
-    params: {
-      start: number;
-      end: number;
-      expire: boolean;
-      toc: boolean;
-    }
+    params: TranslateTaskParams
   ) => `web/${providerId}/${novelId}` + buildTaskQueryString(params);
 
   export const wenku = (
     novelId: string,
     volumeId: string,
-    params: {
-      start: number;
-      end: number;
-      expire: boolean;
-    }
-  ) => `wenku/${novelId}/${volumeId}` + buildTaskQueryString(params);
+    params: TranslateTaskParams
+  ) =>
+    `wenku/${novelId}/${encodeURIComponent(volumeId)}` +
+    buildTaskQueryString(params);
 
-  export const workspace = (
-    volumeId: string,
-    params: {
-      start: number;
-      end: number;
-      expire: boolean;
-    }
-  ) => `personal/${volumeId}` + buildTaskQueryString(params);
+  export const workspace = (volumeId: string, params: TranslateTaskParams) =>
+    `local/${encodeURIComponent(volumeId)}` + buildTaskQueryString(params);
 
   export const parse = (task: string) => {
     const [taskString, queryString] = task.split('?');
-    const { start, end, expire, toc } = Object.fromEntries(
-      new URLSearchParams(queryString) as any
-    );
 
     let desc: TranslateTaskDesc;
     if (taskString.startsWith('web/')) {
-      const [type, providerId, novelId] = taskString.split('/');
-      desc = { type: type as any, providerId, novelId };
+      const [_, providerId, novelId] = taskString.split('/');
+      desc = { type: 'web', providerId, novelId };
     } else if (taskString.startsWith('wenku/')) {
-      const [type, novelId, volumeId] = taskString.split('/');
-      desc = { type: type as any, novelId, volumeId };
+      const [_, novelId, volumeId] = taskString.split('/');
+      desc = {
+        type: 'wenku',
+        novelId,
+        volumeId: decodeURIComponent(volumeId),
+      };
     } else if (
+      taskString.startsWith('local/') ||
       taskString.startsWith('personal/') ||
       taskString.startsWith('personal2/')
     ) {
-      const [_type, volumeId] = taskString.split('/');
-      desc = { type: 'personal', volumeId };
+      const [_, volumeId] = taskString.split('/');
+      desc = { type: 'local', volumeId: decodeURIComponent(volumeId) };
     } else {
       throw 'quit';
     }
 
-    const parseIntWithDefault = (str: string, defaultValue: number) => {
-      const num = parseInt(str, 10);
+    const query = Object.fromEntries(new URLSearchParams(queryString) as any);
+
+    const queryBoolean = (name: string) => {
+      return query[name] === 'true';
+    };
+
+    const queryInt = (name: string, defaultValue: number) => {
+      const num = parseInt(query[name], 10);
       return isNaN(num) ? defaultValue : num;
     };
 
     const params: TranslateTaskParams = {
-      translateExpireChapter: expire === 'true',
-      overriteToc: toc === 'true',
-      syncFromProvider: false,
-      startIndex: parseIntWithDefault(start, 0),
-      endIndex: parseIntWithDefault(end, 65535),
+      expire: queryBoolean('expire'),
+      sync: queryBoolean('sync'),
+      forceMetadata: queryBoolean('forceMetadata'),
+      forceSeg: queryBoolean('forceSeg'),
+      startIndex: queryInt('startIndex', 0),
+      endIndex: queryInt('endIndex', 65535),
     };
 
     return { desc, params };
-  };
-
-  export const parseUrl = (task: string) => {
-    const { desc } = parse(task);
-    if (desc.type === 'web') {
-      return `/novel/${desc.providerId}/${desc.novelId}`;
-    } else if (desc.type === 'wenku') {
-      return `/wenku/${desc.novelId}`;
-    } else {
-      return undefined;
-    }
   };
 }
 
@@ -197,6 +183,7 @@ export interface WebChapterTranslateTask {
   oldParagraphZh?: string[];
   glossaryId: string;
   glossary: Glossary;
+  oldGlossaryId?: string;
   oldGlossary: Glossary;
 }
 
@@ -213,5 +200,6 @@ export interface WenkuChapterTranslateTask {
   oldParagraphZh?: string[];
   glossaryId: string;
   glossary: Glossary;
+  oldGlossaryId?: string;
   oldGlossary: Glossary;
 }

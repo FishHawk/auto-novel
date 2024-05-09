@@ -3,17 +3,17 @@ import { FileDownloadOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { WenkuNovelRepository } from '@/data/api';
-import { TranslateTaskDescriptor } from '@/model/Translator';
+import {
+  TranslateTaskDescriptor,
+  TranslateTaskParams,
+} from '@/model/Translator';
 import { VolumeJpDto } from '@/model/WenkuNovel';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 const { novelId, volume, getParams } = defineProps<{
   novelId: string;
   volume: VolumeJpDto;
-  getParams: () => {
-    translateExpireChapter: boolean;
-    autoTop: boolean;
-  };
+  getParams: () => TranslateTaskParams;
 }>();
 
 const emit = defineEmits<{ delete: [] }>();
@@ -25,16 +25,9 @@ const { atLeastMaintainer } = Locator.userDataRepository();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
-  const params = getParams();
   return translateTask?.value?.startTask(
     { type: 'wenku', novelId, volumeId: volume.volumeId },
-    {
-      ...params,
-      overriteToc: false,
-      syncFromProvider: false,
-      startIndex: 0,
-      endIndex: 65536,
-    },
+    getParams(),
     { id: translatorId }
   );
 };
@@ -53,12 +46,11 @@ const file = computed(() => {
 });
 
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const { translateExpireChapter, autoTop } = getParams();
-  const task = TranslateTaskDescriptor.wenku(novelId, volume.volumeId, {
-    start: 0,
-    end: 65535,
-    expire: translateExpireChapter,
-  });
+  const task = TranslateTaskDescriptor.wenku(
+    novelId,
+    volume.volumeId,
+    getParams()
+  );
   const workspace =
     id === 'gpt'
       ? Locator.gptWorkspaceRepository()
@@ -69,7 +61,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     createAt: Date.now(),
   };
   const success = workspace.addJob(job);
-  if (autoTop) workspace.topJob(job);
   if (success) {
     message.success('排队成功');
   } else {

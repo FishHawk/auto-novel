@@ -705,6 +705,7 @@ class WebNovelTranslateV2Api(
         val oldParagraphZh: List<String>?,
         val glossaryId: String,
         val glossary: Map<String, String>,
+        val oldGlossaryId: String?,
         val oldGlossary: Map<String, String>,
     )
 
@@ -714,7 +715,7 @@ class WebNovelTranslateV2Api(
         translatorId: TranslatorId,
         chapterId: String,
         sync: Boolean,
-    ): ChapterTranslateTaskDto? {
+    ): ChapterTranslateTaskDto {
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
 
@@ -727,7 +728,7 @@ class WebNovelTranslateV2Api(
             throwInternalServerError("从源站获取失败:" + it.message)
         }
 
-        val (oldGlossaryId, oldGlossary, oldTranslation) = chapter.run {
+        val (oldGlossaryIdRaw, oldGlossary, oldTranslation) = chapter.run {
             when (translatorId) {
                 TranslatorId.Baidu -> Triple(baiduGlossaryUuid, baiduGlossary, baiduParagraphs)
                 TranslatorId.Youdao -> Triple(youdaoGlossaryUuid, youdaoGlossary, youdaoParagraphs)
@@ -738,22 +739,22 @@ class WebNovelTranslateV2Api(
 
         val sakuraOutdated =
             (translatorId == TranslatorId.Sakura && chapter.sakuraVersion != "0.9")
-        return if (
-            oldTranslation != null &&
-            (oldGlossaryId ?: "no glossary") == (novel.glossaryUuid ?: "no glossary") &&
-            !sakuraOutdated
-        ) {
-            // 无需翻译
+        val oldGlossaryId = if (oldTranslation == null) {
             null
+        } else if (sakuraOutdated) {
+            "sakura outdated"
         } else {
-            return ChapterTranslateTaskDto(
-                paragraphJp = chapter.paragraphs,
-                oldParagraphZh = oldTranslation.takeIf { !sakuraOutdated },
-                glossaryId = novel.glossaryUuid ?: "no glossary",
-                glossary = novel.glossary,
-                oldGlossary = oldGlossary ?: emptyMap(),
-            )
+            oldGlossaryIdRaw ?: "no glossary"
         }
+
+        return ChapterTranslateTaskDto(
+            paragraphJp = chapter.paragraphs,
+            oldParagraphZh = oldTranslation.takeIf { !sakuraOutdated },
+            glossaryId = novel.glossaryUuid ?: "no glossary",
+            glossary = novel.glossary,
+            oldGlossaryId = oldGlossaryId,
+            oldGlossary = oldGlossary ?: emptyMap(),
+        )
     }
 
     suspend fun updateMetadataTranslation(
@@ -764,7 +765,7 @@ class WebNovelTranslateV2Api(
         toc: Map<String, String>,
     ) {
         val metadata = metadataRepo.get(providerId, novelId)
-            ?: return
+            ?: throwNovelNotFound()
 
         val tocZh = mutableMapOf<Int, String>()
         metadata.toc.forEachIndexed { index, item ->

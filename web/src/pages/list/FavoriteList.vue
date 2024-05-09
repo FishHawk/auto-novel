@@ -262,10 +262,12 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 
   novelsSorted.forEach((it) => {
     const task = TranslateTaskDescriptor.web(it.providerId, it.novelId, {
-      start: 0,
-      end,
+      startIndex: 0,
+      endIndex: end,
       expire,
-      toc: false,
+      sync: false,
+      forceMetadata: false,
+      forceSeg: false,
     });
     const workspace =
       id === 'gpt'
