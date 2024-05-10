@@ -175,6 +175,7 @@ const fontColor = computed(() => {
   min-height: 65vh;
 }
 #chapter-content p {
+  font-weight: v-bind(setting.fontWeight);
   font-size: v-bind('`${setting.fontSize}px`');
   margin: v-bind('`${setting.fontSize * setting.lineSpace}px 0`');
   color: v-bind('fontColor');
@@ -184,4 +185,3 @@ const fontColor = computed(() => {
   opacity: v-bind('setting.mixJpOpacity');
 }
 </style>
-@/data/stores/ReadPosition

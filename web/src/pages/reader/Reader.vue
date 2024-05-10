@@ -23,6 +23,7 @@ const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
 const { isSignedIn } = Locator.userDataRepository();
+const setting = Locator.readerSettingRepository().ref;
 
 const gnid = ((): GenericNovelId => {
   const path = route.path;
@@ -304,7 +305,7 @@ onKeyDown(['Enter'], (e) => {
 
 <style scoped>
 .content {
-  max-width: 800px;
+  max-width: v-bind('`${setting.pageWidth}px`');
   margin: 0 auto;
   padding-left: v-bind("isMobile? '12px' : '24px'");
   padding-right: v-bind("isMobile? '12px' : '84px'");

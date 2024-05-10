@@ -1,5 +1,7 @@
 <script lang="ts" setup>
-defineProps<{ options: { label: string; value: string }[] }>();
+defineProps<{
+  options: { label: string; value: string | number }[];
+}>();
 </script>
 
 <template>

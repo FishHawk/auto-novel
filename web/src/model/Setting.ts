@@ -44,15 +44,18 @@ export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';
   translationsMode: 'parallel' | 'priority';
   translations: TranslatorId[];
+  speakLanguages: string[];
+  enableSakuraReportButton: boolean;
+  //
+  fontWeight: number;
   fontSize: number;
   lineSpace: number;
+  pageWidth: number;
   theme: {
     mode: 'light' | 'dark' | 'system' | 'custom';
     bodyColor: string;
     fontColor: string;
   };
-  speakLanguages: string[];
-  enableSakuraReportButton: boolean;
   mixJpOpacity: number;
   mixZhOpacity: number;
 }
@@ -69,9 +72,15 @@ export namespace ReaderSetting {
     { label: '并列', value: 'parallel' },
   ];
 
-  export const fontSizeOptions = [14, 16, 18, 20, 24, 30, 40];
+  export const speakLanguagesOptions = [
+    { label: '中文', value: 'zh' },
+    { label: '日文', value: 'jp' },
+  ];
 
-  export const lineSpaceOptions = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+  export const fontWeightOptions = [
+    { label: '正常', value: 400 },
+    { label: '加粗', value: 600 },
+  ];
 
   export const themeModeOptions = [
     { label: '浅色', value: 'light' },
@@ -88,10 +97,5 @@ export namespace ReaderSetting {
 
     { bodyColor: '#000000', fontColor: '#FFFFFF' },
     { bodyColor: '#272727', fontColor: '#FFFFFF' },
-  ];
-
-  export const speakLanguagesOptions = [
-    { label: '中文', value: 'zh' },
-    { label: '日文', value: 'jp' },
   ];
 }
