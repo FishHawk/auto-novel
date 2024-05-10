@@ -46,6 +46,7 @@ export interface ReaderSetting {
   translations: TranslatorId[];
   speakLanguages: string[];
   enableSakuraReportButton: boolean;
+  trimLeadingSpaces: boolean;
   //
   fontWeight: number;
   fontSize: number;

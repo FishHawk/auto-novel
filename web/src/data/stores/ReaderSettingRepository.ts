@@ -12,6 +12,7 @@ export const createReaderSettingRepository = () => {
       translations: ['sakura', 'gpt', 'youdao', 'baidu'],
       speakLanguages: ['jp'],
       enableSakuraReportButton: true,
+      trimLeadingSpaces: false,
       //
       fontWeight: 400,
       fontSize: 14,

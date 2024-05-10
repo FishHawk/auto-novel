@@ -7,7 +7,7 @@ import { ReaderChapter } from '../ReaderStore';
 export type ReaderParagraph =
   | { text: string; secondary: boolean; needSpeak: boolean; popover?: number }
   | { imageUrl: string }
-  | null;
+  | undefined;
 
 export const buildParagraphs = (
   gnid: GenericNovelId,
@@ -115,13 +115,17 @@ export const buildParagraphs = (
 
   for (let i = 0; i < chapter.paragraphs.length; i++) {
     if (chapter.paragraphs[i].trim().length === 0) {
-      merged.push(null);
+      merged.push(undefined);
     } else if (chapter.paragraphs[i].startsWith('<图片>')) {
       merged.push({ imageUrl: chapter.paragraphs[i].slice(4) });
     } else {
       for (const style of styles) {
+        let text = style.paragraphs[i];
+        if (setting.trimLeadingSpaces) {
+          text = text.trimStart();
+        }
         merged.push({
-          text: style.paragraphs[i],
+          text,
           secondary: style.secondary,
           needSpeak: style.needSpeak,
           popover: style.popover === true ? i : undefined,

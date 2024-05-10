@@ -60,6 +60,10 @@ const setCustomFontColor = (color: string) =>
             />
           </c-action-wrapper>
 
+          <c-action-wrapper title="去除缩进" align="center">
+            <n-switch v-model:value="setting.trimLeadingSpaces" size="small" />
+          </c-action-wrapper>
+
           <n-text depth="3" style="font-size: 12px">
             # 左/右方向键跳转章节，数字键1～4切换翻译
           </n-text>
