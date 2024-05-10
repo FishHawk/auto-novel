@@ -6,8 +6,9 @@ import { SakuraRepository } from '@/data/api';
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { WebNovelChapterDto } from '@/model/WebNovel';
+
 import { doAction } from '@/pages/util';
-import { ReaderService } from '@/domain';
+import { buildParagraphs } from './BuildParagraphs';
 
 const props = defineProps<{
   gnid: GenericNovelId;
@@ -18,10 +19,7 @@ const props = defineProps<{
 const message = useMessage();
 const osThemeRef = useOsTheme();
 
-const paragraphs = computed(() => {
-  const chapter = props.chapter;
-  return ReaderService.getParagraphs(props.gnid, chapter);
-});
+const paragraphs = computed(() => buildParagraphs(props.gnid, props.chapter));
 
 const readPositionRepository = Locator.readPositionRepository();
 
@@ -110,7 +108,7 @@ const createWebIncorrectCase = async (
   );
 };
 
-const setting = Locator.readerSettingRepository().ref;
+const { setting } = Locator.readerSettingRepository();
 const fontColor = computed(() => {
   const theme = setting.value.theme;
   if (theme.mode === 'custom') {

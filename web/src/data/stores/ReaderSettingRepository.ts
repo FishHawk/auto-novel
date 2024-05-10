@@ -4,7 +4,7 @@ import { ReaderSetting } from '@/model/Setting';
 import { isDarkColor } from '@/pages/util';
 
 export const createReaderSettingRepository = () => {
-  const ref = useLocalStorage<ReaderSetting>(
+  const settingRef = useLocalStorage<ReaderSetting>(
     'readerSetting',
     {
       mode: 'zh-jp',
@@ -29,7 +29,7 @@ export const createReaderSettingRepository = () => {
   );
 
   const migrate = () => {
-    const setting = ref.value;
+    const setting = settingRef.value;
     if (typeof setting.fontSize === 'string') {
       setting.fontSize = Number(
         (setting.fontSize as any).replace(/[^0-9]/g, '')
@@ -69,7 +69,5 @@ export const createReaderSettingRepository = () => {
 
   migrate();
 
-  return {
-    ref,
-  };
+  return { setting: settingRef };
 };

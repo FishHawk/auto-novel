@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { ReaderService } from '@/domain';
+import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
-import { ReaderTocItem } from '@/model/Reader';
-import { Result, runCatching } from '@/util/result';
+import { useWebNovelStore } from '@/pages/novel/WebNovelStore';
+import { Ok, Result, runCatching } from '@/util/result';
 
 const props = defineProps<{
   show: boolean;
@@ -15,7 +15,13 @@ const emit = defineEmits<{
   (e: 'nav', chapterId: string): void;
 }>();
 
-type TocItem = ReaderTocItem & { key: number };
+type TocItem = {
+  key: number;
+  titleJp: string;
+  titleZh?: string;
+  chapterId?: string;
+  createAt?: number;
+};
 const tocResult = shallowRef<Result<TocItem[]>>();
 
 const tocNumber = computed(() => {
@@ -29,11 +35,46 @@ watch(
   () => props.show,
   async (show) => {
     if (show && tocResult.value?.ok !== true) {
-      tocResult.value = await runCatching(
-        ReaderService.getToc(props.gnid).then((toc) =>
-          toc.map((it, index) => <TocItem>{ ...it, key: index })
-        )
-      );
+      const getWebToc = async (providerId: string, novelId: string) => {
+        const store = useWebNovelStore(providerId, novelId);
+        const result = await store.loadNovel();
+        if (result.ok) {
+          return Ok(
+            result.value.toc.map(
+              (it, index) =>
+                <TocItem>{
+                  ...it,
+                  key: index,
+                }
+            )
+          );
+        } else {
+          return result;
+        }
+      };
+
+      const getLocalToc = async (volumeId: string) => {
+        const repo = await Locator.localVolumeRepository();
+        const volume = await repo.getVolume(volumeId);
+        if (volume === undefined) throw Error('小说不存在');
+        return volume.toc.map(
+          (it, index) =>
+            <TocItem>{
+              titleJp: it.chapterId,
+              chapterId: it.chapterId,
+              key: index,
+            }
+        );
+      };
+
+      const gnid = props.gnid;
+      if (gnid.type === 'web') {
+        tocResult.value = await getWebToc(gnid.providerId, gnid.novelId);
+      } else if (gnid.type === 'wenku') {
+        throw '不支持文库';
+      } else {
+        tocResult.value = await runCatching(getLocalToc(gnid.volumeId));
+      }
     }
   }
 );

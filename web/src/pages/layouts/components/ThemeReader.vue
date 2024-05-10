@@ -6,7 +6,7 @@ import { isDarkColor } from '@/pages/util';
 
 const osThemeRef = useOsTheme();
 
-const setting = Locator.readerSettingRepository().ref;
+const { setting } = Locator.readerSettingRepository();
 const readerTheme = computed(() => {
   const readerTheme = setting.value.theme;
 

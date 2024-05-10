@@ -1,74 +1,19 @@
 import { Locator } from '@/data';
-import { WebNovelRepository } from '@/data/api';
 import { GenericNovelId } from '@/model/Common';
-import { ReaderChapter, ReaderParagraph, ReaderTocItem } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
 
-export const getToc = async (
-  gnid: GenericNovelId
-): Promise<ReaderTocItem[]> => {
-  if (gnid.type === 'web') {
-    return WebNovelRepository.getNovel(gnid.providerId, gnid.novelId).then(
-      (it) => it.toc
-    );
-  } else if (gnid.type === 'wenku') {
-    throw '不支持文库';
-  } else {
-    const repo = await Locator.localVolumeRepository();
-    const volume = await repo.getVolume(gnid.volumeId);
-    if (volume === undefined) throw Error('小说不存在');
-    return volume.toc.map(
-      (it) =>
-        <ReaderTocItem>{
-          titleJp: it.chapterId,
-          chapterId: it.chapterId,
-        }
-    );
-  }
-};
+import { ReaderChapter } from '../ReaderStore';
 
-const getChapter = async (
-  gnid: GenericNovelId,
-  chapterId: string
-): Promise<ReaderChapter> => {
-  if (gnid.type === 'web') {
-    return WebNovelRepository.getChapter(
-      gnid.providerId,
-      gnid.novelId,
-      chapterId
-    );
-  } else if (gnid.type === 'wenku') {
-    throw '不支持文库';
-  } else {
-    const repo = await Locator.localVolumeRepository();
+export type ReaderParagraph =
+  | { text: string; secondary: boolean; needSpeak: boolean; popover?: number }
+  | { imageUrl: string }
+  | null;
 
-    const volumeId = gnid.volumeId;
-    const volume = await repo.getVolume(volumeId);
-    if (volume === undefined) throw Error('小说不存在');
-
-    const chapter = await repo.getChapter(volumeId, chapterId);
-    if (chapter === undefined) throw Error('章节不存在');
-
-    const currIndex = volume.toc.findIndex((it) => it.chapterId == chapterId);
-    return <ReaderChapter>{
-      titleJp: `${volumeId} - ${chapterId}`,
-      titleZh: undefined,
-      prevId: volume.toc[currIndex - 1]?.chapterId,
-      nextId: volume.toc[currIndex + 1]?.chapterId,
-      paragraphs: chapter.paragraphs,
-      baiduParagraphs: chapter.baidu?.paragraphs,
-      youdaoParagraphs: chapter.youdao?.paragraphs,
-      gptParagraphs: chapter.gpt?.paragraphs,
-      sakuraParagraphs: chapter.sakura?.paragraphs,
-    };
-  }
-};
-
-const getParagraphs = (
+export const buildParagraphs = (
   gnid: GenericNovelId,
   chapter: ReaderChapter
 ): ReaderParagraph[] => {
-  const setting = Locator.readerSettingRepository().ref.value;
+  const setting = Locator.readerSettingRepository().setting.value;
 
   const merged: ReaderParagraph[] = [];
   const styles: {
@@ -185,10 +130,4 @@ const getParagraphs = (
     }
   }
   return merged;
-};
-
-export const ReaderService = {
-  getToc,
-  getChapter,
-  getParagraphs,
 };

@@ -4,7 +4,7 @@ import { ReaderSetting } from '@/model/Setting';
 import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(600);
-const setting = Locator.readerSettingRepository().ref;
+const { setting } = Locator.readerSettingRepository();
 
 const setCustomBodyColor = (color: string) =>
   (setting.value.theme.bodyColor = color);

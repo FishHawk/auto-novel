@@ -4,13 +4,12 @@ import { createReusableTemplate, onKeyDown } from '@vueuse/core';
 import { Locator } from '@/data';
 import { UserRepository } from '@/data/api';
 import { GenericNovelId } from '@/model/Common';
-import { ReaderChapter } from '@/model/Reader';
 import { TranslatorId } from '@/model/Translator';
-import { ReaderService } from '@/domain';
-import { Ok, Result, runCatching } from '@/util/result';
+import { Result } from '@/util/result';
 import { WebUtil } from '@/util/web';
 
 import { checkIsMobile, useIsWideScreen } from '@/pages/util';
+import { ReaderChapter, useReaderStore } from './ReaderStore';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
   label: string;
@@ -23,7 +22,7 @@ const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
 const { isSignedIn } = Locator.userDataRepository();
-const setting = Locator.readerSettingRepository().ref;
+const { setting } = Locator.readerSettingRepository();
 
 const gnid = ((): GenericNovelId => {
   const path = route.path;
@@ -38,41 +37,7 @@ const gnid = ((): GenericNovelId => {
   }
 })();
 
-interface ReaderChapterState {
-  value?: ReaderChapter;
-  promise: Promise<Result<ReaderChapter>>;
-}
-
-const chapters = new Map<string, ReaderChapterState>();
-
-const loadChapter = (
-  chapterId: string
-):
-  | { type: 'async'; promiseOrValue: Promise<Result<ReaderChapter>> }
-  | { type: 'sync'; promiseOrValue: Result<ReaderChapter> } => {
-  const state = chapters.get(chapterId);
-
-  if (state === undefined) {
-    const promise = runCatching(ReaderService.getChapter(gnid, chapterId));
-    const stateNew: ReaderChapterState = { promise };
-    chapters.set(chapterId, stateNew);
-    return {
-      type: 'async',
-      promiseOrValue: promise.then((result) => {
-        if (result.ok) {
-          stateNew.value = result.value;
-        } else {
-          chapters.delete(chapterId);
-        }
-        return result;
-      }),
-    };
-  } else if (state.value === undefined) {
-    return { type: 'async', promiseOrValue: state.promise };
-  } else {
-    return { type: 'sync', promiseOrValue: Ok(state.value) };
-  }
-};
+const store = useReaderStore(gnid);
 
 const targetChapterId = ref('');
 const currentChapterId = ref('');
@@ -88,7 +53,7 @@ const novelUrl = (() => {
 const navToChapter = async (chapterId: string) => {
   targetChapterId.value = chapterId;
 
-  const { type, promiseOrValue } = loadChapter(chapterId);
+  const { type, promiseOrValue } = store.loadChapter(chapterId);
 
   if (type === 'async') {
     loadingBar.start();
@@ -117,9 +82,8 @@ const navToChapter = async (chapterId: string) => {
           chapterId
         );
       }
-      // 在阅读器缓存章节大于1时，再进行预加载
-      if (chapters.size > 1 && result.value.nextId) {
-        loadChapter(result.value.nextId);
+      if (result.value.nextId) {
+        store.preloadChapter(result.value.nextId);
       }
     }
 
@@ -181,7 +145,7 @@ onKeyDown(['ArrowRight'], (e) => {
 });
 
 onKeyDown(['1', '2', '3', '4'], (e) => {
-  const setting = Locator.readerSettingRepository().ref.value;
+  const setting = Locator.readerSettingRepository().setting.value;
 
   const translatorIds = <TranslatorId[]>['baidu', 'youdao', 'gpt', 'sakura'];
   const translatorId = translatorIds[parseInt(e.key, 10) - 1];
