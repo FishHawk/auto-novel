@@ -176,7 +176,7 @@ const showWebNovelsModal = ref(false);
 
       <template v-if="metadata.volumes.length">
         <section-header title="各卷封面" />
-        <n-scrollbar x-scrollable>
+        <c-x-scrollbar>
           <n-image-group show-toolbar-tooltip>
             <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
               <n-image
@@ -190,7 +190,7 @@ const showWebNovelsModal = ref(false);
               />
             </n-flex>
           </n-image-group>
-        </n-scrollbar>
+        </c-x-scrollbar>
       </template>
 
       <section-header title="中文章节" />
