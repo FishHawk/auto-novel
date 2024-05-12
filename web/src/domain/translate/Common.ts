@@ -27,42 +27,52 @@ export interface SegmentTranslator {
 
 export const createGlossaryWrapper = (glossary: Glossary) => {
   const presetTokens = [
-    '$kie',
-    '$rgx',
-    '$wfv',
-    '$oyg',
-    '$yhs',
-    '$rvy',
-    '$dpt',
-    '$wkj',
-    '$gzg',
-    '$xef',
-    '$efx',
-    '$ugx',
-    '$woz',
-    '$peh',
-    '$rjp',
-    '$eon',
-    '$ayj',
-    '$gkp',
-    '$wie',
-    '$yla',
+    'kie',
+    'rgx',
+    'wfv',
+    'oyg',
+    'yhs',
+    'rvy',
+    'dpt',
+    'wkj',
+    'gzg',
+    'xef',
+    'efx',
+    'ugx',
+    'woz',
+    'peh',
+    'rjp',
+    'eon',
+    'ayj',
+    'gkp',
+    'wie',
+    'yla',
   ];
+  const usedToken: string[] = [];
   const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 4);
   const generateToken = () => {
-    const presetToken = presetTokens.shift();
-    if (presetToken !== undefined) return presetToken;
-    while (true) {
-      const token = nanoid();
-      if (!/(.)\1/.test(token)) return '$' + token;
+    let token = presetTokens.shift();
+    if (token === undefined) {
+      while (true) {
+        token = nanoid();
+        if (
+          !/(.)\1/.test(token) &&
+          !usedToken.some((used) => token!.includes(used))
+        ) {
+          break;
+        }
+      }
     }
+    usedToken.push(token);
+    return token;
   };
+
+  const sortedKeys = (glossary: Glossary) =>
+    Object.keys(glossary).sort((a, b) => b.length - a.length);
 
   const wordJpToToken: Glossary = {};
   const tokenToWordZh: Glossary = {};
-  for (const wordJp of Object.keys(glossary).sort(
-    (a, b) => b.length - a.length
-  )) {
+  for (const wordJp of sortedKeys(glossary)) {
     const wordZh = glossary[wordJp];
     const token = generateToken();
     wordJpToToken[wordJp] = token;
@@ -71,9 +81,9 @@ export const createGlossaryWrapper = (glossary: Glossary) => {
 
   const encode = (text: string[]): string[] => {
     return text.map((line) => {
-      for (const wordJp in wordJpToToken) {
+      for (const wordJp of sortedKeys(wordJpToToken)) {
         const token = wordJpToToken[wordJp];
-        line = line.replaceAll(wordJp, token);
+        line = line.replaceAll(wordJp, '$' + token);
       }
       return line;
     });
@@ -81,9 +91,12 @@ export const createGlossaryWrapper = (glossary: Glossary) => {
 
   const decode = (text: string[]): string[] => {
     return text.map((line) => {
-      for (const token in tokenToWordZh) {
+      for (const token of sortedKeys(tokenToWordZh)) {
         const wordZh = tokenToWordZh[token];
-        line = line.replaceAll(token, wordZh);
+        line = line
+          .replaceAll('$' + token, wordZh)
+          .replaceAll('$ ' + token, wordZh)
+          .replaceAll(token, wordZh);
       }
       return line;
     });
