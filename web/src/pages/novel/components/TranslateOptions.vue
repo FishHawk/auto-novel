@@ -62,9 +62,14 @@ const showDownloadModal = ref(false);
           重翻目录
         </n-tag>
 
-        <n-tag v-model:checked="forceSeg" checkable size="small">
-          重翻分段
-        </n-tag>
+        <n-tooltip trigger="hover" style="max-width: 200px">
+          <template #trigger>
+            <n-tag v-model:checked="forceSeg" checkable size="small">
+              重翻分段
+            </n-tag>
+          </template>
+          开启后，分段不再因为没有受到术语表变化影响而跳过。
+        </n-tooltip>
 
         <n-tooltip
           v-if="gnid.type === 'web'"
