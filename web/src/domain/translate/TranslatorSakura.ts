@@ -234,7 +234,7 @@ export class SakuraTranslator implements SegmentTranslator {
     );
     return {
       text: completion.choices[0].message.content!!,
-      hasDegradation: completion.choices[0].finish_reason !== 'stop',
+      hasDegradation: completion.usage.completion_tokens >= maxNewToken,
     };
   }
 

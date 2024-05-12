@@ -100,6 +100,11 @@ interface ChatCompletion {
       role: 'system' | 'user' | 'assistant' | 'function';
     };
   }>;
+  usage: {
+    completion_tokens: number;
+    prompt_tokens: number;
+    total_tokens: number;
+  };
   // llamacpp特有
   completion_probabilities?: Array<{
     content: string;
