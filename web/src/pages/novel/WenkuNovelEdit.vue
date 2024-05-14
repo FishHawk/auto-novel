@@ -1,9 +1,15 @@
 <script lang="ts" setup>
-import { UploadOutlined } from '@vicons/material';
+import {
+  DeleteOutlineOutlined,
+  KeyboardDoubleArrowDownOutlined,
+  KeyboardDoubleArrowUpOutlined,
+  UploadOutlined,
+} from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
+import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
-import { smartImport } from '@/domain';
+import { smartImport } from '@/domain/SmartImport';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import {
   presetKeywordsNonR18,
@@ -11,10 +17,10 @@ import {
   WenkuNovelOutlineDto,
   WenkuVolumeDto,
 } from '@/model/WenkuNovel';
+import { delay, RegexUtil } from '@/util';
 import { runCatching } from '@/util/result';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
-import CTaskCard from '@/pages/components/CTaskCard.vue';
 import { useWenkuNovelStore } from './WenkuNovelStore';
 
 const { novelId } = defineProps<{
@@ -27,7 +33,8 @@ const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
-const { atLeastMaintainer } = Locator.userDataRepository();
+const { atLeastMaintainer, createAtLeastOneMonth } =
+  Locator.userDataRepository();
 const { prettyCover } = Locator.amazonRepository();
 
 const allowSubmit = ref(novelId === undefined);
@@ -67,6 +74,20 @@ const formRules: FormRules = {
     {
       validator: (_rule: FormItemRule, value: string) => value.length <= 80,
       message: '标题长度不能超过80个字符',
+      trigger: 'input',
+    },
+    {
+      validator: (_rule: FormItemRule, value: string) =>
+        !RegexUtil.hasKanaChars(value),
+      message: '不要使用日文当作中文标题，没有公认的标题可以尝试自行翻译',
+      trigger: 'input',
+    },
+  ],
+  r18: [
+    {
+      validator: (_rule: FormItemRule, value: boolean) =>
+        !value || createAtLeastOneMonth.value,
+      message: '你太年轻了，无法创建r18页面',
       trigger: 'input',
     },
   ],
@@ -163,20 +184,14 @@ const submit = async () => {
   }
 };
 
-const running = ref(false);
-const cardRef = ref<InstanceType<typeof CTaskCard>>();
-
 const populateNovelFromAmazon = async (
   urlOrQuery: string,
   forcePopulateVolumes: boolean
 ) => {
-  if (running.value) {
-    message.info('已有任务在运行。');
-    return 'fail';
-  }
-
-  running.value = true;
-  cardRef.value!.clearLog();
+  const msgReactive = message.create('', {
+    type: 'loading',
+    duration: 0,
+  });
 
   await smartImport(
     urlOrQuery.trim(),
@@ -184,7 +199,7 @@ const populateNovelFromAmazon = async (
     forcePopulateVolumes,
     {
       log: (message) => {
-        cardRef.value!.pushLog({ message });
+        msgReactive.content = message;
       },
       populateNovel: (novel) => {
         formValue.value = {
@@ -219,7 +234,9 @@ const populateNovelFromAmazon = async (
   );
 
   formValue.value.cover = formValue.value.volumes[0]?.cover;
-  running.value = false;
+  msgReactive.content = '智能导入完成';
+  msgReactive.type = 'info';
+  delay(3000).then(() => msgReactive.destroy());
 };
 
 const submitCurrentStep = ref(1);
@@ -252,20 +269,6 @@ const findSimilarNovels = async () => {
 const confirmNovelNotExist = () => {
   if (submitCurrentStep.value === 1) {
     submitCurrentStep.value = 2;
-  }
-};
-const moveVolumeUp = (index: number) => {
-  if (index > 0) {
-    const temp = formValue.value.volumes[index];
-    formValue.value.volumes[index] = formValue.value.volumes[index - 1];
-    formValue.value.volumes[index - 1] = temp;
-  }
-};
-const moveVolumeDown = (index: number) => {
-  if (index < formValue.value.volumes.length - 1) {
-    const temp = formValue.value.volumes[index];
-    formValue.value.volumes[index] = formValue.value.volumes[index + 1];
-    formValue.value.volumes[index + 1] = temp;
   }
 };
 const topVolume = (asin: string) => {
@@ -332,12 +335,8 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
         <n-li>导入R18书需要安装插件，并在亚马逊上点过“已满18岁”。</n-li>
         <n-li>不要重复创建，请确定文库小说列表里面没有这本。 </n-li>
         <n-li>
-          请正常填写中文标题，没有公认的标题可以尝试自行翻译，不要复制日文标题作为中文标题。
+          不要创建文库页再去寻找资源，最后发现资源用不了，留下一个空的文库页。
         </n-li>
-        <n-li>
-          不要创建空的文库页，尤其是不要创建文库页再去寻找资源，最后发现资源用不了。
-        </n-li>
-        <n-li>如果你搜不了R18，就不要创建R18页面，因为创建了也看不了。</n-li>
       </n-ul>
     </n-card>
 
@@ -387,7 +386,6 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
             @action="markAsDuplicate"
           />
         </n-flex>
-        <c-task-card ref="cardRef" title="智能导入" :running="running" />
       </n-flex>
     </n-flex>
 
@@ -452,122 +450,134 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
-    </n-form>
 
-    <section-header title="标签">
-      <c-button label="使用说明" @action="showKeywordsModal = true" />
-    </section-header>
-
-    <n-p>
-      <n-text type="error"> 编辑标签前务必先看一遍使用说明。 </n-text>
-    </n-p>
-
-    <n-list
-      v-if="presetKeywords.groups.length > 0"
-      bordered
-      style="width: 100%"
-    >
-      <n-list-item v-for="group of presetKeywords.groups" :key="group.title">
-        <n-p>
-          <n-flex style="margin-top: 8px">
-            <n-tag :bordered="false" size="small">
-              <b>{{ group.title }}</b>
-            </n-tag>
-            <n-tag
-              v-for="keyword of group.presetKeywords"
-              size="small"
-              checkable
-              :checked="formValue.keywords.includes(keyword)"
-              @update:checked="(checked: boolean) => togglePresetKeyword(checked, keyword)"
-            >
-              {{ keyword }}
-            </n-tag>
-          </n-flex>
-        </n-p>
-      </n-list-item>
-    </n-list>
-    <n-p v-else>R18标签暂时不支持。</n-p>
-
-    <section-header title="分卷" />
-    <n-image-group show-toolbar-tooltip>
-      <n-list>
-        <n-list-item v-for="(volume, index) in formValue.volumes">
-          <n-flex :wrap="false">
-            <div>
-              <n-image
-                width="104"
-                :src="volume.cover"
-                :preview-src="volume.coverHires ?? volume.cover"
-                :alt="volume.asin"
-                lazy
-                style="border-radius: 2px"
-              />
-            </div>
-
-            <n-flex vertical style="flex: auto">
-              <n-flex align="center" :size="0" :wrap="false">
-                <n-text style="word-break: keep-all">日文标题：</n-text>
-                <n-input
-                  v-model:value="volume.title"
-                  placeholder="日文标题"
-                  :input-props="{ spellcheck: false }"
-                />
-              </n-flex>
-
-              <n-text>
-                ASIN：
-                <n-a :href="`https://www.amazon.co.jp/zh/dp/${volume.asin}`">
-                  {{ volume.asin }}
-                </n-a>
-              </n-text>
-              <n-text>封面-缩略：{{ volume.cover }}</n-text>
-              <n-text>封面-高清：{{ volume.coverHires }}</n-text>
-              <n-text>
-                出版：
-                {{ volume.publisher ?? '未知出版商' }}
-                /
-                {{ volume.imprint ?? '未知文库' }}
-                /
-                <n-time
-                  v-if="volume.publishAt"
-                  :time="volume.publishAt * 1000"
-                  type="date"
-                />
-              </n-text>
-
-              <n-flex>
-                <c-button
-                  label="上移"
-                  secondary
-                  @action="moveVolumeUp(index)"
-                />
-                <c-button
-                  label="下移"
-                  secondary
-                  @action="moveVolumeDown(index)"
-                />
-                <c-button
-                  label="置顶"
-                  secondary
-                  @action="topVolume(volume.asin)"
-                />
-                <c-button
-                  label="置底"
-                  secondary
-                  @action="bottomVolume(volume.asin)"
-                />
-                <c-button
-                  label="删除"
-                  secondary
-                  type="error"
-                  @action="deleteVolume(volume.asin)"
-                />
-              </n-flex>
+      <n-form-item-row label="标签">
+        <n-list bordered style="width: 100%">
+          <n-list-item>
+            <c-button
+              v-if="presetKeywords.groups.length > 0"
+              label="用前必读"
+              @action="showKeywordsModal = true"
+              text
+              type="error"
+            />
+            <n-p v-else>R18标签暂时不支持。</n-p>
+          </n-list-item>
+          <n-list-item
+            v-for="group of presetKeywords.groups"
+            :key="group.title"
+          >
+            <n-flex size="small">
+              <n-tag :bordered="false" size="small">
+                <b>{{ group.title }}</b>
+              </n-tag>
+              <n-tag
+                v-for="keyword of group.presetKeywords"
+                size="small"
+                checkable
+                :checked="formValue.keywords.includes(keyword)"
+                @update:checked="(checked: boolean) => togglePresetKeyword(checked, keyword)"
+              >
+                {{ keyword }}
+              </n-tag>
             </n-flex>
-          </n-flex>
-        </n-list-item>
-      </n-list>
-    </n-image-group>
+          </n-list-item>
+        </n-list>
+      </n-form-item-row>
+
+      <n-form-item-row label="分卷" v-if="formValue.volumes.length > 0">
+        <n-list style="width: 100%; font-size: 12px">
+          <vue-draggable
+            v-model="formValue.volumes"
+            :animation="150"
+            handle=".drag-trigger"
+          >
+            <n-list-item v-for="volume of formValue.volumes" :key="volume.asin">
+              <n-thing>
+                <template #avatar>
+                  <div>
+                    <n-image
+                      class="drag-trigger"
+                      width="88"
+                      :src="volume.cover"
+                      :preview-src="volume.coverHires ?? volume.cover"
+                      :alt="volume.asin"
+                      lazy
+                      style="border-radius: 2px; cursor: move"
+                    />
+                  </div>
+                </template>
+
+                <template #header>
+                  <n-text style="font-size: 12px">
+                    ASIN：
+                    <n-a
+                      :href="`https://www.amazon.co.jp/zh/dp/${volume.asin}`"
+                    >
+                      {{ volume.asin }}
+                    </n-a>
+                  </n-text>
+                </template>
+
+                <template #header-extra>
+                  <n-flex :size="6" :wrap="false">
+                    <c-icon-button
+                      tooltip="置顶"
+                      :icon="KeyboardDoubleArrowUpOutlined"
+                      @action="topVolume(volume.asin)"
+                    />
+
+                    <c-icon-button
+                      tooltip="置底"
+                      :icon="KeyboardDoubleArrowDownOutlined"
+                      @action="bottomVolume(volume.asin)"
+                    />
+
+                    <c-icon-button
+                      tooltip="删除"
+                      :icon="DeleteOutlineOutlined"
+                      type="error"
+                      @action="deleteVolume(volume.asin)"
+                    />
+                  </n-flex>
+                </template>
+
+                <template #description>
+                  <n-flex align="center" :size="0" :wrap="false">
+                    <n-text style="word-break: keep-all; font-size: 12px">
+                      标题：
+                    </n-text>
+                    <n-input
+                      v-model:value="volume.title"
+                      placeholder="标题"
+                      :input-props="{ spellcheck: false }"
+                      size="small"
+                      style="font-size: 12px"
+                    />
+                  </n-flex>
+                  <n-text style="font-size: 12px">
+                    缩略：{{ volume.cover }}
+                    <br />
+                    高清：{{ volume.coverHires }}
+                    <br />
+                    出版：
+                    {{ volume.publisher ?? '未知出版商' }}
+                    /
+                    {{ volume.imprint ?? '未知文库' }}
+                    /
+                    <n-time
+                      v-if="volume.publishAt"
+                      :time="volume.publishAt * 1000"
+                      type="date"
+                    />
+                  </n-text>
+                </template>
+              </n-thing>
+            </n-list-item>
+          </vue-draggable>
+        </n-list>
+      </n-form-item-row>
+    </n-form>
 
     <n-divider />
 

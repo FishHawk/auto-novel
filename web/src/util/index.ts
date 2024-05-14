@@ -74,3 +74,8 @@ export const parallelExec = async <T>(
     await Promise.race([...context.promises.values()]);
   }
 };
+
+export namespace RegexUtil {
+  export const hasKanaChars = (text: string) =>
+    /[\u3041-\u3096|\u30A1-\u30FA]/.test(text);
+}
