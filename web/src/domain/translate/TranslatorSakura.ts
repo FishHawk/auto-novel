@@ -15,16 +15,20 @@ export class SakuraTranslator implements SegmentTranslator {
   fingerprint?: number[];
   segmentor = createLengthSegmentor(500);
   segLength = 500;
+  prevSegLength = 1000;
 
   constructor(
     log: Logger,
-    { endpoint, testSegLength }: SakuraTranslator.Config
+    { endpoint, segLength, prevSegLength }: SakuraTranslator.Config
   ) {
     this.log = log;
     this.api = Locator.openAiRepositoryFactory(endpoint, 'no-key');
-    if (testSegLength !== undefined) {
-      this.segmentor = createLengthSegmentor(testSegLength);
-      this.segLength = testSegLength;
+    if (segLength !== undefined) {
+      this.segmentor = createLengthSegmentor(segLength);
+      this.segLength = segLength;
+    }
+    if (prevSegLength !== undefined) {
+      this.prevSegLength = prevSegLength;
     }
   }
 
@@ -38,7 +42,7 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   allowUpload = () => {
-    if (this.segLength !== 500) {
+    if (this.segLength !== 500 || this.prevSegLength !== 1000) {
       return false;
     }
     if (this.fingerprint === undefined) {
@@ -154,10 +158,10 @@ export class SakuraTranslator implements SegmentTranslator {
 
     const maxNewToken = this.segLength * 2;
     const concatedSeg = seg.join('\n');
-    const concatedPrevSeg = prevSegs
-      .slice(-Math.ceil(1000 / this.segLength))
-      .flat()
-      .join('\n');
+    const prevSegCount = -Math.ceil(this.prevSegLength / this.segLength);
+
+    const concatedPrevSeg =
+      prevSegCount === 0 ? '' : prevSegs.slice(prevSegCount).flat().join('\n');
 
     let retry = 0;
     while (retry < 2) {
@@ -218,7 +222,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   private async translatePrompt(
     text: string,
-    prevText: string | undefined,
+    prevText: string,
     maxNewToken: number,
     tryFixDegradation: boolean,
     signal?: AbortSignal
@@ -290,7 +294,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   private createChatCompletions(
     text: string,
-    prevText: string | undefined,
+    prevText: string,
     config: Partial<Parameters<typeof this.api.createChatCompletions>[0]>,
     signal?: AbortSignal
   ) {
@@ -308,7 +312,7 @@ export class SakuraTranslator implements SegmentTranslator {
         content: '将下面的日文文本翻译成中文：' + text,
       },
     ];
-    if (prevText !== undefined) {
+    if (prevText !== '') {
       messages.splice(1, 0, {
         role: 'assistant',
         content: prevText,
@@ -333,7 +337,8 @@ export class SakuraTranslator implements SegmentTranslator {
 export namespace SakuraTranslator {
   export interface Config {
     endpoint: string;
-    testSegLength?: number;
+    segLength?: number;
+    prevSegLength?: number;
   }
   export const create = (log: Logger, config: Config) =>
     new SakuraTranslator(log, config).init();

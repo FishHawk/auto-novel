@@ -13,7 +13,8 @@ export interface GptWorker {
 export interface SakuraWorker {
   id: string;
   endpoint: string;
-  testSegLength?: number;
+  segLength?: number;
+  prevSegLength?: number;
 }
 
 export interface TranslateJob {

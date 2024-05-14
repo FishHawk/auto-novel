@@ -70,7 +70,8 @@ const translate = async () => {
     config = {
       id,
       endpoint: worker.endpoint,
-      testSegLength: worker.testSegLength,
+      segLength: worker.segLength,
+      prevSegLength: worker.prevSegLength,
     };
   } else {
     config = {

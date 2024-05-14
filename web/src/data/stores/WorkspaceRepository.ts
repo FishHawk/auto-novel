@@ -139,7 +139,20 @@ export const createGptWorkspaceRepository = () =>
   });
 
 export const createSakuraWorkspaceRepository = () =>
-  createWorkspaceRepository<SakuraWorker>('sakura-workspace', [
-    { id: '本机', endpoint: 'http://127.0.0.1:8080' },
-    { id: 'AutoDL', endpoint: 'http://127.0.0.1:6006' },
-  ]);
+  createWorkspaceRepository<SakuraWorker>(
+    'sakura-workspace',
+    [
+      { id: '本机', endpoint: 'http://127.0.0.1:8080' },
+      { id: 'AutoDL', endpoint: 'http://127.0.0.1:6006' },
+    ],
+    (workspace) => {
+      // 2024-5-14
+      workspace.value.workers.forEach((it: any) => {
+        it.testContext = undefined;
+        if (typeof it.testSegLength === 'number') {
+          it.segLength = it.testSegLength;
+          it.testSegLength = undefined;
+        }
+      });
+    }
+  );

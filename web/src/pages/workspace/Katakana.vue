@@ -154,7 +154,8 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
     config = {
       id,
       endpoint: worker.endpoint,
-      testSegLength: worker.testSegLength,
+      segLength: worker.segLength,
+      prevSegLength: worker.prevSegLength,
     };
   } else {
     config = { id };

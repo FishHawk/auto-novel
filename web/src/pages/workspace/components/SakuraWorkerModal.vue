@@ -21,7 +21,8 @@ const initFormValue = () => {
     return {
       id: '',
       endpoint: '',
-      testSegLength: 500,
+      segLength: 500,
+      prevSegLength: 1000,
     };
   } else {
     return { ...worker };
@@ -110,16 +111,26 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
         />
       </n-form-item-row>
 
-      <n-form-item-row path="testSegLength" label="分段长度">
+      <n-form-item-row path="segLength" label="分段长度">
         <n-input-number
-          v-model:value="formValue.testSegLength"
+          v-model:value="formValue.segLength"
           :show-button="false"
           :min="100"
         />
       </n-form-item-row>
 
+      <n-form-item-row path="prevSegLength" label="前文长度">
+        <n-input-number
+          v-model:value="formValue.prevSegLength"
+          :show-button="false"
+          :min="0"
+        />
+      </n-form-item-row>
+
       <n-text depth="3" style="font-size: 12px">
         # 分段长度还在测试中，非默认500无法上传
+        <br />
+        # 前文长度是临时功能，非默认1000无法上传
         <br />
         # 链接例子：http://127.0.0.1:8080
       </n-text>
