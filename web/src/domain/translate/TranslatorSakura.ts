@@ -6,6 +6,7 @@ import {
   SegmentTranslator,
   createLengthSegmentor,
 } from './Common';
+import { Glossary } from '@/model/Glossary';
 
 export class SakuraTranslator implements SegmentTranslator {
   id = <const>'sakura';
@@ -137,44 +138,23 @@ export class SakuraTranslator implements SegmentTranslator {
     seg: string[],
     { glossary, prevSegs, signal }: SegmentContext
   ): Promise<string[]> {
-    // 替换术语表词汇
-    seg = seg
-      .map((text) =>
-        // 全角数字转换成半角数字
-        text.replace(/[\uff10-\uff19]/g, (ch) =>
-          String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
-        )
-      )
-      .map((text) => {
-        const wordJpArray = Object.keys(glossary).sort(
-          (a, b) => b.length - a.length
-        );
-        for (const wordJp of wordJpArray) {
-          const wordZh = glossary[wordJp];
-          text = text.replaceAll(wordJp, wordZh);
-        }
-        return text;
-      });
-
-    const maxNewToken = this.segLength * 2;
     const concatedSeg = seg.join('\n');
     const prevSegCount = -Math.ceil(this.prevSegLength / this.segLength);
 
     const concatedPrevSeg =
       prevSegCount === 0 ? '' : prevSegs.slice(prevSegCount).flat().join('\n');
 
-    let retry = 0;
-    while (retry < 2) {
-      const { text, hasDegradation } = await this.translatePrompt(
+    // 正常翻译
+    {
+      const { text, hasDegradation } = await this.createChatCompletions(
         concatedSeg,
+        glossary,
         concatedPrevSeg,
-        maxNewToken,
-        retry > 0,
         signal
       );
       const splitText = text.replaceAll('<|im_end|>', '').split('\n');
 
-      const parts: string[] = [`第${retry + 1}次`];
+      const parts: string[] = [`第1次`];
       const linesNotMatched = seg.length !== splitText.length;
       if (hasDegradation) {
         parts.push('退化');
@@ -188,58 +168,35 @@ export class SakuraTranslator implements SegmentTranslator {
 
       if (!hasDegradation && !linesNotMatched) {
         return splitText;
-      } else {
-        retry += 1;
       }
     }
 
-    // 进入逐行翻译模式
-    this.log('逐行翻译');
-    let degradationLineCount = 0;
-    const resultPerLine = [];
-    for (const line of seg) {
-      const { text, hasDegradation } = await this.translatePrompt(
-        line,
-        [concatedPrevSeg, ...resultPerLine].join('\n'),
-        maxNewToken,
-        true,
-        signal
-      );
-      if (hasDegradation) {
-        degradationLineCount += 1;
-        this.log(`单行退化${degradationLineCount}次`, [line, text]);
-        if (degradationLineCount >= 2) {
-          throw Error('单个分段有2行退化，Sakura翻译器可能存在异常');
+    // 逐行翻译
+    {
+      this.log('第2次　逐行翻译');
+      let degradationLineCount = 0;
+      const resultPerLine = [];
+      for (const line of seg) {
+        const { text, hasDegradation } = await this.createChatCompletions(
+          line,
+          glossary,
+          [concatedPrevSeg, ...resultPerLine].join('\n'),
+          signal
+        );
+        if (hasDegradation) {
+          degradationLineCount += 1;
+          this.log(`单行退化${degradationLineCount}次`, [line, text]);
+          if (degradationLineCount >= 2) {
+            throw Error('单个分段有2行退化，Sakura翻译器可能存在异常');
+          } else {
+            resultPerLine.push(line);
+          }
         } else {
-          resultPerLine.push(line);
+          resultPerLine.push(text.replaceAll('<|im_end|>', ''));
         }
-      } else {
-        resultPerLine.push(text.replaceAll('<|im_end|>', ''));
       }
+      return resultPerLine;
     }
-    return resultPerLine;
-  }
-
-  private async translatePrompt(
-    text: string,
-    prevText: string,
-    maxNewToken: number,
-    tryFixDegradation: boolean,
-    signal?: AbortSignal
-  ) {
-    const completion = await this.createChatCompletions(
-      text,
-      prevText,
-      {
-        max_tokens: maxNewToken,
-        frequency_penalty: tryFixDegradation ? 0.2 : 0.0,
-      },
-      signal
-    );
-    return {
-      text: completion.choices[0].message.content!!,
-      hasDegradation: completion.usage.completion_tokens >= maxNewToken,
-    };
   }
 
   private async detectModel() {
@@ -260,9 +217,10 @@ export class SakuraTranslator implements SegmentTranslator {
       return { version: '0.9' };
     }
 
-    const version: '0.8' | '0.9' = completion.model.includes('0.9')
-      ? '0.9'
-      : '0.8';
+    let version = '0.8';
+    if (completion.model.includes('0.9')) version = '0.9';
+    if (completion.model.includes('0.10')) version = '0.10';
+
     const allow = [
       '0.9-Q4',
       '0.9-Q5',
@@ -292,45 +250,86 @@ export class SakuraTranslator implements SegmentTranslator {
     return { version, fingerprint };
   }
 
-  private createChatCompletions(
+  private async createChatCompletions(
     text: string,
+    glossary: Glossary,
     prevText: string,
-    config: Partial<Parameters<typeof this.api.createChatCompletions>[0]>,
     signal?: AbortSignal
   ) {
     const messages: {
       role: 'system' | 'user' | 'assistant';
       content: string;
-    }[] = [
-      {
-        role: 'system',
-        content:
-          '你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。',
-      },
-      {
-        role: 'user',
-        content: '将下面的日文文本翻译成中文：' + text,
-      },
-    ];
-    if (prevText !== '') {
-      messages.splice(1, 0, {
-        role: 'assistant',
-        content: prevText,
-      });
+    }[] = [];
+
+    const system = (content: string) => {
+      messages.push({ role: 'system', content });
+    };
+    const user = (content: string) => {
+      messages.push({ role: 'user', content });
+    };
+    const assistant = (content: string) => {
+      messages.push({ role: 'assistant', content });
+    };
+
+    // 全角数字转换成半角数字
+    text = text.replace(/[\uff10-\uff19]/g, (ch) =>
+      String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+    );
+
+    if (this.version === '0.10') {
+      system(
+        '你是一个轻小说翻译模型，可以流畅通顺地使用给定的术语表以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，注意不要混淆使役态和被动态的主语和宾语，不要擅自添加原文中没有的代词，也不要擅自增加或减少换行。'
+      );
+      if (prevText !== '') {
+        assistant(prevText);
+      }
+
+      const glossaryHint = Object.entries(glossary)
+        .map(([wordJp, wordZh]) => `${wordJp}->${wordZh}`)
+        .join('\n');
+
+      user(
+        `根据以下术语表（可以为空）：\n${glossaryHint}\n\n将下面的日文文本根据上述术语表的对应关系和备注翻译成中文：${text}`
+      );
+    } else {
+      system(
+        '你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。'
+      );
+      if (prevText !== '') {
+        assistant(prevText);
+      }
+
+      // 替换术语表词汇
+      for (const wordJp of Object.keys(glossary).sort(
+        (a, b) => b.length - a.length
+      )) {
+        const wordZh = glossary[wordJp];
+        text = text.replaceAll(wordJp, wordZh);
+      }
+
+      user(`将下面的日文文本翻译成中文：${text}`);
     }
-    return this.api.createChatCompletions(
+
+    const maxNewToken = Math.ceil(text.length * 1.7);
+    const completion = await this.api.createChatCompletions(
       {
         model: '',
         messages,
         temperature: 0.1,
         top_p: 0.3,
-        ...config,
+        max_tokens: maxNewToken,
+        frequency_penalty: 0.2,
       },
       {
         signal,
         timeout: false,
       }
     );
+
+    return {
+      text: completion.choices[0].message.content!!,
+      hasDegradation: completion.usage.completion_tokens >= maxNewToken,
+    };
   }
 }
 
