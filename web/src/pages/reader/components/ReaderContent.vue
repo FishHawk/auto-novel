@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ErrorOutlineOutlined } from '@vicons/material';
 import { useOsTheme } from 'naive-ui';
+import { useScroll } from '@vueuse/core';
 
 import { SakuraRepository } from '@/data/api';
 import { Locator } from '@/data';
@@ -30,10 +31,7 @@ const addReadPosition = () => {
   });
 };
 
-window.removeEventListener('beforeunload', addReadPosition);
-window.addEventListener('beforeunload', addReadPosition);
-
-onBeforeUnmount(addReadPosition);
+useScroll(window, { onScroll: addReadPosition, throttle: 1000 });
 
 onMounted(async () => {
   const readPosition = readPositionRepository.getPosition(props.gnid);
