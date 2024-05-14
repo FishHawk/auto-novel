@@ -63,6 +63,10 @@ onKeyDown('ArrowLeft', (e) => {
   if (pageContent.value === undefined) return;
   const page = props.page;
   if (page > 1) {
+    // hacky:防止在编辑搜索栏时跳转
+    if (e.target instanceof Element && e.target.tagName === 'INPUT') {
+      return;
+    }
     onUpdatePage(page - 1);
     e.preventDefault();
   }
@@ -72,6 +76,10 @@ onKeyDown('ArrowRight', (e) => {
   if (pageContent.value === undefined) return;
   const page = props.page;
   if (page < pageNumber.value) {
+    // hacky:防止在编辑搜索栏时跳转
+    if (e.target instanceof Element && e.target.tagName === 'INPUT') {
+      return;
+    }
     onUpdatePage(page + 1);
     e.preventDefault();
   }
