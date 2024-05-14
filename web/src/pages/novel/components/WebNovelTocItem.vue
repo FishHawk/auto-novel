@@ -36,7 +36,13 @@ const type = computed(() => {
     style="width: calc(100% - 12px); display: block; padding: 6px"
     :style="{ 'font-size': tocItem.order !== undefined ? '14px' : '12px' }"
   >
-    <n-text :class="{ 'toc-title': type !== undefined }" :type="type">
+    <n-text
+      :class="{
+        'toc-title-visited': type !== undefined && type !== 'warning',
+        'toc-title': type !== undefined,
+      }"
+      :type="type"
+    >
       {{ tocItem.titleJp }}
     </n-text>
     <br />

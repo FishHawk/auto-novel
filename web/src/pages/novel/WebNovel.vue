@@ -64,7 +64,7 @@ const visitedColor = mixColor();
 </template>
 
 <style>
-.toc:visited {
+.toc:visited .toc-title-visited {
   color: v-bind('visitedColor');
 }
 </style>
