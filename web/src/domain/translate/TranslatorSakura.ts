@@ -318,7 +318,7 @@ export class SakuraTranslator implements SegmentTranslator {
       user(`将下面的日文文本翻译成中文：${text}`);
     }
 
-    const maxNewToken = Math.ceil(text.length * 1.7);
+    const maxNewToken = Math.max(Math.ceil(text.length * 1.7), 10);
     const completion = await this.api.createChatCompletions(
       {
         model: '',
