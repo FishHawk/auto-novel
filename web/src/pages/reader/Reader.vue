@@ -93,7 +93,7 @@ const navToChapter = async (chapterId: string) => {
     } else if (gnid.type === 'wenku') {
       throw '不支持文库';
     } else {
-      prefix = `/workspace/reader/${gnid.volumeId}`;
+      prefix = `/workspace/reader/${encodeURIComponent(gnid.volumeId)}`;
     }
     currentChapterId.value = chapterId;
     router.push(`${prefix}/${chapterId}`);
