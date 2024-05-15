@@ -33,6 +33,8 @@ suspend inline fun ApplicationCall.doOrRespondError(block: () -> Unit) {
         val uri = request.uri
         application.environment.log.warn("已捕获异常 $httpMethod-$uri:", e.message)
 
+        e.printStackTrace()
+
         if (e is HttpException) {
             respond(e.status, e.message)
         } else {

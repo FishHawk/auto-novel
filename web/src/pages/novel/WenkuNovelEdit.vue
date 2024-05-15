@@ -45,7 +45,7 @@ const formValue = ref({
   cover: '',
   authors: <string[]>[],
   artists: <string[]>[],
-  r18: false,
+  level: '一般向',
   keywords: <string[]>[],
   introduction: '',
   volumes: <WenkuVolumeDto[]>[],
@@ -83,11 +83,11 @@ const formRules: FormRules = {
       trigger: 'input',
     },
   ],
-  r18: [
+  level: [
     {
-      validator: (_rule: FormItemRule, value: boolean) =>
-        !value || createAtLeastOneMonth.value,
-      message: '你太年轻了，无法创建r18页面',
+      validator: (_rule: FormItemRule, value: string) =>
+        value !== '成人向' || createAtLeastOneMonth.value,
+      message: '你太年轻了，无法创建成人向页面',
       trigger: 'input',
     },
   ],
@@ -110,7 +110,7 @@ store?.loadNovel()?.then((result) => {
       cover,
       authors,
       artists,
-      r18,
+      level,
       keywords,
       introduction,
     } = result.value;
@@ -120,7 +120,7 @@ store?.loadNovel()?.then((result) => {
       cover: prettyCover(cover ?? ''),
       authors,
       artists,
-      r18,
+      level,
       keywords,
       introduction,
       volumes: result.value.volumes.map((it) => {
@@ -157,7 +157,7 @@ const submit = async () => {
     cover: formValue.value.cover,
     authors: formValue.value.authors,
     artists: formValue.value.artists,
-    r18: formValue.value.r18,
+    level: formValue.value.level,
     introduction: formValue.value.introduction,
     keywords: formValue.value.keywords.filter((it) =>
       allPresetKeywords.includes(it)
@@ -214,7 +214,7 @@ const populateNovelFromAmazon = async (
             formValue.value.artists.length > 0
               ? formValue.value.artists
               : novel.artists,
-          r18: novel.r18,
+          level: novel.r18 ? '成人向' : '一般向',
           keywords: formValue.value.keywords,
           introduction: formValue.value.introduction
             ? formValue.value.introduction
@@ -294,16 +294,20 @@ const markAsDuplicate = () => {
     cover: '',
     authors: [],
     artists: [],
-    r18: formValue.value.r18,
+    level: formValue.value.level,
     keywords: [],
     introduction: '',
     volumes: [],
   };
 };
 
-const presetKeywords = computed(() =>
-  formValue.value.r18 ? presetKeywordsR18 : presetKeywordsNonR18
-);
+const presetKeywords = computed(() => {
+  if (formValue.value.level === '一般向') {
+    return presetKeywordsNonR18;
+  } else {
+    return presetKeywordsR18;
+  }
+});
 const showKeywordsModal = ref(false);
 
 const togglePresetKeyword = (checked: boolean, keyword: string) => {
@@ -315,6 +319,12 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
     );
   }
 };
+
+const levelOptions = [
+  { label: '一般向', value: '一般向' },
+  { label: '成人向', value: '成人向' },
+  { label: '严肃向', value: '严肃向' },
+];
 </script>
 
 <template>
@@ -432,8 +442,11 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
         <n-dynamic-tags v-model:value="formValue.artists" />
       </n-form-item-row>
 
-      <n-form-item-row path="r18" label="R18">
-        <n-switch v-model:value="formValue.r18" />
+      <n-form-item-row path="level" label="分级">
+        <c-radio-group
+          v-model:value="formValue.level"
+          :options="levelOptions"
+        />
       </n-form-item-row>
 
       <n-form-item-row path="content" label="简介">
@@ -461,7 +474,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
               text
               type="error"
             />
-            <n-p v-else>R18标签暂时不支持。</n-p>
+            <n-p v-else>暂不支持标签。</n-p>
           </n-list-item>
           <n-list-item
             v-for="group of presetKeywords.groups"

@@ -1,7 +1,7 @@
 import { Document } from 'mongodb';
 import fs from 'node:fs';
 
-import { mongo } from './mongo.js';
+import { mongo } from './config.js';
 
 const formatDuration = (durationInMs: number) => {
   const pad = (num: number) => `${num < 10 ? '0' : ''}${num}`;

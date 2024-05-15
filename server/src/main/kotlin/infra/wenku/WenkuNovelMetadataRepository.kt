@@ -1,6 +1,5 @@
 package infra.wenku
 
-import com.jillesvangurp.jsondsl.JsonDsl
 import com.jillesvangurp.ktsearch.*
 import com.jillesvangurp.searchdsls.querydsl.*
 import com.mongodb.client.model.CountOptions
@@ -14,10 +13,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
+import util.serialName
 import java.util.*
 
 object WenkuNovelFilter {
-    enum class Level { 全部, 一般向, R18 }
+    enum class Level { 全部, 一般向, 成人向, 严肃向 }
 }
 
 class WenkuNovelMetadataRepository(
@@ -43,15 +43,11 @@ class WenkuNovelMetadataRepository(
                 // Filter level
                 when (filterLevel) {
                     WenkuNovelFilter.Level.全部 -> null
-                    WenkuNovelFilter.Level.一般向 -> false
-                    WenkuNovelFilter.Level.R18 -> true
+                    WenkuNovelFilter.Level.一般向 -> WenkuNovelLevel.一般向
+                    WenkuNovelFilter.Level.成人向 -> WenkuNovelLevel.成人向
+                    WenkuNovelFilter.Level.严肃向 -> WenkuNovelLevel.严肃向
                 }?.let {
-                    mustQueries.add(
-                        ESQuery(
-                            "term",
-                            JsonDsl().apply { put("r18", it) },
-                        )
-                    )
+                    mustQueries.add(term(WenkuNovelMetadataEsModel::level, it.serialName()))
                 }
 
                 // Parse query
@@ -83,6 +79,8 @@ class WenkuNovelMetadataRepository(
                             WenkuNovelMetadataEsModel::authors,
                             WenkuNovelMetadataEsModel::artists,
                             WenkuNovelMetadataEsModel::keywords,
+                            WenkuNovelMetadataEsModel::publisher,
+                            WenkuNovelMetadataEsModel::imprint,
                         ) {
                             defaultOperator = MatchOperator.AND
                         }
@@ -146,7 +144,7 @@ class WenkuNovelMetadataRepository(
         cover: String?,
         authors: List<String>,
         artists: List<String>,
-        r18: Boolean,
+        level: WenkuNovelLevel,
         introduction: String,
         keywords: List<String>,
         volumes: List<WenkuNovelVolume>,
@@ -164,7 +162,7 @@ class WenkuNovelMetadataRepository(
             imprint = volumes.firstNotNullOfOrNull { it.imprint },
             latestPublishAt = volumes.mapNotNull { it.publishAt }.maxOrNull()
                 ?.let { Instant.fromEpochSeconds(it) },
-            r18 = r18,
+            level = level,
             volumes = volumes,
             visited = 0,
         )
@@ -183,7 +181,7 @@ class WenkuNovelMetadataRepository(
         cover: String?,
         authors: List<String>,
         artists: List<String>,
-        r18: Boolean,
+        level: WenkuNovelLevel,
         introduction: String,
         keywords: List<String>,
         volumes: List<WenkuNovelVolume>,
@@ -206,7 +204,7 @@ class WenkuNovelMetadataRepository(
                             volumes.mapNotNull { it.publishAt }.maxOrNull()
                                 ?.let { Instant.fromEpochSeconds(it) },
                         ),
-                        setValue(WenkuNovelMetadata::r18, r18),
+                        setValue(WenkuNovelMetadata::level, level),
                         setValue(WenkuNovelMetadata::introduction, introduction),
                         setValue(WenkuNovelMetadata::keywords, keywords),
                         setValue(WenkuNovelMetadata::volumes, volumes)
@@ -249,9 +247,9 @@ class WenkuNovelMetadataRepository(
                 keywords = metadata.keywords,
                 publisher = metadata.publisher,
                 imprint = metadata.imprint,
-                latestPublishAt = metadata.latestPublishAt?.epochSeconds,
-                r18 = metadata.r18,
-                updateAt = metadata.updateAt.epochSeconds,
+                latestPublishAt = metadata.latestPublishAt,
+                level = metadata.level,
+                updateAt = metadata.updateAt,
             ),
             refresh = Refresh.WaitFor,
         )

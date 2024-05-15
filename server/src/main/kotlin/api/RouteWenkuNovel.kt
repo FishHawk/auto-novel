@@ -81,7 +81,8 @@ fun Route.routeWenkuNovel() {
                     pageSize = loc.pageSize,
                     filterLevel = when (loc.level) {
                         1 -> WenkuNovelFilter.Level.一般向
-                        2 -> WenkuNovelFilter.Level.R18
+                        2 -> WenkuNovelFilter.Level.成人向
+                        3 -> WenkuNovelFilter.Level.严肃向
                         else -> WenkuNovelFilter.Level.全部
                     },
                 )
@@ -243,10 +244,13 @@ class WenkuNovelApi(
         validatePageNumber(page)
         validatePageSize(pageSize)
 
-        val filterLevelAllowed = if (user != null && user.isOldAss()) {
-            filterLevel
-        } else {
+        val filterLevelAllowed = if (
+            filterLevel == WenkuNovelFilter.Level.成人向 &&
+            (user == null || !user.isOldAss())
+        ) {
             WenkuNovelFilter.Level.一般向
+        } else {
+            filterLevel
         }
 
         return metadataRepo
@@ -270,7 +274,7 @@ class WenkuNovelApi(
         val publisher: String?,
         val imprint: String?,
         val latestPublishAt: Long?,
-        val r18: Boolean,
+        val level: WenkuNovelLevel,
         val introduction: String,
         val glossary: Map<String, String>,
         val webIds: List<String>,
@@ -289,7 +293,7 @@ class WenkuNovelApi(
         val metadata = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
 
-        if (metadata.r18) {
+        if (metadata.level == WenkuNovelLevel.成人向) {
             if (user == null) {
                 throwUnauthorized("请先登录")
             } else {
@@ -316,7 +320,7 @@ class WenkuNovelApi(
             publisher = metadata.publisher,
             imprint = metadata.imprint,
             latestPublishAt = metadata.latestPublishAt?.epochSeconds,
-            r18 = metadata.r18,
+            level = metadata.level,
             introduction = metadata.introduction,
             webIds = metadata.webIds,
             volumes = metadata.volumes,
@@ -349,7 +353,7 @@ class WenkuNovelApi(
         val cover: String?,
         val authors: List<String>,
         val artists: List<String>,
-        val r18: Boolean,
+        val level: WenkuNovelLevel,
         val introduction: String,
         val keywords: List<String>,
         val volumes: List<WenkuNovelVolume>,
@@ -365,7 +369,7 @@ class WenkuNovelApi(
             cover = body.cover,
             authors = body.authors,
             artists = body.artists,
-            r18 = body.r18,
+            level = body.level,
             introduction = body.introduction,
             keywords = body.keywords,
             volumes = body.volumes,
@@ -414,7 +418,7 @@ class WenkuNovelApi(
             cover = body.cover,
             authors = body.authors,
             artists = body.artists,
-            r18 = body.r18,
+            level = body.level,
             introduction = body.introduction,
             keywords = body.keywords,
             volumes = body.volumes,

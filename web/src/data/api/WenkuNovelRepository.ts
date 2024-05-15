@@ -36,7 +36,7 @@ interface WenkuNovelCreateBody {
   cover?: string;
   authors: string[];
   artists: string[];
-  r18: boolean;
+  level: string;
   introduction: string;
   keywords: string[];
   volumes: WenkuVolumeDto[];

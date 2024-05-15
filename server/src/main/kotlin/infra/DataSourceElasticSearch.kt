@@ -3,7 +3,10 @@ package infra
 import com.jillesvangurp.ktsearch.*
 import domain.entity.WebNovelAttention
 import domain.entity.WebNovelType
+import domain.entity.WenkuNovelLevel
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -34,9 +37,9 @@ data class WenkuNovelMetadataEsModel(
     val keywords: List<String>,
     val publisher: String?,
     val imprint: String?,
-    val latestPublishAt: Long?,
-    val r18: Boolean,
-    val updateAt: Long,
+    @Contextual val latestPublishAt: Instant?,
+    val level: WenkuNovelLevel,
+    @Contextual val updateAt: Instant,
 )
 
 class DataSourceElasticSearch(host: String, port: Int?) {
@@ -48,7 +51,7 @@ class DataSourceElasticSearch(host: String, port: Int?) {
 
     companion object {
         const val webNovelIndexName = "web-index-alt"
-        const val wenkuNovelIndexName = "wenku-index-alt"
+        const val wenkuNovelIndexName = "wenku.2024-05-15"
     }
 
     init {
@@ -68,20 +71,6 @@ class DataSourceElasticSearch(host: String, port: Int?) {
                         bool(WebNovelMetadataEsModel::hasGpt)
                         bool(WebNovelMetadataEsModel::hasSakura)
                         date(WebNovelMetadataEsModel::updateAt)
-                    }
-                }
-            }
-
-            runCatching {
-                client.createIndex(wenkuNovelIndexName) {
-                    mappings(dynamicEnabled = false) {
-                        text(WenkuNovelMetadataEsModel::title) { analyzer = "icu_analyzer" }
-                        text(WenkuNovelMetadataEsModel::titleZh) { analyzer = "icu_analyzer" }
-                        keyword(WenkuNovelMetadataEsModel::authors)
-                        keyword(WenkuNovelMetadataEsModel::artists)
-                        keyword(WenkuNovelMetadataEsModel::keywords)
-                        bool(WenkuNovelMetadataEsModel::r18)
-                        date(WenkuNovelMetadataEsModel::updateAt)
                     }
                 }
             }

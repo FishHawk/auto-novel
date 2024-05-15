@@ -104,7 +104,6 @@ const showWebNovelsModal = ref(false);
                     ? novelResult.value.titleZh
                     : novelResult.value.title
                 }}
-                <n-text v-if="novelResult.value.r18" depth="3"> [成人] </n-text>
               </b>
             </n-h2>
 

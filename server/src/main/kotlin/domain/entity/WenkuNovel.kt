@@ -10,6 +10,18 @@ import org.bson.types.ObjectId
 import org.litote.kmongo.eq
 
 @Serializable
+enum class WenkuNovelLevel {
+    @SerialName("一般向")
+    一般向,
+
+    @SerialName("成人向")
+    成人向,
+
+    @SerialName("严肃向")
+    严肃向,
+}
+
+@Serializable
 data class WenkuNovelMetadataOutline(
     val id: String,
     val title: String,
@@ -29,7 +41,7 @@ data class WenkuNovelMetadata(
     val publisher: String? = null,
     val imprint: String? = null,
     @Contextual val latestPublishAt: Instant? = null,
-    val r18: Boolean = false,
+    val level: WenkuNovelLevel,
     val introduction: String,
     val webIds: List<String> = emptyList(),
     val volumes: List<WenkuNovelVolume>,

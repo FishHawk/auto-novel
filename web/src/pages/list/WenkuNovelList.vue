@@ -18,20 +18,23 @@ const route = useRoute();
 
 const { createAtLeastOneMonth } = Locator.userDataRepository();
 
-const options = createAtLeastOneMonth.value
-  ? [
-      {
-        label: '分级',
-        tags: ['一般向', 'R18'],
-      },
-    ]
-  : [];
+const options = [
+  {
+    label: '分级',
+    tags: createAtLeastOneMonth.value
+      ? ['一般向', '成人向', '严肃向']
+      : ['一般向', '严肃向'],
+  },
+];
 
 const loader: Loader<WenkuNovelOutlineDto> = (page, query, selected) => {
   if (query !== '') {
     document.title = '文库小说 搜索：' + query;
   }
-  const level = createAtLeastOneMonth.value ? selected[0] + 1 : 1;
+  let level = selected[0] + 1;
+  if (!createAtLeastOneMonth.value && level === 2) {
+    level = 3;
+  }
   return runCatching(
     WenkuNovelRepository.listNovel({
       page,
