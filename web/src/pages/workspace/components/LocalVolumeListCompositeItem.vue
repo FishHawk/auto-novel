@@ -24,24 +24,22 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   translateTask?.value?.startTask(
     { type: 'local', volumeId: props.volume.id },
     {
-      startIndex: 0,
-      endIndex: 65535,
-      expire: true,
+      level: 'expire',
       sync: false,
       forceMetadata: false,
-      forceSeg: false,
+      startIndex: 0,
+      endIndex: 65535,
     },
     { id: translatorId }
   );
 
 const queueVolume = (translatorId: 'gpt' | 'sakura') => {
   const task = TranslateTaskDescriptor.workspace(props.volume.id, {
-    startIndex: 0,
-    endIndex: 65535,
-    expire: true,
+    level: 'expire',
     sync: false,
     forceMetadata: false,
-    forceSeg: false,
+    startIndex: 0,
+    endIndex: 65535,
   });
 
   const workspace =

@@ -10,7 +10,7 @@ import { Translator } from './Translator';
 
 export const translateWenku = async (
   { novelId, volumeId }: WenkuTranslateTaskDesc,
-  { expire, forceSeg }: TranslateTaskParams,
+  { level }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
   signal?: AbortSignal
@@ -49,12 +49,12 @@ export const translateWenku = async (
       glossaryId,
     }))
     .filter(({ glossaryId }) => {
-      if (glossaryId === undefined) {
+      if (level === 'all') {
         return true;
-      } else if (glossaryId !== task.glossaryId) {
-        return expire;
+      } else if (level === 'expire') {
+        return glossaryId === undefined || glossaryId !== task.glossaryId;
       } else {
-        return false;
+        return glossaryId === undefined;
       }
     });
 
@@ -63,6 +63,7 @@ export const translateWenku = async (
     callback.log(`没有需要更新的章节`);
   }
 
+  const forceSeg = level === 'all';
   for (const { index, chapterId } of chapters) {
     try {
       callback.log(`\n[${index}] ${volumeId}/${chapterId}`);

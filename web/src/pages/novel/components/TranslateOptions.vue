@@ -17,9 +17,8 @@ const isWideScreen = useIsWideScreen(600);
 const { setting } = Locator.settingRepository();
 
 // 翻译设置
-const expire = ref(false);
+const translateLevel = ref<'normal' | 'expire' | 'all'>('normal');
 const forceMetadata = ref(false);
-const forceSeg = ref(false);
 const sync = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
@@ -27,10 +26,9 @@ const taskNumber = ref<number | null>(1);
 
 defineExpose({
   getTranslateTaskParams: (): TranslateTaskParams => ({
-    expire: expire.value,
+    level: translateLevel.value,
     sync: sync.value,
     forceMetadata: forceMetadata.value,
-    forceSeg: forceSeg.value,
     startIndex: startIndex.value ?? 0,
     endIndex: endIndex.value ?? 65536,
   }),
@@ -44,32 +42,37 @@ const showDownloadModal = ref(false);
   <n-flex vertical>
     <c-action-wrapper title="选项">
       <n-flex size="small">
-        <n-tooltip trigger="hover" style="max-width: 200px">
+        <n-tooltip trigger="hover">
           <template #trigger>
-            <n-tag v-model:checked="expire" checkable size="small">
-              过期章节
-            </n-tag>
+            <n-flex :size="0" :wrap="false">
+              <tag-button
+                label="常规"
+                :checked="translateLevel === 'normal'"
+                @update:checked="translateLevel = 'normal'"
+              />
+              <tag-button
+                label="过期"
+                :checked="translateLevel === 'expire'"
+                @update:checked="translateLevel = 'expire'"
+              />
+              <tag-button
+                label="全部"
+                type="warning"
+                :checked="translateLevel === 'all'"
+                @update:checked="translateLevel = 'all'"
+              />
+            </n-flex>
           </template>
-          翻译术语表过期的章节。
+          常规：只翻译未翻译的章节<br />
+          过期：翻译术语表过期的章节<br />
+          全部：翻译全部章节<br />
         </n-tooltip>
 
-        <n-tag
+        <tag-button
           v-if="gnid.type === 'web'"
+          label="重翻目录"
           v-model:checked="forceMetadata"
-          checkable
-          size="small"
-        >
-          重翻目录
-        </n-tag>
-
-        <n-tooltip trigger="hover" style="max-width: 200px">
-          <template #trigger>
-            <n-tag v-model:checked="forceSeg" checkable size="small">
-              重翻分段
-            </n-tag>
-          </template>
-          开启后，分段不再因为没有受到术语表变化影响而跳过。
-        </n-tooltip>
+        />
 
         <n-tooltip
           v-if="gnid.type === 'web'"
@@ -77,11 +80,13 @@ const showDownloadModal = ref(false);
           style="max-width: 200px"
         >
           <template #trigger>
-            <n-tag v-model:checked="sync" checkable size="small">
-              源站同步
-            </n-tag>
+            <tag-button
+              label="源站同步"
+              type="warning"
+              v-model:checked="sync"
+            />
           </template>
-          同步已缓存章节，与源站不一致会删除现有翻译，慎用！!
+          慎用！!可能清空现有翻译，只适用于原作者修改了原文的情况导致不一致的情况
         </n-tooltip>
       </n-flex>
     </c-action-wrapper>
@@ -118,7 +123,7 @@ const showDownloadModal = ref(false);
               :show-button="false"
               :min="1"
               :max="10"
-              style="width: 60px"
+              style="width: 40px"
             />
             <n-input-group-label size="small">个任务</n-input-group-label>
           </n-input-group>

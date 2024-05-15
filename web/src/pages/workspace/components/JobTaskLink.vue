@@ -7,8 +7,7 @@ const props = defineProps<{
 
 const link = computed(() => {
   const { desc, params } = TranslateTaskDescriptor.parse(props.task);
-  const { startIndex, endIndex, expire, sync, forceMetadata, forceSeg } =
-    params;
+  const { level, sync, forceMetadata, startIndex, endIndex } = params;
 
   let text: string;
   let url: string | undefined;
@@ -29,9 +28,12 @@ const link = computed(() => {
   }
 
   const tags: string[] = [];
-  if (expire) tags.push('过期章节');
+  if (level === 'expire') {
+    tags.push('过期章节');
+  } else if (level === 'all') {
+    tags.push('全部章节');
+  }
   if (forceMetadata) tags.push('重翻目录');
-  if (forceSeg) tags.push('重翻分段');
   if (sync) tags.push('源站同步');
   if (tags.length > 0) {
     text += ` [${tags.join('/')}]`;

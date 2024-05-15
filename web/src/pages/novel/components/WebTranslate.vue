@@ -92,7 +92,7 @@ const importToWorkspace = async () => {
 
 const shouldTopJob = useKeyModifier('Control');
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const { startIndex, endIndex, expire, sync, forceMetadata, forceSeg } =
+  const { startIndex, endIndex, level, sync, forceMetadata } =
     translateOptions.value!!.getTranslateTaskParams();
   const taskNumber = translateOptions.value!!.getTaskNumber();
 
@@ -109,24 +109,22 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       const end = Math.round(startIndex + (i + 1) * taskSize);
       if (end > start) {
         const task = TranslateTaskDescriptor.web(providerId, novelId, {
-          startIndex: start,
-          endIndex: end,
-          expire,
+          level,
           sync,
           forceMetadata,
-          forceSeg,
+          startIndex: start,
+          endIndex: end,
         });
         tasks.push(task);
       }
     }
   } else {
     const task = TranslateTaskDescriptor.web(providerId, novelId, {
-      startIndex,
-      endIndex,
-      expire,
+      level,
       sync,
       forceMetadata,
-      forceSeg,
+      startIndex,
+      endIndex,
     });
     tasks.push(task);
   }
@@ -153,35 +151,28 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     message.success('排队成功');
   }
 };
-const showTranslateSection = ref(!isMobile);
 </script>
 
 <template>
-  <template v-if="isSignedIn">
-    <c-button
-      v-if="isMobile && !showTranslateSection"
-      label="翻译选项"
-      @action="showTranslateSection = true"
-    />
+  <n-text v-if="!isSignedIn"> 游客无法使用翻译功能，请先登录。 </n-text>
+  <n-text v-else-if="setting.enabledTranslator.length === 0">
+    没有翻译器启用。
+  </n-text>
+  <translate-options
+    v-else
+    ref="translateOptions"
+    :gnid="GenericNovelId.web(providerId, novelId)"
+    :glossary="glossary"
+  />
 
-    <translate-options
-      v-show="showTranslateSection"
-      ref="translateOptions"
-      :gnid="GenericNovelId.web(providerId, novelId)"
-      :glossary="glossary"
-    />
-  </template>
-
-  <n-p v-else>游客无法使用翻译功能，请先登录。</n-p>
-
-  <n-flex vertical style="margin-top: 20px">
+  <n-flex vertical style="margin-top: 16px">
     <n-text>
       总计 {{ total }} / 百度 {{ baidu }} / 有道 {{ youdao }} / GPT {{ gpt }} /
       Sakura {{ sakura }}
     </n-text>
 
-    <template v-if="isSignedIn">
-      <n-button-group v-if="setting.enabledTranslator.length > 0">
+    <template v-if="isSignedIn && setting.enabledTranslator.length > 0">
+      <n-button-group>
         <c-button
           v-if="setting.enabledTranslator.includes('baidu')"
           label="更新百度"
@@ -207,7 +198,6 @@ const showTranslateSection = ref(!isMobile);
           @action="submitJob('sakura')"
         />
       </n-button-group>
-      <n-text v-else>没有翻译器启用</n-text>
     </template>
 
     <n-button-group>

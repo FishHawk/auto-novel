@@ -60,10 +60,9 @@ export type TranslateTaskDesc =
   | LocalTranslateTaskDesc;
 
 export type TranslateTaskParams = {
-  expire: boolean; // 是否翻译过期章节
+  level: 'normal' | 'expire' | 'all'; // 翻译等级
   sync: boolean; // 是否与源站同步
   forceMetadata: boolean; // 强制重翻元数据
-  forceSeg: boolean; // 强制重翻分段
   startIndex: number;
   endIndex: number;
 };
@@ -79,20 +78,18 @@ type TranslateTaskDescriptor = string;
 
 export namespace TranslateTaskDescriptor {
   const buildTaskQueryString = ({
-    startIndex,
-    endIndex,
-    expire,
+    level,
     sync,
     forceMetadata,
-    forceSeg,
+    startIndex,
+    endIndex,
   }: TranslateTaskParams) => {
     const searchParamsInit: { [key: string]: string } = {
-      startIndex: startIndex.toString(),
-      endIndex: endIndex.toString(),
-      expire: expire.toString(),
+      level,
       sync: sync.toString(),
       forceMetadata: forceMetadata.toString(),
-      forceSeg: forceSeg.toString(),
+      startIndex: startIndex.toString(),
+      endIndex: endIndex.toString(),
     };
     const searchParams = new URLSearchParams(searchParamsInit).toString();
     return searchParams ? `?${searchParams}` : '';
@@ -152,10 +149,9 @@ export namespace TranslateTaskDescriptor {
     };
 
     const params: TranslateTaskParams = {
-      expire: queryBoolean('expire'),
+      level: query['expire'],
       sync: queryBoolean('sync'),
       forceMetadata: queryBoolean('forceMetadata'),
-      forceSeg: queryBoolean('forceSeg'),
       startIndex: queryInt('startIndex', 0),
       endIndex: queryInt('endIndex', 65535),
     };

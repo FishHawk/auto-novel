@@ -258,16 +258,15 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       ? selectedNovels.novels
       : selectedNovels.novels.slice().reverse();
   const end = queueTaskSize.value === 'first5' ? 5 : 65535;
-  const expire = queueTaskSize.value === 'full-expire';
+  const level = queueTaskSize.value === 'full-expire' ? 'expire' : 'normal';
 
   novelsSorted.forEach((it) => {
     const task = TranslateTaskDescriptor.web(it.providerId, it.novelId, {
       startIndex: 0,
       endIndex: end,
-      expire,
+      level,
       sync: false,
       forceMetadata: false,
-      forceSeg: false,
     });
     const workspace =
       id === 'gpt'

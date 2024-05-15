@@ -55,10 +55,17 @@ const startTask = async (
     };
     let label = `${idToLaber[translatorDesc.id]}翻译`;
     const suffixParts: string[] = [];
-    if (params.expire) suffixParts.push('过期章节');
-    if (params.forceMetadata) suffixParts.push('重翻目录');
-    if (params.forceSeg) suffixParts.push('重翻分段');
-    if (params.sync) suffixParts.push('源站同步');
+    if (params.level === 'expire') {
+      suffixParts.push('过期章节');
+    } else if (params.level === 'all') {
+      suffixParts.push('全部章节');
+    }
+    if (params.forceMetadata) {
+      suffixParts.push('重翻目录');
+    }
+    if (params.sync) {
+      suffixParts.push('源站同步');
+    }
     if (suffixParts.length > 0) {
       label = label + ` [${suffixParts.join('/')}]`;
     }

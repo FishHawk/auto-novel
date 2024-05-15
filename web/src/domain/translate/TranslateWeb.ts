@@ -11,14 +11,7 @@ import { Translator } from './Translator';
 
 export const translateWeb = async (
   { providerId, novelId }: WebTranslateTaskDesc,
-  {
-    expire,
-    sync,
-    forceMetadata,
-    forceSeg,
-    startIndex,
-    endIndex,
-  }: TranslateTaskParams,
+  { level, sync, forceMetadata, startIndex, endIndex }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
   signal?: AbortSignal
@@ -188,12 +181,16 @@ export const translateWeb = async (
     }))
     .slice(startIndex, endIndex)
     .filter(({ glossaryUuid }) => {
-      if (glossaryUuid === undefined) {
+      if (sync) {
         return true;
-      } else if (glossaryUuid !== task.glossaryUuid) {
-        return expire || sync;
+      }
+
+      if (level === 'all') {
+        return true;
+      } else if (level === 'expire') {
+        return glossaryUuid === undefined || glossaryUuid !== task.glossaryUuid;
       } else {
-        return sync;
+        return glossaryUuid === undefined;
       }
     });
 
@@ -202,6 +199,7 @@ export const translateWeb = async (
     callback.log(`没有需要更新的章节`);
   }
 
+  const forceSeg = level === 'all';
   for (const { index, chapterId } of chapters) {
     try {
       callback.log(`\n[${index}] ${providerId}/${novelId}/${chapterId}`);

@@ -10,7 +10,7 @@ import { Translator } from './Translator';
 
 export const translateLocal = async (
   { volumeId }: LocalTranslateTaskDesc,
-  { expire, forceSeg }: TranslateTaskParams,
+  { level }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
   signal?: AbortSignal
@@ -45,25 +45,34 @@ export const translateLocal = async (
     return;
   }
 
-  const untranslatedChapters = metadata.toc
-    .filter((it) => it[translator.id] === undefined)
-    .map((it) => it.chapterId);
-  const expiredChapters = metadata.toc
-    .filter(
-      (it) =>
-        it[translator.id] !== undefined &&
-        it[translator.id] !== metadata.glossaryId
-    )
-    .map((it) => it.chapterId);
-  const chapters = (
-    expire ? untranslatedChapters.concat(expiredChapters) : untranslatedChapters
-  ).sort((a, b) => a.localeCompare(b));
+  const chapters = (() => {
+    if (level === 'all') {
+      return metadata.toc.map((it) => it.chapterId);
+    } else {
+      const untranslatedChapters = metadata.toc
+        .filter((it) => it[translator.id] === undefined)
+        .map((it) => it.chapterId);
+      if (level === 'normal') {
+        return untranslatedChapters;
+      }
+
+      const expiredChapters = metadata.toc
+        .filter(
+          (it) =>
+            it[translator.id] !== undefined &&
+            it[translator.id] !== metadata.glossaryId
+        )
+        .map((it) => it.chapterId);
+      return untranslatedChapters.concat(expiredChapters);
+    }
+  })().sort((a, b) => a.localeCompare(b));
 
   callback.onStart(chapters.length);
   if (chapters.length === 0) {
     callback.log(`没有需要更新的章节`);
   }
 
+  const forceSeg = level === 'all';
   for (const chapterId of chapters) {
     try {
       callback.log(`\n[${0}] ${volumeId}/${chapterId}`);
