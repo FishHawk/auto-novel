@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vue-tsc --noEmit",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run"
   },
@@ -21,6 +21,7 @@
     "@types/markdown-it": "^13.0.7",
     "@types/uuid": "^9.0.8",
     "@vicons/material": "^0.12.0",
+    "@vite-pwa/assets-generator": "^0.2.4",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vueuse/core": "^10.9.0",
     "@zip.js/zip.js": "^2.7.41",
@@ -40,6 +41,7 @@
     "uuid": "^9.0.1",
     "vite": "^5.2.9",
     "vite-plugin-html": "^3.2.2",
+    "vite-plugin-pwa": "^0.20.0",
     "vite-tsconfig-paths": "^4.3.2",
     "vue": "^3.4.23",
     "vue-draggable-plus": "^0.4.0",
