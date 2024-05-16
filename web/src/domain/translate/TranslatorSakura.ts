@@ -16,7 +16,7 @@ export class SakuraTranslator implements SegmentTranslator {
   fingerprint?: number[];
   segmentor = createLengthSegmentor(500);
   segLength = 500;
-  prevSegLength = 1000;
+  prevSegLength = 500;
 
   constructor(
     log: Logger,
@@ -43,7 +43,7 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   allowUpload = () => {
-    if (this.segLength !== 500 || this.prevSegLength !== 1000) {
+    if (this.segLength !== 500 || this.prevSegLength !== 500) {
       return false;
     }
     if (this.fingerprint === undefined) {
@@ -153,16 +153,18 @@ export class SakuraTranslator implements SegmentTranslator {
       prevSegCount === 0 ? '' : prevSegs.slice(prevSegCount).flat().join('\n');
 
     // 正常翻译
-    {
+    let retry = 1;
+    while (retry < 3) {
       const { text, hasDegradation } = await this.createChatCompletions(
         concatedSeg,
         glossary,
         concatedPrevSeg,
         signal,
+        retry > 1,
       );
       const splitText = text.replaceAll('<|im_end|>', '').split('\n');
 
-      const parts: string[] = [`第1次`];
+      const parts: string[] = [`第${retry}次`];
       const linesNotMatched = seg.length !== splitText.length;
       if (hasDegradation) {
         parts.push('退化');
@@ -176,12 +178,14 @@ export class SakuraTranslator implements SegmentTranslator {
 
       if (!hasDegradation && !linesNotMatched) {
         return splitText;
+      } else {
+        retry += 1;
       }
     }
 
     // 逐行翻译
     {
-      this.log('第2次　逐行翻译');
+      this.log('逐行翻译');
       let degradationLineCount = 0;
       const resultPerLine = [];
       for (const line of seg) {
@@ -190,6 +194,7 @@ export class SakuraTranslator implements SegmentTranslator {
           glossary,
           [concatedPrevSeg, ...resultPerLine].join('\n'),
           signal,
+          true,
         );
         if (hasDegradation) {
           degradationLineCount += 1;
@@ -263,6 +268,7 @@ export class SakuraTranslator implements SegmentTranslator {
     glossary: Glossary,
     prevText: string,
     signal?: AbortSignal,
+    hasDegradation?: boolean,
   ) {
     const messages: {
       role: 'system' | 'user' | 'assistant';
@@ -318,7 +324,7 @@ export class SakuraTranslator implements SegmentTranslator {
       user(`将下面的日文文本翻译成中文：${text}`);
     }
 
-    const maxNewToken = Math.max(Math.ceil(text.length * 1.7), 10);
+    const maxNewToken = Math.max(Math.ceil(text.length * 1.7), 100);
     const completion = await this.api.createChatCompletions(
       {
         model: '',
@@ -326,7 +332,7 @@ export class SakuraTranslator implements SegmentTranslator {
         temperature: 0.1,
         top_p: 0.3,
         max_tokens: maxNewToken,
-        frequency_penalty: 0.2,
+        frequency_penalty: hasDegradation ? 0.2 : 0.0,
       },
       {
         signal,
