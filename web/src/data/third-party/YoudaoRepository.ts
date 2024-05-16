@@ -9,7 +9,7 @@ const getBaseBody = (key: string) => {
   const t = Date.now().toString();
 
   const sign = MD5(
-    `client=${c}&mysticTime=${t}&product=${p}&key=${key}`
+    `client=${c}&mysticTime=${t}&product=${p}&key=${key}`,
   ).toString();
   return {
     sign,
@@ -27,13 +27,13 @@ const decode = (src: string) => {
   const dec = AES.decrypt(
     src.replace(/_/g, '/').replace(/-/g, '+'),
     MD5(
-      'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl'
+      'ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl',
     ),
     {
       iv: MD5(
-        'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4'
+        'ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4',
       ),
-    }
+    },
   ).toString(Utf8);
   return dec;
 };

@@ -17,7 +17,7 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
 
   const createChatCompletionsStream = (
     json: ChatCompletion.Params & { stream: true },
-    options?: Options
+    options?: Options,
   ): Promise<Generator<ChatCompletionChunk>> =>
     client
       .post('v1/chat/completions', { json, ...options })
@@ -26,7 +26,7 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
 
   const createChatCompletions = (
     json: ChatCompletion.Params & { stream?: false },
-    options?: Options
+    options?: Options,
   ): Promise<ChatCompletion> =>
     client
       .post('v1/chat/completions', { json, ...options })
@@ -46,7 +46,7 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
       min_keep?: number;
       seed?: number;
     },
-    options?: Options
+    options?: Options,
   ) =>
     client.post('completion', { json, ...options }).json<{
       completion_probabilities?: Array<{
@@ -273,7 +273,7 @@ export class OpenAiError extends Error {
   constructor(
     status: number | undefined,
     code: string | undefined,
-    message: string | undefined
+    message: string | undefined,
   ) {
     super(`${status} ${code ?? 'unknown_code'} ${message}`);
     this.status = status;
@@ -290,7 +290,7 @@ export class OpenAiError extends Error {
       throw new OpenAiError(
         e.response.status,
         errJson?.['error']?.['code'],
-        errText
+        errText,
       );
     } else {
       throw e;

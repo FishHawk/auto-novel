@@ -120,7 +120,7 @@ const progressFilterFunc = computed(() => {
     ref="localVolumeListRef"
     :filter="progressFilterFunc"
     :options="{ 全部排队: queueAllVolumes }"
-    :beforeVolumeAdd="(file:File)=>queueVolume(file.name)"
+    :beforeVolumeAdd="(file: File) => queueVolume(file.name)"
   >
     <template #extra>
       <c-action-wrapper title="状态">

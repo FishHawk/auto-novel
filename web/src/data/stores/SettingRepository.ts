@@ -22,7 +22,7 @@ export const createSettingRepository = () => {
       },
       workspaceSound: false,
     },
-    { mergeDefaults: true }
+    { mergeDefaults: true },
   );
 
   const migrate = () => {

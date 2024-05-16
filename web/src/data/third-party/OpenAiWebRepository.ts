@@ -4,7 +4,7 @@ import { parseEventStream } from '@/util';
 
 export const createOpenAiWebRepository = (
   endpoint: string,
-  accessToken: string
+  accessToken: string,
 ) => {
   const client = ky.create({
     prefixUrl: endpoint,
@@ -18,7 +18,7 @@ export const createOpenAiWebRepository = (
 
   const createConversation = (
     json: Conversation.Params,
-    options?: Options
+    options?: Options,
   ): Promise<Generator<ConversationChunk>> =>
     client
       .post('conversation', {
@@ -60,7 +60,7 @@ export const createOpenAiWebRepository = (
 
   const getConversation = (
     conversationId: string,
-    options?: Options
+    options?: Options,
   ): Promise<Conversation> =>
     client.get(`conversation/${conversationId}`, options).json<Conversation>();
 

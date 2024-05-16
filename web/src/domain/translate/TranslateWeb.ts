@@ -14,7 +14,7 @@ export const translateWeb = async (
   { level, sync, forceMetadata, startIndex, endIndex }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) => {
   if (!translator.allowUpload()) {
     callback.log('发生错误，当前Sakura版本不允许上传翻译');
@@ -31,7 +31,7 @@ export const translateWeb = async (
     novelId,
     translator.id,
     sync,
-    signal
+    signal,
   );
 
   // Task
@@ -75,8 +75,8 @@ export const translateWeb = async (
           toc
             .map((it) => it.split(/[\s　]+/))
             .filter((it) => it.length > 0)
-            .flat()
-        )
+            .flat(),
+        ),
       );
 
       const preTranslateTocWord = (wordJp: string) => {

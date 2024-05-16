@@ -28,7 +28,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
   if (
     file.file &&
     ['jp', 'zh', 'zh-jp', 'jp-zh'].some((prefix) =>
-      file.file!!.name.startsWith(prefix)
+      file.file!!.name.startsWith(prefix),
     )
   ) {
     message.error('不要上传本网站上生成的机翻文件');
@@ -52,7 +52,7 @@ const customRequest = ({
   }
   store
     .createVolume(file.name, type, file.file as File, (percent) =>
-      onProgress({ percent })
+      onProgress({ percent }),
     )
     .then(() => {
       onFinish();

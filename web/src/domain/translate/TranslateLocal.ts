@@ -13,7 +13,7 @@ export const translateLocal = async (
   { level }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) => {
   const localVolumeRepository = await Locator.localVolumeRepository();
   // Api
@@ -27,7 +27,7 @@ export const translateLocal = async (
       volumeId,
       chapterId,
       translator.id,
-      json
+      json,
     );
 
   // Task
@@ -60,7 +60,7 @@ export const translateLocal = async (
         .filter(
           (it) =>
             it[translator.id] !== undefined &&
-            it[translator.id] !== metadata.glossaryId
+            it[translator.id] !== metadata.glossaryId,
         )
         .map((it) => it.chapterId);
       return untranslatedChapters.concat(expiredChapters);

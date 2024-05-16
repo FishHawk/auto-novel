@@ -47,7 +47,7 @@ const addFavorite = async () => {
       emit('update:show', false);
     }),
     '收藏夹创建',
-    message
+    message,
   );
 };
 </script>

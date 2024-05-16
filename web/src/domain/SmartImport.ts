@@ -50,7 +50,7 @@ const parseTitle = (title: string) => {
 
   let imprint;
   for (const [matched, content] of title.matchAll(
-    /[【（(]([^)）】]*)[)）】]/g
+    /[【（(]([^)）】]*)[)）】]/g,
   )) {
     if (includeIrrelevantKeywords(content)) {
       title = title.replace(matched, '');
@@ -142,7 +142,7 @@ const getNovelByAsin = async (asin: string): Promise<AmazonNovel> => {
 
 const getNovelBySearch = async (
   query: string,
-  log: Logger
+  log: Logger,
 ): Promise<AmazonNovel> => {
   log(`导入小说 开始搜索\n`);
   const searchItems = (await amazon.search(query))
@@ -169,7 +169,7 @@ const getNovelBySearch = async (
   }
 
   const volumes = searchItems.filter(
-    ({ serialAsin }) => serialAsin === undefined
+    ({ serialAsin }) => serialAsin === undefined,
   );
   if (volumes.length === 0) {
     throw Error('搜索结果为空');
@@ -201,7 +201,7 @@ export const smartImport = async (
   urlOrQuery: string,
   volumes: WenkuVolumeDto[],
   forcePopulateVolumes: boolean,
-  callback: SmartImportCallback
+  callback: SmartImportCallback,
 ) => {
   const { log, populateNovel, populateVolume } = callback;
 
@@ -220,7 +220,7 @@ export const smartImport = async (
       return;
     }
     const volumesNew = novel.volumes.filter(
-      (newV) => !volumes.some((oldV) => oldV.asin === newV.asin)
+      (newV) => !volumes.some((oldV) => oldV.asin === newV.asin),
     );
     volumes = volumes.concat(volumesNew);
     novel.volumes = volumes;
@@ -230,7 +230,7 @@ export const smartImport = async (
   const volumesNeedPopulate = volumes.filter(
     ({ coverHires, publishAt }) =>
       [coverHires, publishAt].some((it) => it === undefined) ||
-      forcePopulateVolumes
+      forcePopulateVolumes,
   );
 
   await parallelExec(
@@ -250,7 +250,7 @@ export const smartImport = async (
       const finished = context.finished;
       const size = volumesNeedPopulate.length;
       log(`导入分卷[${finished}/${size}] ${processing}本处理中`);
-    }
+    },
   );
 
   log('\n结束');

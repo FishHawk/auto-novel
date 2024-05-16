@@ -17,7 +17,7 @@ interface Workspace<T> {
 const createWorkspaceRepository = <W extends GptWorker | SakuraWorker>(
   id: string,
   workers: W[],
-  migrate?: (ref: Ref<Workspace<W>>) => void
+  migrate?: (ref: Ref<Workspace<W>>) => void,
 ) => {
   const ref = useLocalStorage<Workspace<W>>(id, {
     workers,
@@ -68,7 +68,7 @@ const createWorkspaceRepository = <W extends GptWorker | SakuraWorker>(
   };
   const deleteJobRecord = (job: TranslateJobRecord) => {
     ref.value.uncompletedJobs = ref.value.uncompletedJobs.filter(
-      (j) => j.task !== job.task
+      (j) => j.task !== job.task,
     );
   };
   const retryJobRecord = (job: TranslateJobRecord) => {
@@ -154,5 +154,5 @@ export const createSakuraWorkspaceRepository = () =>
           it.testSegLength = undefined;
         }
       });
-    }
+    },
   );

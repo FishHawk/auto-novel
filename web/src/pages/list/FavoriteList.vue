@@ -55,7 +55,7 @@ const loaderWeb = computed<Loader<WebNovelOutlineDto>>(() => {
         page,
         pageSize: 30,
         sort: optionSort(),
-      }).then((it) => ({ type: 'web', ...it }))
+      }).then((it) => ({ type: 'web', ...it })),
     );
   };
 });
@@ -77,7 +77,7 @@ const loaderWenku = computed<Loader<WenkuNovelOutlineDto>>(() => {
         page,
         pageSize: 24,
         sort: optionSort(),
-      }).then((it) => ({ type: 'wenku', ...it }))
+      }).then((it) => ({ type: 'wenku', ...it })),
     );
   };
 });
@@ -107,7 +107,7 @@ loadFavoredList();
 const favoriteMenuOption = (
   type: 'web' | 'wenku',
   id: string,
-  title: string
+  title: string,
 ): MenuOption => ({
   label: () =>
     h(FavoriteMenuItem, {
@@ -126,7 +126,7 @@ const menuOptions = computed(() => [
     type: 'group',
     label: '网络小说',
     children: favoredList.value.web.map(({ id, title }) =>
-      favoriteMenuOption('web', id, title)
+      favoriteMenuOption('web', id, title),
     ),
   },
   {
@@ -138,7 +138,7 @@ const menuOptions = computed(() => [
     type: 'group',
     label: '文库小说',
     children: favoredList.value.wenku.map(({ id, title }) =>
-      favoriteMenuOption('wenku', id, title)
+      favoriteMenuOption('wenku', id, title),
     ),
   },
 ]);
@@ -207,15 +207,15 @@ const moveToFavored = async () => {
           ? UserRepository.favoriteWebNovel(
               targetFavoredId.value,
               novel.providerId,
-              novel.novelId
+              novel.novelId,
             )
           : UserRepository.unfavoriteWebNovel(
               props.favoriteId,
               novel.providerId,
-              novel.novelId
+              novel.novelId,
             ),
         '收藏',
-        message
+        message,
       );
     }
   } else {
@@ -225,10 +225,10 @@ const moveToFavored = async () => {
           ? UserRepository.favoriteWenkuNovel(targetFavoredId.value, novel.id)
           : UserRepository.unfavoriteWenkuNovel(
               targetFavoredId.value,
-              novel.id
+              novel.id,
             ),
         '取消收藏',
-        message
+        message,
       );
     }
   }

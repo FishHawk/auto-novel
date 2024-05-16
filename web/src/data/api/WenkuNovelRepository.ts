@@ -56,13 +56,13 @@ const createVolume = (
   volumeId: string,
   type: 'jp' | 'zh',
   file: File,
-  onProgress: (p: number) => void
+  onProgress: (p: number) => void,
 ) =>
   uploadFile(
     `/api/wenku/${novelId}/volume/${encodeURIComponent(volumeId)}`,
     type,
     file,
-    onProgress
+    onProgress,
   );
 
 const deleteVolume = (novelId: string, volumeId: string) =>
@@ -73,10 +73,10 @@ const createTranslationApi = (
   novelId: string,
   volumeId: string,
   translatorId: TranslatorId,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) => {
   const endpointV2 = `wenku/${novelId}/translate-v2/${translatorId}/${encodeURIComponent(
-    volumeId
+    volumeId,
   )}`;
 
   const getTranslateTask = () =>
@@ -89,7 +89,7 @@ const createTranslationApi = (
 
   const updateChapterTranslation = (
     chapterId: string,
-    json: { glossaryId: string | undefined; paragraphsZh: string[] }
+    json: { glossaryId: string | undefined; paragraphsZh: string[] },
   ) =>
     client
       .post(`${endpointV2}/chapter/${chapterId}`, {
@@ -133,7 +133,7 @@ const createFileUrl = ({
   });
   translations.forEach((it) => params.append('translations', it));
   const url = `/api/wenku/${novelId}/file/${encodeURIComponent(
-    volumeId
+    volumeId,
   )}?${params}`;
   return { url, filename };
 };

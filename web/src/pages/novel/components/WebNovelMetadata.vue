@@ -52,7 +52,7 @@ const startReadChapter = computed(() => {
   const { novel } = props;
   if (novel.lastReadChapterId !== undefined) {
     const lastReadChapter = novel.toc.find(
-      (it) => it.chapterId === novel.lastReadChapterId
+      (it) => it.chapterId === novel.lastReadChapterId,
     );
     if (lastReadChapter !== undefined) {
       return { chapter: lastReadChapter, type: 'continue' };

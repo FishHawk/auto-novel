@@ -21,7 +21,7 @@ const options = computed(() => {
       optionsBuffer.push({
         key: it,
         label: it,
-      })
+      }),
     );
   }
 
@@ -52,9 +52,9 @@ const options = computed(() => {
                 emit('update:value', [props.value, tag].join(' '));
               },
             },
-            { default: () => tag }
-          )
-        )
+            { default: () => tag },
+          ),
+        ),
       );
     optionsBuffer.push({
       key: 'footer',

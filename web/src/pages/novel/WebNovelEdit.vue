@@ -65,14 +65,14 @@ const submit = async () => {
         wenkuId: formValue.value.wenkuId.trim(),
         toc: Object.assign(
           {},
-          ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh }))
+          ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh })),
         ),
       })
       .then(() => {
         router.push({ path: `/novel/${providerId}/${novelId}` });
       }),
     '编辑',
-    message
+    message,
   );
 };
 </script>

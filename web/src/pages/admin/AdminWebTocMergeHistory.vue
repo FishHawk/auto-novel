@@ -14,7 +14,7 @@ const novelPage = ref<Result<Page<MergeHistoryDto>>>();
 const loadPage = async (page: number) => {
   novelPage.value = undefined;
   const result = await runCatching(
-    OperationRepository.listMergeHistory(currentPage.value - 1)
+    OperationRepository.listMergeHistory(currentPage.value - 1),
   );
   if (currentPage.value == page) {
     novelPage.value = result;
@@ -29,12 +29,12 @@ const deleteDetail = (id: string) =>
     OperationRepository.deleteMergeHistory(id).then(() => {
       if (novelPage.value?.ok) {
         novelPage.value.value.items = novelPage.value.value.items.filter(
-          (it) => it.id !== id
+          (it) => it.id !== id,
         );
       }
     }),
     '删除',
-    message
+    message,
   );
 
 interface DiffTocItem {

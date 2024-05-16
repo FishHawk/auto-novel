@@ -120,7 +120,7 @@ const submit = async () => {
     workspace.addWorker(worker);
   } else {
     const index = workspaceRef.value.workers.findIndex(
-      ({ id }) => id === props.worker?.id
+      ({ id }) => id === props.worker?.id,
     );
     workspaceRef.value.workers[index] = worker;
     emit('update:show', false);

@@ -175,7 +175,9 @@ const setCustomFontColor = (color: string) =>
               :max="1"
               :min="0"
               :step="0.05"
-              :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
+              :format-tooltip="
+                (value: number) => `${(value * 100).toFixed(0)}%`
+              "
               style="flex: auto"
             />
             <n-text style="width: 6em">
@@ -189,7 +191,9 @@ const setCustomFontColor = (color: string) =>
               :max="1"
               :min="0"
               :step="0.05"
-              :format-tooltip="(value: number) => `${(value*100).toFixed(0)}%`"
+              :format-tooltip="
+                (value: number) => `${(value * 100).toFixed(0)}%`
+              "
             />
             <n-text style="width: 6em">
               {{ (setting.mixJpOpacity * 100).toFixed(0) }}%

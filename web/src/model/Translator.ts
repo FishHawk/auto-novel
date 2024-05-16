@@ -98,13 +98,13 @@ export namespace TranslateTaskDescriptor {
   export const web = (
     providerId: string,
     novelId: string,
-    params: TranslateTaskParams
+    params: TranslateTaskParams,
   ) => `web/${providerId}/${novelId}` + buildTaskQueryString(params);
 
   export const wenku = (
     novelId: string,
     volumeId: string,
-    params: TranslateTaskParams
+    params: TranslateTaskParams,
   ) =>
     `wenku/${novelId}/${encodeURIComponent(volumeId)}` +
     buildTaskQueryString(params);

@@ -79,7 +79,7 @@ const navToChapter = async (chapterId: string) => {
         UserRepository.updateReadHistoryWeb(
           gnid.providerId,
           gnid.novelId,
-          chapterId
+          chapterId,
         );
       }
       if (result.value.nextId) {
@@ -111,7 +111,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 const chapterHref = computed(() => {
@@ -152,7 +152,7 @@ onKeyDown(['1', '2', '3', '4'], (e) => {
   if (setting.translationsMode === 'parallel') {
     if (setting.translations.includes(translatorId)) {
       setting.translations = setting.translations.filter(
-        (it) => it !== translatorId
+        (it) => it !== translatorId,
       );
     } else {
       setting.translations.push(translatorId);
@@ -180,7 +180,11 @@ onKeyDown(['Enter'], (e) => {
       quaternary
       :focusable="false"
       :type="id ? 'primary' : 'default'"
-      @action="()=>{navToChapter(id!!)}"
+      @action="
+        () => {
+          navToChapter(id!!);
+        }
+      "
     />
   </DefineChapterLink>
 

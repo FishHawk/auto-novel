@@ -11,7 +11,7 @@ const { site } = withDefaults(
     site: string;
     locked: boolean;
   }>(),
-  { locked: false }
+  { locked: false },
 );
 
 const commentPage = ref<Result<Page<Comment1>>>();
@@ -23,7 +23,7 @@ async function loadComments(page: number) {
       site,
       page: page - 1,
       pageSize: 10,
-    })
+    }),
   );
   if (result.ok) {
     commentPage.value = Ok({

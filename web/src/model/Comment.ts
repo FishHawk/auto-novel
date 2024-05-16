@@ -1,4 +1,4 @@
-import { UserReference } from "./User";
+import { UserReference } from './User';
 
 export interface Comment1 {
   id: string;

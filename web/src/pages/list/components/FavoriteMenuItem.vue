@@ -71,7 +71,7 @@ const updateFavorite = async () => {
       showEditModal.value = false;
     }),
     '收藏夹更新',
-    message
+    message,
   );
 };
 
@@ -86,7 +86,7 @@ const deleteFavorite = () =>
       showDeleteModal.value = false;
     }),
     '收藏夹删除',
-    message
+    message,
   );
 </script>
 

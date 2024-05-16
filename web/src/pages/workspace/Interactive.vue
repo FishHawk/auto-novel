@@ -44,7 +44,7 @@ const translate = async () => {
   const id = translatorId.value;
   if (id === 'gpt') {
     const worker = gptWorkspaceRef.value.workers.find(
-      (it) => it.id === selectedGptWorkerId.value
+      (it) => it.id === selectedGptWorkerId.value,
     );
     if (worker === undefined) {
       message.error('未选择GPT翻译器');
@@ -60,7 +60,7 @@ const translate = async () => {
     };
   } else if (id === 'sakura') {
     const worker = sakuraWorkspaceRef.value.workers.find(
-      (it) => it.id === selectedSakuraWorkerId.value
+      (it) => it.id === selectedSakuraWorkerId.value,
     );
     if (worker === undefined) {
       message.error('未选择Sakura翻译器');

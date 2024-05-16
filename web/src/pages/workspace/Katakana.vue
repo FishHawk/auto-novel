@@ -33,7 +33,7 @@ const countKatakana = (content: string) => {
     katakanaCounter.set(w, (katakanaCounter.get(w) || 0) + 1);
   }
   const sortedKatakanaCounter = new Map(
-    [...katakanaCounter].sort(([_w1, c1], [_w2, c2]) => c2 - c1)
+    [...katakanaCounter].sort(([_w1, c1], [_w2, c2]) => c2 - c1),
   );
   return sortedKatakanaCounter;
 };
@@ -41,11 +41,11 @@ const countKatakana = (content: string) => {
 const loadVolume = async (
   source: 'tmp' | 'local',
   filename: string,
-  file: File
+  file: File,
 ) => {
   if (
     loadedVolumes.value.find(
-      (it) => it.source === source && it.filename === filename
+      (it) => it.source === source && it.filename === filename,
     ) !== undefined
   ) {
     message.warning('文件已经载入');
@@ -59,7 +59,7 @@ const loadVolume = async (
     const fullContent: string[] = [];
     await Epub.forEachXHtmlFile(file, (_path, doc) => {
       Array.from(doc.getElementsByClassName('rt')).forEach((node) =>
-        node.parentNode!!.removeChild(node)
+        node.parentNode!!.removeChild(node),
       );
       fullContent.push(doc.body.textContent ?? '');
     });
@@ -77,7 +77,7 @@ const loadVolume = async (
 
 const deleteVolume = (volume: LoadedVolume) => {
   loadedVolumes.value = loadedVolumes.value.filter(
-    (it) => !(it.source === volume.source && it.filename === volume.filename)
+    (it) => !(it.source === volume.source && it.filename === volume.filename),
   );
 };
 
@@ -120,7 +120,7 @@ const katakanaMerged = computed(() => {
 
 const katakanas = computed(() => {
   return new Map(
-    [...katakanaMerged.value].filter(([w, c]) => c > katakanaThredhold.value)
+    [...katakanaMerged.value].filter(([w, c]) => c > katakanaThredhold.value),
   );
 });
 
@@ -129,7 +129,7 @@ const copyTranslationJson = async () => {
     Array.from(katakanas.value).map(([key]) => [
       key,
       katakanaTranslations.value[key] ?? '',
-    ])
+    ]),
   );
   const jsonString = Glossary.encodeToText(obj);
   navigator.clipboard.writeText(jsonString);
@@ -145,7 +145,7 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
   let config: TranslatorConfig;
   if (id === 'sakura') {
     const worker = sakuraWorkspace.value.workers.find(
-      (it) => it.id === selectedSakuraWorkerId.value
+      (it) => it.id === selectedSakuraWorkerId.value,
     );
     if (worker === undefined) {
       message.error('未选择Sakura翻译器');

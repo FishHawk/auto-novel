@@ -18,7 +18,7 @@ export const formatError = (error: any) => {
     return error.response
       .text()
       .then(
-        (message) => `[${error.response.status}]${messageOverride ?? message}`
+        (message) => `[${error.response.status}]${messageOverride ?? message}`,
       );
   } else if (error instanceof TimeoutError) {
     return '请求超时';

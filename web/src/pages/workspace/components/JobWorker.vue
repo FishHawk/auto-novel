@@ -34,7 +34,7 @@ const emit = defineEmits<{
     (
       | { state: 'finish'; abort: boolean }
       | { state: 'processed'; finished: number; error: number; total: number }
-    )
+    ),
   ];
 }>();
 
@@ -109,7 +109,7 @@ const processTasks = async () => {
           });
         },
       },
-      signal
+      signal,
     );
     emit('update:progress', job.task, {
       state: 'finish',
@@ -163,7 +163,7 @@ const testWorker = async () => {
           `版本：${translator.sakuraVersion()} ${
             translator.allowUpload() ? '允许上传' : '禁止上传'
           }`,
-        ].join('\n')
+        ].join('\n'),
       );
     }
   } catch (e: any) {

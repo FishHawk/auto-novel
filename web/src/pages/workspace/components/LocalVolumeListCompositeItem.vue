@@ -30,7 +30,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
       startIndex: 0,
       endIndex: 65535,
     },
-    { id: translatorId }
+    { id: translatorId },
   );
 
 const queueVolume = (translatorId: 'gpt' | 'sakura') => {

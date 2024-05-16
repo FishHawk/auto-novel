@@ -1,4 +1,4 @@
-import { Favored } from "./User";
+import { Favored } from './User';
 
 export interface WebNovelOutlineDto {
   providerId: string;

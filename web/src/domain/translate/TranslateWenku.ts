@@ -13,7 +13,7 @@ export const translateWenku = async (
   { level }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) => {
   const {
     getTranslateTask,
@@ -23,7 +23,7 @@ export const translateWenku = async (
     novelId,
     volumeId,
     translator.id,
-    signal
+    signal,
   );
 
   // Task

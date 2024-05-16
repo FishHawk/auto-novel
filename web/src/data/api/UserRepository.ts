@@ -16,7 +16,7 @@ const listReadHistoryWeb = (searchParams: { page: number; pageSize: number }) =>
 const updateReadHistoryWeb = (
   providerId: string,
   novelId: string,
-  chapterId: string
+  chapterId: string,
 ) =>
   client.put(`user/read-history/${providerId}/${novelId}`, { body: chapterId });
 
@@ -40,7 +40,7 @@ const listFavoredWebNovel = (
     page: number;
     pageSize: number;
     sort: 'create' | 'update';
-  }
+  },
 ) =>
   client
     .get(`user/favored-web/${favoredId}`, { searchParams })
@@ -49,13 +49,13 @@ const listFavoredWebNovel = (
 const favoriteWebNovel = (
   favoredId: string,
   providerId: string,
-  novelId: string
+  novelId: string,
 ) => client.put(`user/favored-web/${favoredId}/${providerId}/${novelId}`);
 
 const unfavoriteWebNovel = (
   favoredId: string,
   providerId: string,
-  novelId: string
+  novelId: string,
 ) => client.delete(`user/favored-web/${favoredId}/${providerId}/${novelId}`);
 
 const createFavoredWenku = (json: { title: string }) =>
@@ -73,7 +73,7 @@ const listFavoredWenkuNovel = (
     page: number;
     pageSize: number;
     sort: 'create' | 'update';
-  }
+  },
 ) =>
   client
     .get(`user/favored-wenku/${favoredId}`, { searchParams })

@@ -28,7 +28,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
   return translateTask?.value?.startTask(
     { type: 'wenku', novelId, volumeId: volume.volumeId },
     getParams(),
-    { id: translatorId }
+    { id: translatorId },
   );
 };
 
@@ -49,7 +49,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   const task = TranslateTaskDescriptor.wenku(
     novelId,
     volume.volumeId,
-    getParams()
+    getParams(),
   );
   const workspace =
     id === 'gpt'

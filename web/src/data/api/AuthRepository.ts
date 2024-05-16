@@ -35,7 +35,7 @@ const sendResetPasswordEmail = (emailOrUsername: string) =>
 const resetPassword = (
   emailOrUsername: string,
   token: string,
-  password: string
+  password: string,
 ) =>
   client.post('auth/reset-password', {
     searchParams: { emailOrUsername },

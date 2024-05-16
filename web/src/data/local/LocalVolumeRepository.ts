@@ -33,7 +33,7 @@ export const createLocalVolumeRepository = async () => {
     id: string,
     chapterId: string,
     translatorId: TranslatorId,
-    translation: ChapterTranslation
+    translation: ChapterTranslation,
   ) => {
     const chapter = await dao.updateChapter(
       id,
@@ -41,7 +41,7 @@ export const createLocalVolumeRepository = async () => {
       (value: LocalVolumeChapter) => {
         value[translatorId] = translation;
         return value;
-      }
+      },
     );
     if (chapter === undefined) {
       throw '章节不存在';
@@ -53,7 +53,7 @@ export const createLocalVolumeRepository = async () => {
           .filter((it) => it.chapterId === chapterId)
           .forEach((it) => (it[translatorId] = translation.glossaryId));
         return value;
-      }
+      },
     );
     if (metadata === undefined) {
       throw '小说不存在';
@@ -62,7 +62,7 @@ export const createLocalVolumeRepository = async () => {
   };
 
   const bind = <Args extends Array<any>, Return>(
-    fn: (dao: LocalVolumeDao, ...args: Args) => Promise<Return>
+    fn: (dao: LocalVolumeDao, ...args: Args) => Promise<Return>,
   ) => {
     return async (...args: Args): Promise<Return> => {
       return fn(dao, ...args);

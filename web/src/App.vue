@@ -8,7 +8,7 @@ const { renew, updateToken } = Locator.authRepository;
 watch(
   () => userData.value.info?.token,
   (token) => updateToken(token),
-  { immediate: true }
+  { immediate: true },
 );
 
 // 更新Token，冷却时间为24小时

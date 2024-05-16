@@ -30,7 +30,7 @@ async function loadPage(page: number) {
       page: currentPage.value - 1,
       pageSize: 30,
       type: type.value,
-    })
+    }),
   );
   if (currentPage.value == page) {
     historiesResult.value = result;
@@ -49,7 +49,7 @@ const deleteHistory = (id: string) =>
       }
     }),
     '删除',
-    message
+    message,
   );
 
 watch(currentPage, (page) => loadPage(page), { immediate: true });
@@ -75,7 +75,7 @@ watch(type, () => {
 
   <c-result
     :result="historiesResult"
-    :show-empty="(it: Page<any>) => it.items.length === 0 "
+    :show-empty="(it: Page<any>) => it.items.length === 0"
     v-slot="{ value }"
   >
     <n-list>

@@ -26,14 +26,14 @@ export const createReaderSettingRepository = () => {
       mixJpOpacity: 0.4,
       mixZhOpacity: 0.75,
     },
-    { mergeDefaults: true }
+    { mergeDefaults: true },
   );
 
   const migrate = () => {
     const setting = settingRef.value;
     if (typeof setting.fontSize === 'string') {
       setting.fontSize = Number(
-        (setting.fontSize as any).replace(/[^0-9]/g, '')
+        (setting.fontSize as any).replace(/[^0-9]/g, ''),
       );
     }
     if ((setting.mode as any) === 'mix') {

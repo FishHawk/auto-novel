@@ -25,7 +25,7 @@ const processedJobs = ref<Map<string, ProcessedJob>>(new Map());
 
 const getNextJob = () => {
   const job = workspace.ref.value.jobs.find(
-    (it) => !processedJobs.value.has(it.task)
+    (it) => !processedJobs.value.has(it.task),
   );
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);
@@ -53,7 +53,7 @@ const onProgressUpdated = (
   task: string,
   state:
     | { state: 'finish'; abort: boolean }
-    | { state: 'processed'; finished: number; error: number; total: number }
+    | { state: 'processed'; finished: number; error: number; total: number },
 ) => {
   if (state.state === 'finish') {
     const job = processedJobs.value.get(task)!!;
@@ -76,15 +76,15 @@ const clearCache = async () =>
   doAction(
     Locator.cachedSegRepository().then((repo) => repo.clear('gpt-seg-cache')),
     '缓存清除',
-    message
+    message,
   );
 
 const notices = [
   notice(
-    '当您添加翻译器时，若链接留空，则表示将使用OpenAI官方链接，您也可以提供链接以使用第三方GPT代理。'
+    '当您添加翻译器时，若链接留空，则表示将使用OpenAI官方链接，您也可以提供链接以使用第三方GPT代理。',
   ),
   notice(
-    '当使用GPT-3.5 Web且选择官方链接时，需要安装相应的插件，详情看使用教程。'
+    '当使用GPT-3.5 Web且选择官方链接时，需要安装相应的插件，详情看使用教程。',
   ),
 ];
 </script>

@@ -23,7 +23,7 @@ watch(
     if (selectable !== false) {
       selectedNovels.value = [];
     }
-  }
+  },
 );
 const toggleNovelSelect = (novel: string, selected: boolean) => {
   if (!selected) {
@@ -35,13 +35,13 @@ const toggleNovelSelect = (novel: string, selected: boolean) => {
 
 const getSelectedNovels = () => {
   return props.items.filter((it) =>
-    selectedNovels.value.includes(`${it.providerId}/${it.novelId}`)
+    selectedNovels.value.includes(`${it.providerId}/${it.novelId}`),
   );
 };
 
 const selectAll = () => {
   selectedNovels.value = props.items.map(
-    (it) => `${it.providerId}/${it.novelId}`
+    (it) => `${it.providerId}/${it.novelId}`,
   );
 };
 

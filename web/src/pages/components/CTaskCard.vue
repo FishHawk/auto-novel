@@ -13,7 +13,7 @@ watch(
     if (running) {
       show.value = true;
     }
-  }
+  },
 );
 
 type LogLine = { message: string; detail?: string[] };
@@ -39,7 +39,7 @@ watch(
       });
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 const showLogDetailModal = ref(false);

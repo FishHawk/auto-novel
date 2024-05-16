@@ -1,12 +1,12 @@
 const forEachXHtmlFile = async (
   file: File,
-  callback: (path: string, doc: Document) => void
+  callback: (path: string, doc: Document) => void,
 ) => {
   const { BlobReader, TextWriter, ZipReader } = await import('@zip.js/zip.js');
 
   const reader = new ZipReader(new BlobReader(file));
   const entries = new Map(
-    (await reader.getEntries()).map((obj) => [obj.filename, obj])
+    (await reader.getEntries()).map((obj) => [obj.filename, obj]),
   );
   const readFileAsXHtml = async (filename: string) => {
     const entry = entries.get(filename);
@@ -26,7 +26,7 @@ const forEachXHtmlFile = async (
 
   const opf = await readFileAsXHtml(opfPath);
   for (const xhtmlPath of Array.from(
-    opf.querySelectorAll("manifest > item[media-type='application/xhtml+xml']")
+    opf.querySelectorAll("manifest > item[media-type='application/xhtml+xml']"),
   ).map((it) => opfDir + it.getAttribute('href'))) {
     const doc = await readFileAsXHtml(xhtmlPath);
     callback(xhtmlPath, doc);
@@ -36,7 +36,7 @@ const forEachXHtmlFile = async (
 
 const modify = async (
   file: File,
-  callback: (path: string, blobIn: Blob) => Promise<Blob>
+  callback: (path: string, blobIn: Blob) => Promise<Blob>,
 ) => {
   const { BlobReader, BlobWriter, ZipReader, ZipWriter } = await import(
     '@zip.js/zip.js'

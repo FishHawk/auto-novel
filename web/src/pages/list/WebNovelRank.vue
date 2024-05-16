@@ -124,7 +124,7 @@ const descriptiors: { [key: string]: Descriptor } = {
 };
 
 const descriptior = computed(
-  () => descriptiors[props.providerId][props.typeId]
+  () => descriptiors[props.providerId][props.typeId],
 );
 
 const loader = computed<Loader<WebNovelOutlineDto>>(() => {
@@ -162,7 +162,7 @@ const loader = computed<Loader<WebNovelOutlineDto>>(() => {
       filters = { genre: optionNth(0), range: optionNth(1) };
     }
     return runCatching(
-      Locator.webNovelRepository.listRank(providerId, filters)
+      Locator.webNovelRepository.listRank(providerId, filters),
     );
   };
 });

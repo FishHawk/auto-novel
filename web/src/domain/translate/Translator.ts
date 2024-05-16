@@ -29,7 +29,7 @@ export class Translator {
   constructor(
     segTranslator: SegmentTranslator,
     segCache?: SegmentCache,
-    log?: (message: string) => void
+    log?: (message: string) => void,
   ) {
     this.id = segTranslator.id;
     this.segTranslator = segTranslator;
@@ -60,7 +60,7 @@ export class Translator {
       oldGlossary?: Glossary;
       force?: boolean;
       signal?: AbortSignal;
-    }
+    },
   ): Promise<string[]> {
     const oldTextZh = context?.oldTextZh;
     if (oldTextZh !== undefined && textJp.length !== oldTextZh.length) {
@@ -89,7 +89,7 @@ export class Translator {
           segsZh.push(segZh);
         }
         return segsZh.flat();
-      }
+      },
     );
     return textZh;
   }
@@ -112,7 +112,7 @@ export class Translator {
       prevSegs: string[][];
       force?: boolean;
       signal?: AbortSignal;
-    }
+    },
   ) {
     glossary = glossary || {};
     oldGlossary = oldGlossary || {};
@@ -176,7 +176,7 @@ export class Translator {
 export namespace Translator {
   const createSegmentTranslator = async (
     log: Logger,
-    config: TranslatorConfig
+    config: TranslatorConfig,
   ): Promise<SegmentTranslator> => {
     if (config.id === 'baidu') {
       return BaiduTranslator.create(log);
@@ -192,12 +192,12 @@ export namespace Translator {
   export const create = async (
     config: TranslatorConfig,
     cache: boolean = false,
-    log?: Logger
+    log?: Logger,
   ) => {
     log = log ?? (() => {});
     const segTranslator = await createSegmentTranslator(
       (message, detail) => log?.('　' + message, detail),
-      config
+      config,
     );
     let segCache: SegmentCache | undefined = undefined;
     if (cache) {
@@ -226,8 +226,8 @@ const emptyLineFilterWrapper = async (
   oldTextZh: string[] | undefined,
   callback: (
     textJp: string[],
-    oldTextZh: string[] | undefined
-  ) => Promise<string[]>
+    oldTextZh: string[] | undefined,
+  ) => Promise<string[]>,
 ) => {
   const textJpFiltered: string[] = [];
   const oldTextZhFiltered: string[] = [];
@@ -244,7 +244,7 @@ const emptyLineFilterWrapper = async (
 
   const textZh = await callback(
     textJpFiltered,
-    oldTextZh === undefined ? undefined : oldTextZhFiltered
+    oldTextZh === undefined ? undefined : oldTextZhFiltered,
   );
 
   const recoveredTextZh: string[] = [];

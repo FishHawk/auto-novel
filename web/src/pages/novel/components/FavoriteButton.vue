@@ -17,7 +17,7 @@ const emit = defineEmits<{ 'update:favored': [string | undefined] }>();
 const message = useMessage();
 
 const favoredTitle = computed(
-  () => props.favoredList.find((it) => it.id === props.favored)?.title
+  () => props.favoredList.find((it) => it.id === props.favored)?.title,
 );
 
 const favoriteNovel = (favoredId: string) =>
@@ -26,7 +26,7 @@ const favoriteNovel = (favoredId: string) =>
       ? UserRepository.favoriteWebNovel(
           favoredId,
           props.novel.providerId,
-          props.novel.novelId
+          props.novel.novelId,
         )
       : UserRepository.favoriteWenkuNovel(favoredId, props.novel.novelId)
     ).then(() => {
@@ -34,7 +34,7 @@ const favoriteNovel = (favoredId: string) =>
       showFavoredModal.value = false;
     }),
     '收藏',
-    message
+    message,
   );
 
 const unfavoriteNovel = async () => {
@@ -44,7 +44,7 @@ const unfavoriteNovel = async () => {
       ? UserRepository.unfavoriteWebNovel(
           props.favored,
           props.novel.providerId,
-          props.novel.novelId
+          props.novel.novelId,
         )
       : UserRepository.unfavoriteWenkuNovel(props.favored, props.novel.novelId)
     ).then(() => {
@@ -52,7 +52,7 @@ const unfavoriteNovel = async () => {
       showFavoredModal.value = false;
     }),
     '取消收藏',
-    message
+    message,
   );
 };
 

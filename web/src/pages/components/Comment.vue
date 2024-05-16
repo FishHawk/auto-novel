@@ -33,7 +33,7 @@ const loadReplies = async (page: number) => {
       parentId: comment.id,
       page: page - 1,
       pageSize: 10,
-    })
+    }),
   );
   if (result.ok) {
     pageCount.value = result.value.pageNumber;
@@ -55,19 +55,19 @@ function onReplied() {
 const hideComment = (comment: Comment1) =>
   doAction(
     CommentRepository.hideComment(comment.id).then(
-      () => (comment.hidden = true)
+      () => (comment.hidden = true),
     ),
     '隐藏',
-    message
+    message,
   );
 
 const unhideComment = (comment: Comment1) =>
   doAction(
     CommentRepository.unhideComment(comment.id).then(
-      () => (comment.hidden = false)
+      () => (comment.hidden = false),
     ),
     '解除隐藏',
-    message
+    message,
   );
 
 const showInput = ref(false);

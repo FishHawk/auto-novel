@@ -24,10 +24,10 @@ export const useWenkuNovelStore = (novelId: string) => {
         const result = await runCatching(repo.getNovel(novelId));
         if (result.ok) {
           result.value.volumeZh = result.value.volumeZh.sort((a, b) =>
-            a.localeCompare(b)
+            a.localeCompare(b),
           );
           result.value.volumeJp = result.value.volumeJp.sort((a, b) =>
-            a.volumeId.localeCompare(b.volumeId)
+            a.volumeId.localeCompare(b.volumeId),
           );
         }
         this.novelResult = result;
@@ -44,14 +44,14 @@ export const useWenkuNovelStore = (novelId: string) => {
         volumeId: string,
         type: 'jp' | 'zh',
         file: File,
-        onProgress: (p: number) => void
+        onProgress: (p: number) => void,
       ) {
         const total = await repo.createVolume(
           novelId,
           volumeId,
           type,
           file,
-          onProgress
+          onProgress,
         );
 
         if (this.novelResult?.ok) {
@@ -66,13 +66,13 @@ export const useWenkuNovelStore = (novelId: string) => {
             });
             this.novelResult.value.volumeJp =
               this.novelResult.value.volumeJp.sort((a, b) =>
-                a.volumeId.localeCompare(b.volumeId)
+                a.volumeId.localeCompare(b.volumeId),
               );
           } else {
             this.novelResult.value.volumeZh.push(volumeId);
             this.novelResult.value.volumeZh =
               this.novelResult.value.volumeZh.sort((a, b) =>
-                a.localeCompare(b)
+                a.localeCompare(b),
               );
           }
         }
@@ -83,7 +83,7 @@ export const useWenkuNovelStore = (novelId: string) => {
         if (this.novelResult?.ok) {
           this.novelResult.value.volumeJp =
             this.novelResult.value.volumeJp.filter(
-              (it) => it.volumeId !== volumeId
+              (it) => it.volumeId !== volumeId,
             );
           this.novelResult.value.volumeZh =
             this.novelResult.value.volumeZh.filter((it) => it !== volumeId);

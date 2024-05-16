@@ -7,7 +7,7 @@ import { TranslatorId } from '@/model/Translator';
 
 export type Segmentor = (
   textJp: string[],
-  textZh?: string[]
+  textZh?: string[],
 ) => [string[], string[]?][];
 
 export type Logger = (message: string, detail?: string[]) => void;
@@ -104,7 +104,7 @@ export const createGlossaryWrapper = (glossary: Glossary) => {
 
   return async (
     textJp: string[],
-    callback: (input: string[]) => Promise<string[]>
+    callback: (input: string[]) => Promise<string[]>,
   ) => {
     const textJpEncoded = encode(textJp);
     const textZh = await callback(textJpEncoded);
@@ -115,7 +115,7 @@ export const createGlossaryWrapper = (glossary: Glossary) => {
 
 export const createLengthSegmentor = (
   maxLength: number,
-  maxLine?: number
+  maxLine?: number,
 ): Segmentor => {
   maxLine = maxLine ?? 65536;
 
@@ -168,7 +168,7 @@ export interface SegmentCache {
 }
 
 export const createSegIndexedDbCache = async (
-  storeName: 'gpt-seg-cache' | 'sakura-seg-cache'
+  storeName: 'gpt-seg-cache' | 'sakura-seg-cache',
 ) => {
   return <SegmentCache>{
     cacheKey: (seg: string[], extra?: any): string =>

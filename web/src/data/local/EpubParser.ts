@@ -3,17 +3,17 @@ interface EpubParser {
   injectTranslation: (
     doc: Document,
     mode: 'zh' | 'jp-zh' | 'zh-jp',
-    zhLinesList: string[][]
+    zhLinesList: string[][],
   ) => Document;
 }
 
 export const EpubParserV1: EpubParser = {
   extractText: (doc: Document) => {
     Array.from(doc.getElementsByTagName('rt')).forEach((node) =>
-      node.parentNode!!.removeChild(node)
+      node.parentNode!!.removeChild(node),
     );
     Array.from(doc.getElementsByTagName('rp')).forEach((node) =>
-      node.parentNode!!.removeChild(node)
+      node.parentNode!!.removeChild(node),
     );
     return Array.from(doc.body.getElementsByTagName('p'))
       .map((el) => el.innerText)
@@ -22,7 +22,7 @@ export const EpubParserV1: EpubParser = {
   injectTranslation: (
     doc: Document,
     mode: 'zh' | 'jp-zh' | 'zh-jp',
-    zhLinesList: string[][]
+    zhLinesList: string[][],
   ) => {
     Array.from(doc.body.getElementsByTagName('p'))
       .filter((el) => el.innerText.trim().length !== 0)

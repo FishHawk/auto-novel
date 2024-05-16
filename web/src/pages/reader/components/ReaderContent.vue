@@ -45,7 +45,7 @@ onMounted(async () => {
 
 const createWebIncorrectCase = async (
   index: number,
-  chapter: WebNovelChapterDto
+  chapter: WebNovelChapterDto,
 ) => {
   if (props.gnid.type !== 'web') return;
 
@@ -55,7 +55,7 @@ const createWebIncorrectCase = async (
   function truncateParagraphs(
     paragraphsJp: string[],
     paragraphsZh: string[],
-    maxLength: number
+    maxLength: number,
   ) {
     const truncatedJp: string[] = [];
     const truncatedZh: string[] = [];
@@ -80,12 +80,12 @@ const createWebIncorrectCase = async (
   const { jp: contextJpBefore, zh: contextZhBefore } = truncateParagraphs(
     chapter.paragraphs.slice(0, index).reverse(),
     chapter.sakuraParagraphs!.slice(0, index).reverse(),
-    512 - jp.length
+    512 - jp.length,
   );
   const { jp: contextJpAfter, zh: contextZhAfter } = truncateParagraphs(
     chapter.paragraphs.slice(index + 1, chapter.paragraphs.length),
     chapter.sakuraParagraphs!.slice(index + 1, chapter.paragraphs.length),
-    512 - jp.length
+    512 - jp.length,
   );
 
   const contextJp = [...contextJpBefore.reverse(), jp, ...contextJpAfter];
@@ -102,7 +102,7 @@ const createWebIncorrectCase = async (
       contextZh,
     }),
     '提交',
-    message
+    message,
   );
 };
 

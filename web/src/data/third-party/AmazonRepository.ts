@@ -90,7 +90,7 @@ export const createAmazonRepository = () => {
     });
 
     const volumes = Array.from(
-      doc.getElementsByClassName('bundle-components')[0].children
+      doc.getElementsByClassName('bundle-components')[0].children,
     ).map((el) => {
       const img = el.children[0].getElementsByTagName('img')[0];
       const a = el.children[1].children[0].getElementsByTagName('a')[0];
@@ -148,7 +148,7 @@ export const createAmazonRepository = () => {
         doc,
         null,
         XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null
+        null,
       ).singleNodeValue;
     };
 
@@ -190,7 +190,7 @@ export const createAmazonRepository = () => {
 
     const otherVersion = Array.from(
       doc.getElementById('tmmSwatches')?.getElementsByClassName('slot-title') ??
-        []
+        [],
     ).map((el) => el.textContent?.trim() ?? '');
 
     return {
@@ -235,7 +235,7 @@ export const createAmazonRepository = () => {
         });
     });
     Array.from(
-      doc.getElementsByClassName('series-childAsin-item-details-contributor')
+      doc.getElementsByClassName('series-childAsin-item-details-contributor'),
     ).forEach((element) => {
       const contribution = element
         .textContent!.trim()
@@ -252,10 +252,10 @@ export const createAmazonRepository = () => {
     const artists = [...artistsSet];
 
     const volumes = Array.from(
-      doc.getElementById('series-childAsin-batch_1')!.children
+      doc.getElementById('series-childAsin-batch_1')!.children,
     ).map((it) => {
       const titleLink = it.getElementsByClassName(
-        'a-size-base-plus a-link-normal itemBookTitle a-text-bold'
+        'a-size-base-plus a-link-normal itemBookTitle a-text-bold',
       )[0]!;
       const asin = extractAsin(titleLink.getAttribute('href')!)!;
       const title = titleLink.textContent!;
@@ -277,7 +277,7 @@ export const createAmazonRepository = () => {
 
   const parseSearch = (doc: Document) => {
     const items = Array.from(
-      doc.getElementsByClassName('s-search-results')[0].children
+      doc.getElementsByClassName('s-search-results')[0].children,
     );
     return items
       .filter((item) => {
@@ -304,7 +304,7 @@ export const createAmazonRepository = () => {
         const serialAsin = Array.from(
           it
             .getElementsByTagName('h2')[0]
-            .nextElementSibling?.getElementsByTagName('a') ?? []
+            .nextElementSibling?.getElementsByTagName('a') ?? [],
         )
           .map((el) => el.getAttribute('href')!)
           .filter((href) => href.startsWith('/dp/'))

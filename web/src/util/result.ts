@@ -24,7 +24,7 @@ export const runCatching = <T>(callback: Promise<T>): Promise<Result<T>> => {
         return error.response
           .text()
           .then((message) =>
-            Err(`[${error.response.status}]${messageOverride ?? message}`)
+            Err(`[${error.response.status}]${messageOverride ?? message}`),
           );
       } else if (error instanceof TimeoutError) {
         return Err('请求超时');

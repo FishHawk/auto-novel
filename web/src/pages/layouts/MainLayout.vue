@@ -19,7 +19,7 @@ const { userData, isSignedIn, deleteProfile } = Locator.userDataRepository();
 const menuOption = (
   text: string,
   href: string,
-  show?: boolean
+  show?: boolean,
 ): MenuOption => ({
   label: () => h(RouterLink, { to: href }, { default: () => text }),
   key: href,
@@ -29,7 +29,7 @@ const menuOption = (
 const dropdownOption = (
   label: string,
   key: string,
-  icon: Component
+  icon: Component,
 ): MenuOption => ({
   label,
   key,
@@ -97,7 +97,7 @@ const showMenuModal = ref(false);
 
 watch(
   () => route.path,
-  () => (showMenuModal.value = false)
+  () => (showMenuModal.value = false),
 );
 </script>
 

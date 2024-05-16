@@ -46,7 +46,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   translateTask?.value?.startTask(
     { type: 'web', providerId, novelId },
     translateOptions.value!!.getTranslateTaskParams(),
-    { id: translatorId }
+    { id: translatorId },
   );
 
 const files = computed(() => {

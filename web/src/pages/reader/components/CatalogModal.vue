@@ -45,8 +45,8 @@ watch(
                 <TocItem>{
                   ...it,
                   key: index,
-                }
-            )
+                },
+            ),
           );
         } else {
           return result;
@@ -63,7 +63,7 @@ watch(
               titleJp: it.chapterId,
               chapterId: it.chapterId,
               key: index,
-            }
+            },
         );
       };
 
@@ -76,7 +76,7 @@ watch(
         tocResult.value = await runCatching(getLocalToc(gnid.volumeId));
       }
     }
-  }
+  },
 );
 
 const currentKey = computed(() => {
@@ -134,8 +134,8 @@ const onTocItemClick = (chapterId: string | undefined) => {
                   item.key === currentKey
                     ? 'warning'
                     : item.chapterId
-                    ? 'success'
-                    : 'default'
+                      ? 'success'
+                      : 'default'
                 "
               >
                 {{ item.titleJp }}

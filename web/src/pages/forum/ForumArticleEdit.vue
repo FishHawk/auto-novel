@@ -94,7 +94,7 @@ const submit = async () => {
         .createArticle(formValue.value)
         .then((id) => router.push({ path: `/forum/${id}` })),
       '发布',
-      message
+      message,
     );
   } else {
     await doAction(
@@ -102,7 +102,7 @@ const submit = async () => {
         router.push({ path: `/forum/${articleId}` });
       }),
       '更新',
-      message
+      message,
     );
   }
 };

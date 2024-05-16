@@ -45,7 +45,7 @@ export const createLocalVolumeDao = async () => {
     db.put('metadata', value);
   const updateMetadata = async (
     id: string,
-    mutator: Mutator<LocalVolumeMetadata>
+    mutator: Mutator<LocalVolumeMetadata>,
   ) => {
     const tx = db.transaction('metadata', 'readwrite');
     let value = await tx.store.get(id);
@@ -70,7 +70,7 @@ export const createLocalVolumeDao = async () => {
   const updateChapter = async (
     id: string,
     chapterId: string,
-    mutator: Mutator<LocalVolumeChapter>
+    mutator: Mutator<LocalVolumeChapter>,
   ) => {
     const tx = db.transaction('chapter', 'readwrite');
     let value = await tx.store.get(`${id}/${chapterId}`);

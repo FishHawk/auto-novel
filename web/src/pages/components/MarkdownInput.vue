@@ -12,7 +12,7 @@ const vars = useThemeVars();
       </n-tab-pane>
       <n-tab-pane tab="预览" :name="1">
         <div style="padding: 8px 16px 16px">
-          <markdown :source="$attrs.value as string || '没有可预览的内容'" />
+          <markdown :source="($attrs.value as string) || '没有可预览的内容'" />
         </div>
       </n-tab-pane>
     </n-tabs>

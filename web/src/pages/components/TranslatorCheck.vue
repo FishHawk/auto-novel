@@ -21,7 +21,7 @@ const toggleTranslator = (id: TranslatorId) => {
   if (props.value.includes(id)) {
     emit(
       'update:value',
-      props.value.filter((it) => it !== id)
+      props.value.filter((it) => it !== id),
     );
   } else {
     props.value.push(id);

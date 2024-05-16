@@ -14,7 +14,7 @@ watch(
     if (selectable !== false) {
       selectedNovels.value = [];
     }
-  }
+  },
 );
 const toggleNovelSelect = (novel: string, selected: boolean) => {
   if (!selected) {
@@ -57,7 +57,9 @@ defineExpose({
       <n-checkbox
         v-if="selectable"
         :checked="selectedNovels.includes(item.id)"
-        @update:checked="(selected: boolean) => toggleNovelSelect(item.id, selected)"
+        @update:checked="
+          (selected: boolean) => toggleNovelSelect(item.id, selected)
+        "
         style="margin-right: 8px"
       />
     </n-grid-item>

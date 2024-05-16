@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh">
   <head>
     <meta charset="UTF-8" />
@@ -52,7 +52,7 @@
         ];
         const isReader = reg.some((r) => r.test(window.location.pathname));
         const setting = localStorage.getItem(
-          isReader ? 'readerSetting' : 'setting'
+          isReader ? 'readerSetting' : 'setting',
         );
         if (!setting) return;
         const json = JSON.parse(setting);

@@ -44,7 +44,7 @@ const onUpdatePage = (page: number) => {
 watch(
   () => props.page,
   async () => reload(),
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -56,7 +56,7 @@ watch(
     } else {
       reload();
     }
-  }
+  },
 );
 
 onKeyDown('ArrowLeft', (e) => {

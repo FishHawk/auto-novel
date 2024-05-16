@@ -59,12 +59,12 @@ const resetPassword = async () => {
     AuthRepository.resetPassword(
       formValue.value.emailOrUsername,
       formValue.value.resetPasswordToken,
-      formValue.value.password
+      formValue.value.password,
     ).then(() => {
       router.push('/');
     }),
     '密码重置',
-    message
+    message,
   );
 };
 

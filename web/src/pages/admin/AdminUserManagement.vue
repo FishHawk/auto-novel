@@ -22,7 +22,7 @@ async function loadPage(page: number) {
       page: currentPage.value - 1,
       pageSize: 50,
       role: userRole.value,
-    })
+    }),
   );
   if (currentPage.value == page) {
     userResult.value = result;
@@ -64,7 +64,7 @@ const roleToReadableText = (role: UserRole) => {
 
   <c-result
     :result="userResult"
-    :show-empty="(it: Page<any>) => it.items.length === 0 "
+    :show-empty="(it: Page<any>) => it.items.length === 0"
     v-slot="{ value }"
   >
     <n-table :bordered="false">

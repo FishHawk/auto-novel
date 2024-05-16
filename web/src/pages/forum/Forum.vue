@@ -37,62 +37,62 @@ const loader = computed(() => {
         page,
         pageSize: 20,
         category,
-      })
+      }),
     );
 });
 
 const lockArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.lockArticle(article.id).then(
-      () => (article.locked = true)
+      () => (article.locked = true),
     ),
     '锁定',
-    message
+    message,
   );
 
 const unlockArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.unlockArticle(article.id).then(
-      () => (article.locked = false)
+      () => (article.locked = false),
     ),
     '解除锁定',
-    message
+    message,
   );
 
 const pinArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.pinArticle(article.id).then(
-      () => (article.pinned = true)
+      () => (article.pinned = true),
     ),
     '置顶',
-    message
+    message,
   );
 
 const unpinArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.unpinArticle(article.id).then(
-      () => (article.pinned = false)
+      () => (article.pinned = false),
     ),
     '解除置顶',
-    message
+    message,
   );
 
 const hideArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.hideArticle(article.id).then(
-      () => (article.hidden = true)
+      () => (article.hidden = true),
     ),
     '隐藏',
-    message
+    message,
   );
 
 const unhideArticle = (article: ArticleSimplified) =>
   doAction(
     ArticleRepository.unhideArticle(article.id).then(
-      () => (article.hidden = false)
+      () => (article.hidden = false),
     ),
     '解除隐藏',
-    message
+    message,
   );
 
 const deleteArticle = (article: ArticleSimplified) =>

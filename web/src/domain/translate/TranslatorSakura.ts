@@ -20,7 +20,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   constructor(
     log: Logger,
-    { endpoint, segLength, prevSegLength }: SakuraTranslator.Config
+    { endpoint, segLength, prevSegLength }: SakuraTranslator.Config,
   ) {
     this.log = log;
     this.api = Locator.openAiRepositoryFactory(endpoint, 'no-key');
@@ -144,7 +144,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    { glossary, prevSegs, signal }: SegmentContext
+    { glossary, prevSegs, signal }: SegmentContext,
   ): Promise<string[]> {
     const concatedSeg = seg.join('\n');
     const prevSegCount = -Math.ceil(this.prevSegLength / this.segLength);
@@ -158,7 +158,7 @@ export class SakuraTranslator implements SegmentTranslator {
         concatedSeg,
         glossary,
         concatedPrevSeg,
-        signal
+        signal,
       );
       const splitText = text.replaceAll('<|im_end|>', '').split('\n');
 
@@ -189,7 +189,7 @@ export class SakuraTranslator implements SegmentTranslator {
           line,
           glossary,
           [concatedPrevSeg, ...resultPerLine].join('\n'),
-          signal
+          signal,
         );
         if (hasDegradation) {
           degradationLineCount += 1;
@@ -252,7 +252,7 @@ export class SakuraTranslator implements SegmentTranslator {
     }
 
     const fingerprint = completion.completion_probabilities[0].probs.map(
-      (it) => it.prob
+      (it) => it.prob,
     );
 
     return { version, fingerprint };
@@ -262,7 +262,7 @@ export class SakuraTranslator implements SegmentTranslator {
     text: string,
     glossary: Glossary,
     prevText: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ) {
     const messages: {
       role: 'system' | 'user' | 'assistant';
@@ -281,12 +281,12 @@ export class SakuraTranslator implements SegmentTranslator {
 
     // 全角数字转换成半角数字
     text = text.replace(/[\uff10-\uff19]/g, (ch) =>
-      String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+      String.fromCharCode(ch.charCodeAt(0) - 0xfee0),
     );
 
     if (this.version === '0.10') {
       system(
-        '你是一个轻小说翻译模型，可以流畅通顺地使用给定的术语表以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，注意不要混淆使役态和被动态的主语和宾语，不要擅自添加原文中没有的代词，也不要擅自增加或减少换行。'
+        '你是一个轻小说翻译模型，可以流畅通顺地使用给定的术语表以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，注意不要混淆使役态和被动态的主语和宾语，不要擅自添加原文中没有的代词，也不要擅自增加或减少换行。',
       );
       if (prevText !== '') {
         assistant(prevText);
@@ -297,11 +297,11 @@ export class SakuraTranslator implements SegmentTranslator {
         .join('\n');
 
       user(
-        `根据以下术语表（可以为空）：\n${glossaryHint}\n\n将下面的日文文本根据上述术语表的对应关系和备注翻译成中文：${text}`
+        `根据以下术语表（可以为空）：\n${glossaryHint}\n\n将下面的日文文本根据上述术语表的对应关系和备注翻译成中文：${text}`,
       );
     } else {
       system(
-        '你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。'
+        '你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。',
       );
       if (prevText !== '') {
         assistant(prevText);
@@ -309,7 +309,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
       // 替换术语表词汇
       for (const wordJp of Object.keys(glossary).sort(
-        (a, b) => b.length - a.length
+        (a, b) => b.length - a.length,
       )) {
         const wordZh = glossary[wordJp];
         text = text.replaceAll(wordJp, wordZh);
@@ -331,7 +331,7 @@ export class SakuraTranslator implements SegmentTranslator {
       {
         signal,
         timeout: false,
-      }
+      },
     );
 
     return {

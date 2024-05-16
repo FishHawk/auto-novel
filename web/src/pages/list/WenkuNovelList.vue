@@ -41,7 +41,7 @@ const loader: Loader<WenkuNovelOutlineDto> = (page, query, selected) => {
       pageSize: 24,
       query,
       level,
-    })
+    }),
   );
 };
 
@@ -67,7 +67,7 @@ watch(
     }
     wenkuSearchHistoryRepository.addHistory(query);
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
 

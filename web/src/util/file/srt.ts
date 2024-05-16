@@ -34,7 +34,7 @@ const readContent = async (file: File) => {
           id: block[0],
           time: block[1],
           text: block.slice(2),
-        }
+        },
     );
 };
 

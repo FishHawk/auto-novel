@@ -39,7 +39,7 @@ const startTask = async (
       total: number;
     }) => void;
   },
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) => {
   if (running.value) {
     message.info('已有任务在运行。');
@@ -120,7 +120,7 @@ const startTask = async (
       },
     },
     translatorDesc,
-    signal
+    signal,
   );
 
   cardRef.value!.pushLog({ message: '\n结束' });

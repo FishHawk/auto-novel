@@ -70,13 +70,13 @@ const updateNovel = (
     introduction: string;
     toc: { [key: string]: string };
     wenkuId?: string;
-  }
+  },
 ) => client.post(`novel/${providerId}/${novelId}`, { json });
 
 const updateGlossary = (
   providerId: string,
   novelId: string,
-  json: { [key: string]: string }
+  json: { [key: string]: string },
 ) => client.put(`novel/${providerId}/${novelId}/glossary`, { json });
 
 // Translate
@@ -85,7 +85,7 @@ const createTranslationApi = (
   novelId: string,
   translatorId: TranslatorId,
   syncFromProvider: boolean,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) => {
   const endpointV2 = `novel/${providerId}/${novelId}/translate-v2/${translatorId}`;
 
@@ -111,7 +111,7 @@ const createTranslationApi = (
     json: {
       glossaryId?: string;
       paragraphsZh: string[];
-    }
+    },
   ) =>
     client
       .post(`${endpointV2}/chapter/${chapterId}`, {

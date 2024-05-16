@@ -45,7 +45,7 @@ const loadFavorite = async () => {
       page: 0,
       pageSize: 8,
       sort: 'update',
-    }).then((it) => it.items)
+    }).then((it) => it.items),
   );
 };
 loadFavorite();
@@ -59,7 +59,7 @@ const loadWeb = async () => {
       provider: 'kakuyomu,syosetu,novelup,hameln,pixiv,alphapolis',
       sort: 1,
       level: 1,
-    }).then((it) => it.items)
+    }).then((it) => it.items),
   );
 };
 loadWeb();
@@ -71,7 +71,7 @@ const loadWenku = async () => {
       page: 0,
       pageSize: 12,
       level: 1,
-    }).then((it) => it.items)
+    }).then((it) => it.items),
   );
 };
 loadWenku();
@@ -101,13 +101,13 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
 
 const notices = [
   notice(
-    '如果发现Sakura某段翻译得不准确，可以提交错误，给网站收集数据帮助sakura训练。'
+    '如果发现Sakura某段翻译得不准确，可以提交错误，给网站收集数据帮助sakura训练。',
   ),
   notice(
-    '禁止使用脚本绕过翻译器提交翻译文本，哪怕你提交的是正经翻译。现在所有翻译功能都需要登录才可使用。'
+    '禁止使用脚本绕过翻译器提交翻译文本，哪怕你提交的是正经翻译。现在所有翻译功能都需要登录才可使用。',
   ),
   notice(
-    '翻译器大修完成，旧的排队置顶按钮已经删除，现在你可以通过按住Ctrl键点排队来置顶。'
+    '翻译器大修完成，旧的排队置顶按钮已经删除，现在你可以通过按住Ctrl键点排队来置顶。',
   ),
 ];
 </script>

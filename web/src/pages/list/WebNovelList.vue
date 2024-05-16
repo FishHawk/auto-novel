@@ -94,7 +94,7 @@ const loader: Loader<WebNovelOutlineDto> = (page, query, selected) => {
             translate: selected[2],
             sort: selected[3],
           }),
-    })
+    }),
   );
 };
 
@@ -120,7 +120,7 @@ watch(
     }
     webSearchHistoryRepository.addHistory(query);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const showListModal = ref(false);

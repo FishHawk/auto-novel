@@ -26,7 +26,7 @@ const processedJobs = ref<Map<string, ProcessedJob>>(new Map());
 
 const getNextJob = () => {
   const job = workspaceRef.value.jobs.find(
-    (it) => !processedJobs.value.has(it.task)
+    (it) => !processedJobs.value.has(it.task),
   );
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);
@@ -57,7 +57,7 @@ const onProgressUpdated = (
   task: string,
   state:
     | { state: 'finish'; abort: boolean }
-    | { state: 'processed'; finished: number; error: number; total: number }
+    | { state: 'processed'; finished: number; error: number; total: number },
 ) => {
   if (state.state === 'finish') {
     const job = processedJobs.value.get(task)!!;
@@ -79,10 +79,10 @@ const onProgressUpdated = (
 const clearCache = async () =>
   doAction(
     Locator.cachedSegRepository().then((repo) =>
-      repo.clear('sakura-seg-cache')
+      repo.clear('sakura-seg-cache'),
     ),
     '缓存清除',
-    message
+    message,
   );
 
 const notices = [

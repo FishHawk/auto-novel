@@ -86,7 +86,7 @@ const pixiv: Provider = {
 const alphapolis: Provider = {
   parseUrl(url: string): string | undefined {
     const matched = /www\.alphapolis\.co\.jp\/novel\/([0-9]+)\/([0-9]+)/.exec(
-      url
+      url,
     );
     if (matched) {
       return `${matched[1]}-${matched[2]}`;
@@ -144,5 +144,5 @@ export const buildNovelUrl = (providerId: string, novelId: string) =>
 export const buildChapterUrl = (
   providerId: string,
   novelId: string,
-  chapterId: string
+  chapterId: string,
 ) => providers[providerId].buildChapterUrl(novelId, chapterId);

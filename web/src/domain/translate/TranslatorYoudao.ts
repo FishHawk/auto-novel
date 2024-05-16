@@ -32,10 +32,10 @@ export class YoudaoTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    { glossary, signal }: SegmentContext
+    { glossary, signal }: SegmentContext,
   ): Promise<string[]> {
     return createGlossaryWrapper(glossary)(seg, (seg) =>
-      this.translateInner(seg, signal)
+      this.translateInner(seg, signal),
     );
   }
 
@@ -49,7 +49,7 @@ export class YoudaoTranslator implements SegmentTranslator {
     } else {
       try {
         const result = decodedJson['translateResult'].map((it: any) =>
-          it.map((it: any) => it.tgt.trimEnd()).join('')
+          it.map((it: any) => it.tgt.trimEnd()).join(''),
         );
         return result;
       } catch (e) {

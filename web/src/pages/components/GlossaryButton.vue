@@ -41,7 +41,7 @@ const updateGlossary = async (gnid: GenericNovelId, glossary: Glossary) => {
     await Locator.webNovelRepository.updateGlossary(
       gnid.providerId,
       gnid.novelId,
-      glossary
+      glossary,
     );
   } else if (gnid.type === 'wenku') {
     await Locator.wenkuNovelRepository.updateGlossary(gnid.novelId, glossary);
@@ -63,7 +63,7 @@ const submitGlossary = () =>
       }
     }),
     '术语表提交',
-    message
+    message,
   );
 
 const importGlossaryRaw = ref('');

@@ -7,7 +7,7 @@ import { Result } from '@/util/result';
 export type Loader<T extends any> = (
   page: number,
   query: string,
-  selected: number[]
+  selected: number[],
 ) => Promise<Result<Page<T>>>;
 
 const props = defineProps<{
@@ -37,7 +37,7 @@ watch(
   () => props.query,
   (query) => {
     queryEdit.value = props.query ?? '';
-  }
+  },
 );
 
 const onUpdateQuery = (query: string) => {
@@ -69,13 +69,13 @@ watch(
       selectedWithDefault.value = newSelected;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const onUpdateSelect = (
   optionIndex: number,
   index: number,
-  multiple: boolean = false
+  multiple: boolean = false,
 ) => {
   const selected = [...selectedWithDefault.value];
   if (!multiple) {
@@ -92,7 +92,7 @@ const onUpdateSelect = (
 const isSelected = (
   optionIndex: number,
   index: number,
-  multiple: boolean = false
+  multiple: boolean = false,
 ) => {
   if (!multiple) {
     return index === selectedWithDefault.value[optionIndex];

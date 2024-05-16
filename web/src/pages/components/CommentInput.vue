@@ -8,7 +8,7 @@ const { site, parent } = withDefaults(
     parent?: string;
     placeholder?: string;
   }>(),
-  { parent: undefined }
+  { parent: undefined },
 );
 
 const emit = defineEmits<{ replied: [] }>();
@@ -33,7 +33,7 @@ const reply = async () => {
       emit('replied');
     }),
     '回复发布',
-    message
+    message,
   );
 };
 </script>

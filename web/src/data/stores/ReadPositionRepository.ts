@@ -8,7 +8,7 @@ interface LocalStorage<T> {
 
 const syncLocalStorage = <T extends object>(
   key: string,
-  initialValue: T
+  initialValue: T,
 ): LocalStorage<T> => {
   return {
     get: () => {

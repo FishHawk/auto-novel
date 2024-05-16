@@ -11,7 +11,7 @@ export type ReaderParagraph =
 
 export const buildParagraphs = (
   gnid: GenericNovelId,
-  chapter: ReaderChapter
+  chapter: ReaderChapter,
 ): ReaderParagraph[] => {
   const setting = Locator.readerSettingRepository().setting.value;
 
@@ -43,7 +43,7 @@ export const buildParagraphs = (
     }
 
     const paragraphsWithLabel = (
-      t: TranslatorId
+      t: TranslatorId,
     ): [string, string[] | undefined] => {
       if (t === 'youdao') {
         return ['有道', chapter.youdaoParagraphs];

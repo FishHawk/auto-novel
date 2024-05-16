@@ -21,7 +21,7 @@ const deleteHistory = (providerId: string, novelId: string) =>
       window.location.reload();
     }),
     '删除',
-    message
+    message,
   );
 </script>
 

@@ -43,7 +43,8 @@ const vars = useThemeVars();
   color: v-bind('vars.textColor2');
 }
 .markdown code {
-  transition: color 0.3s v-bind('vars.cubicBezierEaseInOut'),
+  transition:
+    color 0.3s v-bind('vars.cubicBezierEaseInOut'),
     background-color 0.3s v-bind('vars.cubicBezierEaseInOut'),
     border-color 0.3s v-bind('vars.cubicBezierEaseInOut');
   padding: 0.05em 0.35em 0 0.35em;

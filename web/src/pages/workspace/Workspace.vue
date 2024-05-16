@@ -1,10 +1,6 @@
 <script lang="ts" setup>
 import { notice } from '@/pages/components/NoticeBoard.vue';
-const notices = [
-  notice(
-    '本地文件支持EPUB、TXT、SRT文件。'
-  ),
-];
+const notices = [notice('本地文件支持EPUB、TXT、SRT文件。')];
 </script>
 
 <template>

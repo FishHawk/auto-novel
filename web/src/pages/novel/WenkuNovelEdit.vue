@@ -148,7 +148,7 @@ const submit = async () => {
   }
 
   const allPresetKeywords = presetKeywords.value.groups.flatMap(
-    (it) => it.presetKeywords
+    (it) => it.presetKeywords,
   );
 
   const body = {
@@ -160,7 +160,7 @@ const submit = async () => {
     level: formValue.value.level,
     introduction: formValue.value.introduction,
     keywords: formValue.value.keywords.filter((it) =>
-      allPresetKeywords.includes(it)
+      allPresetKeywords.includes(it),
     ),
     volumes: formValue.value.volumes,
   };
@@ -171,7 +171,7 @@ const submit = async () => {
         router.push({ path: `/wenku/${id}` });
       }),
       '新建文库',
-      message
+      message,
     );
   } else {
     await doAction(
@@ -179,14 +179,14 @@ const submit = async () => {
         router.push({ path: `/wenku/${novelId}` });
       }),
       '编辑文库',
-      message
+      message,
     );
   }
 };
 
 const populateNovelFromAmazon = async (
   urlOrQuery: string,
-  forcePopulateVolumes: boolean
+  forcePopulateVolumes: boolean,
 ) => {
   const msgReactive = message.create('', {
     type: 'loading',
@@ -224,13 +224,13 @@ const populateNovelFromAmazon = async (
       },
       populateVolume: (volume) => {
         const index = formValue.value.volumes.findIndex(
-          (it) => it.asin === volume.asin
+          (it) => it.asin === volume.asin,
         );
         if (index >= 0) {
           formValue.value.volumes[index] = volume;
         }
       },
-    }
+    },
   );
 
   formValue.value.cover = formValue.value.volumes[0]?.cover;
@@ -250,7 +250,7 @@ watch(title, () => {
 const findSimilarNovels = async () => {
   const query = title.value.split(
     /[^\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\u3400-\u4dbf]/,
-    2
+    2,
   )[0];
   const result = await runCatching(
     Locator.wenkuNovelRepository.listNovel({
@@ -258,7 +258,7 @@ const findSimilarNovels = async () => {
       pageSize: 6,
       query,
       level: 0,
-    })
+    }),
   );
   if (result.ok) {
     similarNovels.value = result.value.items;
@@ -283,7 +283,7 @@ const bottomVolume = (asin: string) => {
 };
 const deleteVolume = (asin: string) => {
   formValue.value.volumes = formValue.value.volumes.filter(
-    (it) => it.asin !== asin
+    (it) => it.asin !== asin,
   );
 };
 
@@ -315,7 +315,7 @@ const togglePresetKeyword = (checked: boolean, keyword: string) => {
     formValue.value.keywords.push(keyword);
   } else {
     formValue.value.keywords = formValue.value.keywords.filter(
-      (it) => it !== keyword
+      (it) => it !== keyword,
     );
   }
 };
@@ -379,7 +379,7 @@ const levelOptions = [
             secondary
             tag="a"
             :href="`https://www.amazon.co.jp/s?k=${encodeURIComponent(
-              formValue.title
+              formValue.title,
             )}&i=stripbooks`"
             target="_blank"
           />
@@ -489,7 +489,9 @@ const levelOptions = [
                 size="small"
                 checkable
                 :checked="formValue.keywords.includes(keyword)"
-                @update:checked="(checked: boolean) => togglePresetKeyword(checked, keyword)"
+                @update:checked="
+                  (checked: boolean) => togglePresetKeyword(checked, keyword)
+                "
               >
                 {{ keyword }}
               </n-tag>

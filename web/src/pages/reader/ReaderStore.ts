@@ -31,7 +31,7 @@ export const useReaderStore = (gnid: GenericNovelId) => {
       },
     actions: {
       loadChapter(
-        chapterId: string
+        chapterId: string,
       ):
         | { type: 'async'; promiseOrValue: Promise<Result<ReaderChapter>> }
         | { type: 'sync'; promiseOrValue: Result<ReaderChapter> } {
@@ -70,13 +70,13 @@ export const useReaderStore = (gnid: GenericNovelId) => {
 
 const getChapter = async (
   gnid: GenericNovelId,
-  chapterId: string
+  chapterId: string,
 ): Promise<ReaderChapter> => {
   if (gnid.type === 'web') {
     return Locator.webNovelRepository.getChapter(
       gnid.providerId,
       gnid.novelId,
-      chapterId
+      chapterId,
     );
   } else if (gnid.type === 'wenku') {
     throw '不支持文库';

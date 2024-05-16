@@ -26,10 +26,10 @@ export class BaiduTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    { glossary, signal }: SegmentContext
+    { glossary, signal }: SegmentContext,
   ): Promise<string[]> {
     return createGlossaryWrapper(glossary)(seg, (seg) =>
-      this.translateInner(seg, signal)
+      this.translateInner(seg, signal),
     );
   }
 

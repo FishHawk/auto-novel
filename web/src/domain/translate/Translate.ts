@@ -15,7 +15,7 @@ export const translate = async (
   taskParams: TranslateTaskParams,
   taskCallback: TranslateTaskCallback,
   translatorConfig: TranslatorConfig,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) => {
   await keepPageAlive();
 
@@ -24,7 +24,7 @@ export const translate = async (
     translator = await Translator.create(
       translatorConfig,
       true,
-      (message, detail) => taskCallback.log('　' + message, detail)
+      (message, detail) => taskCallback.log('　' + message, detail),
     );
   } catch (e: any) {
     taskCallback.log(`发生错误，无法创建翻译器：${e}`);
@@ -46,7 +46,7 @@ export const translate = async (
       taskParams,
       taskCallback,
       translator,
-      signal
+      signal,
     );
   } else {
     return translateLocal(
@@ -54,7 +54,7 @@ export const translate = async (
       taskParams,
       taskCallback,
       translator,
-      signal
+      signal,
     );
   }
 };

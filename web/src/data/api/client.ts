@@ -22,7 +22,7 @@ export const uploadFile = (
   url: string,
   name: string,
   file: File,
-  onProgress: (p: number) => void
+  onProgress: (p: number) => void,
 ) => {
   return new Promise<string>(function (resolve, reject) {
     const formData = new FormData();
