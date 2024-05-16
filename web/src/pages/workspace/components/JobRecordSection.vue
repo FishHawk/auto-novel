@@ -44,7 +44,7 @@ const records = computed(() => {
         size="small"
       />
     </c-action-wrapper>
-    <c-action-wrapper title="操作">
+    <c-action-wrapper title="操作" align="center">
       <n-button-group size="small">
         <c-button
           label="重试未完成任务"
