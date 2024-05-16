@@ -247,9 +247,9 @@ const queueTaskSize = ref<'first5' | 'full' | 'full-expire' | 'full-overwrite'>(
 );
 const queueTaskSizeOptions = [
   { value: 'first5', label: '前5话' },
-  { value: 'full', label: '全部' },
-  { value: 'full-expire', label: '全部并更新过期章节' },
-  { value: 'full-overwrite', label: '全部并覆盖所有章节' },
+  { value: 'full', label: '全文' },
+  { value: 'full-expire', label: '全文并更新过期章节' },
+  { value: 'full-overwrite', label: '全文并覆盖所有章节' },
 ];
 
 const submitJob = (id: 'gpt' | 'sakura') => {
