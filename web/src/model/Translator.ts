@@ -149,7 +149,7 @@ export namespace TranslateTaskDescriptor {
     };
 
     const params: TranslateTaskParams = {
-      level: query['expire'],
+      level: query['level'],
       sync: queryBoolean('sync'),
       forceMetadata: queryBoolean('forceMetadata'),
       startIndex: queryInt('startIndex', 0),
