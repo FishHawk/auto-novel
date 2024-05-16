@@ -10,7 +10,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 </script>
 
 <template>
-  <local-volume-list ref="localVolumeListRef" dropzone>
+  <local-volume-list ref="localVolumeListRef">
     <template #extra>
       <c-action-wrapper title="语言">
         <c-radio-group
