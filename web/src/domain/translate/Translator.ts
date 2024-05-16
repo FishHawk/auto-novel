@@ -13,6 +13,7 @@ import {
   SegmentTranslator,
   createSegIndexedDbCache,
 } from './Common';
+import { RegexUtil } from '@/util';
 
 export type TranslatorConfig =
   | { id: 'baidu' }
@@ -162,6 +163,14 @@ export class Translator {
     });
     if (segOutput.length !== seg.length) {
       throw new Error('分段翻译结果行数不匹配，请反馈给站长');
+    }
+
+    // 翻译器通常不会保留行首空格，尝试手动恢复
+    for (let i = 0; i < seg.length; i++) {
+      const lineJp = seg[i];
+      if (lineJp.trim().length === 0) continue;
+      const space = RegexUtil.getLeadingSpaces(lineJp);
+      segOutput[i] = space + segOutput[i].trimStart();
     }
 
     // 保存分段缓存

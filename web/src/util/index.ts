@@ -76,6 +76,8 @@ export const parallelExec = async <T>(
 };
 
 export namespace RegexUtil {
-  export const hasKanaChars = (text: string) =>
-    /[\u3041-\u3096|\u30A1-\u30FA]/.test(text);
+  export const hasKanaChars = (str: string) =>
+    /[\u3041-\u3096|\u30A1-\u30FA]/.test(str);
+
+  export const getLeadingSpaces = (str: string) => str.match(/^\s*/)?.[0] ?? '';
 }
