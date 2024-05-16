@@ -91,6 +91,11 @@ const router = createRouter({
               component: () => import('./pages/workspace/SakuraWorkspace.vue'),
             },
             {
+              path: 'sakura-shared',
+              meta: { title: 'Sakura公用队列' },
+              component: () => import('./pages/workspace/SakuraSharedWorkspace.vue'),
+            },
+            {
               path: 'interactive',
               meta: { title: '交互翻译' },
               component: () => import('./pages/workspace/Interactive.vue'),
