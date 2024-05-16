@@ -242,11 +242,14 @@ const queueOrderOptions = [
   { value: 'asc', label: '从旧到新' },
 ];
 
-const queueTaskSize = ref<'first5' | 'full' | 'full-expire'>('full');
+const queueTaskSize = ref<'first5' | 'full' | 'full-expire' | 'full-overwrite'>(
+  'full',
+);
 const queueTaskSizeOptions = [
   { value: 'first5', label: '前5话' },
   { value: 'full', label: '全部' },
-  { value: 'full-expire', label: '全部+过期章节' },
+  { value: 'full-expire', label: '全部并更新过期章节' },
+  { value: 'full-overwrite', label: '全部并覆盖所有章节' },
 ];
 
 const submitJob = (id: 'gpt' | 'sakura') => {
@@ -258,7 +261,12 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       ? selectedNovels.novels
       : selectedNovels.novels.slice().reverse();
   const end = queueTaskSize.value === 'first5' ? 5 : 65535;
-  const level = queueTaskSize.value === 'full-expire' ? 'expire' : 'normal';
+  const level =
+    queueTaskSize.value === 'full-expire'
+      ? 'expire'
+      : queueTaskSize.value === 'full-overwrite'
+        ? 'all'
+        : 'normal';
 
   novelsSorted.forEach((it) => {
     const task = TranslateTaskDescriptor.web(it.providerId, it.novelId, {
