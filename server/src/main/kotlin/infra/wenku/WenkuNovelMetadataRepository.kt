@@ -296,20 +296,13 @@ class WenkuNovelMetadataRepository(
 
     suspend fun notifyUpdate(novelId: String) {
         val updateAt = Clock.System.now()
-        mongo
+        val novel = mongo
             .wenkuNovelMetadataCollection
             .findOneAndUpdate(
                 WenkuNovelMetadata.byId(novelId),
                 setValue(WenkuNovelMetadata::updateAt, updateAt),
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
-            )
-        es.client.updateDocument(
-            id = novelId,
-            target = DataSourceElasticSearch.wenkuNovelIndexName,
-            doc = buildJsonObject {
-                put("updateAt", updateAt.epochSeconds)
-            },
-            refresh = Refresh.WaitFor,
-        )
+            )!!
+        syncEs(novel)
     }
 }
