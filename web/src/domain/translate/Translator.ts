@@ -52,6 +52,11 @@ export class Translator {
     }
   }
 
+  async translatePlain(textJp: string) {
+    const result = await this.translate(textJp.split('\n'));
+    return result.join('\n');
+  }
+
   async translate(
     textJp: string[],
     context?: {

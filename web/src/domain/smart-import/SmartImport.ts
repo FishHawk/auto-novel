@@ -1,6 +1,11 @@
-import { Locator } from '@/data';
 import { AmazonNovel, WenkuVolumeDto } from '@/model/WenkuNovel';
 import { parallelExec } from '@/util';
+
+import { getProduct } from './ApiGetProduct';
+import { getSerial } from './ApiGetSerial';
+import { search } from './ApiSearch';
+import { extractAsin, prettyCover } from './Common';
+import { Translator } from '../translate';
 
 type Logger = (message: string) => void;
 
@@ -9,8 +14,6 @@ type SmartImportCallback = {
   populateNovel: (novel: AmazonNovel) => void;
   populateVolume: (volume: WenkuVolumeDto) => void;
 };
-
-const amazon = Locator.amazonRepository();
 
 const parseTitle = (title: string) => {
   // 替换全角空格
@@ -107,18 +110,18 @@ const getNovelFromVolumes = async (volumes: WenkuVolumeDto[]) => {
   const metadata = await getNovelByAsin(volumes[0].asin);
   metadata.volumes = volumes.map((v) => {
     const { title, imprint } = parseTitle(v.title);
-    const cover = amazon.prettyCover(v.cover);
+    const cover = prettyCover(v.cover);
     return { asin: v.asin, title, cover, imprint };
   });
   return metadata;
 };
 
 const getNovelByAsin = async (asin: string): Promise<AmazonNovel> => {
-  const product = await amazon.getProduct(asin);
+  const product = await getProduct(asin);
   if (product.type === 'volume') {
     const volume = product.volume;
     const { title, imprint } = parseTitle(volume.title);
-    const cover = amazon.prettyCover(volume.cover);
+    const cover = prettyCover(volume.cover);
     return {
       title,
       r18: volume.r18,
@@ -129,7 +132,7 @@ const getNovelByAsin = async (asin: string): Promise<AmazonNovel> => {
     };
   } else if (product.type === 'serial') {
     const { title, total } = product.serial;
-    const serial = await amazon.getSerial(asin, total);
+    const serial = await getSerial(asin, total);
     const novel = await getNovelFromVolumes(serial.volumes);
     if (title !== undefined) {
       novel.title = title;
@@ -145,7 +148,7 @@ const getNovelBySearch = async (
   log: Logger,
 ): Promise<AmazonNovel> => {
   log(`导入小说 开始搜索\n`);
-  const searchItems = (await amazon.search(query))
+  const searchItems = (await search(query))
     .filter(({ title }) => title.includes(query) && isNovelByTitle(title))
     .sort((a, b) => a.title.localeCompare(b.title));
 
@@ -157,7 +160,7 @@ const getNovelBySearch = async (
     serialAsinSet.add(serialAsin);
 
     log(`尝试导入小说系列 ${serialAsin}`);
-    const product = await amazon.getProduct(asin);
+    const product = await getProduct(asin);
     if (
       product.type !== 'volume' ||
       !isNovelByDetail(product.volume.otherVersion, product.volume.breadcrumbs)
@@ -180,7 +183,7 @@ const getNovelBySearch = async (
 };
 
 const getVolume = async (asin: string) => {
-  const product = await amazon.getProduct(asin);
+  const product = await getProduct(asin);
   if (product.type !== 'volume') {
     throw new Error(`ASIN不对应小说:${asin}`);
   }
@@ -189,8 +192,8 @@ const getVolume = async (asin: string) => {
   return <WenkuVolumeDto>{
     asin,
     title: realTitle,
-    cover: amazon.prettyCover(cover),
-    coverHires: amazon.prettyCover(coverHires),
+    cover: prettyCover(cover),
+    coverHires: prettyCover(coverHires),
     publisher,
     imprint,
     publishAt,
@@ -208,7 +211,7 @@ export const smartImport = async (
   if (urlOrQuery.length > 0) {
     let novel: AmazonNovel;
     try {
-      const asin = amazon.extractAsin(urlOrQuery);
+      const asin = extractAsin(urlOrQuery);
       if (asin === undefined) {
         novel = await getNovelBySearch(urlOrQuery, log);
       } else {
@@ -224,6 +227,17 @@ export const smartImport = async (
     );
     volumes = volumes.concat(volumesNew);
     novel.volumes = volumes;
+
+    try {
+      const translator = await Translator.create({ id: 'youdao' });
+      const titleZh = await translator.translatePlain(novel.title);
+      const introductionZh = await translator.translatePlain(
+        novel.introduction,
+      );
+      novel.titleZh = titleZh;
+      novel.introduction = introductionZh;
+    } catch {}
+
     populateNovel(novel);
   }
 

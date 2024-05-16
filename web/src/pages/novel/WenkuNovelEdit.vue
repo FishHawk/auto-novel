@@ -9,15 +9,15 @@ import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
-import { smartImport } from '@/domain/SmartImport';
+import { prettyCover, smartImport } from '@/domain/smart-import';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import {
-  presetKeywordsNonR18,
-  presetKeywordsR18,
   WenkuNovelOutlineDto,
   WenkuVolumeDto,
+  presetKeywordsNonR18,
+  presetKeywordsR18,
 } from '@/model/WenkuNovel';
-import { delay, RegexUtil } from '@/util';
+import { RegexUtil, delay } from '@/util';
 import { runCatching } from '@/util/result';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
@@ -35,7 +35,6 @@ const message = useMessage();
 
 const { atLeastMaintainer, createAtLeastOneMonth } =
   Locator.userDataRepository();
-const { prettyCover } = Locator.amazonRepository();
 
 const allowSubmit = ref(novelId === undefined);
 const formRef = ref<FormInst>();
@@ -204,7 +203,9 @@ const populateNovelFromAmazon = async (
       populateNovel: (novel) => {
         formValue.value = {
           title: formValue.value.title ? formValue.value.title : novel.title,
-          titleZh: formValue.value.titleZh,
+          titleZh: formValue.value.titleZh
+            ? formValue.value.titleZh
+            : novel.titleZh ?? '',
           cover: novel.volumes[0]?.cover,
           authors:
             formValue.value.authors.length > 0

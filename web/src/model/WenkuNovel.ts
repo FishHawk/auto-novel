@@ -51,6 +51,7 @@ export interface VolumeJpDto {
 
 export interface AmazonNovel {
   title: string;
+  titleZh?: string;
   r18: boolean;
   authors: string[];
   artists: string[];
