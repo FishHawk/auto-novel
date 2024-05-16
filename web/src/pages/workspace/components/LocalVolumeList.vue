@@ -8,7 +8,6 @@ import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { UploadCustomRequestOptions } from 'naive-ui';
 
 const props = defineProps<{
-  dropzone?: boolean;
   hideTitle?: boolean;
   options?: { [key: string]: (volumes: LocalVolumeMetadata[]) => void };
   filter?: (volume: LocalVolumeMetadata) => boolean;
@@ -146,7 +145,6 @@ const handleDrop = (e: DragEvent) => {
   <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
       <n-upload
-        v-if="!dropzone"
         :show-file-list="false"
         accept=".txt,.epub,.srt"
         multiple
@@ -189,22 +187,6 @@ const handleDrop = (e: DragEvent) => {
   </n-flex>
 
   <n-divider style="margin: 16px 0 8px" />
-
-  <n-upload
-    v-if="dropzone"
-    :show-file-list="false"
-    @finish="onFinish"
-    :trigger-style="{ width: '100%' }"
-    accept=".txt,.epub,.srt"
-    multiple
-    directory-dnd
-    :custom-request="customRequest"
-    @before-upload="beforeUpload"
-  >
-    <n-upload-dragger>
-      <n-text> 点击或者拖动文件到该区域来添加小说 </n-text>
-    </n-upload-dragger>
-  </n-upload>
 
   <n-spin v-if="sortedVolumes === undefined" style="margin-top: 20px" />
 
