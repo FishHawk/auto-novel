@@ -4,10 +4,11 @@ import {
   FormatListBulletedOutlined,
   PlusOutlined,
 } from '@vicons/material';
+import { useKeyModifier } from '@vueuse/core';
 import { MenuOption } from 'naive-ui';
 
-import { UserRepository } from '@/data/api';
 import { Locator } from '@/data';
+import { UserRepository } from '@/data/api';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 import { FavoredList } from '@/model/User';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
@@ -16,9 +17,9 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/util/result';
 
 import FavoriteMenuItem from './components/FavoriteMenuItem.vue';
-import { Loader } from './components/NovelPage.vue';
 import NovelListWeb from './components/NovelListWeb.vue';
 import NovelListWenku from './components/NovelListWenku.vue';
+import { Loader } from './components/NovelPage.vue';
 
 const props = defineProps<{
   page: number;
@@ -236,35 +237,25 @@ const moveToFavored = async () => {
   window.location.reload();
 };
 
-const queueOrder = ref<'asc' | 'desc'>('desc');
-const queueOrderOptions = [
-  { value: 'desc', label: '从新到旧' },
-  { value: 'asc', label: '从旧到新' },
-];
-
-const queueTaskSize = ref<'first5' | 'full' | 'full-expire'>('full');
-const queueTaskSizeOptions = [
-  { value: 'first5', label: '前5话' },
-  { value: 'full', label: '全部' },
-  { value: 'full-expire', label: '全部+过期章节' },
-];
+const translateLevel = ref<'normal' | 'expire' | 'all'>('normal');
+const forceMetadata = ref(false);
+const first5 = ref(false);
+const reverseOrder = ref(false);
+const shouldTopJob = useKeyModifier('Control');
 
 const submitJob = (id: 'gpt' | 'sakura') => {
   const selectedNovels = getSelectedNovels();
   if (selectedNovels === undefined || selectedNovels.type === 'wenku') return;
 
-  const novelsSorted =
-    queueOrder.value === 'desc'
-      ? selectedNovels.novels
-      : selectedNovels.novels.slice().reverse();
-  const end = queueTaskSize.value === 'first5' ? 5 : 65535;
-  const level = queueTaskSize.value === 'full-expire' ? 'expire' : 'normal';
+  const novelsSorted = reverseOrder.value
+    ? selectedNovels.novels.slice().reverse()
+    : selectedNovels.novels;
 
   novelsSorted.forEach((it) => {
     const task = TranslateTaskDescriptor.web(it.providerId, it.novelId, {
       startIndex: 0,
-      endIndex: end,
-      level,
+      endIndex: first5.value ? 5 : 65535,
+      level: translateLevel.value,
       sync: false,
       forceMetadata: false,
     });
@@ -272,11 +263,15 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       id === 'gpt'
         ? Locator.gptWorkspaceRepository()
         : Locator.sakuraWorkspaceRepository();
-    workspace.addJob({
+    const job = {
       task,
       description: it.titleJp,
       createAt: Date.now(),
-    });
+    };
+    workspace.addJob(job);
+    if (shouldTopJob.value) {
+      workspace.topJob(job);
+    }
   });
   message.success('排队成功');
 };
@@ -367,20 +362,49 @@ const submitJob = (id: 'gpt' | 'sakura') => {
             <n-flex vertical>
               <b>批量生成GPT/Sakura任务</b>
 
-              <c-action-wrapper title="顺序">
-                <c-radio-group
-                  v-model:value="queueOrder"
-                  :options="queueOrderOptions"
-                  size="small"
-                />
-              </c-action-wrapper>
+              <c-action-wrapper title="选项">
+                <n-flex size="small">
+                  <n-tooltip trigger="hover">
+                    <template #trigger>
+                      <n-flex :size="0" :wrap="false">
+                        <tag-button
+                          label="常规"
+                          :checked="translateLevel === 'normal'"
+                          @update:checked="translateLevel = 'normal'"
+                        />
+                        <tag-button
+                          label="过期"
+                          :checked="translateLevel === 'expire'"
+                          @update:checked="translateLevel = 'expire'"
+                        />
+                        <tag-button
+                          label="全部"
+                          type="warning"
+                          :checked="translateLevel === 'all'"
+                          @update:checked="translateLevel = 'all'"
+                        />
+                      </n-flex>
+                    </template>
+                    常规：只翻译未翻译的章节<br />
+                    过期：翻译术语表过期的章节<br />
+                    全部：翻译全部章节<br />
+                  </n-tooltip>
 
-              <c-action-wrapper title="范围">
-                <c-radio-group
-                  v-model:value="queueTaskSize"
-                  :options="queueTaskSizeOptions"
-                  size="small"
-                />
+                  <tag-button
+                    label="重翻目录"
+                    v-model:checked="forceMetadata"
+                  />
+                  <tag-button label="前5话" v-model:checked="first5" />
+                  <tag-button label="倒序添加" v-model:checked="reverseOrder" />
+
+                  <n-text
+                    v-if="translateLevel === 'all'"
+                    type="warning"
+                    style="font-size: 12px; flex-basis: 100%"
+                  >
+                    * 请谨慎使用“全部”选项
+                  </n-text>
+                </n-flex>
               </c-action-wrapper>
 
               <c-action-wrapper title="操作">
