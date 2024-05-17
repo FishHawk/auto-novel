@@ -101,6 +101,17 @@ export default defineConfig(({ command, mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,png,jpg,svg,webp}'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) =>
+                /files-extra\/girl\..*\.webp/.test(url.pathname),
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'assets-girl',
+                expiration: { maxEntries: 1 },
+              },
+            },
+          ],
         },
       }),
     ],
