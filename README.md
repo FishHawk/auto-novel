@@ -20,8 +20,8 @@
 - 生成多种机翻，支持的翻译器有：
   - 百度
   - 有道
-  - GPT3.5 [Web](https://chat.openai.com/)/Api
-  - GPT4 Api
+  - GPT3.5 [Web](https://chat.openai.com/)/API
+  - GPT4 API
   - [Sakura](https://huggingface.co/sakuraumi/Sakura-13B-Galgame)
 - 支持术语表。
 - 支持多种格式，包括日文、中文以及中日对比。
@@ -40,8 +40,8 @@
 ```shell
 git clone git@github.com:FishHawk/auto-novel.git
 cd web
-pnpm install # 安装依赖
-pnpm run dev # 启动开发服务器
+pnpm install --frozen-lockfile  # 安装依赖
+pnpm run dev  # 启动开发服务器
 ```
 
 开发服务器将实时反映代码的变化。注意，开发服务器直接与网站后端通信，请务必避免在开发过程中污染网站数据库。出于安全考虑，章节翻译请求将被拦截。
