@@ -108,7 +108,7 @@ export default defineConfig(({ command, mode }) => {
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'assets-girl',
-                expiration: { maxEntries: 1 },
+                expiration: { maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 * 31 },
               },
             },
           ],
