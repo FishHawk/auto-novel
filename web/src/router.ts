@@ -204,7 +204,7 @@ const router = createRouter({
           component: () => import('./pages/forum/Forum.vue'),
           props: (route) => ({
             page: Number(route.query.page) || 1,
-            category: route.query.category || 'Guide',
+            category: route.query.category || 'General',
           }),
         },
         {

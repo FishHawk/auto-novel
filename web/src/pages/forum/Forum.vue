@@ -19,8 +19,8 @@ const message = useMessage();
 const { asAdmin } = Locator.userDataRepository();
 
 const articleCategoryOptions = [
-  { value: 'Guide', label: '使用指南' },
   { value: 'General', label: '小说交流' },
+  { value: 'Guide', label: '使用指南' },
   { value: 'Support', label: '反馈与建议' },
 ];
 

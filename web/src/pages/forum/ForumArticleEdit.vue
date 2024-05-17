@@ -21,8 +21,8 @@ const message = useMessage();
 const store = articleId !== undefined ? useArticleStore(articleId) : undefined;
 
 const articleCategoryOptions = [
-  { value: 'Guide', label: '使用指南' },
   { value: 'General', label: '小说交流' },
+  { value: 'Guide', label: '使用指南' },
   { value: 'Support', label: '反馈与建议' },
 ];
 
