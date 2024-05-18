@@ -43,10 +43,16 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   allowUpload = () => {
-    if (this.segLength !== 500 || this.prevSegLength !== 500) {
+    if (this.segLength !== 500) {
+      this.log('分段长度不是500');
+      return false;
+    }
+    if (this.prevSegLength !== 500) {
+      this.log('前文长度不是500');
       return false;
     }
     if (this.fingerprint === undefined) {
+      this.log('无法确定使用什么模型');
       return false;
     } else {
       const fingerprint = this.fingerprint;
@@ -151,7 +157,12 @@ export class SakuraTranslator implements SegmentTranslator {
         console.log(distance);
         return distance;
       });
-      return distanceList.some((it) => it < 0.001);
+
+      const isFingerprintLegal = distanceList.some((it) => it < 0.001);
+      if (!isFingerprintLegal) {
+        this.log('该模型无法通过上传检测');
+      }
+      return isFingerprintLegal;
     }
   };
 

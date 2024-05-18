@@ -378,7 +378,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                           @update:checked="translateLevel = 'expire'"
                         />
                         <tag-button
-                          label="全部"
+                          label="重翻"
                           type="warning"
                           :checked="translateLevel === 'all'"
                           @update:checked="translateLevel = 'all'"
@@ -387,7 +387,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                     </template>
                     常规：只翻译未翻译的章节<br />
                     过期：翻译术语表过期的章节<br />
-                    全部：翻译全部章节<br />
+                    重翻：重翻全部章节<br />
                   </n-tooltip>
 
                   <tag-button
@@ -402,7 +402,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
                     type="warning"
                     style="font-size: 12px; flex-basis: 100%"
                   >
-                    * 请谨慎使用“全部”选项
+                    <b> * 请确保你知道自己在干啥，不要随便使用危险功能 </b>
                   </n-text>
                 </n-flex>
               </c-action-wrapper>

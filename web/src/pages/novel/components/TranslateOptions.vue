@@ -56,7 +56,7 @@ const showDownloadModal = ref(false);
                 @update:checked="translateLevel = 'expire'"
               />
               <tag-button
-                label="全部"
+                label="重翻"
                 type="warning"
                 :checked="translateLevel === 'all'"
                 @update:checked="translateLevel = 'all'"
@@ -65,7 +65,7 @@ const showDownloadModal = ref(false);
           </template>
           常规：只翻译未翻译的章节<br />
           过期：翻译术语表过期的章节<br />
-          全部：翻译全部章节<br />
+          重翻：重翻全部章节<br />
         </n-tooltip>
 
         <tag-button
@@ -88,6 +88,14 @@ const showDownloadModal = ref(false);
           </template>
           慎用！!可能清空现有翻译，只适用于原作者修改了原文的情况导致不一致的情况
         </n-tooltip>
+
+        <n-text
+          v-if="translateLevel === 'all' || sync"
+          type="warning"
+          style="font-size: 12px; flex-basis: 100%"
+        >
+          <b> * 请确保你知道自己在干啥，不要随便使用危险功能 </b>
+        </n-text>
       </n-flex>
     </c-action-wrapper>
 
