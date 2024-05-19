@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { FileDownloadOutlined } from '@vicons/material';
+import { useKeyModifier } from '@vueuse/core';
 
 import { Locator } from '@/data';
 import { WenkuNovelRepository } from '@/data/api';
@@ -45,6 +46,7 @@ const file = computed(() => {
   return { url, filename };
 });
 
+const shouldTopJob = useKeyModifier('Control');
 const submitJob = (id: 'gpt' | 'sakura') => {
   const task = TranslateTaskDescriptor.wenku(
     novelId,
@@ -63,6 +65,9 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   const success = workspace.addJob(job);
   if (success) {
     message.success('排队成功');
+    if (shouldTopJob.value) {
+      workspace.topJob(job);
+    }
   } else {
     message.error('排队失败：翻译任务已经存在');
   }

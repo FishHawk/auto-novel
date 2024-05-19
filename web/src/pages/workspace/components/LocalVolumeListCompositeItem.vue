@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { useKeyModifier } from '@vueuse/core';
+
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
@@ -33,6 +35,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
     { id: translatorId },
   );
 
+const shouldTopJob = useKeyModifier('Control');
 const queueVolume = (translatorId: 'gpt' | 'sakura') => {
   const task = TranslateTaskDescriptor.workspace(props.volume.id, {
     level: 'expire',
@@ -47,14 +50,19 @@ const queueVolume = (translatorId: 'gpt' | 'sakura') => {
       ? Locator.gptWorkspaceRepository()
       : Locator.sakuraWorkspaceRepository();
 
-  const success = workspace.addJob({
+  const job = {
     task,
     description: props.volume.id,
     createAt: Date.now(),
-  });
+  };
+
+  const success = workspace.addJob(job);
 
   if (success) {
     message.success('排队成功');
+    if (shouldTopJob.value) {
+      workspace.topJob(job);
+    }
   } else {
     message.error('排队失败：翻译任务已经存在');
   }

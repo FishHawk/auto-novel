@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
+import { useKeyModifier } from '@vueuse/core';
 
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
@@ -45,6 +46,7 @@ const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
   volumes.forEach((volume) => queueVolume(volume.id));
 };
 
+const shouldTopJob = useKeyModifier('Control');
 const queueVolume = (volumeId: string) => {
   const task = TranslateTaskDescriptor.workspace(volumeId, {
     level: 'expire',
@@ -59,14 +61,19 @@ const queueVolume = (volumeId: string) => {
       ? Locator.gptWorkspaceRepository()
       : Locator.sakuraWorkspaceRepository();
 
-  const success = workspace.addJob({
+  const job = {
     task,
     description: volumeId,
     createAt: Date.now(),
-  });
+  };
+
+  const success = workspace.addJob(job);
 
   if (success) {
     message.success('排队成功');
+    if (shouldTopJob.value) {
+      workspace.topJob(job);
+    }
   } else {
     message.error('排队失败：翻译任务已经存在');
   }

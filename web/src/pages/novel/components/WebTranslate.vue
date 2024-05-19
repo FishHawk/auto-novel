@@ -140,8 +140,10 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       createAt: Date.now(),
     };
     const success = workspace.addJob(job);
-    if (shouldTopJob.value) {
-      workspace.topJob(job);
+    if (success) {
+      if (shouldTopJob.value) {
+        workspace.topJob(job);
+      }
     }
     return success;
   });

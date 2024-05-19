@@ -268,9 +268,11 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       description: it.titleJp,
       createAt: Date.now(),
     };
-    workspace.addJob(job);
-    if (shouldTopJob.value) {
-      workspace.topJob(job);
+    const success = workspace.addJob(job);
+    if (success) {
+      if (shouldTopJob.value) {
+        workspace.topJob(job);
+      }
     }
   });
   message.success('排队成功');
