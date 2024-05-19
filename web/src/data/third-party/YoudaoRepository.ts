@@ -74,7 +74,7 @@ export const createYoudaoRepository = () => {
       .post('https://dict.youdao.com/webtranslate', {
         body: new URLSearchParams({
           i: query,
-          from: 'ja',
+          from: 'auto',
           to: 'zh-CHS',
           dictResult: 'true',
           keyid: 'webfanyi',
