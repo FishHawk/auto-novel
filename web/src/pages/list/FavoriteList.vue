@@ -257,7 +257,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       endIndex: first5.value ? 5 : 65535,
       level: translateLevel.value,
       sync: false,
-      forceMetadata: false,
+      forceMetadata: forceMetadata.value,
     });
     const workspace =
       id === 'gpt'
