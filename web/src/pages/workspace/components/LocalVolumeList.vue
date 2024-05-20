@@ -23,12 +23,10 @@ const message = useMessage();
 const { setting } = Locator.settingRepository();
 
 const volumes = ref<LocalVolumeMetadata[]>();
-const fileNameSearch = ref('');
 
 const loadVolumes = async () => {
   const repo = await Locator.localVolumeRepository();
   volumes.value = await repo.listVolume();
-  fileNameSearch.value = '';
 };
 loadVolumes();
 
@@ -105,6 +103,9 @@ const deleteAllVolumes = () =>
       message.error(`清空失败:${error}`);
     });
 
+const enableRegexMode = ref(false);
+const fileNameSearch = ref('');
+
 const order = ref<'byCreateAt' | 'byId'>('byCreateAt');
 const orderOptions = [
   { value: 'byCreateAt', label: '按添加时间' },
@@ -117,14 +118,20 @@ const sortedVolumes = computed(() => {
       : volumes.value?.filter(props.filter);
 
   if (fileNameSearch.value) {
-    const regs = fileNameSearch.value
-      .trim()
-      .split(' ')
-      .filter((v) => v.length > 0)
-      .map((it) => new RegExp(it, 'i'));
-    filteredVolumes = filteredVolumes?.filter((volume) => {
-      return !regs.some((r) => !r.test(volume.id));
-    });
+    const buildSearchFilter = () => {
+      const parts = fileNameSearch.value
+        .trim()
+        .split(' ')
+        .filter((v) => v.length > 0);
+      if (enableRegexMode.value) {
+        const regs = parts.map((it) => new RegExp(it, 'i'));
+        return (s: string) => !regs.some((r) => !r.test(s));
+      } else {
+        return (s: string) => !parts.some((r) => !s.includes(r));
+      }
+    };
+    const filter = buildSearchFilter();
+    filteredVolumes = filteredVolumes?.filter((volume) => filter(volume.id));
   }
   if (order.value === 'byId') {
     return filteredVolumes?.sort((a, b) => a.id.localeCompare(b.id));
@@ -248,6 +255,8 @@ const handleDrop = (e: DragEvent) => {
       >
         <template #suffix> <n-icon :component="SearchOutlined" /> </template>
       </n-input>
+
+      <tag-button label="正则" v-model:checked="enableRegexMode" />
     </c-action-wrapper>
 
     <c-action-wrapper title="排序">
