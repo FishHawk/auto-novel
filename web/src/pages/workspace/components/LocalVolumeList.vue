@@ -3,7 +3,7 @@ import {
   DriveFolderUploadOutlined,
   MoreVertOutlined,
   PlusOutlined,
-  SearchOutlined
+  SearchOutlined,
 } from '@vicons/material';
 import { useEventListener } from '@vueuse/core';
 import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
@@ -116,23 +116,13 @@ const sortedVolumes = computed(() => {
       : volumes.value?.filter(props.filter);
 
   if (fileNameSearch.value) {
-    const search = fileNameSearch.value.trim();
-    let reg = null;
-    if (search.includes(' ') || search.includes('，') || search.includes(',')) {
-      reg = new RegExp(
-        search
-          .replace(/\,|\，/gi, ' ')
-          .split(' ')
-          .filter((v) => v.trim())
-          .join('|'),
-        'i',
-      );
-    } else {
-      reg = new RegExp(search, 'i');
-    }
-
+    const regs = fileNameSearch.value
+      .trim()
+      .split(' ')
+      .filter((v) => v.length > 0)
+      .map((it) => new RegExp(it, 'i'));
     filteredVolumes = filteredVolumes?.filter((volume) => {
-      return reg.test(volume.id);
+      return !regs.some((r) => !r.test(volume.id));
     });
   }
   if (order.value === 'byId') {
