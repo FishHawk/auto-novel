@@ -3,6 +3,7 @@ import {
   DriveFolderUploadOutlined,
   MoreVertOutlined,
   PlusOutlined,
+  SearchOutlined,
 } from '@vicons/material';
 import { useEventListener } from '@vueuse/core';
 import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
@@ -115,9 +116,13 @@ const sortedVolumes = computed(() => {
       : volumes.value?.filter(props.filter);
 
   if (fileNameSearch.value) {
-    const reg = new RegExp(fileNameSearch.value, 'i');
+    const regs = fileNameSearch.value
+      .trim()
+      .split(' ')
+      .filter((v) => v.length > 0)
+      .map((it) => new RegExp(it, 'i'));
     filteredVolumes = filteredVolumes?.filter((volume) => {
-      return reg.test(volume.id);
+      return !regs.some((r) => !r.test(volume.id));
     });
   }
   if (order.value === 'byId') {
@@ -234,11 +239,14 @@ const handleDrop = (e: DragEvent) => {
   <n-flex vertical>
     <c-action-wrapper title="搜索">
       <n-input
+        clearable
         v-model:value="fileNameSearch"
         type="text"
         placeholder="搜索文件名"
         style="max-width: 400px"
-      />
+      >
+        <template #suffix> <n-icon :component="SearchOutlined" /> </template>
+      </n-input>
     </c-action-wrapper>
 
     <c-action-wrapper title="排序">
@@ -315,12 +323,14 @@ const handleDrop = (e: DragEvent) => {
   z-index: 2000;
   box-sizing: border-box;
 }
+
 .drop-zone {
   width: 100%;
   height: 100%;
   cursor: pointer;
   box-sizing: border-box;
 }
+
 .drop-zone-placeholder {
   pointer-events: none;
   position: fixed;
@@ -339,6 +349,7 @@ const handleDrop = (e: DragEvent) => {
   border-radius: 12px;
   border-width: 2px !important;
 }
+
 .drop-icon {
   font-size: 48px;
   margin-bottom: 16px;
