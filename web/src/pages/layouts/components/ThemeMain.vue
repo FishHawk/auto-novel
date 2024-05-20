@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
-
+import { lightTheme, darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
 import { Locator } from '@/data';
 
 const osThemeRef = useOsTheme();
@@ -15,8 +14,20 @@ const theme = computed(() => {
   } else if (osThemeRef.value) {
     specificTheme = osThemeRef.value;
   }
-  return specificTheme === 'light' ? null : darkTheme;
+  return specificTheme === 'light' ? lightTheme : darkTheme;
 });
+
+watch(
+  theme,
+  (theme) => {
+    const bodyColor = theme.common.bodyColor;
+    if (bodyColor) {
+      const meta = document.querySelector('meta[name="theme-color"]')!;
+      meta.setAttribute('content', bodyColor);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

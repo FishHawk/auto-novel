@@ -5,6 +5,7 @@ import Components from 'unplugin-vue-components/vite';
 import { ProxyOptions, defineConfig, loadEnv } from 'vite';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ command, mode }) => {
   const proxy: Record<string, ProxyOptions> = {};
@@ -84,6 +85,34 @@ export default defineConfig(({ command, mode }) => {
       Components({
         resolvers: [NaiveUiResolver()],
         dirs: ['./**/components/**'],
+      }),
+      VitePWA({
+        registerType: 'autoUpdate',
+        pwaAssets: {
+          disabled: false,
+          image: 'public/icon.svg',
+          injectThemeColor: false,
+        },
+        manifest: {
+          name: '轻小说机翻机器人',
+          short_name: '轻小说机翻机器人',
+          lang: 'zh',
+          theme_color: '#ffffff',
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,png,jpg,svg,webp}'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) =>
+                /files-extra\/girl\..*\.webp/.test(url.pathname),
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'assets-girl',
+                expiration: { maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 * 31 },
+              },
+            },
+          ],
+        },
       }),
     ],
   };
