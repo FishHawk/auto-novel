@@ -4,7 +4,7 @@ export const downloadFile = (filename: string, blob: Blob): void => {
   el.target = '_blank';
   el.download = filename;
   el.click();
-}
+};
 
 export const safeJson = <T extends object>(text: string) => {
   try {

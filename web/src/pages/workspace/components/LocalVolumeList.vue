@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { MoreVertOutlined, DriveFolderUploadOutlined, PlusOutlined } from '@vicons/material';
+import {
+  MoreVertOutlined,
+  DriveFolderUploadOutlined,
+  PlusOutlined,
+} from '@vicons/material';
 import { UploadFileInfo } from 'naive-ui';
 import { useEventListener } from '@vueuse/core';
 
@@ -20,12 +24,12 @@ const message = useMessage();
 const { setting } = Locator.settingRepository();
 
 const volumes = ref<LocalVolumeMetadata[]>();
-const fileNameSearch = ref<string>('')
+const fileNameSearch = ref<string>('');
 
 const loadVolumes = async () => {
   const repo = await Locator.localVolumeRepository();
   volumes.value = await repo.listVolume();
-  fileNameSearch.value = ''
+  fileNameSearch.value = '';
 };
 loadVolumes();
 
@@ -34,9 +38,9 @@ const options = computed(() => {
     props.options === undefined
       ? []
       : Object.keys(props.options).map((it) => ({
-        label: it,
-        key: it,
-      }));
+          label: it,
+          key: it,
+        }));
   options.push({ label: '清空文件', key: '清空文件' });
   options.push({ label: '批量下载', key: '批量下载' });
   return options;
@@ -47,7 +51,7 @@ const handleSelect = (key: string) => {
       showClearModal.value = true;
       break;
     case '批量下载':
-      downloadVolumes()
+      downloadVolumes();
       break;
 
     default:
@@ -59,24 +63,26 @@ const handleSelect = (key: string) => {
 const downloadVolumes = async () => {
   const { mode, translationsMode, translations } = setting.value.downloadFormat;
   const repo = await Locator.localVolumeRepository();
-  const zip = new JSZip
-  await Promise.all(volumes.value.map(async (volume: LocalVolumeMetadata) => {
-    try {
-      const { filename, blob } = await repo.getTranslationFile({
-        id: volume.id,
-        mode,
-        translationsMode,
-        translations,
-      });
-      zip.file(filename, blob)
-    } catch (error) {
-      message.error(`${volume.id} 文件生成错误：${error}`);
-    }
-  }))
+  const zip = new JSZip();
+  await Promise.all(
+    volumes.value.map(async (volume: LocalVolumeMetadata) => {
+      try {
+        const { filename, blob } = await repo.getTranslationFile({
+          id: volume.id,
+          mode,
+          translationsMode,
+          translations,
+        });
+        zip.file(filename, blob);
+      } catch (error) {
+        message.error(`${volume.id} 文件生成错误：${error}`);
+      }
+    }),
+  );
 
-  const blob = await zip.generateAsync({ type: "blob" })
-  downloadFile('批量下载.zip', blob)
-}
+  const blob = await zip.generateAsync({ type: 'blob' });
+  downloadFile('批量下载.zip', blob);
+};
 
 const showClearModal = ref(false);
 const deleteAllVolumes = () =>
@@ -100,10 +106,10 @@ const sortedVolumes = computed(() => {
       : volumes.value?.filter(props.filter);
 
   if (fileNameSearch.value) {
-    const reg = new RegExp(fileNameSearch.value, 'i')
+    const reg = new RegExp(fileNameSearch.value, 'i');
     filteredVolumes = filteredVolumes.filter((volume: LocalVolumeMetadata) => {
-      return reg.test(volume.id)
-    })
+      return reg.test(volume.id);
+    });
   }
   if (order.value === 'byId') {
     return filteredVolumes?.sort((a, b) => a.id.localeCompare(b.id));
@@ -163,12 +169,12 @@ const customRequest = ({
 const showDropZone = ref(false);
 let dragFlag = { isDragStart: false };
 // 将文件从操作系统拖拽到浏览器内，不会触发 dragstart 和 dragend 事件
-useEventListener(document, ['dragenter', 'dragstart', 'dragend'], e => {
+useEventListener(document, ['dragenter', 'dragstart', 'dragend'], (e) => {
   if (e.type === 'dragstart') {
     dragFlag.isDragStart = true;
   } else if (e.type === 'dragenter' && !dragFlag.isDragStart) {
     e.preventDefault();
-    showDropZone.value = true
+    showDropZone.value = true;
   } else if (e.type === 'dragend') {
     dragFlag.isDragStart = false;
   }
@@ -176,17 +182,25 @@ useEventListener(document, ['dragenter', 'dragstart', 'dragend'], e => {
 const handleDragLeave = (e: DragEvent) => {
   e.preventDefault();
   showDropZone.value = false;
-}
+};
 const handleDrop = (e: DragEvent) => {
   e.preventDefault();
   showDropZone.value = false;
-}
+};
 </script>
 
 <template>
   <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
-      <n-upload :show-file-list="false" accept=".txt,.epub,.srt" multiple directory-dnd :custom-request="customRequest" @before-upload="beforeUpload" @finish="onFinish">
+      <n-upload
+        :show-file-list="false"
+        accept=".txt,.epub,.srt"
+        multiple
+        directory-dnd
+        :custom-request="customRequest"
+        @before-upload="beforeUpload"
+        @finish="onFinish"
+      >
         <n-tooltip trigger="hover">
           <template #trigger>
             <c-button label="添加文件" :icon="PlusOutlined" />
@@ -195,7 +209,12 @@ const handleDrop = (e: DragEvent) => {
         </n-tooltip>
       </n-upload>
 
-      <n-dropdown trigger="click" :options="options" :keyboard="false" @select="handleSelect">
+      <n-dropdown
+        trigger="click"
+        :options="options"
+        :keyboard="false"
+        @select="handleSelect"
+      >
         <n-button circle>
           <n-icon :component="MoreVertOutlined" />
         </n-button>
@@ -205,10 +224,18 @@ const handleDrop = (e: DragEvent) => {
 
   <n-flex vertical>
     <c-action-wrapper title="排序">
-      <c-radio-group v-model:value="order" :options="orderOptions" size="small" />
+      <c-radio-group
+        v-model:value="order"
+        :options="orderOptions"
+        size="small"
+      />
     </c-action-wrapper>
     <c-action-wrapper title="文件名">
-      <n-input v-model:value="fileNameSearch" type="text" placeholder="请输入文件名搜索" />
+      <n-input
+        v-model:value="fileNameSearch"
+        type="text"
+        placeholder="请输入文件名搜索"
+      />
     </c-action-wrapper>
 
     <slot name="extra" />
@@ -218,7 +245,11 @@ const handleDrop = (e: DragEvent) => {
 
   <n-spin v-if="sortedVolumes === undefined" style="margin-top: 20px" />
 
-  <n-empty v-else-if="sortedVolumes.length === 0" description="没有文件" style="margin-top: 20px" />
+  <n-empty
+    v-else-if="sortedVolumes.length === 0"
+    description="没有文件"
+    style="margin-top: 20px"
+  />
 
   <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
     <n-list style="padding-bottom: 48px; padding-right: 12px">
@@ -241,7 +272,19 @@ const handleDrop = (e: DragEvent) => {
 
   <teleport to="body">
     <div class="drop-zone-wrap" v-show="showDropZone">
-      <n-upload :show-file-list="false" @finish="onFinish" accept=".txt,.epub,.srt" multiple directory-dnd :custom-request="customRequest" @before-upload="beforeUpload" class="drop-zone" trigger-style="height:100%" @dragleave="handleDragLeave" @drop="handleDrop">
+      <n-upload
+        :show-file-list="false"
+        @finish="onFinish"
+        accept=".txt,.epub,.srt"
+        multiple
+        directory-dnd
+        :custom-request="customRequest"
+        @before-upload="beforeUpload"
+        class="drop-zone"
+        trigger-style="height:100%"
+        @dragleave="handleDragLeave"
+        @drop="handleDrop"
+      >
         <n-upload-dragger class="drop-zone-placeholder">
           <n-icon class="drop-icon" :component="DriveFolderUploadOutlined" />
           <div>拖拽文件到这里上传</div>
