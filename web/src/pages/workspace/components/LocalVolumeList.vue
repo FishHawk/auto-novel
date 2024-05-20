@@ -1,16 +1,15 @@
 <script lang="ts" setup>
 import {
-  MoreVertOutlined,
   DriveFolderUploadOutlined,
+  MoreVertOutlined,
   PlusOutlined,
 } from '@vicons/material';
-import { UploadFileInfo } from 'naive-ui';
 import { useEventListener } from '@vueuse/core';
+import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
+import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
 import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { UploadCustomRequestOptions } from 'naive-ui';
-import JSZip from 'jszip';
 import { downloadFile } from '@/util';
 
 const props = defineProps<{
@@ -24,7 +23,7 @@ const message = useMessage();
 const { setting } = Locator.settingRepository();
 
 const volumes = ref<LocalVolumeMetadata[]>();
-const fileNameSearch = ref<string>('');
+const fileNameSearch = ref('');
 
 const loadVolumes = async () => {
   const repo = await Locator.localVolumeRepository();
@@ -63,25 +62,35 @@ const handleSelect = (key: string) => {
 const downloadVolumes = async () => {
   const { mode, translationsMode, translations } = setting.value.downloadFormat;
   const repo = await Locator.localVolumeRepository();
-  const zip = new JSZip();
-  await Promise.all(
-    volumes.value.map(async (volume: LocalVolumeMetadata) => {
-      try {
-        const { filename, blob } = await repo.getTranslationFile({
-          id: volume.id,
-          mode,
-          translationsMode,
-          translations,
-        });
-        zip.file(filename, blob);
-      } catch (error) {
-        message.error(`${volume.id} 文件生成错误：${error}`);
-      }
-    }),
-  );
 
-  const blob = await zip.generateAsync({ type: 'blob' });
-  downloadFile('批量下载.zip', blob);
+  const zipBlobWriter = new BlobWriter();
+  const writer = new ZipWriter(zipBlobWriter);
+
+  if (sortedVolumes.value === undefined) {
+    message.info('列表加载中');
+  } else if (sortedVolumes.value.length === 0) {
+    message.info('列表为空，没有文件需要下载');
+  } else {
+    await Promise.all(
+      sortedVolumes.value.map(async (volume: LocalVolumeMetadata) => {
+        try {
+          const { filename, blob } = await repo.getTranslationFile({
+            id: volume.id,
+            mode,
+            translationsMode,
+            translations,
+          });
+          await writer.add(filename, new BlobReader(blob));
+        } catch (error) {
+          message.error(`${volume.id} 文件生成错误：${error}`);
+        }
+      }),
+    );
+
+    await writer.close();
+    const zipBlob = await zipBlobWriter.getData();
+    downloadFile(`批量下载[${sortedVolumes.value.length}].zip`, zipBlob);
+  }
 };
 
 const showClearModal = ref(false);
@@ -107,7 +116,7 @@ const sortedVolumes = computed(() => {
 
   if (fileNameSearch.value) {
     const reg = new RegExp(fileNameSearch.value, 'i');
-    filteredVolumes = filteredVolumes.filter((volume: LocalVolumeMetadata) => {
+    filteredVolumes = filteredVolumes?.filter((volume) => {
       return reg.test(volume.id);
     });
   }
@@ -223,6 +232,15 @@ const handleDrop = (e: DragEvent) => {
   </section-header>
 
   <n-flex vertical>
+    <c-action-wrapper title="搜索">
+      <n-input
+        v-model:value="fileNameSearch"
+        type="text"
+        placeholder="搜索文件名"
+        style="max-width: 400px"
+      />
+    </c-action-wrapper>
+
     <c-action-wrapper title="排序">
       <c-radio-group
         v-model:value="order"
@@ -230,14 +248,6 @@ const handleDrop = (e: DragEvent) => {
         size="small"
       />
     </c-action-wrapper>
-    <c-action-wrapper title="文件名">
-      <n-input
-        v-model:value="fileNameSearch"
-        type="text"
-        placeholder="请输入文件名搜索"
-      />
-    </c-action-wrapper>
-
     <slot name="extra" />
   </n-flex>
 
@@ -305,14 +315,12 @@ const handleDrop = (e: DragEvent) => {
   z-index: 2000;
   box-sizing: border-box;
 }
-
 .drop-zone {
   width: 100%;
   height: 100%;
   cursor: pointer;
   box-sizing: border-box;
 }
-
 .drop-zone-placeholder {
   pointer-events: none;
   position: fixed;
@@ -331,7 +339,6 @@ const handleDrop = (e: DragEvent) => {
   border-radius: 12px;
   border-width: 2px !important;
 }
-
 .drop-icon {
   font-size: 48px;
   margin-bottom: 16px;
