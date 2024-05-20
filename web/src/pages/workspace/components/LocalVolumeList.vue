@@ -1,11 +1,16 @@
 <script lang="ts" setup>
-import { MoreVertOutlined, DriveFolderUploadOutlined, PlusOutlined } from '@vicons/material';
-import { UploadFileInfo } from 'naive-ui';
+import {
+  DriveFolderUploadOutlined,
+  MoreVertOutlined,
+  PlusOutlined,
+} from '@vicons/material';
 import { useEventListener } from '@vueuse/core';
+import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
+import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
 import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { UploadCustomRequestOptions } from 'naive-ui';
+import { downloadFile } from '@/util';
 
 const props = defineProps<{
   hideTitle?: boolean;
@@ -15,12 +20,15 @@ const props = defineProps<{
 }>();
 
 const message = useMessage();
+const { setting } = Locator.settingRepository();
 
 const volumes = ref<LocalVolumeMetadata[]>();
+const fileNameSearch = ref('');
 
 const loadVolumes = async () => {
   const repo = await Locator.localVolumeRepository();
   volumes.value = await repo.listVolume();
+  fileNameSearch.value = '';
 };
 loadVolumes();
 
@@ -33,13 +41,55 @@ const options = computed(() => {
           key: it,
         }));
   options.push({ label: '清空文件', key: '清空文件' });
+  options.push({ label: '批量下载', key: '批量下载' });
   return options;
 });
 const handleSelect = (key: string) => {
-  if (key === '清空文件') {
-    showClearModal.value = true;
+  switch (key) {
+    case '清空文件':
+      showClearModal.value = true;
+      break;
+    case '批量下载':
+      downloadVolumes();
+      break;
+
+    default:
+      props.options?.[key]?.(volumes.value ?? []);
+      break;
+  }
+};
+
+const downloadVolumes = async () => {
+  const { mode, translationsMode, translations } = setting.value.downloadFormat;
+  const repo = await Locator.localVolumeRepository();
+
+  const zipBlobWriter = new BlobWriter();
+  const writer = new ZipWriter(zipBlobWriter);
+
+  if (sortedVolumes.value === undefined) {
+    message.info('列表加载中');
+  } else if (sortedVolumes.value.length === 0) {
+    message.info('列表为空，没有文件需要下载');
   } else {
-    props.options?.[key]?.(volumes.value ?? []);
+    await Promise.all(
+      sortedVolumes.value.map(async (volume: LocalVolumeMetadata) => {
+        try {
+          const { filename, blob } = await repo.getTranslationFile({
+            id: volume.id,
+            mode,
+            translationsMode,
+            translations,
+          });
+          await writer.add(filename, new BlobReader(blob));
+        } catch (error) {
+          message.error(`${volume.id} 文件生成错误：${error}`);
+        }
+      }),
+    );
+
+    await writer.close();
+    const zipBlob = await zipBlobWriter.getData();
+    downloadFile(`批量下载[${sortedVolumes.value.length}].zip`, zipBlob);
   }
 };
 
@@ -59,10 +109,17 @@ const orderOptions = [
   { value: 'byId', label: '按文件名' },
 ];
 const sortedVolumes = computed(() => {
-  const filteredVolumes =
+  let filteredVolumes =
     props.filter === undefined
       ? volumes.value
       : volumes.value?.filter(props.filter);
+
+  if (fileNameSearch.value) {
+    const reg = new RegExp(fileNameSearch.value, 'i');
+    filteredVolumes = filteredVolumes?.filter((volume) => {
+      return reg.test(volume.id);
+    });
+  }
   if (order.value === 'byId') {
     return filteredVolumes?.sort((a, b) => a.id.localeCompare(b.id));
   } else {
@@ -121,12 +178,12 @@ const customRequest = ({
 const showDropZone = ref(false);
 let dragFlag = { isDragStart: false };
 // 将文件从操作系统拖拽到浏览器内，不会触发 dragstart 和 dragend 事件
-useEventListener(document, ['dragenter', 'dragstart', 'dragend'], e => {
+useEventListener(document, ['dragenter', 'dragstart', 'dragend'], (e) => {
   if (e.type === 'dragstart') {
     dragFlag.isDragStart = true;
   } else if (e.type === 'dragenter' && !dragFlag.isDragStart) {
     e.preventDefault();
-    showDropZone.value = true
+    showDropZone.value = true;
   } else if (e.type === 'dragend') {
     dragFlag.isDragStart = false;
   }
@@ -134,11 +191,11 @@ useEventListener(document, ['dragenter', 'dragstart', 'dragend'], e => {
 const handleDragLeave = (e: DragEvent) => {
   e.preventDefault();
   showDropZone.value = false;
-}
+};
 const handleDrop = (e: DragEvent) => {
   e.preventDefault();
   showDropZone.value = false;
-}
+};
 </script>
 
 <template>
@@ -175,6 +232,15 @@ const handleDrop = (e: DragEvent) => {
   </section-header>
 
   <n-flex vertical>
+    <c-action-wrapper title="搜索">
+      <n-input
+        v-model:value="fileNameSearch"
+        type="text"
+        placeholder="搜索文件名"
+        style="max-width: 400px"
+      />
+    </c-action-wrapper>
+
     <c-action-wrapper title="排序">
       <c-radio-group
         v-model:value="order"
@@ -182,7 +248,6 @@ const handleDrop = (e: DragEvent) => {
         size="small"
       />
     </c-action-wrapper>
-
     <slot name="extra" />
   </n-flex>
 
@@ -246,7 +311,7 @@ const handleDrop = (e: DragEvent) => {
   top: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 2000;
   box-sizing: border-box;
 }

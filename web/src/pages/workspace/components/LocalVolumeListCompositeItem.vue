@@ -6,6 +6,7 @@ import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { TranslatorId, TranslateTaskDescriptor } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
+import { downloadFile } from '@/util';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
@@ -79,12 +80,7 @@ const downloadVolume = async () => {
       translationsMode,
       translations,
     });
-
-    const el = document.createElement('a');
-    el.href = URL.createObjectURL(blob);
-    el.target = '_blank';
-    el.download = filename;
-    el.click();
+    downloadFile(filename, blob);
   } catch (error) {
     message.error(`文件生成错误：${error}`);
   }

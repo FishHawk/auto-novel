@@ -1,3 +1,11 @@
+export const downloadFile = (filename: string, blob: Blob): void => {
+  const el = document.createElement('a');
+  el.href = URL.createObjectURL(blob);
+  el.target = '_blank';
+  el.download = filename;
+  el.click();
+};
+
 export const safeJson = <T extends object>(text: string) => {
   try {
     return JSON.parse(text) as T;
