@@ -3,6 +3,7 @@ import {
   DriveFolderUploadOutlined,
   MoreVertOutlined,
   PlusOutlined,
+  SearchOutlined
 } from '@vicons/material';
 import { useEventListener } from '@vueuse/core';
 import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
@@ -253,7 +254,9 @@ const handleDrop = (e: DragEvent) => {
         type="text"
         placeholder="搜索文件名"
         style="max-width: 400px"
-      />
+      >
+        <template #suffix> <n-icon :component="SearchOutlined" /> </template>
+      </n-input>
     </c-action-wrapper>
 
     <c-action-wrapper title="排序">
