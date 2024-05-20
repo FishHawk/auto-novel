@@ -13,6 +13,7 @@ import LocalVolumeList from './LocalVolumeList.vue';
 const props = defineProps<{ type: 'gpt' | 'sakura' }>();
 
 const message = useMessage();
+const router = useRouter();
 
 const { setting } = Locator.settingRepository();
 
@@ -120,6 +121,13 @@ const progressFilterFunc = computed(() => {
     return undefined;
   }
 });
+
+const readVolume = (volume: LocalVolumeMetadata): void => {
+  const url = router.resolve({
+    path: `/workspace/reader/${encodeURIComponent(volume.id)}/0`,
+  });
+  window.open(url.href, '_blank');
+};
 </script>
 
 <template>
@@ -165,12 +173,13 @@ const progressFilterFunc = computed(() => {
             @action="queueVolume(volume.id)"
           />
 
-          <router-link
+          <c-button
             v-if="!volume.id.endsWith('.epub')"
-            :to="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"
-          >
-            <c-button label="阅读" size="tiny" secondary />
-          </router-link>
+            label="阅读"
+            size="tiny"
+            @click="readVolume(volume)"
+            secondary
+          />
 
           <c-button
             label="下载"
