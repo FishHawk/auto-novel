@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "vite build && vue-tsc --noEmit",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare": "cd .. && husky web/.husky"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
+    "husky": "^9.0.11",
     "prettier": "3.2.5",
+    "pretty-quick": "^4.0.0",
     "vite-bundle-visualizer": "^0.11.0",
     "vitest": "^1.5.0"
   },
