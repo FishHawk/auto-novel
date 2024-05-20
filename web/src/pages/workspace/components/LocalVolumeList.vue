@@ -6,7 +6,6 @@ import {
   SearchOutlined,
 } from '@vicons/material';
 import { useEventListener } from '@vueuse/core';
-import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
 import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
 import { Locator } from '@/data';
@@ -61,6 +60,8 @@ const handleSelect = (key: string) => {
 };
 
 const downloadVolumes = async () => {
+  const { BlobReader, BlobWriter, ZipWriter } = await import('@zip.js/zip.js');
+
   const { mode, translationsMode, translations } = setting.value.downloadFormat;
   const repo = await Locator.localVolumeRepository();
 
