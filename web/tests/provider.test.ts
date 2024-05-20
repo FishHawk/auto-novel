@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseUrl } from '../src/data/web/url';
+import { parseUrl } from '../src/util/web/url';
 
 function test_parse_url(providerId: string, benches: [string, string][]) {
   for (const [url, novelId] of benches) {
