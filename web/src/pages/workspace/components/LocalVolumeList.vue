@@ -115,7 +115,21 @@ const sortedVolumes = computed(() => {
       : volumes.value?.filter(props.filter);
 
   if (fileNameSearch.value) {
-    const reg = new RegExp(fileNameSearch.value, 'i');
+    const search = fileNameSearch.value.trim();
+    let reg = null;
+    if (search.includes(' ') || search.includes('，') || search.includes(',')) {
+      reg = new RegExp(
+        search
+          .replace(/\,|\，/gi, ' ')
+          .split(' ')
+          .filter((v) => v.trim())
+          .join('|'),
+        'i',
+      );
+    } else {
+      reg = new RegExp(search, 'i');
+    }
+
     filteredVolumes = filteredVolumes?.filter((volume) => {
       return reg.test(volume.id);
     });
@@ -234,6 +248,7 @@ const handleDrop = (e: DragEvent) => {
   <n-flex vertical>
     <c-action-wrapper title="搜索">
       <n-input
+        clearable
         v-model:value="fileNameSearch"
         type="text"
         placeholder="搜索文件名"
@@ -315,12 +330,14 @@ const handleDrop = (e: DragEvent) => {
   z-index: 2000;
   box-sizing: border-box;
 }
+
 .drop-zone {
   width: 100%;
   height: 100%;
   cursor: pointer;
   box-sizing: border-box;
 }
+
 .drop-zone-placeholder {
   pointer-events: none;
   position: fixed;
@@ -339,6 +356,7 @@ const handleDrop = (e: DragEvent) => {
   border-radius: 12px;
   border-width: 2px !important;
 }
+
 .drop-icon {
   font-size: 48px;
   margin-bottom: 16px;
