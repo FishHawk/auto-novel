@@ -50,7 +50,6 @@ const handleSelect = (key: string) => {
     case '批量下载':
       downloadVolumes();
       break;
-
     default:
       props.options?.[key]?.(volumes.value ?? []);
       break;
@@ -58,6 +57,15 @@ const handleSelect = (key: string) => {
 };
 
 const downloadVolumes = async () => {
+  if (sortedVolumes.value === undefined) {
+    message.info('列表加载中');
+    return;
+  }
+  if (sortedVolumes.value.length === 0) {
+    message.info('列表为空，没有文件需要下载');
+    return;
+  }
+
   const { BlobReader, BlobWriter, ZipWriter } = await import('@zip.js/zip.js');
 
   const { mode, translationsMode, translations } = setting.value.downloadFormat;
@@ -66,31 +74,25 @@ const downloadVolumes = async () => {
   const zipBlobWriter = new BlobWriter();
   const writer = new ZipWriter(zipBlobWriter);
 
-  if (sortedVolumes.value === undefined) {
-    message.info('列表加载中');
-  } else if (sortedVolumes.value.length === 0) {
-    message.info('列表为空，没有文件需要下载');
-  } else {
-    await Promise.all(
-      sortedVolumes.value.map(async (volume: LocalVolumeMetadata) => {
-        try {
-          const { filename, blob } = await repo.getTranslationFile({
-            id: volume.id,
-            mode,
-            translationsMode,
-            translations,
-          });
-          await writer.add(filename, new BlobReader(blob));
-        } catch (error) {
-          message.error(`${volume.id} 文件生成错误：${error}`);
-        }
-      }),
-    );
+  await Promise.all(
+    sortedVolumes.value.map(async (volume: LocalVolumeMetadata) => {
+      try {
+        const { filename, blob } = await repo.getTranslationFile({
+          id: volume.id,
+          mode,
+          translationsMode,
+          translations,
+        });
+        await writer.add(filename, new BlobReader(blob));
+      } catch (error) {
+        message.error(`${volume.id} 文件生成错误：${error}`);
+      }
+    }),
+  );
 
-    await writer.close();
-    const zipBlob = await zipBlobWriter.getData();
-    downloadFile(`批量下载[${sortedVolumes.value.length}].zip`, zipBlob);
-  }
+  await writer.close();
+  const zipBlob = await zipBlobWriter.getData();
+  downloadFile(`批量下载[${sortedVolumes.value.length}].zip`, zipBlob);
 };
 
 const showClearModal = ref(false);
@@ -106,7 +108,13 @@ const deleteAllVolumes = () =>
 const enableRegexMode = ref(false);
 const fileNameSearch = ref('');
 
-const order = ref<'byCreateAt' | 'byId'>('byCreateAt');
+const order = reactive<{
+  value: 'byCreateAt' | 'byId';
+  desc: boolean;
+}>({
+  value: 'byCreateAt',
+  desc: true,
+});
 const orderOptions = [
   { value: 'byCreateAt', label: '按添加时间' },
   { value: 'byId', label: '按文件名' },
@@ -133,12 +141,35 @@ const sortedVolumes = computed(() => {
     const filter = buildSearchFilter();
     filteredVolumes = filteredVolumes?.filter((volume) => filter(volume.id));
   }
-  if (order.value === 'byId') {
-    return filteredVolumes?.sort((a, b) => a.id.localeCompare(b.id));
-  } else {
-    return filteredVolumes?.sort((a, b) => b.createAt - a.createAt);
+  if (!Array.isArray(filteredVolumes)) {
+    return filteredVolumes;
   }
+  return orderSortVolumes(filteredVolumes);
 });
+
+const orderSortVolumes = (
+  volumes: LocalVolumeMetadata[],
+): LocalVolumeMetadata[] => {
+  // if (order.value === 'byId') {
+  //   return filteredVolumes?.sort((a, b) => a.id.localeCompare(b.id));
+  // } else {
+  //   return filteredVolumes?.sort((a, b) => b.createAt - a.createAt);
+  // }
+  return volumes?.sort((a, b) => {
+    switch (order.value) {
+      case 'byId':
+        return order.desc ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
+        break;
+      case 'byCreateAt':
+        return order.desc ? b.createAt - a.createAt : a.createAt - b.createAt;
+        break;
+      default:
+        console.error(`未支持${order.value}排序`);
+        break;
+    }
+    return 0;
+  });
+};
 
 const deleteVolume = (volumeId: string) =>
   Locator.localVolumeRepository()
@@ -248,6 +279,7 @@ const handleDrop = (e: DragEvent) => {
     <c-action-wrapper title="搜索">
       <n-input
         clearable
+        size="small"
         v-model:value="fileNameSearch"
         type="text"
         placeholder="搜索文件名"
@@ -260,11 +292,12 @@ const handleDrop = (e: DragEvent) => {
     </c-action-wrapper>
 
     <c-action-wrapper title="排序">
-      <c-radio-group
+      <!-- <c-radio-group
         v-model:value="order"
         :options="orderOptions"
         size="small"
-      />
+      /> -->
+      <order-sort v-model:value="order" :options="orderOptions" />
     </c-action-wrapper>
     <slot name="extra" />
   </n-flex>
