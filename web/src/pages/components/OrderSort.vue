@@ -15,10 +15,12 @@ defineProps<{
 }>();
 
 const handelClick = (option: Option) => {
+  // 玄学问题 当传进来的值是ref的时候 只有这样才能触发computed
   // value.value = {
   //   value: option.value,
   //   desc: !value.value.desc,
   // };
+  // 玄学问题 当传进来的值是reactive的时候 只有这样才能触发computed
   value.value.value = option.value;
   value.value.desc = !value.value.desc;
 };
