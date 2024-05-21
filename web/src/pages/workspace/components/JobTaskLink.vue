@@ -44,7 +44,7 @@ const link = computed(() => {
 </script>
 
 <template>
-  <router-link v-if="link.url" :to="link.url">
+  <router-link v-if="link.url" :to="link.url" target="_blank">
     <n-text depth="3" underline style="font-size: 12px">
       {{ link.text }}
     </n-text>
