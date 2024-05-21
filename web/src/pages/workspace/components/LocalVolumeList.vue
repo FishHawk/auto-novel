@@ -150,11 +150,6 @@ const sortedVolumes = computed(() => {
 const orderSortVolumes = (
   volumes: LocalVolumeMetadata[],
 ): LocalVolumeMetadata[] => {
-  // if (order.value === 'byId') {
-  //   return filteredVolumes?.sort((a, b) => a.id.localeCompare(b.id));
-  // } else {
-  //   return filteredVolumes?.sort((a, b) => b.createAt - a.createAt);
-  // }
   return volumes?.sort((a, b) => {
     switch (order.value) {
       case 'byId':
@@ -292,11 +287,6 @@ const handleDrop = (e: DragEvent) => {
     </c-action-wrapper>
 
     <c-action-wrapper title="排序">
-      <!-- <c-radio-group
-        v-model:value="order"
-        :options="orderOptions"
-        size="small"
-      /> -->
       <order-sort v-model:value="order" :options="orderOptions" />
     </c-action-wrapper>
     <slot name="extra" />
