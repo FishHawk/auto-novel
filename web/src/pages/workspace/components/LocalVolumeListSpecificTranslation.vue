@@ -9,6 +9,7 @@ import { Setting } from '@/model/Setting';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 
 import LocalVolumeList from './LocalVolumeList.vue';
+import { downloadFile } from '@/util';
 
 const props = defineProps<{ type: 'gpt' | 'sakura' }>();
 
@@ -90,12 +91,7 @@ const downloadVolume = async (volumeId: string) => {
       translationsMode: 'priority',
       translations: [props.type],
     });
-
-    const el = document.createElement('a');
-    el.href = URL.createObjectURL(blob);
-    el.target = '_blank';
-    el.download = filename;
-    el.click();
+    downloadFile(filename, blob);
   } catch (error) {
     message.error(`文件生成错误：${error}`);
   }
