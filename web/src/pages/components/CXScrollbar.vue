@@ -4,6 +4,7 @@ import { ScrollbarInst } from 'naive-ui';
 const scrollRef = ref<ScrollbarInst>();
 let point = { x: 0, isDrag: false };
 const handleMouseDown = (e: MouseEvent) => {
+  e.preventDefault();
   point.x = e.clientX;
   point.isDrag = false;
 
