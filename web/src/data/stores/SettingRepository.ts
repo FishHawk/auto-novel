@@ -21,6 +21,7 @@ export const createSettingRepository = () => {
         type: 'epub',
       },
       workspaceSound: false,
+      paginationMode: 'auto',
     },
     { mergeDefaults: true },
   );

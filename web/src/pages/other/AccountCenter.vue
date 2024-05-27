@@ -94,6 +94,17 @@ const playSound = (source: string) => {
 
         <n-list-item>
           <n-flex vertical>
+            <b>列表分页方式</b>
+            <c-radio-group
+              v-model:value="setting.paginationMode"
+              :options="Setting.paginationModeOptions"
+              size="small"
+            />
+          </n-flex>
+        </n-list-item>
+
+        <n-list-item>
+          <n-flex vertical>
             <b>显示的翻译按钮</b>
             <translator-check
               v-model:value="setting.enabledTranslator"

@@ -286,7 +286,7 @@ const handleDrop = (e: DragEvent) => {
       <tag-button label="正则" v-model:checked="enableRegexMode" />
     </c-action-wrapper>
 
-    <c-action-wrapper title="排序">
+    <c-action-wrapper title="排序" align="center">
       <order-sort v-model:value="order" :options="orderOptions" />
     </c-action-wrapper>
     <slot name="extra" />

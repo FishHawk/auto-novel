@@ -5,7 +5,8 @@ import { useThrottleFn } from '@vueuse/core';
 import { Page } from '@/model/Page';
 import { Result } from '@/util/result';
 
-import { onKeyDown } from '../util';
+import { checkIsMobile, onKeyDown, useIsWideScreen } from '../util';
+import { Locator } from '@/data';
 
 export type Loader<T extends any> = (page: number) => Promise<Result<Page<T>>>;
 
@@ -17,7 +18,17 @@ const props = defineProps<{
   loader: Loader<T>;
 }>();
 
-const mode = ref<'pc' | 'h5'>('pc');
+const isMobile = checkIsMobile();
+const { setting } = Locator.settingRepository();
+const mode = computed(() => {
+  let mode = setting.value.paginationMode;
+  if (mode === 'auto') {
+    return isMobile ? 'scroll' : 'pagination';
+  } else {
+    return mode;
+  }
+});
+
 const pageNumber = ref(1);
 const pageContent = ref<Result<Page<T>>>();
 const loading = ref(false);
@@ -65,7 +76,7 @@ watch(
 );
 
 watch(
-  () => [props.loader],
+  () => props.loader,
   () => {
     pageNumber.value = 1;
     if (props.page > 1) {
@@ -102,7 +113,7 @@ onKeyDown('ArrowRight', (e) => {
   }
 });
 
-// ===h5===
+// ===scroll===
 const innerPage = ref(props.page);
 watch(
   () => [props.page, props.loader],
@@ -120,7 +131,7 @@ onDeactivated(() => {
 const check = useThrottleFn(
   () => {
     if (
-      mode.value !== 'h5' ||
+      mode.value !== 'scroll' ||
       !pageContent.value ||
       !pageContent.value.ok ||
       loading.value ||
@@ -166,7 +177,7 @@ const loadMore = async () => {
 </script>
 
 <template>
-  <template v-if="mode === 'pc'">
+  <template v-if="mode === 'pagination'">
     <n-pagination
       v-if="pageNumber > 1"
       :page="page"
@@ -192,14 +203,14 @@ const loadMore = async () => {
     <n-divider />
     <n-pagination
       v-if="pageNumber > 1"
-      :page="page"
+      :page="innerPage"
       @update-page="(page) => onUpdatePage(page)"
       :page-count="pageNumber"
       :page-slot="7"
     />
   </template>
   <template v-else>
-    <n-divider />
+    <div style="margin-top: 32px"></div>
 
     <c-result
       :result="pageContent"
@@ -212,7 +223,9 @@ const loadMore = async () => {
       <template v v-if="loading">
         <n-spin />
       </template>
-      <template v-else-if="innerPage >= pageNumber">没有更多了</template>
+      <template v-else-if="innerPage >= pageNumber && pageNumber > 1"
+        >没有更多了</template
+      >
     </div>
   </template>
 </template>
