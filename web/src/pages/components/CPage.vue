@@ -65,7 +65,7 @@ watch(
 );
 
 watch(
-  () => props.loader,
+  () => [props.loader],
   () => {
     pageNumber.value = 1;
     if (props.page > 1) {
@@ -127,11 +127,10 @@ const check = useThrottleFn(
       innerPage.value >= pageNumber.value
     )
       return;
-    const dom = document.scrollingElement || document.documentElement;
+    const dom = document.documentElement;
     const threshold = 250;
 
-    if (dom.scrollHeight - dom.scrollTop - window.innerHeight > threshold)
-      return;
+    if (dom.scrollHeight - dom.scrollTop - dom.clientHeight > threshold) return;
     loadMore();
   },
   100,
