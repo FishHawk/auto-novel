@@ -1,5 +1,9 @@
 <script lang="ts" setup>
+import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
+
 import { Locator, formatError } from '@/data';
+import { isDarkColor } from '@/pages/util';
+import { RegexUtil } from '@/util';
 
 const { userData, setProfile } = Locator.userDataRepository();
 const { renew, updateToken } = Locator.authRepository;
@@ -34,10 +38,79 @@ Object.keys(window.localStorage).forEach((key) => {
     window.localStorage.removeItem(key);
   }
 });
+
+// 主题
+const route = useRoute();
+const osThemeRef = useOsTheme();
+
+const { setting } = Locator.settingRepository();
+const { setting: readerSetting } = Locator.readerSettingRepository();
+
+const buildTheme = (
+  theme: 'light' | 'dark' | 'system' | 'custom',
+  bodyColor?: string,
+): {
+  isDark: boolean;
+  bodyColor?: string;
+} => {
+  switch (theme) {
+    case 'light':
+      return { isDark: false };
+    case 'dark':
+      return { isDark: true };
+    case 'system':
+      return { isDark: osThemeRef.value === 'dark' };
+    case 'custom':
+      return { isDark: isDarkColor(bodyColor!!), bodyColor };
+  }
+};
+const theme = computed(() => {
+  if (route.meta.isReader) {
+    const theme = readerSetting.value.theme;
+    return buildTheme(theme.mode, theme.bodyColor);
+  } else {
+    return buildTheme(setting.value.theme, undefined);
+  }
+});
+
+// 处理Safari的奇妙问题
+if (RegexUtil.isSafari(navigator.userAgent)) {
+  // 防止Safari返回上一页时的灰屏
+  // https://github.com/reactjs/react.dev/blob/e45ac5552c13fc50832624b7deb0c6f631d461bf/src/pages/_app.tsx#L30
+  window.history.scrollRestoration = 'auto';
+
+  // 禁用浏览器聚焦时的自动缩放，但浏览器还是会允许用户手动缩放
+  const meta = document.querySelector('meta[name="viewport"]')!;
+  const content = meta.getAttribute('content')!;
+  meta.setAttribute('content', `${content}, user-scalable=no`);
+}
 </script>
 
 <template>
-  <router-view />
+  <n-config-provider
+    :theme="theme.isDark ? darkTheme : null"
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+    inline-theme-disabled
+    :theme-overrides="{
+      Drawer: { bodyPadding: '0px' },
+      List: { color: '#0000' },
+      common: {
+        ...{ bodyColor: theme.bodyColor },
+      },
+    }"
+  >
+    <n-global-style />
+    <n-message-provider container-style="white-space: pre-wrap">
+      <n-loading-bar-provider>
+        <router-view v-slot="{ Component }">
+          <keep-alive :include="['MainLayout']">
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
+      </n-loading-bar-provider>
+    </n-message-provider>
+  </n-config-provider>
 </template>
 
 <style>

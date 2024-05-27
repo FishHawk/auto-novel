@@ -272,17 +272,6 @@ const router = createRouter({
   },
 });
 
-// https://github.com/reactjs/react.dev/blob/e45ac5552c13fc50832624b7deb0c6f631d461bf/src/pages/_app.tsx#L30
-const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-if (isSafari) {
-  window.history.scrollRestoration = 'auto';
-
-  // 禁用浏览器聚焦时的自动缩放，但浏览器还是会允许用户手动缩放
-  const meta = document.querySelector('meta[name="viewport"]')!;
-  const content = meta.getAttribute('content')!;
-  meta.setAttribute('content', `${content}, user-scalable=no`);
-}
-
 router.afterEach((to, from) => {
   // 章节之间标题依靠手动切换，这里跳过
   if (!(to.meta.isReader && from.meta.isReader)) {

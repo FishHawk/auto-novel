@@ -88,4 +88,7 @@ export namespace RegexUtil {
     /[\u3041-\u3096|\u30A1-\u30FA]/.test(str);
 
   export const getLeadingSpaces = (str: string) => str.match(/^\s*/)?.[0] ?? '';
+
+  export const isSafari = (agent: string) =>
+    /^((?!chrome|android).)*safari/i.test(agent);
 }

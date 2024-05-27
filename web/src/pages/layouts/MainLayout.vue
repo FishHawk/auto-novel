@@ -102,83 +102,81 @@ watch(
 </script>
 
 <template>
-  <theme-main>
-    <n-layout style="width: 100%; min-height: 100vh">
-      <n-layout-header bordered style="position: fixed; z-index: 1">
-        <n-flex class="layout-content" align="center" style="height: 50px">
-          <template v-if="isWideScreen">
-            <robot-icon />
-            <div>
-              <n-menu
-                :value="menuKey"
-                mode="horizontal"
-                :options="topMenuOptions"
-              />
-            </div>
-          </template>
+  <n-layout style="width: 100%; min-height: 100vh">
+    <n-layout-header bordered style="position: fixed; z-index: 1">
+      <n-flex class="layout-content" align="center" style="height: 50px">
+        <template v-if="isWideScreen">
+          <robot-icon />
+          <div>
+            <n-menu
+              :value="menuKey"
+              mode="horizontal"
+              :options="topMenuOptions"
+            />
+          </div>
+        </template>
 
-          <n-icon
-            v-else
-            size="24"
-            :component="MenuOutlined"
-            @click="showMenuModal = true"
-          />
+        <n-icon
+          v-else
+          size="24"
+          :component="MenuOutlined"
+          @click="showMenuModal = true"
+        />
 
-          <div style="flex: 1"></div>
+        <div style="flex: 1"></div>
 
-          <template v-if="isSignedIn">
-            <router-link v-if="isWideScreen" to="/read-history">
-              <n-button :focusable="false" quaternary>历史</n-button>
-            </router-link>
-            <router-link v-if="isWideScreen" to="/favorite">
-              <n-button :focusable="false" quaternary>收藏</n-button>
-            </router-link>
-            <n-dropdown
-              trigger="hover"
-              :keyboard="false"
-              :options="userDropdownOptions"
-              @select="handleUserDropdownSelect"
-            >
-              <n-button :focusable="false" quaternary>
-                @{{ userData.info?.username }}
-              </n-button>
-            </n-dropdown>
-          </template>
-
-          <router-link
-            v-else
-            :to="{ name: 'sign-in', query: { from: route.fullPath } }"
-          >
-            <n-button quaternary>登录/注册</n-button>
+        <template v-if="isSignedIn">
+          <router-link v-if="isWideScreen" to="/read-history">
+            <n-button :focusable="false" quaternary>历史</n-button>
           </router-link>
-        </n-flex>
-      </n-layout-header>
-
-      <n-layout-content style="margin-top: 50px; z-index: 0">
-        <router-view v-slot="{ Component }">
-          <keep-alive
-            :include="[
-              'Forum',
-              'Index',
-              'FavoriteList',
-              'ReadHistoryList',
-              'WebNovelList',
-              'WebNovelRank',
-              'WenkuNovelList',
-            ]"
+          <router-link v-if="isWideScreen" to="/favorite">
+            <n-button :focusable="false" quaternary>收藏</n-button>
+          </router-link>
+          <n-dropdown
+            trigger="hover"
+            :keyboard="false"
+            :options="userDropdownOptions"
+            @select="handleUserDropdownSelect"
           >
-            <component :is="Component" />
-          </keep-alive>
-        </router-view>
-      </n-layout-content>
+            <n-button :focusable="false" quaternary>
+              @{{ userData.info?.username }}
+            </n-button>
+          </n-dropdown>
+        </template>
 
-      <n-layout-footer style="height: 64px; background-color: transparent" />
-    </n-layout>
+        <router-link
+          v-else
+          :to="{ name: 'sign-in', query: { from: route.fullPath } }"
+        >
+          <n-button quaternary>登录/注册</n-button>
+        </router-link>
+      </n-flex>
+    </n-layout-header>
 
-    <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
-      <n-menu :value="menuKey" :options="collapsedMenuOptions" />
-    </c-drawer-left>
-  </theme-main>
+    <n-layout-content style="margin-top: 50px; z-index: 0">
+      <router-view v-slot="{ Component }">
+        <keep-alive
+          :include="[
+            'Forum',
+            'Index',
+            'FavoriteList',
+            'ReadHistoryList',
+            'WebNovelList',
+            'WebNovelRank',
+            'WenkuNovelList',
+          ]"
+        >
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
+    </n-layout-content>
+
+    <n-layout-footer style="height: 64px; background-color: transparent" />
+  </n-layout>
+
+  <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
+    <n-menu :value="menuKey" :options="collapsedMenuOptions" />
+  </c-drawer-left>
 </template>
 
 <style>
