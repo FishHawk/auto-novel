@@ -8,6 +8,7 @@ export interface ChapterTranslation {
 
 export interface LocalVolumeMetadata {
   id: string;
+  readAt?: number;
   createAt: number;
   toc: {
     chapterId: string;

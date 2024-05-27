@@ -2,7 +2,6 @@
 import { createReusableTemplate, onKeyDown } from '@vueuse/core';
 
 import { Locator } from '@/data';
-import { UserRepository } from '@/data/api';
 import { GenericNovelId } from '@/model/Common';
 import { TranslatorId } from '@/model/Translator';
 import { Result } from '@/util/result';
@@ -76,10 +75,14 @@ const navToChapter = async (chapterId: string) => {
     if (result.ok) {
       document.title = result.value.titleJp;
       if (gnid.type === 'web' && isSignedIn) {
-        UserRepository.updateReadHistoryWeb(
+        Locator.userRepository.updateReadHistoryWeb(
           gnid.providerId,
           gnid.novelId,
           chapterId,
+        );
+      } else if (gnid.type === 'local') {
+        Locator.localVolumeRepository().then((it) =>
+          it.updateReadAt(gnid.volumeId),
         );
       }
       if (result.value.nextId) {

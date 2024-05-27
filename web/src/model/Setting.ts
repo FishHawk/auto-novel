@@ -17,6 +17,10 @@ export interface Setting {
   };
   workspaceSound: boolean;
   paginationMode: 'auto' | 'pagination' | 'scroll';
+  localVolumeOrder: {
+    value: 'byCreateAt' | 'byReadAt' | 'byId';
+    desc: boolean;
+  };
 }
 
 export namespace Setting {
@@ -43,6 +47,11 @@ export namespace Setting {
     { label: '自适应', value: 'auto' },
     { label: '分页', value: 'pagination' },
     { label: '滚动', value: 'scroll' },
+  ];
+  export const localVolumeOrderOptions = [
+    { value: 'byCreateAt', label: '添加时间' },
+    { value: 'byReadAt', label: '阅读时间' },
+    { value: 'byId', label: '标题' },
   ];
 }
 

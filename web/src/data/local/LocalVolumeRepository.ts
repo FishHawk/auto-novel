@@ -29,6 +29,12 @@ export const createLocalVolumeRepository = async () => {
       return value;
     });
 
+  const updateReadAt = (id: string) =>
+    dao.updateMetadata(id, (value) => {
+      value.readAt = Date.now();
+      return value;
+    });
+
   const updateTranslation = async (
     id: string,
     chapterId: string,
@@ -77,6 +83,7 @@ export const createLocalVolumeRepository = async () => {
     createVolume: bind(createVolume),
     deleteVolume,
     updateGlossary,
+    updateReadAt,
     //
     getChapter: dao.getChapter,
     updateTranslation,

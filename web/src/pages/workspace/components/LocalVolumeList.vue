@@ -11,6 +11,7 @@ import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { downloadFile } from '@/util';
+import { Setting } from '@/model/Setting';
 
 const props = defineProps<{
   hideTitle?: boolean;
@@ -108,17 +109,6 @@ const deleteAllVolumes = () =>
 const enableRegexMode = ref(false);
 const fileNameSearch = ref('');
 
-const order = reactive<{
-  value: 'byCreateAt' | 'byId';
-  desc: boolean;
-}>({
-  value: 'byCreateAt',
-  desc: true,
-});
-const orderOptions = [
-  { value: 'byCreateAt', label: '按添加时间' },
-  { value: 'byId', label: '按文件名' },
-];
 const sortedVolumes = computed(() => {
   let filteredVolumes =
     props.filter === undefined
@@ -150,19 +140,26 @@ const sortedVolumes = computed(() => {
 const orderSortVolumes = (
   volumes: LocalVolumeMetadata[],
 ): LocalVolumeMetadata[] => {
+  const order = setting.value.localVolumeOrder;
   return volumes?.sort((a, b) => {
+    let delta = 0;
     switch (order.value) {
       case 'byId':
-        return order.desc ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
+        delta = b.id.localeCompare(a.id);
         break;
-      case 'byCreateAt':
-        return order.desc ? b.createAt - a.createAt : a.createAt - b.createAt;
+      case 'byCreateAt': {
+        delta = a.createAt - b.createAt;
         break;
+      }
+      case 'byReadAt': {
+        delta = (a.readAt ?? 0) - (b.readAt ?? 0);
+        break;
+      }
       default:
         console.error(`未支持${order.value}排序`);
         break;
     }
-    return 0;
+    return order.desc ? -delta : delta;
   });
 };
 
@@ -287,7 +284,10 @@ const handleDrop = (e: DragEvent) => {
     </c-action-wrapper>
 
     <c-action-wrapper title="排序" align="center">
-      <order-sort v-model:value="order" :options="orderOptions" />
+      <order-sort
+        v-model:value="setting.localVolumeOrder"
+        :options="Setting.localVolumeOrderOptions"
+      />
     </c-action-wrapper>
     <slot name="extra" />
   </n-flex>

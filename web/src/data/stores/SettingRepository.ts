@@ -22,6 +22,10 @@ export const createSettingRepository = () => {
       },
       workspaceSound: false,
       paginationMode: 'auto',
+      localVolumeOrder: {
+        value: 'byCreateAt',
+        desc: true,
+      },
     },
     { mergeDefaults: true },
   );
