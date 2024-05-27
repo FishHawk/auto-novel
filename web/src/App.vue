@@ -96,7 +96,9 @@ if (RegexUtil.isSafari(navigator.userAgent)) {
       Drawer: { bodyPadding: '0px' },
       List: { color: '#0000' },
       common: {
-        ...{ bodyColor: theme.bodyColor },
+        ...(theme.bodyColor === undefined
+          ? undefined
+          : { bodyColor: theme.bodyColor }),
       },
     }"
   >
