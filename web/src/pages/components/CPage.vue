@@ -1,5 +1,6 @@
 <script lang="ts" setup generic="T extends any">
 import { v4 as uuidv4 } from 'uuid';
+import { useThrottleFn } from '@vueuse/core';
 
 import { Page } from '@/model/Page';
 import { Result } from '@/util/result';
@@ -16,21 +17,37 @@ const props = defineProps<{
   loader: Loader<T>;
 }>();
 
+const mode = ref<'pc' | 'h5'>('pc');
 const pageNumber = ref(1);
 const pageContent = ref<Result<Page<T>>>();
+const loading = ref(false);
 
 const loadId = ref(uuidv4());
 
+const loader = computed(() => {
+  const loaderOut = props.loader;
+
+  return async (page: number) => {
+    const currentLoadId = uuidv4();
+    loadId.value = currentLoadId;
+
+    loading.value = true;
+    const res = await loaderOut(page);
+
+    if (loadId.value !== currentLoadId) return;
+
+    loading.value = false;
+    return res;
+  };
+});
+
 const reload = async () => {
-  const currentLoadId = uuidv4();
-  loadId.value = currentLoadId;
-
   pageContent.value = undefined;
-  const result = await props.loader(props.page - 1);
-
-  if (loadId.value !== currentLoadId) return;
+  const result = await loader.value(props.page - 1);
+  if (!result) return;
 
   pageContent.value = result;
+
   if (result.ok) {
     pageNumber.value = result.value.pageNumber;
   }
@@ -84,33 +101,129 @@ onKeyDown('ArrowRight', (e) => {
     e.preventDefault();
   }
 });
+
+// ===h5===
+const innerPage = ref(props.page);
+watch(
+  () => [props.page, props.loader],
+  () => {
+    innerPage.value = props.page;
+  },
+);
+onActivated(() => {
+  window.addEventListener('scroll', check);
+});
+onDeactivated(() => {
+  window.removeEventListener('scroll', check);
+});
+
+const check = useThrottleFn(
+  () => {
+    if (
+      mode.value !== 'h5' ||
+      !pageContent.value ||
+      !pageContent.value.ok ||
+      loading.value ||
+      innerPage.value >= pageNumber.value
+    )
+      return;
+    const dom = document.scrollingElement || document.documentElement;
+    const threshold = 250;
+
+    if (dom.scrollHeight - dom.scrollTop - window.innerHeight > threshold)
+      return;
+    loadMore();
+  },
+  100,
+  true,
+  true,
+);
+
+watch(
+  pageContent,
+  async () => {
+    await nextTick();
+    check();
+  },
+  { deep: true },
+);
+
+const loadMore = async () => {
+  const nextPage = innerPage.value + 1;
+  const result = await loader.value(nextPage - 1);
+  if (!result) return;
+
+  innerPage.value = nextPage;
+  if (!result.ok) {
+    pageContent.value = result;
+  } else {
+    if (!pageContent.value || !pageContent.value.ok) {
+      pageContent.value = result;
+    } else {
+      pageContent.value.value.items.push(...result.value.items);
+    }
+  }
+};
 </script>
 
 <template>
-  <n-pagination
-    v-if="pageNumber > 1"
-    :page="page"
-    @update-page="(page) => onUpdatePage(page)"
-    :page-count="pageNumber"
-    :page-slot="7"
-    style="margin-top: 20px"
-  />
-  <n-divider />
+  <template v-if="mode === 'pc'">
+    <n-pagination
+      v-if="pageNumber > 1"
+      :page="page"
+      @update-page="(page) => onUpdatePage(page)"
+      :page-count="pageNumber"
+      :page-slot="7"
+      style="margin-top: 20px"
+    />
+    <n-divider />
 
-  <c-result
-    :result="pageContent"
-    :show-empty="(it: Page<T>) => it.items.length === 0"
-    v-slot="{ value: page }"
-  >
-    <slot :items="page.items" />
-  </c-result>
+    <div v-if="loading" class="loading-box">
+      <n-spin />
+    </div>
+    <c-result
+      v-else
+      :result="pageContent"
+      :show-empty="(it: Page<T>) => it.items.length === 0"
+      v-slot="{ value: page }"
+    >
+      <slot :items="page.items" />
+    </c-result>
 
-  <n-divider />
-  <n-pagination
-    v-if="pageNumber > 1"
-    :page="page"
-    @update-page="(page) => onUpdatePage(page)"
-    :page-count="pageNumber"
-    :page-slot="7"
-  />
+    <n-divider />
+    <n-pagination
+      v-if="pageNumber > 1"
+      :page="page"
+      @update-page="(page) => onUpdatePage(page)"
+      :page-count="pageNumber"
+      :page-slot="7"
+    />
+  </template>
+  <template v-else>
+    <n-divider />
+
+    <c-result
+      :result="pageContent"
+      :show-empty="(it: Page<T>) => it.items.length === 0"
+      v-slot="{ value: page }"
+    >
+      <slot :items="page.items" />
+    </c-result>
+    <div class="loading-box" v-if="pageContent?.ok !== false">
+      <template v v-if="loading">
+        <n-spin />
+      </template>
+      <template v-else-if="innerPage >= pageNumber">没有更多了</template>
+    </div>
+  </template>
 </template>
+
+<style scoped>
+.loading-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0;
+  color: #999;
+}
+</style>
