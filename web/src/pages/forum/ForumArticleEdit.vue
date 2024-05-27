@@ -31,7 +31,7 @@ const formRef = ref<FormInst>();
 const formValue = ref({
   title: '',
   content: '',
-  category: category ?? 'General',
+  category,
 });
 const formRules: FormRules = {
   title: [
@@ -57,6 +57,14 @@ const formRules: FormRules = {
     {
       validator: (_rule: FormItemRule, value: string) => value.length <= 20_000,
       message: '正文长度不能超过2万个字符',
+      trigger: 'input',
+    },
+  ],
+  category: [
+    {
+      validator: (_rule: FormItemRule, value: string | undefined) =>
+        value !== undefined,
+      message: '未选择要发表的版块',
       trigger: 'input',
     },
   ],
@@ -91,14 +99,14 @@ const submit = async () => {
   if (store === undefined) {
     await doAction(
       Locator.articleRepository
-        .createArticle(formValue.value)
+        .createArticle(formValue.value as any)
         .then((id) => router.push({ path: `/forum/${id}` })),
       '发布',
       message,
     );
   } else {
     await doAction(
-      store.updateArticle(formValue.value).then(() => {
+      store.updateArticle(formValue.value as any).then(() => {
         router.push({ path: `/forum/${articleId}` });
       }),
       '更新',
