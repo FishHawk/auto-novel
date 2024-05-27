@@ -16,6 +16,7 @@ export interface Setting {
     type: 'epub' | 'txt';
   };
   workspaceSound: boolean;
+  paginationMode: 'auto' | 'pagination' | 'scroll';
 }
 
 export namespace Setting {
@@ -37,6 +38,11 @@ export namespace Setting {
     { label: '亮色主题', value: 'light' },
     { label: '暗色主题', value: 'dark' },
     { label: '跟随系统', value: 'system' },
+  ];
+  export const paginationModeOptions = [
+    { label: '自适应', value: 'auto' },
+    { label: '分页', value: 'pagination' },
+    { label: '滚动', value: 'scroll' },
   ];
 }
 
