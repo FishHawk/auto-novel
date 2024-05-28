@@ -42,11 +42,15 @@ const router = createRouter({
       children: [
         {
           path: '/novel/:providerId/:novelId/:chapterId',
-          component: () => import('./pages/reader/Reader.vue'),
+          components: {
+            reader: () => import('./pages/reader/Reader.vue'),
+          },
         },
         {
           path: '/workspace/reader/:novelId/:chapterId',
-          component: () => import('./pages/reader/Reader.vue'),
+          components: {
+            reader: () => import('./pages/reader/Reader.vue'),
+          },
         },
       ],
     },
