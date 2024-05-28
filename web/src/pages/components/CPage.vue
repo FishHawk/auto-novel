@@ -5,7 +5,7 @@ import { useThrottleFn } from '@vueuse/core';
 import { Page } from '@/model/Page';
 import { Result } from '@/util/result';
 
-import { checkIsMobile, onKeyDown, useIsWideScreen } from '../util';
+import { onKeyDown } from '../util';
 import { Locator } from '@/data';
 
 export type Loader<T extends any> = (page: number) => Promise<Result<Page<T>>>;
@@ -18,16 +18,7 @@ const props = defineProps<{
   loader: Loader<T>;
 }>();
 
-const isMobile = checkIsMobile();
 const { setting } = Locator.settingRepository();
-const mode = computed(() => {
-  let mode = setting.value.paginationMode;
-  if (mode === 'auto') {
-    return isMobile ? 'scroll' : 'pagination';
-  } else {
-    return mode;
-  }
-});
 
 const pageNumber = ref(1);
 const pageContent = ref<Result<Page<T>>>();
@@ -131,7 +122,7 @@ onDeactivated(() => {
 const check = useThrottleFn(
   () => {
     if (
-      mode.value !== 'scroll' ||
+      setting.value.paginationMode !== 'scroll' ||
       !pageContent.value ||
       !pageContent.value.ok ||
       loading.value ||
@@ -177,7 +168,7 @@ const loadMore = async () => {
 </script>
 
 <template>
-  <template v-if="mode === 'pagination'">
+  <template v-if="setting.paginationMode === 'pagination'">
     <n-pagination
       v-if="pageNumber > 1"
       :page="page"

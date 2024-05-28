@@ -16,7 +16,7 @@ export interface Setting {
     type: 'epub' | 'txt';
   };
   workspaceSound: boolean;
-  paginationMode: 'auto' | 'pagination' | 'scroll';
+  paginationMode: 'pagination' | 'scroll';
   localVolumeOrder: {
     value: 'byCreateAt' | 'byReadAt' | 'byId';
     desc: boolean;
@@ -44,7 +44,6 @@ export namespace Setting {
     { label: '跟随系统', value: 'system' },
   ];
   export const paginationModeOptions = [
-    { label: '自适应', value: 'auto' },
     { label: '分页', value: 'pagination' },
     { label: '滚动', value: 'scroll' },
   ];
