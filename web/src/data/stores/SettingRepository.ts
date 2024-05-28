@@ -21,7 +21,7 @@ export const createSettingRepository = () => {
         type: 'epub',
       },
       workspaceSound: false,
-      paginationMode: 'auto',
+      paginationMode: 'pagination',
       localVolumeOrder: {
         value: 'byCreateAt',
         desc: true,
@@ -51,6 +51,10 @@ export const createSettingRepository = () => {
     // 2024-03-05
     if (settingValue.workspaceSound === undefined) {
       settingValue.workspaceSound = false;
+    }
+    // 2024-05-28
+    if ((settingValue.paginationMode as any) === 'auto') {
+      settingValue.paginationMode = 'pagination';
     }
   };
 
