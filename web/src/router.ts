@@ -45,7 +45,6 @@ const router = createRouter({
           components: {
             reader: () => import('./pages/reader/Reader.vue'),
           },
-          name: 'reader',
         },
         {
           path: '/workspace/reader/:novelId/:chapterId',
