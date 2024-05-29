@@ -5,8 +5,8 @@ import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { TranslatorId, TranslateTaskDescriptor } from '@/model/Translator';
+
 import TranslateTask from '@/pages/components/TranslateTask.vue';
-import { downloadFile } from '@/util';
 
 const props = defineProps<{ volume: LocalVolumeMetadata }>();
 
@@ -38,7 +38,7 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
 
 const shouldTopJob = useKeyModifier('Control');
 const queueVolume = (translatorId: 'gpt' | 'sakura') => {
-  const task = TranslateTaskDescriptor.workspace(props.volume.id, {
+  const task = TranslateTaskDescriptor.local(props.volume.id, {
     level: 'expire',
     sync: false,
     forceMetadata: false,
@@ -68,27 +68,17 @@ const queueVolume = (translatorId: 'gpt' | 'sakura') => {
     message.error('排队失败：翻译任务已经存在');
   }
 };
-
-const downloadVolume = async () => {
-  const { mode, translationsMode, translations } = setting.value.downloadFormat;
-  const repo = await Locator.localVolumeRepository();
-
-  try {
-    const { filename, blob } = await repo.getTranslationFile({
-      id: props.volume.id,
-      mode,
-      translationsMode,
-      translations,
-    });
-    downloadFile(filename, blob);
-  } catch (error) {
-    message.error(`文件生成错误：${error}`);
-  }
-};
 </script>
+
 <template>
   <n-flex :size="4" vertical>
-    <n-text>{{ volume.id }}</n-text>
+    <c-a
+      v-if="!volume.id.endsWith('.epub')"
+      :to="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"
+    >
+      {{ volume.id }}
+    </c-a>
+    <n-text v-else>{{ volume.id }}</n-text>
 
     <n-text depth="3">
       总计 {{ volume.toc.length }} / 百度 {{ baidu }} / 有道 {{ youdao }} / GPT
@@ -110,41 +100,15 @@ const downloadVolume = async () => {
         secondary
         @action="startTranslateTask('youdao')"
       />
-
-      <c-button
-        v-if="setting.enabledTranslator.includes('gpt')"
-        label="排队GPT"
-        size="tiny"
-        secondary
-        @action="queueVolume('gpt')"
-      />
-      <c-button
-        v-if="setting.enabledTranslator.includes('sakura')"
-        label="排队Sakura"
-        size="tiny"
-        secondary
-        @action="queueVolume('sakura')"
-      />
-
-      <router-link
-        v-if="!volume.id.endsWith('.epub')"
-        :to="`/workspace/reader/${encodeURIComponent(volume.id)}/0`"
-      >
-        <c-button label="阅读" size="tiny" secondary />
-      </router-link>
-
       <glossary-button
         :gnid="GenericNovelId.local(volume.id)"
         :value="volume.glossary"
         size="tiny"
         secondary
       />
-
-      <c-button label="下载" size="tiny" secondary @action="downloadVolume" />
-      <slot />
     </n-flex>
   </n-flex>
-  <TranslateTask
+  <translate-task
     ref="translateTask"
     style="margin-top: 20px"
     @update:baidu="(zh) => (baidu = zh)"

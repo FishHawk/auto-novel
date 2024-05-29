@@ -76,8 +76,8 @@ const router = createRouter({
           children: [
             {
               path: '',
-              meta: { title: '工作区' },
-              component: () => import('./pages/workspace/Workspace.vue'),
+              meta: { title: '个人书架' },
+              component: () => import('./pages/workspace/Bookshelf.vue'),
             },
             {
               path: 'katakana',

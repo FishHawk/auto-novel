@@ -1,17 +1,12 @@
 <script lang="ts" setup>
-import {
-  DriveFolderUploadOutlined,
-  MoreVertOutlined,
-  PlusOutlined,
-  SearchOutlined,
-} from '@vicons/material';
-import { useEventListener } from '@vueuse/core';
-import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
+import { MoreVertOutlined, SearchOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { downloadFile } from '@/util';
 import { Setting } from '@/model/Setting';
+
+import { doAction } from '@/pages/util';
+import { BookshelfUtil, useBookshelfStore } from '../BookshelfStore';
 
 const props = defineProps<{
   hideTitle?: boolean;
@@ -23,25 +18,15 @@ const props = defineProps<{
 const message = useMessage();
 const { setting } = Locator.settingRepository();
 
-const volumes = ref<LocalVolumeMetadata[]>();
+const store = useBookshelfStore();
+const { volumes } = storeToRefs(store);
 
-const loadVolumes = async () => {
-  const repo = await Locator.localVolumeRepository();
-  volumes.value = await repo.listVolume();
-};
-loadVolumes();
+store.loadVolumes();
 
 const options = computed(() => {
-  const options =
-    props.options === undefined
-      ? []
-      : Object.keys(props.options).map((it) => ({
-          label: it,
-          key: it,
-        }));
-  options.push({ label: '清空文件', key: '清空文件' });
-  options.push({ label: '批量下载', key: '批量下载' });
-  return options;
+  return [...Object.keys(props.options ?? {}), '清空文件', '批量下载'].map(
+    (it) => ({ label: it, key: it }),
+  );
 });
 const handleSelect = (key: string) => {
   switch (key) {
@@ -58,201 +43,51 @@ const handleSelect = (key: string) => {
 };
 
 const downloadVolumes = async () => {
-  if (sortedVolumes.value === undefined) {
-    message.info('列表加载中');
-    return;
-  }
   if (sortedVolumes.value.length === 0) {
     message.info('列表为空，没有文件需要下载');
     return;
   }
-
-  const { BlobReader, BlobWriter, ZipWriter } = await import('@zip.js/zip.js');
-
-  const { mode, translationsMode, translations } = setting.value.downloadFormat;
-  const repo = await Locator.localVolumeRepository();
-
-  const zipBlobWriter = new BlobWriter();
-  const writer = new ZipWriter(zipBlobWriter);
-
-  await Promise.all(
-    sortedVolumes.value.map(async (volume: LocalVolumeMetadata) => {
-      try {
-        const { filename, blob } = await repo.getTranslationFile({
-          id: volume.id,
-          mode,
-          translationsMode,
-          translations,
-        });
-        await writer.add(filename, new BlobReader(blob));
-      } catch (error) {
-        message.error(`${volume.id} 文件生成错误：${error}`);
-      }
-    }),
-  );
-
-  await writer.close();
-  const zipBlob = await zipBlobWriter.getData();
-  downloadFile(`批量下载[${sortedVolumes.value.length}].zip`, zipBlob);
+  await BookshelfUtil.downloadVolumes(sortedVolumes.value, {
+    ...setting.value.downloadFormat,
+    onError: (id, error) => {
+      message.error(`${id} 文件生成错误：${error}`);
+    },
+  });
 };
 
 const showClearModal = ref(false);
 const deleteAllVolumes = () =>
-  Locator.localVolumeRepository()
-    .then((repo) => repo.deleteVolumesDb())
-    .then(loadVolumes)
-    .then(() => (showClearModal.value = false))
-    .catch((error) => {
-      message.error(`清空失败:${error}`);
-    });
+  doAction(
+    store.deleteAllVolumes().then(() => (showClearModal.value = false)),
+    '清空',
+    message,
+  );
 
 const enableRegexMode = ref(false);
-const fileNameSearch = ref('');
+const filenameSearch = ref('');
 
 const sortedVolumes = computed(() => {
-  let filteredVolumes =
+  const filteredVolumes =
     props.filter === undefined
       ? volumes.value
-      : volumes.value?.filter(props.filter);
-
-  if (fileNameSearch.value) {
-    const buildSearchFilter = () => {
-      const parts = fileNameSearch.value
-        .trim()
-        .split(' ')
-        .filter((v) => v.length > 0);
-      if (enableRegexMode.value) {
-        const regs = parts.map((it) => new RegExp(it, 'i'));
-        return (s: string) => !regs.some((r) => !r.test(s));
-      } else {
-        return (s: string) => !parts.some((r) => !s.includes(r));
-      }
-    };
-    const filter = buildSearchFilter();
-    filteredVolumes = filteredVolumes?.filter((volume) => filter(volume.id));
-  }
-  if (!Array.isArray(filteredVolumes)) {
-    return filteredVolumes;
-  }
-  return orderSortVolumes(filteredVolumes);
-});
-
-const orderSortVolumes = (
-  volumes: LocalVolumeMetadata[],
-): LocalVolumeMetadata[] => {
-  const order = setting.value.localVolumeOrder;
-  return volumes?.sort((a, b) => {
-    let delta = 0;
-    switch (order.value) {
-      case 'byId':
-        delta = b.id.localeCompare(a.id);
-        break;
-      case 'byCreateAt': {
-        delta = a.createAt - b.createAt;
-        break;
-      }
-      case 'byReadAt': {
-        delta = (a.readAt ?? 0) - (b.readAt ?? 0);
-        break;
-      }
-      default:
-        console.error(`未支持${order.value}排序`);
-        break;
-    }
-    return order.desc ? -delta : delta;
+      : volumes.value.filter(props.filter);
+  return BookshelfUtil.filterAndSortVolumes(filteredVolumes, {
+    query: filenameSearch.value,
+    enableRegexMode: enableRegexMode.value,
+    order: setting.value.localVolumeOrder,
   });
-};
+});
 
 const deleteVolume = (volumeId: string) =>
-  Locator.localVolumeRepository()
-    .then((repo) => repo.deleteVolume(volumeId))
-    .then(() => message.info('删除成功'))
-    .then(() => loadVolumes())
-    .catch((error) => message.error(`删除失败：${error}`));
+  doAction(store.deleteVolume(volumeId), '删除', message);
 
 defineExpose({ deleteVolume });
-
-// Add volume
-const onFinish = ({ file }: { file: UploadFileInfo }) => {
-  if (props.beforeVolumeAdd) {
-    props.beforeVolumeAdd(file.file!!);
-  }
-  loadVolumes();
-};
-
-const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
-  if (
-    !(
-      file.name.endsWith('.txt') ||
-      file.name.endsWith('.srt') ||
-      file.name.endsWith('.epub')
-    )
-  ) {
-    message.error(`上传失败:文件类型不允许\n文件名： ${file.name}`);
-    return false;
-  }
-  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error(`上传失败:文件大小不能超过40MB\n文件名: ${file.name}`);
-    return false;
-  }
-};
-
-const customRequest = ({
-  file,
-  onFinish,
-  onError,
-}: UploadCustomRequestOptions) => {
-  Locator.localVolumeRepository()
-    .then((repo) => repo.createVolume(file.file!!))
-    .then(onFinish)
-    .catch((error) => {
-      message.error(`上传失败:${error}\n文件名: ${file.name}`);
-      onError();
-    });
-};
-
-const showDropZone = ref(false);
-let dragFlag = { isDragStart: false };
-// 将文件从操作系统拖拽到浏览器内，不会触发 dragstart 和 dragend 事件
-useEventListener(document, ['dragenter', 'dragstart', 'dragend'], (e) => {
-  if (e.type === 'dragstart') {
-    dragFlag.isDragStart = true;
-  } else if (e.type === 'dragenter' && !dragFlag.isDragStart) {
-    e.preventDefault();
-    showDropZone.value = true;
-  } else if (e.type === 'dragend') {
-    dragFlag.isDragStart = false;
-  }
-});
-const handleDragLeave = (e: DragEvent) => {
-  e.preventDefault();
-  showDropZone.value = false;
-};
-const handleDrop = (e: DragEvent) => {
-  e.preventDefault();
-  showDropZone.value = false;
-};
 </script>
 
 <template>
   <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
-      <n-upload
-        :show-file-list="false"
-        accept=".txt,.epub,.srt"
-        multiple
-        directory-dnd
-        :custom-request="customRequest"
-        @before-upload="beforeUpload"
-        @finish="onFinish"
-      >
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <c-button label="添加文件" :icon="PlusOutlined" />
-          </template>
-          支持拖拽上传文件
-        </n-tooltip>
-      </n-upload>
+      <bookshelf-add-button @done="beforeVolumeAdd" />
 
       <n-dropdown
         trigger="click"
@@ -272,7 +107,7 @@ const handleDrop = (e: DragEvent) => {
       <n-input
         clearable
         size="small"
-        v-model:value="fileNameSearch"
+        v-model:value="filenameSearch"
         type="text"
         placeholder="搜索文件名"
         style="max-width: 400px"
@@ -320,71 +155,4 @@ const handleDrop = (e: DragEvent) => {
       <c-button label="确定" type="primary" @action="deleteAllVolumes" />
     </template>
   </c-modal>
-
-  <teleport to="body">
-    <div class="drop-zone-wrap" v-show="showDropZone">
-      <n-upload
-        :show-file-list="false"
-        @finish="onFinish"
-        accept=".txt,.epub,.srt"
-        multiple
-        directory-dnd
-        :custom-request="customRequest"
-        @before-upload="beforeUpload"
-        class="drop-zone"
-        trigger-style="height:100%"
-        @dragleave="handleDragLeave"
-        @drop="handleDrop"
-      >
-        <n-upload-dragger class="drop-zone-placeholder">
-          <n-icon class="drop-icon" :component="DriveFolderUploadOutlined" />
-          <div>拖拽文件到这里上传</div>
-        </n-upload-dragger>
-      </n-upload>
-    </div>
-  </teleport>
 </template>
-
-<style scoped>
-.drop-zone-wrap {
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 2000;
-  box-sizing: border-box;
-}
-
-.drop-zone {
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  box-sizing: border-box;
-}
-
-.drop-zone-placeholder {
-  pointer-events: none;
-  position: fixed;
-  left: 42px;
-  top: 42px;
-  right: 42px;
-  bottom: 42px;
-  width: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: #fff;
-  background-color: transparent;
-  font-size: 24px;
-  border-radius: 12px;
-  border-width: 2px !important;
-}
-
-.drop-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-</style>

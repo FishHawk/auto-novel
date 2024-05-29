@@ -49,7 +49,7 @@ const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
 
 const shouldTopJob = useKeyModifier('Control');
 const queueVolume = (volumeId: string) => {
-  const task = TranslateTaskDescriptor.workspace(volumeId, {
+  const task = TranslateTaskDescriptor.local(volumeId, {
     level: 'expire',
     sync: false,
     forceMetadata: false,

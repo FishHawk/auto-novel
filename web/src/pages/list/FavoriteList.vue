@@ -32,6 +32,8 @@ const isWideScreen = useIsWideScreen(850);
 const router = useRouter();
 const message = useMessage();
 
+const { setting } = Locator.settingRepository();
+
 const options = [
   {
     label: '排序',
@@ -285,7 +287,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       <n-h1>我的收藏</n-h1>
       <n-flex style="margin-bottom: 24px">
         <c-button
-          label="批量操作"
+          label="选择"
           :icon="ChecklistOutlined"
           @action="showOperationPanel = !showOperationPanel"
         />
@@ -360,9 +362,15 @@ const submitJob = (id: 'gpt' | 'sakura') => {
             </n-flex>
           </n-list-item>
 
-          <n-list-item v-if="favoriteType === 'web'">
+          <n-list-item
+            v-if="
+              favoriteType === 'web' &&
+              (setting.enabledTranslator.includes('gpt') ||
+                setting.enabledTranslator.includes('sakura'))
+            "
+          >
             <n-flex vertical>
-              <b>批量生成GPT/Sakura任务</b>
+              <b>批量生成翻译任务</b>
 
               <c-action-wrapper title="选项">
                 <n-flex size="small">
@@ -412,11 +420,13 @@ const submitJob = (id: 'gpt' | 'sakura') => {
               <c-action-wrapper title="操作">
                 <n-button-group size="small">
                   <c-button
+                    v-if="setting.enabledTranslator.includes('gpt')"
                     label="排队GPT"
                     :round="false"
                     @action="submitJob('gpt')"
                   />
                   <c-button
+                    v-if="setting.enabledTranslator.includes('sakura')"
                     label="排队Sakura"
                     :round="false"
                     @action="submitJob('sakura')"

@@ -109,7 +109,7 @@ export namespace TranslateTaskDescriptor {
     `wenku/${novelId}/${encodeURIComponent(volumeId)}` +
     buildTaskQueryString(params);
 
-  export const workspace = (volumeId: string, params: TranslateTaskParams) =>
+  export const local = (volumeId: string, params: TranslateTaskParams) =>
     `local/${encodeURIComponent(volumeId)}` + buildTaskQueryString(params);
 
   export const parse = (task: string) => {
