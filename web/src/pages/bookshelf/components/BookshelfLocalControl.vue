@@ -5,7 +5,7 @@ import { Locator } from '@/data';
 import { Setting } from '@/model/Setting';
 
 import { useIsWideScreen } from '@/pages/util';
-import { useBookshelfStore } from '../BookshelfStore';
+import { useBookshelfLocalStore } from '../BookshelfLocalStore';
 
 const props = defineProps<{
   selectedIds: string[];
@@ -20,8 +20,27 @@ const isWideScreen = useIsWideScreen(600);
 
 const { setting } = Locator.settingRepository();
 
-const store = useBookshelfStore();
+const store = useBookshelfLocalStore();
 
+// 删除小说
+const showDeleteModal = ref(false);
+
+const openDeleteModal = () => {
+  const ids = props.selectedIds;
+  if (ids.length === 0) {
+    message.info('没有选中小说');
+    return;
+  }
+  showDeleteModal.value = true;
+};
+
+const deleteSelected = async () => {
+  const ids = props.selectedIds;
+  const { success, failed } = await store.deleteVolumes(ids);
+  message.info(`${success}本小说被删除，${failed}本失败`);
+};
+
+// 下载小说
 const showDownloadModal = ref(false);
 
 const downloadSelected = async () => {
@@ -34,16 +53,22 @@ const downloadSelected = async () => {
   message.info(`${success}本小说被打包，${failed}本失败`);
 };
 
+// 生成翻译任务
 const translateLevel = ref<'expire' | 'all'>('expire');
 const reverseOrder = ref(false);
 const shouldTopJob = useKeyModifier('Control');
 
 const queueJobs = (type: 'gpt' | 'sakura') => {
-  const ids = props.selectedIds;
+  let ids = props.selectedIds;
   if (ids.length === 0) {
     message.info('没有选中小说');
     return;
   }
+
+  if (reverseOrder.value) {
+    ids = ids.slice().reverse();
+  }
+
   const { success, failed } = store.queueJobsToWorkspace(ids, {
     level: translateLevel.value,
     type,
@@ -57,38 +82,49 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
   <n-list bordered>
     <n-list-item>
       <n-flex vertical>
-        <c-action-wrapper title="选择">
-          <n-flex align="baseline">
-            <n-button-group size="small">
-              <c-button
-                label="全选"
-                :round="false"
-                @action="$emit('selectAll')"
-              />
-              <c-button
-                label="反选"
-                :round="false"
-                @action="$emit('invertSelection')"
-              />
-            </n-button-group>
-            <n-text depth="3"> 已选择{{ selectedIds.length }}本小说 </n-text>
-          </n-flex>
-        </c-action-wrapper>
-
-        <c-action-wrapper title="操作">
+        <n-flex align="baseline">
           <n-button-group size="small">
-            <c-button label="下载" :round="false" @action="downloadSelected" />
             <c-button
-              label="下载设置"
+              label="全选"
               :round="false"
-              @action="showDownloadModal = true"
+              @action="$emit('selectAll')"
             />
-            <bookshelf-delete-button
-              :selected-ids="selectedIds"
+            <c-button
+              label="反选"
               :round="false"
+              @action="$emit('invertSelection')"
             />
           </n-button-group>
-        </c-action-wrapper>
+          <n-text depth="3"> 已选择{{ selectedIds.length }}本小说 </n-text>
+        </n-flex>
+
+        <n-button-group size="small">
+          <c-button label="下载" :round="false" @action="downloadSelected" />
+          <c-button
+            label="下载设置"
+            :round="false"
+            @action="showDownloadModal = true"
+          />
+          <c-button
+            label="删除"
+            secondary
+            :round="false"
+            type="error"
+            @click="openDeleteModal"
+          />
+          <c-modal
+            :title="`确定删除 ${
+              selectedIds.length === 1
+                ? selectedIds[0]
+                : `${selectedIds.length}本小说`
+            }？`"
+            v-model:show="showDeleteModal"
+          >
+            <template #action>
+              <c-button label="确定" type="primary" @action="deleteSelected" />
+            </template>
+          </c-modal>
+        </n-button-group>
       </n-flex>
     </n-list-item>
 
@@ -99,7 +135,7 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
       "
     >
       <n-flex vertical>
-        <b>批量生成翻译任务</b>
+        <b>生成翻译任务</b>
 
         <c-action-wrapper title="选项">
           <n-flex size="small">

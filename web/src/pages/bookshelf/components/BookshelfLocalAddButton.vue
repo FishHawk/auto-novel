@@ -3,13 +3,13 @@ import { DriveFolderUploadOutlined, PlusOutlined } from '@vicons/material';
 import { useEventListener } from '@vueuse/core';
 import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
-import { useBookshelfStore } from '../BookshelfStore';
+import { useBookshelfLocalStore } from '../BookshelfLocalStore';
 
 const emit = defineEmits<{ done: [File] }>();
 
 const message = useMessage();
 
-const store = useBookshelfStore();
+const store = useBookshelfLocalStore();
 
 const onFinish = ({ file }: { file: UploadFileInfo }) => {
   emit('done', file.file!!);

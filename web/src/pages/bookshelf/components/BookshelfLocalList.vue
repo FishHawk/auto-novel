@@ -4,7 +4,10 @@ import { SearchOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { Setting } from '@/model/Setting';
 
-import { BookshelfUtil, useBookshelfStore } from '../BookshelfStore';
+import {
+  BookshelfLocalUtil,
+  useBookshelfLocalStore,
+} from '../BookshelfLocalStore';
 
 const props = defineProps<{
   selectable?: boolean;
@@ -12,7 +15,7 @@ const props = defineProps<{
 
 const { setting } = Locator.settingRepository();
 
-const store = useBookshelfStore();
+const store = useBookshelfLocalStore();
 const { volumes } = storeToRefs(store);
 
 store.loadVolumes();
@@ -21,7 +24,7 @@ const enableRegexMode = ref(false);
 const filenameSearch = ref('');
 
 const sortedVolumes = computed(() => {
-  return BookshelfUtil.filterAndSortVolumes(volumes.value, {
+  return BookshelfLocalUtil.filterAndSortVolumes(volumes.value, {
     query: filenameSearch.value,
     enableRegexMode: enableRegexMode.value,
     order: setting.value.localVolumeOrder,
@@ -106,7 +109,7 @@ defineExpose({
           "
           style="margin-right: 8px"
         />
-        <bookshelf-list-item :volume="volume" />
+        <bookshelf-local-list-item :volume="volume" />
       </n-list-item>
     </n-list>
   </n-scrollbar>

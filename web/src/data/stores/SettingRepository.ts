@@ -9,10 +9,13 @@ export const createSettingRepository = () => {
       theme: 'light',
       enabledTranslator: ['baidu', 'youdao', 'gpt', 'sakura'],
       tocSortReverse: false,
+      //
       tocCollapseInNarrowScreen: true,
       hideCommmentWebNovel: false,
       hideCommmentWenkuNovel: false,
       hideLocalVolumeListInWorkspace: false,
+      showTagInWebFavored: false,
+      //
       downloadFilenameType: 'zh',
       downloadFormat: {
         mode: 'zh-jp',

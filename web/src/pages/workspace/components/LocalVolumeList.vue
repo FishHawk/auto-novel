@@ -6,7 +6,10 @@ import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { Setting } from '@/model/Setting';
 
 import { doAction } from '@/pages/util';
-import { BookshelfUtil, useBookshelfStore } from '../BookshelfStore';
+import {
+  BookshelfLocalUtil,
+  useBookshelfLocalStore,
+} from '@/pages/bookshelf/BookshelfLocalStore';
 
 const props = defineProps<{
   hideTitle?: boolean;
@@ -18,7 +21,7 @@ const props = defineProps<{
 const message = useMessage();
 const { setting } = Locator.settingRepository();
 
-const store = useBookshelfStore();
+const store = useBookshelfLocalStore();
 const { volumes } = storeToRefs(store);
 
 store.loadVolumes();
@@ -47,7 +50,7 @@ const downloadVolumes = async () => {
     message.info('列表为空，没有文件需要下载');
     return;
   }
-  await BookshelfUtil.downloadVolumes(sortedVolumes.value, {
+  await BookshelfLocalUtil.downloadVolumes(sortedVolumes.value, {
     ...setting.value.downloadFormat,
     onError: (id, error) => {
       message.error(`${id} 文件生成错误：${error}`);
@@ -71,7 +74,7 @@ const sortedVolumes = computed(() => {
     props.filter === undefined
       ? volumes.value
       : volumes.value.filter(props.filter);
-  return BookshelfUtil.filterAndSortVolumes(filteredVolumes, {
+  return BookshelfLocalUtil.filterAndSortVolumes(filteredVolumes, {
     query: filenameSearch.value,
     enableRegexMode: enableRegexMode.value,
     order: setting.value.localVolumeOrder,
@@ -87,7 +90,7 @@ defineExpose({ deleteVolume });
 <template>
   <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
-      <bookshelf-add-button @done="beforeVolumeAdd" />
+      <bookshelf-local-add-button @done="beforeVolumeAdd" />
 
       <n-dropdown
         trigger="click"

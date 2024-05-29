@@ -3,13 +3,13 @@ import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { TranslateTaskDescriptor, TranslatorId } from '@/model/Translator';
 import { downloadFile } from '@/util';
 
-type BookshelfStore = {
+type BookshelfLocalStore = {
   volumes: LocalVolumeMetadata[];
 };
 
-export const useBookshelfStore = defineStore('Bookshelf', {
+export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
   state: () =>
-    <BookshelfStore>{
+    <BookshelfLocalStore>{
       volumes: [],
     },
   actions: {
@@ -132,7 +132,7 @@ export const useBookshelfStore = defineStore('Bookshelf', {
   },
 });
 
-export namespace BookshelfUtil {
+export namespace BookshelfLocalUtil {
   export const filterAndSortVolumes = (
     volumes: LocalVolumeMetadata[],
     {

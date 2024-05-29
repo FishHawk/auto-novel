@@ -1,50 +1,42 @@
 <script lang="ts" setup>
+import { PlusOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { UserRepository } from '@/data/api';
 import { doAction } from '@/pages/util';
-
-defineProps(['show']);
-const emit = defineEmits<{
-  'update:show': [boolean];
-  created: [];
-}>();
+import { useBookshelfStore } from '../BookshelfStore';
 
 const message = useMessage();
 
-const type = ref<'web' | 'wenku'>('web');
+const store = useBookshelfStore();
 
-const formRef = ref<FormInst | null>(null);
-const formValue = ref({ title: '' });
+const showAddModal = ref(false);
+
+const formRef = ref<FormInst>();
+const formValue = ref({
+  title: '',
+  type: 'web' as 'web' | 'wenku',
+});
 const formRules: FormRules = {
   title: [
     {
-      validator: (rule: FormItemRule, value: string) => value.length > 0,
+      validator: (_rule: FormItemRule, value: string) => value.length > 0,
       message: '收藏夹标题不能为空',
       trigger: 'input',
     },
   ],
 };
+
 const addFavorite = async () => {
-  if (formRef.value == null) {
+  try {
+    await formRef.value?.validate();
+  } catch (e) {
     return;
-  } else {
-    try {
-      await formRef.value.validate();
-    } catch (e) {
-      return;
-    }
   }
 
-  const typeValue = type.value;
-  const title = formValue.value.title;
+  const { type, title } = formValue.value;
   await doAction(
-    (typeValue === 'web'
-      ? UserRepository.createFavoredWeb({ title })
-      : UserRepository.createFavoredWenku({ title })
-    ).then(() => {
-      emit('created');
-      emit('update:show', false);
+    store.createFavored(type, title).then(() => {
+      showAddModal.value = false;
     }),
     '收藏夹创建',
     message,
@@ -53,11 +45,9 @@ const addFavorite = async () => {
 </script>
 
 <template>
-  <c-modal
-    title="新建收藏夹"
-    :show="show"
-    @update:show="emit('update:show', $event)"
-  >
+  <c-button label="新建" :icon="PlusOutlined" @action="showAddModal = true" />
+
+  <c-modal title="新建收藏夹" v-model:show="showAddModal">
     <n-form
       ref="formRef"
       :model="formValue"
@@ -73,7 +63,7 @@ const addFavorite = async () => {
         />
       </n-form-item-row>
       <n-form-item-row label="类型">
-        <n-radio-group v-model:value="type" name="type">
+        <n-radio-group v-model:value="formValue.type" name="type">
           <n-flex>
             <n-radio value="web"> 网页小说 </n-radio>
             <n-radio value="wenku"> 文库小说 </n-radio>

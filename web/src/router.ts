@@ -72,13 +72,44 @@ const router = createRouter({
         },
 
         {
-          path: '/workspace',
+          path: '/favorite',
+          redirect: '/favorite/web/default',
           children: [
             {
-              path: '',
-              meta: { title: '个人书架' },
-              component: () => import('./pages/workspace/Bookshelf.vue'),
+              path: 'web/:favoredId?',
+              meta: { title: '我的收藏' },
+              component: () => import('./pages/bookshelf/BookshelfWeb.vue'),
+              props: (route) => ({
+                page: Number(route.query.page) || 1,
+                selected: parseSelected(route.query),
+                favoredId: route.params.favoredId || 'default',
+              }),
             },
+            {
+              path: 'wenku/:favoredId?',
+              meta: { title: '我的收藏' },
+              component: () => import('./pages/bookshelf/BookshelfWenku.vue'),
+              props: (route) => ({
+                page: Number(route.query.page) || 1,
+                selected: parseSelected(route.query),
+                favoredId: route.params.favoredId || 'default',
+              }),
+            },
+            {
+              path: 'local/:favoredId?',
+              meta: { title: '我的收藏' },
+              component: () => import('./pages/bookshelf/BookshelfLocal.vue'),
+              props: (route) => ({
+                favoredId: route.params.favoredId || 'default',
+              }),
+            },
+          ],
+        },
+
+        {
+          path: '/workspace',
+          redirect: '/workspace/sakura',
+          children: [
             {
               path: 'katakana',
               meta: { title: '术语表工作区' },
@@ -136,17 +167,6 @@ const router = createRouter({
           }),
         },
 
-        {
-          path: '/favorite',
-          meta: { title: '我的收藏' },
-          component: () => import('./pages/list/FavoriteList.vue'),
-          props: (route) => ({
-            page: Number(route.query.page) || 1,
-            selected: parseSelected(route.query),
-            favoriteType: route.query.type || 'web',
-            favoriteId: route.query.fid || 'default',
-          }),
-        },
         {
           path: '/read-history',
           meta: { title: '阅读历史' },
@@ -259,7 +279,6 @@ const router = createRouter({
         },
 
         // 兼容旧路由
-        { path: '/personal', redirect: '/workspace' },
         { path: '/sakura-workspace', redirect: '/workspace/sakura' },
 
         // 404

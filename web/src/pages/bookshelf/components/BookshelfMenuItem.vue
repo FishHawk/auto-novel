@@ -2,25 +2,18 @@
 import { MoreVertOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { UserRepository } from '@/data/api';
 import { doAction } from '@/pages/util';
+import { useBookshelfStore } from '../BookshelfStore';
 
 const { id, type, title } = defineProps<{
   id: string;
   title: string;
-  type: 'web' | 'wenku';
+  type: 'web' | 'wenku' | 'local';
 }>();
 
-const emit = defineEmits<{ updated: []; deleted: [] }>();
+const store = useBookshelfStore();
 
 const message = useMessage();
-
-const href = computed(() => {
-  const params = new URLSearchParams({});
-  params.append('type', type);
-  params.append('fid', id);
-  return `/favorite?${params}`;
-});
 
 const options =
   id === 'default'
@@ -43,7 +36,7 @@ const formValue = ref({ title });
 const formRules: FormRules = {
   title: [
     {
-      validator: (rule: FormItemRule, value: string) => value.length > 0,
+      validator: (_rule: FormItemRule, value: string) => value.length > 0,
       message: '收藏夹标题不能为空',
       trigger: 'input',
     },
@@ -63,11 +56,7 @@ const updateFavorite = async () => {
   const title = formValue.value.title;
 
   await doAction(
-    (type === 'web'
-      ? UserRepository.updateFavoredWeb(id, { title })
-      : UserRepository.updateFavoredWenku(id, { title })
-    ).then(() => {
-      emit('updated');
+    store.updateFavored(type, id, title).then(() => {
       showEditModal.value = false;
     }),
     '收藏夹更新',
@@ -78,11 +67,7 @@ const updateFavorite = async () => {
 const showDeleteModal = ref(false);
 const deleteFavorite = () =>
   doAction(
-    (type === 'web'
-      ? UserRepository.deleteFavoredWeb(id)
-      : UserRepository.deleteFavoredWenku(id)
-    ).then(() => {
-      emit('deleted');
+    store.deleteFavored(type, id).then(() => {
       showDeleteModal.value = false;
     }),
     '收藏夹删除',
@@ -91,10 +76,11 @@ const deleteFavorite = () =>
 </script>
 
 <template>
-  <router-link :to="href">
+  <router-link :to="`/favorite/${type}/${id}`">
     <n-flex align="center" justify="space-between">
       {{ title }}
       <n-dropdown
+        v-if="type !== 'local'"
         trigger="hover"
         :options="options"
         :keyboard="false"

@@ -4,10 +4,13 @@ export interface Setting {
   theme: 'light' | 'dark' | 'system';
   enabledTranslator: TranslatorId[];
   tocSortReverse: boolean;
+  //
   tocCollapseInNarrowScreen: boolean;
   hideCommmentWebNovel: boolean;
   hideCommmentWenkuNovel: boolean;
   hideLocalVolumeListInWorkspace: boolean;
+  showTagInWebFavored: boolean;
+  //
   downloadFilenameType: 'jp' | 'zh';
   downloadFormat: {
     mode: 'zh' | 'zh-jp' | 'jp-zh';

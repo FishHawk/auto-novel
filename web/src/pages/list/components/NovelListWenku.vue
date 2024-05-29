@@ -6,42 +6,42 @@ const props = defineProps<{
   selectable?: boolean;
 }>();
 
-const selectedNovels = ref<string[]>([]);
+const selectedIds = ref<string[]>([]);
+const selectedNovels = computed(() =>
+  props.items.filter(({ id }) => selectedIds.value.includes(id)),
+);
 
 watch(
   () => props.selectable,
   (selectable) => {
     if (selectable !== false) {
-      selectedNovels.value = [];
+      selectedIds.value = [];
     }
   },
 );
 const toggleNovelSelect = (novel: string, selected: boolean) => {
   if (!selected) {
-    selectedNovels.value = selectedNovels.value.filter((it) => it != novel);
-  } else if (!selectedNovels.value.includes(novel)) {
-    selectedNovels.value.push(novel);
+    selectedIds.value = selectedIds.value.filter((it) => it != novel);
+  } else if (!selectedIds.value.includes(novel)) {
+    selectedIds.value.push(novel);
   }
 };
 
 const getSelectedNovels = () => {
-  return props.items.filter((it) => selectedNovels.value.includes(it.id));
-};
-
-const selectAll = () => {
-  selectedNovels.value = props.items.map((it) => it.id);
-};
-
-const invertSelection = () => {
-  selectedNovels.value = props.items
-    .map((it) => it.id)
-    .filter((it) => !selectedNovels.value.includes(it));
+  return props.items.filter((it) => selectedIds.value.includes(it.id));
 };
 
 defineExpose({
+  selectedNovels,
   getSelectedNovels,
-  selectAll,
-  invertSelection,
+  selectAll: () => {
+    selectedIds.value = props.items.map((it) => it.id);
+  },
+  invertSelection: () => {
+    selectedIds.value = props.items
+      .map((it) => it.id)
+      .filter((it) => !selectedIds.value.includes(it));
+  },
 });
 </script>
 
@@ -56,7 +56,7 @@ defineExpose({
       </router-link>
       <n-checkbox
         v-if="selectable"
-        :checked="selectedNovels.includes(item.id)"
+        :checked="selectedIds.includes(item.id)"
         @update:checked="
           (selected: boolean) => toggleNovelSelect(item.id, selected)
         "

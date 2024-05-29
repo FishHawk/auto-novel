@@ -15,46 +15,48 @@ const props = defineProps<{
   selectable?: boolean;
 }>();
 
-const selectedNovels = ref<string[]>([]);
+const selectedIds = ref<string[]>([]);
+const selectedNovels = computed(() =>
+  props.items.filter(({ providerId, novelId }) =>
+    selectedIds.value.includes(`${providerId}/${novelId}`),
+  ),
+);
 
 watch(
   () => props.selectable,
   (selectable) => {
     if (selectable !== false) {
-      selectedNovels.value = [];
+      selectedIds.value = [];
     }
   },
 );
 const toggleNovelSelect = (novel: string, selected: boolean) => {
   if (!selected) {
-    selectedNovels.value = selectedNovels.value.filter((it) => it != novel);
-  } else if (!selectedNovels.value.includes(novel)) {
-    selectedNovels.value.push(novel);
+    selectedIds.value = selectedIds.value.filter((it) => it != novel);
+  } else if (!selectedIds.value.includes(novel)) {
+    selectedIds.value.push(novel);
   }
 };
 
 const getSelectedNovels = () => {
   return props.items.filter((it) =>
-    selectedNovels.value.includes(`${it.providerId}/${it.novelId}`),
+    selectedIds.value.includes(`${it.providerId}/${it.novelId}`),
   );
-};
-
-const selectAll = () => {
-  selectedNovels.value = props.items.map(
-    (it) => `${it.providerId}/${it.novelId}`,
-  );
-};
-
-const invertSelection = () => {
-  selectedNovels.value = props.items
-    .map((it) => `${it.providerId}/${it.novelId}`)
-    .filter((it) => !selectedNovels.value.includes(it));
 };
 
 defineExpose({
+  selectedNovels,
   getSelectedNovels,
-  selectAll,
-  invertSelection,
+  selectAll: () => {
+    selectedIds.value = props.items.map(
+      (it) => `${it.providerId}/${it.novelId}`,
+    );
+  },
+  invertSelection: () => {
+    selectedIds.value = props.items
+      .map((it) => `${it.providerId}/${it.novelId}`)
+      .filter((it) => !selectedIds.value.includes(it));
+  },
 });
 </script>
 
@@ -74,7 +76,7 @@ defineExpose({
     <n-list-item v-for="item of items">
       <n-checkbox
         v-if="selectable"
-        :checked="selectedNovels.includes(`${item.providerId}/${item.novelId}`)"
+        :checked="selectedIds.includes(`${item.providerId}/${item.novelId}`)"
         @update:checked="
           (selected: boolean) =>
             toggleNovelSelect(`${item.providerId}/${item.novelId}`, selected)
