@@ -74,7 +74,7 @@ const showInput = ref(false);
 
 const splitByLinks = (text: string): [string, boolean][] => {
   const regExp =
-    /((?:http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(?:\/\S*)?)/g;
+    /((?:http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,6}(?:[/?][a-zA-Z0-9-_/?=&%*#+]+)?)/g;
   return text.split(regExp).map((part) => [part, regExp.test(part)]);
 };
 </script>
