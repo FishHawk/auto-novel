@@ -16,9 +16,12 @@ export const useBookshelfStore = defineStore('Bookshelf', {
     },
   actions: {
     async loadFavoredList() {
-      const favoredList = await Locator.userRepository.listFavored();
-      this.web = favoredList.web;
-      this.wenku = favoredList.wenku;
+      const { isSignedIn } = Locator.userDataRepository();
+      if (isSignedIn.value) {
+        const favoredList = await Locator.userRepository.listFavored();
+        this.web = favoredList.web;
+        this.wenku = favoredList.wenku;
+      }
     },
     async createFavored(type: 'web' | 'wenku' | 'local', title: string) {
       if (type === 'web') {

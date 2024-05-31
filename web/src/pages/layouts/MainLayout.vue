@@ -74,7 +74,10 @@ const menuKey = computed(() => {
 const collapsedMenuOptions = computed(() => {
   return [
     menuOption('首页', '/'),
-    menuOption('我的收藏', '/favorite', isSignedIn.value),
+    menuOption(
+      '我的收藏',
+      isSignedIn.value ? '/favorite/web' : '/favorite/local',
+    ),
     menuOption('阅读历史', '/read-history', isSignedIn.value),
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
@@ -127,24 +130,29 @@ watch(
 
         <div style="flex: 1"></div>
 
-        <template v-if="isSignedIn">
-          <router-link v-if="isWideScreen" to="/read-history">
+        <template v-if="isWideScreen">
+          <router-link v-if="isSignedIn" to="/read-history">
             <n-button :focusable="false" quaternary>历史</n-button>
           </router-link>
-          <router-link v-if="isWideScreen" to="/favorite">
+          <router-link
+            v-if="isWideScreen"
+            :to="isSignedIn ? '/favorite/web' : '/favorite/local'"
+          >
             <n-button :focusable="false" quaternary>收藏</n-button>
           </router-link>
-          <n-dropdown
-            trigger="hover"
-            :keyboard="false"
-            :options="userDropdownOptions"
-            @select="handleUserDropdownSelect"
-          >
-            <n-button :focusable="false" quaternary>
-              @{{ userData.info?.username }}
-            </n-button>
-          </n-dropdown>
         </template>
+
+        <n-dropdown
+          v-if="isSignedIn"
+          trigger="hover"
+          :keyboard="false"
+          :options="userDropdownOptions"
+          @select="handleUserDropdownSelect"
+        >
+          <n-button :focusable="false" quaternary>
+            @{{ userData.info?.username }}
+          </n-button>
+        </n-dropdown>
 
         <router-link
           v-else

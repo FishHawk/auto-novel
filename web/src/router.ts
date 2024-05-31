@@ -73,7 +73,7 @@ const router = createRouter({
 
         {
           path: '/favorite',
-          redirect: '/favorite/web/default',
+          redirect: '/favorite/local/default',
           children: [
             {
               path: 'web/:favoredId?',
