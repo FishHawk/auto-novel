@@ -91,6 +91,9 @@ const playSound = (source: string) => {
               <n-checkbox v-model:checked="setting.showTagInWebFavored">
                 显示收藏夹里网络小说的标签
               </n-checkbox>
+              <n-checkbox v-model:checked="setting.favoriteCreateTimeFirst">
+                收藏时间排序优先
+              </n-checkbox>
             </n-flex>
           </n-flex>
         </n-list-item>

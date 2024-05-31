@@ -10,6 +10,7 @@ export interface Setting {
   hideCommmentWenkuNovel: boolean;
   hideLocalVolumeListInWorkspace: boolean;
   showTagInWebFavored: boolean;
+  favoriteCreateTimeFirst: boolean;
   //
   downloadFilenameType: 'jp' | 'zh';
   downloadFormat: {
@@ -37,6 +38,7 @@ export namespace Setting {
     hideCommmentWenkuNovel: false,
     hideLocalVolumeListInWorkspace: false,
     showTagInWebFavored: false,
+    favoriteCreateTimeFirst: false,
     //
     downloadFilenameType: 'zh',
     downloadFormat: {

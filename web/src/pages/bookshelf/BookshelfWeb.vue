@@ -19,17 +19,21 @@ const isWideScreen = useIsWideScreen(850);
 
 const { setting } = Locator.settingRepository();
 
-const options = [
-  {
-    label: '排序',
-    tags: ['更新时间', '收藏时间'],
-  },
-];
+const options = computed(() => {
+  return [
+    {
+      label: '排序',
+      tags: setting.value.favoriteCreateTimeFirst
+        ? ['收藏时间', '更新时间']
+        : ['更新时间', '收藏时间'],
+    },
+  ];
+});
 
 const loader = computed<Loader<WebNovelOutlineDto>>(() => {
   const { favoredId } = props;
   return (page, _query, selected) => {
-    const optionNth = (n: number): string => options[n].tags[selected[n]];
+    const optionNth = (n: number): string => options.value[n].tags[selected[n]];
     const optionSort = () => {
       const option = optionNth(0);
       if (option === '更新时间') {
