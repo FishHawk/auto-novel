@@ -42,11 +42,11 @@ const topMenuOptions = computed(() => {
     menuOption('网络小说', '/novel-list'),
     menuOption('文库小说', '/wenku-list'),
     {
-      ...menuOption('工作区', '/workspace/sakura'),
+      ...menuOption('工作区', '/workspace'),
       children: [
         menuOption('术语表工作区', '/workspace/katakana'),
         menuOption('GPT工作区', '/workspace/gpt'),
-        menuOption('Sakura工作区', '/workspace'),
+        menuOption('Sakura工作区', '/workspace/sakura'),
         menuOption('交互翻译', '/workspace/interactive'),
       ],
     },
@@ -62,8 +62,6 @@ const menuKey = computed(() => {
     return '/wenku-list';
   } else if (path.startsWith('/favorite')) {
     return '/favorite';
-  } else if (path.startsWith('/workspace')) {
-    return '/workspace';
   } else if (path.startsWith('/forum')) {
     return '/forum';
   } else {

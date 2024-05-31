@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { DeleteOutlineOutlined } from '@vicons/material';
+import { DeleteOutlineOutlined, RemoveRedEyeOutlined } from '@vicons/material';
 
 defineProps<{
   volume: {
@@ -18,7 +18,7 @@ const showPreviewModal = ref(false);
   <n-flex :size="4" aign="center" style="font-size: 12px" :wrap="false">
     <c-icon-button
       tooltip="预览"
-      :icon="DeleteOutlineOutlined"
+      :icon="RemoveRedEyeOutlined"
       text
       size="small"
       type="primary"

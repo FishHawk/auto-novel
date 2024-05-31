@@ -6,18 +6,23 @@ import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { Setting } from '@/model/Setting';
-import { TranslateTaskDescriptor } from '@/model/Translator';
-
-import LocalVolumeList from './LocalVolumeList.vue';
 import { downloadFile } from '@/util';
 
-const props = defineProps<{ type: 'gpt' | 'sakura' }>();
+import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';
+import { doAction } from '@/pages/util';
+
+const props = defineProps<{
+  type: 'gpt' | 'sakura';
+}>();
 
 const message = useMessage();
 
 const { setting } = Locator.settingRepository();
 
-const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
+const store = useBookshelfLocalStore();
+
+const deleteVolume = (volumeId: string) =>
+  doAction(store.deleteVolume(volumeId), '删除', message);
 
 const calculateFinished = (volume: LocalVolumeMetadata) =>
   volume.toc.filter((it) => {
@@ -44,37 +49,24 @@ const calculateExpired = (volume: LocalVolumeMetadata) =>
   }).length;
 
 const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
-  volumes.forEach((volume) => queueVolume(volume.id));
+  const ids = volumes.map((it) => it.id);
+  const { success, failed } = store.queueJobsToWorkspace(ids, {
+    level: 'expire',
+    type: props.type,
+    shouldTop: shouldTopJob.value ?? false,
+  });
+  message.info(`${success}本小说已排队，${failed}本失败`);
 };
 
 const shouldTopJob = useKeyModifier('Control');
 const queueVolume = (volumeId: string) => {
-  const task = TranslateTaskDescriptor.local(volumeId, {
+  const success = store.queueJobToWorkspace(volumeId, {
     level: 'expire',
-    sync: false,
-    forceMetadata: false,
-    startIndex: 0,
-    endIndex: 65535,
+    type: props.type,
+    shouldTop: shouldTopJob.value ?? false,
   });
-
-  const workspace =
-    props.type === 'gpt'
-      ? Locator.gptWorkspaceRepository()
-      : Locator.sakuraWorkspaceRepository();
-
-  const job = {
-    task,
-    description: volumeId,
-    createAt: Date.now(),
-  };
-
-  const success = workspace.addJob(job);
-
   if (success) {
     message.success('排队成功');
-    if (shouldTopJob.value) {
-      workspace.topJob(job);
-    }
   } else {
     message.error('排队失败：翻译任务已经存在');
   }
@@ -120,10 +112,9 @@ const progressFilterFunc = computed(() => {
 
 <template>
   <local-volume-list
-    ref="localVolumeListRef"
     :filter="progressFilterFunc"
     :options="{ 全部排队: queueAllVolumes }"
-    :beforeVolumeAdd="(file: File) => queueVolume(file.name)"
+    @volume-add="queueVolume($event.name)"
   >
     <template #extra>
       <c-action-wrapper title="状态">
@@ -187,7 +178,7 @@ const progressFilterFunc = computed(() => {
 
           <n-popconfirm
             :show-icon="false"
-            @positive-click="localVolumeListRef?.deleteVolume(volume.id)"
+            @positive-click="deleteVolume(volume.id)"
             :negative-text="null"
             style="max-width: 300px"
           >

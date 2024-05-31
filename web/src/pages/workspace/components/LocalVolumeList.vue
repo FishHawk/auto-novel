@@ -5,17 +5,20 @@ import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { Setting } from '@/model/Setting';
 
-import { doAction } from '@/pages/util';
 import {
   BookshelfLocalUtil,
   useBookshelfLocalStore,
 } from '@/pages/bookshelf/BookshelfLocalStore';
+import { doAction } from '@/pages/util';
 
 const props = defineProps<{
   hideTitle?: boolean;
   options?: { [key: string]: (volumes: LocalVolumeMetadata[]) => void };
   filter?: (volume: LocalVolumeMetadata) => boolean;
-  beforeVolumeAdd?: (file: File) => void;
+}>();
+
+const emit = defineEmits<{
+  volumeAdd: [File];
 }>();
 
 const message = useMessage();
@@ -50,12 +53,9 @@ const downloadVolumes = async () => {
     message.info('列表为空，没有文件需要下载');
     return;
   }
-  await BookshelfLocalUtil.downloadVolumes(sortedVolumes.value, {
-    ...setting.value.downloadFormat,
-    onError: (id, error) => {
-      message.error(`${id} 文件生成错误：${error}`);
-    },
-  });
+  const ids = sortedVolumes.value.map((it) => it.id);
+  const { success, failed } = await store.downloadVolumes(ids);
+  message.info(`${success}本小说被打包，${failed}本失败`);
 };
 
 const showClearModal = ref(false);
@@ -80,17 +80,12 @@ const sortedVolumes = computed(() => {
     order: setting.value.localVolumeOrder,
   });
 });
-
-const deleteVolume = (volumeId: string) =>
-  doAction(store.deleteVolume(volumeId), '删除', message);
-
-defineExpose({ deleteVolume });
 </script>
 
 <template>
   <section-header title="本地小说" v-if="!hideTitle">
     <n-flex :wrap="false">
-      <bookshelf-local-add-button @done="beforeVolumeAdd" />
+      <bookshelf-local-add-button @done="$emit('volumeAdd', $event)" />
 
       <n-dropdown
         trigger="click"

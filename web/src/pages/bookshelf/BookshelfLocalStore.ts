@@ -1,6 +1,6 @@
 import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { TranslateTaskDescriptor, TranslatorId } from '@/model/Translator';
+import { TranslateTaskDescriptor } from '@/model/Translator';
 import { downloadFile } from '@/util';
 
 type BookshelfLocalStore = {
@@ -18,15 +18,15 @@ export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
       this.volumes = await repo.listVolume();
       return this.volumes;
     },
-    async deleteVolume(id: string) {
-      const repo = await Locator.localVolumeRepository();
-      await repo.deleteVolume(id);
-      this.volumes = this.volumes.filter((it) => it.id !== id);
-    },
     async addVolume(file: File) {
       const repo = await Locator.localVolumeRepository();
       await repo.createVolume(file);
       await this.loadVolumes();
+    },
+    async deleteVolume(id: string) {
+      const repo = await Locator.localVolumeRepository();
+      await repo.deleteVolume(id);
+      this.volumes = this.volumes.filter((it) => it.id !== id);
     },
     async deleteVolumes(ids: string[]) {
       const repo = await Locator.localVolumeRepository();
@@ -81,6 +81,42 @@ export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
       downloadFile(`批量下载[${ids.length}].zip`, zipBlob);
 
       return { success: ids.length - failed, failed };
+    },
+
+    queueJobToWorkspace(
+      id: string,
+      {
+        level,
+        type,
+        shouldTop,
+      }: {
+        level: 'expire' | 'all';
+        type: 'gpt' | 'sakura';
+        shouldTop: boolean;
+      },
+    ) {
+      const workspace =
+        type === 'gpt'
+          ? Locator.gptWorkspaceRepository()
+          : Locator.sakuraWorkspaceRepository();
+
+      const task = TranslateTaskDescriptor.local(id, {
+        level,
+        sync: false,
+        forceMetadata: false,
+        startIndex: 0,
+        endIndex: 65535,
+      });
+      const job = {
+        task,
+        description: id,
+        createAt: Date.now(),
+      };
+      const success = workspace.addJob(job);
+      if (success && shouldTop) {
+        workspace.topJob(job);
+      }
+      return success;
     },
     queueJobsToWorkspace(
       ids: string[],
@@ -185,50 +221,5 @@ export namespace BookshelfLocalUtil {
       }
       return order.desc ? -delta : delta;
     });
-  };
-
-  export const downloadVolumes = async (
-    volumes: LocalVolumeMetadata[],
-    {
-      mode,
-      translationsMode,
-      translations,
-      onError,
-    }: {
-      mode: 'zh' | 'zh-jp' | 'jp-zh';
-      translationsMode: 'parallel' | 'priority';
-      translations: TranslatorId[];
-      onError: (id: string, error: unknown) => void;
-    },
-  ) => {
-    const { BlobReader, BlobWriter, ZipWriter } = await import(
-      '@zip.js/zip.js'
-    );
-
-    const repo = await Locator.localVolumeRepository();
-
-    const zipBlobWriter = new BlobWriter();
-    const writer = new ZipWriter(zipBlobWriter);
-
-    await Promise.all(
-      volumes.map(async (volume: LocalVolumeMetadata) => {
-        try {
-          const { filename, blob } = await repo.getTranslationFile({
-            id: volume.id,
-            mode,
-            translationsMode,
-            translations,
-          });
-          await writer.add(filename, new BlobReader(blob));
-        } catch (error) {
-          onError(volume.id, error);
-          // message.error(`${volume.id} 文件生成错误：${error}`);
-        }
-      }),
-    );
-
-    await writer.close();
-    const zipBlob = await zipBlobWriter.getData();
-    downloadFile(`批量下载[${volumes.length}].zip`, zipBlob);
   };
 }

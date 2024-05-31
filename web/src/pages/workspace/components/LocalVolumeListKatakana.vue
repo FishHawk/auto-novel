@@ -3,15 +3,23 @@ import { DeleteOutlineOutlined } from '@vicons/material';
 
 import { GenericNovelId } from '@/model/Common';
 
-import LocalVolumeList from './LocalVolumeList.vue';
+import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';
+import { doAction } from '@/pages/util';
 
-const emit = defineEmits<{ volumeLoaded: [string] }>();
+defineEmits<{
+  volumeLoaded: [string];
+}>();
 
-const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
+const message = useMessage();
+
+const store = useBookshelfLocalStore();
+
+const deleteVolume = (volumeId: string) =>
+  doAction(store.deleteVolume(volumeId), '删除', message);
 </script>
 
 <template>
-  <local-volume-list ref="localVolumeListRef">
+  <local-volume-list>
     <template #volume="volume">
       <n-flex :size="4" vertical>
         <n-text>{{ volume.id }}</n-text>
@@ -26,7 +34,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
             label="载入"
             size="tiny"
             secondary
-            @action="emit('volumeLoaded', volume.id)"
+            @action="$emit('volumeLoaded', volume.id)"
           />
 
           <glossary-button
@@ -40,7 +48,7 @@ const localVolumeListRef = ref<InstanceType<typeof LocalVolumeList>>();
 
           <n-popconfirm
             :show-icon="false"
-            @positive-click="localVolumeListRef?.deleteVolume(volume.id)"
+            @positive-click="deleteVolume(volume.id)"
             :negative-text="null"
             style="max-width: 300px"
           >
