@@ -27,6 +27,59 @@ export interface Setting {
 }
 
 export namespace Setting {
+  export const defaultValue: Setting = {
+    theme: 'light',
+    enabledTranslator: ['baidu', 'youdao', 'gpt', 'sakura'],
+    tocSortReverse: false,
+    //
+    tocCollapseInNarrowScreen: true,
+    hideCommmentWebNovel: false,
+    hideCommmentWenkuNovel: false,
+    hideLocalVolumeListInWorkspace: false,
+    showTagInWebFavored: false,
+    //
+    downloadFilenameType: 'zh',
+    downloadFormat: {
+      mode: 'zh-jp',
+      translationsMode: 'priority',
+      translations: ['sakura', 'gpt', 'youdao', 'baidu'],
+      type: 'epub',
+    },
+    workspaceSound: false,
+    paginationMode: 'pagination',
+    localVolumeOrder: {
+      value: 'byCreateAt',
+      desc: true,
+    },
+  };
+
+  export const migrate = (setting: Setting) => {
+    if ((setting as any).isDark !== undefined) {
+      if ((setting as any).isDark === true) {
+        setting.theme = 'dark';
+      }
+      (setting as any).isDark = undefined;
+    }
+    if (setting.enabledTranslator === undefined) {
+      setting.enabledTranslator = ['baidu', 'youdao', 'gpt', 'sakura'];
+    }
+    if ((setting.downloadFormat.mode as any) === 'mix') {
+      setting.downloadFormat.mode = 'zh-jp';
+    } else if ((setting.downloadFormat.mode as any) === 'mix-reverse') {
+      setting.downloadFormat.mode = 'jp-zh';
+    } else if ((setting.downloadFormat.mode as any) === 'jp') {
+      setting.downloadFormat.mode = 'zh';
+    }
+    // 2024-03-05
+    if (setting.workspaceSound === undefined) {
+      setting.workspaceSound = false;
+    }
+    // 2024-05-28
+    if ((setting.paginationMode as any) === 'auto') {
+      setting.paginationMode = 'pagination';
+    }
+  };
+
   export const downloadModeOptions = [
     { label: '中文', value: 'zh' },
     { label: '中日', value: 'zh-jp' },
@@ -79,6 +132,56 @@ export interface ReaderSetting {
 }
 
 export namespace ReaderSetting {
+  export const defaultValue: ReaderSetting = {
+    mode: 'zh-jp',
+    translationsMode: 'priority',
+    translations: ['sakura', 'gpt', 'youdao', 'baidu'],
+    speakLanguages: ['jp'],
+    enableSakuraReportButton: true,
+    trimLeadingSpaces: false,
+    //
+    fontWeight: 400,
+    fontSize: 14,
+    lineSpace: 1.0,
+    pageWidth: 800,
+    theme: {
+      mode: 'light',
+      bodyColor: '#FFFFFF',
+      fontColor: '#000000',
+    },
+    mixJpOpacity: 0.4,
+    mixZhOpacity: 0.75,
+  };
+
+  export const migrate = (setting: ReaderSetting) => {
+    if (typeof setting.fontSize === 'string') {
+      setting.fontSize = Number(
+        (setting.fontSize as any).replace(/[^0-9]/g, ''),
+      );
+    }
+    if ((setting.mode as any) === 'mix') {
+      setting.mode = 'zh-jp';
+    } else if ((setting.mode as any) === 'mix-reverse') {
+      setting.mode = 'jp-zh';
+    }
+    const theme = setting.theme as any;
+    if (theme.isDark !== undefined) {
+      if (theme.bodyColor === '#272727' && theme.fontColor === undefined) {
+        setting.theme = {
+          mode: 'dark',
+          bodyColor: '#FFFFFF',
+          fontColor: '#000000',
+        };
+      } else {
+        setting.theme = {
+          mode: 'light',
+          bodyColor: '#FFFFFF',
+          fontColor: '#000000',
+        };
+      }
+    }
+  };
+
   export const modeOptions = [
     { label: '日文', value: 'jp' },
     { label: '中文', value: 'zh' },
