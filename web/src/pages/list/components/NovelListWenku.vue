@@ -20,10 +20,10 @@ watch(
   },
 );
 const toggleNovelSelect = (novel: string, selected: boolean) => {
-  if (!selected) {
-    selectedIds.value = selectedIds.value.filter((it) => it != novel);
-  } else if (!selectedIds.value.includes(novel)) {
+  if (selected) {
     selectedIds.value.push(novel);
+  } else {
+    selectedIds.value = selectedIds.value.filter((it) => it != novel);
   }
 };
 
@@ -48,20 +48,22 @@ defineExpose({
 <template>
   <n-grid :x-gap="12" :y-gap="12" cols="2 500:3 800:4">
     <n-grid-item v-for="item in items">
-      <router-link :to="`/wenku/${item.id}`">
-        <ImageCard
-          :src="item.cover"
-          :title="item.titleZh ? item.titleZh : item.title"
+      <div style="position: relative">
+        <router-link :to="`/wenku/${item.id}`">
+          <ImageCard
+            :src="item.cover"
+            :title="item.titleZh ? item.titleZh : item.title"
+          />
+        </router-link>
+
+        <c-select-overlay
+          v-if="selectable"
+          :checked="selectedIds.includes(item.id)"
+          @update:checked="
+            (checked: boolean) => toggleNovelSelect(item.id, checked)
+          "
         />
-      </router-link>
-      <n-checkbox
-        v-if="selectable"
-        :checked="selectedIds.includes(item.id)"
-        @update:checked="
-          (selected: boolean) => toggleNovelSelect(item.id, selected)
-        "
-        style="margin-right: 8px"
-      />
+      </div>
     </n-grid-item>
   </n-grid>
 </template>

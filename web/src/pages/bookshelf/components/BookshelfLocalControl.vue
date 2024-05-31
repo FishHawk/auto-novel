@@ -95,20 +95,21 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
               @action="$emit('invertSelection')"
             />
           </n-button-group>
-          <n-text depth="3"> 已选择{{ selectedIds.length }}本小说 </n-text>
-        </n-flex>
 
-        <n-button-group size="small">
-          <c-button label="下载" :round="false" @action="downloadSelected" />
-          <c-button
-            label="下载设置"
-            :round="false"
-            @action="showDownloadModal = true"
-          />
+          <n-button-group size="small">
+            <c-button label="下载" :round="false" @action="downloadSelected" />
+            <c-button
+              label="下载设置"
+              :round="false"
+              @action="showDownloadModal = true"
+            />
+          </n-button-group>
+
           <c-button
             label="删除"
             secondary
             :round="false"
+            size="small"
             type="error"
             @click="openDeleteModal"
           />
@@ -124,7 +125,9 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
               <c-button label="确定" type="primary" @action="deleteSelected" />
             </template>
           </c-modal>
-        </n-button-group>
+        </n-flex>
+
+        <n-text depth="3"> 已选择{{ selectedIds.length }}本小说 </n-text>
       </n-flex>
     </n-list-item>
 

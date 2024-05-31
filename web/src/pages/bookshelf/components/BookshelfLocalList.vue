@@ -43,10 +43,10 @@ watch(
 );
 
 const toggleSelect = (id: string, selected: boolean) => {
-  if (!selected) {
-    selectedIds.value = selectedIds.value.filter((it) => it != id);
-  } else if (!selectedIds.value.includes(id)) {
+  if (selected) {
     selectedIds.value.push(id);
+  } else {
+    selectedIds.value = selectedIds.value.filter((it) => it != id);
   }
 };
 
@@ -101,15 +101,14 @@ defineExpose({
   <n-scrollbar v-else trigger="none" :size="24" style="flex: auto">
     <n-list style="padding-bottom: 48px; padding-right: 12px">
       <n-list-item v-for="volume of sortedVolumes ?? []" :key="volume.id">
-        <n-checkbox
+        <bookshelf-local-list-item :volume="volume" />
+        <c-select-overlay
           v-if="selectable"
           :checked="selectedIds.includes(volume.id)"
           @update:checked="
-            (selected: boolean) => toggleSelect(volume.id, selected)
+            (checked: boolean) => toggleSelect(volume.id, checked)
           "
-          style="margin-right: 8px"
         />
-        <bookshelf-local-list-item :volume="volume" />
       </n-list-item>
     </n-list>
   </n-scrollbar>

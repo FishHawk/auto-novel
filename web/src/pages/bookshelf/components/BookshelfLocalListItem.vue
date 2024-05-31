@@ -8,7 +8,9 @@ import { TranslatorId, TranslateTaskDescriptor } from '@/model/Translator';
 
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
-const props = defineProps<{ volume: LocalVolumeMetadata }>();
+const props = defineProps<{
+  volume: LocalVolumeMetadata;
+}>();
 
 const message = useMessage();
 

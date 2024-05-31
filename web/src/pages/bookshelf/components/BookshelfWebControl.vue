@@ -153,14 +153,11 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
             />
           </n-button-group>
 
-          <n-text depth="3"> 已选择{{ selectedNovels.length }}本小说 </n-text>
-        </n-flex>
-
-        <n-button-group size="small">
           <c-button
             label="删除"
             secondary
             :round="false"
+            size="small"
             type="error"
             @click="openDeleteModal"
           />
@@ -176,7 +173,9 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
               <c-button label="确定" type="primary" @action="deleteSelected" />
             </template>
           </c-modal>
-        </n-button-group>
+        </n-flex>
+
+        <n-text depth="3"> 已选择{{ selectedNovels.length }}本小说 </n-text>
       </n-flex>
     </n-list-item>
 

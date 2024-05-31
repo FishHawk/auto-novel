@@ -31,10 +31,10 @@ watch(
   },
 );
 const toggleNovelSelect = (novel: string, selected: boolean) => {
-  if (!selected) {
-    selectedIds.value = selectedIds.value.filter((it) => it != novel);
-  } else if (!selectedIds.value.includes(novel)) {
+  if (selected) {
     selectedIds.value.push(novel);
+  } else {
+    selectedIds.value = selectedIds.value.filter((it) => it != novel);
   }
 };
 
@@ -74,15 +74,6 @@ defineExpose({
 
   <n-list>
     <n-list-item v-for="item of items">
-      <n-checkbox
-        v-if="selectable"
-        :checked="selectedIds.includes(`${item.providerId}/${item.novelId}`)"
-        @update:checked="
-          (selected: boolean) =>
-            toggleNovelSelect(`${item.providerId}/${item.novelId}`, selected)
-        "
-        style="margin-right: 8px"
-      />
       <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
         {{ item.titleJp }}
       </c-a>
@@ -133,6 +124,15 @@ defineExpose({
         </template>
       </n-text>
       <slot name="action" v-bind="item" />
+
+      <c-select-overlay
+        v-if="selectable"
+        :checked="selectedIds.includes(`${item.providerId}/${item.novelId}`)"
+        @update:checked="
+          (checked: boolean) =>
+            toggleNovelSelect(`${item.providerId}/${item.novelId}`, checked)
+        "
+      />
     </n-list-item>
   </n-list>
 </template>
