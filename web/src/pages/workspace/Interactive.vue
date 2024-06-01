@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
 import { Translator, TranslatorConfig } from '@/domain/translate';
+import { Glossary } from '@/model/Glossary';
 import { GptWorker, SakuraWorker, TranslatorId } from '@/model/Translator';
 
 const message = useMessage();
@@ -37,6 +38,8 @@ interface SavedTranslation {
   zh: string;
 }
 const savedTranslation = ref<SavedTranslation[]>([]);
+
+const glossary = ref<Glossary>({});
 
 const translate = async () => {
   let config: TranslatorConfig;
@@ -82,7 +85,9 @@ const translate = async () => {
   try {
     const translator = await Translator.create(config, false);
     const linesJp = textJp.value.split('\n');
-    const linesZh = await translator.translate(linesJp, {});
+    const linesZh = await translator.translate(linesJp, {
+      glossary: glossary.value,
+    });
     textZh.value = linesZh.join('\n');
   } catch (e: any) {
     message.error(`翻译器错误：${e}`);
@@ -168,13 +173,15 @@ const clearSavedTranslation = () => {
             <c-button label="翻译" :round="false" @action="translate" />
             <c-button label="清空" :round="false" @action="clearTranslation" />
           </n-button-group>
-          <n-button-group size="small">
-            <c-button
-              label="复制到剪贴板"
-              :round="false"
-              @action="copyToClipboard"
-            />
-          </n-button-group>
+
+          <glossary-button :value="glossary" :round="false" size="small" />
+
+          <c-button
+            label="复制到剪贴板"
+            :round="false"
+            size="small"
+            @action="copyToClipboard"
+          />
         </n-flex>
       </c-action-wrapper>
     </n-flex>

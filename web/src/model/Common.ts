@@ -21,8 +21,12 @@ export namespace GenericNovelId {
   });
 
   export const toString = (gnid: GenericNovelId) => {
-    if (gnid.type === 'web') return `web/${gnid.providerId}/${gnid.novelId}`;
-    else if (gnid.type === 'wenku') return `wenku/${gnid.novelId}`;
-    else return `local/${gnid.volumeId}`;
+    if (gnid.type === 'web') {
+      return `web/${gnid.providerId}/${gnid.novelId}`;
+    } else if (gnid.type === 'wenku') {
+      return `wenku/${gnid.novelId}`;
+    } else {
+      return `local/${gnid.volumeId}`;
+    }
   };
 }

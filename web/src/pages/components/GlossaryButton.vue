@@ -8,7 +8,7 @@ import { Glossary } from '@/model/Glossary';
 import { doAction } from '@/pages/util';
 
 const props = defineProps<{
-  gnid: GenericNovelId;
+  gnid?: GenericNovelId;
   value: Glossary;
 }>();
 
@@ -25,35 +25,41 @@ const toggleGlossaryModal = () => {
   showGlossaryModal.value = !showGlossaryModal.value;
 };
 
-const readableGnid = computed(() => {
+const gnidHint = computed(() => {
   const gnid = props.gnid;
-  if (gnid.type === 'web') {
-    return `web/${gnid.providerId}/${gnid.novelId}`;
-  } else if (gnid.type === 'wenku') {
-    return `wenku/${gnid.novelId}`;
+  if (gnid === undefined) {
+    return undefined;
   } else {
-    return `local/${gnid.volumeId}`;
+    return GenericNovelId.toString(gnid);
   }
 });
 
-const updateGlossary = async (gnid: GenericNovelId, glossary: Glossary) => {
+const updateGlossary = async () => {
+  const gnid = props.gnid;
+  if (gnid === undefined) {
+    return;
+  }
+  const glossaryValue = toRaw(glossary.value);
   if (gnid.type === 'web') {
     await Locator.webNovelRepository.updateGlossary(
       gnid.providerId,
       gnid.novelId,
-      glossary,
+      glossaryValue,
     );
   } else if (gnid.type === 'wenku') {
-    await Locator.wenkuNovelRepository.updateGlossary(gnid.novelId, glossary);
+    await Locator.wenkuNovelRepository.updateGlossary(
+      gnid.novelId,
+      glossaryValue,
+    );
   } else {
     const repo = await Locator.localVolumeRepository();
-    await repo.updateGlossary(gnid.volumeId, glossary);
+    await repo.updateGlossary(gnid.volumeId, glossaryValue);
   }
 };
 
 const submitGlossary = () =>
   doAction(
-    updateGlossary(props.gnid, toRaw(glossary.value)).then(() => {
+    updateGlossary().then(() => {
       // 触发组件外的术语表本体更新。有点傻，但够用。
       for (const key in props.value) {
         delete props.value[key];
@@ -135,13 +141,15 @@ const importGlossary = () => {
         size="large"
         style="max-width: 400px; margin-bottom: 16px"
       >
-        <n-text style="font-size: 12px">{{ readableGnid }}</n-text>
+        <template v-if="gnidHint">
+          <n-text style="font-size: 12px">{{ gnidHint }}</n-text>
 
-        <n-text>
-          使用前务必先阅读
-          <c-a to="/forum/660ab4da55001f583649a621"> 术语表使用指南 </c-a>
-          ，不要滥用术语表。
-        </n-text>
+          <n-text>
+            使用前务必先阅读
+            <c-a to="/forum/660ab4da55001f583649a621"> 术语表使用指南 </c-a>
+            ，不要滥用术语表。
+          </n-text>
+        </template>
 
         <n-input-group>
           <n-input
