@@ -72,5 +72,7 @@ const menuOptions = computed(() => {
 </script>
 
 <template>
-  <n-menu :options="menuOptions" />
+  <n-scrollbar>
+    <n-menu :options="menuOptions" />
+  </n-scrollbar>
 </template>
