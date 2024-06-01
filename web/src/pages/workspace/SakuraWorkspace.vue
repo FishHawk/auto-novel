@@ -63,6 +63,7 @@ const onProgressUpdated = (
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
     if (!state.abort) {
+      job.finishAt = Date.now()
       workspace.addJobRecord(job as any);
       workspace.deleteJob(task);
     }
