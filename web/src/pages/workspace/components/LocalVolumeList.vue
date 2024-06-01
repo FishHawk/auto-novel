@@ -20,6 +20,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   volumeAdd: [File];
 }>();
+const deleteLoading = ref(false);
 
 const message = useMessage();
 const { setting } = Locator.settingRepository();
@@ -59,15 +60,22 @@ const downloadVolumes = async () => {
 };
 
 const showClearModal = ref(false);
-const deleteAllVolumes = () =>
+const deleteAllVolumes = () => {
+  deleteLoading.value = true;
   doAction(
-    store.deleteAllVolumes().then(() => (showClearModal.value = false)),
+    store.deleteAllVolumes().then(() => {
+      showClearModal.value = false;
+      deleteLoading.value = false;
+    }),
     '清空',
     message,
   );
+};
 
-const enableRegexMode = ref(false);
-const filenameSearch = ref('');
+const search = reactive({
+  query: '',
+  enableRegexMode: false,
+});
 
 const sortedVolumes = computed(() => {
   const filteredVolumes =
@@ -75,8 +83,7 @@ const sortedVolumes = computed(() => {
       ? volumes.value
       : volumes.value.filter(props.filter);
   return BookshelfLocalUtil.filterAndSortVolumes(filteredVolumes, {
-    query: filenameSearch.value,
-    enableRegexMode: enableRegexMode.value,
+    ...search,
     order: setting.value.localVolumeOrder,
   });
 });
@@ -102,18 +109,11 @@ const sortedVolumes = computed(() => {
 
   <n-flex vertical>
     <c-action-wrapper title="搜索">
-      <n-input
-        clearable
-        size="small"
-        v-model:value="filenameSearch"
-        type="text"
+      <search-input
+        v-model:value="search"
         placeholder="搜索文件名"
         style="max-width: 400px"
-      >
-        <template #suffix> <n-icon :component="SearchOutlined" /> </template>
-      </n-input>
-
-      <tag-button label="正则" v-model:checked="enableRegexMode" />
+      />
     </c-action-wrapper>
 
     <c-action-wrapper title="排序" align="center">
@@ -150,7 +150,12 @@ const sortedVolumes = computed(() => {
     </n-p>
 
     <template #action>
-      <c-button label="确定" type="primary" @action="deleteAllVolumes" />
+      <c-button
+        label="确定"
+        type="primary"
+        :loading="deleteLoading"
+        @action="deleteAllVolumes"
+      />
     </template>
   </c-modal>
 </template>
