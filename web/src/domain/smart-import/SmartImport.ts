@@ -44,6 +44,7 @@ const parseTitle = (title: string) => {
     '濃蜜ラブルージュ',
     '講談社タイガ',
     '集英社文芸単行本',
+    'ストレートエッジ',
   ];
 
   const includeIrrelevantKeywords = (s: string) =>
@@ -73,11 +74,13 @@ const parseTitle = (title: string) => {
   return { title, imprint };
 };
 
-const isNovelByTitle = (title: string) => {
+const checkIsNovelByTitle = (title: string) => {
   const titleKeywords = [
     '試し読', // 试读，例如：https://www.amazon.co.jp/dp/B0BTDKR5LZ
     '分冊版', // 漫画，例如：https://www.amazon.co.jp/dp/B08CRKP52T
     'コミックライド', // 漫画文库，例如：https://www.amazon.co.jp/dp/B0CGR4GB8H
+    'グラストCOMICS', //  漫画文库，例如：https://www.amazon.co.jp/dp/B09D7DD219
+    'ゼノンコミックス', // 漫画文库，https://www.amazon.co.jp/zh/dp/B09PR85NJG
     '巻セット', // 系列，例如：https://www.amazon.co.jp/dp/B0CLBTVDLP
   ];
   if (titleKeywords.some((it) => title.includes(it))) {
@@ -86,7 +89,7 @@ const isNovelByTitle = (title: string) => {
   return true;
 };
 
-const isNovelByDetail = (otherVersion: string[], breadcrumbs: string) => {
+const checkIsNovelByDetail = (otherVersion: string[], breadcrumbs: string) => {
   const otherVersionKeywords = [
     'コミック', // 例如：https://www.amazon.co.jp/dp/B09Z9XB924
   ];
@@ -149,7 +152,7 @@ const getNovelBySearch = async (
 ): Promise<AmazonNovel> => {
   log(`导入小说 开始搜索\n`);
   const searchItems = (await search(query))
-    .filter(({ title }) => title.includes(query) && isNovelByTitle(title))
+    .filter(({ title }) => title.includes(query) && checkIsNovelByTitle(title))
     .sort((a, b) => a.title.localeCompare(b.title));
 
   const serialAsinSet = new Set<string>();
@@ -163,7 +166,10 @@ const getNovelBySearch = async (
     const product = await getProduct(asin);
     if (
       product.type !== 'volume' ||
-      !isNovelByDetail(product.volume.otherVersion, product.volume.breadcrumbs)
+      !checkIsNovelByDetail(
+        product.volume.otherVersion,
+        product.volume.breadcrumbs,
+      )
     ) {
       log('检测系列不是小说，跳过\n');
       continue;

@@ -3,7 +3,6 @@ import {
   TranslateTaskDesc,
   TranslateTaskParams,
 } from '@/model/Translator';
-import { keepPageAlive } from '@/util';
 
 import { translateLocal } from './TranslateLocal';
 import { translateWeb } from './TranslateWeb';
@@ -17,8 +16,6 @@ export const translate = async (
   translatorConfig: TranslatorConfig,
   signal?: AbortSignal,
 ) => {
-  await keepPageAlive();
-
   let translator: Translator;
   try {
     translator = await Translator.create(

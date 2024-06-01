@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { TranslatorConfig, translate } from '@/domain/translate';
 import { TranslateTaskDesc, TranslateTaskParams } from '@/model/Translator';
+import { releaseKeepAlive, requestKeepAlive } from '@/util';
 
 import CTaskCard from './CTaskCard.vue';
 
@@ -87,6 +88,7 @@ const startTask = async (
       total: chapterTotal.value ?? 0,
     });
 
+  await requestKeepAlive();
   const state = await translate(
     desc,
     params,
@@ -125,6 +127,7 @@ const startTask = async (
 
   cardRef.value!.pushLog({ message: '\n结束' });
   running.value = false;
+  releaseKeepAlive();
 
   if (state === 'abort') {
     return 'abort';

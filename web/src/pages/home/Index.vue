@@ -199,7 +199,7 @@ const notices = [
 
     <template v-if="isSignedIn">
       <section-header title="我的收藏">
-        <router-link to="/favorite">
+        <router-link to="/favorite/web">
           <c-button label="更多" :icon="ReadMoreOutlined" />
         </router-link>
       </section-header>

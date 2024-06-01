@@ -93,8 +93,7 @@ const parseProductVolume = (doc: Document) => {
   const introduction = Array.from(
     doc
       .getElementById('bookDescription_feature_div')
-      ?.getElementsByClassName('books-expander-content')
-      ?.item(0)?.children ?? [],
+      ?.getElementsByTagName('span') ?? [],
   )
     .map((el) => el.innerHTML.replaceAll('<br>', '\n'))
     .join('\n');

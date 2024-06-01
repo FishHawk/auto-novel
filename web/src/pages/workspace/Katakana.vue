@@ -194,6 +194,7 @@ const notices = [
       <n-flex vertical style="margin: 20px 0">
         <n-flex style="margin-bottom: 8px">
           <c-button
+            v-if="!isWideScreen"
             label="加载本地小说"
             :icon="PlusOutlined"
             size="small"
