@@ -97,8 +97,6 @@ const processTasks = async () => {
     if (job === undefined) break;
     const { desc, params } = TranslateTaskDescriptor.parse(job.task);
 
-    console.log({desc,params})
-
     const state = await translateTask.value!!.startTask(
       desc,
       params,
