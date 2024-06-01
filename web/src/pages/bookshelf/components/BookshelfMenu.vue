@@ -73,6 +73,6 @@ const menuOptions = computed(() => {
 
 <template>
   <n-scrollbar>
-    <n-menu :options="menuOptions" />
+    <n-menu v-bind="$attrs" :options="menuOptions" />
   </n-scrollbar>
 </template>
