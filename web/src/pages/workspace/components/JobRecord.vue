@@ -11,13 +11,6 @@ const emit = defineEmits<{
   deleteJob: [];
 }>();
 const isFinished = computed(() => TranslateJob.isFinished(props.job));
-const finishAtText = (finishAt: number | undefined): string => {
-  if (!finishAt) {
-    return '';
-  }
-  const date = new Date(finishAt);
-  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-};
 </script>
 
 <template>
@@ -54,7 +47,10 @@ const finishAtText = (finishAt: number | undefined): string => {
             失败 {{ job.progress?.error }}
           </template>
         </template>
-        <template v-else> 已完成 {{ finishAtText(job?.finishAt) }} </template>
+        <template v-else>
+          已完成
+          <n-time v-if="job?.finishAt" :time="job?.finishAt" type="datetime" />
+        </template>
       </n-text>
     </template>
   </n-thing>
