@@ -160,11 +160,6 @@ export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
 
       return { success: ids.length - failed, failed };
     },
-    async deleteAllVolumes() {
-      const repo = await Locator.localVolumeRepository();
-      await repo.deleteVolumesDb();
-      await this.loadVolumes();
-    },
   },
 });
 
@@ -187,7 +182,7 @@ export namespace BookshelfLocalUtil {
     volumes = querySearch(volumes, 'id', {
       query,
       enableRegexMode,
-    })
+    });
 
     return volumes.sort((a, b) => {
       let delta = 0;

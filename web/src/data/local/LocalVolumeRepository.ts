@@ -88,8 +88,6 @@ export const createLocalVolumeRepository = async () => {
     getChapter: dao.getChapter,
     updateTranslation,
     //
-    deleteVolumesDb: dao.clear,
-    //
     getTranslationFile: bind(getTranslationFile),
   };
 };

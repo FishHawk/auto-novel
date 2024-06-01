@@ -35,8 +35,6 @@ export const createLocalVolumeDao = async () => {
     },
   });
 
-  const clear = () => deleteDB('volumes');
-
   //Metadata
   const listMetadata = () => db.getAll('metadata');
   const getMetadata = (id: string) => db.get('metadata', id);
@@ -90,8 +88,6 @@ export const createLocalVolumeDao = async () => {
   };
 
   return {
-    clear,
-    //
     listMetadata,
     getMetadata,
     deleteMetadata,

@@ -9,7 +9,6 @@ import {
   BookshelfLocalUtil,
   useBookshelfLocalStore,
 } from '@/pages/bookshelf/BookshelfLocalStore';
-import { doAction } from '@/pages/util';
 
 const props = defineProps<{
   hideTitle?: boolean;
@@ -31,14 +30,14 @@ const { volumes } = storeToRefs(store);
 store.loadVolumes();
 
 const options = computed(() => {
-  return [...Object.keys(props.options ?? {}), '清空文件', '批量下载'].map(
+  return [...Object.keys(props.options ?? {}), '批量删除', '批量下载'].map(
     (it) => ({ label: it, key: it }),
   );
 });
 const handleSelect = (key: string) => {
   switch (key) {
-    case '清空文件':
-      showClearModal.value = true;
+    case '批量删除':
+      openDeleteModal();
       break;
     case '批量下载':
       downloadVolumes();
@@ -51,7 +50,7 @@ const handleSelect = (key: string) => {
 
 const downloadVolumes = async () => {
   if (sortedVolumes.value.length === 0) {
-    message.info('列表为空，没有文件需要下载');
+    message.info('没有选中小说');
     return;
   }
   const ids = sortedVolumes.value.map((it) => it.id);
@@ -59,17 +58,23 @@ const downloadVolumes = async () => {
   message.info(`${success}本小说被打包，${failed}本失败`);
 };
 
-const showClearModal = ref(false);
-const deleteAllVolumes = () => {
+const showDeleteModal = ref(false);
+
+const openDeleteModal = () => {
+  if (sortedVolumes.value.length === 0) {
+    message.info('没有选中小说');
+    return;
+  }
+  showDeleteModal.value = true;
+};
+
+const deleteAllVolumes = async () => {
+  const ids = sortedVolumes.value.map((it) => it.id);
   deleteLoading.value = true;
-  doAction(
-    store.deleteAllVolumes().then(() => {
-      showClearModal.value = false;
-      deleteLoading.value = false;
-    }),
-    '清空',
-    message,
-  );
+  const { success, failed } = await store.deleteVolumes(ids);
+  showDeleteModal.value = false;
+  deleteLoading.value = false;
+  message.info(`${success}本小说被删除，${failed}本失败`);
 };
 
 const search = reactive({
@@ -143,7 +148,7 @@ const sortedVolumes = computed(() => {
     </n-list>
   </n-scrollbar>
 
-  <c-modal title="清空所有文件" v-model:show="showClearModal">
+  <c-modal title="清空所有文件" v-model:show="showDeleteModal">
     <n-p>
       这将清空你的浏览器里面保存的所有EPUB/TXT文件，包括已经翻译的章节和术语表，无法恢复。
       你确定吗？
