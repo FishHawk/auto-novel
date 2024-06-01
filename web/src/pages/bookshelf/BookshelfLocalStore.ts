@@ -1,7 +1,7 @@
 import { Locator } from '@/data';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { TranslateTaskDescriptor } from '@/model/Translator';
-import { downloadFile } from '@/util';
+import { downloadFile, querySearch } from '@/util';
 
 type BookshelfLocalStore = {
   volumes: LocalVolumeMetadata[];
@@ -184,22 +184,10 @@ export namespace BookshelfLocalUtil {
       };
     },
   ) => {
-    if (query) {
-      const buildSearchFilter = () => {
-        const parts = query
-          .trim()
-          .split(' ')
-          .filter((v) => v.length > 0);
-        if (enableRegexMode) {
-          const regs = parts.map((it) => new RegExp(it, 'i'));
-          return (s: string) => !regs.some((r) => !r.test(s));
-        } else {
-          return (s: string) => !parts.some((r) => !s.includes(r));
-        }
-      };
-      const filter = buildSearchFilter();
-      volumes = volumes.filter((volume) => filter(volume.id));
-    }
+    volumes = querySearch(volumes, 'id', {
+      query,
+      enableRegexMode,
+    })
 
     return volumes.sort((a, b) => {
       let delta = 0;
