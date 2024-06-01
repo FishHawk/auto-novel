@@ -21,6 +21,7 @@ export interface TranslateJob {
   task: string;
   description: string;
   createAt: number;
+  finishAt?: number
 }
 
 export type TranslateJobRecord = TranslateJob & {

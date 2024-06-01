@@ -47,7 +47,10 @@ const isFinished = computed(() => TranslateJob.isFinished(props.job));
             失败 {{ job.progress?.error }}
           </template>
         </template>
-        <template v-else>已完成</template>
+        <template v-else>
+          已完成
+          <n-time v-if="job?.finishAt" :time="job?.finishAt" type="datetime" />
+        </template>
       </n-text>
     </template>
   </n-thing>
