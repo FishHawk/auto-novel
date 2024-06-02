@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { SearchOutlined } from '@vicons/material';
-
 import { Locator } from '@/data';
 import { Setting } from '@/model/Setting';
 
@@ -20,13 +18,14 @@ const { volumes } = storeToRefs(store);
 
 store.loadVolumes();
 
-const enableRegexMode = ref(false);
-const filenameSearch = ref('');
+const search = reactive({
+  query: '',
+  enableRegexMode: false,
+});
 
 const sortedVolumes = computed(() => {
   return BookshelfLocalUtil.filterAndSortVolumes(volumes.value, {
-    query: filenameSearch.value,
-    enableRegexMode: enableRegexMode.value,
+    ...search,
     order: setting.value.localVolumeOrder,
   });
 });
@@ -66,18 +65,11 @@ defineExpose({
 <template>
   <n-flex vertical>
     <c-action-wrapper title="搜索">
-      <n-input
-        clearable
-        size="small"
-        v-model:value="filenameSearch"
-        type="text"
+      <search-input
+        v-model:value="search"
         placeholder="搜索文件名"
         style="max-width: 400px"
-      >
-        <template #suffix> <n-icon :component="SearchOutlined" /> </template>
-      </n-input>
-
-      <tag-button label="正则" v-model:checked="enableRegexMode" />
+      />
     </c-action-wrapper>
 
     <c-action-wrapper title="排序" align="center">
