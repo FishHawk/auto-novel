@@ -4,38 +4,51 @@ interface Option {
   value: string;
   label: string;
 }
-const value = defineModel<{
+const modelValue = defineModel<{
   value: string;
   desc: boolean;
 }>('value', {
   required: true,
 });
-defineProps<{
-  options: Option[];
-}>();
+
+const props = withDefaults(
+  defineProps<{
+    options: Option[];
+    defaultDesc?: boolean;
+  }>(),
+  {
+    defaultDesc: true,
+  },
+);
+
+let currentValue = modelValue.value.value;
 
 const handelClick = (option: Option) => {
-  // 玄学问题 当传进来的值是ref的时候 只有这样才能触发computed
-  // value.value = {
-  //   value: option.value,
-  //   desc: !value.value.desc,
-  // };
-  // 玄学问题 当传进来的值是reactive的时候 只有这样才能触发computed
-  value.value.value = option.value;
-  value.value.desc = !value.value.desc;
+  let desc = false;
+  if (currentValue != option.value) {
+    // 当前切换了选项，重置desc
+    currentValue = option.value;
+    desc = props.defaultDesc;
+  } else {
+    desc = !modelValue.value.desc;
+  }
+  modelValue.value = {
+    value: option.value,
+    desc,
+  };
 };
 </script>
 <template>
   <n-button-group size="small">
     <template v-for="option in options">
       <n-button
-        :type="option.value === value.value ? 'success' : 'default'"
+        :type="option.value === modelValue.value ? 'success' : 'default'"
         @click="handelClick(option)"
         ghost
       >
-        <template #icon v-if="option.value === value.value">
+        <template #icon v-if="option.value === modelValue.value">
           <n-icon>
-            <ArrowDropDownFilled v-if="value.desc" />
+            <ArrowDropDownFilled v-if="modelValue.desc" />
             <ArrowDropUpFilled v-else />
           </n-icon>
         </template>
