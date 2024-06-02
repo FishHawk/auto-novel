@@ -45,12 +45,15 @@ const parseTitle = (title: string) => {
     '講談社タイガ',
     '集英社文芸単行本',
     'ストレートエッジ',
+    '講談社ＢＯＸ',
   ];
 
   const includeIrrelevantKeywords = (s: string) =>
     irrelevantKeywords.some((it) => s.includes(it));
   const includeImprintKeywords = (s: string) =>
-    imprintKeywords.some((it) => s.toLocaleLowerCase().includes(it));
+    imprintKeywords.some((it) =>
+      s.toLocaleLowerCase().includes(it.toLocaleLowerCase()),
+    );
 
   let imprint;
   for (const [matched, content] of title.matchAll(

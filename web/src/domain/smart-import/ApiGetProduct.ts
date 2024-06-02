@@ -90,10 +90,11 @@ const parseProductVolume = (doc: Document) => {
     }
   });
 
+  console.log(doc.getElementById('bookDescription_feature_div'));
   const introduction = Array.from(
     doc
       .getElementById('bookDescription_feature_div')
-      ?.getElementsByTagName('span') ?? [],
+      ?.querySelectorAll('span:not(.a-expander-prompt)') ?? [],
   )
     .map((el) => el.innerHTML.replaceAll('<br>', '\n'))
     .join('\n');
