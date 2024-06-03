@@ -19,7 +19,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   volumeAdd: [File];
 }>();
-const deleteLoading = ref(false);
 
 const message = useMessage();
 const { setting } = Locator.settingRepository();
@@ -70,10 +69,8 @@ const openDeleteModal = () => {
 
 const deleteAllVolumes = async () => {
   const ids = sortedVolumes.value.map((it) => it.id);
-  deleteLoading.value = true;
   const { success, failed } = await store.deleteVolumes(ids);
   showDeleteModal.value = false;
-  deleteLoading.value = false;
   message.info(`${success}本小说被删除，${failed}本失败`);
 };
 
@@ -158,7 +155,6 @@ const sortedVolumes = computed(() => {
       <c-button
         label="确定"
         type="primary"
-        :loading="deleteLoading"
         @action="deleteAllVolumes"
       />
     </template>

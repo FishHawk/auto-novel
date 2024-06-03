@@ -33,7 +33,7 @@ const onClick = async (e: MouseEvent) => {
 </script>
 
 <template>
-  <n-button round @click="onClick">
+  <n-button round :loading="running" @click="onClick">
     <template v-if="icon && label" #icon>
       <n-icon :component="icon" />
     </template>
