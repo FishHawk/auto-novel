@@ -1,31 +1,22 @@
 package infra
 
-import appModule
 import domain.entity.Comment
 import infra.common.SakuraJobRepository
 import infra.user.UserRepository
 import infra.web.DataSourceWebNovelProvider
 import infra.wenku.WenkuNovelMetadataRepository
 import io.kotest.core.spec.style.DescribeSpec
-import io.kotest.koin.KoinExtension
-import io.kotest.koin.KoinLifecycleMode
-import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.litote.kmongo.EMPTY_BSON
 import org.litote.kmongo.setValue
 
 class BookRepositoryTest : DescribeSpec(), KoinTest {
-    override fun extensions() = listOf(
-        KoinExtension(
-            module = appModule,
-            mode = KoinLifecycleMode.Root,
-        )
-    )
+    override fun extensions() = koinExtensions()
 
-    private val provider by inject<DataSourceWebNovelProvider>(DataSourceWebNovelProvider::class.java)
-    private val es by inject<DataSourceElasticSearch>(DataSourceElasticSearch::class.java)
-    private val mongo by inject<DataSourceMongo>(DataSourceMongo::class.java)
+    private val provider by inject<DataSourceWebNovelProvider>()
+    private val es by inject<DataSourceElasticSearch>()
+    private val mongo by inject<DataSourceMongo>()
 
     private val sjRepo by inject<SakuraJobRepository>()
     private val userRepo by inject<UserRepository>()

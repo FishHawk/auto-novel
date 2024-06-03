@@ -31,9 +31,7 @@ import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -150,20 +148,20 @@ val appModule = module {
             secret = env("JWT_SECRET")!!,
             get(),
         )
-    } withOptions { createdAtStart() }
-    singleOf(::ArticleApi) { createdAtStart() }
-    singleOf(::CommentApi) { createdAtStart() }
-    singleOf(::OperationHistoryApi) { createdAtStart() }
+    }
+    singleOf(::ArticleApi)
+    singleOf(::CommentApi)
+    singleOf(::OperationHistoryApi)
 
-    singleOf(::SakuraApi) { createdAtStart() }
+    singleOf(::SakuraApi)
 
-    singleOf(::UserApi) { createdAtStart() }
-    singleOf(::UserFavoredWebApi) { createdAtStart() }
-    singleOf(::UserFavoredWenkuApi) { createdAtStart() }
-    singleOf(::UserReadHistoryWebApi) { createdAtStart() }
+    singleOf(::UserApi)
+    singleOf(::UserFavoredWebApi)
+    singleOf(::UserFavoredWenkuApi)
+    singleOf(::UserReadHistoryWebApi)
 
-    singleOf(::WebNovelApi) { createdAtStart() }
-    singleOf(::WebNovelTranslateV2Api) { createdAtStart() }
-    singleOf(::WenkuNovelApi) { createdAtStart() }
-    singleOf(::WenkuNovelTranslateV2Api) { createdAtStart() }
+    singleOf(::WebNovelApi)
+    singleOf(::WebNovelTranslateV2Api)
+    singleOf(::WenkuNovelApi)
+    singleOf(::WenkuNovelTranslateV2Api)
 }
