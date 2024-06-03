@@ -45,3 +45,36 @@ pnpm run dev  # 启动开发服务器
 ```
 
 开发服务器将实时反映代码的变化。注意，开发服务器直接与网站后端通信，请务必避免在开发过程中污染网站数据库。出于安全考虑，章节翻译请求将被拦截。
+
+## 🤝 参与共建 
+
+<table>
+  <tr>
+    <td>
+      <a href="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors?repo_id=559577341" target="_blank" style="display: block" align="center">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=dark" width="280">
+          <img alt="Top Contributors of ant-design/ant-design - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=light" width="280">
+        </picture>
+      </a>
+    </td>
+    <td rowspan="2">
+      <a href="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats?repo_id=559577341" target="_blank" style="display: block" align="center">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=dark" width="655" height="auto">
+          <img alt="Performance Stats of ant-design/ant-design - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=light" width="655" height="auto">
+        </picture>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://next.ossinsight.io/widgets/official/analyze-repo-issue-opened-and-closed?repo_id=559577341" target="_blank" style="display: block" align="center">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/analyze-repo-issue-opened-and-closed/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=dark" width="721" height="auto">
+      <img alt="Issue Opened and Closed of FishHawk/auto-novel" src="https://next.ossinsight.io/widgets/official/analyze-repo-issue-opened-and-closed/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=light" width="721" height="auto">
+    </picture>
+  </a>
+    </td>
+  </tr>
+</table>
