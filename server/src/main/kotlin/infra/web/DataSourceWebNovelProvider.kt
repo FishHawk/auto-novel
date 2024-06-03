@@ -5,8 +5,11 @@ import infra.web.providers.*
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.cookies.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
@@ -32,9 +35,15 @@ class DataSourceWebNovelProvider(
                 proxy = ProxyBuilder.http(it)
             }
         }
+        defaultRequest {
+            header(
+                HttpHeaders.UserAgent,
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
+            )
+        }
     }
 
-    private val providers = mapOf(
+    val providers = mapOf(
         Alphapolis.id to Alphapolis(client),
         Hameln.id to Hameln(client),
         Kakuyomu.id to Kakuyomu(client),

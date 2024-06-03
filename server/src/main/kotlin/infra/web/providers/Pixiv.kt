@@ -4,7 +4,6 @@ import domain.entity.*
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -27,17 +26,6 @@ class Pixiv(
         }
     }
 
-    private suspend fun get(url: String): HttpResponse {
-        return client.get(url) {
-            headers {
-                append(
-                    HttpHeaders.UserAgent,
-                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
-                )
-            }
-        }
-    }
-
     override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
         return emptyPage()
     }
@@ -46,8 +34,7 @@ class Pixiv(
         if (novelId.startsWith("s")) {
             val chapterId = novelId.removePrefix("s")
             val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"
-            val doc = get(url).document()
-
+            val doc = client.get(url).document()
 
             val obj = doc
                 .selectFirst("meta#meta-preload-data")!!
@@ -108,7 +95,7 @@ class Pixiv(
                 ),
             )
         } else {
-            val obj1 = get("https://www.pixiv.net/ajax/novel/series/$novelId")
+            val obj1 = client.get("https://www.pixiv.net/ajax/novel/series/$novelId")
                 .json()
                 .obj("body")
 
@@ -142,7 +129,7 @@ class Pixiv(
 
             if (keywords.isEmpty()) {
                 val arr1 =
-                    get("https://www.pixiv.net/ajax/novel/series_content/${novelId}?limit=30&last_order=0&order_by=asc")
+                    client.get("https://www.pixiv.net/ajax/novel/series_content/${novelId}?limit=30&last_order=0&order_by=asc")
                         .json()
                         .obj("body")
                         .obj("page")
@@ -185,7 +172,7 @@ class Pixiv(
             }
 
             toc.clear()
-            val arr2 = get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles")
+            val arr2 = client.get("https://www.pixiv.net/ajax/novel/series/$novelId/content_titles")
                 .json()
                 .array("body")
 
@@ -228,7 +215,7 @@ class Pixiv(
     private suspend fun parseImageUrlPattern2(line: String, chapterId: String): String? {
         val id = imagePattern2.find(line)?.groupValues?.get(1) ?: return null
         val fetchUrl = "https://www.pixiv.net/ajax/novel/${chapterId}/insert_illusts?id%5B%5D=${id}"
-        val body = get(fetchUrl).json().obj("body")
+        val body = client.get(fetchUrl).json().obj("body")
         val url = body.obj(id).obj("illust").obj("images").string("original")
         return url
     }
@@ -240,7 +227,7 @@ class Pixiv(
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
         val url = "https://www.pixiv.net/ajax/novel/$chapterId"
-        val body = get(url).json().obj("body")
+        val body = client.get(url).json().obj("body")
 
         val embeddedImages = body.objOrNull("textEmbeddedImages")
         val content = body.string("content")

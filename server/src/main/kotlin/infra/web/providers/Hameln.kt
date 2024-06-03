@@ -51,7 +51,7 @@ class Hameln(
             .let { el ->
                 WebNovelAuthor(
                     name = el.text(),
-                    link = el.selectFirst("a")?.attr("href")?.let { "https:$it" },
+                    link = el.selectFirst("a")?.attr("href"),
                 )
             }
 
