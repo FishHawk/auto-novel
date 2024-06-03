@@ -33,15 +33,23 @@
 
 欢迎提交 pull request。对于重大更改，请先打开一个 issue 来讨论你要进行的更改。
 
-### 前端开发
+<a href="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors?repo_id=559577341" target="_blank" style="display: block" align="left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=dark" width="280">
+    <img alt="Top Contributors of ant-design/ant-design - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors/thumbnail.png?repo_id=559577341&image_size=auto&color_scheme=light" width="280">
+  </picture>
+</a>
 
-网站基于 Vue3 + TypeScript + Vite + [Naive ui](https://www.naiveui.com/zh-CN)开发，按照下述步骤初始化开发环境。
+### 如何参与前端开发
+
+网站基于 Vue3 + TypeScript + Vite + [Naive ui](https://www.naiveui.com/zh-CN)开发，你可以按照下述步骤初始化开发环境。
 
 ```shell
 git clone git@github.com:FishHawk/auto-novel.git
 cd web
 pnpm install --frozen-lockfile  # 安装依赖
+pnpm run prepare # 设置Git钩子
 pnpm run dev  # 启动开发服务器
 ```
 
-开发服务器将实时反映代码的变化。注意，开发服务器直接与网站后端通信，请务必避免在开发过程中污染网站数据库。出于安全考虑，章节翻译请求将被拦截。
+开发服务器将实时反映代码的变化。注意，开发服务器直接与网站后端通信，请避免在开发过程中污染网站数据库。出于安全考虑，章节翻译的上传请求将被拦截。
