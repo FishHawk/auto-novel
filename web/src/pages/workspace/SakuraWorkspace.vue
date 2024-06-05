@@ -6,6 +6,8 @@ import { Locator } from '@/data';
 import { TranslateJob } from '@/model/Translator';
 import { notice } from '@/pages/components/NoticeBoard.vue';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
+import { SakuraTranslator } from '@/domain/translate';
+
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
@@ -63,7 +65,7 @@ const onProgressUpdated = (
     const job = processedJobs.value.get(task)!!;
     processedJobs.value.delete(task);
     if (!state.abort) {
-      job.finishAt = Date.now()
+      job.finishAt = Date.now();
       workspace.addJobRecord(job as any);
       workspace.deleteJob(task);
     }
@@ -86,10 +88,7 @@ const clearCache = async () =>
     message,
   );
 
-const notices = [
-  notice('低于Q4的量化模型即使能通过检查，显示允许上传，也不要使用。'),
-  notice('禁止一切伪装Sakura模型来突破上传检查的行为。'),
-];
+const notices = [notice('禁止一切伪装Sakura模型来突破上传检查的行为。')];
 </script>
 
 <template>
@@ -132,6 +131,28 @@ const notices = [
           </n-a>
         </span>
       </n-flex>
+
+      <n-p> 允许上传的模型： </n-p>
+      <n-ul>
+        <n-li v-for="{ repo, model } of SakuraTranslator.allowModels">
+          [
+          <n-a
+            target="_blank"
+            :href="`https://huggingface.co/${repo}/blob/main/${model}`"
+          >
+            HF
+          </n-a>
+          /
+          <n-a
+            target="_blank"
+            :href="`https://hf-mirror.com/${repo}/blob/main/${model}`"
+          >
+            国内镜像
+          </n-a>
+          ]
+          {{ model }}
+        </n-li>
+      </n-ul>
     </notice-board>
 
     <section-header title="翻译器">

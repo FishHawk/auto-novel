@@ -30,7 +30,6 @@ export const translate = async (
 
   if (taskDesc.type === 'web' || taskDesc.type === 'wenku') {
     if (!translator.allowUpload()) {
-      taskCallback.log('发生错误，当前Sakura版本不允许上传翻译');
       return;
     }
   }

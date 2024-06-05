@@ -16,11 +16,6 @@ export const translateWeb = async (
   translator: Translator,
   signal?: AbortSignal,
 ) => {
-  if (!translator.allowUpload()) {
-    callback.log('发生错误，当前Sakura版本不允许上传翻译');
-    return;
-  }
-
   const {
     getTranslateTask,
     getChapterTranslateTask,

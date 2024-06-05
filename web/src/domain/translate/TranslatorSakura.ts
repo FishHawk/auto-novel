@@ -1,4 +1,5 @@
 import { Locator } from '@/data';
+import { Glossary } from '@/model/Glossary';
 
 import {
   Logger,
@@ -6,13 +7,13 @@ import {
   SegmentTranslator,
   createLengthSegmentor,
 } from './Common';
-import { Glossary } from '@/model/Glossary';
 
 export class SakuraTranslator implements SegmentTranslator {
   id = <const>'sakura';
   log: (message: string, detail?: string[]) => void;
   private api;
-  version: string = '0.8';
+  version: string = '0.9';
+  model?: string;
   fingerprint?: number[];
   segmentor = createLengthSegmentor(500);
   segLength = 500;
@@ -34,10 +35,16 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   async init() {
-    const { version, fingerprint } = await this.detectModel();
-    this.version = version;
+    const { model, fingerprint } = await this.detectModel();
+    if (model !== undefined) {
+      if (model.includes('0.8')) this.version = '0.8';
+      else if (model.includes('0.9')) this.version = '0.9';
+      else if (model.includes('0.10')) this.version = '0.10';
+    }
+    this.model = model;
     this.fingerprint = fingerprint;
-    console.log('模型指纹');
+    console.log('模型/指纹:');
+    console.log(this.model);
     console.log(this.fingerprint);
     return this;
   }
@@ -51,124 +58,54 @@ export class SakuraTranslator implements SegmentTranslator {
       this.log('前文长度不是500');
       return false;
     }
+
+    if (this.model === undefined) {
+      this.log('无法确定模型名称');
+      return false;
+    }
+
+    const isModelAllowed = SakuraTranslator.allowModels
+      .map((it) => it.model)
+      .some((it) => it === this.model);
+    if (isModelAllowed) {
+      this.log(`模型为${this.model}，允许上传`);
+    } else {
+      this.log(`模型为${this.model}，禁止上传`);
+      return false;
+    }
+
     if (this.fingerprint === undefined) {
-      this.log('无法确定使用什么模型');
+      this.log('无法确定模型指纹');
+      return false;
+    }
+
+    const fingerprint = this.fingerprint;
+    const fingerprintKnownList = SakuraTranslator.allowModels
+      .map((it) => it.fingerprint)
+      .flat();
+    const calculateDistance = (a: number[], b: number[]) => {
+      let d = 0;
+      for (let i = 0; i < a.length; i++) {
+        const numA = a[i];
+        const numB = b[i] ?? 0;
+        d += Math.abs(numA - numB) ** 2;
+      }
+      return d;
+    };
+
+    const distanceList = fingerprintKnownList.map((known) => {
+      const distance = calculateDistance(known, fingerprint);
+      console.log(`距离:${distance}`);
+      return distance;
+    });
+
+    const isFingerprintLegal = distanceList.some((it) => it < 0.001);
+    if (!isFingerprintLegal) {
+      this.log('指纹检查未通过，请找站长反馈');
       return false;
     } else {
-      const fingerprint = this.fingerprint;
-      const fingerprintKnownList = [
-        // V9Q4
-        [
-          0.43284669518470764, 0.4130252003669739, 0.04670359566807747,
-          0.026198342442512512, 0.018005838617682457, 0.017726685851812363,
-          0.013591521419584751, 0.0112677663564682, 0.010921093635261059,
-          0.009713421575725079,
-        ],
-        // V9bQ4
-        [
-          0.4376196265220642, 0.40473198890686035, 0.046124767512083054,
-          0.042326465249061584, 0.014513801783323288, 0.013741392642259598,
-          0.012511679902672768, 0.010453899390995502, 0.009444311261177063,
-          0.008532224223017693,
-        ],
-        // V9Q5
-        [
-          0.47926297783851624, 0.3850986361503601, 0.048578787595033646,
-          0.025202343240380287, 0.015049006789922714, 0.011538472957909107,
-          0.010755039751529694, 0.009199273772537708, 0.007807321380823851,
-          0.007508228067308664,
-        ],
-        // V9Q8
-        [
-          0.5050740242004395, 0.3581511378288269, 0.047719020396471024,
-          0.023994628340005875, 0.01783129572868347, 0.010319961234927177,
-          0.010319961234927177, 0.009544404223561287, 0.008622650057077408,
-          0.008422906510531902,
-        ],
-        // qwen2beta v0.9 Q6_K
-        [
-          0.5330696105957031, 0.3233230710029602, 0.03381280228495598,
-          0.024354450404644012, 0.01809868961572647, 0.01673855260014534,
-          0.01420582365244627, 0.012934550642967224, 0.011777041479945183,
-          0.011685391888022423,
-        ],
-        // qwen2beta v0.9 IQ4_XS
-        [
-          0.5346031188964844, 0.3217298090457916, 0.031361691653728485,
-          0.022065704688429832, 0.020728811621665955, 0.016526449471712112,
-          0.016017984598875046, 0.014246690087020397, 0.012377738952636719,
-          0.010341987945139408,
-        ],
-        [
-          0.5695551633834839, 0.26602110266685486, 0.037017278373241425,
-          0.023593876510858536, 0.019706768915057182, 0.018498677760362625,
-          0.01830877549946308, 0.018086310476064682, 0.01600310392677784,
-          0.013208990916609764,
-        ],
-        [
-          0.5865097045898438, 0.2559467554092407, 0.03481026366353035,
-          0.022377753630280495, 0.021618124097585678, 0.017949266359210014,
-          0.01727847382426262, 0.01687248796224594, 0.013742952607572079,
-          0.012894189916551113,
-        ],
-        // qwen2beta v0.9 IQ4_XS rocm
-        [
-          0.5755994319915771, 0.29531994462013245, 0.027012469246983528,
-          0.020408252254128456, 0.019373252987861633, 0.013949254527688026,
-          0.01368272677063942, 0.013679255731403828, 0.011674472130835056,
-          0.009300841949880123,
-        ],
-        // sakura-32b-qwen2beta-v0.9-iq4xs.gguf
-        [
-          0.637474775314331, 0.2745130658149719, 0.03205988556146622,
-          0.013636616989970207, 0.009562249295413494, 0.0072726053185760975,
-          0.007086690980941057, 0.007071454077959061, 0.006449921987950802,
-          0.00487272534519434,
-        ],
-        [
-          0.612946629524231, 0.29618123173713684, 0.033997636288404465,
-          0.013719908893108368, 0.010187946259975433, 0.0077759381383657455,
-          0.007326382678002119, 0.006830626633018255, 0.0067310151644051075,
-          0.004302578046917915,
-        ],
-        // sakura-32b-qwen2beta-v0.9.1-iq4xs.gguf
-        [
-          0.5895127058029175, 0.3742421269416809, 0.008571512065827847,
-          0.005501568783074617, 0.0046662273816764355, 0.004656270146369934,
-          0.003773320000618696, 0.0034761286806315184, 0.0031783662270754576,
-          0.002421919722110033,
-        ],
-        [
-          // 这个是 Akira 的电脑上跑出来的指纹
-          // 用 sakura-launcher-cuda12-b2859 跑 sakura-32b-qwen2beta-v0.9.1-iq4xs 的结果
-          0.49625661969184875, 0.4707738757133484, 0.008472394198179245,
-          0.00468214089050889, 0.0041005234234035015, 0.0035940087400376797,
-          0.0035077850334346294, 0.00345810828730464, 0.00293041137047112,
-          0.002223958494141698,
-        ],
-      ];
-
-      const calculateDistance = (a: number[], b: number[]) => {
-        let d = 0;
-        for (let i = 0; i < a.length; i++) {
-          const numA = a[i];
-          const numB = b[i] ?? 0;
-          d += Math.abs(numA - numB) ** 2;
-        }
-        return d;
-      };
-
-      const distanceList = fingerprintKnownList.map((known) => {
-        const distance = calculateDistance(known, fingerprint);
-        console.log(distance);
-        return distance;
-      });
-
-      const isFingerprintLegal = distanceList.some((it) => it < 0.001);
-      if (!isFingerprintLegal) {
-        this.log('该模型无法通过上传检测');
-      }
-      return isFingerprintLegal;
+      this.log('指纹检查通过');
+      return true;
     }
   };
 
@@ -257,41 +194,22 @@ export class SakuraTranslator implements SegmentTranslator {
       .catch(() => undefined);
 
     if (completion === undefined) {
-      return { version: '0.9' };
+      return {};
     }
 
-    let version = '0.8';
-    if (completion.model.includes('0.9')) version = '0.9';
-    if (completion.model.includes('0.10')) version = '0.10';
-
-    const allow = [
-      '0.9-Q4',
-      '0.9-Q5',
-      '0.9-Q6',
-      '0.9-Q8',
-      '0.9b-Q4',
-      '0.9b-Q5',
-      '0.9b-Q6',
-      '0.9b-Q8',
-      '0.9-iq4',
-      '0.9-IQ4',
-      '0.9.1-iq4',
-    ].some((it) => completion.model.includes(it));
-
+    const model = completion.model;
     if (
       completion.completion_probabilities === undefined ||
-      completion.completion_probabilities.length === 0 ||
-      version !== '0.9' ||
-      !allow
+      completion.completion_probabilities.length === 0
     ) {
-      return { version };
+      return { model };
     }
 
     const fingerprint = completion.completion_probabilities[0].probs.map(
       (it) => it.prob,
     );
 
-    return { version, fingerprint };
+    return { model, fingerprint };
   }
 
   private async createChatCompletions(
@@ -386,4 +304,104 @@ export namespace SakuraTranslator {
   }
   export const create = (log: Logger, config: Config) =>
     new SakuraTranslator(log, config).init();
+
+  const model = (repo: string, model: string, fingerprint: number[][]) => ({
+    repo,
+    model,
+    fingerprint,
+  });
+
+  export const allowModels = [
+    model(
+      'SakuraLLM/Sakura-14B-Qwen2beta-v0.9-GGUF',
+      'sakura-14b-qwen2beta-v0.9-iq4_xs_ver2.gguf',
+      [
+        [
+          0.5346031188964844, 0.3217298090457916, 0.031361691653728485,
+          0.022065704688429832, 0.020728811621665955, 0.016526449471712112,
+          0.016017984598875046, 0.014246690087020397, 0.012377738952636719,
+          0.010341987945139408,
+        ],
+        [
+          0.5695551633834839, 0.26602110266685486, 0.037017278373241425,
+          0.023593876510858536, 0.019706768915057182, 0.018498677760362625,
+          0.01830877549946308, 0.018086310476064682, 0.01600310392677784,
+          0.013208990916609764,
+        ],
+        [
+          0.5865097045898438, 0.2559467554092407, 0.03481026366353035,
+          0.022377753630280495, 0.021618124097585678, 0.017949266359210014,
+          0.01727847382426262, 0.01687248796224594, 0.013742952607572079,
+          0.012894189916551113,
+        ],
+        //  rocm
+        [
+          0.5755994319915771, 0.29531994462013245, 0.027012469246983528,
+          0.020408252254128456, 0.019373252987861633, 0.013949254527688026,
+          0.01368272677063942, 0.013679255731403828, 0.011674472130835056,
+          0.009300841949880123,
+        ],
+      ],
+    ),
+    model(
+      'SakuraLLM/Sakura-32B-Qwen2beta-v0.9-GGUF',
+      'sakura-32b-qwen2beta-v0.9-iq4xs.gguf',
+      [
+        [
+          0.637474775314331, 0.2745130658149719, 0.03205988556146622,
+          0.013636616989970207, 0.009562249295413494, 0.0072726053185760975,
+          0.007086690980941057, 0.007071454077959061, 0.006449921987950802,
+          0.00487272534519434,
+        ],
+        [
+          0.612946629524231, 0.29618123173713684, 0.033997636288404465,
+          0.013719908893108368, 0.010187946259975433, 0.0077759381383657455,
+          0.007326382678002119, 0.006830626633018255, 0.0067310151644051075,
+          0.004302578046917915,
+        ],
+      ],
+    ),
+    model(
+      'SakuraLLM/Sakura-14B-Qwen2beta-v0.9.1-GGUF',
+      'sakura-14b-qwen2beta-v0.9.1-iq4xs.gguf',
+      [
+        [
+          0.44965803623199463, 0.4034508168697357, 0.05095893144607544,
+          0.023245327174663544, 0.017602942883968353, 0.014538204297423363,
+          0.011166810058057308, 0.010693884454667568, 0.009813597425818443,
+          0.008871445432305336,
+        ],
+      ],
+    ),
+    model(
+      'SakuraLLM/Sakura-32B-Qwen2beta-v0.9.1-GGUF',
+      'sakura-32b-qwen2beta-v0.9.1-iq4xs.gguf',
+      [
+        [
+          0.5895127058029175, 0.3742421269416809, 0.008571512065827847,
+          0.005501568783074617, 0.0046662273816764355, 0.004656270146369934,
+          0.003773320000618696, 0.0034761286806315184, 0.0031783662270754576,
+          0.002421919722110033,
+        ],
+        [
+          0.49625661969184875, 0.4707738757133484, 0.008472394198179245,
+          0.00468214089050889, 0.0041005234234035015, 0.0035940087400376797,
+          0.0035077850334346294, 0.00345810828730464, 0.00293041137047112,
+          0.002223958494141698,
+        ],
+      ],
+    ),
+    model(
+      'SakuraLLM/Sakura-14B-Qwen2beta-v0.9.2-GGUF',
+      'sakura-14b-qwen2beta-v0.9.2-iq4xs.gguf',
+      [
+        [
+          0.5601178407669067, 0.10090667009353638, 0.07124997675418854,
+          0.050760358572006226, 0.048443447798490524, 0.04311312735080719,
+          0.034672778099775314, 0.03223879635334015, 0.03134223446249962,
+          0.027154725044965744,
+        ],
+      ],
+    ),
+  ];
 }

@@ -45,9 +45,9 @@ export class Translator {
     );
   }
 
-  sakuraVersion() {
+  sakuraModel() {
     if (this.segTranslator instanceof SakuraTranslator) {
-      return this.segTranslator.version;
+      return this.segTranslator.model ?? '未知';
     } else {
       return '';
     }
