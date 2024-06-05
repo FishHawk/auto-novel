@@ -46,6 +46,7 @@ const parseTitle = (title: string) => {
     '集英社文芸単行本',
     'ストレートエッジ',
     '講談社ＢＯＸ',
+    '光文社新書',
   ];
 
   const includeIrrelevantKeywords = (s: string) =>
