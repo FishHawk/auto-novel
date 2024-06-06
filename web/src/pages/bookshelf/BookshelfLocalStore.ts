@@ -83,6 +83,39 @@ export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
       return { success: ids.length - failed, failed };
     },
 
+    async downloadRawVolumes(ids: string[]) {
+      const repo = await Locator.localVolumeRepository();
+
+      const { BlobReader, BlobWriter, ZipWriter } = await import(
+        '@zip.js/zip.js'
+      );
+      const zipBlobWriter = new BlobWriter();
+      const writer = new ZipWriter(zipBlobWriter);
+
+      let failed = 0;
+      await Promise.all(
+        ids.map(async (id: string) => {
+          try {
+            const file = await repo.getFile(id);
+            if (file !== undefined) {
+              await writer.add(id, new BlobReader(file.file));
+            } else {
+              throw new Error('文件应当存在');
+            }
+          } catch (error) {
+            failed += 1;
+            console.error(`生成文件错误：${error}\n标题:${id}`);
+          }
+        }),
+      );
+
+      await writer.close();
+      const zipBlob = await zipBlobWriter.getData();
+      downloadFile(`批量下载[${ids.length}].zip`, zipBlob);
+
+      return { success: ids.length - failed, failed };
+    },
+
     queueJobToWorkspace(
       id: string,
       {

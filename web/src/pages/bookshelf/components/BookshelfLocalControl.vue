@@ -50,7 +50,17 @@ const downloadSelected = async () => {
     return;
   }
   const { success, failed } = await store.downloadVolumes(ids);
-  message.info(`${success}本小说被打包，${failed}本失败`);
+  message.info(`${success}本小说机翻被打包，${failed}本失败`);
+};
+
+const downloadRawSelected = async () => {
+  const ids = props.selectedIds;
+  if (ids.length === 0) {
+    message.info('没有选中小说');
+    return;
+  }
+  const { success, failed } = await store.downloadRawVolumes(ids);
+  message.info(`${success}本小说原文被打包，${failed}本失败`);
 };
 
 // 生成翻译任务
@@ -97,7 +107,16 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
           </n-button-group>
 
           <n-button-group size="small">
-            <c-button label="下载" :round="false" @action="downloadSelected" />
+            <c-button
+              label="下载原文"
+              :round="false"
+              @action="downloadRawSelected"
+            />
+            <c-button
+              label="下载机翻"
+              :round="false"
+              @action="downloadSelected"
+            />
             <c-button
               label="下载设置"
               :round="false"

@@ -81,7 +81,7 @@ const handleDrop = (e: DragEvent) => {
   >
     <n-tooltip trigger="hover">
       <template #trigger>
-        <c-button label="添加文件" :icon="PlusOutlined" />
+        <c-button label="添加" :icon="PlusOutlined" />
       </template>
       支持拖拽上传文件
     </n-tooltip>
