@@ -21,6 +21,8 @@ defineProps<{ listResult?: Result<WebNovelOutlineDto[]> }>();
         <div class="text-2line">{{ item.titleZh }}</div>
         <n-text depth="3">
           总计 {{ item.total }} / 百度 {{ item.baidu }} / 有道 {{ item.youdao }}
+          <br />
+          {{ item.type }} / GPT {{ item.gpt }} / Sakura {{ item.sakura }}
         </n-text>
       </n-grid-item>
     </n-grid>
