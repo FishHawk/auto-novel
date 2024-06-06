@@ -20,9 +20,9 @@ defineProps<{ listResult?: Result<WebNovelOutlineDto[]> }>();
         </c-a>
         <div class="text-2line">{{ item.titleZh }}</div>
         <n-text depth="3">
-          总计 {{ item.total }} / 百度 {{ item.baidu }} / 有道 {{ item.youdao }}
+          {{ item.type }} / 总计 {{ item.total }} / 百度 {{ item.baidu }}
           <br />
-          {{ item.type }} / GPT {{ item.gpt }} / Sakura {{ item.sakura }}
+          有道 {{ item.youdao }} / GPT {{ item.gpt }} / Sakura {{ item.sakura }}
         </n-text>
       </n-grid-item>
     </n-grid>
