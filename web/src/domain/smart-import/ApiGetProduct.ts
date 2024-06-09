@@ -90,7 +90,6 @@ const parseProductVolume = (doc: Document) => {
     }
   });
 
-  console.log(doc.getElementById('bookDescription_feature_div'));
   const introduction = Array.from(
     doc
       .getElementById('bookDescription_feature_div')

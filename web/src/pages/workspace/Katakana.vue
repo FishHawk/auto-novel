@@ -202,7 +202,9 @@ const notices = [
           />
           <div>
             <n-upload
-              accept=".txt,.epub"
+              accept=".txt,.epub,.srt"
+              multiple
+              directory-dnd
               :custom-request="customRequest"
               :show-file-list="false"
             >

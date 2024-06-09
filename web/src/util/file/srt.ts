@@ -10,7 +10,7 @@ const dividerByEmptyLine = (lines: string[]) => {
   const blocks = [];
   let block = [];
   for (const line of lines) {
-    if (line.length !== 0) {
+    if (line.trim().length !== 0) {
       block.push(line);
     } else if (block.length > 0) {
       blocks.push(block);
