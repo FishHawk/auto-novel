@@ -87,8 +87,6 @@ const clearCache = async () =>
     '缓存清除',
     message,
   );
-
-const notices = [notice('禁止一切伪装Sakura模型来突破上传检查的行为。')];
 </script>
 
 <template>
@@ -99,7 +97,7 @@ const notices = [notice('禁止一切伪装Sakura模型来突破上传检查的�
   >
     <n-h1>Sakura工作区</n-h1>
 
-    <notice-board :notices="notices">
+    <notice-board :notices="[]">
       <n-flex>
         <c-a to="/forum/656d60530286f15e3384fcf8" target="_blank">
           本地部署教程
@@ -132,7 +130,7 @@ const notices = [notice('禁止一切伪装Sakura模型来突破上传检查的�
         </span>
       </n-flex>
 
-      <n-p> 允许上传的模型： </n-p>
+      <n-p> 允许上传的模型如下，禁止一切试图突破上传检查的操作。 </n-p>
       <n-ul>
         <n-li v-for="{ repo, model } of SakuraTranslator.allowModels">
           [
