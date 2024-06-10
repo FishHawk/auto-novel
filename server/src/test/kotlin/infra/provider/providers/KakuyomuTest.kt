@@ -2,7 +2,7 @@ package infra.provider.providers
 
 import domain.entity.WebNovelAttention
 import domain.entity.WebNovelType
-import infra.koinExtensions
+import koinExtensions
 import infra.web.DataSourceWebNovelProvider
 import infra.web.providers.Kakuyomu
 import io.kotest.core.spec.style.DescribeSpec

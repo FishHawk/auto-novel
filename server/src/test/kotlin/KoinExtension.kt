@@ -1,6 +1,3 @@
-package infra
-
-import appModule
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 

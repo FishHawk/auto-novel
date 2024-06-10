@@ -4,7 +4,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Attributes
+import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.Entities
 import org.jsoup.parser.Parser
 import org.jsoup.parser.Tag
 import java.io.BufferedOutputStream
@@ -277,7 +279,7 @@ class EpubBook {
 
     suspend fun write(filePath: Path) = Writer(this).write(filePath)
 
-    private class Writer(val book: EpubBook) {
+    class Writer(val book: EpubBook) {
         suspend fun write(filePath: Path) {
             withContext(Dispatchers.IO) {
                 if (filePath.notExists()) {
@@ -301,7 +303,7 @@ class EpubBook {
             }
         }
 
-        private fun createPackageDocument(): String {
+        fun createPackageDocument(): String {
             val doc = Jsoup.parse(TEMPLATE_PACKAGE, Parser.xmlParser())
             val rootElement = doc.selectFirst("package")!!
             rootElement.attr("unique-identifier", UNIQUE_IDENTIFIER)
@@ -328,7 +330,8 @@ class EpubBook {
             rootElement.appendChild(manifestElement)
             rootElement.appendChild(spineElement)
 
-            doc.outputSettings().prettyPrint(true)
+            // hacky https://github.com/jhy/jsoup/issues/2141
+            doc.outputSettings().prettyPrint(false)
             return doc.html()
         }
 

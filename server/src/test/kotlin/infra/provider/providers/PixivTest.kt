@@ -1,6 +1,6 @@
 package infra.provider.providers
 
-import infra.koinExtensions
+import koinExtensions
 import infra.web.DataSourceWebNovelProvider
 import infra.web.providers.NovelIdShouldBeReplacedException
 import infra.web.providers.Pixiv
