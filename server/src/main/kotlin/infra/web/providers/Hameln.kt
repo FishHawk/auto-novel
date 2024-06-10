@@ -139,11 +139,13 @@ class Hameln(
             if (chapterId == "default") "https://syosetu.org/novel/$novelId"
             else "https://syosetu.org/novel/$novelId/$chapterId.html"
         val paragraphs = client.get(url).document()
-            .select("div#honbun > p")
+            .selectFirst("div#honbun")!!
+            .getElementsByTag("p")
             .apply {
                 select("rp").remove()
                 select("rt").remove()
             }
+            .filter { it -> it.id().isNotEmpty() }
             .map { it.text() }
         return RemoteChapter(paragraphs = paragraphs)
     }

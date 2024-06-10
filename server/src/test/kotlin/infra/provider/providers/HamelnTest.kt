@@ -77,6 +77,11 @@ class HamelnTest : DescribeSpec(), KoinTest {
                 chapter.paragraphs.size.shouldBe(141)
                 chapter.paragraphs.first().shouldStartWith("　特級呪霊花御による、呪術高専東京校への襲撃")
             }
+            it("奇妙格式") {
+                // https://syosetu.org/novel/299011/72.html
+                val chapter = provider.getChapter("299011", "72")
+                chapter.paragraphs.size.shouldBe(323)
+            }
         }
     }
 }
