@@ -3,7 +3,10 @@ import { es, mongo } from './config.js';
 export const generateWenkuIndex = async () => {
   const index = 'wenku.2024-05-15';
 
-  await es.indices.delete({ index });
+  try {
+    await es.indices.delete({ index });
+  } catch {}
+
   await es.indices.create(
     {
       index,
