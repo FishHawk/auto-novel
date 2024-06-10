@@ -4,7 +4,6 @@ import com.jillesvangurp.ktsearch.*
 import domain.entity.WebNovelAttention
 import domain.entity.WebNovelType
 import domain.entity.WenkuNovelLevel
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -23,7 +22,7 @@ data class WebNovelMetadataEsModel(
     val visited: Int,
     val hasGpt: Boolean,
     val hasSakura: Boolean,
-    val updateAt: Long,
+    @Contextual val updateAt: Instant,
 )
 
 @Serializable
@@ -50,30 +49,7 @@ class DataSourceElasticSearch(host: String, port: Int?) {
     )
 
     companion object {
-        const val webNovelIndexName = "web-index-alt"
+        const val webNovelIndexName = "web.2024-06-10"
         const val wenkuNovelIndexName = "wenku.2024-05-15"
-    }
-
-    init {
-        runBlocking {
-            runCatching {
-                client.createIndex(webNovelIndexName) {
-                    mappings(dynamicEnabled = false) {
-                        keyword(WebNovelMetadataEsModel::providerId)
-                        text(WebNovelMetadataEsModel::titleJp) { analyzer = "icu_analyzer" }
-                        text(WebNovelMetadataEsModel::titleZh) { analyzer = "icu_analyzer" }
-                        keyword(WebNovelMetadataEsModel::authors)
-                        keyword(WebNovelMetadataEsModel::type)
-                        keyword(WebNovelMetadataEsModel::attentions)
-                        keyword(WebNovelMetadataEsModel::keywords)
-                        number<Int>(WebNovelMetadataEsModel::tocSize)
-                        number<Int>(WebNovelMetadataEsModel::visited)
-                        bool(WebNovelMetadataEsModel::hasGpt)
-                        bool(WebNovelMetadataEsModel::hasSakura)
-                        date(WebNovelMetadataEsModel::updateAt)
-                    }
-                }
-            }
-        }
     }
 }

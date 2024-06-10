@@ -429,7 +429,7 @@ class WebNovelMetadataRepository(
                 visited = novel.visited.toInt(),
                 hasGpt = novel.gpt > 0,
                 hasSakura = novel.sakura > 0,
-                updateAt = novel.updateAt.epochSeconds,
+                updateAt = novel.updateAt,
             ),
             refresh = Refresh.WaitFor,
         )
