@@ -48,20 +48,19 @@ export const generateWebIndex = async () => {
     updateAt: 1,
   });
 
-  const dataset: any[] = [];
+  const dataset: { id: string; doc: any }[] = [];
 
   const processDataset = async () => {
-    const operations = dataset.flatMap((doc) => [
-      { index: { _index: index } },
+    const operations = dataset.flatMap(({ id, doc }) => [
+      { index: { _index: index, _id: id } },
       doc,
     ]);
-    await es.bulk({ refresh: true, operations });
+    await es.bulk({ operations });
   };
 
   let i = 1;
   for await (const it of novels) {
-    const novelEs = {
-      id: `${it.providerId}.${it.bookId}`,
+    const doc = {
       providerId: it.providerId,
       novelId: it.bookId,
       authors: it.authors.map((a: any) => a.name),
@@ -76,10 +75,13 @@ export const generateWebIndex = async () => {
       tocSize: it.toc.filter((it: any) => it.chapterId).length,
       updateAt: it.updateAt,
     };
-    dataset.push(novelEs);
+    dataset.push({
+      id: `${it.providerId}.${it.bookId}`,
+      doc,
+    });
 
-    if (dataset.length === 100) {
-      console.log(`${i * 100}/${total}`);
+    if (dataset.length === 300) {
+      console.log(`${i * 300}/${total}`);
       i += 1;
       await processDataset();
       dataset.length = 0;

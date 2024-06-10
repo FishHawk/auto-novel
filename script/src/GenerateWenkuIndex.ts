@@ -44,25 +44,24 @@ export const generateWenkuIndex = async () => {
     updateAt: 1,
   });
 
-  const dataset: any[] = [];
+  const dataset: { id: string; doc: any }[] = [];
 
   const processDataset = async () => {
-    const operations = dataset.flatMap((doc) => [
-      { index: { _index: index } },
+    const operations = dataset.flatMap(({ id, doc }) => [
+      { index: { _index: index, _id: id } },
       doc,
     ]);
-    await es.bulk({ refresh: true, operations });
+    await es.bulk({ operations });
   };
 
   let i = 1;
-  for await (const novel of novels) {
-    const id = novel._id.toHexString();
-    delete novel._id;
-    novel.id = id;
-    dataset.push(novel);
+  for await (const doc of novels) {
+    const id = doc._id.toHexString();
+    delete doc._id;
+    dataset.push({ id, doc });
 
-    if (dataset.length === 100) {
-      console.log(`${i * 100}/${total}`);
+    if (dataset.length === 300) {
+      console.log(`${i * 300}/${total}`);
       i += 1;
       await processDataset();
       dataset.length = 0;
