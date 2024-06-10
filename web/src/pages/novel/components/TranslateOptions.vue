@@ -17,9 +17,8 @@ const isWideScreen = useIsWideScreen(600);
 const { setting } = Locator.settingRepository();
 
 // 翻译设置
-const translateLevel = ref<'normal' | 'expire' | 'all'>('normal');
+const translateLevel = ref<'normal' | 'expire' | 'all' | 'sync'>('normal');
 const forceMetadata = ref(false);
-const sync = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
 const taskNumber = ref<number | null>(1);
@@ -27,7 +26,6 @@ const taskNumber = ref<number | null>(1);
 defineExpose({
   getTranslateTaskParams: (): TranslateTaskParams => ({
     level: translateLevel.value,
-    sync: sync.value,
     forceMetadata: forceMetadata.value,
     startIndex: startIndex.value ?? 0,
     endIndex: endIndex.value ?? 65536,
@@ -42,7 +40,7 @@ const showDownloadModal = ref(false);
   <n-flex vertical>
     <c-action-wrapper title="选项">
       <n-flex size="small">
-        <n-tooltip trigger="hover">
+        <n-tooltip trigger="hover" style="max-width: 200px">
           <template #trigger>
             <n-flex :size="0" :wrap="false">
               <tag-button
@@ -61,11 +59,21 @@ const showDownloadModal = ref(false);
                 :checked="translateLevel === 'all'"
                 @update:checked="translateLevel = 'all'"
               />
+              <tag-button
+                v-if="gnid.type === 'web'"
+                label="源站同步"
+                type="warning"
+                :checked="translateLevel === 'sync'"
+                @update:checked="translateLevel = 'sync'"
+              />
             </n-flex>
           </template>
           常规：只翻译未翻译的章节<br />
           过期：翻译术语表过期的章节<br />
           重翻：重翻全部章节<br />
+          <template v-if="gnid.type === 'web'">
+            源站同步：用于原作者修改了原文的情况导致不一致的情况，可能清空现有翻译，慎用！!
+          </template>
         </n-tooltip>
 
         <tag-button
@@ -74,23 +82,8 @@ const showDownloadModal = ref(false);
           v-model:checked="forceMetadata"
         />
 
-        <n-tooltip
-          v-if="gnid.type === 'web'"
-          trigger="hover"
-          style="max-width: 200px"
-        >
-          <template #trigger>
-            <tag-button
-              label="源站同步"
-              type="warning"
-              v-model:checked="sync"
-            />
-          </template>
-          慎用！!可能清空现有翻译，只适用于原作者修改了原文的情况导致不一致的情况
-        </n-tooltip>
-
         <n-text
-          v-if="translateLevel === 'all' || sync"
+          v-if="translateLevel === 'all' || translateLevel === 'sync'"
           type="warning"
           style="font-size: 12px; flex-basis: 100%"
         >

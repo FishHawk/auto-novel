@@ -135,7 +135,6 @@ export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
 
       const task = TranslateTaskDescriptor.local(id, {
         level,
-        sync: false,
         forceMetadata: false,
         startIndex: 0,
         endIndex: 65535,
@@ -172,7 +171,6 @@ export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
       ids.forEach((id) => {
         const task = TranslateTaskDescriptor.local(id, {
           level,
-          sync: false,
           forceMetadata: false,
           startIndex: 0,
           endIndex: 65535,

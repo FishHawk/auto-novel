@@ -21,7 +21,7 @@ export interface TranslateJob {
   task: string;
   description: string;
   createAt: number;
-  finishAt?: number
+  finishAt?: number;
 }
 
 export type TranslateJobRecord = TranslateJob & {
@@ -61,8 +61,7 @@ export type TranslateTaskDesc =
   | LocalTranslateTaskDesc;
 
 export type TranslateTaskParams = {
-  level: 'normal' | 'expire' | 'all'; // 翻译等级
-  sync: boolean; // 是否与源站同步
+  level: 'normal' | 'expire' | 'all' | 'sync'; // 翻译等级
   forceMetadata: boolean; // 强制重翻元数据
   startIndex: number;
   endIndex: number;
@@ -80,14 +79,12 @@ type TranslateTaskDescriptor = string;
 export namespace TranslateTaskDescriptor {
   const buildTaskQueryString = ({
     level,
-    sync,
     forceMetadata,
     startIndex,
     endIndex,
   }: TranslateTaskParams) => {
     const searchParamsInit: { [key: string]: string } = {
       level,
-      sync: sync.toString(),
       forceMetadata: forceMetadata.toString(),
       startIndex: startIndex.toString(),
       endIndex: endIndex.toString(),
@@ -151,7 +148,6 @@ export namespace TranslateTaskDescriptor {
 
     const params: TranslateTaskParams = {
       level: query['level'],
-      sync: queryBoolean('sync'),
       forceMetadata: queryBoolean('forceMetadata'),
       startIndex: queryInt('startIndex', 0),
       endIndex: queryInt('endIndex', 65535),

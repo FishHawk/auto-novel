@@ -92,7 +92,7 @@ const importToWorkspace = async () => {
 
 const shouldTopJob = useKeyModifier('Control');
 const submitJob = (id: 'gpt' | 'sakura') => {
-  const { startIndex, endIndex, level, sync, forceMetadata } =
+  const { startIndex, endIndex, level, forceMetadata } =
     translateOptions.value!!.getTranslateTaskParams();
   const taskNumber = translateOptions.value!!.getTaskNumber();
 
@@ -110,7 +110,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       if (end > start) {
         const task = TranslateTaskDescriptor.web(providerId, novelId, {
           level,
-          sync,
           forceMetadata,
           startIndex: start,
           endIndex: end,
@@ -121,7 +120,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   } else {
     const task = TranslateTaskDescriptor.web(providerId, novelId, {
       level,
-      sync,
       forceMetadata,
       startIndex,
       endIndex,

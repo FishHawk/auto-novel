@@ -1,18 +1,14 @@
 <script lang="ts" setup>
-import { useKeyModifier } from '@vueuse/core';
-
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { TranslatorId, TranslateTaskDescriptor } from '@/model/Translator';
+import { TranslatorId } from '@/model/Translator';
 
 import TranslateTask from '@/pages/components/TranslateTask.vue';
 
 const props = defineProps<{
   volume: LocalVolumeMetadata;
 }>();
-
-const message = useMessage();
 
 const { setting } = Locator.settingRepository();
 
@@ -30,46 +26,12 @@ const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
     { type: 'local', volumeId: props.volume.id },
     {
       level: 'expire',
-      sync: false,
       forceMetadata: false,
       startIndex: 0,
       endIndex: 65535,
     },
     { id: translatorId },
   );
-
-const shouldTopJob = useKeyModifier('Control');
-const queueVolume = (translatorId: 'gpt' | 'sakura') => {
-  const task = TranslateTaskDescriptor.local(props.volume.id, {
-    level: 'expire',
-    sync: false,
-    forceMetadata: false,
-    startIndex: 0,
-    endIndex: 65535,
-  });
-
-  const workspace =
-    translatorId === 'gpt'
-      ? Locator.gptWorkspaceRepository()
-      : Locator.sakuraWorkspaceRepository();
-
-  const job = {
-    task,
-    description: props.volume.id,
-    createAt: Date.now(),
-  };
-
-  const success = workspace.addJob(job);
-
-  if (success) {
-    message.success('排队成功');
-    if (shouldTopJob.value) {
-      workspace.topJob(job);
-    }
-  } else {
-    message.error('排队失败：翻译任务已经存在');
-  }
-};
 </script>
 
 <template>

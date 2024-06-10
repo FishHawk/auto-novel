@@ -49,12 +49,12 @@ export const translateWenku = async (
       glossaryId,
     }))
     .filter(({ glossaryId }) => {
-      if (level === 'all') {
-        return true;
+      if (level === 'normal') {
+        return glossaryId === undefined;
       } else if (level === 'expire') {
         return glossaryId === undefined || glossaryId !== task.glossaryId;
       } else {
-        return glossaryId === undefined;
+        return true;
       }
     });
 

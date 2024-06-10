@@ -11,7 +11,7 @@ import { Translator } from './Translator';
 
 export const translateWeb = async (
   { providerId, novelId }: WebTranslateTaskDesc,
-  { level, sync, forceMetadata, startIndex, endIndex }: TranslateTaskParams,
+  { level, forceMetadata, startIndex, endIndex }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
   signal?: AbortSignal,
@@ -25,7 +25,7 @@ export const translateWeb = async (
     providerId,
     novelId,
     translator.id,
-    sync,
+    level === 'sync',
     signal,
   );
 
@@ -176,16 +176,12 @@ export const translateWeb = async (
     }))
     .slice(startIndex, endIndex)
     .filter(({ glossaryUuid }) => {
-      if (sync) {
-        return true;
-      }
-
-      if (level === 'all') {
-        return true;
+      if (level === 'normal') {
+        return glossaryUuid === undefined;
       } else if (level === 'expire') {
         return glossaryUuid === undefined || glossaryUuid !== task.glossaryUuid;
       } else {
-        return glossaryUuid === undefined;
+        return true;
       }
     });
 

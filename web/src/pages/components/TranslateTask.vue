@@ -60,12 +60,11 @@ const startTask = async (
       suffixParts.push('过期章节');
     } else if (params.level === 'all') {
       suffixParts.push('全部章节');
+    } else if (params.level === 'sync') {
+      suffixParts.push('源站同步');
     }
     if (params.forceMetadata) {
       suffixParts.push('重翻目录');
-    }
-    if (params.sync) {
-      suffixParts.push('源站同步');
     }
     if (suffixParts.length > 0) {
       label = label + ` [${suffixParts.join('/')}]`;
