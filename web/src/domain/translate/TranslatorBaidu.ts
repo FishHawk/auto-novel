@@ -41,10 +41,9 @@ export class BaiduTranslator implements SegmentTranslator {
     if (RegexUtil.hasHangulChars(query)) {
       from = 'kor';
     } else if (RegexUtil.hasKanaChars(query) || RegexUtil.hasHanzi(query)) {
-      from = 'ja';
+      from = 'jp';
     } else if (RegexUtil.hasEnglishChars(query)) {
       from = 'en';
-      // : 'jp'
     }
     const chunks = await this.api.translate(query, from, { signal });
 
