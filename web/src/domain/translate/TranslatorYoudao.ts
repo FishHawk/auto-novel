@@ -1,5 +1,5 @@
 import { Locator } from '@/data';
-import { safeJson } from '@/util';
+import { RegexUtil, safeJson } from '@/util';
 
 import {
   Logger,
@@ -40,7 +40,19 @@ export class YoudaoTranslator implements SegmentTranslator {
   }
 
   async translateInner(seg: string[], signal?: AbortSignal): Promise<string[]> {
-    const decoded = await this.api.webtranslate(seg.join('\n'), { signal });
+    let from = 'auto';
+    const segText = seg.join('\n');
+    if (RegexUtil.hasHangulChars(segText)) {
+      from = 'ko';
+    } else if (RegexUtil.hasKanaChars(segText) || RegexUtil.hasHanzi(segText)) {
+      from = 'ja';
+    } else if (RegexUtil.hasEnglishChars(segText)) {
+      from = 'en';
+    }
+
+    const decoded = await this.api.webtranslate(seg.join('\n'), from, {
+      signal,
+    });
     const decodedJson = safeJson<any>(decoded);
 
     if (decodedJson === undefined) {

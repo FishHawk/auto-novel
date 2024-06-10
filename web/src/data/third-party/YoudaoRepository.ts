@@ -69,12 +69,12 @@ export const createYoudaoRepository = () => {
       .json()
       .then((json: any) => (key = json['data']['secretKey']));
 
-  const webtranslate = (query: string, options?: Options) =>
+  const webtranslate = (query: string, from: string, options?: Options) =>
     client
       .post('https://dict.youdao.com/webtranslate', {
         body: new URLSearchParams({
           i: query,
-          from: 'auto',
+          from,
           to: 'zh-CHS',
           dictResult: 'true',
           keyid: 'webfanyi',

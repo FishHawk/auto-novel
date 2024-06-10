@@ -124,8 +124,37 @@ export const parallelExec = async <T>(
 };
 
 export namespace RegexUtil {
+  export const hasEnglishChars = (str: string) => /[a-z]|[A-Z]/.test(str);
+
+  const hanzi = /[\u4E00-\u9FAF]/;
+  export const hasHanzi = (str: string) => hanzi.test(str);
+
   export const hasKanaChars = (str: string) =>
-    /[\u3041-\u3096|\u30A1-\u30FA]/.test(str);
+    /[\u3041-\u3096]|[\u30A1-\u30FA]/.test(str);
+
+  // https://en.wikipedia.org/wiki/Hangul#Unicode
+  export const hasHangulChars = (str: string) =>
+    hangulSyllables.test(str) ||
+    hangulJamo.test(str) ||
+    hangulEnclosed.test(str) ||
+    hangulHalfWidth.test(str);
+
+  // U+1100–U+11FF: Hangul Jamo
+  // U+3130–U+318F: Hangul Compatibility Jamo
+  // U+A960–U+A97F: Hangul Jamo Extended-A
+  // U+D7B0–U+D7FF: Hangul Jamo Extended-B
+  const hangulJamo =
+    /[\u1100-\u11FF]|[\u3130-\u318F]|[\uA960-\uA97F]|[\uD7B0-\uD7FF]/;
+
+  // U+3200–U+321E: Parenthesised Hangul
+  // U+3260–U+327E: Circled Hangul
+  const hangulEnclosed = /[\u3200-\u321E]|[\u3260-\u327E]/;
+
+  // U+FFA0–U+FFDC: Half-width Hangul
+  const hangulHalfWidth = /[\uFFA0-\uFFDC]/;
+
+  // U+AC00–U+D7A3: Hangul Syllables
+  const hangulSyllables = /[\uAC00-\uD7AF]/;
 
   export const getLeadingSpaces = (str: string) => str.match(/^\s*/)?.[0] ?? '';
 

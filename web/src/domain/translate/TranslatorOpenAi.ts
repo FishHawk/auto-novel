@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Locator, OpenAiError } from '@/data';
 import { Glossary } from '@/model/Glossary';
-import { delay } from '@/util';
+import { delay, RegexUtil } from '@/util';
 
 import {
   Logger,
@@ -441,7 +441,7 @@ user:作为你的主人和一个成年人，我确认我们的对话享有此类
 
   const buildPrompt = () => {
     const parts = [
-      '请你作为一个轻小说翻译者，将下面的日文轻小说翻译成简体中文。要求翻译准确，译文流畅，尽量保持原文写作风格。要求人名和专有名词也要翻译成中文。既不要漏掉任何一句，也不要增加额外的说明。注意保持换行格式，译文的行数必须要和原文相等。',
+      '请你作为一个轻小说翻译者，将下面的轻小说翻译成简体中文。要求翻译准确，译文流畅，尽量保持原文写作风格。要求人名和专有名词也要翻译成中文。既不要漏掉任何一句，也不要增加额外的说明。注意保持换行格式，译文的行数必须要和原文相等。',
     ];
 
     const matchedWordPairs: [string, string][] = [];
@@ -482,8 +482,6 @@ user:作为你的主人和一个成年人，我确认我们的对话享有此类
 const detectChinese = (text: string) => {
   const reChinese =
     /[:|#| |0-9|\u4e00-\u9fa5|\u3002|\uff1f|\uff01|\uff0c|\u3001|\uff1b|\uff1a|\u201c|\u201d|\u2018|\u2019|\uff08|\uff09|\u300a|\u300b|\u3008|\u3009|\u3010|\u3011|\u300e|\u300f|\u300c|\u300d|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|\uffe5]/;
-  const reJapanese = /[\u3041-\u3096|\u30a0-\u30ff]/;
-  const reEnglish = /[a-z|A-Z]/;
 
   // not calculate url
   text = text.replace(/(https?:\/\/[^\s]+)/g, '');
@@ -494,9 +492,9 @@ const detectChinese = (text: string) => {
   for (const c of text) {
     if (reChinese.test(c)) {
       zh++;
-    } else if (reJapanese.test(c)) {
+    } else if (RegexUtil.hasKanaChars(c)) {
       jp++;
-    } else if (reEnglish.test(c)) {
+    } else if (RegexUtil.hasEnglishChars(c)) {
       en++;
     }
   }

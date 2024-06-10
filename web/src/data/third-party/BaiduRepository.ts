@@ -19,14 +19,14 @@ export const createBaiduRepository = () => {
       .text();
   };
 
-  const translate = (query: string, options: Options) => {
+  const translate = (query: string, from: string, options: Options) => {
     return client
       .post('ait/text/translate', {
         headers: {
           accept: 'text/event-stream',
         },
         json: {
-          from: 'jp',
+          from,
           to: 'zh',
           query,
           corpusIds: [],
