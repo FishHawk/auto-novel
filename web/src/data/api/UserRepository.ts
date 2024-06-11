@@ -8,7 +8,7 @@ import { client } from './client';
 const listUser = (params: { page: number; pageSize: number; role: UserRole }) =>
   client.get('user', { searchParams: params }).json<Page<UserOutline>>();
 
-const listReadHistoryWeb = (searchParams: { page: number; pageSize: number }) =>
+const listReadHistoryWeb = (searchParams: { query?: string, page: number; pageSize: number }) =>
   client
     .get('user/read-history', { searchParams })
     .json<Page<WebNovelOutlineDto>>();
@@ -85,12 +85,17 @@ const favoriteWenkuNovel = (favoredId: string, novelId: string) =>
 const unfavoriteWenkuNovel = (favoredId: string, novelId: string) =>
   client.delete(`user/favored-wenku/${favoredId}/${novelId}`);
 
+const clearReadHistoryWeb = () => client.delete(`user/read-history/clear`);
+const stopReadHistoryWeb = () => client.put(`user/read-history/stop`);
+
 export const UserRepository = {
   listUser,
   //
   listReadHistoryWeb,
   updateReadHistoryWeb,
   deleteReadHistoryWeb,
+  clearReadHistoryWeb,
+  stopReadHistoryWeb,
   //
   listFavored,
   //

@@ -16,6 +16,10 @@ export interface WebNovelOutlineDto {
   gpt: number;
   sakura: number;
   updateAt?: number;
+  // 阅读进度
+  read?: number;
+  // 阅读时间
+  readAt?: number;
 }
 
 export interface WebNovelTocItemDto {
