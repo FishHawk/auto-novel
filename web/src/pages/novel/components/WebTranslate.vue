@@ -134,7 +134,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   const results = tasks.map((task) => {
     const job = {
       task,
-      description: titleJp,
+      description: titleZh ?? titleJp,
       createAt: Date.now(),
     };
     const success = workspace.addJob(job);
