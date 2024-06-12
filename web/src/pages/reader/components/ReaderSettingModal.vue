@@ -85,7 +85,7 @@ const setCustomFontColor = (color: string) =>
               :min="14"
               :max="40"
               style="flex: auto"
-              :format-tooltip="(value) => `${value}px`"
+              :format-tooltip="(value: number) => `${value}px`"
             />
             <n-text style="width: 6em">{{ setting.fontSize }}px</n-text>
           </c-action-wrapper>
@@ -97,7 +97,7 @@ const setCustomFontColor = (color: string) =>
               :min="0"
               :max="2"
               style="flex: auto"
-              :format-tooltip="(value) => value.toFixed(1)"
+              :format-tooltip="(value: number) => value.toFixed(1)"
             />
             <n-text style="width: 6em">
               {{ setting.lineSpace.toFixed(1) }}
@@ -111,7 +111,7 @@ const setCustomFontColor = (color: string) =>
               :min="600"
               :max="1200"
               style="flex: auto"
-              :format-tooltip="(value) => `${value}px`"
+              :format-tooltip="(value: number) => `${value}px`"
             />
             <n-text style="width: 6em">{{ setting.pageWidth }}px</n-text>
           </c-action-wrapper>

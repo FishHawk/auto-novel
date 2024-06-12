@@ -71,7 +71,7 @@ const latestChapterCreateAt = computed(() => {
   const { novel } = props;
   const createAtList = novel.toc
     .map((it) => it.createAt)
-    .filter((it) => it !== undefined);
+    .filter((it): it is number => it !== undefined);
   if (createAtList.length === 0) return undefined;
   else return Math.max(...createAtList);
 });
