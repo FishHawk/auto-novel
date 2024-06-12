@@ -66,6 +66,15 @@ const startReadChapter = computed(() => {
 
   return undefined;
 });
+
+const latestChapterCreateAt = computed(() => {
+  const { novel } = props;
+  const createAtList = novel.toc
+    .map((it) => it.createAt)
+    .filter((it) => it !== undefined);
+  if (createAtList.length === 0) return undefined;
+  else return Math.max(...createAtList);
+});
 </script>
 
 <template>
@@ -115,6 +124,11 @@ const startReadChapter = computed(() => {
   <n-p>{{ labels }}</n-p>
 
   <n-p>
+    <template v-if="latestChapterCreateAt">
+      最近更新于
+      <n-time :time="latestChapterCreateAt * 1000" type="date" />
+      /
+    </template>
     <c-a :to="generateSearchUrl(novel.titleJp)"> 搜索标题 </c-a>
     <template v-if="novel.authors">
       /
