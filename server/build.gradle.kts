@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.6"
+    val ktorVersion = "2.3.11"
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -45,9 +45,9 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
 
     implementation("org.codehaus.janino:janino:3.1.9")
-    implementation("ch.qos.logback:logback-classic:1.4.5")
+    implementation("ch.qos.logback:logback-classic:1.5.6")
 
-    val koinVersion = "3.3.0"
+    val koinVersion = "3.5.6"
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     testImplementation("io.insert-koin:koin-test:$koinVersion")
@@ -61,9 +61,9 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.15.3")
 
-    implementation("com.jillesvangurp:search-client:2.1.1")
+    implementation("com.jillesvangurp:search-client:2.2.1")
 
-    implementation("io.github.crackthecodeabhi:kreds:0.9.0")
+    implementation("io.github.crackthecodeabhi:kreds:0.9.1")
 
     val kotestVersion = "5.5.4"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
