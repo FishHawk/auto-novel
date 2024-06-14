@@ -2,9 +2,11 @@ package infra.web
 
 import domain.entity.*
 import infra.DataSourceMongo
+import infra.aggregate
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.aggregate
 
 class WebNovelChapterRepository(
     private val provider: DataSourceWebNovelProvider,
@@ -42,7 +44,8 @@ class WebNovelChapterRepository(
     ): WebNovelChapter? {
         return mongo
             .webNovelChapterCollection
-            .findOne(WebNovelChapter.byId(providerId, novelId, chapterId))
+            .find(WebNovelChapter.byId(providerId, novelId, chapterId))
+            .firstOrNull()
     }
 
     private suspend fun getRemote(

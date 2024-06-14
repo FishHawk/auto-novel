@@ -8,7 +8,7 @@ import infra.DataSourceMongo
 import infra.common.ArticleRepository
 import infra.common.CommentRepository
 import infra.common.OperationHistoryRepository
-import infra.common.SakuraJobRepository
+import infra.common.SakuraFeedbackRepository
 import infra.createRedisDataSource
 import infra.user.UserFavoredWebRepository
 import infra.user.UserFavoredWenkuRepository
@@ -128,7 +128,7 @@ val appModule = module {
     singleOf(::CommentRepository)
     singleOf(::OperationHistoryRepository)
 
-    singleOf(::SakuraJobRepository)
+    singleOf(::SakuraFeedbackRepository)
 
     singleOf(::UserRepository)
     singleOf(::UserFavoredWebRepository)

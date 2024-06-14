@@ -11,6 +11,7 @@ import infra.*
 import infra.web.providers.Hameln
 import infra.web.providers.RemoteNovelListItem
 import infra.web.providers.Syosetu
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -43,7 +44,8 @@ class WebNovelMetadataRepository(
             .map { rank ->
                 rank.map { remote ->
                     val local = mongo.webNovelMetadataCollection
-                        .findOne(WebNovelMetadata.byId(providerId, remote.novelId))
+                        .find(WebNovelMetadata.byId(providerId, remote.novelId))
+                        .firstOrNull()
                     remote.toOutline(providerId, local)
                 }
             }
@@ -181,7 +183,8 @@ class WebNovelMetadataRepository(
             ?.map { hit ->
                 val esNovel = hit.parseHit<WebNovelMetadataEsModel>()
                 mongo.webNovelMetadataCollection
-                    .findOne(WebNovelMetadata.byId(esNovel.providerId, esNovel.novelId))!!
+                    .find(WebNovelMetadata.byId(esNovel.providerId, esNovel.novelId))
+                    .firstOrNull()!!
                     .toOutline()
             }
             ?: emptyList()
@@ -199,7 +202,8 @@ class WebNovelMetadataRepository(
     ): WebNovelMetadata? {
         return mongo
             .webNovelMetadataCollection
-            .findOne(WebNovelMetadata.byId(providerId, novelId))
+            .find(WebNovelMetadata.byId(providerId, novelId))
+            .firstOrNull()
     }
 
     private suspend fun getRemote(

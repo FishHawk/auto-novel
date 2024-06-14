@@ -2,16 +2,17 @@ package infra.user
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
-import com.mongodb.client.model.UpdateOptions
+import com.mongodb.client.model.ReplaceOptions
 import domain.entity.*
 import infra.DataSourceMongo
+import infra.aggregate
 import infra.web.toOutline
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 
 class UserReadHistoryWebRepository(
@@ -51,7 +52,7 @@ class UserReadHistoryWebRepository(
                     NovelPage::items from "items".projection,
                 )
             )
-            .first()
+            .firstOrNull()
         return if (doc == null) {
             emptyPage()
         } else {
@@ -69,12 +70,13 @@ class UserReadHistoryWebRepository(
     ): UserReadHistoryWebModel? {
         return mongo
             .userReadHistoryWebCollection
-            .findOne(
+            .find(
                 and(
                     UserReadHistoryWebModel::userId eq ObjectId(userId).toId(),
                     UserReadHistoryWebModel::novelId eq ObjectId(novelId).toId(),
                 ),
             )
+            .firstOrNull()
     }
 
     suspend fun updateReadHistory(
@@ -84,7 +86,7 @@ class UserReadHistoryWebRepository(
     ) {
         mongo
             .userReadHistoryWebCollection
-            .updateOne(
+            .replaceOne(
                 and(
                     UserReadHistoryWebModel::userId eq userId.toId(),
                     UserReadHistoryWebModel::novelId eq novelId.toId(),
@@ -95,7 +97,7 @@ class UserReadHistoryWebRepository(
                     chapterId = chapterId,
                     createAt = Clock.System.now(),
                 ),
-                UpdateOptions().upsert(true),
+                ReplaceOptions().upsert(true),
             )
     }
 

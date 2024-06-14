@@ -3,14 +3,13 @@ package infra.common
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
 import domain.entity.*
-import infra.DataSourceMongo
-import infra.DataSourceRedis
-import infra.withRateLimit
+import infra.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 
 class ArticleRepository(
@@ -67,7 +66,8 @@ class ArticleRepository(
                     ArticlePage::items from "items".projection,
                 )
             )
-            .first()
+            .firstOrNull()
+
         return if (doc == null) {
             emptyPage()
         } else {
@@ -102,7 +102,8 @@ class ArticleRepository(
     ): Article? =
         mongo
             .articleCollection
-            .findOneById(id)
+            .find(Article::id eq id)
+            .firstOrNull()
 
     suspend fun deleteArticle(
         id: ObjectId,

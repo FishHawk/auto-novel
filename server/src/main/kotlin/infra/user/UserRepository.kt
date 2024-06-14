@@ -8,6 +8,8 @@ import domain.entity.Page
 import domain.entity.User
 import domain.entity.UserFavored
 import io.github.crackthecodeabhi.kreds.args.SetOption
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
@@ -92,30 +94,34 @@ class UserRepository(
     suspend fun getById(id: String): User? {
         return mongo
             .userCollection
-            .findOne(User::id eq ObjectId(id))
+            .find(User::id eq ObjectId(id))
+            .firstOrNull()
     }
 
     suspend fun getByEmail(email: String): User? {
         return mongo
             .userCollection
-            .findOne(User::email eq email)
+            .find(User::email eq email)
+            .firstOrNull()
     }
 
     suspend fun getByUsername(username: String): User? {
         return mongo
             .userCollection
-            .findOne(User.byUsername(username))
+            .find(User.byUsername(username))
+            .firstOrNull()
     }
 
     suspend fun getByUsernameOrEmail(emailOrUsername: String): User? {
         return mongo
             .userCollection
-            .findOne(
+            .find(
                 or(
                     User::email eq emailOrUsername,
                     User::username eq emailOrUsername,
                 )
             )
+            .firstOrNull()
     }
 
     private fun emailCodeRedisKey(email: String) = "ec:${email}"

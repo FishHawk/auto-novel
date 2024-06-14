@@ -2,16 +2,17 @@ package infra.user
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
-import com.mongodb.client.model.UpdateOptions
+import com.mongodb.client.model.ReplaceOptions
 import domain.entity.*
 import infra.DataSourceMongo
+import infra.aggregate
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 
 class UserFavoredWenkuRepository(
@@ -33,10 +34,12 @@ class UserFavoredWenkuRepository(
         userId: String,
         novelId: String,
     ): String? {
-        return mongo.userFavoredWenkuCollection.findOne(
-            UserFavoredWenkuNovelModel::userId eq ObjectId(userId).toId(),
-            UserFavoredWenkuNovelModel::novelId eq ObjectId(novelId).toId(),
-        )?.favoredId
+        return mongo.userFavoredWenkuCollection.find(
+            and(
+                UserFavoredWenkuNovelModel::userId eq ObjectId(userId).toId(),
+                UserFavoredWenkuNovelModel::novelId eq ObjectId(novelId).toId(),
+            )
+        ).firstOrNull()?.favoredId
     }
 
     suspend fun listFavoriteWenkuNovel(
@@ -83,7 +86,8 @@ class UserFavoredWenkuRepository(
                     NovelPage::items from "items".projection,
                 ),
             )
-            .first()
+            .firstOrNull()
+
         return if (doc == null) {
             emptyPage()
         } else {
@@ -124,7 +128,7 @@ class UserFavoredWenkuRepository(
     ) {
         mongo
             .userFavoredWenkuCollection
-            .updateOne(
+            .replaceOne(
                 and(
                     UserFavoredWenkuNovelModel::userId eq userId.toId(),
                     UserFavoredWenkuNovelModel::novelId eq novelId.toId(),
@@ -136,7 +140,7 @@ class UserFavoredWenkuRepository(
                     createAt = Clock.System.now(),
                     updateAt = updateAt,
                 ),
-                UpdateOptions().upsert(true),
+                ReplaceOptions().upsert(true),
             )
     }
 
@@ -147,8 +151,10 @@ class UserFavoredWenkuRepository(
         mongo
             .userFavoredWenkuCollection
             .deleteOne(
-                UserFavoredWenkuNovelModel::userId eq userId.toId(),
-                UserFavoredWenkuNovelModel::novelId eq novelId.toId(),
+                and(
+                    UserFavoredWenkuNovelModel::userId eq userId.toId(),
+                    UserFavoredWenkuNovelModel::novelId eq novelId.toId(),
+                )
             )
     }
 }

@@ -7,6 +7,7 @@ import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import domain.entity.*
 import infra.*
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.buildJsonObject
@@ -123,7 +124,8 @@ class WenkuNovelMetadataRepository(
     suspend fun get(novelId: String): WenkuNovelMetadata? {
         return mongo
             .wenkuNovelMetadataCollection
-            .findOne(WenkuNovelMetadata.byId(novelId))
+            .find(WenkuNovelMetadata.byId(novelId))
+            .firstOrNull()
     }
 
     suspend fun increaseVisited(

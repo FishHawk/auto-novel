@@ -4,12 +4,13 @@ import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
 import com.mongodb.client.model.Filters
 import domain.entity.*
-import infra.DataSourceMongo
+import infra.*
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 import org.litote.kmongo.util.KMongoUtil
 
@@ -56,7 +57,8 @@ class OperationHistoryRepository(
                     PageModel::items from "items".projection,
                 ),
             )
-            .first()
+            .firstOrNull()
+
         return if (doc == null) {
             emptyPage()
         } else {
@@ -87,7 +89,7 @@ class OperationHistoryRepository(
     suspend fun delete(id: String) {
         mongo
             .operationHistoryCollection
-            .deleteOneById(ObjectId(id))
+            .deleteOne(OperationHistoryModel::id eq ObjectId(id))
     }
 
     suspend fun listMergeHistory(
@@ -114,6 +116,6 @@ class OperationHistoryRepository(
     suspend fun deleteMergeHistory(id: String) {
         mongo
             .webNovelTocMergeHistoryCollection
-            .deleteOneById(ObjectId(id))
+            .deleteOne(WebNovelTocMergeHistory::id eq ObjectId(id))
     }
 }

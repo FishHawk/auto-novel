@@ -2,17 +2,18 @@ package infra.user
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
-import com.mongodb.client.model.UpdateOptions
+import com.mongodb.client.model.ReplaceOptions
 import domain.entity.*
 import infra.DataSourceMongo
+import infra.aggregate
 import infra.web.toOutline
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
-import org.litote.kmongo.coroutine.aggregate
 import org.litote.kmongo.id.toId
 
 class UserFavoredWebRepository(
@@ -34,10 +35,12 @@ class UserFavoredWebRepository(
         userId: String,
         novelId: String,
     ): String? {
-        return mongo.userFavoredWebCollection.findOne(
-            UserFavoredWebNovelModel::userId eq ObjectId(userId).toId(),
-            UserFavoredWebNovelModel::novelId eq ObjectId(novelId).toId(),
-        )?.favoredId
+        return mongo.userFavoredWebCollection.find(
+            and(
+                UserFavoredWebNovelModel::userId eq ObjectId(userId).toId(),
+                UserFavoredWebNovelModel::novelId eq ObjectId(novelId).toId(),
+            )
+        ).firstOrNull()?.favoredId
     }
 
     suspend fun listFavoredNovel(
@@ -84,7 +87,7 @@ class UserFavoredWebRepository(
                     NovelPage::items from "items".projection,
                 ),
             )
-            .first()
+            .firstOrNull()
         return if (doc == null) {
             emptyPage()
         } else {
@@ -118,7 +121,7 @@ class UserFavoredWebRepository(
     ) {
         mongo
             .userFavoredWebCollection
-            .updateOne(
+            .replaceOne(
                 and(
                     UserFavoredWebNovelModel::userId eq userId.toId(),
                     UserFavoredWebNovelModel::novelId eq novelId.toId(),
@@ -130,7 +133,7 @@ class UserFavoredWebRepository(
                     createAt = Clock.System.now(),
                     updateAt = updateAt,
                 ),
-                UpdateOptions().upsert(true),
+                ReplaceOptions().upsert(true),
             )
     }
 
@@ -141,8 +144,10 @@ class UserFavoredWebRepository(
         mongo
             .userFavoredWebCollection
             .deleteOne(
-                UserFavoredWebNovelModel::userId eq userId.toId(),
-                UserFavoredWebNovelModel::novelId eq novelId.toId(),
+                and(
+                    UserFavoredWebNovelModel::userId eq userId.toId(),
+                    UserFavoredWebNovelModel::novelId eq novelId.toId(),
+                )
             )
     }
 }

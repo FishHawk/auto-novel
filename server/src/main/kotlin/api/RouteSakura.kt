@@ -1,7 +1,7 @@
 package api
 
 import api.plugins.*
-import infra.common.SakuraJobRepository
+import infra.common.SakuraFeedbackRepository
 import domain.entity.SakuraWebIncorrectCase
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -53,7 +53,7 @@ fun Route.routeSakura() {
 }
 
 class SakuraApi(
-    private val sakuraJobRepo: SakuraJobRepository,
+    private val sakuraJobRepo: SakuraFeedbackRepository,
 ) {
     suspend fun createSakuraWebIncorrectCase(
         user: AuthenticatedUser,

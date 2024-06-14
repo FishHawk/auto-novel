@@ -2,6 +2,7 @@ package infra.web
 
 import domain.entity.*
 import infra.DataSourceMongo
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.toKotlinInstant
 import util.serialName
 import java.nio.file.attribute.BasicFileAttributes
@@ -25,7 +26,8 @@ class WebNovelFileRepository(
     ): String? {
         val novel = mongo
             .webNovelMetadataCollection
-            .findOne(WebNovelMetadata.byId(providerId, novelId))
+            .find(WebNovelMetadata.byId(providerId, novelId))
+            .firstOrNull()
             ?: return null
 
         val zhFilename = buildString {
@@ -61,7 +63,8 @@ class WebNovelFileRepository(
             .mapNotNull { it.chapterId }
             .mapNotNull { chapterId ->
                 mongo.webNovelChapterCollection
-                    .findOne(WebNovelChapter.byId(providerId, novelId, chapterId))
+                    .find(WebNovelChapter.byId(providerId, novelId, chapterId))
+                    .firstOrNull()
                     ?.let {
                         generateWriteInfoFromChapter(
                             chapter = it,

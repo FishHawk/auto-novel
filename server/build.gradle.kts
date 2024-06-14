@@ -52,6 +52,11 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     testImplementation("io.insert-koin:koin-test:$koinVersion")
 
+    val mongodbVersion = "5.1.0"
+    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:${mongodbVersion}")
+    implementation("org.mongodb:bson-kotlinx:${mongodbVersion}")
+    implementation("org.litote.kmongo:kmongo:5.1.0")
+
     implementation("org.eclipse.angus:angus-mail:2.0.1")
 
     implementation("org.jsoup:jsoup:1.15.3")
@@ -59,8 +64,6 @@ dependencies {
     implementation("com.jillesvangurp:search-client:2.1.1")
 
     implementation("io.github.crackthecodeabhi:kreds:0.9.0")
-
-    implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.9.0")
 
     val kotestVersion = "5.5.4"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")

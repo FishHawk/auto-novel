@@ -3,7 +3,7 @@ package infra.common
 import infra.DataSourceMongo
 import domain.entity.SakuraWebIncorrectCase
 
-class SakuraJobRepository(
+class SakuraFeedbackRepository(
     private val mongo: DataSourceMongo,
 ) {
     suspend fun createWebIncorrectCase(
