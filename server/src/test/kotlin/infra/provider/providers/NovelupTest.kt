@@ -1,8 +1,8 @@
 package infra.provider.providers
 
 import koinExtensions
-import infra.web.DataSourceWebNovelProvider
-import infra.web.providers.Novelup
+import infra.web.datasource.WebNovelHttpDataSource
+import infra.web.datasource.providers.Novelup
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
@@ -14,7 +14,7 @@ import org.koin.test.inject
 
 class NovelupTest : DescribeSpec(), KoinTest {
     override fun extensions() = koinExtensions()
-    private val dataSource by inject<DataSourceWebNovelProvider>()
+    private val dataSource by inject<WebNovelHttpDataSource>()
     private val provider get() = dataSource.providers[Novelup.id]!!
 
     init {

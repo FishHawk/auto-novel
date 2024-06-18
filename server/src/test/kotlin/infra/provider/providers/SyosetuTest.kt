@@ -1,8 +1,8 @@
 package infra.provider.providers
 
 import koinExtensions
-import infra.web.DataSourceWebNovelProvider
-import infra.web.providers.Syosetu
+import infra.web.datasource.WebNovelHttpDataSource
+import infra.web.datasource.providers.Syosetu
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -15,7 +15,7 @@ import org.koin.test.inject
 
 class SyosetuTest : DescribeSpec(), KoinTest {
     override fun extensions() = koinExtensions()
-    private val dataSource by inject<DataSourceWebNovelProvider>()
+    private val dataSource by inject<WebNovelHttpDataSource>()
     private val provider get() = dataSource.providers[Syosetu.id]!!
 
     init {

@@ -1,8 +1,12 @@
 package api
 
 import api.plugins.*
-import domain.entity.*
-import infra.common.OperationHistoryRepository
+import infra.common.Page
+import infra.oplog.OperationHistoryRepository
+import infra.oplog.Operation
+import infra.user.UserOutline
+import infra.user.UserRole
+import infra.web.WebNovelTocItem
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.resources.*
@@ -107,7 +111,7 @@ class OperationHistoryApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         operationHistoryRepo.delete(id)
     }
 
@@ -155,7 +159,7 @@ class OperationHistoryApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         operationHistoryRepo.deleteMergeHistory(id)
     }
 }

@@ -5,12 +5,12 @@ import api.model.asDto
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import domain.entity.FavoredNovelListSort
-import domain.entity.Page
-import domain.entity.UserFavored
-import infra.user.UserFavoredWenkuRepository
+import infra.common.FavoredNovelListSort
+import infra.common.Page
+import infra.user.UserFavored
+import infra.wenku.repository.WenkuNovelFavoredRepository
 import infra.user.UserRepository
-import infra.wenku.WenkuNovelMetadataRepository
+import infra.wenku.repository.WenkuNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -122,7 +122,7 @@ fun Route.routeUserFavoredWenku() {
 
 class UserFavoredWenkuApi(
     private val userRepo: UserRepository,
-    private val favoredRepo: UserFavoredWenkuRepository,
+    private val favoredRepo: WenkuNovelFavoredRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
 ) {
     suspend fun createFavored(
@@ -134,7 +134,7 @@ class UserFavoredWenkuApi(
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
         if (user.favoredWenku.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
 
-        favoredRepo.updateFavored(
+        userRepo.updateFavoredWenku(
             userId = user.id,
             favored = user.favoredWenku + listOf(
                 UserFavored(
@@ -154,7 +154,7 @@ class UserFavoredWenkuApi(
 
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
 
-        favoredRepo.updateFavored(
+        userRepo.updateFavoredWenku(
             userId = user.id,
             favored = user.favoredWenku.map {
                 if (it.id == favoredId) it.copy(title = title) else it
@@ -170,7 +170,7 @@ class UserFavoredWenkuApi(
 
         if (favoredId == "default") throwBadRequest("不可以删除默认收藏夹")
 
-        favoredRepo.updateFavored(
+        userRepo.updateFavoredWenku(
             userId = user.id,
             favored = user.favoredWenku.filter { it.id != favoredId },
         )
@@ -223,11 +223,12 @@ class UserFavoredWenkuApi(
         user: AuthenticatedUser,
         novelId: String,
     ) {
-        val novel = metadataRepo.get(novelId)
-            ?: throwNotFound("小说不存在")
+        if (!metadataRepo.exist(novelId)) {
+            throwNotFound("小说不存在")
+        }
         favoredRepo.deleteFavoredNovel(
             userId = ObjectId(user.id),
-            novelId = novel.id,
+            novelId = ObjectId(novelId),
         )
     }
 }

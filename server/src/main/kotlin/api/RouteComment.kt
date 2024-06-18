@@ -1,9 +1,12 @@
 package api
 
 import api.plugins.*
-import domain.entity.*
-import infra.common.ArticleRepository
-import infra.common.CommentRepository
+import infra.article.ArticleRepository
+import infra.comment.CommentRepository
+import infra.comment.Comment
+import infra.common.Page
+import infra.user.UserOutline
+import infra.user.UserRole
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
@@ -107,7 +110,7 @@ class CommentApi(
         val replies: List<CommentDto>,
     )
 
-    private fun CommentWithUserReadModel.asDto(
+    private fun Comment.asDto(
         replies: List<CommentDto>,
         ignoreHidden: Boolean,
     ) =
@@ -134,7 +137,7 @@ class CommentApi(
         validatePageSize(pageSize)
         validatePageSize(replyPageSize, max = 20)
 
-        val ignoreHidden = user != null && user.role atLeast User.Role.Maintainer
+        val ignoreHidden = user != null && user.role atLeast UserRole.Maintainer
 
         return commentRepo
             .listCommentWithUser(
@@ -166,7 +169,7 @@ class CommentApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         val isDeleted = commentRepo.deleteComment(ObjectId(id))
         if (!isDeleted) throwNotFound("评论不存在")
         commentRepo.deleteCommentByParent(ObjectId(id))
@@ -209,7 +212,7 @@ class CommentApi(
         id: String,
         hidden: Boolean,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         val isUpdated = commentRepo.updateCommentHidden(
             id = ObjectId(id),
             hidden = hidden,

@@ -3,14 +3,20 @@ package api
 import api.model.WenkuNovelOutlineDto
 import api.model.asDto
 import api.plugins.*
-import domain.entity.*
-import infra.VolumeCreateException
-import infra.common.OperationHistoryRepository
-import infra.user.UserFavoredWenkuRepository
+import infra.wenku.datasource.VolumeCreateException
+import infra.common.NovelFileMode
+import infra.common.NovelFileTranslationsMode
+import infra.common.Page
+import infra.common.TranslatorId
+import infra.oplog.OperationHistoryRepository
+import infra.oplog.Operation
+import infra.user.UserFavored
 import infra.user.UserRepository
-import infra.wenku.WenkuNovelFilter
-import infra.wenku.WenkuNovelMetadataRepository
-import infra.wenku.WenkuNovelVolumeRepository
+import infra.user.UserRole
+import infra.wenku.*
+import infra.wenku.repository.WenkuNovelFavoredRepository
+import infra.wenku.repository.WenkuNovelMetadataRepository
+import infra.wenku.repository.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
@@ -231,7 +237,7 @@ class WenkuNovelApi(
     private val userRepo: UserRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
     private val volumeRepo: WenkuNovelVolumeRepository,
-    private val favoredRepo: UserFavoredWenkuRepository,
+    private val favoredRepo: WenkuNovelFavoredRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
     suspend fun list(
@@ -408,7 +414,7 @@ class WenkuNovelApi(
                 }
             }
         if (!noVolumeDeleted) {
-            user.shouldBeAtLeast(User.Role.Maintainer)
+            user.shouldBeAtLeast(UserRole.Maintainer)
         }
 
         metadataRepo.update(
@@ -515,7 +521,7 @@ class WenkuNovelApi(
         novelId: String,
         volumeId: String,
     ) {
-        user.shouldBeAtLeast(User.Role.Maintainer)
+        user.shouldBeAtLeast(UserRole.Maintainer)
 
         validateNovelId(novelId)
         validateVolumeId(volumeId)

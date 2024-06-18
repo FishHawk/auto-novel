@@ -6,11 +6,11 @@ import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import infra.user.UserRepository
-import domain.entity.FavoredNovelListSort
-import domain.entity.Page
-import domain.entity.UserFavored
-import infra.user.UserFavoredWebRepository
-import infra.web.WebNovelMetadataRepository
+import infra.common.FavoredNovelListSort
+import infra.common.Page
+import infra.user.UserFavored
+import infra.web.repository.WebNovelFavoredRepository
+import infra.web.repository.WebNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -125,7 +125,7 @@ fun Route.routeUserFavoredWeb() {
 
 class UserFavoredWebApi(
     private val userRepo: UserRepository,
-    private val favoredRepo: UserFavoredWebRepository,
+    private val favoredRepo: WebNovelFavoredRepository,
     private val metadataRepo: WebNovelMetadataRepository,
 ) {
     suspend fun createFavored(
@@ -137,7 +137,7 @@ class UserFavoredWebApi(
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
         if (user.favoredWeb.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
 
-        favoredRepo.updateFavored(
+        userRepo.updateFavoredWeb(
             userId = user.id,
             favored = user.favoredWeb + listOf(
                 UserFavored(
@@ -157,7 +157,7 @@ class UserFavoredWebApi(
 
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
 
-        favoredRepo.updateFavored(
+        userRepo.updateFavoredWeb(
             userId = user.id,
             favored = user.favoredWeb.map {
                 if (it.id == favoredId) it.copy(title = title) else it
@@ -173,7 +173,7 @@ class UserFavoredWebApi(
 
         if (favoredId == "default") throwBadRequest("不可以删除默认收藏夹")
 
-        favoredRepo.updateFavored(
+        userRepo.updateFavoredWeb(
             userId = user.id,
             favored = user.favoredWeb.filter { it.id != favoredId },
         )

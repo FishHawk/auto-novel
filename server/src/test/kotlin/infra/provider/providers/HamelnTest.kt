@@ -1,10 +1,10 @@
 package infra.provider.providers
 
-import domain.entity.WebNovelAttention
-import domain.entity.WebNovelType
+import infra.web.WebNovelAttention
+import infra.web.WebNovelType
 import koinExtensions
-import infra.web.DataSourceWebNovelProvider
-import infra.web.providers.Hameln
+import infra.web.datasource.WebNovelHttpDataSource
+import infra.web.datasource.providers.Hameln
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldBeNull
@@ -16,7 +16,7 @@ import org.koin.test.inject
 
 class HamelnTest : DescribeSpec(), KoinTest {
     override fun extensions() = koinExtensions()
-    private val dataSource by inject<DataSourceWebNovelProvider>()
+    private val dataSource by inject<WebNovelHttpDataSource>()
     private val provider get() = dataSource.providers[Hameln.id]!!
 
     init {

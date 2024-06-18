@@ -1,8 +1,8 @@
 package api
 
 import api.plugins.*
-import infra.common.SakuraFeedbackRepository
-import domain.entity.SakuraWebIncorrectCase
+import infra.sakura.SakuraFeedbackRepository
+import infra.sakura.SakuraWebIncorrectCase
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

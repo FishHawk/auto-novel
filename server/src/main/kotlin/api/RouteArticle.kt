@@ -1,9 +1,14 @@
 package api
 
 import api.plugins.*
-import domain.entity.*
-import infra.common.ArticleRepository
-import infra.common.CommentRepository
+import infra.article.ArticleCategory
+import infra.article.ArticleRepository
+import infra.article.ArticleListItem
+import infra.article.Article
+import infra.comment.CommentRepository
+import infra.common.Page
+import infra.user.UserOutline
+import infra.user.UserRole
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
@@ -15,7 +20,6 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
-import org.litote.kmongo.id.toId
 
 @Resource("/article")
 private class ArticleRes {
@@ -165,7 +169,7 @@ class ArticleApi(
         val updateAt: Long,
     )
 
-    private fun ArticleSimplifiedWithUserReadModel.asDto(
+    private fun ArticleListItem.asDto(
         ignoreHidden: Boolean,
     ) =
         ArticleSimplifiedDto(
@@ -191,10 +195,10 @@ class ArticleApi(
         validatePageNumber(page)
         validatePageSize(pageSize)
 
-        val ignoreHidden = user != null && user.role atLeast User.Role.Maintainer
+        val ignoreHidden = user != null && user.role atLeast UserRole.Maintainer
 
         return articleRepo
-            .listArticleWithUser(
+            .listArticle(
                 page = page,
                 pageSize = pageSize,
                 category = category,
@@ -221,7 +225,7 @@ class ArticleApi(
         val updateAt: Long,
     )
 
-    private fun ArticleWithUserReadModel.asDto(
+    private fun Article.asDto(
         ignoreHidden: Boolean,
     ) =
         ArticleDto(
@@ -243,9 +247,9 @@ class ArticleApi(
         user: AuthenticatedUser?,
         id: String,
     ): ArticleDto {
-        val ignoreHidden = user != null && user.role atLeast User.Role.Maintainer
+        val ignoreHidden = user != null && user.role atLeast UserRole.Maintainer
 
-        val article = articleRepo.getArticleWithUser(ObjectId(id))
+        val article = articleRepo.getArticle(ObjectId(id))
             ?: throwArticleNotFound()
 
         if (user != null) {
@@ -302,11 +306,12 @@ class ArticleApi(
         validateTitle(title)
         validateContent(content)
 
-        val article = articleRepo.getArticle(ObjectId(id))
-            ?: throwArticleNotFound()
-
-        if (article.user != ObjectId(user.id).toId<User>()) {
-            user.shouldBeAtLeast(User.Role.Admin)
+        if (!(user.role atLeast UserRole.Admin) && !articleRepo.isArticleCreateBy(
+                id = ObjectId(id),
+                userId = ObjectId(user.id),
+            )
+        ) {
+            throwUnauthorized("只有文章作者才有权限编辑")
         }
 
         articleRepo.updateTitleAndContent(
@@ -321,7 +326,7 @@ class ArticleApi(
         user: AuthenticatedUser,
         id: String,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         val isDeleted = articleRepo.deleteArticle(
             id = ObjectId(id),
         )
@@ -334,7 +339,7 @@ class ArticleApi(
         id: String,
         pinned: Boolean,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         val isUpdated = articleRepo.updateArticlePinned(
             id = ObjectId(id),
             pinned = pinned,
@@ -347,7 +352,7 @@ class ArticleApi(
         id: String,
         locked: Boolean,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         val isUpdated = articleRepo.updateArticleLocked(
             id = ObjectId(id),
             locked = locked,
@@ -360,7 +365,7 @@ class ArticleApi(
         id: String,
         hidden: Boolean,
     ) {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         val isUpdated = articleRepo.updateArticleHidden(
             id = ObjectId(id),
             hidden = hidden,

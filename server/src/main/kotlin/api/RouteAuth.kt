@@ -5,7 +5,8 @@ import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import api.plugins.generateToken
 import infra.user.UserRepository
-import domain.entity.User
+import infra.user.User
+import infra.user.UserRole
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -129,7 +130,7 @@ class AuthApi(
     @Serializable
     data class SignInDto(
         val username: String,
-        val role: User.Role,
+        val role: UserRole,
         val token: String,
         @Contextual val createAt: Instant,
         @Contextual val expiresAt: Instant,
@@ -194,7 +195,7 @@ class AuthApi(
         if (userRepo.getByUsername(username) != null) throwConflict("用户名已经被使用")
         if (!userRepo.validateEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
 
-        val role = User.Role.Normal
+        val role = UserRole.Normal
         val userId = userRepo.add(
             email = email,
             username = username,

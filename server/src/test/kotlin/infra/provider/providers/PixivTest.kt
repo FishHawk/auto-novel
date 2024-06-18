@@ -1,9 +1,9 @@
 package infra.provider.providers
 
 import koinExtensions
-import infra.web.DataSourceWebNovelProvider
-import infra.web.providers.NovelIdShouldBeReplacedException
-import infra.web.providers.Pixiv
+import infra.web.datasource.WebNovelHttpDataSource
+import infra.web.datasource.providers.NovelIdShouldBeReplacedException
+import infra.web.datasource.providers.Pixiv
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -14,7 +14,7 @@ import org.koin.test.inject
 
 class PixivTest : DescribeSpec(), KoinTest {
     override fun extensions() = koinExtensions()
-    private val dataSource by inject<DataSourceWebNovelProvider>()
+    private val dataSource by inject<WebNovelHttpDataSource>()
     private val provider get() = dataSource.providers[Pixiv.id]!!
 
     init {

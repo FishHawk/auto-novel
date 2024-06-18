@@ -5,9 +5,9 @@ import api.model.asDto
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import domain.entity.Page
-import infra.user.UserReadHistoryWebRepository
-import infra.web.WebNovelMetadataRepository
+import infra.common.Page
+import infra.web.repository.WebNovelReadHistoryRepository
+import infra.web.repository.WebNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -75,7 +75,7 @@ fun Route.routeUserReadHistoryWeb() {
 }
 
 class UserReadHistoryWebApi(
-    private val historyRepo: UserReadHistoryWebRepository,
+    private val historyRepo: WebNovelReadHistoryRepository,
     private val metadataRepo: WebNovelMetadataRepository,
 ) {
     suspend fun listReadHistory(

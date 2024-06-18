@@ -6,18 +6,20 @@ import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
 import api.plugins.authenticatedUserOrNull
-import domain.entity.*
-import infra.common.OperationHistoryRepository
-import infra.user.UserFavoredWebRepository
-import infra.user.UserReadHistoryWebRepository
+import infra.common.*
+import infra.oplog.OperationHistoryRepository
+import infra.oplog.Operation
+import infra.user.UserFavored
+import infra.web.repository.WebNovelFavoredRepository
+import infra.web.repository.WebNovelReadHistoryRepository
 import infra.user.UserRepository
-import infra.web.WebNovelChapterRepository
-import infra.web.WebNovelFileRepository
-import infra.web.WebNovelFilter
-import infra.web.WebNovelMetadataRepository
-import infra.web.providers.NovelIdShouldBeReplacedException
-import infra.web.providers.Syosetu
-import infra.wenku.WenkuNovelMetadataRepository
+import infra.web.*
+import infra.web.datasource.providers.NovelIdShouldBeReplacedException
+import infra.web.datasource.providers.Syosetu
+import infra.web.repository.WebNovelChapterRepository
+import infra.web.repository.WebNovelFileRepository
+import infra.web.repository.WebNovelMetadataRepository
+import infra.wenku.repository.WenkuNovelMetadataRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
@@ -288,8 +290,8 @@ class WebNovelApi(
     private val chapterRepo: WebNovelChapterRepository,
     private val fileRepo: WebNovelFileRepository,
     private val userRepo: UserRepository,
-    private val favoredRepo: UserFavoredWebRepository,
-    private val historyRepo: UserReadHistoryWebRepository,
+    private val favoredRepo: WebNovelFavoredRepository,
+    private val historyRepo: WebNovelReadHistoryRepository,
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {

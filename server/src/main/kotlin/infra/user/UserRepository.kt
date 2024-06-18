@@ -1,40 +1,44 @@
 package infra.user
 
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Updates
-import infra.DataSourceMongo
-import infra.DataSourceRedis
-import domain.entity.Page
-import domain.entity.User
-import domain.entity.UserFavored
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Filters.or
+import com.mongodb.client.model.Updates.combine
+import com.mongodb.client.model.Updates.set
+import infra.MongoClient
+import infra.MongoCollectionNames
+import infra.RedisClient
+import infra.common.Page
+import infra.field
 import io.github.crackthecodeabhi.kreds.args.SetOption
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import org.bson.types.ObjectId
-import org.litote.kmongo.*
 import util.PBKDF2
 import util.serialName
 import kotlin.time.Duration.Companion.minutes
 
 class UserRepository(
-    private val mongo: DataSourceMongo,
-    private val redis: DataSourceRedis,
+    mongo: MongoClient,
+    private val redis: RedisClient,
 ) {
+    private val userCollection =
+        mongo.database.getCollection<User>(
+            MongoCollectionNames.USER,
+        )
+
     suspend fun listUser(
         page: Int,
         pageSize: Int,
-        role: User.Role,
+        role: UserRole,
     ): Page<User> {
-        val users = mongo
-            .userCollection
-            .find(Filters.eq(User::role.path(), role.serialName()))
+        val users = userCollection
+            .find(eq(User::role.field(), role.serialName()))
             .skip(page * pageSize)
             .limit(pageSize)
             .toList()
 
-        val total = mongo
-            .userCollection
+        val total = userCollection
             .countDocuments()
 
         return Page(
@@ -51,8 +55,7 @@ class UserRepository(
     ): ObjectId {
         val salt = PBKDF2.randomSalt()
         val hashedPassword = PBKDF2.hash(password, salt)
-        return mongo
-            .userCollection
+        return userCollection
             .insertOne(
                 User(
                     id = ObjectId(),
@@ -60,7 +63,7 @@ class UserRepository(
                     username = username,
                     salt = salt,
                     password = hashedPassword,
-                    role = User.Role.Normal,
+                    role = UserRole.Normal,
                     favoredWeb = listOf(UserFavored(id = "default", title = "默认收藏夹")),
                     favoredWenku = listOf(UserFavored(id = "default", title = "默认收藏夹")),
                     createdAt = Clock.System.now(),
@@ -71,54 +74,54 @@ class UserRepository(
     suspend fun updatePassword(userId: ObjectId, password: String) {
         val salt = PBKDF2.randomSalt()
         val hashedPassword = PBKDF2.hash(password, salt)
-        mongo
-            .userCollection
+        userCollection
             .updateOne(
-                User::id eq userId,
+                eq(User::id.field(), userId),
                 combine(
-                    setValue(User::salt, salt),
-                    setValue(User::password, hashedPassword),
+                    set(User::salt.field(), salt),
+                    set(User::password.field(), hashedPassword),
                 )
             )
     }
 
-    suspend fun updateRole(userId: ObjectId, role: User.Role) {
-        mongo
-            .userCollection
+    suspend fun updateRole(userId: ObjectId, role: UserRole) {
+        userCollection
             .updateOne(
-                User::id eq userId,
-                Updates.set(User::role.path(), role.serialName()),
+                eq(User::id.field(), userId),
+                set(User::role.field(), role.serialName()),
             )
     }
 
     suspend fun getById(id: String): User? {
-        return mongo
-            .userCollection
-            .find(User::id eq ObjectId(id))
+        return userCollection
+            .find(
+                eq(User::id.field(), ObjectId(id)),
+            )
             .firstOrNull()
     }
 
     suspend fun getByEmail(email: String): User? {
-        return mongo
-            .userCollection
-            .find(User::email eq email)
+        return userCollection
+            .find(
+                eq(User::email.field(), email),
+            )
             .firstOrNull()
     }
 
     suspend fun getByUsername(username: String): User? {
-        return mongo
-            .userCollection
-            .find(User.byUsername(username))
+        return userCollection
+            .find(
+                eq(User::username.field(), username),
+            )
             .firstOrNull()
     }
 
     suspend fun getByUsernameOrEmail(emailOrUsername: String): User? {
-        return mongo
-            .userCollection
+        return userCollection
             .find(
                 or(
-                    User::email eq emailOrUsername,
-                    User::username eq emailOrUsername,
+                    eq(User::email.field(), emailOrUsername),
+                    eq(User::username.field(), emailOrUsername),
                 )
             )
             .firstOrNull()
@@ -154,5 +157,27 @@ class UserRepository(
                 .exSeconds(15.minutes.inWholeSeconds.toULong())
                 .build(),
         )
+    }
+
+    suspend fun updateFavoredWeb(
+        userId: ObjectId,
+        favored: List<UserFavored>,
+    ) {
+        userCollection
+            .updateOne(
+                eq(User::id.field(), userId),
+                set(User::favoredWeb.field(), favored)
+            )
+    }
+
+    suspend fun updateFavoredWenku(
+        userId: ObjectId,
+        favored: List<UserFavored>,
+    ) {
+        userCollection
+            .updateOne(
+                eq(User::id.field(), userId),
+                set(User::favoredWenku.field(), favored),
+            )
     }
 }

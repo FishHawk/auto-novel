@@ -1,8 +1,8 @@
 package infra.provider.providers
 
 import koinExtensions
-import infra.web.DataSourceWebNovelProvider
-import infra.web.providers.Alphapolis
+import infra.web.datasource.WebNovelHttpDataSource
+import infra.web.datasource.providers.Alphapolis
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
@@ -12,7 +12,7 @@ import org.koin.test.inject
 
 class AlphapolisTest : DescribeSpec(), KoinTest {
     override fun extensions() = koinExtensions()
-    private val dataSource by inject<DataSourceWebNovelProvider>()
+    private val dataSource by inject<WebNovelHttpDataSource>()
     private val provider get() = dataSource.providers[Alphapolis.id]!!
 
     init {

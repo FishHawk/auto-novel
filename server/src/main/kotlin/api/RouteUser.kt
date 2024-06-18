@@ -3,10 +3,10 @@ package api
 import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
 import api.plugins.authenticatedUser
-import domain.entity.Page
-import domain.entity.User
-import domain.entity.UserFavored
+import infra.common.Page
+import infra.user.UserFavored
 import infra.user.UserRepository
+import infra.user.UserRole
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.resources.*
@@ -21,7 +21,7 @@ private class UserRes {
         val parent: UserRes,
         val page: Int,
         val pageSize: Int,
-        val role: User.Role,
+        val role: UserRole,
     )
 
     @Resource("/favored")
@@ -62,7 +62,7 @@ class UserApi(
         val id: String,
         val email: String,
         val username: String,
-        val role: User.Role,
+        val role: UserRole,
         val createdAt: Long,
     )
 
@@ -70,9 +70,9 @@ class UserApi(
         user: AuthenticatedUser,
         page: Int,
         pageSize: Int,
-        role: User.Role,
+        role: UserRole,
     ): Page<UserOutlineDto> {
-        user.shouldBeAtLeast(User.Role.Admin)
+        user.shouldBeAtLeast(UserRole.Admin)
         return userRepo.listUser(
             page = page,
             pageSize = pageSize,

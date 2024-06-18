@@ -4,7 +4,7 @@ import api.throwUnauthorized
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import infra.user.UserRepository
-import domain.entity.User
+import infra.user.UserRole
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -39,10 +39,10 @@ fun Application.authentication(secret: String) = install(Authentication) {
 data class AuthenticatedUser(
     val id: String,
     val username: String,
-    val role: User.Role,
+    val role: UserRole,
     val createdAt: Instant,
 ) {
-    fun shouldBeAtLeast(role: User.Role) {
+    fun shouldBeAtLeast(role: UserRole) {
         if (!(this.role atLeast role)) {
             throwUnauthorized("只有${role.name}及以上的用户才有权限执行此操作")
         }
@@ -110,7 +110,7 @@ private val PostAuthenticationInterceptors = createRouteScopedPlugin(name = "Use
                 role = userDb.role,
                 createdAt = userDb.createdAt,
             )
-            if (userDb.role === User.Role.Banned) {
+            if (userDb.role === UserRole.Banned) {
                 call.respond(HttpStatusCode.Unauthorized, "用户已被封禁")
             } else {
                 call.attributes.put(AuthenticatedUserKey, user)

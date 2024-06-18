@@ -1,8 +1,8 @@
 package api.model
 
-import domain.entity.WebNovelAttention
-import domain.entity.WebNovelMetadataOutline
-import domain.entity.WebNovelType
+import infra.web.WebNovelAttention
+import infra.web.WebNovelMetadataListItem
+import infra.web.WebNovelType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -24,7 +24,7 @@ data class WebNovelOutlineDto(
     val updateAt: Long?,
 )
 
-fun WebNovelMetadataOutline.asDto() =
+fun WebNovelMetadataListItem.asDto() =
     WebNovelOutlineDto(
         providerId = providerId,
         novelId = novelId,

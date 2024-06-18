@@ -1,6 +1,6 @@
 package api.model
 
-import domain.entity.WenkuNovelMetadataOutline
+import infra.wenku.WenkuNovelMetadataListItem
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -11,7 +11,7 @@ data class WenkuNovelOutlineDto(
     val cover: String?,
 )
 
-fun WenkuNovelMetadataOutline.asDto() =
+fun WenkuNovelMetadataListItem.asDto() =
     WenkuNovelOutlineDto(
         id = id,
         title = title,

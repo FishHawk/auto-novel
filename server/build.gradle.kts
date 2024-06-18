@@ -55,7 +55,6 @@ dependencies {
     val mongodbVersion = "5.1.0"
     implementation("org.mongodb:mongodb-driver-kotlin-coroutine:${mongodbVersion}")
     implementation("org.mongodb:bson-kotlinx:${mongodbVersion}")
-    implementation("org.litote.kmongo:kmongo:5.1.0")
 
     implementation("org.eclipse.angus:angus-mail:2.0.1")
 

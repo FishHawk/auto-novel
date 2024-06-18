@@ -2,24 +2,24 @@ import api.*
 import api.plugins.authentication
 import api.plugins.contentNegotiation
 import api.plugins.rateLimit
-import infra.DataSourceElasticSearch
-import infra.DataSourceFileSystem
-import infra.DataSourceMongo
-import infra.common.ArticleRepository
-import infra.common.CommentRepository
-import infra.common.OperationHistoryRepository
-import infra.common.SakuraFeedbackRepository
-import infra.createRedisDataSource
-import infra.user.UserFavoredWebRepository
-import infra.user.UserFavoredWenkuRepository
-import infra.user.UserReadHistoryWebRepository
+import infra.*
+import infra.article.ArticleRepository
+import infra.comment.CommentRepository
+import infra.oplog.OperationHistoryRepository
+import infra.sakura.SakuraFeedbackRepository
+import infra.web.repository.WebNovelFavoredRepository
+import infra.wenku.repository.WenkuNovelFavoredRepository
+import infra.web.repository.WebNovelReadHistoryRepository
 import infra.user.UserRepository
-import infra.web.DataSourceWebNovelProvider
-import infra.web.WebNovelChapterRepository
-import infra.web.WebNovelFileRepository
-import infra.web.WebNovelMetadataRepository
-import infra.wenku.WenkuNovelMetadataRepository
-import infra.wenku.WenkuNovelVolumeRepository
+import infra.web.datasource.WebNovelHttpDataSource
+import infra.web.repository.WebNovelChapterRepository
+import infra.web.repository.WebNovelFileRepository
+import infra.web.repository.WebNovelMetadataRepository
+import infra.web.datasource.WebNovelEsDataSource
+import infra.wenku.datasource.WenkuNovelEsDataSource
+import infra.wenku.datasource.WenkuNovelVolumeDiskDataSource
+import infra.wenku.repository.WenkuNovelMetadataRepository
+import infra.wenku.repository.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -84,65 +84,65 @@ fun main() {
 }
 
 val appModule = module {
+    // Data layer: Client
     fun env(name: String): String? =
         System.getenv(name)
 
     fun envDbHost(name: String) =
-        env(name)
-            ?: env("DB_HOST_TEST")
-            ?: "localhost"
+        env(name) ?: env("DB_HOST_TEST") ?: "localhost"
 
     fun envDbPort(name: String) =
-        env(name)
-            ?.toIntOrNull()
+        env(name)?.toIntOrNull()
 
-    // Data Source
     single {
-        DataSourceMongo(
+        MongoClient(
             host = envDbHost("DB_HOST_MONGO"),
             port = envDbPort("DB_PORT_MONGO"),
         )
     }
     single {
-        DataSourceElasticSearch(
+        elasticSearchClient(
             host = envDbHost("DB_HOST_ES"),
             port = envDbPort("DB_PORT_ES"),
         )
     }
     single {
-        createRedisDataSource(
+        redisClient(
             host = envDbHost("DB_HOST_REDIS"),
             port = envDbPort("DB_PORT_REDIS"),
         )
     }
+
+    // Data layer: Data Source
+    singleOf(::WebNovelEsDataSource)
     single {
-        DataSourceWebNovelProvider(
+        WebNovelHttpDataSource(
             httpsProxy = env("HTTPS_PROXY"),
             pixivPhpsessid = env("PIXIV_COOKIE_PHPSESSID"),
         )
     }
-    singleOf(::DataSourceFileSystem)
 
-    // Repository
+    singleOf(::WenkuNovelEsDataSource)
+    singleOf(::WenkuNovelVolumeDiskDataSource)
+
+    // Data layer: Repository
     singleOf(::ArticleRepository)
     singleOf(::CommentRepository)
     singleOf(::OperationHistoryRepository)
-
     singleOf(::SakuraFeedbackRepository)
-
     singleOf(::UserRepository)
-    singleOf(::UserFavoredWebRepository)
-    singleOf(::UserFavoredWenkuRepository)
-    singleOf(::UserReadHistoryWebRepository)
 
     singleOf(::WebNovelMetadataRepository)
     singleOf(::WebNovelChapterRepository)
     singleOf(::WebNovelFileRepository)
+    singleOf(::WebNovelFavoredRepository)
+    singleOf(::WebNovelReadHistoryRepository)
 
     singleOf(::WenkuNovelMetadataRepository)
     singleOf(::WenkuNovelVolumeRepository)
+    singleOf(::WenkuNovelFavoredRepository)
 
-    // Api
+    // App Layer
     single {
         AuthApi(
             secret = env("JWT_SECRET")!!,
