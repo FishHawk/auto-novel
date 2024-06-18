@@ -16,6 +16,7 @@ import infra.web.datasource.WebNovelHttpDataSource
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
+import org.bson.Document
 
 class WebNovelChapterRepository(
     private val provider: WebNovelHttpDataSource,
@@ -48,20 +49,32 @@ class WebNovelChapterRepository(
                     fields(
                         include(
                             WebNovelChapterTranslationState::sakuraVersion.field(),
+                        ),
+                        computed(
                             WebNovelChapterTranslationState::chapterId.field(),
+                            WebNovelChapter::chapterId.fieldPath(),
                         ),
                         computed(
                             WebNovelChapterTranslationState::glossaryUuid.field(),
-                            glossaryUuidProperty.field(),
+                            glossaryUuidProperty.fieldPath(),
                         ),
                         computed(
                             WebNovelChapterTranslationState::translated.field(),
-                            cond(paragraphsZhProperty, true, false),
+                            Document(
+                                "\$cond",
+                                listOf("\$" + paragraphsZhProperty.field(), true, false)
+                            ),
                         ),
                     )
                 ),
             )
             .toList()
+            .apply {
+                println("////")
+                this.forEach {
+                    println(it)
+                }
+            }
     }
 
     suspend fun get(
