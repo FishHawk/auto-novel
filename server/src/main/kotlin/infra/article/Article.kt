@@ -21,7 +21,7 @@ enum class ArticleCategory {
 
 @Serializable
 data class ArticleListItem(
-    @Contextual @SerialName("_id") val id: ObjectId,
+    val id: String,
     val title: String,
     val category: ArticleCategory,
     val locked: Boolean,
@@ -36,7 +36,7 @@ data class ArticleListItem(
 
 @Serializable
 data class Article(
-    @Contextual @SerialName("_id") val id: ObjectId,
+    val id: String,
     val title: String,
     val content: String,
     val category: ArticleCategory,

@@ -122,6 +122,9 @@ inline fun <reified R : Any> MongoCollection<*>.aggregate(vararg bson: Bson) =
 fun arrayElemAt(path: String, index: Int = 0): Bson =
     Document("\$arrayElemAt", listOf("\$" + path, index))
 
+fun toString(path: String): Bson =
+    Document("\$toString", "\$" + path)
+
 //            // Common
 //            articleCollection.ensureIndex(
 //                Article::updateAt,

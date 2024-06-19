@@ -3,6 +3,7 @@ package infra.article
 import com.mongodb.client.model.Aggregates.*
 import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.Facet
+import com.mongodb.client.model.Field
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Projections.*
@@ -62,8 +63,11 @@ class ArticleRepository(
                         unwind(ArticleListItem::user.fieldPath()),
                         project(
                             fields(
-                                include(
+                                computed(
                                     ArticleListItem::id.field(),
+                                    toString(ArticleDbModel::id.field())
+                                ),
+                                include(
                                     ArticleListItem::title.field(),
                                     ArticleListItem::category.field(),
                                     ArticleListItem::locked.field(),
@@ -100,11 +104,11 @@ class ArticleRepository(
     }
 
     suspend fun getArticle(
-        id: ObjectId,
+        id: String,
     ): Article? {
         return articleCollection
             .aggregate<Article>(
-                match(eq(ArticleDbModel::id.field(), id)),
+                match(eq(ArticleDbModel::id.field(), ObjectId(id))),
                 lookup(
                     /* from = */ MongoCollectionNames.USER,
                     /* localField = */ ArticleDbModel::user.field(),
@@ -112,29 +116,35 @@ class ArticleRepository(
                     /* as = */ Article::user.field(),
                 ),
                 unwind(Article::user.fieldPath()),
+                addFields(
+                    Field(
+                        Article::id.field(),
+                        toString(ArticleDbModel::id.field()),
+                    ),
+                )
             )
             .firstOrNull()
     }
 
     suspend fun isArticleCreateBy(
-        id: ObjectId,
-        userId: ObjectId,
+        id: String,
+        userId: String,
     ): Boolean =
         articleCollection
             .countDocuments(
                 and(
-                    eq(ArticleDbModel::id.field(), id),
-                    eq(ArticleDbModel::user.field(), userId)
+                    eq(ArticleDbModel::id.field(), ObjectId(id)),
+                    eq(ArticleDbModel::user.field(), ObjectId(userId))
                 ),
                 CountOptions().limit(1),
             ) > 0
 
     suspend fun deleteArticle(
-        id: ObjectId,
+        id: String,
     ): Boolean =
         articleCollection
             .deleteOne(
-                eq(ArticleDbModel::id.field(), id),
+                eq(ArticleDbModel::id.field(), ObjectId(id)),
             )
             .run { deletedCount > 0 }
 
@@ -142,7 +152,7 @@ class ArticleRepository(
         title: String,
         content: String,
         category: ArticleCategory,
-        userId: ObjectId,
+        userId: String,
     ): ObjectId {
         val now = Clock.System.now()
         return articleCollection
@@ -156,7 +166,7 @@ class ArticleRepository(
                     pinned = false,
                     numViews = 0,
                     numComments = 0,
-                    user = userId,
+                    user = ObjectId(userId),
                     createAt = now,
                     updateAt = now,
                     changeAt = now,
@@ -167,30 +177,29 @@ class ArticleRepository(
 
     suspend fun increaseNumViews(
         userIdOrIp: String,
-        id: ObjectId,
-    ) = redis.withRateLimit("article:${userIdOrIp}:${id.toHexString()}") {
+        id: String,
+    ) = redis.withRateLimit("article:${userIdOrIp}:${id}") {
         articleCollection
             .updateOne(
-                eq(ArticleDbModel::id.field(), id),
+                eq(ArticleDbModel::id.field(), ObjectId(id)),
                 inc(ArticleDbModel::numViews.field(), 1),
             )
     }
 
     suspend fun increaseNumComments(
-        id: ObjectId,
-    ): Boolean =
+        id: String,
+    ) =
         articleCollection
             .updateOne(
-                eq(ArticleDbModel::id.field(), id),
+                eq(ArticleDbModel::id.field(), ObjectId(id)),
                 combine(
                     inc(ArticleDbModel::numComments.field(), 1),
                     set(ArticleDbModel::changeAt.field(), Clock.System.now()),
                 ),
             )
-            .run { matchedCount > 0 }
 
     suspend fun updateTitleAndContent(
-        id: ObjectId,
+        id: String,
         title: String,
         content: String,
         category: ArticleCategory,
@@ -198,7 +207,7 @@ class ArticleRepository(
         val now = Clock.System.now()
         return articleCollection
             .updateOne(
-                eq(ArticleDbModel::id.field(), id),
+                eq(ArticleDbModel::id.field(), ObjectId(id)),
                 combine(
                     set(ArticleDbModel::title.field(), title),
                     set(ArticleDbModel::content.field(), content),
@@ -211,34 +220,34 @@ class ArticleRepository(
     }
 
     suspend fun updateArticlePinned(
-        id: ObjectId,
+        id: String,
         pinned: Boolean,
     ): Boolean =
         articleCollection
             .updateOne(
-                eq(ArticleDbModel::id.field(), id),
+                eq(ArticleDbModel::id.field(), ObjectId(id)),
                 set(ArticleDbModel::pinned.field(), pinned),
             )
             .run { matchedCount > 0 }
 
     suspend fun updateArticleLocked(
-        id: ObjectId,
+        id: String,
         locked: Boolean,
     ): Boolean =
         articleCollection
             .updateOne(
-                eq(ArticleDbModel::id.field(), id),
+                eq(ArticleDbModel::id.field(), ObjectId(id)),
                 set(ArticleDbModel::locked.field(), locked),
             )
             .run { matchedCount > 0 }
 
     suspend fun updateArticleHidden(
-        id: ObjectId,
+        id: String,
         hidden: Boolean,
     ): Boolean =
         articleCollection
             .updateOne(
-                eq(ArticleDbModel::id.field(), id),
+                eq(ArticleDbModel::id.field(), ObjectId(id)),
                 set(ArticleDbModel::hidden.field(), hidden),
             )
             .run { matchedCount > 0 }

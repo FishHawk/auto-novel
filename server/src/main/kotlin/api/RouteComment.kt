@@ -16,7 +16,6 @@ import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
 
 @Resource("/comment")
@@ -115,7 +114,7 @@ class CommentApi(
         ignoreHidden: Boolean,
     ) =
         CommentDto(
-            id = id.toHexString(),
+            id = id,
             user = user,
             content = if (ignoreHidden || !hidden) content else "",
             hidden = hidden,
@@ -140,16 +139,16 @@ class CommentApi(
         val ignoreHidden = user != null && user.role atLeast UserRole.Maintainer
 
         return commentRepo
-            .listCommentWithUser(
+            .listComment(
                 site = postId,
-                parent = parentId?.let { ObjectId(it) },
+                parent = parentId,
                 page = page,
                 pageSize = pageSize,
                 reverse = reverse,
             )
             .map {
                 val replies = if (parentId == null && it.numReplies > 0) {
-                    commentRepo.listCommentWithUser(
+                    commentRepo.listComment(
                         site = postId,
                         parent = it.id,
                         page = 0,
@@ -170,9 +169,8 @@ class CommentApi(
         id: String,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
-        val isDeleted = commentRepo.deleteComment(ObjectId(id))
+        val isDeleted = commentRepo.deleteComment(id)
         if (!isDeleted) throwNotFound("评论不存在")
-        commentRepo.deleteCommentByParent(ObjectId(id))
     }
 
     suspend fun createComment(
@@ -186,20 +184,20 @@ class CommentApi(
         }
         if (
             parent != null &&
-            !commentRepo.increaseNumReplies(ObjectId(parent))
+            !commentRepo.increaseNumReplies(parent)
         ) {
             throwNotFound("回复的评论不存在")
         }
 
         if (site.startsWith("article-")) {
             articleRepo.increaseNumComments(
-                ObjectId(site.removePrefix("article-"))
+                site.removePrefix("article-")
             )
         }
         commentRepo.createComment(
             site = site,
-            parent = parent?.let { ObjectId(it) },
-            user = ObjectId(user.id),
+            parent = parent,
+            user = user.id,
             content = content,
         )
     }
@@ -212,9 +210,11 @@ class CommentApi(
         id: String,
         hidden: Boolean,
     ) {
-        user.shouldBeAtLeast(UserRole.Admin)
+        if (!(user.role atLeast UserRole.Admin) && !commentRepo.isCommentCreateBy(id = id, userId = user.id)) {
+            throwUnauthorized("只有评论作者才有权限隐藏")
+        }
         val isUpdated = commentRepo.updateCommentHidden(
-            id = ObjectId(id),
+            id = id,
             hidden = hidden,
         )
         if (!isUpdated) throwCommentNotFound()

@@ -18,7 +18,6 @@ import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
 
 @Resource("/article")
@@ -173,7 +172,7 @@ class ArticleApi(
         ignoreHidden: Boolean,
     ) =
         ArticleSimplifiedDto(
-            id = id.toHexString(),
+            id = id,
             title = if (ignoreHidden || !hidden) title else "",
             category = category,
             locked = locked,
@@ -229,7 +228,7 @@ class ArticleApi(
         ignoreHidden: Boolean,
     ) =
         ArticleDto(
-            id = id.toHexString(),
+            id = id,
             title = if (ignoreHidden || !hidden) title else "",
             content = if (ignoreHidden || !hidden) content else "",
             category = category,
@@ -249,7 +248,7 @@ class ArticleApi(
     ): ArticleDto {
         val ignoreHidden = user != null && user.role atLeast UserRole.Maintainer
 
-        val article = articleRepo.getArticle(ObjectId(id))
+        val article = articleRepo.getArticle(id)
             ?: throwArticleNotFound()
 
         if (user != null) {
@@ -291,7 +290,7 @@ class ArticleApi(
             title = title,
             content = content,
             category = category,
-            userId = ObjectId(user.id),
+            userId = user.id,
         )
         return articleId.toHexString()
     }
@@ -306,16 +305,12 @@ class ArticleApi(
         validateTitle(title)
         validateContent(content)
 
-        if (!(user.role atLeast UserRole.Admin) && !articleRepo.isArticleCreateBy(
-                id = ObjectId(id),
-                userId = ObjectId(user.id),
-            )
-        ) {
+        if (!(user.role atLeast UserRole.Admin) && !articleRepo.isArticleCreateBy(id = id, userId = user.id)) {
             throwUnauthorized("只有文章作者才有权限编辑")
         }
 
         articleRepo.updateTitleAndContent(
-            id = ObjectId(id),
+            id = id,
             title = title,
             content = content,
             category = category,
@@ -327,9 +322,7 @@ class ArticleApi(
         id: String,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
-        val isDeleted = articleRepo.deleteArticle(
-            id = ObjectId(id),
-        )
+        val isDeleted = articleRepo.deleteArticle(id = id)
         if (!isDeleted) throwArticleNotFound()
         commentRepo.deleteCommentBySite("article-${id}")
     }
@@ -340,10 +333,7 @@ class ArticleApi(
         pinned: Boolean,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
-        val isUpdated = articleRepo.updateArticlePinned(
-            id = ObjectId(id),
-            pinned = pinned,
-        )
+        val isUpdated = articleRepo.updateArticlePinned(id = id, pinned = pinned)
         if (!isUpdated) throwArticleNotFound()
     }
 
@@ -353,10 +343,7 @@ class ArticleApi(
         locked: Boolean,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
-        val isUpdated = articleRepo.updateArticleLocked(
-            id = ObjectId(id),
-            locked = locked,
-        )
+        val isUpdated = articleRepo.updateArticleLocked(id = id, locked = locked)
         if (!isUpdated) throwArticleNotFound()
     }
 
@@ -366,10 +353,7 @@ class ArticleApi(
         hidden: Boolean,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
-        val isUpdated = articleRepo.updateArticleHidden(
-            id = ObjectId(id),
-            hidden = hidden,
-        )
+        val isUpdated = articleRepo.updateArticleHidden(id = id, hidden = hidden)
         if (!isUpdated) throwArticleNotFound()
     }
 }

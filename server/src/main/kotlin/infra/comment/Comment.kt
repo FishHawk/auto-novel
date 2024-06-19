@@ -9,7 +9,7 @@ import org.bson.types.ObjectId
 
 @Serializable
 data class Comment(
-    @Contextual @SerialName("_id") val id: ObjectId,
+    val id: String,
     val site: String,
     val content: String,
     val hidden: Boolean,

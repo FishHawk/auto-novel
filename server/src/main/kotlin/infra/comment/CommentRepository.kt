@@ -1,9 +1,9 @@
 package infra.comment
 
 import com.mongodb.client.model.Aggregates.*
+import com.mongodb.client.model.CountOptions
 import com.mongodb.client.model.Facet
-import com.mongodb.client.model.Filters.and
-import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.Projections.*
 import com.mongodb.client.model.Sorts.ascending
 import com.mongodb.client.model.Sorts.descending
@@ -27,9 +27,9 @@ class CommentRepository(
             MongoCollectionNames.COMMENT,
         )
 
-    suspend fun listCommentWithUser(
+    suspend fun listComment(
         site: String,
-        parent: ObjectId?,
+        parent: String?,
         page: Int,
         pageSize: Int,
         reverse: Boolean = false,
@@ -45,7 +45,7 @@ class CommentRepository(
                 match(
                     and(
                         eq(CommentDbModel::site.field(), site),
-                        eq(CommentDbModel::parent.field(), parent),
+                        eq(CommentDbModel::parent.field(), parent?.let { ObjectId(it) }),
                     ),
                 ),
                 facet(
@@ -67,6 +67,10 @@ class CommentRepository(
                         unwind(Comment::user.fieldPath()),
                         project(
                             fields(
+                                computed(
+                                    Comment::id.field(),
+                                    toString(Comment::id.field())
+                                ),
                                 include(
                                     Comment::id.field(),
                                     Comment::site.field(),
@@ -101,14 +105,29 @@ class CommentRepository(
         }
     }
 
-    suspend fun deleteComment(
-        id: ObjectId,
+    suspend fun isCommentCreateBy(
+        id: String,
+        userId: String,
     ): Boolean =
         commentCollection
-            .deleteOne(
-                eq(CommentDbModel::id.field(), id),
+            .countDocuments(
+                and(
+                    eq(CommentDbModel::id.field(), ObjectId(id)),
+                    eq(CommentDbModel::user.field(), ObjectId(userId))
+                ),
+                CountOptions().limit(1),
+            ) > 0
+
+    suspend fun deleteComment(
+        id: String,
+    ): Boolean = commentCollection
+        .deleteMany(
+            or(
+                eq(CommentDbModel::id.field(), ObjectId(id)),
+                eq(CommentDbModel::parent.field(), ObjectId(id)),
             )
-            .run { deletedCount > 0 }
+        )
+        .run { deletedCount > 0 }
 
     suspend fun deleteCommentBySite(
         site: String,
@@ -119,19 +138,10 @@ class CommentRepository(
             )
     }
 
-    suspend fun deleteCommentByParent(
-        parent: ObjectId,
-    ) {
-        commentCollection
-            .deleteMany(
-                eq(CommentDbModel::parent.field(), parent),
-            )
-    }
-
     suspend fun createComment(
         site: String,
-        parent: ObjectId?,
-        user: ObjectId,
+        parent: String?,
+        user: String,
         content: String,
     ): ObjectId =
         commentCollection
@@ -141,30 +151,30 @@ class CommentRepository(
                     site = site,
                     content = content,
                     numReplies = 0,
-                    parent = parent,
-                    user = user,
+                    parent = parent?.let { ObjectId(it) },
+                    user = ObjectId(user),
                     createAt = Clock.System.now(),
                 )
             )
             .run { insertedId!!.asObjectId().value }
 
     suspend fun increaseNumReplies(
-        id: ObjectId,
+        id: String,
     ): Boolean =
         commentCollection
             .updateOne(
-                eq(CommentDbModel::id.field(), id),
+                eq(CommentDbModel::id.field(), ObjectId(id)),
                 inc(CommentDbModel::numReplies.field(), 1),
             )
             .run { matchedCount > 0 }
 
     suspend fun updateCommentHidden(
-        id: ObjectId,
+        id: String,
         hidden: Boolean,
     ): Boolean =
         commentCollection
             .updateOne(
-                eq(CommentDbModel::id.field(), id),
+                eq(CommentDbModel::id.field(), ObjectId(id)),
                 set(CommentDbModel::hidden.field(), hidden),
             )
             .run { matchedCount > 0 }
