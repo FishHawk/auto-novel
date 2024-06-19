@@ -1,13 +1,9 @@
 package infra
 
-import com.mongodb.ConnectionString
-import com.mongodb.MongoClientSettings
+import com.mongodb.*
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import kotlinx.datetime.Instant
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -18,14 +14,15 @@ import kotlinx.serialization.modules.plus
 import org.bson.BsonDateTime
 import org.bson.BsonString
 import org.bson.Document
+import org.bson.codecs.*
+import org.bson.codecs.configuration.CodecProvider
 import org.bson.codecs.configuration.CodecRegistries
-import org.bson.codecs.kotlinx.BsonDecoder
-import org.bson.codecs.kotlinx.BsonEncoder
-import org.bson.codecs.kotlinx.KotlinSerializerCodecProvider
-import org.bson.codecs.kotlinx.defaultSerializersModule
+import org.bson.codecs.configuration.CodecRegistry
+import org.bson.codecs.kotlinx.*
 import org.bson.conversions.Bson
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.hasAnnotation
 import com.mongodb.kotlin.client.coroutine.MongoClient as KMongoClient
 
 class MongoClient(host: String, port: Int?) {
@@ -48,25 +45,41 @@ class MongoClient(host: String, port: Int?) {
         }
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
-    private fun getAddonCodecRegistry() =
-        CodecRegistries.fromProviders(
-            KotlinSerializerCodecProvider(
-                serializersModule = defaultSerializersModule + SerializersModule {
-                    contextual(Instant::class, KInstantSerializer)
+    @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+    private fun getPatchedCodecRegistries() =
+        CodecRegistries.fromRegistries(
+            CodecRegistries.fromProviders(
+                object : CodecProvider {
+                    private val serializersModule = defaultSerializersModule + SerializersModule {
+                        contextual(Instant::class, KInstantSerializer)
+                    }
+
+                    override fun <T : Any> get(clazz: Class<T>, registry: CodecRegistry): Codec<T>? {
+                        val kClass = clazz.kotlin
+                        return if (kClass.hasAnnotation<Serializable>()) {
+                            try {
+                                KotlinSerializerCodec.create(
+                                    kClass,
+                                    serializersModule.getContextual(kClass) ?: kClass.serializer(),
+                                    serializersModule,
+                                    BsonConfiguration(),
+                                )
+                            } catch (exception: SerializationException) {
+                                null
+                            }
+                        } else {
+                            null
+                        }
+                    }
                 },
-            )
+            ),
+            MongoClientSettings.getDefaultCodecRegistry(),
         )
 
     private val client = KMongoClient.create(
         MongoClientSettings
             .builder()
-            .codecRegistry(
-                CodecRegistries.fromRegistries(
-                    getAddonCodecRegistry(),
-                    MongoClientSettings.getDefaultCodecRegistry(),
-                )
-            )
+            .codecRegistry(getPatchedCodecRegistries())
             .applyConnectionString(
                 ConnectionString(
                     "mongodb://${host}:${port ?: 27017}"
