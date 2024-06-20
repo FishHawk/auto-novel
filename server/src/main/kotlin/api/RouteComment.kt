@@ -5,6 +5,7 @@ import infra.article.ArticleRepository
 import infra.comment.CommentRepository
 import infra.comment.Comment
 import infra.common.Page
+import infra.user.User
 import infra.user.UserOutline
 import infra.user.UserRole
 import io.ktor.resources.*
@@ -42,7 +43,7 @@ fun Route.routeComment() {
     authenticateDb(optional = true) {
         get<CommentRes.List> { loc ->
             call.tryRespond {
-                val user = call.authenticatedUserOrNull()
+                val user = call.userOrNull()
                 service.listComment(
                     user = user,
                     postId = loc.site,
@@ -66,7 +67,7 @@ fun Route.routeComment() {
                     val content: String,
                 )
 
-                val user = call.authenticatedUser()
+                val user = call.user()
                 val body = call.receive<Body>()
                 call.tryRespond {
                     service.createComment(
@@ -80,13 +81,13 @@ fun Route.routeComment() {
         }
 
         put<CommentRes.Id.Hidden> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateCommentHidden(user = user, id = loc.parent.id, hidden = true)
             }
         }
         delete<CommentRes.Id.Hidden> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateCommentHidden(user = user, id = loc.parent.id, hidden = false)
             }
@@ -124,7 +125,7 @@ class CommentApi(
         )
 
     suspend fun listComment(
-        user: AuthenticatedUser?,
+        user: User?,
         postId: String,
         parentId: String?,
         page: Int,
@@ -165,7 +166,7 @@ class CommentApi(
 
     @Suppress("unused")
     suspend fun deleteComment(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
@@ -174,7 +175,7 @@ class CommentApi(
     }
 
     suspend fun createComment(
-        user: AuthenticatedUser,
+        user: User,
         site: String,
         parent: String?,
         content: String,
@@ -206,7 +207,7 @@ class CommentApi(
         throwNotFound("评论不存在")
 
     suspend fun updateCommentHidden(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
         hidden: Boolean,
     ) {

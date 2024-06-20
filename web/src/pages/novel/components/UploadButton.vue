@@ -16,7 +16,7 @@ const { novelId, type } = defineProps<{
 
 const message = useMessage();
 
-const { userData, isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.userDataRepository();
 
 const store = useWenkuNovelStore(novelId);
 
@@ -46,7 +46,7 @@ const customRequest = ({
   onError,
   onProgress,
 }: UploadCustomRequestOptions) => {
-  if (userData.value.info === undefined) {
+  if (!isSignedIn) {
     onError();
     return;
   }

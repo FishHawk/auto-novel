@@ -2,14 +2,14 @@ package api
 
 import api.model.WenkuNovelOutlineDto
 import api.model.asDto
-import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
+import api.plugins.user
 import infra.common.FavoredNovelListSort
 import infra.common.Page
+import infra.user.User
 import infra.user.UserFavored
+import infra.user.UserFavoredRepository
 import infra.wenku.repository.WenkuNovelFavoredRepository
-import infra.user.UserRepository
 import infra.wenku.repository.WenkuNovelMetadataRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -54,7 +54,7 @@ fun Route.routeUserFavoredWenku() {
             @Serializable
             class Body(val title: String)
 
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Body>()
             call.tryRespond {
                 service.createFavored(
@@ -67,7 +67,7 @@ fun Route.routeUserFavoredWenku() {
             @Serializable
             class Body(val title: String)
 
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Body>()
             call.tryRespond {
                 service.updateFavored(
@@ -78,7 +78,7 @@ fun Route.routeUserFavoredWenku() {
             }
         }
         delete<UserFavoredWenkuRes.Id> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.deleteFavored(
                     user = user,
@@ -87,7 +87,7 @@ fun Route.routeUserFavoredWenku() {
             }
         }
         get<UserFavoredWenkuRes.Id.List> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.listFavoredNovel(
                     user = user,
@@ -99,7 +99,7 @@ fun Route.routeUserFavoredWenku() {
             }
         }
         put<UserFavoredWenkuRes.Id.Novel> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateFavoredNovel(
                     user = user,
@@ -109,7 +109,7 @@ fun Route.routeUserFavoredWenku() {
             }
         }
         delete<UserFavoredWenkuRes.Id.Novel> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.deleteFavoredNovel(
                     user = user,
@@ -121,22 +121,22 @@ fun Route.routeUserFavoredWenku() {
 }
 
 class UserFavoredWenkuApi(
-    private val userRepo: UserRepository,
+    private val userFavoredRepo: UserFavoredRepository,
     private val favoredRepo: WenkuNovelFavoredRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
 ) {
     suspend fun createFavored(
-        user: AuthenticatedUser,
+        user: User,
         title: String,
     ) {
-        val user = userRepo.getById(user.id)!!
-
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
-        if (user.favoredWenku.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
 
-        userRepo.updateFavoredWenku(
+        val (_, favoredWenku) = userFavoredRepo.getFavoredList(user.id)!!
+        if (favoredWenku.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
+
+        userFavoredRepo.updateFavoredWenku(
             userId = user.id,
-            favored = user.favoredWenku + listOf(
+            favored = favoredWenku + listOf(
                 UserFavored(
                     id = UUID.randomUUID().toString(),
                     title = title,
@@ -146,38 +146,38 @@ class UserFavoredWenkuApi(
     }
 
     suspend fun updateFavored(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
         title: String,
     ) {
-        val user = userRepo.getById(user.id)!!
-
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
 
-        userRepo.updateFavoredWenku(
+        val (_, favoredWenku) = userFavoredRepo.getFavoredList(user.id)!!
+
+        userFavoredRepo.updateFavoredWenku(
             userId = user.id,
-            favored = user.favoredWenku.map {
+            favored = favoredWenku.map {
                 if (it.id == favoredId) it.copy(title = title) else it
             },
         )
     }
 
     suspend fun deleteFavored(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
     ) {
-        val user = userRepo.getById(user.id)!!
-
         if (favoredId == "default") throwBadRequest("不可以删除默认收藏夹")
 
-        userRepo.updateFavoredWenku(
+        val (_, favoredWenku) = userFavoredRepo.getFavoredList(user.id)!!
+
+        userFavoredRepo.updateFavoredWenku(
             userId = user.id,
-            favored = user.favoredWenku.filter { it.id != favoredId },
+            favored = favoredWenku.filter { it.id != favoredId },
         )
     }
 
     suspend fun listFavoredNovel(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
         page: Int,
         pageSize: Int,
@@ -197,7 +197,7 @@ class UserFavoredWenkuApi(
     }
 
     suspend fun updateFavoredNovel(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
         novelId: String,
     ) {
@@ -220,7 +220,7 @@ class UserFavoredWenkuApi(
     }
 
     suspend fun deleteFavoredNovel(
-        user: AuthenticatedUser,
+        user: User,
         novelId: String,
     ) {
         if (!metadataRepo.exist(novelId)) {

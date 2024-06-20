@@ -38,8 +38,8 @@ const signIn = async () => {
   }
   loadingBar.start();
   try {
-    const profile = await Locator.authRepository.signIn(formValue.value);
-    Locator.userDataRepository().setProfile(profile);
+    const token = await Locator.authRepository.signIn(formValue.value);
+    Locator.userDataRepository().setProfile(token);
     loadingBar.finish();
   } catch (e) {
     loadingBar.error();

@@ -3,17 +3,21 @@ package api
 import api.model.WenkuNovelOutlineDto
 import api.model.asDto
 import api.plugins.*
-import infra.wenku.datasource.VolumeCreateException
 import infra.common.NovelFileMode
 import infra.common.NovelFileTranslationsMode
 import infra.common.Page
 import infra.common.TranslatorId
-import infra.oplog.OperationHistoryRepository
 import infra.oplog.Operation
+import infra.oplog.OperationHistoryRepository
+import infra.user.User
 import infra.user.UserFavored
-import infra.user.UserRepository
+import infra.user.UserFavoredRepository
 import infra.user.UserRole
-import infra.wenku.*
+import infra.wenku.WenkuNovelFilter
+import infra.wenku.WenkuNovelLevel
+import infra.wenku.WenkuNovelVolume
+import infra.wenku.WenkuNovelVolumeJp
+import infra.wenku.datasource.VolumeCreateException
 import infra.wenku.repository.WenkuNovelFavoredRepository
 import infra.wenku.repository.WenkuNovelMetadataRepository
 import infra.wenku.repository.WenkuNovelVolumeRepository
@@ -78,7 +82,7 @@ fun Route.routeWenkuNovel() {
 
     authenticateDb(optional = true) {
         get<WenkuNovelRes.NovelList> { loc ->
-            val user = call.authenticatedUserOrNull()
+            val user = call.userOrNull()
             call.tryRespond {
                 service.list(
                     user = user,
@@ -98,7 +102,7 @@ fun Route.routeWenkuNovel() {
 
     authenticateDb(optional = true) {
         get<WenkuNovelRes.Id> { loc ->
-            val user = call.authenticatedUserOrNull()
+            val user = call.userOrNull()
             call.tryRespond {
                 service.getNovel(user = user, novelId = loc.novelId)
             }
@@ -108,7 +112,7 @@ fun Route.routeWenkuNovel() {
     authenticateDb {
         rateLimit(RateLimitNames.CreateWenkuNovel) {
             post<WenkuNovelRes> {
-                val user = call.authenticatedUser()
+                val user = call.user()
                 val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
                 call.tryRespond {
                     service.createNovel(user = user, body = body)
@@ -116,7 +120,7 @@ fun Route.routeWenkuNovel() {
             }
         }
         put<WenkuNovelRes.Id> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<WenkuNovelApi.MetadataCreateBody>()
             call.tryRespond {
                 service.updateNovel(user = user, novelId = loc.novelId, body = body)
@@ -124,7 +128,7 @@ fun Route.routeWenkuNovel() {
         }
 
         put<WenkuNovelRes.Id.Glossary> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Map<String, String>>()
             call.tryRespond {
                 service.updateGlossary(user = user, novelId = loc.parent.novelId, glossary = body)
@@ -141,7 +145,7 @@ fun Route.routeWenkuNovel() {
                     }
                 }
 
-                val user = call.authenticatedUser()
+                val user = call.user()
                 val filePart = call.receiveMultipart().firstFilePart()
                 call.tryRespond {
                     if (filePart == null) throwBadRequest("请求里没有文件")
@@ -156,7 +160,7 @@ fun Route.routeWenkuNovel() {
             }
         }
         delete<WenkuNovelRes.Id.Volume> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.deleteVolume(
                     user = user,
@@ -234,14 +238,14 @@ private fun validateVolumeId(volumeId: String) {
 }
 
 class WenkuNovelApi(
-    private val userRepo: UserRepository,
+    private val userFavoredRepo: UserFavoredRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
     private val volumeRepo: WenkuNovelVolumeRepository,
     private val favoredRepo: WenkuNovelFavoredRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
     suspend fun list(
-        user: AuthenticatedUser?,
+        user: User?,
         queryString: String?,
         page: Int,
         pageSize: Int,
@@ -293,7 +297,7 @@ class WenkuNovelApi(
     )
 
     suspend fun getNovel(
-        user: AuthenticatedUser?,
+        user: User?,
         novelId: String,
     ): WenkuNovelDto {
         val metadata = metadataRepo.get(novelId)
@@ -341,7 +345,7 @@ class WenkuNovelApi(
         return if (user == null) {
             dto
         } else {
-            val favoredList = userRepo.getById(user.id)!!.favoredWenku
+            val favoredList = userFavoredRepo.getFavoredList(user.id)!!.favoredWenku
             val favored = favoredRepo
                 .getFavoredId(user.id, novelId)
                 .takeIf { favored -> favoredList.any { it.id == favored } }
@@ -366,7 +370,7 @@ class WenkuNovelApi(
     )
 
     suspend fun createNovel(
-        user: AuthenticatedUser,
+        user: User,
         body: MetadataCreateBody,
     ): String {
         val novelId = metadataRepo.create(
@@ -398,7 +402,7 @@ class WenkuNovelApi(
     }
 
     suspend fun updateNovel(
-        user: AuthenticatedUser,
+        user: User,
         novelId: String,
         body: MetadataCreateBody,
     ) {
@@ -453,7 +457,7 @@ class WenkuNovelApi(
     }
 
     suspend fun updateGlossary(
-        user: AuthenticatedUser,
+        user: User,
         novelId: String,
         glossary: Map<String, String>,
     ) {
@@ -481,7 +485,7 @@ class WenkuNovelApi(
     }
 
     suspend fun createVolume(
-        user: AuthenticatedUser,
+        user: User,
         novelId: String,
         volumeId: String,
         inputStream: InputStream,
@@ -517,7 +521,7 @@ class WenkuNovelApi(
     }
 
     suspend fun deleteVolume(
-        user: AuthenticatedUser,
+        user: User,
         novelId: String,
         volumeId: String,
     ) {

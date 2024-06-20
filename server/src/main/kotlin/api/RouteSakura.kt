@@ -3,6 +3,7 @@ package api
 import api.plugins.*
 import infra.sakura.SakuraFeedbackRepository
 import infra.sakura.SakuraWebIncorrectCase
+import infra.user.User
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -34,7 +35,7 @@ fun Route.routeSakura() {
                 val contextZh: List<String>,
             )
 
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Body>()
             call.tryRespond {
                 api.createSakuraWebIncorrectCase(
@@ -56,7 +57,7 @@ class SakuraApi(
     private val sakuraJobRepo: SakuraFeedbackRepository,
 ) {
     suspend fun createSakuraWebIncorrectCase(
-        user: AuthenticatedUser,
+        user: User,
         providerId: String,
         novelId: String,
         chapterId: String,

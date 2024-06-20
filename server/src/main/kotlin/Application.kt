@@ -11,6 +11,8 @@ import infra.web.repository.WebNovelFavoredRepository
 import infra.wenku.repository.WenkuNovelFavoredRepository
 import infra.web.repository.WebNovelReadHistoryRepository
 import infra.user.UserRepository
+import infra.user.UserCodeRepository
+import infra.user.UserFavoredRepository
 import infra.web.datasource.WebNovelHttpDataSource
 import infra.web.repository.WebNovelChapterRepository
 import infra.web.repository.WebNovelFileRepository
@@ -130,7 +132,10 @@ val appModule = module {
     singleOf(::CommentRepository)
     singleOf(::OperationHistoryRepository)
     singleOf(::SakuraFeedbackRepository)
+
     singleOf(::UserRepository)
+    singleOf(::UserCodeRepository)
+    singleOf(::UserFavoredRepository)
 
     singleOf(::WebNovelMetadataRepository)
     singleOf(::WebNovelChapterRepository)
@@ -144,10 +149,7 @@ val appModule = module {
 
     // App Layer
     single {
-        AuthApi(
-            secret = env("JWT_SECRET")!!,
-            get(),
-        )
+        AuthApi(secret = env("JWT_SECRET")!!, get(), get())
     }
     singleOf(::ArticleApi)
     singleOf(::CommentApi)

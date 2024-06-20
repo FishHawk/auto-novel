@@ -7,7 +7,7 @@ import { UserOutline, UserRole } from '@/model/User';
 const userRole = ref<UserRole>('normal');
 const userRoleOptions = [
   { value: 'normal', label: '正常用户' },
-  { value: 'mantainer', label: '维护者' },
+  { value: 'maintainer', label: '维护者' },
   { value: 'banned', label: '封禁用户' },
 ];
 

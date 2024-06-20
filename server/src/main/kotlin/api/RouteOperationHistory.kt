@@ -4,6 +4,7 @@ import api.plugins.*
 import infra.common.Page
 import infra.oplog.OperationHistoryRepository
 import infra.oplog.Operation
+import infra.user.User
 import infra.user.UserOutline
 import infra.user.UserRole
 import infra.web.WebNovelTocItem
@@ -61,13 +62,13 @@ fun Route.routeOperationHistory() {
 
     authenticateDb {
         delete<OperationHistoryRes.Id> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 api.deleteOperationHistory(user = user, id = loc.id)
             }
         }
         delete<OperationHistoryRes.TocMergeHistory.Id> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 api.deleteTocMergeHistory(user = user, id = loc.id)
             }
@@ -108,7 +109,7 @@ class OperationHistoryApi(
     }
 
     suspend fun deleteOperationHistory(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
@@ -156,7 +157,7 @@ class OperationHistoryApi(
     }
 
     suspend fun deleteTocMergeHistory(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)

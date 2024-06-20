@@ -2,10 +2,10 @@ package api
 
 import api.model.WebNovelOutlineDto
 import api.model.asDto
-import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
+import api.plugins.user
 import infra.common.Page
+import infra.user.User
 import infra.web.repository.WebNovelReadHistoryRepository
 import infra.web.repository.WebNovelMetadataRepository
 import io.ktor.resources.*
@@ -16,7 +16,6 @@ import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
-
 
 @Resource("/user/read-history")
 private class UserReadHistoryWebRes {
@@ -40,7 +39,7 @@ fun Route.routeUserReadHistoryWeb() {
 
     authenticateDb {
         get<UserReadHistoryWebRes.List> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.listReadHistory(
                     user = user,
@@ -50,7 +49,7 @@ fun Route.routeUserReadHistoryWeb() {
             }
         }
         put<UserReadHistoryWebRes.Novel> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             val chapterId = call.receive<String>()
             call.tryRespond {
                 service.updateReadHistory(
@@ -62,7 +61,7 @@ fun Route.routeUserReadHistoryWeb() {
             }
         }
         delete<UserReadHistoryWebRes.Novel> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.deleteReadHistory(
                     user = user,
@@ -79,7 +78,7 @@ class UserReadHistoryWebApi(
     private val metadataRepo: WebNovelMetadataRepository,
 ) {
     suspend fun listReadHistory(
-        user: AuthenticatedUser,
+        user: User,
         page: Int,
         pageSize: Int,
     ): Page<WebNovelOutlineDto> {
@@ -95,7 +94,7 @@ class UserReadHistoryWebApi(
     }
 
     suspend fun updateReadHistory(
-        user: AuthenticatedUser,
+        user: User,
         providerId: String,
         novelId: String,
         chapterId: String,
@@ -110,7 +109,7 @@ class UserReadHistoryWebApi(
     }
 
     suspend fun deleteReadHistory(
-        user: AuthenticatedUser,
+        user: User,
         providerId: String,
         novelId: String,
     ) {

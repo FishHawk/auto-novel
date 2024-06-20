@@ -8,7 +8,7 @@ import com.mongodb.client.model.Sorts.descending
 import infra.*
 import infra.common.Page
 import infra.common.emptyPage
-import infra.user.User
+import infra.user.UserDbModel
 import infra.user.UserOutline
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -51,7 +51,7 @@ class OperationHistoryRepository(
                         lookup(
                             MongoCollectionNames.USER,
                             OperationHistoryModel::operator.field(),
-                            User::id.field(),
+                            UserDbModel::id.field(),
                             OperationHistory::operator.field(),
                         ),
                         unwind(OperationHistory::operator.fieldPath()),

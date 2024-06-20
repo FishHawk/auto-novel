@@ -19,8 +19,8 @@ export const useBookshelfStore = defineStore('Bookshelf', {
       const { isSignedIn } = Locator.userDataRepository();
       if (isSignedIn.value) {
         const favoredList = await Locator.userRepository.listFavored();
-        this.web = favoredList.web;
-        this.wenku = favoredList.wenku;
+        this.web = favoredList.favoredWeb;
+        this.wenku = favoredList.favoredWenku;
       }
     },
     async createFavored(type: 'web' | 'wenku' | 'local', title: string) {

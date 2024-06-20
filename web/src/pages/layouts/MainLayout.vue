@@ -148,7 +148,7 @@ watch(
           @select="handleUserDropdownSelect"
         >
           <n-button :focusable="false" quaternary>
-            @{{ userData.info?.username }}
+            @{{ userData.profile?.username }}
           </n-button>
         </n-dropdown>
 

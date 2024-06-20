@@ -1,12 +1,10 @@
 package api
 
-import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
+import api.plugins.shouldBeAtLeast
+import api.plugins.user
 import infra.common.Page
-import infra.user.UserFavored
-import infra.user.UserRepository
-import infra.user.UserRole
+import infra.user.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.resources.*
@@ -33,7 +31,7 @@ fun Route.routeUser() {
 
     authenticateDb {
         get<UserRes.List> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.listUser(
                     user = user,
@@ -44,7 +42,7 @@ fun Route.routeUser() {
             }
         }
         get<UserRes.Favored> {
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.listFavored(
                     user = user,
@@ -56,6 +54,7 @@ fun Route.routeUser() {
 
 class UserApi(
     private val userRepo: UserRepository,
+    private val userFavoredRepo: UserFavoredRepository,
 ) {
     @Serializable
     data class UserOutlineDto(
@@ -67,7 +66,7 @@ class UserApi(
     )
 
     suspend fun listUser(
-        user: AuthenticatedUser,
+        user: User,
         page: Int,
         pageSize: Int,
         role: UserRole,
@@ -79,7 +78,7 @@ class UserApi(
             role = role,
         ).map {
             UserOutlineDto(
-                id = it.id.toHexString(),
+                id = it.id,
                 email = it.email,
                 username = it.username,
                 role = it.role,
@@ -88,17 +87,8 @@ class UserApi(
         }
     }
 
-    @Serializable
-    data class UserFavoredList(
-        val web: List<UserFavored>,
-        val wenku: List<UserFavored>,
-    )
-
-    suspend fun listFavored(user: AuthenticatedUser): UserFavoredList {
-        val user = userRepo.getById(user.id)!!
-        return UserFavoredList(
-            web = user.favoredWeb,
-            wenku = user.favoredWenku,
-        )
+    suspend fun listFavored(user: User): UserFavoredList {
+        return userFavoredRepo.getFavoredList(user.id)
+            ?: throwNotFound("用户不存在")
     }
 }

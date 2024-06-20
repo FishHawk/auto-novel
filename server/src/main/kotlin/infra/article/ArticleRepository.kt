@@ -12,7 +12,7 @@ import com.mongodb.client.model.Updates.*
 import infra.*
 import infra.common.Page
 import infra.common.emptyPage
-import infra.user.User
+import infra.user.UserDbModel
 import infra.user.UserOutline
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
@@ -57,7 +57,7 @@ class ArticleRepository(
                         lookup(
                             /* from = */ MongoCollectionNames.USER,
                             /* localField = */ ArticleDbModel::user.field(),
-                            /* foreignField = */ User::id.field(),
+                            /* foreignField = */ UserDbModel::id.field(),
                             /* as = */ ArticleListItem::user.field(),
                         ),
                         unwind(ArticleListItem::user.fieldPath()),
@@ -65,7 +65,7 @@ class ArticleRepository(
                             fields(
                                 computed(
                                     ArticleListItem::id.field(),
-                                    toString(ArticleDbModel::id.field())
+                                    toString(ArticleDbModel::id.field()),
                                 ),
                                 include(
                                     ArticleListItem::title.field(),
@@ -112,7 +112,7 @@ class ArticleRepository(
                 lookup(
                     /* from = */ MongoCollectionNames.USER,
                     /* localField = */ ArticleDbModel::user.field(),
-                    /* foreignField = */ User::id.field(),
+                    /* foreignField = */ UserDbModel::id.field(),
                     /* as = */ Article::user.field(),
                 ),
                 unwind(Article::user.fieldPath()),

@@ -12,7 +12,7 @@ import com.mongodb.client.model.Updates.set
 import infra.*
 import infra.common.Page
 import infra.common.emptyPage
-import infra.user.User
+import infra.user.UserDbModel
 import infra.user.UserOutline
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
@@ -61,7 +61,7 @@ class CommentRepository(
                         lookup(
                             /* from = */ MongoCollectionNames.USER,
                             /* localField = */ CommentDbModel::user.field(),
-                            /* foreignField = */ User::id.field(),
+                            /* foreignField = */ UserDbModel::id.field(),
                             /* as = */ Comment::user.field(),
                         ),
                         unwind(Comment::user.fieldPath()),
@@ -69,10 +69,9 @@ class CommentRepository(
                             fields(
                                 computed(
                                     Comment::id.field(),
-                                    toString(Comment::id.field())
+                                    toString(CommentDbModel::id.field()),
                                 ),
                                 include(
-                                    Comment::id.field(),
                                     Comment::site.field(),
                                     Comment::content.field(),
                                     Comment::hidden.field(),

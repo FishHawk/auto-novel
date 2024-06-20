@@ -1,5 +1,3 @@
-import { UserProfile } from '@/model/User';
-
 import { client, updateToken } from './client';
 
 interface SignInBody {
@@ -8,9 +6,9 @@ interface SignInBody {
 }
 
 const signIn = (json: SignInBody) =>
-  client.post(`auth/sign-in`, { json }).json<UserProfile>();
+  client.post(`auth/sign-in`, { json }).text();
 
-const renew = () => client.get(`auth/renew`).json<UserProfile>();
+const renew = () => client.get(`auth/renew`).text();
 
 interface SignUpBody {
   email: string;
@@ -20,7 +18,7 @@ interface SignUpBody {
 }
 
 const signUp = (json: SignUpBody) =>
-  client.post('auth/sign-up', { json }).json<UserProfile>();
+  client.post('auth/sign-up', { json }).text();
 
 const verifyEmail = (email: string) =>
   client.post('auth/verify-email', {

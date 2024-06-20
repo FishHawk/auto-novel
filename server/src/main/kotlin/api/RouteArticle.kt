@@ -7,6 +7,7 @@ import infra.article.ArticleListItem
 import infra.article.Article
 import infra.comment.CommentRepository
 import infra.common.Page
+import infra.user.User
 import infra.user.UserOutline
 import infra.user.UserRole
 import io.ktor.resources.*
@@ -48,7 +49,7 @@ fun Route.routeArticle() {
 
     authenticateDb(optional = true) {
         get<ArticleRes.List> { loc ->
-            val user = call.authenticatedUserOrNull()
+            val user = call.userOrNull()
             call.tryRespond {
                 service.listArticle(
                     user = user,
@@ -60,7 +61,7 @@ fun Route.routeArticle() {
         }
 
         get<ArticleRes.Id> { loc ->
-            val user = call.authenticatedUserOrNull()
+            val user = call.userOrNull()
             call.tryRespond {
                 service.getArticle(user = user, id = loc.id)
             }
@@ -76,7 +77,7 @@ fun Route.routeArticle() {
         )
         rateLimit(RateLimitNames.CreateArticle) {
             post<ArticleRes> {
-                val user = call.authenticatedUser()
+                val user = call.user()
                 val body = call.receive<ArticleBody>()
                 call.tryRespond {
                     service.createArticle(
@@ -89,7 +90,7 @@ fun Route.routeArticle() {
             }
         }
         put<ArticleRes.Id> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<ArticleBody>()
             call.tryRespond {
                 service.updateArticle(
@@ -102,46 +103,46 @@ fun Route.routeArticle() {
             }
         }
         delete<ArticleRes.Id> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.deleteArticle(user = user, id = loc.id)
             }
         }
 
         put<ArticleRes.Id.Locked> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateArticleLocked(user = user, id = loc.parent.id, locked = true)
             }
         }
         delete<ArticleRes.Id.Locked> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateArticleLocked(user = user, id = loc.parent.id, locked = false)
             }
         }
 
         put<ArticleRes.Id.Pinned> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateArticlePinned(user = user, id = loc.parent.id, pinned = true)
             }
         }
         delete<ArticleRes.Id.Pinned> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateArticlePinned(user = user, id = loc.parent.id, pinned = false)
             }
         }
 
         put<ArticleRes.Id.Hidden> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateArticleHidden(user = user, id = loc.parent.id, hidden = true)
             }
         }
         delete<ArticleRes.Id.Hidden> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateArticleHidden(user = user, id = loc.parent.id, hidden = false)
             }
@@ -186,7 +187,7 @@ class ArticleApi(
         )
 
     suspend fun listArticle(
-        user: AuthenticatedUser?,
+        user: User?,
         page: Int,
         pageSize: Int,
         category: ArticleCategory,
@@ -243,7 +244,7 @@ class ArticleApi(
         )
 
     suspend fun getArticle(
-        user: AuthenticatedUser?,
+        user: User?,
         id: String,
     ): ArticleDto {
         val ignoreHidden = user != null && user.role atLeast UserRole.Maintainer
@@ -278,7 +279,7 @@ class ArticleApi(
     }
 
     suspend fun createArticle(
-        user: AuthenticatedUser,
+        user: User,
         title: String,
         content: String,
         category: ArticleCategory,
@@ -296,7 +297,7 @@ class ArticleApi(
     }
 
     suspend fun updateArticle(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
         title: String,
         content: String,
@@ -318,7 +319,7 @@ class ArticleApi(
     }
 
     suspend fun deleteArticle(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
@@ -328,7 +329,7 @@ class ArticleApi(
     }
 
     suspend fun updateArticlePinned(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
         pinned: Boolean,
     ) {
@@ -338,7 +339,7 @@ class ArticleApi(
     }
 
     suspend fun updateArticleLocked(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
         locked: Boolean,
     ) {
@@ -348,7 +349,7 @@ class ArticleApi(
     }
 
     suspend fun updateArticleHidden(
-        user: AuthenticatedUser,
+        user: User,
         id: String,
         hidden: Boolean,
     ) {

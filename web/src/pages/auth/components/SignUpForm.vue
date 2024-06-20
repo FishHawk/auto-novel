@@ -67,13 +67,13 @@ const signUp = async () => {
   }
   loadingBar.start();
   try {
-    const profile = await Locator.authRepository.signUp({
+    const token = await Locator.authRepository.signUp({
       email: formValue.value.email,
       emailCode: formValue.value.emailCode,
       username: formValue.value.username,
       password: formValue.value.password,
     });
-    Locator.userDataRepository().setProfile(profile);
+    Locator.userDataRepository().setProfile(token);
     loadingBar.finish();
   } catch (e) {
     loadingBar.error();

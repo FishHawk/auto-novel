@@ -29,7 +29,7 @@ store.loadArticle().then((result) => {
         />
         by {{ article.user.username }}
         <template
-          v-if="userData.info?.username === article.user.username || asAdmin"
+          v-if="userData.profile?.username === article.user.username || asAdmin"
         >
           /
           <c-a :to="`/forum-edit/${article.id}?category=${article.category}`">

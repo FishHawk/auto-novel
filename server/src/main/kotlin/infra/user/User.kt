@@ -7,31 +7,6 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 
 @Serializable
-data class UserOutline(
-    val username: String,
-    val role: UserRole,
-)
-
-@Serializable
-data class UserFavored(
-    val id: String,
-    val title: String,
-)
-
-@Serializable
-data class User(
-    @Contextual @SerialName("_id") val id: ObjectId,
-    val email: String,
-    val username: String,
-    val salt: String,
-    val password: String,
-    val role: UserRole,
-    val favoredWeb: List<UserFavored>,
-    val favoredWenku: List<UserFavored>,
-    @Contextual val createdAt: Instant,
-)
-
-@Serializable
 enum class UserRole {
     @SerialName("admin")
     Admin,
@@ -58,4 +33,57 @@ enum class UserRole {
 
     infix fun atLeast(other: UserRole): Boolean =
         authLevel() >= other.authLevel()
+
+    companion object {
+        fun String.toUserRole(): UserRole =
+            when (this) {
+                "normal" -> Normal
+                "trusted" -> Trusted
+                "maintainer" -> Maintainer
+                "admin" -> Admin
+                else -> Banned
+            }
+    }
 }
+
+@Serializable
+data class UserOutline(
+    val username: String,
+    val role: UserRole,
+)
+
+@Serializable
+data class UserFavored(
+    val id: String,
+    val title: String,
+)
+
+@Serializable
+data class UserFavoredList(
+    val favoredWeb: List<UserFavored>,
+    val favoredWenku: List<UserFavored>,
+)
+
+@Serializable
+data class User(
+    val id: String,
+    val email: String,
+    val username: String,
+    val role: UserRole,
+    @Contextual val createdAt: Instant,
+)
+
+// MongoDB
+@Serializable
+data class UserDbModel(
+    @Contextual @SerialName("_id") val id: ObjectId,
+    val email: String,
+    val username: String,
+    val salt: String,
+    val password: String,
+    val role: UserRole,
+    @Contextual val createdAt: Instant,
+    //
+    val favoredWeb: List<UserFavored>,
+    val favoredWenku: List<UserFavored>,
+)

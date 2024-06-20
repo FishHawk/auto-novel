@@ -38,9 +38,9 @@ const playSound = (source: string) => {
   <div class="layout-content">
     <template v-if="isSignedIn">
       <n-h1>
-        @{{ userData.info?.username }}
+        @{{ userData.profile?.username }}
         <n-tag :bordered="false" size="small" style="margin-left: 4px">
-          {{ roleToReadableText(userData.info!!.role) }}
+          {{ roleToReadableText(userData.profile!!.role) }}
         </n-tag>
       </n-h1>
 

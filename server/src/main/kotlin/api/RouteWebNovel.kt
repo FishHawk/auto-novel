@@ -2,23 +2,20 @@ package api
 
 import api.model.WebNovelOutlineDto
 import api.model.asDto
-import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
-import api.plugins.authenticatedUserOrNull
+import api.plugins.isOldAss
+import api.plugins.user
+import api.plugins.userOrNull
 import infra.common.*
-import infra.oplog.OperationHistoryRepository
 import infra.oplog.Operation
+import infra.oplog.OperationHistoryRepository
+import infra.user.User
 import infra.user.UserFavored
-import infra.web.repository.WebNovelFavoredRepository
-import infra.web.repository.WebNovelReadHistoryRepository
-import infra.user.UserRepository
+import infra.user.UserFavoredRepository
 import infra.web.*
 import infra.web.datasource.providers.NovelIdShouldBeReplacedException
 import infra.web.datasource.providers.Syosetu
-import infra.web.repository.WebNovelChapterRepository
-import infra.web.repository.WebNovelFileRepository
-import infra.web.repository.WebNovelMetadataRepository
+import infra.web.repository.*
 import infra.wenku.repository.WenkuNovelMetadataRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -93,7 +90,7 @@ fun Route.routeWebNovel() {
 
     authenticateDb(optional = true) {
         get<WebNovelRes.List> { loc ->
-            val user = call.authenticatedUserOrNull()
+            val user = call.userOrNull()
             call.tryRespond {
                 service.list(
                     user = user,
@@ -138,7 +135,7 @@ fun Route.routeWebNovel() {
     // Get
     authenticateDb(optional = true) {
         get<WebNovelRes.Id> { loc ->
-            val user = call.authenticatedUserOrNull()
+            val user = call.userOrNull()
             call.tryRespond {
                 service.getMetadata(
                     user = user,
@@ -169,7 +166,7 @@ fun Route.routeWebNovel() {
                 val toc: Map<String, String>,
             )
 
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Body>()
             call.tryRespond {
                 service.updateMetadata(
@@ -184,7 +181,7 @@ fun Route.routeWebNovel() {
             }
         }
         put<WebNovelRes.Id.Glossary> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Map<String, String>>()
             call.tryRespond {
                 service.updateGlossary(
@@ -289,14 +286,14 @@ class WebNovelApi(
     private val metadataRepo: WebNovelMetadataRepository,
     private val chapterRepo: WebNovelChapterRepository,
     private val fileRepo: WebNovelFileRepository,
-    private val userRepo: UserRepository,
+    private val userFavoredRepo: UserFavoredRepository,
     private val favoredRepo: WebNovelFavoredRepository,
     private val historyRepo: WebNovelReadHistoryRepository,
     private val wenkuMetadataRepo: WenkuNovelMetadataRepository,
     private val operationHistoryRepo: OperationHistoryRepository,
 ) {
     suspend fun list(
-        user: AuthenticatedUser?,
+        user: User?,
         queryString: String?,
         filterProvider: String,
         filterType: WebNovelFilter.Type,
@@ -391,7 +388,7 @@ class WebNovelApi(
 
     private suspend fun buildNovelDto(
         novel: WebNovelMetadata,
-        user: AuthenticatedUser?,
+        user: User?,
     ): NovelDto {
         val dto = NovelDto(
             wenkuId = novel.wenkuId,
@@ -422,7 +419,7 @@ class WebNovelApi(
             dto
         } else {
             val novelId = novel.id.toHexString()
-            val favoredList = userRepo.getById(user.id)!!.favoredWeb
+            val favoredList = userFavoredRepo.getFavoredList(user.id)!!.favoredWeb
             val favored = favoredRepo
                 .getFavoredId(user.id, novelId)
                 .takeIf { favored -> favoredList.any { it.id == favored } }
@@ -436,7 +433,7 @@ class WebNovelApi(
     }
 
     suspend fun getMetadata(
-        user: AuthenticatedUser?,
+        user: User?,
         providerId: String,
         novelId: String,
     ): NovelDto {
@@ -504,7 +501,7 @@ class WebNovelApi(
 
     // Update
     suspend fun updateMetadata(
-        user: AuthenticatedUser,
+        user: User,
         providerId: String,
         novelId: String,
         title: String,
@@ -578,7 +575,7 @@ class WebNovelApi(
     }
 
     suspend fun updateGlossary(
-        user: AuthenticatedUser,
+        user: User,
         providerId: String,
         novelId: String,
         glossary: Map<String, String>,

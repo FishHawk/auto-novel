@@ -10,7 +10,7 @@ const { renew, updateToken } = Locator.authRepository;
 
 // 订阅Token
 watch(
-  () => userData.value.info?.token,
+  () => userData.value.profile?.token,
   (token) => updateToken(token),
   { immediate: true },
 );
@@ -18,12 +18,12 @@ watch(
 // 更新Token，冷却时间为24小时
 const renewToken = async () => {
   const renewCooldown = 24 * 3600 * 1000;
-  if (userData.value.info) {
+  if (userData.value.profile) {
     const sinceLoggedIn = Date.now() - (userData.value.renewedAt ?? 0);
     if (sinceLoggedIn > renewCooldown) {
       try {
-        const profile = await renew();
-        setProfile(profile);
+        const token = await renew();
+        setProfile(token);
       } catch (e) {
         console.warn('更新授权失败：' + (await formatError(e)));
       }

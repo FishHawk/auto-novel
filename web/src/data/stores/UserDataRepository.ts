@@ -1,27 +1,40 @@
-import { UserProfile, UserRole } from '@/model/User';
+import { UserRole } from '@/model/User';
 import { useLocalStorage } from '@vueuse/core';
+import { updateToken } from '../api/client';
+import { Locator } from '..';
+import { AuthRepository } from '../api';
+
+interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  role: UserRole;
+  createAt: number;
+  token: string;
+  expireAt: number;
+}
 
 interface UserData {
-  info?: UserProfile;
+  profile?: UserProfile;
   renewedAt?: number;
   adminMode: boolean;
 }
 
 export const createUserDataRepository = () => {
   const ref = useLocalStorage<UserData>('authInfo', {
-    info: undefined,
+    profile: undefined,
     renewedAt: undefined,
     adminMode: false,
   });
 
-  if (ref.value.info && Date.now() / 1000 > ref.value.info.expiresAt) {
-    ref.value.info = undefined;
+  if (ref.value.profile && Date.now() / 1000 > ref.value.profile.expireAt) {
+    ref.value.profile = undefined;
   }
 
-  const isSignedIn = computed(() => ref.value.info !== undefined);
+  const isSignedIn = computed(() => ref.value.profile !== undefined);
 
   const createAtLeast = (days: number) => {
-    const createAt = ref.value.info?.createAt;
+    const createAt = ref.value.profile?.createAt;
     if (!createAt) {
       return false;
     }
@@ -31,7 +44,7 @@ export const createUserDataRepository = () => {
   const createAtLeastOneMonth = computed(() => createAtLeast(30));
 
   const userRoleAtLeast = (role: UserRole) => {
-    const myRole = ref.value.info?.role;
+    const myRole = ref.value.profile?.role;
     if (!myRole) {
       return false;
     }
@@ -49,16 +62,39 @@ export const createUserDataRepository = () => {
   const atLeastMaintainer = computed(() => userRoleAtLeast('maintainer'));
   const asAdmin = computed(() => atLeastAdmin.value && ref.value.adminMode);
 
-  const setProfile = (profile: UserProfile) => {
+  const setProfile = (token: string) => {
+    const part = token.split('.')[1];
+    const { id, email, username, role, createAt, exp } = JSON.parse(
+      atob(part),
+    ) as {
+      id: string;
+      email: string;
+      username: string;
+      role: UserRole;
+      createAt: number;
+      exp: number;
+    };
+    const profile: UserProfile = {
+      id,
+      email,
+      username,
+      role,
+      createAt,
+      token,
+      expireAt: exp,
+    };
+
     ref.value.renewedAt = Date.now();
-    ref.value.info = profile;
+    ref.value.profile = profile;
   };
   const deleteProfile = () => {
-    ref.value.info = undefined;
+    ref.value.profile = undefined;
   };
   const toggleAdminMode = () => {
     ref.value.adminMode = !ref.value.adminMode;
   };
+
+  migrate(ref.value, setProfile);
 
   return {
     userData: ref,
@@ -74,4 +110,14 @@ export const createUserDataRepository = () => {
     deleteProfile,
     toggleAdminMode,
   };
+};
+
+const migrate = (userData: UserData, setProfile: (token: string) => void) => {
+  // 2024-06-21
+  if ((userData as any).info !== undefined) {
+    //  30天后可删除
+    updateToken((userData as any).info.token);
+    AuthRepository.renew().then((token) => setProfile(token));
+    delete (userData as any).info;
+  }
 };

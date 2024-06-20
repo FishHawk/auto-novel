@@ -2,30 +2,41 @@ package infra.user
 
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.or
+import com.mongodb.client.model.Projections.*
 import com.mongodb.client.model.Updates.combine
 import com.mongodb.client.model.Updates.set
 import infra.MongoClient
 import infra.MongoCollectionNames
-import infra.RedisClient
 import infra.common.Page
 import infra.field
-import io.github.crackthecodeabhi.kreds.args.SetOption
+import infra.toString
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import org.bson.types.ObjectId
 import util.PBKDF2
 import util.serialName
-import kotlin.time.Duration.Companion.minutes
 
 class UserRepository(
     mongo: MongoClient,
-    private val redis: RedisClient,
 ) {
     private val userCollection =
-        mongo.database.getCollection<User>(
+        mongo.database.getCollection<UserDbModel>(
             MongoCollectionNames.USER,
         )
+
+    private val userProjection = fields(
+        computed(
+            User::id.field(),
+            toString(UserDbModel::id.field()),
+        ),
+        include(
+            User::email.field(),
+            User::username.field(),
+            User::role.field(),
+            User::createdAt.field(),
+        )
+    )
 
     suspend fun listUser(
         page: Int,
@@ -33,13 +44,15 @@ class UserRepository(
         role: UserRole,
     ): Page<User> {
         val users = userCollection
-            .find(eq(User::role.field(), role.serialName()))
+            .withDocumentClass<User>()
+            .find(eq(UserDbModel::role.field(), role))
             .skip(page * pageSize)
             .limit(pageSize)
+            .projection(userProjection)
             .toList()
 
         val total = userCollection
-            .countDocuments()
+            .estimatedDocumentCount()
 
         return Page(
             items = users,
@@ -48,136 +61,126 @@ class UserRepository(
         )
     }
 
-    suspend fun add(
+    suspend fun getUser(
+        id: String,
+    ): User? {
+        return userCollection
+            .withDocumentClass<User>()
+            .find(eq(UserDbModel::id.field(), ObjectId(id)))
+            .projection(userProjection)
+            .firstOrNull()
+    }
+
+    suspend fun getUserByEmail(email: String): User? {
+        return userCollection
+            .withDocumentClass<User>()
+            .find(eq(UserDbModel::email.field(), email))
+            .projection(userProjection)
+            .firstOrNull()
+    }
+
+    suspend fun getUserByUsername(username: String): User? {
+        return userCollection
+            .withDocumentClass<User>()
+            .find(eq(UserDbModel::username.field(), username))
+            .projection(userProjection)
+            .firstOrNull()
+    }
+
+    suspend fun getUserByUsernameOrEmail(emailOrUsername: String): User? {
+        return userCollection
+            .withDocumentClass<User>()
+            .find(
+                or(
+                    eq(UserDbModel::email.field(), emailOrUsername),
+                    eq(UserDbModel::username.field(), emailOrUsername),
+                )
+            )
+            .projection(userProjection)
+            .firstOrNull()
+    }
+
+    suspend fun getUserWithPasswordVerify(
+        emailOrUsername: String,
+        password: String,
+    ): User? {
+        val model = userCollection
+            .find(
+                or(
+                    eq(UserDbModel::email.field(), emailOrUsername),
+                    eq(UserDbModel::username.field(), emailOrUsername),
+                )
+            )
+            .firstOrNull()
+        return if (
+            model == null || model.password != PBKDF2.hash(password, model.salt)
+        ) {
+            null
+        } else {
+            User(
+                id = model.id.toHexString(),
+                email = model.email,
+                username = model.username,
+                role = model.role,
+                createdAt = model.createdAt
+            )
+        }
+    }
+
+    suspend fun addUser(
         email: String,
         username: String,
         password: String,
-    ): ObjectId {
+    ): User {
         val salt = PBKDF2.randomSalt()
         val hashedPassword = PBKDF2.hash(password, salt)
-        return userCollection
-            .insertOne(
-                User(
-                    id = ObjectId(),
-                    email = email,
-                    username = username,
-                    salt = salt,
-                    password = hashedPassword,
-                    role = UserRole.Normal,
-                    favoredWeb = listOf(UserFavored(id = "default", title = "默认收藏夹")),
-                    favoredWenku = listOf(UserFavored(id = "default", title = "默认收藏夹")),
-                    createdAt = Clock.System.now(),
-                )
-            ).insertedId!!.asObjectId().value
+        val model = UserDbModel(
+            id = ObjectId(),
+            email = email,
+            username = username,
+            salt = salt,
+            password = hashedPassword,
+            role = UserRole.Normal,
+            favoredWeb = listOf(UserFavored(id = "default", title = "默认收藏夹")),
+            favoredWenku = listOf(UserFavored(id = "default", title = "默认收藏夹")),
+            createdAt = Clock.System.now(),
+        )
+        val userId = userCollection
+            .insertOne(model)
+            .insertedId!!.asObjectId().value
+        return User(
+            id = userId.toHexString(),
+            email = model.email,
+            username = model.username,
+            role = model.role,
+            createdAt = model.createdAt
+        )
     }
 
-    suspend fun updatePassword(userId: ObjectId, password: String) {
+    suspend fun updatePassword(
+        userId: String,
+        password: String,
+    ) {
         val salt = PBKDF2.randomSalt()
         val hashedPassword = PBKDF2.hash(password, salt)
         userCollection
             .updateOne(
-                eq(User::id.field(), userId),
+                eq(UserDbModel::id.field(), ObjectId(userId)),
                 combine(
-                    set(User::salt.field(), salt),
-                    set(User::password.field(), hashedPassword),
+                    set(UserDbModel::salt.field(), salt),
+                    set(UserDbModel::password.field(), hashedPassword),
                 )
             )
     }
 
-    suspend fun updateRole(userId: ObjectId, role: UserRole) {
-        userCollection
-            .updateOne(
-                eq(User::id.field(), userId),
-                set(User::role.field(), role.serialName()),
-            )
-    }
-
-    suspend fun getById(id: String): User? {
-        return userCollection
-            .find(
-                eq(User::id.field(), ObjectId(id)),
-            )
-            .firstOrNull()
-    }
-
-    suspend fun getByEmail(email: String): User? {
-        return userCollection
-            .find(
-                eq(User::email.field(), email),
-            )
-            .firstOrNull()
-    }
-
-    suspend fun getByUsername(username: String): User? {
-        return userCollection
-            .find(
-                eq(User::username.field(), username),
-            )
-            .firstOrNull()
-    }
-
-    suspend fun getByUsernameOrEmail(emailOrUsername: String): User? {
-        return userCollection
-            .find(
-                or(
-                    eq(User::email.field(), emailOrUsername),
-                    eq(User::username.field(), emailOrUsername),
-                )
-            )
-            .firstOrNull()
-    }
-
-    private fun emailCodeRedisKey(email: String) = "ec:${email}"
-
-    suspend fun validateEmailCode(email: String, emailCode: String): Boolean {
-        return redis.get(emailCodeRedisKey(email)) == emailCode
-    }
-
-    suspend fun addEmailCode(email: String, emailCode: String) {
-        redis.set(
-            key = emailCodeRedisKey(email),
-            value = emailCode,
-            setOption = SetOption.Builder()
-                .exSeconds(15.minutes.inWholeSeconds.toULong())
-                .build(),
-        )
-    }
-
-    private fun resetPasswordTokenRedisKey(id: ObjectId) = "rpt:${id.toHexString()}"
-
-    suspend fun validateResetPasswordToken(id: ObjectId, token: String): Boolean {
-        return redis.get(resetPasswordTokenRedisKey(id)) == token
-    }
-
-    suspend fun addResetPasswordToken(id: ObjectId, token: String) {
-        redis.set(
-            key = resetPasswordTokenRedisKey(id),
-            value = token,
-            setOption = SetOption.Builder()
-                .exSeconds(15.minutes.inWholeSeconds.toULong())
-                .build(),
-        )
-    }
-
-    suspend fun updateFavoredWeb(
-        userId: ObjectId,
-        favored: List<UserFavored>,
+    suspend fun updateRole(
+        userId: String,
+        role: UserRole,
     ) {
         userCollection
             .updateOne(
-                eq(User::id.field(), userId),
-                set(User::favoredWeb.field(), favored)
-            )
-    }
-
-    suspend fun updateFavoredWenku(
-        userId: ObjectId,
-        favored: List<UserFavored>,
-    ) {
-        userCollection
-            .updateOne(
-                eq(User::id.field(), userId),
-                set(User::favoredWenku.field(), favored),
+                eq(UserDbModel::id.field(), ObjectId(userId)),
+                set(UserDbModel::role.field(), role.serialName()),
             )
     }
 }

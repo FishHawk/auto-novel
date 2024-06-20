@@ -1,12 +1,11 @@
 package api
 
-import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
 import api.plugins.generateToken
-import infra.user.UserRepository
+import api.plugins.user
 import infra.user.User
-import infra.user.UserRole
+import infra.user.UserCodeRepository
+import infra.user.UserRepository
 import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -15,13 +14,9 @@ import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import util.Email
-import util.PBKDF2
 import java.util.*
 
 @Resource("/auth")
@@ -65,7 +60,7 @@ fun Route.routeAuth() {
     }
     authenticateDb {
         get<AuthRes.Renew> {
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.renew(user)
             }
@@ -123,63 +118,24 @@ fun Route.routeAuth() {
 class AuthApi(
     private val secret: String,
     private val userRepo: UserRepository,
+    private val userCodeRepo: UserCodeRepository,
 ) {
     private fun throwUserNotFound(): Nothing =
         throwNotFound("用户不存在")
 
-    @Serializable
-    data class SignInDto(
-        val username: String,
-        val role: UserRole,
-        val token: String,
-        @Contextual val createAt: Instant,
-        @Contextual val expiresAt: Instant,
-    )
-
     suspend fun signIn(
         emailOrUsername: String,
         password: String,
-    ): SignInDto {
-        val user = userRepo.getByEmail(emailOrUsername)
-            ?: userRepo.getByUsername(emailOrUsername)
-            ?: throwUserNotFound()
-
-        fun User.validatePassword(password: String): Boolean {
-            return this.password == PBKDF2.hash(password, salt)
-        }
-        if (!user.validatePassword(password))
-            throwUnauthorized("密码错误")
-
-        val (token, expiresAt) = generateToken(
-            secret = secret,
-            id = user.id.toHexString(),
-            username = user.username,
-        )
-
-        return SignInDto(
-            username = user.username,
-            role = user.role,
-            token = token,
-            createAt = user.createdAt,
-            expiresAt = expiresAt,
-        )
+    ): String {
+        val user = userRepo.getUserWithPasswordVerify(emailOrUsername, password)
+            ?: throwUnauthorized("用户不存在或者密码错误")
+        return user.generateToken(secret = secret)
     }
 
     fun renew(
-        user: AuthenticatedUser,
-    ): SignInDto {
-        val (token, expiresAt) = generateToken(
-            secret = secret,
-            id = user.id,
-            username = user.username,
-        )
-        return SignInDto(
-            username = user.username,
-            role = user.role,
-            token = token,
-            createAt = user.createdAt,
-            expiresAt = expiresAt,
-        )
+        user: User,
+    ): String {
+        return user.generateToken(secret = secret)
     }
 
     suspend fun signUp(
@@ -187,34 +143,20 @@ class AuthApi(
         emailCode: String,
         username: String,
         password: String,
-    ): SignInDto {
+    ): String {
         if (username.length < 3) throwBadRequest("用户名至少为3个字符")
         if (username.length > 15) throwBadRequest("用户名至多为15个字符")
         if (password.length < 8) throwBadRequest("密码至少为8个字符")
-        if (userRepo.getByEmail(email) != null) throwConflict("邮箱已经被使用")
-        if (userRepo.getByUsername(username) != null) throwConflict("用户名已经被使用")
-        if (!userRepo.validateEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
+        if (userRepo.getUserByEmail(email) != null) throwConflict("邮箱已经被使用")
+        if (userRepo.getUserByUsername(username) != null) throwConflict("用户名已经被使用")
+        if (!userCodeRepo.verifyEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
 
-        val role = UserRole.Normal
-        val userId = userRepo.add(
+        val user = userRepo.addUser(
             email = email,
             username = username,
             password = password,
-        ).toHexString()
-
-        val (token, expiresAt) = generateToken(
-            secret = secret,
-            id = userId,
-            username = username,
         )
-
-        return SignInDto(
-            username = username,
-            role = role,
-            token = token,
-            createAt = Clock.System.now(),
-            expiresAt = expiresAt,
-        )
+        return user.generateToken(secret = secret)
     }
 
     suspend fun sendVerifyEmail(email: String) {
@@ -224,7 +166,7 @@ class AuthApi(
             throwBadRequest("邮箱不合法")
         }
 
-        if (userRepo.getByEmail(email) != null) throwConflict("邮箱已经被使用")
+        if (userRepo.getUserByEmail(email) != null) throwConflict("邮箱已经被使用")
 
         val emailCode = String.format("%06d", Random().nextInt(999999))
 
@@ -240,11 +182,11 @@ class AuthApi(
             throwInternalServerError("邮件发送失败")
         }
 
-        userRepo.addEmailCode(email, emailCode)
+        userCodeRepo.addEmailCode(email, emailCode)
     }
 
     suspend fun sendResetPasswordTokenEmail(emailOrUsername: String) {
-        val user = userRepo.getByUsernameOrEmail(emailOrUsername)
+        val user = userRepo.getUserByUsernameOrEmail(emailOrUsername)
             ?: throwUserNotFound()
 
         val token = UUID.randomUUID().toString()
@@ -262,7 +204,7 @@ class AuthApi(
             throwInternalServerError("邮件发送失败")
         }
 
-        userRepo.addResetPasswordToken(user.id, token)
+        userCodeRepo.addResetPasswordCode(user.id, token)
     }
 
     suspend fun resetPassword(
@@ -270,9 +212,9 @@ class AuthApi(
         token: String,
         password: String,
     ) {
-        val user = userRepo.getByUsernameOrEmail(emailOrUsername)
+        val user = userRepo.getUserByUsernameOrEmail(emailOrUsername)
             ?: throwUserNotFound()
-        if (!userRepo.validateResetPasswordToken(user.id, token)) {
+        if (!userCodeRepo.verifyResetPasswordToken(user.id, token)) {
             throwBadRequest("口令不合法")
         }
         userRepo.updatePassword(user.id, password)

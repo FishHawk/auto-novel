@@ -2,13 +2,13 @@ package api
 
 import api.model.WebNovelOutlineDto
 import api.model.asDto
-import api.plugins.AuthenticatedUser
 import api.plugins.authenticateDb
-import api.plugins.authenticatedUser
-import infra.user.UserRepository
+import api.plugins.user
 import infra.common.FavoredNovelListSort
 import infra.common.Page
+import infra.user.User
 import infra.user.UserFavored
+import infra.user.UserFavoredRepository
 import infra.web.repository.WebNovelFavoredRepository
 import infra.web.repository.WebNovelMetadataRepository
 import io.ktor.resources.*
@@ -55,7 +55,7 @@ fun Route.routeUserFavoredWeb() {
             @Serializable
             class Body(val title: String)
 
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Body>()
             call.tryRespond {
                 service.createFavored(
@@ -68,7 +68,7 @@ fun Route.routeUserFavoredWeb() {
             @Serializable
             class Body(val title: String)
 
-            val user = call.authenticatedUser()
+            val user = call.user()
             val body = call.receive<Body>()
             call.tryRespond {
                 service.updateFavored(
@@ -79,7 +79,7 @@ fun Route.routeUserFavoredWeb() {
             }
         }
         delete<UserFavoredWebRes.Id> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.deleteFavored(
                     user = user,
@@ -88,7 +88,7 @@ fun Route.routeUserFavoredWeb() {
             }
         }
         get<UserFavoredWebRes.Id.List> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.listFavoredNovel(
                     user = user,
@@ -100,7 +100,7 @@ fun Route.routeUserFavoredWeb() {
             }
         }
         put<UserFavoredWebRes.Id.Novel> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.updateFavoredNovel(
                     user = user,
@@ -111,7 +111,7 @@ fun Route.routeUserFavoredWeb() {
             }
         }
         delete<UserFavoredWebRes.Id.Novel> { loc ->
-            val user = call.authenticatedUser()
+            val user = call.user()
             call.tryRespond {
                 service.deleteFavoredNovel(
                     user = user,
@@ -124,22 +124,22 @@ fun Route.routeUserFavoredWeb() {
 }
 
 class UserFavoredWebApi(
-    private val userRepo: UserRepository,
+    private val userFavoredRepo: UserFavoredRepository,
     private val favoredRepo: WebNovelFavoredRepository,
     private val metadataRepo: WebNovelMetadataRepository,
 ) {
     suspend fun createFavored(
-        user: AuthenticatedUser,
+        user: User,
         title: String,
     ) {
-        val user = userRepo.getById(user.id)!!
-
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
-        if (user.favoredWeb.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
 
-        userRepo.updateFavoredWeb(
+        val (favoredWeb) = userFavoredRepo.getFavoredList(user.id)!!
+        if (favoredWeb.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
+
+        userFavoredRepo.updateFavoredWeb(
             userId = user.id,
-            favored = user.favoredWeb + listOf(
+            favored = favoredWeb + listOf(
                 UserFavored(
                     id = UUID.randomUUID().toString(),
                     title = title,
@@ -149,38 +149,38 @@ class UserFavoredWebApi(
     }
 
     suspend fun updateFavored(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
         title: String,
     ) {
-        val user = userRepo.getById(user.id)!!
-
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
 
-        userRepo.updateFavoredWeb(
+        val (favoredWeb) = userFavoredRepo.getFavoredList(user.id)!!
+
+        userFavoredRepo.updateFavoredWeb(
             userId = user.id,
-            favored = user.favoredWeb.map {
+            favored = favoredWeb.map {
                 if (it.id == favoredId) it.copy(title = title) else it
             },
         )
     }
 
     suspend fun deleteFavored(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
     ) {
-        val user = userRepo.getById(user.id)!!
-
         if (favoredId == "default") throwBadRequest("不可以删除默认收藏夹")
 
-        userRepo.updateFavoredWeb(
+        val (favoredWeb) = userFavoredRepo.getFavoredList(user.id)!!
+
+        userFavoredRepo.updateFavoredWeb(
             userId = user.id,
-            favored = user.favoredWeb.filter { it.id != favoredId },
+            favored = favoredWeb.filter { it.id != favoredId },
         )
     }
 
     suspend fun listFavoredNovel(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
         page: Int,
         pageSize: Int,
@@ -200,7 +200,7 @@ class UserFavoredWebApi(
     }
 
     suspend fun updateFavoredNovel(
-        user: AuthenticatedUser,
+        user: User,
         favoredId: String,
         providerId: String,
         novelId: String,
@@ -224,7 +224,7 @@ class UserFavoredWebApi(
     }
 
     suspend fun deleteFavoredNovel(
-        user: AuthenticatedUser,
+        user: User,
         providerId: String,
         novelId: String,
     ) {

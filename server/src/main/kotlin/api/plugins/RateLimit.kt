@@ -16,22 +16,22 @@ object RateLimitNames {
 fun Application.rateLimit() = install(RateLimit) {
     register(RateLimitNames.CreateArticle) {
         rateLimiter(limit = 10, refillPeriod = 1.days)
-        requestKey { call -> call.authenticatedUser().id }
+        requestKey { call -> call.user().id }
     }
     register(RateLimitNames.CreateComment) {
         rateLimiter(limit = 100, refillPeriod = 1.days)
-        requestKey { call -> call.authenticatedUser().id }
+        requestKey { call -> call.user().id }
     }
     register(RateLimitNames.CreateSakuraJob) {
         rateLimiter(limit = 5, refillPeriod = 1.minutes)
-        requestKey { call -> call.authenticatedUser().id }
+        requestKey { call -> call.user().id }
     }
     register(RateLimitNames.CreateWenkuNovel) {
         rateLimiter(limit = 100, refillPeriod = 1.days)
-        requestKey { call -> call.authenticatedUser().id }
+        requestKey { call -> call.user().id }
     }
     register(RateLimitNames.CreateWenkuVolume) {
         rateLimiter(limit = 100, refillPeriod = 1.days)
-        requestKey { call -> call.authenticatedUser().id }
+        requestKey { call -> call.user().id }
     }
 }
