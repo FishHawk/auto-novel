@@ -44,6 +44,7 @@ const bookshelfListRef = ref<InstanceType<typeof BookshelfList>>();
 
     <bookshelf-local-list
       ref="bookshelfListRef"
+      :favoredId="favoredId"
       :selectable="showControlPanel"
     />
   </bookshelf-layout>

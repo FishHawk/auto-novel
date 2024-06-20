@@ -9,6 +9,7 @@ import {
 
 const props = defineProps<{
   selectable?: boolean;
+  favoredId: string;
 }>();
 
 const { setting } = Locator.settingRepository();
@@ -24,7 +25,11 @@ const search = reactive({
 });
 
 const sortedVolumes = computed(() => {
-  return BookshelfLocalUtil.filterAndSortVolumes(volumes.value, {
+  let _volumes = volumes.value;
+  if (props.favoredId && props.favoredId != 'default') {
+    _volumes = _volumes.filter((v) => v.favoriteId == props.favoredId);
+  }
+  return BookshelfLocalUtil.filterAndSortVolumes(_volumes, {
     ...search,
     order: setting.value.localVolumeOrder,
   });

@@ -80,7 +80,6 @@ const deleteFavorite = () =>
     <n-flex align="center" justify="space-between">
       {{ title }}
       <n-dropdown
-        v-if="type !== 'local'"
         trigger="hover"
         :options="options"
         :keyboard="false"

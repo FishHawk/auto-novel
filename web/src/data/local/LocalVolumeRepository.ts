@@ -35,6 +35,12 @@ export const createLocalVolumeRepository = async () => {
       return value;
     });
 
+  const updateFavoriteId = (id: string, favoriteId: string) =>
+    dao.updateMetadata(id, (value) => {
+      value.favoriteId = favoriteId;
+      return value
+    })
+
   const updateTranslation = async (
     id: string,
     chapterId: string,
@@ -84,6 +90,7 @@ export const createLocalVolumeRepository = async () => {
     deleteVolume,
     updateGlossary,
     updateReadAt,
+    updateFavoriteId,
     //
     getChapter: dao.getChapter,
     updateTranslation,

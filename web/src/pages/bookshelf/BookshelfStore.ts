@@ -1,11 +1,15 @@
 import { Locator } from '@/data';
+import { createLocalVolumeDao } from '@/data/local';
 import { Favored } from '@/model/User';
+import { v4 as uuidv4 } from 'uuid';
 
 type BookshelfStore = {
   web: Favored[];
   wenku: Favored[];
   local: Favored[];
 };
+
+const dao = await createLocalVolumeDao()
 
 export const useBookshelfStore = defineStore('Bookshelf', {
   state: () =>
@@ -22,6 +26,7 @@ export const useBookshelfStore = defineStore('Bookshelf', {
         this.web = favoredList.favoredWeb;
         this.wenku = favoredList.favoredWenku;
       }
+      this.local = (await dao.listFavorite()).reverse()
     },
     async createFavored(type: 'web' | 'wenku' | 'local', title: string) {
       if (type === 'web') {
@@ -29,7 +34,10 @@ export const useBookshelfStore = defineStore('Bookshelf', {
       } else if (type === 'wenku') {
         await Locator.userRepository.createFavoredWenku({ title });
       } else {
-        // 未完成
+        await dao.createFavorite({
+          id: uuidv4(),
+          title
+        });
       }
       await this.loadFavoredList();
     },
@@ -43,7 +51,10 @@ export const useBookshelfStore = defineStore('Bookshelf', {
       } else if (type === 'wenku') {
         await Locator.userRepository.updateFavoredWenku(id, { title });
       } else {
-        // 未完成
+        await dao.updateFavorite(id, (value) => {
+          value.title = title
+          return value
+        })
       }
       const favored = this[type].find((it) => it.id === id);
       if (favored) {
@@ -56,7 +67,7 @@ export const useBookshelfStore = defineStore('Bookshelf', {
       } else if (type === 'wenku') {
         await Locator.userRepository.deleteFavoredWenku(id);
       } else {
-        // 未完成
+        await dao.deleteFavorite(id)
       }
       this[type] = this[type].filter((it) => it.id !== id);
     },

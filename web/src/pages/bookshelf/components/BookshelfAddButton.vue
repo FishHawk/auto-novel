@@ -11,10 +11,15 @@ const store = useBookshelfStore();
 
 const showAddModal = ref(false);
 
+interface Value {
+  title: string;
+  type: 'web' | 'wenku' | 'local';
+}
+
 const formRef = ref<FormInst>();
-const formValue = ref({
+const formValue = ref<Value>({
   title: '',
-  type: 'web' as 'web' | 'wenku',
+  type: 'web',
 });
 const formRules: FormRules = {
   title: [
@@ -67,6 +72,7 @@ const addFavorite = async () => {
           <n-flex>
             <n-radio value="web"> 网页小说 </n-radio>
             <n-radio value="wenku"> 文库小说 </n-radio>
+            <n-radio value="local"> 本地小说 </n-radio>
           </n-flex>
         </n-radio-group>
       </n-form-item-row>

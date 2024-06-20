@@ -6,9 +6,11 @@ import { Setting } from '@/model/Setting';
 
 import { useIsWideScreen } from '@/pages/util';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
+import { useBookshelfStore } from '../BookshelfStore';
 
 const props = defineProps<{
   selectedIds: string[];
+  favoredId: string;
 }>();
 defineEmits<{
   selectAll: [];
@@ -61,6 +63,40 @@ const downloadRawSelected = async () => {
   }
   const { success, failed } = await store.downloadRawVolumes(ids);
   message.info(`${success}本小说原文被打包，${failed}本失败`);
+};
+
+// 移动小说
+const bookshelfStore = useBookshelfStore();
+const targetFavoredId = ref(props.favoredId);
+
+const moveToFavored = async () => {
+  const novels = props.selectedIds;
+  if (novels.length === 0) {
+    message.info('没有选中小说');
+    return;
+  }
+
+  if (targetFavoredId.value === props.favoredId) {
+    message.info('无需移动');
+    return;
+  }
+
+  const localVolumeRepository = await Locator.localVolumeRepository();
+
+  let failed = 0;
+  await Promise.all(
+    novels.map(async (it) => {
+      try {
+        await localVolumeRepository.updateFavoriteId(it, targetFavoredId.value);
+      } catch (error) {
+        failed += 1;
+      }
+    }),
+  );
+  const success = novels.length - failed;
+
+  message.info(`${success}本小说已移动，${failed}本失败`);
+  window.location.reload();
 };
 
 // 生成翻译任务
@@ -147,6 +183,31 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
         </n-flex>
 
         <n-text depth="3"> 已选择{{ selectedIds.length }}本小说 </n-text>
+      </n-flex>
+    </n-list-item>
+
+    <n-list-item v-if="bookshelfStore.local.length > 1">
+      <n-flex vertical>
+        <b>移动小说</b>
+
+        <n-radio-group v-model:value="targetFavoredId">
+          <n-flex align="center">
+            <c-button
+              label="移动"
+              size="small"
+              :round="false"
+              @action="moveToFavored"
+            />
+
+            <n-radio
+              v-for="favored in bookshelfStore.local"
+              :key="favored.id"
+              :value="favored.id"
+            >
+              {{ favored.title }}
+            </n-radio>
+          </n-flex>
+        </n-radio-group>
       </n-flex>
     </n-list-item>
 
