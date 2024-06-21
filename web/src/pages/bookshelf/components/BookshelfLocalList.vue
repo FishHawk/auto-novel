@@ -25,14 +25,13 @@ const search = reactive({
 });
 
 const sortedVolumes = computed(() => {
-  let _volumes = volumes.value;
-  if (props.favoredId && props.favoredId != 'default') {
-    _volumes = _volumes.filter((v) => v.favoriteId == props.favoredId);
-  }
-  return BookshelfLocalUtil.filterAndSortVolumes(_volumes, {
-    ...search,
-    order: setting.value.localVolumeOrder,
-  });
+  return BookshelfLocalUtil.filterAndSortVolumes(
+    volumes.value.filter((v) => v.favoriteId == props.favoredId),
+    {
+      ...search,
+      order: setting.value.localVolumeOrder,
+    },
+  );
 });
 
 const selectedIds = ref<string[]>([]);

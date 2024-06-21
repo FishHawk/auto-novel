@@ -11,13 +11,11 @@ const store = useBookshelfStore();
 
 const showAddModal = ref(false);
 
-interface Value {
+const formRef = ref<FormInst>();
+const formValue = ref<{
   title: string;
   type: 'web' | 'wenku' | 'local';
-}
-
-const formRef = ref<FormInst>();
-const formValue = ref<Value>({
+}>({
   title: '',
   type: 'web',
 });
@@ -26,6 +24,11 @@ const formRules: FormRules = {
     {
       validator: (_rule: FormItemRule, value: string) => value.length > 0,
       message: '收藏夹标题不能为空',
+      trigger: 'input',
+    },
+    {
+      validator: (_rule: FormItemRule, value: string) => value.length <= 20,
+      message: '收藏夹标题至多为20个字符',
       trigger: 'input',
     },
   ],
@@ -67,14 +70,16 @@ const addFavorite = async () => {
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
+
       <n-form-item-row label="类型">
-        <n-radio-group v-model:value="formValue.type" name="type">
-          <n-flex>
-            <n-radio value="web"> 网页小说 </n-radio>
-            <n-radio value="wenku"> 文库小说 </n-radio>
-            <n-radio value="local"> 本地小说 </n-radio>
-          </n-flex>
-        </n-radio-group>
+        <c-radio-group
+          v-model:value="formValue.type"
+          :options="[
+            { label: '网页小说', value: 'web' },
+            { label: '文库小说', value: 'wenku' },
+            { label: '本地小说', value: 'local' },
+          ]"
+        />
       </n-form-item-row>
     </n-form>
 

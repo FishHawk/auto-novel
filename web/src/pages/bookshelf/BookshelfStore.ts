@@ -1,15 +1,11 @@
 import { Locator } from '@/data';
-import { createLocalVolumeDao } from '@/data/local';
 import { Favored } from '@/model/User';
-import { v4 as uuidv4 } from 'uuid';
 
 type BookshelfStore = {
   web: Favored[];
   wenku: Favored[];
   local: Favored[];
 };
-
-const dao = await createLocalVolumeDao()
 
 export const useBookshelfStore = defineStore('Bookshelf', {
   state: () =>
@@ -26,7 +22,8 @@ export const useBookshelfStore = defineStore('Bookshelf', {
         this.web = favoredList.favoredWeb;
         this.wenku = favoredList.favoredWenku;
       }
-      this.local = (await dao.listFavorite()).reverse()
+      const repo = await Locator.localVolumeRepository();
+      this.local = await repo.listFavored();
     },
     async createFavored(type: 'web' | 'wenku' | 'local', title: string) {
       if (type === 'web') {
@@ -34,10 +31,8 @@ export const useBookshelfStore = defineStore('Bookshelf', {
       } else if (type === 'wenku') {
         await Locator.userRepository.createFavoredWenku({ title });
       } else {
-        await dao.createFavorite({
-          id: uuidv4(),
-          title
-        });
+        const repo = await Locator.localVolumeRepository();
+        await repo.createFavored(title);
       }
       await this.loadFavoredList();
     },
@@ -51,10 +46,8 @@ export const useBookshelfStore = defineStore('Bookshelf', {
       } else if (type === 'wenku') {
         await Locator.userRepository.updateFavoredWenku(id, { title });
       } else {
-        await dao.updateFavorite(id, (value) => {
-          value.title = title
-          return value
-        })
+        const repo = await Locator.localVolumeRepository();
+        await repo.updateFavored(id, title);
       }
       const favored = this[type].find((it) => it.id === id);
       if (favored) {
@@ -67,7 +60,8 @@ export const useBookshelfStore = defineStore('Bookshelf', {
       } else if (type === 'wenku') {
         await Locator.userRepository.deleteFavoredWenku(id);
       } else {
-        await dao.deleteFavorite(id)
+        const repo = await Locator.localVolumeRepository();
+        await repo.deleteFavored(id);
       }
       this[type] = this[type].filter((it) => it.id !== id);
     },

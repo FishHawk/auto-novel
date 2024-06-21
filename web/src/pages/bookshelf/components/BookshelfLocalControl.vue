@@ -84,15 +84,16 @@ const moveToFavored = async () => {
   const localVolumeRepository = await Locator.localVolumeRepository();
 
   let failed = 0;
-  await Promise.all(
-    novels.map(async (it) => {
-      try {
-        await localVolumeRepository.updateFavoriteId(it, targetFavoredId.value);
-      } catch (error) {
-        failed += 1;
-      }
-    }),
-  );
+  for (const volumeId of novels) {
+    try {
+      await localVolumeRepository.updateFavoriteId(
+        volumeId,
+        targetFavoredId.value,
+      );
+    } catch (e) {
+      failed += 1;
+    }
+  }
   const success = novels.length - failed;
 
   message.info(`${success}本小说已移动，${failed}本失败`);
