@@ -1,7 +1,9 @@
+import { jwtDecode } from 'jwt-decode';
+
 import { UserRole } from '@/model/User';
 import { useLocalStorage } from '@vueuse/core';
+
 import { updateToken } from '../api/client';
-import { Locator } from '..';
 import { AuthRepository } from '../api';
 
 interface UserProfile {
@@ -63,17 +65,14 @@ export const createUserDataRepository = () => {
   const asAdmin = computed(() => atLeastAdmin.value && ref.value.adminMode);
 
   const setProfile = (token: string) => {
-    const part = token.split('.')[1];
-    const { id, email, username, role, createAt, exp } = JSON.parse(
-      atob(part),
-    ) as {
+    const { id, email, username, role, createAt, exp } = jwtDecode<{
       id: string;
       email: string;
       username: string;
       role: UserRole;
       createAt: number;
       exp: number;
-    };
+    }>(token);
     const profile: UserProfile = {
       id,
       email,
