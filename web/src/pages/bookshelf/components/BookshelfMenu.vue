@@ -12,7 +12,7 @@ const { isSignedIn } = Locator.authRepository();
 const favoredRepository = Locator.favoredRepository();
 const favoreds = favoredRepository.favoreds;
 
-onActivated(async () => {
+onMounted(async () => {
   if (isSignedIn.value) {
     try {
       await favoredRepository.loadRemoteFavoreds();

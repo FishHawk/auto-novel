@@ -18,9 +18,13 @@ const message = useMessage();
 const { isSignedIn } = Locator.authRepository();
 const favoredRepository = Locator.favoredRepository();
 
-onActivated(() => {
+onMounted(async () => {
   if (isSignedIn.value) {
-    favoredRepository.loadRemoteFavoreds();
+    try {
+      await favoredRepository.loadRemoteFavoreds();
+    } catch (e) {
+      message.error(`获取收藏列表失败：${e}`);
+    }
   }
 });
 

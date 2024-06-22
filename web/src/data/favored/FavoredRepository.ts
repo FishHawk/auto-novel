@@ -11,18 +11,13 @@ export const createFavoredRepository = () => {
     local: [{ id: 'default', title: '默认收藏夹' }],
   });
 
-  let canFetchRemote = true;
+  let remoteFetched = false;
   const loadRemoteFavoreds = async () => {
-    if (!canFetchRemote) return;
-
-    canFetchRemote = false;
-    try {
-      const favoredList = await FavoredApi.listFavored();
-      favoreds.value.web = favoredList.favoredWeb;
-      favoreds.value.wenku = favoredList.favoredWenku;
-    } catch {
-      canFetchRemote = true;
-    }
+    if (remoteFetched) return;
+    const favoredList = await FavoredApi.listFavored();
+    favoreds.value.web = favoredList.favoredWeb;
+    favoreds.value.wenku = favoredList.favoredWenku;
+    remoteFetched = true;
   };
 
   const createFavored = async (
