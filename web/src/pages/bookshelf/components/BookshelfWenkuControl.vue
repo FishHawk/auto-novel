@@ -2,8 +2,6 @@
 import { Locator } from '@/data';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 
-import { useBookshelfStore } from '../BookshelfStore';
-
 const props = defineProps<{
   selectedNovels: WenkuNovelOutlineDto[];
   favoredId: string;
@@ -14,6 +12,9 @@ defineEmits<{
 }>();
 
 const message = useMessage();
+
+const favoredRepository = Locator.favoredRepository();
+const { favoreds } = favoredRepository;
 
 // 删除小说
 const showDeleteModal = ref(false);
@@ -32,7 +33,10 @@ const deleteSelected = async () => {
   let failed = 0;
   for (const { id } of novels) {
     try {
-      await Locator.userRepository.unfavoriteWenkuNovel(props.favoredId, id);
+      await favoredRepository.unfavoriteNovel(props.favoredId, {
+        type: 'wenku',
+        novelId: id,
+      });
     } catch (e) {
       failed += 1;
     }
@@ -43,7 +47,6 @@ const deleteSelected = async () => {
 };
 
 // 移动小说
-const store = useBookshelfStore();
 const targetFavoredId = ref(props.favoredId);
 
 const moveToFavored = async () => {
@@ -61,10 +64,10 @@ const moveToFavored = async () => {
   let failed = 0;
   for (const { id } of novels) {
     try {
-      await Locator.userRepository.favoriteWenkuNovel(
-        targetFavoredId.value,
-        id,
-      );
+      await favoredRepository.favoriteNovel(props.favoredId, {
+        type: 'wenku',
+        novelId: id,
+      });
     } catch (e) {
       failed += 1;
     }
@@ -119,7 +122,7 @@ const moveToFavored = async () => {
       </n-flex>
     </n-list-item>
 
-    <n-list-item v-if="store.web.length > 1">
+    <n-list-item v-if="favoreds.wenku.length > 1">
       <n-flex vertical>
         <b>移动小说（低配版，很慢，等到显示移动完成）</b>
 
@@ -133,7 +136,7 @@ const moveToFavored = async () => {
             />
 
             <n-radio
-              v-for="favored in store.wenku"
+              v-for="favored in favoreds.wenku"
               :key="favored.id"
               :value="favored.id"
             >

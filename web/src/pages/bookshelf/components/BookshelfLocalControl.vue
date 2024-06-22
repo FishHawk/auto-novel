@@ -9,6 +9,7 @@ import { useBookshelfLocalStore } from '../BookshelfLocalStore';
 
 const props = defineProps<{
   selectedIds: string[];
+  favoredId: string;
 }>();
 defineEmits<{
   selectAll: [];
@@ -61,6 +62,42 @@ const downloadRawSelected = async () => {
   }
   const { success, failed } = await store.downloadRawVolumes(ids);
   message.info(`${success}本小说原文被打包，${failed}本失败`);
+};
+
+// 移动小说
+const { favoreds } = Locator.favoredRepository();
+
+const targetFavoredId = ref(props.favoredId);
+
+const moveToFavored = async () => {
+  const novels = props.selectedIds;
+  if (novels.length === 0) {
+    message.info('没有选中小说');
+    return;
+  }
+
+  if (targetFavoredId.value === props.favoredId) {
+    message.info('无需移动');
+    return;
+  }
+
+  const localVolumeRepository = await Locator.localVolumeRepository();
+
+  let failed = 0;
+  for (const volumeId of novels) {
+    try {
+      await localVolumeRepository.updateFavoredId(
+        volumeId,
+        targetFavoredId.value,
+      );
+    } catch (e) {
+      failed += 1;
+    }
+  }
+  const success = novels.length - failed;
+
+  message.info(`${success}本小说已移动，${failed}本失败`);
+  await store.loadVolumes();
 };
 
 // 生成翻译任务
@@ -147,6 +184,31 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
         </n-flex>
 
         <n-text depth="3"> 已选择{{ selectedIds.length }}本小说 </n-text>
+      </n-flex>
+    </n-list-item>
+
+    <n-list-item v-if="favoreds.local.length > 1">
+      <n-flex vertical>
+        <b>移动小说</b>
+
+        <n-radio-group v-model:value="targetFavoredId">
+          <n-flex align="center">
+            <c-button
+              label="移动"
+              size="small"
+              :round="false"
+              @action="moveToFavored"
+            />
+
+            <n-radio
+              v-for="favored in favoreds.local"
+              :key="favored.id"
+              :value="favored.id"
+            >
+              {{ favored.title }}
+            </n-radio>
+          </n-flex>
+        </n-radio-group>
       </n-flex>
     </n-list-item>
 

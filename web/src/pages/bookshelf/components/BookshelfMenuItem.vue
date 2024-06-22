@@ -2,8 +2,10 @@
 import { MoreVertOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
+import { Locator } from '@/data';
+
 import { doAction } from '@/pages/util';
-import { useBookshelfStore } from '../BookshelfStore';
+import { useBookshelfLocalStore } from '../BookshelfLocalStore';
 
 const { id, type, title } = defineProps<{
   id: string;
@@ -11,7 +13,8 @@ const { id, type, title } = defineProps<{
   type: 'web' | 'wenku' | 'local';
 }>();
 
-const store = useBookshelfStore();
+const favoredRepository = Locator.favoredRepository();
+const store = useBookshelfLocalStore();
 
 const message = useMessage();
 
@@ -42,7 +45,7 @@ const formRules: FormRules = {
     },
   ],
 };
-const updateFavorite = async () => {
+const updateFavored = async () => {
   if (formRef.value == null) {
     return;
   } else {
@@ -56,7 +59,7 @@ const updateFavorite = async () => {
   const title = formValue.value.title;
 
   await doAction(
-    store.updateFavored(type, id, title).then(() => {
+    favoredRepository.updateFavored(type, id, title).then(() => {
       showEditModal.value = false;
     }),
     '收藏夹更新',
@@ -64,12 +67,23 @@ const updateFavorite = async () => {
   );
 };
 
+const deleteFavoredNovels = async () => {
+  if (type === 'local') {
+    const { failed } = await store.deleteVolumes(
+      store.volumes.filter((it) => it.favoredId === id).map(({ id }) => id),
+    );
+    if (failed > 0) {
+      throw new Error(`清空收藏夹失败，${failed}本未删除`);
+    }
+  }
+};
+
 const showDeleteModal = ref(false);
-const deleteFavorite = () =>
+const deleteFavored = () =>
   doAction(
-    store.deleteFavored(type, id).then(() => {
-      showDeleteModal.value = false;
-    }),
+    deleteFavoredNovels()
+      .then(() => favoredRepository.deleteFavored(type, id))
+      .then(() => (showDeleteModal.value = false)),
     '收藏夹删除',
     message,
   );
@@ -80,7 +94,6 @@ const deleteFavorite = () =>
     <n-flex align="center" justify="space-between">
       {{ title }}
       <n-dropdown
-        v-if="type !== 'local'"
         trigger="hover"
         :options="options"
         :keyboard="false"
@@ -115,20 +128,24 @@ const deleteFavorite = () =>
         label="确定"
         require-login
         type="primary"
-        @action="updateFavorite"
+        @action="updateFavored"
       />
     </template>
   </c-modal>
 
   <c-modal v-model:show="showDeleteModal" title="删除收藏夹">
-    {{ `确定删除收藏夹<${title}>吗？` }}
+    确定删除收藏夹<{{ title }}>吗？
+    <n-text v-if="type === 'local'">
+      <br />
+      注意，删除本地收藏夹的同时也会清空收藏夹内所有小说。
+    </n-text>
 
     <template #action>
       <c-button
         label="确定"
         require-login
         type="primary"
-        @action="deleteFavorite"
+        @action="deleteFavored"
       />
     </template>
   </c-modal>

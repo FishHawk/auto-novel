@@ -110,7 +110,6 @@ const latestChapterCreateAt = computed(() => {
 
     <favorite-button
       v-model:favored="novel.favored"
-      :favored-list="novel.favoredList"
       :novel="{ type: 'web', providerId, novelId }"
     />
 

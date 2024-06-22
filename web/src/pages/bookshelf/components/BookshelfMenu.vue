@@ -4,19 +4,21 @@ import { MenuOption } from 'naive-ui';
 import { Locator } from '@/data';
 
 import BookshelfMenuItem from './BookshelfMenuItem.vue';
-import { useBookshelfStore } from '../BookshelfStore';
 
 const message = useMessage();
 
 const { isSignedIn } = Locator.userDataRepository();
 
-const store = useBookshelfStore();
+const favoredRepository = Locator.favoredRepository();
+const favoreds = favoredRepository.favoreds;
 
-onMounted(async () => {
-  try {
-    await store.loadFavoredList();
-  } catch (e) {
-    message.error(`获取收藏列表失败：${e}`);
+onActivated(async () => {
+  if (isSignedIn.value) {
+    try {
+      await favoredRepository.loadRemoteFavoreds();
+    } catch (e) {
+      message.error(`获取收藏列表失败：${e}`);
+    }
   }
 });
 
@@ -33,7 +35,7 @@ const menuOptions = computed(() => {
   const localGroup = {
     type: 'group',
     label: '本地小说',
-    children: store.local.map(({ id, title }) =>
+    children: favoreds.value.local.map(({ id, title }) =>
       menuOption('local', id, title),
     ),
   };
@@ -42,7 +44,7 @@ const menuOptions = computed(() => {
       {
         type: 'group',
         label: '网络小说',
-        children: store.web.map(({ id, title }) =>
+        children: favoreds.value.web.map(({ id, title }) =>
           menuOption('web', id, title),
         ),
       },
@@ -54,7 +56,7 @@ const menuOptions = computed(() => {
       {
         type: 'group',
         label: '文库小说',
-        children: store.wenku.map(({ id, title }) =>
+        children: favoreds.value.wenku.map(({ id, title }) =>
           menuOption('wenku', id, title),
         ),
       },

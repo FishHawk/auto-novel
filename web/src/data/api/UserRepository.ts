@@ -1,5 +1,5 @@
 import { Page } from '@/model/Page';
-import { FavoredList, UserOutline, UserRole } from '@/model/User';
+import { UserOutline, UserRole } from '@/model/User';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 
@@ -23,17 +23,6 @@ const updateReadHistoryWeb = (
 const deleteReadHistoryWeb = (providerId: string, novelId: string) =>
   client.delete(`user/read-history/${providerId}/${novelId}`);
 
-const listFavored = () => client.get('user/favored').json<FavoredList>();
-
-const createFavoredWeb = (json: { title: string }) =>
-  client.post(`user/favored-web`, { json });
-
-const updateFavoredWeb = (favoredId: string, json: { title: string }) =>
-  client.put(`user/favored-web/${favoredId}`, { json });
-
-const deleteFavoredWeb = (favoredId: string) =>
-  client.delete(`user/favored-web/${favoredId}`);
-
 const listFavoredWebNovel = (
   favoredId: string,
   searchParams: {
@@ -45,27 +34,6 @@ const listFavoredWebNovel = (
   client
     .get(`user/favored-web/${favoredId}`, { searchParams })
     .json<Page<WebNovelOutlineDto>>();
-
-const favoriteWebNovel = (
-  favoredId: string,
-  providerId: string,
-  novelId: string,
-) => client.put(`user/favored-web/${favoredId}/${providerId}/${novelId}`);
-
-const unfavoriteWebNovel = (
-  favoredId: string,
-  providerId: string,
-  novelId: string,
-) => client.delete(`user/favored-web/${favoredId}/${providerId}/${novelId}`);
-
-const createFavoredWenku = (json: { title: string }) =>
-  client.post(`user/favored-wenku`, { json });
-
-const updateFavoredWenku = (favoredId: string, json: { title: string }) =>
-  client.put(`user/favored-wenku/${favoredId}`, { json });
-
-const deleteFavoredWenku = (favoredId: string) =>
-  client.delete(`user/favored-wenku/${favoredId}`);
 
 const listFavoredWenkuNovel = (
   favoredId: string,
@@ -79,12 +47,6 @@ const listFavoredWenkuNovel = (
     .get(`user/favored-wenku/${favoredId}`, { searchParams })
     .json<Page<WenkuNovelOutlineDto>>();
 
-const favoriteWenkuNovel = (favoredId: string, novelId: string) =>
-  client.put(`user/favored-wenku/${favoredId}/${novelId}`);
-
-const unfavoriteWenkuNovel = (favoredId: string, novelId: string) =>
-  client.delete(`user/favored-wenku/${favoredId}/${novelId}`);
-
 export const UserRepository = {
   listUser,
   //
@@ -92,19 +54,6 @@ export const UserRepository = {
   updateReadHistoryWeb,
   deleteReadHistoryWeb,
   //
-  listFavored,
-  //
-  createFavoredWeb,
-  updateFavoredWeb,
-  deleteFavoredWeb,
   listFavoredWebNovel,
-  favoriteWebNovel,
-  unfavoriteWebNovel,
-  //
-  createFavoredWenku,
-  updateFavoredWenku,
-  deleteFavoredWenku,
   listFavoredWenkuNovel,
-  favoriteWenkuNovel,
-  unfavoriteWenkuNovel,
 };

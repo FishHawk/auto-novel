@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import { FavoriteBorderOutlined, FavoriteOutlined } from '@vicons/material';
 
-import { UserRepository } from '@/data/api';
-import { Favored } from '@/model/User';
+import { Locator } from '@/data';
+
 import { doAction } from '@/pages/util';
 
 const props = defineProps<{
   favored: string | undefined;
-  favoredList: Favored[];
   novel:
     | { type: 'web'; providerId: string; novelId: string }
     | { type: 'wenku'; novelId: string };
@@ -16,20 +15,25 @@ const emit = defineEmits<{ 'update:favored': [string | undefined] }>();
 
 const message = useMessage();
 
+const { isSignedIn } = Locator.userDataRepository();
+const favoredRepository = Locator.favoredRepository();
+
+onActivated(() => {
+  if (isSignedIn.value) {
+    favoredRepository.loadRemoteFavoreds();
+  }
+});
+
+const favoreds = computed(
+  () => favoredRepository.favoreds.value[props.novel.type],
+);
 const favoredTitle = computed(
-  () => props.favoredList.find((it) => it.id === props.favored)?.title,
+  () => favoreds.value.find((it) => it.id === props.favored)?.title,
 );
 
 const favoriteNovel = (favoredId: string) =>
   doAction(
-    (props.novel.type === 'web'
-      ? UserRepository.favoriteWebNovel(
-          favoredId,
-          props.novel.providerId,
-          props.novel.novelId,
-        )
-      : UserRepository.favoriteWenkuNovel(favoredId, props.novel.novelId)
-    ).then(() => {
+    favoredRepository.favoriteNovel(favoredId, props.novel).then(() => {
       emit('update:favored', favoredId);
       showFavoredModal.value = false;
     }),
@@ -40,14 +44,7 @@ const favoriteNovel = (favoredId: string) =>
 const unfavoriteNovel = async () => {
   if (props.favored === undefined) return;
   await doAction(
-    (props.novel.type === 'web'
-      ? UserRepository.unfavoriteWebNovel(
-          props.favored,
-          props.novel.providerId,
-          props.novel.novelId,
-        )
-      : UserRepository.unfavoriteWenkuNovel(props.favored, props.novel.novelId)
-    ).then(() => {
+    favoredRepository.unfavoriteNovel(props.favored, props.novel).then(() => {
       emit('update:favored', undefined);
       showFavoredModal.value = false;
     }),
@@ -61,7 +58,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
 </script>
 
 <template>
-  <template v-if="favoredList.length <= 1">
+  <template v-if="favoreds.length <= 1">
     <c-button
       v-if="favored"
       label="已收藏"
@@ -74,7 +71,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
       label="收藏"
       :icon="FavoriteBorderOutlined"
       require-login
-      @action="favoriteNovel(favoredList[0].id)"
+      @action="favoriteNovel(favoreds[0].id)"
     />
   </template>
 
@@ -91,7 +88,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
     <n-radio-group v-model:value="selectedFavoredId">
       <n-flex vertical size="large">
         <n-radio
-          v-for="favored in favoredList"
+          v-for="favored in favoreds"
           :key="favored.id"
           :value="favored.id"
         >

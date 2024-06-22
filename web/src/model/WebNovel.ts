@@ -1,5 +1,3 @@
-import { Favored } from './User';
-
 export interface WebNovelOutlineDto {
   providerId: string;
   novelId: string;
@@ -42,7 +40,6 @@ export interface WebNovelDto {
   visited: number;
   syncAt: number;
   favored?: string;
-  favoredList: Favored[];
   lastReadChapterId?: string;
   jp: number;
   baidu: number;

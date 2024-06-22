@@ -5,6 +5,7 @@ import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
 
+const props = defineProps<{ favoredId?: string }>();
 const emit = defineEmits<{ done: [File] }>();
 
 const message = useMessage();
@@ -38,7 +39,7 @@ const customRequest = ({
   onError,
 }: UploadCustomRequestOptions) => {
   store
-    .addVolume(file.file!!)
+    .addVolume(file.file!!, props.favoredId ?? 'default')
     .then(onFinish)
     .catch((error) => {
       message.error(`上传失败:${error}\n文件名: ${file.name}`);

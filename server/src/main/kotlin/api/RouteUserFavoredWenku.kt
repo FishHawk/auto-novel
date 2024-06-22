@@ -128,21 +128,21 @@ class UserFavoredWenkuApi(
     suspend fun createFavored(
         user: User,
         title: String,
-    ) {
+    ): String {
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
 
         val (_, favoredWenku) = userFavoredRepo.getFavoredList(user.id)!!
         if (favoredWenku.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
 
+        val newFavoredWenku = favoredWenku.toMutableList()
+        val id = UUID.randomUUID().toString()
+        newFavoredWenku.add(UserFavored(id = id, title = title))
+
         userFavoredRepo.updateFavoredWenku(
             userId = user.id,
-            favored = favoredWenku + listOf(
-                UserFavored(
-                    id = UUID.randomUUID().toString(),
-                    title = title,
-                )
-            )
+            favored = newFavoredWenku,
         )
+        return id
     }
 
     suspend fun updateFavored(

@@ -19,6 +19,7 @@ export interface LocalVolumeMetadata {
   }[];
   glossaryId: string;
   glossary: Glossary;
+  favoredId: string;
 }
 
 export interface LocalVolumeChapter {

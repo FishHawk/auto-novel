@@ -30,13 +30,14 @@ const bookshelfListRef = ref<InstanceType<typeof BookshelfList>>();
         :menu-key="`local/${favoredId}`"
       />
       <div>
-        <bookshelf-local-add-button />
+        <bookshelf-local-add-button :favoredId="favoredId" />
       </div>
     </n-flex>
 
     <n-collapse-transition :show="showControlPanel" style="margin-bottom: 16px">
       <bookshelf-local-control
         :selected-ids="bookshelfListRef!!.selectedIds"
+        :favoredId="favoredId"
         @select-all="bookshelfListRef!!.selectAll()"
         @invert-selection="bookshelfListRef!!.invertSelection()"
       />
@@ -44,6 +45,7 @@ const bookshelfListRef = ref<InstanceType<typeof BookshelfList>>();
 
     <bookshelf-local-list
       ref="bookshelfListRef"
+      :favoredId="favoredId"
       :selectable="showControlPanel"
     />
   </bookshelf-layout>

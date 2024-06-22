@@ -131,21 +131,21 @@ class UserFavoredWebApi(
     suspend fun createFavored(
         user: User,
         title: String,
-    ) {
+    ): String {
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
 
         val (favoredWeb) = userFavoredRepo.getFavoredList(user.id)!!
         if (favoredWeb.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
 
+        val newFavoredWeb = favoredWeb.toMutableList()
+        val id = UUID.randomUUID().toString()
+        newFavoredWeb.add(UserFavored(id = id, title = title))
+
         userFavoredRepo.updateFavoredWeb(
             userId = user.id,
-            favored = favoredWeb + listOf(
-                UserFavored(
-                    id = UUID.randomUUID().toString(),
-                    title = title,
-                )
-            )
+            favored = newFavoredWeb,
         )
+        return id
     }
 
     suspend fun updateFavored(

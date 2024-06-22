@@ -2,25 +2,34 @@
 import { PlusOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
+import { Locator } from '@/data';
+
 import { doAction } from '@/pages/util';
-import { useBookshelfStore } from '../BookshelfStore';
 
 const message = useMessage();
 
-const store = useBookshelfStore();
+const favoredRepository = Locator.favoredRepository();
 
 const showAddModal = ref(false);
 
 const formRef = ref<FormInst>();
-const formValue = ref({
+const formValue = ref<{
+  title: string;
+  type: 'web' | 'wenku' | 'local';
+}>({
   title: '',
-  type: 'web' as 'web' | 'wenku',
+  type: 'web',
 });
 const formRules: FormRules = {
   title: [
     {
       validator: (_rule: FormItemRule, value: string) => value.length > 0,
       message: '收藏夹标题不能为空',
+      trigger: 'input',
+    },
+    {
+      validator: (_rule: FormItemRule, value: string) => value.length <= 20,
+      message: '收藏夹标题至多为20个字符',
       trigger: 'input',
     },
   ],
@@ -35,7 +44,7 @@ const addFavorite = async () => {
 
   const { type, title } = formValue.value;
   await doAction(
-    store.createFavored(type, title).then(() => {
+    favoredRepository.createFavored(type, title).then(() => {
       showAddModal.value = false;
     }),
     '收藏夹创建',
@@ -62,13 +71,16 @@ const addFavorite = async () => {
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
+
       <n-form-item-row label="类型">
-        <n-radio-group v-model:value="formValue.type" name="type">
-          <n-flex>
-            <n-radio value="web"> 网页小说 </n-radio>
-            <n-radio value="wenku"> 文库小说 </n-radio>
-          </n-flex>
-        </n-radio-group>
+        <c-radio-group
+          v-model:value="formValue.type"
+          :options="[
+            { label: '网页小说', value: 'web' },
+            { label: '文库小说', value: 'wenku' },
+            { label: '本地小说', value: 'local' },
+          ]"
+        />
       </n-form-item-row>
     </n-form>
 
