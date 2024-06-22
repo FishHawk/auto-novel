@@ -30,7 +30,7 @@ const bookshelfListRef = ref<InstanceType<typeof BookshelfList>>();
         :menu-key="`local/${favoredId}`"
       />
       <div>
-        <bookshelf-local-add-button />
+        <bookshelf-local-add-button :favoredId="favoredId" />
       </div>
     </n-flex>
 

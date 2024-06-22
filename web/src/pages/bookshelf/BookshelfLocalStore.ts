@@ -18,9 +18,9 @@ export const useBookshelfLocalStore = defineStore('BookshelfLocal', {
       this.volumes = await repo.listVolume();
       return this.volumes;
     },
-    async addVolume(file: File) {
+    async addVolume(file: File, favoredId: string) {
       const repo = await Locator.localVolumeRepository();
-      await repo.createVolume(file);
+      await repo.createVolume(file, favoredId);
       await this.loadVolumes();
     },
     async deleteVolume(id: string) {

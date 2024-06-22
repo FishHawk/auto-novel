@@ -84,7 +84,7 @@ const importToWorkspace = async () => {
 
   const repo = await Locator.localVolumeRepository();
   await repo
-    .createVolume(file)
+    .createVolume(file, 'default')
     .then(() => repo.updateGlossary(file.name, toRaw(props.glossary)))
     .then(() => message.success('导入成功'))
     .catch((error) => message.error(`导入失败:${error}`));
