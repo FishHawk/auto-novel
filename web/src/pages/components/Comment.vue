@@ -21,7 +21,8 @@ const { site, comment } = defineProps<{
 }>();
 
 const message = useMessage();
-const asAdmin = Locator.authRepository().asAdmin;
+
+const { profile, asAdmin } = Locator.authRepository();
 
 const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
@@ -100,7 +101,7 @@ const splitByLinks = (text: string): [string, boolean][] => {
         @action="showInput = !showInput"
       />
 
-      <template v-if="asAdmin">
+      <template v-if="profile?.username === comment.user.username || asAdmin">
         <c-button
           v-if="comment.hidden"
           label="解除隐藏"
