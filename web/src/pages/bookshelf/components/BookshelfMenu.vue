@@ -7,7 +7,7 @@ import BookshelfMenuItem from './BookshelfMenuItem.vue';
 
 const message = useMessage();
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 
 const favoredRepository = Locator.favoredRepository();
 const favoreds = favoredRepository.favoreds;

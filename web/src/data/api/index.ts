@@ -1,7 +1,6 @@
 import { HTTPError, TimeoutError } from 'ky';
 
 export { ArticleRepository } from './ArticleRepository';
-export { AuthRepository } from './AuthRepository';
 export { CommentRepository } from './CommentRepository';
 export { OperationRepository } from './OperationRepository';
 export { SakuraRepository } from './SakuraRepository';

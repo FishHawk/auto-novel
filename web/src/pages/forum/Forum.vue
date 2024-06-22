@@ -16,7 +16,7 @@ const route = useRoute();
 const router = useRouter();
 const message = useMessage();
 
-const { asAdmin } = Locator.userDataRepository();
+const { asAdmin } = Locator.authRepository();
 
 const articleCategoryOptions = [
   { value: 'General', label: '小说交流' },

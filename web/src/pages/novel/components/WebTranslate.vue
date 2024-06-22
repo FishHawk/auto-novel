@@ -37,7 +37,7 @@ const emit = defineEmits<{
 const isMobile = checkIsMobile();
 const message = useMessage();
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 const { setting } = Locator.settingRepository();
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();

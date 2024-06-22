@@ -33,8 +33,7 @@ const router = useRouter();
 const isWideScreen = useIsWideScreen(850);
 const message = useMessage();
 
-const { atLeastMaintainer, createAtLeastOneMonth } =
-  Locator.userDataRepository();
+const { atLeastMaintainer, createAtLeastOneMonth } = Locator.authRepository();
 
 const allowSubmit = ref(novelId === undefined);
 const formRef = ref<FormInst>();

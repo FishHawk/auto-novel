@@ -19,7 +19,7 @@ defineProps<{
 const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 
-const { createAtLeastOneMonth } = Locator.userDataRepository();
+const { createAtLeastOneMonth } = Locator.authRepository();
 
 const oldAssOptions = createAtLeastOneMonth.value
   ? [

@@ -24,7 +24,7 @@ const router = useRouter();
 const vars = useThemeVars();
 const isWideScreen = useIsWideScreen(850);
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 
 const url = ref('');
 const query = (url: string) => {

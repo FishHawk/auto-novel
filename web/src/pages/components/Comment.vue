@@ -21,7 +21,7 @@ const { site, comment } = defineProps<{
 }>();
 
 const message = useMessage();
-const asAdmin = Locator.userDataRepository().asAdmin;
+const asAdmin = Locator.authRepository().asAdmin;
 
 const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));

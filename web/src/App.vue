@@ -1,36 +1,13 @@
 <script lang="ts" setup>
 import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
 
-import { Locator, formatError } from '@/data';
+import { Locator } from '@/data';
 import { isDarkColor } from '@/pages/util';
 import { RegexUtil } from '@/util';
 
-const { userData, setProfile } = Locator.userDataRepository();
-const { renew, updateToken } = Locator.authRepository;
-
-// 订阅Token
-watch(
-  () => userData.value.profile?.token,
-  (token) => updateToken(token),
-  { immediate: true },
-);
-
-// 更新Token，冷却时间为24小时
-const renewToken = async () => {
-  const renewCooldown = 24 * 3600 * 1000;
-  if (userData.value.profile) {
-    const sinceLoggedIn = Date.now() - (userData.value.renewedAt ?? 0);
-    if (sinceLoggedIn > renewCooldown) {
-      try {
-        const token = await renew();
-        setProfile(token);
-      } catch (e) {
-        console.warn('更新授权失败：' + (await formatError(e)));
-      }
-    }
-  }
-};
-renewToken();
+// 激活权限
+const authRepository = Locator.authRepository();
+authRepository.activateAuth();
 
 // 清理pinia留下的垃圾
 Object.keys(window.localStorage).forEach((key) => {

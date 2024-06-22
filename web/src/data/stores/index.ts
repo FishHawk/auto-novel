@@ -8,7 +8,6 @@ export {
   createReaderSettingRepository,
   createSettingRepository,
 } from './SettingRepository';
-export { createUserDataRepository } from './UserDataRepository';
 export {
   createGptWorkspaceRepository,
   createSakuraWorkspaceRepository,

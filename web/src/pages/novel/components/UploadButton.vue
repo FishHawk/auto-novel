@@ -16,7 +16,7 @@ const { novelId, type } = defineProps<{
 
 const message = useMessage();
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 
 const store = useWenkuNovelStore(novelId);
 

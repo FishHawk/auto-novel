@@ -67,13 +67,12 @@ const signUp = async () => {
   }
   loadingBar.start();
   try {
-    const token = await Locator.authRepository.signUp({
+    await Locator.authRepository().signUp({
       email: formValue.value.email,
       emailCode: formValue.value.emailCode,
       username: formValue.value.username,
       password: formValue.value.password,
     });
-    Locator.userDataRepository().setProfile(token);
     loadingBar.finish();
   } catch (e) {
     loadingBar.error();
@@ -89,7 +88,7 @@ const allowSendEmail = () => {
 };
 
 const sendEmail = () =>
-  Locator.authRepository.verifyEmail(formValue.value.email);
+  Locator.authRepository().verifyEmail(formValue.value.email);
 </script>
 
 <template>

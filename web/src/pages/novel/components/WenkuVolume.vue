@@ -22,7 +22,7 @@ const emit = defineEmits<{ delete: [] }>();
 const message = useMessage();
 
 const { setting } = Locator.settingRepository();
-const { atLeastMaintainer } = Locator.userDataRepository();
+const { atLeastMaintainer } = Locator.authRepository();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {

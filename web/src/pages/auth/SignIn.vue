@@ -5,7 +5,7 @@ const props = defineProps<{ from?: string }>();
 
 const router = useRouter();
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 
 watch(
   isSignedIn,

@@ -7,8 +7,8 @@ import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 const message = useMessage();
 
 const { setting } = Locator.settingRepository();
-const { userData, isSignedIn, atLeastAdmin, asAdmin, toggleAdminMode } =
-  Locator.userDataRepository();
+const { profile, isSignedIn, atLeastAdmin, asAdmin, toggleAdminMode } =
+  Locator.authRepository();
 
 const roleToReadableText = (role: UserRole) => {
   if (role === 'normal') return '普通用户';
@@ -38,9 +38,9 @@ const playSound = (source: string) => {
   <div class="layout-content">
     <template v-if="isSignedIn">
       <n-h1>
-        @{{ userData.profile?.username }}
+        @{{ profile?.username }}
         <n-tag :bordered="false" size="small" style="margin-left: 4px">
-          {{ roleToReadableText(userData.profile!!.role) }}
+          {{ roleToReadableText(profile!!.role) }}
         </n-tag>
       </n-h1>
 

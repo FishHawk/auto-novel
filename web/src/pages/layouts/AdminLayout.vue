@@ -6,7 +6,7 @@ import { Locator } from '@/data';
 const router = useRouter();
 const route = useRoute();
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 
 const path = route.path;
 const handleUpdateValue = (path: string) => router.push({ path });

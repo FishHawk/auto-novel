@@ -20,7 +20,7 @@ const router = useRouter();
 const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 const { setting } = Locator.readerSettingRepository();
 
 const gnid = ((): GenericNovelId => {

@@ -1,7 +1,6 @@
 import { createCachedSegRepository } from './CachedSegRepository';
 import {
   ArticleRepository,
-  AuthRepository,
   CommentRepository,
   OperationRepository,
   SakuraRepository,
@@ -9,6 +8,8 @@ import {
   WebNovelRepository,
   WenkuNovelRepository,
 } from './api';
+import { createAuthRepository } from './auth/AuthRepository';
+import { createFavoredRepository } from './favored/FavoredRepository';
 import { createLocalVolumeRepository } from './local';
 import {
   createGptWorkspaceRepository,
@@ -17,11 +18,9 @@ import {
   createRuleViewedRepository,
   createSakuraWorkspaceRepository,
   createSettingRepository,
-  createUserDataRepository,
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
 } from './stores';
-import { createFavoredRepository } from './favored/FavoredRepository';
 import {
   createAmazonRepository,
   createBaiduRepository,
@@ -68,7 +67,6 @@ export const Locator = {
   wenkuSearchHistoryRepository: lazy(createWenkuSearchHistoryRepository),
   gptWorkspaceRepository: lazy(createGptWorkspaceRepository),
   sakuraWorkspaceRepository: lazy(createSakuraWorkspaceRepository),
-  userDataRepository: lazy(createUserDataRepository),
   //
   amazonRepository: lazy(createAmazonRepository),
   baiduRepository: lazy(createBaiduRepository),
@@ -77,7 +75,6 @@ export const Locator = {
   openAiWebRepositoryFactory: createOpenAiWebRepository,
   //
   articleRepository: ArticleRepository,
-  authRepository: AuthRepository,
   commentRepository: CommentRepository,
   operationRepository: OperationRepository,
   sakuraRepository: SakuraRepository,
@@ -85,5 +82,6 @@ export const Locator = {
   webNovelRepository: WebNovelRepository,
   wenkuNovelRepository: WenkuNovelRepository,
   //
+  authRepository: lazy(createAuthRepository),
   favoredRepository: lazy(createFavoredRepository),
 };

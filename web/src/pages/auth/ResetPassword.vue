@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import { AuthRepository } from '@/data/api';
+import { Locator } from '@/data';
+
 import { doAction } from '@/pages/util';
 
 const router = useRouter();
@@ -56,13 +57,15 @@ const resetPassword = async () => {
   }
 
   await doAction(
-    AuthRepository.resetPassword(
-      formValue.value.emailOrUsername,
-      formValue.value.resetPasswordToken,
-      formValue.value.password,
-    ).then(() => {
-      router.push('/');
-    }),
+    Locator.authRepository()
+      .resetPassword(
+        formValue.value.emailOrUsername,
+        formValue.value.resetPasswordToken,
+        formValue.value.password,
+      )
+      .then(() => {
+        router.push('/');
+      }),
     '密码重置',
     message,
   );
@@ -70,7 +73,9 @@ const resetPassword = async () => {
 
 const allowSendEmail = () => true;
 const sendEmail = () =>
-  AuthRepository.sendResetPasswordEmail(formValue.value.emailOrUsername);
+  Locator.authRepository().sendResetPasswordEmail(
+    formValue.value.emailOrUsername,
+  );
 </script>
 
 <template>

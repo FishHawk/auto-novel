@@ -17,7 +17,7 @@ const onClick = async (e: MouseEvent) => {
 
   if (
     props.requireLogin === true &&
-    !Locator.userDataRepository().isSignedIn.value
+    !Locator.authRepository().isSignedIn.value
   ) {
     message.info('请先登录');
     return;

@@ -14,7 +14,7 @@ const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 const router = useRouter();
 
-const { userData, isSignedIn, deleteProfile } = Locator.userDataRepository();
+const { profile, isSignedIn, signOut } = Locator.authRepository();
 
 const menuOption = (
   text: string,
@@ -100,7 +100,7 @@ const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'account') {
     router.push('/account');
   } else if (key === 'signOut') {
-    deleteProfile();
+    signOut;
   }
 };
 
@@ -156,7 +156,7 @@ watch(
           @select="handleUserDropdownSelect"
         >
           <n-button :focusable="false" quaternary>
-            @{{ userData.profile?.username }}
+            @{{ profile?.username }}
           </n-button>
         </n-dropdown>
 

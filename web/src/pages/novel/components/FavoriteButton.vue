@@ -15,7 +15,7 @@ const emit = defineEmits<{ 'update:favored': [string | undefined] }>();
 
 const message = useMessage();
 
-const { isSignedIn } = Locator.userDataRepository();
+const { isSignedIn } = Locator.authRepository();
 const favoredRepository = Locator.favoredRepository();
 
 onActivated(() => {

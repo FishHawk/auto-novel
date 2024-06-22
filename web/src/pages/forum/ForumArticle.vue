@@ -5,7 +5,7 @@ import { useArticleStore } from './ForumArticleStore';
 
 const { articleId } = defineProps<{ articleId: string }>();
 
-const { userData, asAdmin } = Locator.userDataRepository();
+const { profile, asAdmin } = Locator.authRepository();
 
 const store = useArticleStore(articleId);
 const { articleResult } = storeToRefs(store);
@@ -28,9 +28,7 @@ store.loadArticle().then((result) => {
           type="relative"
         />
         by {{ article.user.username }}
-        <template
-          v-if="userData.profile?.username === article.user.username || asAdmin"
-        >
+        <template v-if="profile?.username === article.user.username || asAdmin">
           /
           <c-a :to="`/forum-edit/${article.id}?category=${article.category}`">
             编辑

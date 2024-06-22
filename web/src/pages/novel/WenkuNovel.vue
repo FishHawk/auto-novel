@@ -22,7 +22,7 @@ const message = useMessage();
 const vars = useThemeVars();
 
 const { setting } = Locator.settingRepository();
-const { isSignedIn, atLeastMaintainer } = Locator.userDataRepository();
+const { isSignedIn, atLeastMaintainer } = Locator.authRepository();
 
 const store = useWenkuNovelStore(novelId);
 const { novelResult } = storeToRefs(store);

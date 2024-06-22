@@ -16,7 +16,7 @@ defineProps<{
 
 const route = useRoute();
 
-const { createAtLeastOneMonth } = Locator.userDataRepository();
+const { createAtLeastOneMonth } = Locator.authRepository();
 
 const options = [
   {

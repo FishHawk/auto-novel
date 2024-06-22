@@ -1,16 +1,6 @@
-import { client, updateToken } from './client';
+import { client } from '../api/client';
 
-interface SignInBody {
-  emailOrUsername: string;
-  password: string;
-}
-
-const signIn = (json: SignInBody) =>
-  client.post(`auth/sign-in`, { json }).text();
-
-const renew = () => client.get(`auth/renew`).text();
-
-interface SignUpBody {
+export interface SignUpBody {
   email: string;
   emailCode: string;
   username: string;
@@ -19,6 +9,16 @@ interface SignUpBody {
 
 const signUp = (json: SignUpBody) =>
   client.post('auth/sign-up', { json }).text();
+
+export interface SignInBody {
+  emailOrUsername: string;
+  password: string;
+}
+
+const signIn = (json: SignInBody) =>
+  client.post(`auth/sign-in`, { json }).text();
+
+const renew = () => client.get(`auth/renew`).text();
 
 const verifyEmail = (email: string) =>
   client.post('auth/verify-email', {
@@ -40,15 +40,13 @@ const resetPassword = (
     json: { token, password },
   });
 
-export const AuthRepository = {
-  updateToken,
-
+export const AuthApi = {
   signIn,
   renew,
-
+  //
   signUp,
   verifyEmail,
-
+  //
   sendResetPasswordEmail,
   resetPassword,
 };
