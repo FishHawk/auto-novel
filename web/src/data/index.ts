@@ -21,6 +21,7 @@ import {
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
 } from './stores';
+import { createFavoredRepository } from './favored/FavoredRepository';
 import {
   createAmazonRepository,
   createBaiduRepository,
@@ -83,4 +84,6 @@ export const Locator = {
   userRepository: UserRepository,
   webNovelRepository: WebNovelRepository,
   wenkuNovelRepository: WenkuNovelRepository,
+  //
+  favoredRepository: lazy(createFavoredRepository),
 };

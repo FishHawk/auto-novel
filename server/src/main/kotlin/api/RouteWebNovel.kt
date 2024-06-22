@@ -10,7 +10,6 @@ import infra.common.*
 import infra.oplog.Operation
 import infra.oplog.OperationHistoryRepository
 import infra.user.User
-import infra.user.UserFavored
 import infra.user.UserFavoredRepository
 import infra.web.*
 import infra.web.datasource.providers.NovelIdShouldBeReplacedException
@@ -377,7 +376,6 @@ class WebNovelApi(
         val visited: Long,
         val syncAt: Long,
         val favored: String?,
-        val favoredList: List<UserFavored>,
         val lastReadChapterId: String?,
         val jp: Long,
         val baidu: Long,
@@ -407,7 +405,6 @@ class WebNovelApi(
             visited = novel.visited,
             syncAt = novel.syncAt.epochSeconds,
             favored = null,
-            favoredList = emptyList(),
             lastReadChapterId = null,
             jp = novel.jp,
             baidu = novel.baidu,
@@ -419,14 +416,11 @@ class WebNovelApi(
             dto
         } else {
             val novelId = novel.id.toHexString()
-            val favoredList = userFavoredRepo.getFavoredList(user.id)!!.favoredWeb
             val favored = favoredRepo
                 .getFavoredId(user.id, novelId)
-                .takeIf { favored -> favoredList.any { it.id == favored } }
             val history = historyRepo.getReaderHistory(user.id, novelId)
             dto.copy(
                 favored = favored,
-                favoredList = favoredList,
                 lastReadChapterId = history?.chapterId,
             )
         }

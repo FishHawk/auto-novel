@@ -73,27 +73,6 @@ export const createLocalVolumeRepository = async () => {
     return metadata.toc.filter((it) => it[translatorId] !== undefined).length;
   };
 
-  const listFavored = () => dao.listFavorite().then((it) => it.reverse());
-
-  const createFavored = (title: string) =>
-    dao.createFavorite({
-      id: uuidv4(),
-      title,
-    });
-
-  const updateFavored = (id: string, title: string) =>
-    dao.updateFavorite(id, (value) => {
-      value.title = title;
-      return value;
-    });
-
-  const deleteFavored = (id: string) => {
-    if (id === 'default') {
-      throw new Error('无法删除默认收藏夹');
-    }
-    return dao.deleteFavorite(id);
-  };
-
   const bind = <Args extends Array<any>, Return>(
     fn: (dao: LocalVolumeDao, ...args: Args) => Promise<Return>,
   ) => {
@@ -117,10 +96,5 @@ export const createLocalVolumeRepository = async () => {
     updateTranslation,
     //
     getTranslationFile: bind(getTranslationFile),
-    //
-    listFavored,
-    createFavored,
-    updateFavored,
-    deleteFavored,
   };
 };

@@ -131,7 +131,6 @@ const showWebNovelsModal = ref(false);
 
         <favorite-button
           v-model:favored="metadata.favored"
-          :favored-list="metadata.favoredList"
           :novel="{ type: 'wenku', novelId }"
         />
 

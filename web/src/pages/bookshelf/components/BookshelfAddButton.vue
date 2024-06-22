@@ -2,12 +2,13 @@
 import { PlusOutlined } from '@vicons/material';
 import { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
+import { Locator } from '@/data';
+
 import { doAction } from '@/pages/util';
-import { useBookshelfStore } from '../BookshelfStore';
 
 const message = useMessage();
 
-const store = useBookshelfStore();
+const favoredRepository = Locator.favoredRepository();
 
 const showAddModal = ref(false);
 
@@ -43,7 +44,7 @@ const addFavorite = async () => {
 
   const { type, title } = formValue.value;
   await doAction(
-    store.createFavored(type, title).then(() => {
+    favoredRepository.createFavored(type, title).then(() => {
       showAddModal.value = false;
     }),
     '收藏夹创建',

@@ -5,8 +5,6 @@ import { Locator } from '@/data';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 
-import { useBookshelfStore } from '../BookshelfStore';
-
 const props = defineProps<{
   selectedNovels: WebNovelOutlineDto[];
   favoredId: string;
@@ -19,6 +17,8 @@ defineEmits<{
 const message = useMessage();
 
 const { setting } = Locator.settingRepository();
+const favoredRepository = Locator.favoredRepository();
+const { favoreds } = favoredRepository;
 
 // 删除小说
 const showDeleteModal = ref(false);
@@ -37,11 +37,11 @@ const deleteSelected = async () => {
   let failed = 0;
   for (const { providerId, novelId } of novels) {
     try {
-      await Locator.userRepository.unfavoriteWebNovel(
-        props.favoredId,
+      await favoredRepository.unfavoriteNovel(props.favoredId, {
+        type: 'web',
         providerId,
         novelId,
-      );
+      });
     } catch (e) {
       failed += 1;
     }
@@ -52,7 +52,6 @@ const deleteSelected = async () => {
 };
 
 // 移动小说
-const store = useBookshelfStore();
 const targetFavoredId = ref(props.favoredId);
 
 const moveToFavored = async () => {
@@ -70,11 +69,12 @@ const moveToFavored = async () => {
   let failed = 0;
   for (const { providerId, novelId } of novels) {
     try {
-      await Locator.userRepository.favoriteWebNovel(
-        targetFavoredId.value,
+      await favoredRepository.unfavoriteNovel(targetFavoredId.value, {
+        type: 'web',
+
         providerId,
         novelId,
-      );
+      });
     } catch (e) {
       failed += 1;
     }
@@ -178,7 +178,7 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
       </n-flex>
     </n-list-item>
 
-    <n-list-item v-if="store.web.length > 1">
+    <n-list-item v-if="favoreds.web.length > 1">
       <n-flex vertical>
         <b>移动小说（低配版，很慢，等到显示移动完成）</b>
 
@@ -192,7 +192,7 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
             />
 
             <n-radio
-              v-for="favored in store.web"
+              v-for="favored in favoreds.web"
               :key="favored.id"
               :value="favored.id"
             >

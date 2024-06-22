@@ -6,7 +6,6 @@ import { Setting } from '@/model/Setting';
 
 import { useIsWideScreen } from '@/pages/util';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
-import { useBookshelfStore } from '../BookshelfStore';
 
 const props = defineProps<{
   selectedIds: string[];
@@ -66,7 +65,8 @@ const downloadRawSelected = async () => {
 };
 
 // 移动小说
-const bookshelfStore = useBookshelfStore();
+const { favoreds } = Locator.favoredRepository();
+
 const targetFavoredId = ref(props.favoredId);
 
 const moveToFavored = async () => {
@@ -187,7 +187,7 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
       </n-flex>
     </n-list-item>
 
-    <n-list-item v-if="bookshelfStore.local.length > 1">
+    <n-list-item v-if="favoreds.local.length > 1">
       <n-flex vertical>
         <b>移动小说</b>
 
@@ -201,7 +201,7 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
             />
 
             <n-radio
-              v-for="favored in bookshelfStore.local"
+              v-for="favored in favoreds.local"
               :key="favored.id"
               :value="favored.id"
             >

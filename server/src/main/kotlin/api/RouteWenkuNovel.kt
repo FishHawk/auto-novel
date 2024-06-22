@@ -10,7 +10,6 @@ import infra.common.TranslatorId
 import infra.oplog.Operation
 import infra.oplog.OperationHistoryRepository
 import infra.user.User
-import infra.user.UserFavored
 import infra.user.UserFavoredRepository
 import infra.user.UserRole
 import infra.wenku.WenkuNovelFilter
@@ -291,7 +290,6 @@ class WenkuNovelApi(
         val volumes: List<WenkuNovelVolume>,
         val visited: Long,
         val favored: String?,
-        val favoredList: List<UserFavored>,
         val volumeZh: List<String>,
         val volumeJp: List<WenkuNovelVolumeJp>,
     )
@@ -337,7 +335,6 @@ class WenkuNovelApi(
             glossary = metadata.glossary,
             visited = metadata.visited,
             favored = null,
-            favoredList = emptyList(),
             volumeZh = volumes.zh,
             volumeJp = volumes.jp,
         )
@@ -345,13 +342,10 @@ class WenkuNovelApi(
         return if (user == null) {
             dto
         } else {
-            val favoredList = userFavoredRepo.getFavoredList(user.id)!!.favoredWenku
             val favored = favoredRepo
                 .getFavoredId(user.id, novelId)
-                .takeIf { favored -> favoredList.any { it.id == favored } }
             dto.copy(
                 favored = favored,
-                favoredList = favoredList,
             )
         }
     }

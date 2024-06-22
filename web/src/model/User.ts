@@ -12,12 +12,3 @@ export interface UserOutline {
   role: UserRole;
   createAt: number;
 }
-
-export interface Favored {
-  id: string;
-  title: string;
-}
-export interface FavoredList {
-  favoredWeb: Favored[];
-  favoredWenku: Favored[];
-}

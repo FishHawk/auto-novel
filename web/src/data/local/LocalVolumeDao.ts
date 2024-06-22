@@ -1,14 +1,14 @@
 import { DBSchema, openDB } from 'idb';
 
-import { LocalVolumeChapter, LocalVolumeMetadata, LocalVolumeFavorite } from '@/model/LocalVolume';
+import {
+  LocalVolumeChapter,
+  LocalVolumeMetadata,
+  LocalVolumeFavorite,
+} from '@/model/LocalVolume';
 
 type Mutator<T> = (value: T) => T;
 
 interface VolumesDBSchema extends DBSchema {
-  favorite: {
-    key: string;
-    value: LocalVolumeFavorite;
-  }
   metadata: {
     key: string;
     value: LocalVolumeMetadata;
@@ -36,46 +36,8 @@ export const createLocalVolumeDao = async () => {
         const store = db.createObjectStore('chapter', { keyPath: 'id' });
         store.createIndex('byVolumeId', 'volumeId');
       }
-      if (oldVersion <= 1) {
-        const favorite = db.createObjectStore('favorite', { keyPath: 'id' });
-        favorite.put({
-          id: 'default',
-          title: '默认收藏夹'
-        });
-      }
     },
   });
-
-  //favored
-  const listFavorite = () => db.getAll('favorite');
-  const getFavorite = (id: string) => db.get('favorite', id);
-  const deleteFavorite = async (id: string) => {
-    const list = await listMetadata()
-    await Promise.all(list.map(async it => {
-      if (it.favoriteId === id) {
-        await updateMetadata(it.id, (value) => {
-          delete value.favoriteId
-          return value
-        })
-      }
-    }))
-    return db.delete('favorite', id)
-  };
-  const createFavorite = (value: LocalVolumeFavorite) =>
-    db.put('favorite', value);
-  const updateFavorite = async (
-    id: string,
-    mutator: Mutator<LocalVolumeFavorite>,
-  ) => {
-    const tx = db.transaction('favorite', 'readwrite');
-    let value = await tx.store.get(id);
-    if (value !== undefined) {
-      value = mutator(value);
-      await tx.store.put(value);
-    }
-    await tx.done;
-    return value;
-  };
 
   //Metadata
   const listMetadata = () => db.getAll('metadata');
@@ -130,13 +92,6 @@ export const createLocalVolumeDao = async () => {
   };
 
   return {
-    //
-    listFavorite,
-    getFavorite,
-    deleteFavorite,
-    createFavorite,
-    updateFavorite,
-    //
     listMetadata,
     getMetadata,
     deleteMetadata,
