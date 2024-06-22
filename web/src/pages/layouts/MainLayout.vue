@@ -100,7 +100,7 @@ const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'account') {
     router.push('/account');
   } else if (key === 'signOut') {
-    signOut;
+    signOut();
   }
 };
 
