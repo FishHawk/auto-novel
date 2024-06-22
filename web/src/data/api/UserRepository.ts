@@ -13,6 +13,8 @@ const listReadHistoryWeb = (searchParams: { page: number; pageSize: number }) =>
     .get('user/read-history', { searchParams })
     .json<Page<WebNovelOutlineDto>>();
 
+const clearReadHistoryWeb = () => client.delete('user/read-history');
+
 const updateReadHistoryWeb = (
   providerId: string,
   novelId: string,
@@ -51,6 +53,7 @@ export const UserRepository = {
   listUser,
   //
   listReadHistoryWeb,
+  clearReadHistoryWeb,
   updateReadHistoryWeb,
   deleteReadHistoryWeb,
   //

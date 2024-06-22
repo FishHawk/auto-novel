@@ -14,7 +14,6 @@ import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
-import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
 
 @Resource("/user/read-history")
@@ -45,6 +44,14 @@ fun Route.routeUserReadHistoryWeb() {
                     user = user,
                     page = loc.page,
                     pageSize = loc.pageSize,
+                )
+            }
+        }
+        delete<UserReadHistoryWebRes> {
+            val user = call.user()
+            call.tryRespond {
+                service.clearReadHistory(
+                    user = user,
                 )
             }
         }
@@ -93,6 +100,14 @@ class UserReadHistoryWebApi(
             .map { it.asDto() }
     }
 
+    suspend fun clearReadHistory(
+        user: User,
+    ) {
+        historyRepo.deleteReadHistoryByUser(
+            userId = user.id,
+        )
+    }
+
     suspend fun updateReadHistory(
         user: User,
         providerId: String,
@@ -102,8 +117,8 @@ class UserReadHistoryWebApi(
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNotFound("小说不存在")
         historyRepo.updateReadHistory(
-            userId = ObjectId(user.id),
-            novelId = novel.id,
+            userId = user.id,
+            novelId = novel.id.toHexString(),
             chapterId = chapterId,
         )
     }
@@ -116,8 +131,8 @@ class UserReadHistoryWebApi(
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNotFound("小说不存在")
         historyRepo.deleteReadHistory(
-            userId = ObjectId(user.id),
-            novelId = novel.id,
+            userId = user.id,
+            novelId = novel.id.toHexString(),
         )
     }
 }

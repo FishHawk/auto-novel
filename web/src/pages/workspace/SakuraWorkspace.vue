@@ -3,10 +3,9 @@ import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
-import { TranslateJob } from '@/model/Translator';
-import { notice } from '@/pages/components/NoticeBoard.vue';
-import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 import { SakuraTranslator } from '@/domain/translate';
+import { TranslateJob } from '@/model/Translator';
+import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
 

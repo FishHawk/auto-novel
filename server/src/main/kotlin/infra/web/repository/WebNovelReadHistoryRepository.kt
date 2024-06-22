@@ -78,6 +78,17 @@ class WebNovelReadHistoryRepository(
         }
     }
 
+    suspend fun deleteReadHistoryByUser(
+        userId: String,
+    ) {
+        userReadHistoryWebCollection
+            .deleteMany(
+                and(
+                    eq(WebNovelReadHistoryDbModel::userId.field(), ObjectId(userId)),
+                ),
+            )
+    }
+
     suspend fun getReaderHistory(
         userId: String,
         novelId: String,
@@ -93,19 +104,19 @@ class WebNovelReadHistoryRepository(
     }
 
     suspend fun updateReadHistory(
-        userId: ObjectId,
-        novelId: ObjectId,
+        userId: String,
+        novelId: String,
         chapterId: String,
     ) {
         userReadHistoryWebCollection
             .replaceOne(
                 and(
-                    eq(WebNovelReadHistoryDbModel::userId.field(), userId),
-                    eq(WebNovelReadHistoryDbModel::novelId.field(), novelId),
+                    eq(WebNovelReadHistoryDbModel::userId.field(), ObjectId(userId)),
+                    eq(WebNovelReadHistoryDbModel::novelId.field(), ObjectId(novelId)),
                 ),
                 WebNovelReadHistoryDbModel(
-                    userId = userId,
-                    novelId = novelId,
+                    userId = ObjectId(userId),
+                    novelId = ObjectId(novelId),
                     chapterId = chapterId,
                     createAt = Clock.System.now(),
                 ),
@@ -114,14 +125,14 @@ class WebNovelReadHistoryRepository(
     }
 
     suspend fun deleteReadHistory(
-        userId: ObjectId,
-        novelId: ObjectId,
+        userId: String,
+        novelId: String,
     ) {
         userReadHistoryWebCollection
             .deleteOne(
                 and(
-                    eq(WebNovelReadHistoryDbModel::userId.field(), userId),
-                    eq(WebNovelReadHistoryDbModel::novelId.field(), novelId),
+                    eq(WebNovelReadHistoryDbModel::userId.field(), ObjectId(userId)),
+                    eq(WebNovelReadHistoryDbModel::novelId.field(), ObjectId(novelId)),
                 ),
             )
     }
