@@ -104,18 +104,6 @@ export const createFavoredRepository = () => {
     } else {
       await FavoredApi.unfavoriteWenkuNovel(favoredId, novel.novelId);
     }
-    // const deleteFavorite = async (id: string) => {
-    //   const list = await listMetadata()
-    //   await Promise.all(list.map(async it => {
-    //     if (it.favoriteId === id) {
-    //       await updateMetadata(it.id, (value) => {
-    //         delete value.favoriteId
-    //         return value
-    //       })
-    //     }
-    //   }))
-    //   return db.delete('favorite', id)
-    // };
   };
 
   return {

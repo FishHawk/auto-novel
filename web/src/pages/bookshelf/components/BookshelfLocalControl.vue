@@ -86,7 +86,7 @@ const moveToFavored = async () => {
   let failed = 0;
   for (const volumeId of novels) {
     try {
-      await localVolumeRepository.updateFavoriteId(
+      await localVolumeRepository.updateFavoredId(
         volumeId,
         targetFavoredId.value,
       );
@@ -97,7 +97,7 @@ const moveToFavored = async () => {
   const success = novels.length - failed;
 
   message.info(`${success}本小说已移动，${failed}本失败`);
-  window.location.reload();
+  await store.loadVolumes();
 };
 
 // 生成翻译任务

@@ -26,7 +26,7 @@ const search = reactive({
 
 const sortedVolumes = computed(() => {
   return BookshelfLocalUtil.filterAndSortVolumes(
-    volumes.value.filter((v) => v.favoriteId == props.favoredId),
+    volumes.value.filter((v) => v.favoredId == props.favoredId),
     {
       ...search,
       order: setting.value.localVolumeOrder,

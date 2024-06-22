@@ -19,7 +19,7 @@ export interface LocalVolumeMetadata {
   }[];
   glossaryId: string;
   glossary: Glossary;
-  favoriteId?: string;
+  favoredId: string;
 }
 
 export interface LocalVolumeChapter {
@@ -30,9 +30,4 @@ export interface LocalVolumeChapter {
   youdao?: ChapterTranslation;
   gpt?: ChapterTranslation;
   sakura?: ChapterTranslation;
-}
-
-export interface LocalVolumeFavorite {
-  id: string;
-  title: string;
 }
