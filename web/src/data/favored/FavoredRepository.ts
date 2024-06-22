@@ -29,6 +29,10 @@ export const createFavoredRepository = () => {
     type: 'web' | 'wenku' | 'local',
     title: string,
   ) => {
+    const specificFavoreds = favoreds.value[type];
+    if (specificFavoreds.length >= 10) {
+      throw new Error('收藏夹最多只能创建10个');
+    }
     let id: string;
     if (type === 'web') {
       id = await FavoredApi.createFavoredWeb({ title });
@@ -37,7 +41,7 @@ export const createFavoredRepository = () => {
     } else {
       id = uuidv4();
     }
-    favoreds.value[type].push({ id, title });
+    specificFavoreds.push({ id, title });
   };
 
   const updateFavored = async (
