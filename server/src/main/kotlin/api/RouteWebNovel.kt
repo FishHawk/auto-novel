@@ -319,6 +319,7 @@ class WebNovelApi(
 
         return metadataRepo
             .search(
+                userId = user?.id,
                 userQuery = queryString,
                 filterProvider = filterProviderParsed,
                 filterType = filterType,
@@ -385,7 +386,7 @@ class WebNovelApi(
     )
 
     private suspend fun buildNovelDto(
-        novel: WebNovelMetadata,
+        novel: WebNovel,
         user: User?,
     ): NovelDto {
         val dto = NovelDto(

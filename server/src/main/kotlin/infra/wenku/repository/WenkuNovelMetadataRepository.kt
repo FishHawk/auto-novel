@@ -7,7 +7,7 @@ import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.model.Updates.*
 import infra.*
 import infra.common.Page
-import infra.web.WebNovelMetadata
+import infra.web.WebNovel
 import infra.wenku.*
 import infra.wenku.datasource.WenkuNovelEsDataSource
 import kotlinx.coroutines.flow.firstOrNull
@@ -171,8 +171,8 @@ class WenkuNovelMetadataRepository(
             .updateOne(
                 WenkuNovelMetadata.byId(novelId),
                 combine(
-                    set(WebNovelMetadata::glossaryUuid.field(), UUID.randomUUID().toString()),
-                    set(WebNovelMetadata::glossary.field(), glossary)
+                    set(WebNovel::glossaryUuid.field(), UUID.randomUUID().toString()),
+                    set(WebNovel::glossary.field(), glossary)
                 ),
             )
     }

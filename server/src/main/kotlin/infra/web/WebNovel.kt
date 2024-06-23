@@ -49,7 +49,7 @@ enum class WebNovelType {
 }
 
 @Serializable
-data class WebNovelMetadataListItem(
+data class WebNovelListItem(
     val providerId: String,
     @SerialName("bookId")
     val novelId: String,
@@ -58,6 +58,10 @@ data class WebNovelMetadataListItem(
     val type: WebNovelType?,
     val attentions: List<WebNovelAttention>,
     val keywords: List<String>,
+    //
+    val favored: String? = null,
+    @Contextual val lastReadAt: Instant? = null,
+    //
     val total: Long = 0,
     val jp: Long = 0,
     val baidu: Long = 0,
@@ -69,7 +73,7 @@ data class WebNovelMetadataListItem(
 )
 
 @Serializable
-class WebNovelMetadata(
+class WebNovel(
     @Contextual @SerialName("_id") val id: ObjectId,
     val providerId: String,
     @SerialName("bookId")
@@ -104,8 +108,8 @@ class WebNovelMetadata(
     companion object {
         fun byId(providerId: String, novelId: String): Bson =
             and(
-                eq(WebNovelMetadata::providerId.field(), providerId),
-                eq(WebNovelMetadata::novelId.field(), novelId),
+                eq(WebNovel::providerId.field(), providerId),
+                eq(WebNovel::novelId.field(), novelId),
             )
     }
 }

@@ -1,6 +1,6 @@
 package infra.web.repository
 
-import infra.web.WebNovelMetadata
+import infra.web.WebNovel
 import infra.web.WebNovelTocItem
 import util.epub.EpubBook
 import util.epub.Navigation
@@ -11,7 +11,7 @@ private const val MISSING_EPISODE_HINT = "该章节缺失。"
 
 suspend fun makeEpubFile(
     filePath: Path,
-    metadata: WebNovelMetadata,
+    metadata: WebNovel,
     chapters: Map<String, ChapterWriteData>,
     jp: Boolean,
     zh: Boolean,

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { StarFilled } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { WebNovelOutlineDto } from '@/model/WebNovel';
@@ -74,30 +75,34 @@ defineExpose({
 
   <n-list>
     <n-list-item v-for="item of items">
-      <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
-        {{ item.titleJp }}
-      </c-a>
-      <br />
+      <n-flex vertical :size="0">
+        <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
+          <n-text type="warning" v-if="item.favored">
+            <n-icon
+              :size="16"
+              :component="StarFilled"
+              style="margin-top: 4px"
+            />
+          </n-text>
+          {{ item.titleJp }}
+        </c-a>
 
-      <template v-if="item.titleZh">
-        {{ item.titleZh }}
-        <br />
-      </template>
+        <n-text v-if="item.titleZh">
+          {{ item.titleZh }}
+        </n-text>
 
-      <n-a
-        v-if="!simple"
-        :href="WebUtil.buildNovelUrl(item.providerId, item.novelId)"
-      >
-        {{ item.providerId + '.' + item.novelId }}
-      </n-a>
+        <n-a
+          v-if="!simple"
+          :href="WebUtil.buildNovelUrl(item.providerId, item.novelId)"
+        >
+          {{ item.providerId + '.' + item.novelId }}
+        </n-a>
 
-      <n-text depth="3" tag="div">
-        <template v-if="item.extra">
+        <n-text v-if="item.extra" depth="3">
           {{ item.extra }}
-          <br />
-        </template>
+        </n-text>
 
-        <template v-if="!simple">
+        <n-text v-if="!simple" depth="3">
           <ReuseTag
             v-for="attention in item.attentions.sort()"
             :tag="attention"
@@ -108,21 +113,24 @@ defineExpose({
             :tag="keyword"
             :isAttention="false"
           />
-          <br />
-        </template>
+        </n-text>
 
-        <template v-if="item.total">
+        <n-text v-if="item.total" depth="3">
           {{ item.type ? item.type + ' / ' : '' }}
           总计 {{ item.total }} / 百度 {{ item.baidu }} / 有道
-          {{ item.youdao }} / GPT {{ item.gpt }} / Sakura {{ item.sakura }}
-          <br />
-        </template>
+          {{ item.youdao }} / GPT {{ item.gpt }} / Sakura {{ item.sakura }} /
+        </n-text>
 
-        <template v-if="item.updateAt">
-          本站更新于<n-time :time="item.updateAt * 1000" type="relative" />
-          <br />
-        </template>
-      </n-text>
+        <n-text depth="3">
+          <template v-if="item.updateAt">
+            本站更新于<n-time :time="item.updateAt * 1000" type="relative" /> /
+          </template>
+          <template v-if="item.lastReadAt">
+            <n-time :time="item.lastReadAt * 1000" type="relative" />看过 /
+          </template>
+        </n-text>
+      </n-flex>
+
       <slot name="action" v-bind="item" />
 
       <c-select-overlay

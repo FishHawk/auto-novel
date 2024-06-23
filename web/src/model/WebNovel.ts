@@ -7,6 +7,10 @@ export interface WebNovelOutlineDto {
   attentions: string[];
   keywords: string[];
   extra?: string;
+  //
+  favored?: string;
+  lastReadAt?: number;
+  //
   total: number;
   jp: number;
   baidu: number;

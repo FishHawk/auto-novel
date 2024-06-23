@@ -11,7 +11,7 @@ import infra.common.Glossary
 import infra.common.TranslatorId
 import infra.web.WebNovelChapter
 import infra.web.WebNovelChapterTranslationState
-import infra.web.WebNovelMetadata
+import infra.web.WebNovel
 import infra.web.datasource.WebNovelHttpDataSource
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -23,7 +23,7 @@ class WebNovelChapterRepository(
     mongo: MongoClient,
 ) {
     private val webNovelMetadataCollection =
-        mongo.database.getCollection<WebNovelMetadata>(
+        mongo.database.getCollection<WebNovel>(
             MongoCollectionNames.WEB_NOVEL,
         )
     private val webNovelChapterCollection =
@@ -216,17 +216,17 @@ class WebNovelChapterRepository(
                 )
             )
         val zhProperty = when (translatorId) {
-            TranslatorId.Baidu -> WebNovelMetadata::baidu
-            TranslatorId.Youdao -> WebNovelMetadata::youdao
-            TranslatorId.Gpt -> WebNovelMetadata::gpt
-            TranslatorId.Sakura -> WebNovelMetadata::sakura
+            TranslatorId.Baidu -> WebNovel::baidu
+            TranslatorId.Youdao -> WebNovel::youdao
+            TranslatorId.Gpt -> WebNovel::gpt
+            TranslatorId.Sakura -> WebNovel::sakura
         }
         webNovelMetadataCollection
             .updateOne(
-                WebNovelMetadata.byId(providerId, novelId),
+                WebNovel.byId(providerId, novelId),
                 combine(
                     set(zhProperty.field(), zh),
-                    set(WebNovelMetadata::changeAt.field(), Clock.System.now()),
+                    set(WebNovel::changeAt.field(), Clock.System.now()),
                 ),
             )
         return zh
@@ -240,10 +240,10 @@ class WebNovelChapterRepository(
             .countDocuments(WebNovelChapter.byNovelId(providerId, novelId))
         webNovelMetadataCollection
             .updateOne(
-                WebNovelMetadata.byId(providerId, novelId),
+                WebNovel.byId(providerId, novelId),
                 combine(
-                    set(WebNovelMetadata::jp.field(), jp),
-                    set(WebNovelMetadata::changeAt.field(), Clock.System.now()),
+                    set(WebNovel::jp.field(), jp),
+                    set(WebNovel::changeAt.field(), Clock.System.now()),
                 ),
             )
     }

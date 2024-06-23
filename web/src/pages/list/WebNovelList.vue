@@ -57,6 +57,9 @@ const options = [
   },
 ];
 
+const favoredRepository = Locator.favoredRepository();
+onMounted(() => favoredRepository.loadRemoteFavoreds());
+
 const loader: Loader<WebNovelOutlineDto> = (page, query, selected) => {
   if (query !== '') {
     document.title = '网络小说 搜索：' + query;
@@ -94,6 +97,16 @@ const loader: Loader<WebNovelOutlineDto> = (page, query, selected) => {
             translate: selected[2],
             sort: selected[3],
           }),
+    }).then((page) => {
+      const favoredIds = favoredRepository.favoreds.value.web.map(
+        (it) => it.id,
+      );
+      for (const item of page.items) {
+        if (item.favored && !favoredIds.includes(item.favored)) {
+          item.favored = undefined;
+        }
+      }
+      return page;
     }),
   );
 };

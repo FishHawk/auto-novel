@@ -10,8 +10,8 @@ import com.mongodb.client.model.Sorts.descending
 import infra.*
 import infra.common.Page
 import infra.common.emptyPage
-import infra.web.WebNovelMetadata
-import infra.web.WebNovelMetadataListItem
+import infra.web.WebNovel
+import infra.web.WebNovelListItem
 import infra.web.WebNovelReadHistoryDbModel
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
@@ -30,11 +30,11 @@ class WebNovelReadHistoryRepository(
         userId: String,
         page: Int,
         pageSize: Int,
-    ): Page<WebNovelMetadataListItem> {
+    ): Page<WebNovelListItem> {
         @Serializable
         data class PageModel(
             val total: Int = 0,
-            val items: List<WebNovelMetadata>,
+            val items: List<WebNovel>,
         )
 
         val doc = userReadHistoryWebCollection
@@ -52,7 +52,7 @@ class WebNovelReadHistoryRepository(
                         lookup(
                             /* from = */ MongoCollectionNames.WEB_NOVEL,
                             /* localField = */ WebNovelReadHistoryDbModel::novelId.field(),
-                            /* foreignField = */ WebNovelMetadata::id.field(),
+                            /* foreignField = */ WebNovel::id.field(),
                             /* as = */ "novel"
                         ),
                         unwind("\$novel"),

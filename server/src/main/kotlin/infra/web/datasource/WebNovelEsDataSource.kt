@@ -172,7 +172,7 @@ class WebNovelEsDataSource(
     }
 
     suspend fun syncNovel(
-        novel: WebNovelMetadata,
+        novel: WebNovel,
     ) {
         es.indexDocument(
             id = "${novel.providerId}.${novel.novelId}",
@@ -197,7 +197,7 @@ class WebNovelEsDataSource(
     }
 
     suspend fun syncVisited(
-        novel: WebNovelMetadata,
+        novel: WebNovel,
     ) {
         es.updateDocument(
             id = "${novel.providerId}.${novel.novelId}",

@@ -1,7 +1,6 @@
 package infra.web.repository
 
-import com.mongodb.client.model.Filters.and
-import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.model.Updates.*
@@ -16,7 +15,9 @@ import infra.web.datasource.providers.Hameln
 import infra.web.datasource.providers.RemoteNovelListItem
 import infra.web.datasource.providers.Syosetu
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import java.util.*
@@ -29,7 +30,7 @@ class WebNovelMetadataRepository(
     private val redis: RedisClient,
 ) {
     private val webNovelMetadataCollection =
-        mongo.database.getCollection<WebNovelMetadata>(
+        mongo.database.getCollection<WebNovel>(
             MongoCollectionNames.WEB_NOVEL,
         )
     private val tocMergeHistoryCollection =
@@ -40,17 +41,21 @@ class WebNovelMetadataRepository(
         mongo.database.getCollection<WebNovelFavoriteDbModel>(
             MongoCollectionNames.WEB_FAVORITE,
         )
+    private val userReadHistoryWebCollection =
+        mongo.database.getCollection<WebNovelReadHistoryDbModel>(
+            MongoCollectionNames.WEB_READ_HISTORY,
+        )
 
     private fun byId(providerId: String, novelId: String): Bson =
         and(
-            eq(WebNovelMetadata::providerId.field(), providerId),
-            eq(WebNovelMetadata::novelId.field(), novelId),
+            eq(WebNovel::providerId.field(), providerId),
+            eq(WebNovel::novelId.field(), novelId),
         )
 
     suspend fun listRank(
         providerId: String,
         options: Map<String, String>,
-    ): Result<Page<WebNovelMetadataListItem>> {
+    ): Result<Page<WebNovelListItem>> {
         return provider
             .listRank(providerId, options)
             .map { rank ->
@@ -64,6 +69,7 @@ class WebNovelMetadataRepository(
     }
 
     suspend fun search(
+        userId: String?,
         userQuery: String?,
         filterProvider: List<String>,
         filterType: WebNovelFilter.Type,
@@ -72,8 +78,8 @@ class WebNovelMetadataRepository(
         filterSort: WebNovelFilter.Sort,
         page: Int,
         pageSize: Int,
-    ): Page<WebNovelMetadataListItem> {
-        val (items, total) = es.searchNovel(
+    ): Page<WebNovelListItem> {
+        val (itemsEs, total) = es.searchNovel(
             userQuery = userQuery,
             filterProvider = filterProvider,
             filterType = filterType,
@@ -83,12 +89,41 @@ class WebNovelMetadataRepository(
             page = page,
             pageSize = pageSize
         )
+        val items = itemsEs.map { (providerId, novelId) ->
+            webNovelMetadataCollection
+                .find(byId(providerId, novelId))
+                .firstOrNull()!!
+        }
+        val ids = items.map { it.id }
+        val favoredList = userId?.let {
+            userFavoredWebCollection
+                .find(
+                    and(
+                        eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(it)),
+                        `in`(WebNovelFavoriteDbModel::novelId.field(), ids),
+                    )
+                )
+                .toList()
+        }
+        val readHistoryList = userId?.let {
+            userReadHistoryWebCollection
+                .find(
+                    and(
+                        eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(it)),
+                        `in`(WebNovelReadHistoryDbModel::novelId.field(), ids),
+                    )
+                )
+                .toList()
+        }
+
         return Page(
-            items = items.map { (providerId, novelId) ->
-                webNovelMetadataCollection
-                    .find(byId(providerId, novelId))
-                    .firstOrNull()!!
-                    .toOutline()
+            items = items.map { novel ->
+                val favored = favoredList?.find { it.novelId == novel.id }
+                val readHistory = readHistoryList?.find { it.novelId == novel.id }
+                novel.toOutline(
+                    favored = favored?.favoredId,
+                    lastReadAt = readHistory?.createAt,
+                )
             },
             total = total,
             pageSize = pageSize,
@@ -98,7 +133,7 @@ class WebNovelMetadataRepository(
     suspend fun get(
         providerId: String,
         novelId: String,
-    ): WebNovelMetadata? {
+    ): WebNovel? {
         return webNovelMetadataCollection
             .find(byId(providerId, novelId))
             .firstOrNull()
@@ -107,11 +142,11 @@ class WebNovelMetadataRepository(
     private suspend fun getRemote(
         providerId: String,
         novelId: String,
-    ): Result<WebNovelMetadata> {
+    ): Result<WebNovel> {
         return provider
             .getMetadata(providerId, novelId)
             .map { remote ->
-                WebNovelMetadata(
+                WebNovel(
                     id = ObjectId(),
                     providerId = providerId,
                     novelId = novelId,
@@ -132,7 +167,7 @@ class WebNovelMetadataRepository(
         providerId: String,
         novelId: String,
         expiredMinutes: Int = 20 * 60,
-    ): Result<WebNovelMetadata> {
+    ): Result<WebNovel> {
         val local = get(providerId, novelId)
 
         // 不在数据库中
@@ -174,9 +209,9 @@ class WebNovelMetadataRepository(
     private suspend fun mergeNovel(
         providerId: String,
         novelId: String,
-        local: WebNovelMetadata,
-        remote: WebNovelMetadata,
-    ): WebNovelMetadata {
+        local: WebNovel,
+        remote: WebNovel,
+    ): WebNovel {
         val merged = mergeToc(
             remoteToc = remote.toc,
             localToc = local.toc,
@@ -198,19 +233,19 @@ class WebNovelMetadataRepository(
 
         val now = Clock.System.now()
         val list = mutableListOf(
-            set(WebNovelMetadata::titleJp.field(), remote.titleJp),
-            set(WebNovelMetadata::type.field(), remote.type),
-            set(WebNovelMetadata::attentions.field(), remote.attentions),
-            set(WebNovelMetadata::keywords.field(), remote.keywords),
-            set(WebNovelMetadata::points.field(), remote.points),
-            set(WebNovelMetadata::totalCharacters.field(), remote.totalCharacters),
-            set(WebNovelMetadata::introductionJp.field(), remote.introductionJp),
-            set(WebNovelMetadata::toc.field(), merged.toc),
-            set(WebNovelMetadata::syncAt.field(), now),
+            set(WebNovel::titleJp.field(), remote.titleJp),
+            set(WebNovel::type.field(), remote.type),
+            set(WebNovel::attentions.field(), remote.attentions),
+            set(WebNovel::keywords.field(), remote.keywords),
+            set(WebNovel::points.field(), remote.points),
+            set(WebNovel::totalCharacters.field(), remote.totalCharacters),
+            set(WebNovel::introductionJp.field(), remote.introductionJp),
+            set(WebNovel::toc.field(), merged.toc),
+            set(WebNovel::syncAt.field(), now),
         )
         if (merged.hasChanged) {
-            list.add(set(WebNovelMetadata::changeAt.field(), now))
-            list.add(set(WebNovelMetadata::updateAt.field(), now))
+            list.add(set(WebNovel::changeAt.field(), now))
+            list.add(set(WebNovel::updateAt.field(), now))
         }
 
         val novel = webNovelMetadataCollection
@@ -237,7 +272,7 @@ class WebNovelMetadataRepository(
         val novel = webNovelMetadataCollection
             .findOneAndUpdate(
                 byId(providerId, novelId),
-                inc(WebNovelMetadata::visited.field(), 1),
+                inc(WebNovel::visited.field(), 1),
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             ) ?: return
         es.syncVisited(novel)
@@ -251,18 +286,18 @@ class WebNovelMetadataRepository(
         tocZh: Map<Int, String?>,
     ) {
         val list = mutableListOf(
-            set(WebNovelMetadata::titleZh.field(), titleZh),
-            set(WebNovelMetadata::introductionZh.field(), introductionZh),
+            set(WebNovel::titleZh.field(), titleZh),
+            set(WebNovel::introductionZh.field(), introductionZh),
         )
         tocZh.forEach { (index, itemTitleZh) ->
             list.add(
                 set(
-                    WebNovelMetadata::toc.field() + ".${index}." + WebNovelTocItem::titleZh.field(),
+                    WebNovel::toc.field() + ".${index}." + WebNovelTocItem::titleZh.field(),
                     itemTitleZh,
                 )
             )
         }
-        list.add(set(WebNovelMetadata::changeAt.field(), Clock.System.now()))
+        list.add(set(WebNovel::changeAt.field(), Clock.System.now()))
 
         webNovelMetadataCollection
             .findOneAndUpdate(
@@ -282,8 +317,8 @@ class WebNovelMetadataRepository(
             .updateOne(
                 byId(providerId, novelId),
                 combine(
-                    set(WebNovelMetadata::glossaryUuid.field(), UUID.randomUUID().toString()),
-                    set(WebNovelMetadata::glossary.field(), glossary),
+                    set(WebNovel::glossaryUuid.field(), UUID.randomUUID().toString()),
+                    set(WebNovel::glossary.field(), glossary),
                 ),
             )
     }
@@ -296,16 +331,16 @@ class WebNovelMetadataRepository(
         return webNovelMetadataCollection
             .updateOne(
                 byId(providerId, novelId),
-                set(WebNovelMetadata::wenkuId.field(), wenkuId),
+                set(WebNovel::wenkuId.field(), wenkuId),
             )
     }
 }
 
 private fun RemoteNovelListItem.toOutline(
     providerId: String,
-    novel: WebNovelMetadata?,
+    novel: WebNovel?,
 ) =
-    WebNovelMetadataListItem(
+    WebNovelListItem(
         providerId = providerId,
         novelId = novelId,
         titleJp = title,
@@ -323,8 +358,11 @@ private fun RemoteNovelListItem.toOutline(
         updateAt = novel?.updateAt,
     )
 
-fun WebNovelMetadata.toOutline() =
-    WebNovelMetadataListItem(
+fun WebNovel.toOutline(
+    favored: String? = null,
+    lastReadAt: Instant? = null,
+) =
+    WebNovelListItem(
         providerId = providerId,
         novelId = novelId,
         titleJp = titleJp,
@@ -332,6 +370,10 @@ fun WebNovelMetadata.toOutline() =
         type = type,
         attentions = attentions,
         keywords = keywords,
+        //
+        favored = favored,
+        lastReadAt = lastReadAt,
+        //
         total = toc.count { it.chapterId != null }.toLong(),
         jp = jp,
         baidu = baidu,

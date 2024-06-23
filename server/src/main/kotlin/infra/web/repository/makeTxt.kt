@@ -1,7 +1,7 @@
 package infra.web.repository
 
 import infra.common.TranslatorId
-import infra.web.WebNovelMetadata
+import infra.web.WebNovel
 import infra.web.WebNovelTocItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +13,7 @@ import kotlin.io.path.notExists
 
 suspend fun makeTxtFile(
     filePath: Path,
-    metadata: WebNovelMetadata,
+    metadata: WebNovel,
     chapters: Map<String, ChapterWriteData>,
     jp: Boolean,
     zh: Boolean,
@@ -34,12 +34,12 @@ private class TxtWriter(
     private val jp: Boolean,
     private val zh: Boolean,
 ) {
-    private fun BufferedWriter.writeTitle(novel: WebNovelMetadata) {
+    private fun BufferedWriter.writeTitle(novel: WebNovel) {
         if (jp) write(novel.titleJp + "\n")
         if (zh) write(novel.titleZh + "\n")
     }
 
-    private fun BufferedWriter.writeAuthor(novel: WebNovelMetadata) {
+    private fun BufferedWriter.writeAuthor(novel: WebNovel) {
         novel.authors.forEach { author ->
             write(author.name)
             if (author.link != null) {
@@ -49,7 +49,7 @@ private class TxtWriter(
         }
     }
 
-    private fun BufferedWriter.writeIntroduction(novel: WebNovelMetadata) {
+    private fun BufferedWriter.writeIntroduction(novel: WebNovel) {
         if (jp && novel.introductionJp.isNotBlank()) {
             write(novel.introductionJp)
             write("\n")
@@ -74,7 +74,7 @@ private class TxtWriter(
     }
 
     fun BufferedWriter.writeNovel(
-        novel: WebNovelMetadata,
+        novel: WebNovel,
         chapters: Map<String, ChapterWriteData>,
     ) {
         writeTitle(novel)

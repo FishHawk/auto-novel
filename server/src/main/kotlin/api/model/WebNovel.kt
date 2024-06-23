@@ -1,7 +1,7 @@
 package api.model
 
 import infra.web.WebNovelAttention
-import infra.web.WebNovelMetadataListItem
+import infra.web.WebNovelListItem
 import infra.web.WebNovelType
 import kotlinx.serialization.Serializable
 
@@ -15,6 +15,10 @@ data class WebNovelOutlineDto(
     val attentions: List<WebNovelAttention>,
     val keywords: List<String>,
     val extra: String?,
+    //
+    val favored: String?,
+    val lastReadAt: Long?,
+    //
     val total: Long,
     val jp: Long,
     val baidu: Long,
@@ -24,7 +28,7 @@ data class WebNovelOutlineDto(
     val updateAt: Long?,
 )
 
-fun WebNovelMetadataListItem.asDto() =
+fun WebNovelListItem.asDto() =
     WebNovelOutlineDto(
         providerId = providerId,
         novelId = novelId,
@@ -34,6 +38,8 @@ fun WebNovelMetadataListItem.asDto() =
         attentions = attentions,
         keywords = keywords,
         extra = extra,
+        favored = favored,
+        lastReadAt = lastReadAt?.epochSeconds,
         total = total,
         jp = jp,
         baidu = baidu,

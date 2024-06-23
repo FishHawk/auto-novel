@@ -12,8 +12,8 @@ import infra.common.FavoredNovelListSort
 import infra.common.Page
 import infra.common.emptyPage
 import infra.web.WebNovelFavoriteDbModel
-import infra.web.WebNovelMetadata
-import infra.web.WebNovelMetadataListItem
+import infra.web.WebNovel
+import infra.web.WebNovelListItem
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -47,11 +47,11 @@ class WebNovelFavoredRepository(
         page: Int,
         pageSize: Int,
         sort: FavoredNovelListSort,
-    ): Page<WebNovelMetadataListItem> {
+    ): Page<WebNovelListItem> {
         @Serializable
         data class PageModel(
             val total: Int = 0,
-            val items: List<WebNovelMetadata>,
+            val items: List<WebNovel>,
         )
 
         val sortProperty = when (sort) {
@@ -79,7 +79,7 @@ class WebNovelFavoredRepository(
                         lookup(
                             /* from = */ MongoCollectionNames.WEB_NOVEL,
                             /* localField = */ WebNovelFavoriteDbModel::novelId.field(),
-                            /* foreignField = */ WebNovelMetadata::id.field(),
+                            /* foreignField = */ WebNovel::id.field(),
                             /* as = */ "novel"
                         ),
                         unwind("\$novel"),

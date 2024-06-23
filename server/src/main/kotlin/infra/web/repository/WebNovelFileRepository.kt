@@ -7,7 +7,7 @@ import infra.common.NovelFileTranslationsMode
 import infra.common.NovelFileType
 import infra.common.TranslatorId
 import infra.web.WebNovelChapter
-import infra.web.WebNovelMetadata
+import infra.web.WebNovel
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.toKotlinInstant
 import util.serialName
@@ -21,7 +21,7 @@ class WebNovelFileRepository(
     mongo: MongoClient,
 ) {
     private val webNovelMetadataCollection =
-        mongo.database.getCollection<WebNovelMetadata>(
+        mongo.database.getCollection<WebNovel>(
             MongoCollectionNames.WEB_NOVEL,
         )
     private val webNovelChapterCollection =
@@ -40,7 +40,7 @@ class WebNovelFileRepository(
         type: NovelFileType,
     ): String? {
         val novel = webNovelMetadataCollection
-            .find(WebNovelMetadata.byId(providerId, novelId))
+            .find(WebNovel.byId(providerId, novelId))
             .firstOrNull()
             ?: return null
 
