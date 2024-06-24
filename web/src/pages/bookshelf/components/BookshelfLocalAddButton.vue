@@ -84,7 +84,9 @@ const handleDrop = (e: DragEvent) => {
       <template #trigger>
         <c-button label="添加" :icon="PlusOutlined" />
       </template>
-      支持拖拽上传文件
+      支持拖拽上传Epub/Txt/Srt文件
+      <br />
+      百度/有道/GPT支持韩语/英语小说
     </n-tooltip>
   </n-upload>
 
