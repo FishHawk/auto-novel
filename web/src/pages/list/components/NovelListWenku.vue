@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { StarFilled } from '@vicons/material';
+
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 
 const props = defineProps<{
@@ -53,7 +55,13 @@ defineExpose({
           <ImageCard
             :src="item.cover"
             :title="item.titleZh ? item.titleZh : item.title"
-          />
+          >
+            <template #prefix>
+              <n-text v-if="item.favored" type="warning">
+                <n-icon :size="16" :component="StarFilled" />
+              </n-text>
+            </template>
+          </ImageCard>
         </router-link>
 
         <c-select-overlay

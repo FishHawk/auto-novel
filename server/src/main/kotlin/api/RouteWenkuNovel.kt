@@ -1,7 +1,5 @@
 package api
 
-import api.model.WenkuNovelOutlineDto
-import api.model.asDto
 import api.plugins.*
 import infra.common.NovelFileMode
 import infra.common.NovelFileTranslationsMode
@@ -10,12 +8,8 @@ import infra.common.TranslatorId
 import infra.oplog.Operation
 import infra.oplog.OperationHistoryRepository
 import infra.user.User
-import infra.user.UserFavoredRepository
 import infra.user.UserRole
-import infra.wenku.WenkuNovelFilter
-import infra.wenku.WenkuNovelLevel
-import infra.wenku.WenkuNovelVolume
-import infra.wenku.WenkuNovelVolumeJp
+import infra.wenku.*
 import infra.wenku.datasource.VolumeCreateException
 import infra.wenku.repository.WenkuNovelFavoredRepository
 import infra.wenku.repository.WenkuNovelMetadataRepository
@@ -237,7 +231,6 @@ private fun validateVolumeId(volumeId: String) {
 }
 
 class WenkuNovelApi(
-    private val userFavoredRepo: UserFavoredRepository,
     private val metadataRepo: WenkuNovelMetadataRepository,
     private val volumeRepo: WenkuNovelVolumeRepository,
     private val favoredRepo: WenkuNovelFavoredRepository,
@@ -249,7 +242,7 @@ class WenkuNovelApi(
         page: Int,
         pageSize: Int,
         filterLevel: WenkuNovelFilter.Level,
-    ): Page<WenkuNovelOutlineDto> {
+    ): Page<WenkuNovelListItem> {
         validatePageNumber(page)
         validatePageSize(pageSize)
 
@@ -264,12 +257,12 @@ class WenkuNovelApi(
 
         return metadataRepo
             .search(
+                userId = user?.id,
                 userQuery = queryString,
                 page = page,
                 pageSize = pageSize,
                 filterLevel = filterLevelAllowed,
             )
-            .map { it.asDto() }
     }
 
     @Serializable

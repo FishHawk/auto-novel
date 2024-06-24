@@ -11,9 +11,9 @@ import infra.*
 import infra.common.FavoredNovelListSort
 import infra.common.Page
 import infra.common.emptyPage
-import infra.wenku.UserFavoredWenkuNovelDbModel
-import infra.wenku.WenkuNovelMetadata
-import infra.wenku.WenkuNovelMetadataListItem
+import infra.wenku.WenkuNovelFavoriteDbModel
+import infra.wenku.WenkuNovel
+import infra.wenku.WenkuNovelListItem
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -24,7 +24,7 @@ class WenkuNovelFavoredRepository(
     mongo: MongoClient,
 ) {
     private val userFavoredWenkuCollection =
-        mongo.database.getCollection<UserFavoredWenkuNovelDbModel>(
+        mongo.database.getCollection<WenkuNovelFavoriteDbModel>(
             MongoCollectionNames.WENKU_FAVORITE,
         )
 
@@ -36,9 +36,9 @@ class WenkuNovelFavoredRepository(
             .find(
                 and(
                     eq(
-                        UserFavoredWenkuNovelDbModel::userId.field(), ObjectId(userId)
+                        WenkuNovelFavoriteDbModel::userId.field(), ObjectId(userId)
                     ),
-                    eq(UserFavoredWenkuNovelDbModel::novelId.field(), ObjectId(novelId)),
+                    eq(WenkuNovelFavoriteDbModel::novelId.field(), ObjectId(novelId)),
                 )
             )
             .firstOrNull()?.favoredId
@@ -50,24 +50,24 @@ class WenkuNovelFavoredRepository(
         page: Int,
         pageSize: Int,
         sort: FavoredNovelListSort,
-    ): Page<WenkuNovelMetadataListItem> {
+    ): Page<WenkuNovelListItem> {
         @Serializable
         data class PageModel(
             val total: Int = 0,
-            val items: List<WenkuNovelMetadata>,
+            val items: List<WenkuNovel>,
         )
 
         val sortProperty = when (sort) {
-            FavoredNovelListSort.CreateAt -> UserFavoredWenkuNovelDbModel::createAt
-            FavoredNovelListSort.UpdateAt -> UserFavoredWenkuNovelDbModel::updateAt
+            FavoredNovelListSort.CreateAt -> WenkuNovelFavoriteDbModel::createAt
+            FavoredNovelListSort.UpdateAt -> WenkuNovelFavoriteDbModel::updateAt
         }
 
         val doc = userFavoredWenkuCollection
             .aggregate<PageModel>(
                 match(
                     and(
-                        eq(UserFavoredWenkuNovelDbModel::userId.field(), ObjectId(userId)),
-                        eq(UserFavoredWenkuNovelDbModel::favoredId.field(), favoredId),
+                        eq(WenkuNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                        eq(WenkuNovelFavoriteDbModel::favoredId.field(), favoredId),
                     )
                 ),
                 sort(
@@ -81,8 +81,8 @@ class WenkuNovelFavoredRepository(
                         limit(pageSize),
                         lookup(
                             /* from = */ MongoCollectionNames.WENKU_NOVEL,
-                            /* localField = */ UserFavoredWenkuNovelDbModel::novelId.field(),
-                            /* foreignField = */ WenkuNovelMetadata::id.field(),
+                            /* localField = */ WenkuNovelFavoriteDbModel::novelId.field(),
+                            /* foreignField = */ WenkuNovel::id.field(),
                             /* as = */ "novel"
                         ),
                         unwind("\$novel"),
@@ -104,11 +104,12 @@ class WenkuNovelFavoredRepository(
             Page(
                 total = doc.total.toLong(),
                 items = doc.items.map {
-                    WenkuNovelMetadataListItem(
+                    WenkuNovelListItem(
                         id = it.id.toHexString(),
                         title = it.title,
                         titleZh = it.titleZh,
                         cover = it.cover,
+                        favored = null,
                     )
                 },
                 pageSize = pageSize,
@@ -123,8 +124,8 @@ class WenkuNovelFavoredRepository(
         return userFavoredWenkuCollection
             .countDocuments(
                 and(
-                    eq(UserFavoredWenkuNovelDbModel::userId.field(), ObjectId(userId)),
-                    eq(UserFavoredWenkuNovelDbModel::favoredId.field(), favoredId),
+                    eq(WenkuNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                    eq(WenkuNovelFavoriteDbModel::favoredId.field(), favoredId),
                 )
             )
     }
@@ -138,10 +139,10 @@ class WenkuNovelFavoredRepository(
         userFavoredWenkuCollection
             .replaceOne(
                 and(
-                    eq(UserFavoredWenkuNovelDbModel::userId.field(), userId),
-                    eq(UserFavoredWenkuNovelDbModel::novelId.field(), novelId),
+                    eq(WenkuNovelFavoriteDbModel::userId.field(), userId),
+                    eq(WenkuNovelFavoriteDbModel::novelId.field(), novelId),
                 ),
-                UserFavoredWenkuNovelDbModel(
+                WenkuNovelFavoriteDbModel(
                     userId = userId,
                     novelId = novelId,
                     favoredId = favoredId,
@@ -159,8 +160,8 @@ class WenkuNovelFavoredRepository(
         userFavoredWenkuCollection
             .deleteOne(
                 and(
-                    eq(UserFavoredWenkuNovelDbModel::userId.field(), userId),
-                    eq(UserFavoredWenkuNovelDbModel::novelId.field(), novelId),
+                    eq(WenkuNovelFavoriteDbModel::userId.field(), userId),
+                    eq(WenkuNovelFavoriteDbModel::novelId.field(), novelId),
                 )
             )
     }

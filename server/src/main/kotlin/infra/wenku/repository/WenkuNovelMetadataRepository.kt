@@ -1,7 +1,7 @@
 package infra.wenku.repository
 
 import com.mongodb.client.model.CountOptions
-import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.model.Updates.*
@@ -11,6 +11,7 @@ import infra.web.WebNovel
 import infra.wenku.*
 import infra.wenku.datasource.WenkuNovelEsDataSource
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.bson.types.ObjectId
@@ -22,29 +23,47 @@ class WenkuNovelMetadataRepository(
     private val redis: RedisClient,
 ) {
     private val wenkuNovelMetadataCollection =
-        mongo.database.getCollection<WenkuNovelMetadata>(
+        mongo.database.getCollection<WenkuNovel>(
             MongoCollectionNames.WENKU_NOVEL,
+        )
+    private val userFavoredWenkuCollection =
+        mongo.database.getCollection<WenkuNovelFavoriteDbModel>(
+            MongoCollectionNames.WENKU_FAVORITE,
         )
 
     suspend fun search(
+        userId: String?,
         userQuery: String?,
         page: Int,
         pageSize: Int,
         filterLevel: WenkuNovelFilter.Level,
-    ): Page<WenkuNovelMetadataListItem> {
+    ): Page<WenkuNovelListItem> {
         val (items, total) = es.searchNovel(
             userQuery = userQuery,
             page = page,
             pageSize = pageSize,
             filterLevel = filterLevel,
         )
+        val ids = items.map { ObjectId(it.id) }
+        val favoredList = userId?.let {
+            userFavoredWenkuCollection
+                .find(
+                    and(
+                        eq(WenkuNovelFavoriteDbModel::userId.field(), ObjectId(it)),
+                        `in`(WenkuNovelFavoriteDbModel::novelId.field(), ids),
+                    )
+                )
+                .toList()
+        }
         return Page(
-            items = items.map {
-                WenkuNovelMetadataListItem(
-                    id = it.id,
-                    title = it.title,
-                    titleZh = it.titleZh,
-                    cover = it.cover,
+            items = items.map { novel ->
+                val favored = favoredList?.find { it.novelId.toHexString() == novel.id }
+                WenkuNovelListItem(
+                    id = novel.id,
+                    title = novel.title,
+                    titleZh = novel.titleZh,
+                    cover = novel.cover,
+                    favored = favored?.favoredId,
                 )
             },
             total = total,
@@ -55,14 +74,14 @@ class WenkuNovelMetadataRepository(
     suspend fun exist(novelId: String): Boolean {
         return wenkuNovelMetadataCollection
             .countDocuments(
-                WenkuNovelMetadata.byId(novelId),
+                WenkuNovel.byId(novelId),
                 CountOptions().limit(1),
             ) > 0L
     }
 
-    suspend fun get(novelId: String): WenkuNovelMetadata? {
+    suspend fun get(novelId: String): WenkuNovel? {
         return wenkuNovelMetadataCollection
-            .find(WenkuNovelMetadata.byId(novelId))
+            .find(WenkuNovel.byId(novelId))
             .firstOrNull()
     }
 
@@ -72,8 +91,8 @@ class WenkuNovelMetadataRepository(
     ) = redis.withRateLimit("wenku-visited:${userIdOrIp}:${novelId}") {
         wenkuNovelMetadataCollection
             .updateOne(
-                WenkuNovelMetadata.byId(novelId),
-                inc(WenkuNovelMetadata::visited.field(), 1),
+                WenkuNovel.byId(novelId),
+                inc(WenkuNovel::visited.field(), 1),
             )
     }
 
@@ -88,7 +107,7 @@ class WenkuNovelMetadataRepository(
         keywords: List<String>,
         volumes: List<WenkuNovelVolume>,
     ): String {
-        val model = WenkuNovelMetadata(
+        val model = WenkuNovel(
             id = ObjectId(),
             title = title,
             titleZh = titleZh,
@@ -126,24 +145,24 @@ class WenkuNovelMetadataRepository(
     ) {
         wenkuNovelMetadataCollection
             .findOneAndUpdate(
-                WenkuNovelMetadata.byId(novelId),
+                WenkuNovel.byId(novelId),
                 combine(
                     listOf(
-                        set(WenkuNovelMetadata::title.field(), title),
-                        set(WenkuNovelMetadata::titleZh.field(), titleZh),
-                        set(WenkuNovelMetadata::cover.field(), cover),
-                        set(WenkuNovelMetadata::authors.field(), authors),
-                        set(WenkuNovelMetadata::artists.field(), artists),
-                        set(WenkuNovelMetadata::publisher.field(), volumes.firstNotNullOfOrNull { it.publisher }),
-                        set(WenkuNovelMetadata::imprint.field(), volumes.firstNotNullOfOrNull { it.imprint }),
+                        set(WenkuNovel::title.field(), title),
+                        set(WenkuNovel::titleZh.field(), titleZh),
+                        set(WenkuNovel::cover.field(), cover),
+                        set(WenkuNovel::authors.field(), authors),
+                        set(WenkuNovel::artists.field(), artists),
+                        set(WenkuNovel::publisher.field(), volumes.firstNotNullOfOrNull { it.publisher }),
+                        set(WenkuNovel::imprint.field(), volumes.firstNotNullOfOrNull { it.imprint }),
                         set(
-                            WenkuNovelMetadata::latestPublishAt.field(),
+                            WenkuNovel::latestPublishAt.field(),
                             volumes.mapNotNull { it.publishAt }.maxOrNull()?.let { Instant.fromEpochSeconds(it) },
                         ),
-                        set(WenkuNovelMetadata::level.field(), level),
-                        set(WenkuNovelMetadata::introduction.field(), introduction),
-                        set(WenkuNovelMetadata::keywords.field(), keywords),
-                        set(WenkuNovelMetadata::volumes.field(), volumes)
+                        set(WenkuNovel::level.field(), level),
+                        set(WenkuNovel::introduction.field(), introduction),
+                        set(WenkuNovel::keywords.field(), keywords),
+                        set(WenkuNovel::volumes.field(), volumes)
                     )
                 ),
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
@@ -158,7 +177,7 @@ class WenkuNovelMetadataRepository(
     ) {
         wenkuNovelMetadataCollection
             .deleteOne(
-                eq(WenkuNovelMetadata::id.field(), ObjectId(novelId)),
+                eq(WenkuNovel::id.field(), ObjectId(novelId)),
             )
         es.deleteNovel(novelId)
     }
@@ -169,7 +188,7 @@ class WenkuNovelMetadataRepository(
     ) {
         wenkuNovelMetadataCollection
             .updateOne(
-                WenkuNovelMetadata.byId(novelId),
+                WenkuNovel.byId(novelId),
                 combine(
                     set(WebNovel::glossaryUuid.field(), UUID.randomUUID().toString()),
                     set(WebNovel::glossary.field(), glossary)
@@ -183,8 +202,8 @@ class WenkuNovelMetadataRepository(
     ) {
         wenkuNovelMetadataCollection
             .updateOne(
-                WenkuNovelMetadata.byId(novelId),
-                addToSet(WenkuNovelMetadata::webIds.field(), webId),
+                WenkuNovel.byId(novelId),
+                addToSet(WenkuNovel::webIds.field(), webId),
             )
     }
 
@@ -194,8 +213,8 @@ class WenkuNovelMetadataRepository(
     ) {
         wenkuNovelMetadataCollection
             .updateOne(
-                WenkuNovelMetadata.byId(novelId),
-                pull(WenkuNovelMetadata::webIds.field(), webId),
+                WenkuNovel.byId(novelId),
+                pull(WenkuNovel::webIds.field(), webId),
             )
     }
 
@@ -203,8 +222,8 @@ class WenkuNovelMetadataRepository(
         val updateAt = Clock.System.now()
         val novel = wenkuNovelMetadataCollection
             .findOneAndUpdate(
-                WenkuNovelMetadata.byId(novelId),
-                set(WenkuNovelMetadata::updateAt.field(), updateAt),
+                WenkuNovel.byId(novelId),
+                set(WenkuNovel::updateAt.field(), updateAt),
                 FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
             )!!
         es.syncNovel(novel)

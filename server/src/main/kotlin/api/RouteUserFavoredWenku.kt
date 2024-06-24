@@ -1,7 +1,5 @@
 package api
 
-import api.model.WenkuNovelOutlineDto
-import api.model.asDto
 import api.plugins.authenticateDb
 import api.plugins.user
 import infra.common.FavoredNovelListSort
@@ -9,6 +7,7 @@ import infra.common.Page
 import infra.user.User
 import infra.user.UserFavored
 import infra.user.UserFavoredRepository
+import infra.wenku.WenkuNovelListItem
 import infra.wenku.repository.WenkuNovelFavoredRepository
 import infra.wenku.repository.WenkuNovelMetadataRepository
 import io.ktor.resources.*
@@ -182,7 +181,7 @@ class UserFavoredWenkuApi(
         page: Int,
         pageSize: Int,
         sort: FavoredNovelListSort,
-    ): Page<WenkuNovelOutlineDto> {
+    ): Page<WenkuNovelListItem> {
         validatePageNumber(page)
         validatePageSize(pageSize)
         return favoredRepo
@@ -193,7 +192,6 @@ class UserFavoredWenkuApi(
                 pageSize = pageSize,
                 sort = sort,
             )
-            .map { it.asDto() }
     }
 
     suspend fun updateFavoredNovel(

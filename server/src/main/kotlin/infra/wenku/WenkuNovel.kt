@@ -26,15 +26,16 @@ enum class WenkuNovelLevel {
 }
 
 @Serializable
-data class WenkuNovelMetadataListItem(
+data class WenkuNovelListItem(
     val id: String,
     val title: String,
     val titleZh: String,
     val cover: String?,
+    val favored: String?,
 )
 
 @Serializable
-data class WenkuNovelMetadata(
+data class WenkuNovel(
     @Contextual @SerialName("_id") val id: ObjectId,
     val title: String,
     val titleZh: String,
@@ -95,7 +96,7 @@ data class WenkuChapterGlossary(
 
 // MongoDB
 @Serializable
-data class UserFavoredWenkuNovelDbModel(
+data class WenkuNovelFavoriteDbModel(
     @Contextual val userId: ObjectId,
     @Contextual val novelId: ObjectId,
     @Contextual val favoredId: String,

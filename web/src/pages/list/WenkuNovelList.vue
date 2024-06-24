@@ -27,6 +27,9 @@ const options = [
   },
 ];
 
+const favoredRepository = Locator.favoredRepository();
+onMounted(() => favoredRepository.loadRemoteFavoreds());
+
 const loader: Loader<WenkuNovelOutlineDto> = (page, query, selected) => {
   if (query !== '') {
     document.title = '文库小说 搜索：' + query;
@@ -41,6 +44,16 @@ const loader: Loader<WenkuNovelOutlineDto> = (page, query, selected) => {
       pageSize: 24,
       query,
       level,
+    }).then((page) => {
+      const favoredIds = favoredRepository.favoreds.value.wenku.map(
+        (it) => it.id,
+      );
+      for (const item of page.items) {
+        if (item.favored && !favoredIds.includes(item.favored)) {
+          item.favored = undefined;
+        }
+      }
+      return page;
     }),
   );
 };

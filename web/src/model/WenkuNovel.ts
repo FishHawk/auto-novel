@@ -3,6 +3,7 @@ export interface WenkuNovelOutlineDto {
   title: string;
   titleZh: string;
   cover: string;
+  favored?: string;
 }
 
 export interface WenkuNovelDto {

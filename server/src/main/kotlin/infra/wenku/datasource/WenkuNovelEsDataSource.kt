@@ -5,7 +5,7 @@ import com.jillesvangurp.searchdsls.querydsl.*
 import infra.*
 import infra.wenku.WenkuNovelFilter
 import infra.wenku.WenkuNovelLevel
-import infra.wenku.WenkuNovelMetadata
+import infra.wenku.WenkuNovel
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -107,7 +107,7 @@ class WenkuNovelEsDataSource(
     }
 
     suspend fun syncNovel(
-        novel: WenkuNovelMetadata,
+        novel: WenkuNovel,
     ) {
         es.indexDocument(
             id = novel.id.toHexString(),
