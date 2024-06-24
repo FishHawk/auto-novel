@@ -1,110 +1,189 @@
 <script lang="ts" setup>
 import {
-  AccountCircleOutlined,
+  BookOutlined,
+  ForumOutlined,
+  HistoryOutlined,
+  HomeOutlined,
+  LanguageOutlined,
+  LocalFireDepartmentOutlined,
   LogOutOutlined,
   MenuOutlined,
+  SettingsOutlined,
+  StarBorderOutlined,
+  WorkspacesOutlined,
 } from '@vicons/material';
 import { MenuOption, NIcon } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 
 import { Locator } from '@/data';
-import { useIsWideScreen } from '@/pages/util';
+import { UserRole } from '@/model/User';
+import { useBreakPoints } from '@/pages/util';
 
-const isWideScreen = useIsWideScreen(850);
+const bp = useBreakPoints();
+const hasSider = bp.greater('tablet');
+const menuShowTrigger = bp.greater('desktop');
+const menuCollapsed = ref(!menuShowTrigger.value);
+const showMenuModal = ref(false);
+
+watch(hasSider, () => (showMenuModal.value = false));
+watch(menuShowTrigger, (value) => (menuCollapsed.value = !value));
+
 const route = useRoute();
-const router = useRouter();
 
-const { profile, isSignedIn, signOut } = Locator.authRepository();
+const authRepository = Locator.authRepository();
+const { profile, isSignedIn, atLeastAdmin, asAdmin } = authRepository;
 
-const menuOption = (
-  text: string,
-  href: string,
-  show?: boolean,
-): MenuOption => ({
-  label: () => h(RouterLink, { to: href }, { default: () => text }),
-  key: href,
-  show,
-});
+const renderLabel = (text: string, href: string) => () =>
+  h(RouterLink, { to: href }, { default: () => text });
+const renderIcon = (icon: Component) => () =>
+  h(NIcon, null, { default: () => h(icon) });
 
-const dropdownOption = (
-  label: string,
-  key: string,
-  icon: Component,
-): MenuOption => ({
-  label,
-  key,
-  icon: () => h(NIcon, null, { default: () => h(icon) }),
-});
-
-const topMenuOptions = computed(() => {
+const menuOptions = computed<MenuOption[]>(() => {
   return [
-    menuOption('首页', '/'),
-    menuOption('网络小说', '/novel-list'),
-    menuOption('文库小说', '/wenku-list'),
     {
-      ...menuOption('工作区', '/workspace'),
+      label: renderLabel('首页', '/'),
+      icon: renderIcon(HomeOutlined),
+      key: '/',
+    },
+    {
+      label: renderLabel(
+        '我的收藏',
+        isSignedIn.value ? '/favorite/web' : '/favorite/local',
+      ),
+      icon: renderIcon(StarBorderOutlined),
+      key: '/favorite',
+    },
+    {
+      label: renderLabel('阅读历史', '/read-history'),
+      icon: renderIcon(HistoryOutlined),
+      key: '/read-history',
+      show: isSignedIn.value,
+    },
+    {
+      label: renderLabel('网络小说', '/novel'),
+      icon: renderIcon(LanguageOutlined),
+      key: '/novel',
+    },
+    {
+      label: renderLabel('文库小说', '/wenku'),
+      icon: renderIcon(BookOutlined),
+      key: '/wenku',
+    },
+    {
+      label: '小说排行',
+      icon: renderIcon(LocalFireDepartmentOutlined),
+      key: '/rank',
       children: [
-        menuOption('术语表工作区', '/workspace/katakana'),
-        menuOption('GPT工作区', '/workspace/gpt'),
-        menuOption('Sakura工作区', '/workspace/sakura'),
-        menuOption('交互翻译', '/workspace/interactive'),
+        {
+          label: renderLabel('成为小说家：流派', '/rank/web/syosetu/1'),
+          key: '/rank/web/syosetu/1',
+        },
+        {
+          label: renderLabel('成为小说家：综合', '/rank/web/syosetu/2'),
+          key: '/rank/web/syosetu/2',
+        },
+        {
+          label: renderLabel(
+            '成为小说家：异世界转移/转生',
+            '/rank/web/syosetu/3',
+          ),
+          key: '/rank/web/syosetu/3',
+        },
+        {
+          label: renderLabel('Kakuyomu：流派', '/rank/web/kakuyomu/1'),
+          key: '/rank/web/kakuyomu/1',
+        },
       ],
     },
-    menuOption('论坛', '/forum'),
+    {
+      type: 'divider',
+      key: 'divider',
+      props: { style: { marginTop: '16px', marginBottom: '16px' } },
+    },
+    {
+      label: '工作区',
+      icon: renderIcon(WorkspacesOutlined),
+      key: '/workspace',
+      children: [
+        {
+          label: renderLabel('术语表工作区', '/workspace/katakana'),
+          key: '/workspace/katakana',
+        },
+        {
+          label: renderLabel('GPT工作区', '/workspace/gpt'),
+          key: '/workspace/gpt',
+        },
+        {
+          label: renderLabel('Sakura工作区', '/workspace/sakura'),
+          key: '/workspace/sakura',
+        },
+        {
+          label: renderLabel('交互翻译', '/workspace/interactive'),
+          key: '/workspace/interactive',
+        },
+      ],
+    },
+    {
+      label: renderLabel('论坛', '/forum'),
+      icon: renderIcon(ForumOutlined),
+      key: '/forum',
+    },
+    {
+      label: renderLabel('设置', '/setting'),
+      icon: renderIcon(SettingsOutlined),
+      key: '/setting',
+    },
+    {
+      label: renderLabel('控制台', '/admin'),
+      icon: renderIcon(SettingsOutlined),
+      key: '/admin',
+      show: asAdmin.value,
+    },
   ];
 });
 
 const menuKey = computed(() => {
   const path = route.path;
-  if (path.startsWith('/novel')) {
-    return '/novel-list';
-  } else if (path.startsWith('/wenku')) {
-    return '/wenku-list';
-  } else if (path.startsWith('/favorite')) {
-    return '/favorite';
-  } else if (path.startsWith('/forum')) {
-    return '/forum';
-  } else {
-    return path;
+  for (const key of ['/novel', '/wenku', '/favorite', '/forum']) {
+    if (path.startsWith(key)) {
+      return key;
+    }
   }
+  return path;
 });
 
-const collapsedMenuOptions = computed(() => {
-  return [
-    menuOption('首页', '/'),
-    menuOption(
-      '我的收藏',
-      isSignedIn.value ? '/favorite/web' : '/favorite/local',
-    ),
-    menuOption('阅读历史', '/read-history', isSignedIn.value),
-    menuOption('网络小说', '/novel-list'),
-    menuOption('文库小说', '/wenku-list'),
-    {
-      label: '工作区',
-      children: [
-        menuOption('术语表工作区', '/workspace/katakana'),
-        menuOption('GPT工作区', '/workspace/gpt'),
-        menuOption('Sakura工作区', '/workspace/sakura'),
-        menuOption('交互翻译', '/workspace/interactive'),
-      ],
-    },
-    menuOption('论坛', '/forum'),
-  ];
-});
-
-const userDropdownOptions = [
-  dropdownOption('用户中心', 'account', AccountCircleOutlined),
-  dropdownOption('退出登录', 'signOut', LogOutOutlined),
-];
-const handleUserDropdownSelect = (key: string | number) => {
-  if (key === 'account') {
-    router.push('/account');
-  } else if (key === 'signOut') {
-    signOut();
-  }
+const readableRole = (role: UserRole) => {
+  if (role === 'normal') return '普通用户';
+  else if (role === 'trusted') return '信任用户';
+  else if (role === 'maintainer') return '维护者';
+  else if (role === 'admin') return '管理员';
+  else if (role === 'banned') return '封禁用户';
+  else return '未知';
 };
 
-const showMenuModal = ref(false);
+const userDropdownOptions = computed<MenuOption[]>(() => {
+  const options: MenuOption[] = [
+    {
+      label: '退出账号',
+      key: 'sign-out',
+      icon: renderIcon(LogOutOutlined),
+    },
+  ];
+  options.unshift({
+    label: readableRole(profile.value!.role) + (asAdmin.value ? '+' : ''),
+    key: 'toggle',
+  });
+  return options;
+});
+const handleUserDropdownSelect = (key: string | number) => {
+  if (key === 'sign-out') {
+    authRepository.signOut();
+  } else if (key === 'toggle') {
+    if (atLeastAdmin.value) {
+      authRepository.toggleAdminMode();
+    }
+  }
+};
 
 watch(
   () => route.path,
@@ -113,40 +192,34 @@ watch(
 </script>
 
 <template>
-  <n-layout style="width: 100%; min-height: 100vh">
-    <n-layout-header bordered style="position: fixed; z-index: 1">
-      <n-flex class="layout-content" align="center" style="height: 50px">
-        <template v-if="isWideScreen">
-          <robot-icon />
-          <div>
-            <n-menu
-              :value="menuKey"
-              mode="horizontal"
-              :options="topMenuOptions"
-            />
-          </div>
-        </template>
-
-        <n-icon
-          v-else
-          size="24"
-          :component="MenuOutlined"
+  <n-layout :has-sider="hasSider" style="width: 100%; min-height: 100vh">
+    <n-layout-header bordered style="position: fixed; z-index: 2">
+      <n-flex align="center" style="height: 50px" :size="0">
+        <n-button
+          v-if="!hasSider"
+          size="large"
+          quaternary
+          circle
+          :focusable="false"
+          style="margin: 0 8px"
           @click="showMenuModal = true"
-        />
+        >
+          <n-icon size="24" :component="MenuOutlined" />
+        </n-button>
+        <div v-else style="padding: 0 16px">
+          <robot-icon size="32" />
+        </div>
 
-        <div style="flex: 1"></div>
+        <div style="flex: 1" />
 
-        <template v-if="isWideScreen">
-          <router-link v-if="isSignedIn" to="/read-history">
-            <n-button :focusable="false" quaternary>历史</n-button>
-          </router-link>
-          <router-link
-            v-if="isWideScreen"
-            :to="isSignedIn ? '/favorite/web' : '/favorite/local'"
-          >
-            <n-button :focusable="false" quaternary>收藏</n-button>
-          </router-link>
-        </template>
+        <router-link
+          v-if="!hasSider"
+          :to="isSignedIn ? '/favorite/web' : '/favorite/local'"
+        >
+          <n-button size="large" quaternary circle :focusable="false">
+            <n-icon size="20" :component="StarBorderOutlined" />
+          </n-button>
+        </router-link>
 
         <n-dropdown
           v-if="isSignedIn"
@@ -169,7 +242,45 @@ watch(
       </n-flex>
     </n-layout-header>
 
-    <n-layout-content style="margin-top: 50px; z-index: 0">
+    <n-layout-sider
+      v-if="hasSider"
+      :show-trigger="menuShowTrigger"
+      :trigger-style="{ position: 'fixed', top: '80%', left: '214px' }"
+      :collapsed-trigger-style="{ position: 'fixed', top: '80%', left: '36px' }"
+      bordered
+      :width="240"
+      :collapsed="menuCollapsed"
+      :collapsed-width="64"
+      collapse-mode="width"
+      :native-scrollbar="false"
+      style="z-index: 1"
+      @collapse="menuCollapsed = true"
+      @expand="menuCollapsed = false"
+    >
+      <n-scrollbar
+        style="margin-top: 50px; position: fixed; top: 0; padding-bottom: 64px"
+        :style="{ width: menuCollapsed ? '64px' : '240px' }"
+      >
+        <n-menu
+          :value="menuKey"
+          :options="menuOptions"
+          :width="240"
+          :collapsed="menuCollapsed"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :default-expanded-keys="['/workspace']"
+        />
+      </n-scrollbar>
+    </n-layout-sider>
+
+    <n-layout-content
+      style="
+        margin-top: 50px;
+        margin-bottom: 64px;
+        z-index: 0;
+        min-height: calc(100vh - 50px);
+      "
+    >
       <router-view v-slot="{ Component }">
         <keep-alive
           :include="[
@@ -187,12 +298,10 @@ watch(
         </keep-alive>
       </router-view>
     </n-layout-content>
-
-    <n-layout-footer style="height: 64px; background-color: transparent" />
   </n-layout>
 
-  <c-drawer-left v-if="!isWideScreen" v-model:show="showMenuModal">
-    <n-menu :value="menuKey" :options="collapsedMenuOptions" />
+  <c-drawer-left v-if="!hasSider" v-model:show="showMenuModal">
+    <n-menu :value="menuKey" :options="menuOptions" />
   </c-drawer-left>
 </template>
 

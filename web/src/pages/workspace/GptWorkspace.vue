@@ -8,7 +8,7 @@ import { notice } from '@/pages/components/NoticeBoard.vue';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 
 const { setting } = Locator.settingRepository();
 

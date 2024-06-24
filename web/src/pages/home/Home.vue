@@ -4,6 +4,7 @@ import {
   ForumOutlined,
   LanguageOutlined,
   ReadMoreOutlined,
+  StarBorderOutlined,
 } from '@vicons/material';
 
 import { Locator } from '@/data';
@@ -16,13 +17,15 @@ import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { notice } from '@/pages/components/NoticeBoard.vue';
-import { useIsWideScreen } from '@/pages/util';
+import { useBreakPoints } from '@/pages/util';
 import { Result, runCatching } from '@/util/result';
 import { WebUtil } from '@/util/web';
 
+const bp = useBreakPoints();
+const showShortcut = bp.smaller('tablet');
+
 const router = useRouter();
 const vars = useThemeVars();
-const isWideScreen = useIsWideScreen(850);
 
 const { isSignedIn } = Locator.authRepository();
 
@@ -34,7 +37,7 @@ const query = (url: string) => {
     const { providerId, novelId } = parseResult;
     router.push({ path: `/novel/${providerId}/${novelId}` });
   } else {
-    router.push({ path: `/novel-list`, query: { query: url } });
+    router.push({ path: '/novel', query: { query: url } });
   }
 };
 
@@ -107,6 +110,7 @@ const notices = [
     '禁止使用脚本绕过翻译器提交翻译文本，哪怕你提交的是正经翻译。现在所有翻译功能都需要登录才可使用。',
   ),
   notice('因为种种原因，文库小说不再允许上传中文小说。'),
+  notice('本地小说的百度/有道翻译请到【我的收藏->本地小说】里面进行。'),
 ];
 </script>
 
@@ -144,24 +148,36 @@ const notices = [
 
   <div class="layout-content">
     <n-flex
-      v-if="!isWideScreen"
+      v-if="showShortcut"
       :size="0"
       justify="space-around"
       :wrap="false"
       style="margin: 8px 0px"
     >
-      <router-link to="/novel-list" style="flex: 1">
+      <router-link
+        :to="isSignedIn ? '/favorite/web' : '/favorite/local'"
+        style="flex: 1"
+      >
         <n-button quaternary style="width: 100%; height: 64px">
-          <n-flex align="center" vertical>
+          <n-flex align="center" vertical style="font-size: 12px">
+            <n-icon size="24" :component="StarBorderOutlined" />
+            我的收藏
+          </n-flex>
+        </n-button>
+      </router-link>
+
+      <router-link to="/novel" style="flex: 1">
+        <n-button quaternary style="width: 100%; height: 64px">
+          <n-flex align="center" vertical style="font-size: 12px">
             <n-icon size="24" :component="LanguageOutlined" />
             网络小说
           </n-flex>
         </n-button>
       </router-link>
 
-      <router-link to="/wenku-list" style="flex: 1">
+      <router-link to="/wenku" style="flex: 1">
         <n-button quaternary style="width: 100%; height: 64px">
-          <n-flex align="center" vertical>
+          <n-flex align="center" vertical style="font-size: 12px">
             <n-icon size="24" :component="BookOutlined" />
             文库小说
           </n-flex>
@@ -170,7 +186,7 @@ const notices = [
 
       <router-link to="/forum" style="flex: 1">
         <n-button quaternary style="width: 100%; height: 64px">
-          <n-flex align="center" vertical>
+          <n-flex align="center" vertical style="font-size: 12px">
             <n-icon size="24" :component="ForumOutlined" />
             论坛
           </n-flex>
@@ -206,7 +222,7 @@ const notices = [
     </template>
 
     <section-header title="网络小说-最多点击">
-      <router-link to="/novel-list">
+      <router-link to="/novel">
         <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>
@@ -214,7 +230,7 @@ const notices = [
     <n-divider />
 
     <section-header title="文库小说-最新更新">
-      <router-link to="/wenku-list">
+      <router-link to="/wenku">
         <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>

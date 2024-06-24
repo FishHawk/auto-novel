@@ -7,7 +7,7 @@ const { providerId, novelId } = defineProps<{
   novelId: string;
 }>();
 
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 const router = useRouter();
 
 const store = useWebNovelStore(providerId, novelId);

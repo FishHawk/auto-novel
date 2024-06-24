@@ -8,7 +8,7 @@ defineProps<{
   favoredId: string;
 }>();
 
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 
 const showControlPanel = ref(false);
 
@@ -17,8 +17,6 @@ const bookshelfListRef = ref<InstanceType<typeof BookshelfList>>();
 
 <template>
   <bookshelf-layout :menu-key="`local/${favoredId}`">
-    <n-h1>我的收藏：本地小说</n-h1>
-
     <n-flex style="margin-bottom: 24px">
       <c-button
         label="选择"

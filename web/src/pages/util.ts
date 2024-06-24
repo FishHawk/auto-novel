@@ -1,12 +1,22 @@
-import { useWindowSize } from '@vueuse/core';
+import {
+  useBreakpoints as useBreakpointsInner,
+  useWindowSize,
+} from '@vueuse/core';
 import { MessageApi } from 'naive-ui';
 
 import { formatError } from '@/data';
 
-export const useIsWideScreen = (limit: number) => {
+export const useIsWideScreen = (limit: number = 840) => {
   const { width } = useWindowSize();
   return computed(() => width.value > limit);
 };
+
+export const useBreakPoints = () =>
+  useBreakpointsInner({
+    mobile: 0,
+    tablet: 540,
+    desktop: 1200,
+  });
 
 export const checkIsMobile = () => {
   const a = navigator.userAgent || navigator.vendor || (window as any).opera;

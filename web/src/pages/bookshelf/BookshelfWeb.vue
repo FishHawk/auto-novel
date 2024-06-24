@@ -15,7 +15,7 @@ const props = defineProps<{
   favoredId: string;
 }>();
 
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 
 const { setting } = Locator.settingRepository();
 
@@ -61,8 +61,6 @@ const novelListRef = ref<InstanceType<typeof NovelListWeb>>();
 
 <template>
   <bookshelf-layout :menu-key="`web/${favoredId}`">
-    <n-h1>我的收藏：网络小说</n-h1>
-
     <n-flex style="margin-bottom: 24px">
       <c-button
         label="选择"

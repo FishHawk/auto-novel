@@ -30,7 +30,7 @@ const { novelId } = defineProps<{
 const store = novelId !== undefined ? useWenkuNovelStore(novelId) : undefined;
 
 const router = useRouter();
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 const message = useMessage();
 
 const { atLeastMaintainer, createAtLeastOneMonth } = Locator.authRepository();

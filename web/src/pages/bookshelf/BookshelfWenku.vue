@@ -15,7 +15,7 @@ const props = defineProps<{
   favoredId: string;
 }>();
 
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 
 const options = [
   {
@@ -55,8 +55,6 @@ const novelListRef = ref<InstanceType<typeof NovelListWenku>>();
 
 <template>
   <bookshelf-layout :menu-key="`wenku/${favoredId}`">
-    <n-h1>我的收藏：文库小说</n-h1>
-
     <n-flex style="margin-bottom: 24px">
       <c-button
         label="选择"

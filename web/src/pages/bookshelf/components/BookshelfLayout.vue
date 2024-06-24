@@ -2,12 +2,13 @@
 import { useIsWideScreen } from '@/pages/util';
 
 defineProps<{ menuKey: string }>();
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 </script>
 
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
     <div style="flex: auto">
+      <n-h1>我的收藏</n-h1>
       <slot />
     </div>
     <template #sidebar>

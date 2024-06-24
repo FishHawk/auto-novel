@@ -63,7 +63,7 @@ defineExpose({
 
 <template>
   <DefineTag v-slot="{ tag, isAttention }">
-    <router-link :to="`/novel-list?query=${tag}\$`">
+    <router-link :to="`/novel?query=${tag}\$`">
       <n-text depth="3">
         <component :is="isAttention ? 'b' : 'span'">
           {{ isAttention ? tag : WebUtil.tryTranslateKeyword(tag) }}

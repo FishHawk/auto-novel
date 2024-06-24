@@ -1,14 +1,10 @@
 <script lang="ts" setup>
-import { FormatListBulletedOutlined } from '@vicons/material';
-
 import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
-import { useIsWideScreen } from '@/pages/util';
 import { runCatching } from '@/util/result';
 
 import { Loader } from './components/NovelPage.vue';
-import { menuOptions } from './components/menu';
 
 defineProps<{
   page: number;
@@ -16,7 +12,6 @@ defineProps<{
   selected: number[];
 }>();
 
-const isWideScreen = useIsWideScreen(850);
 const route = useRoute();
 
 const { createAtLeastOneMonth } = Locator.authRepository();
@@ -135,22 +130,11 @@ watch(
   },
   { immediate: true },
 );
-
-const showListModal = ref(false);
 </script>
 
 <template>
-  <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
+  <div class="layout-content">
     <n-h1>网络小说</n-h1>
-
-    <div style="margin-bottom: 24px">
-      <c-button
-        v-if="!isWideScreen"
-        label="列表/排行"
-        :icon="FormatListBulletedOutlined"
-        @action="showListModal = true"
-      />
-    </div>
 
     <novel-page
       :page="page"
@@ -163,17 +147,5 @@ const showListModal = ref(false);
     >
       <novel-list-web :items="items" />
     </novel-page>
-
-    <template #sidebar>
-      <n-menu :value="route.path" :options="menuOptions" />
-    </template>
-
-    <c-drawer-right
-      v-if="!isWideScreen"
-      v-model:show="showListModal"
-      title="列表/排行"
-    >
-      <n-menu :value="route.path" :options="menuOptions" />
-    </c-drawer-right>
-  </c-layout>
+  </div>
 </template>

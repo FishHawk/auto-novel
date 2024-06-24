@@ -10,7 +10,7 @@ import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 
 const { setting } = Locator.settingRepository();
 

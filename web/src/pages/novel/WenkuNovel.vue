@@ -38,7 +38,7 @@ const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 const deleteVolume = (volumeId: string) =>
   doAction(store.deleteVolume(volumeId), '删除', message);
 
-const buildSearchLink = (tag: string) => `/wenku-list?query="${tag}"`;
+const buildSearchLink = (tag: string) => `/wenku?query="${tag}"`;
 
 const showWebNovelsModal = ref(false);
 </script>
@@ -166,7 +166,7 @@ const showWebNovelsModal = ref(false);
       <n-flex :size="[4, 4]">
         <router-link
           v-for="keyword of metadata.keywords"
-          :to="`/wenku-list?query=${keyword}\$`"
+          :to="`/wenku?query=${keyword}\$`"
         >
           <novel-tag :tag="keyword" />
         </router-link>

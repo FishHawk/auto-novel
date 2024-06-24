@@ -15,7 +15,7 @@ const { articleId, category } = defineProps<{
 }>();
 
 const router = useRouter();
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 const message = useMessage();
 
 const store = articleId !== undefined ? useArticleStore(articleId) : undefined;

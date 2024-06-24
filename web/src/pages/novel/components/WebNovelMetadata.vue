@@ -13,7 +13,7 @@ const props = defineProps<{
   novel: WebNovelDto;
 }>();
 
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 
 const labels = computed(() => {
   const readableNumber = (num: number | undefined) => {
@@ -45,7 +45,7 @@ const generateSearchUrl = (query: string) => {
   if (includesWhitespace(query)) {
     query = `"${query}"`;
   }
-  return `/novel-list?query=${encodeURIComponent(query)}`;
+  return `/novel?query=${encodeURIComponent(query)}`;
 };
 
 const startReadChapter = computed(() => {
@@ -152,14 +152,14 @@ const latestChapterCreateAt = computed(() => {
   <n-flex :size="[4, 4]">
     <router-link
       v-for="attention of novel.attentions.sort()"
-      :to="`/novel-list?query=${attention}\$`"
+      :to="`/novel?query=${attention}\$`"
     >
       <novel-tag :tag="attention" strong />
     </router-link>
 
     <router-link
       v-for="keyword of novel.keywords"
-      :to="`/novel-list?query=${keyword}\$`"
+      :to="`/novel?query=${keyword}\$`"
     >
       <novel-tag :tag="WebUtil.tryTranslateKeyword(keyword)" />
     </router-link>

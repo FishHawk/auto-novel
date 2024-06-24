@@ -1,13 +1,10 @@
 <script lang="ts" setup>
-import { FormatListBulletedOutlined } from '@vicons/material';
-
 import { Locator } from '@/data';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { runCatching } from '@/util/result';
 
 import { useIsWideScreen } from '@/pages/util';
 import { Loader } from './components/NovelPage.vue';
-import { menuOptions } from './components/menu';
 
 const props = defineProps<{
   providerId: string;
@@ -16,7 +13,7 @@ const props = defineProps<{
   selected: number[];
 }>();
 
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 const route = useRoute();
 
 type Descriptor = {
@@ -166,22 +163,11 @@ const loader = computed<Loader<WebNovelOutlineDto>>(() => {
     );
   };
 });
-
-const showListModal = ref(false);
 </script>
 
 <template>
-  <c-layout :sidebar="isWideScreen" :sidebar-width="250" class="layout-content">
+  <div class="layout-content">
     <n-h1>{{ descriptior.title }}</n-h1>
-
-    <div style="margin-bottom: 24px">
-      <c-button
-        v-if="!isWideScreen"
-        label="列表/排行"
-        :icon="FormatListBulletedOutlined"
-        @action="showListModal = true"
-      />
-    </div>
 
     <novel-page
       :page="page"
@@ -200,17 +186,5 @@ const showListModal = ref(false);
     >
       <novel-list-web :items="items" />
     </novel-page>
-
-    <template #sidebar>
-      <n-menu :value="route.path" :options="menuOptions" />
-    </template>
-
-    <c-drawer-right
-      v-if="!isWideScreen"
-      v-model:show="showListModal"
-      title="列表/排行"
-    >
-      <n-menu :value="route.path" :options="menuOptions" />
-    </c-drawer-right>
-  </c-layout>
+  </div>
 </template>

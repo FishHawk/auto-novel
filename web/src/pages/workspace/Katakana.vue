@@ -12,7 +12,7 @@ import { Epub, Txt } from '@/util/file';
 import LoadedVolume from './components/LoadedVolume.vue';
 
 const message = useMessage();
-const isWideScreen = useIsWideScreen(850);
+const isWideScreen = useIsWideScreen();
 const sakuraWorkspace = Locator.sakuraWorkspaceRepository().ref;
 
 interface LoadedVolume {
