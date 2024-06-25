@@ -15,6 +15,8 @@ import infra.web.WebNovelListItem
 import infra.web.WebNovelReadHistoryDbModel
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 
@@ -32,9 +34,15 @@ class WebNovelReadHistoryRepository(
         pageSize: Int,
     ): Page<WebNovelListItem> {
         @Serializable
+        data class WebNovelAndHistory(
+            @Contextual val createAt: Instant,
+            val novel: WebNovel,
+        )
+
+        @Serializable
         data class PageModel(
             val total: Int = 0,
-            val items: List<WebNovel>,
+            val items: List<WebNovelAndHistory>,
         )
 
         val doc = userReadHistoryWebCollection
@@ -56,7 +64,6 @@ class WebNovelReadHistoryRepository(
                             /* as = */ "novel"
                         ),
                         unwind("\$novel"),
-                        replaceRoot("\$novel"),
                     )
                 ),
                 project(
@@ -71,7 +78,7 @@ class WebNovelReadHistoryRepository(
             emptyPage()
         } else {
             Page(
-                items = doc.items.map { it.toOutline() },
+                items = doc.items.map { it.novel.toOutline().copy(lastReadAt = it.createAt) },
                 total = doc.total.toLong(),
                 pageSize = pageSize,
             )
