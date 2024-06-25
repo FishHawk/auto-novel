@@ -32,15 +32,12 @@ export const createAuthRepository = () => {
 
   const isSignedIn = computed(() => profile.value !== undefined);
 
-  const createAtLeast = (days: number) => {
+  const createAtLeastOneMonth = computed(() => {
+    const days = 30;
     const createAt = authData.value.profile?.createAt;
-    if (!createAt) {
-      return false;
-    }
+    if (!createAt) return false;
     return Date.now() / 1000 - createAt > days * 24 * 3600;
-  };
-
-  const createAtLeastOneMonth = computed(() => createAtLeast(30));
+  });
 
   const userRoleAtLeast = (role: UserRole) => {
     const myRole = authData.value.profile?.role;
@@ -99,7 +96,7 @@ export const createAuthRepository = () => {
       authData.value.profile = undefined;
     }
 
-    // 订阅Token;
+    // 订阅Token
     watch(
       () => authData.value.profile?.token,
       (token) => updateToken(token),
@@ -111,7 +108,7 @@ export const createAuthRepository = () => {
     if (authData.value.profile) {
       const sinceLoggedIn = Date.now() - (authData.value.renewedAt ?? 0);
       if (sinceLoggedIn > renewCooldown) {
-        AuthApi.renew()
+        await AuthApi.renew()
           .then((token) => setProfile(token))
           .catch(async (e) => {
             console.warn('更新授权失败：' + (await formatError(e)));
@@ -123,10 +120,17 @@ export const createAuthRepository = () => {
     if ((authData as any).info !== undefined) {
       //  30天后可删除
       updateToken((authData as any).info.token);
-      AuthApi.renew().then((token) => {
+      await AuthApi.renew().then((token) => {
         setProfile(token);
         delete (authData as any).info;
       });
+    }
+
+    // 2024-06-26 createAt不停变小
+    if (authData.value.profile) {
+      if (authData.value.profile.createAt < 2000000) {
+        authData.value.profile = undefined;
+      }
     }
   };
 

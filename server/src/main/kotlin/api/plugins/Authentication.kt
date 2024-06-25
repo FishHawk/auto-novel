@@ -46,7 +46,7 @@ fun User.generateToken(
         withClaim("email", email)
         withClaim("username", username)
         withClaim("role", role.serialName())
-        withClaim("createAt", createdAt.toJavaInstant())
+        withClaim("createAt", createdAt.epochSeconds)
         withExpiresAt((Clock.System.now() + 30.days).toJavaInstant())
     }
     .sign(Algorithm.HMAC256(secret))
@@ -102,7 +102,7 @@ private val PostAuthenticationInterceptors = createRouteScopedPlugin(name = "Use
                     email = principal["email"]!!,
                     username = principal["username"]!!,
                     role = principal["role"]!!.toUserRole(),
-                    createdAt = Instant.fromEpochMilliseconds(
+                    createdAt = Instant.fromEpochSeconds(
                         principal.getClaim("createAt", Long::class)!!
                     ),
                 )
