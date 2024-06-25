@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   BookOutlined,
+  DarkModeOutlined,
   ForumOutlined,
   HistoryOutlined,
   HomeOutlined,
@@ -10,9 +11,10 @@ import {
   MenuOutlined,
   SettingsOutlined,
   StarBorderOutlined,
+  WbSunnyOutlined,
   WorkspacesOutlined,
 } from '@vicons/material';
-import { MenuOption, NIcon } from 'naive-ui';
+import { MenuOption, NButton, NIcon, useOsTheme } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 
 import { Locator } from '@/data';
@@ -46,6 +48,16 @@ const renderIcon = (icon: Component) => () =>
   h(NIcon, null, { default: () => h(icon) });
 
 const menuOptions = computed<MenuOption[]>(() => {
+  const resolveTheme = () => {
+    if (setting.value.theme === 'system') {
+      const osTheme = useOsTheme();
+      return osTheme.value ?? 'light';
+    } else {
+      return setting.value.theme;
+    }
+  };
+  const theme = resolveTheme();
+
   return [
     {
       label: renderLabel('首页', '/'),
@@ -139,6 +151,24 @@ const menuOptions = computed<MenuOption[]>(() => {
       label: renderLabel('设置', '/setting'),
       icon: renderIcon(SettingsOutlined),
       key: '/setting',
+    },
+    {
+      label: () =>
+        h(
+          'a',
+          {
+            onClick: () => {
+              if (theme === 'light') {
+                setting.value.theme = 'dark';
+              } else {
+                setting.value.theme = 'light';
+              }
+            },
+          },
+          { default: () => '切换主题' },
+        ),
+      icon: renderIcon(theme === 'light' ? WbSunnyOutlined : DarkModeOutlined),
+      key: 'theme',
     },
     {
       label: renderLabel('控制台', '/admin'),
