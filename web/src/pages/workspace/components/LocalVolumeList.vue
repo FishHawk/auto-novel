@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { MoreVertOutlined, SearchOutlined } from '@vicons/material';
+import { MoreVertOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
+import { Setting } from '@/data/setting/Setting';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { Setting } from '@/model/Setting';
 
 import {
   BookshelfLocalUtil,
@@ -152,11 +152,7 @@ const sortedVolumes = computed(() => {
     </n-p>
 
     <template #action>
-      <c-button
-        label="确定"
-        type="primary"
-        @action="deleteAllVolumes"
-      />
+      <c-button label="确定" type="primary" @action="deleteAllVolumes" />
     </template>
   </c-modal>
 </template>

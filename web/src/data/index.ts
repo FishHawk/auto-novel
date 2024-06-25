@@ -12,12 +12,14 @@ import { createAuthRepository } from './auth/AuthRepository';
 import { createFavoredRepository } from './favored/FavoredRepository';
 import { createLocalVolumeRepository } from './local';
 import {
+  createReaderSettingRepository,
+  createSettingRepository,
+} from './setting/SettingRepository';
+import {
   createGptWorkspaceRepository,
   createReadPositionRepository,
-  createReaderSettingRepository,
   createRuleViewedRepository,
   createSakuraWorkspaceRepository,
-  createSettingRepository,
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
 } from './stores';

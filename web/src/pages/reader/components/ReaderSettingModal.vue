@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
-import { ReaderSetting } from '@/model/Setting';
+import { ReaderSetting } from '@/data/setting/Setting';
 import { useIsWideScreen } from '@/pages/util';
 
 const isWideScreen = useIsWideScreen(600);

@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@vueuse/core';
 
-import { ReaderSetting, Setting } from '@/model/Setting';
+import { ReaderSetting, Setting } from '@/data/setting/Setting';
 
 export const createSettingRepository = () => {
   const setting = useLocalStorage<Setting>('setting', Setting.defaultValue, {

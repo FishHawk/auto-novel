@@ -1,4 +1,4 @@
-import { TranslatorId } from './Translator';
+import { TranslatorId } from '../../model/Translator';
 
 export interface Setting {
   theme: 'light' | 'dark' | 'system';
@@ -11,6 +11,8 @@ export interface Setting {
   hideLocalVolumeListInWorkspace: boolean;
   showTagInWebFavored: boolean;
   favoriteCreateTimeFirst: boolean;
+  //
+  menuCollapsed: boolean;
   //
   downloadFilenameType: 'jp' | 'zh';
   downloadFormat: {
@@ -39,6 +41,8 @@ export namespace Setting {
     hideLocalVolumeListInWorkspace: false,
     showTagInWebFavored: false,
     favoriteCreateTimeFirst: false,
+    //
+    menuCollapsed: false,
     //
     downloadFilenameType: 'zh',
     downloadFormat: {

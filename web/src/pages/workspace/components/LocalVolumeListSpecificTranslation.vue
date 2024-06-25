@@ -3,9 +3,9 @@ import { DeleteOutlineOutlined } from '@vicons/material';
 import { useKeyModifier } from '@vueuse/core';
 
 import { Locator } from '@/data';
+import { Setting } from '@/data/setting/Setting';
 import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
-import { Setting } from '@/model/Setting';
 import { downloadFile } from '@/util';
 
 import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';

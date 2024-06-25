@@ -2,7 +2,7 @@
 import { useKeyModifier } from '@vueuse/core';
 
 import { Locator } from '@/data';
-import { Setting } from '@/model/Setting';
+import { Setting } from '@/data/setting/Setting';
 
 import { useIsWideScreen } from '@/pages/util';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';

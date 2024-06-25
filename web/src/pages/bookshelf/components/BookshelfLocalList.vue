@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
-import { Setting } from '@/model/Setting';
+import { Setting } from '@/data/setting/Setting';
 
 import {
   BookshelfLocalUtil,

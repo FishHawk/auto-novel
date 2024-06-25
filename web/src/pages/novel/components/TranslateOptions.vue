@@ -2,9 +2,9 @@
 import { InfoOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
+import { Setting } from '@/data/setting/Setting';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
-import { Setting } from '@/model/Setting';
 import { TranslateTaskParams } from '@/model/Translator';
 import { useIsWideScreen } from '@/pages/util';
 

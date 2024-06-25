@@ -22,16 +22,23 @@ import { useBreakPoints } from '@/pages/util';
 const bp = useBreakPoints();
 const hasSider = bp.greater('tablet');
 const menuShowTrigger = bp.greater('desktop');
-const menuCollapsed = ref(!menuShowTrigger.value);
 const showMenuModal = ref(false);
 
 watch(hasSider, () => (showMenuModal.value = false));
-watch(menuShowTrigger, (value) => (menuCollapsed.value = !value));
 
 const route = useRoute();
 
 const authRepository = Locator.authRepository();
 const { profile, isSignedIn, atLeastAdmin, asAdmin } = authRepository;
+
+const { setting } = Locator.settingRepository();
+const menuCollapsed = computed(() => {
+  if (menuShowTrigger.value) {
+    return setting.value.menuCollapsed;
+  } else {
+    return true;
+  }
+});
 
 const renderLabel = (text: string, href: string) => () =>
   h(RouterLink, { to: href }, { default: () => text });
@@ -254,8 +261,8 @@ watch(
       collapse-mode="width"
       :native-scrollbar="false"
       style="z-index: 1"
-      @collapse="menuCollapsed = true"
-      @expand="menuCollapsed = false"
+      @collapse="setting.menuCollapsed = true"
+      @expand="setting.menuCollapsed = false"
     >
       <n-scrollbar
         style="margin-top: 50px; position: fixed; top: 0; padding-bottom: 64px"
