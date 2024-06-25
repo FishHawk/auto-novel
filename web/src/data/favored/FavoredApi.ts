@@ -1,5 +1,8 @@
-import { client } from '@/data/api/client';
+import { Page } from '@/model/Page';
+import { WebNovelOutlineDto } from '@/model/WebNovel';
+import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 
+import { client } from '@/data/api/client';
 import { Favored } from './Favored';
 
 interface FavoredList {
@@ -9,6 +12,18 @@ interface FavoredList {
 const listFavored = () => client.get('user/favored').json<FavoredList>();
 
 //
+
+const listFavoredWebNovel = (
+  favoredId: string,
+  searchParams: {
+    page: number;
+    pageSize: number;
+    sort: 'create' | 'update';
+  },
+) =>
+  client
+    .get(`user/favored-web/${favoredId}`, { searchParams })
+    .json<Page<WebNovelOutlineDto>>();
 
 const createFavoredWeb = (json: { title: string }) =>
   client.post(`user/favored-web`, { json }).text();
@@ -33,6 +48,18 @@ const unfavoriteWebNovel = (
 
 //
 
+const listFavoredWenkuNovel = (
+  favoredId: string,
+  searchParams: {
+    page: number;
+    pageSize: number;
+    sort: 'create' | 'update';
+  },
+) =>
+  client
+    .get(`user/favored-wenku/${favoredId}`, { searchParams })
+    .json<Page<WenkuNovelOutlineDto>>();
+
 const createFavoredWenku = (json: { title: string }) =>
   client.post(`user/favored-wenku`, { json }).text();
 
@@ -48,15 +75,19 @@ const favoriteWenkuNovel = (favoredId: string, novelId: string) =>
 const unfavoriteWenkuNovel = (favoredId: string, novelId: string) =>
   client.delete(`user/favored-wenku/${favoredId}/${novelId}`);
 
+//
+
 export const FavoredApi = {
   listFavored,
   //
+  listFavoredWebNovel,
   createFavoredWeb,
   updateFavoredWeb,
   deleteFavoredWeb,
   favoriteWebNovel,
   unfavoriteWebNovel,
   //
+  listFavoredWenkuNovel,
   createFavoredWenku,
   updateFavoredWenku,
   deleteFavoredWenku,

@@ -43,7 +43,7 @@ const loader = computed<Loader<WebNovelOutlineDto>>(() => {
       }
     };
     return runCatching(
-      Locator.userRepository
+      Locator.favoredRepository()
         .listFavoredWebNovel(favoredId, {
           page,
           pageSize: 30,

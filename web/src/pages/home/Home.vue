@@ -8,11 +8,7 @@ import {
 } from '@vicons/material';
 
 import { Locator } from '@/data';
-import {
-  UserRepository,
-  WebNovelRepository,
-  WenkuNovelRepository,
-} from '@/data/api';
+import { WebNovelRepository, WenkuNovelRepository } from '@/data/api';
 import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
@@ -44,11 +40,13 @@ const query = (url: string) => {
 const favoriteList = ref<Result<WebNovelOutlineDto[]>>();
 const loadFavorite = async () => {
   favoriteList.value = await runCatching(
-    UserRepository.listFavoredWebNovel('default', {
-      page: 0,
-      pageSize: 8,
-      sort: 'update',
-    }).then((it) => it.items),
+    Locator.favoredRepository()
+      .listFavoredWebNovel('default', {
+        page: 0,
+        pageSize: 8,
+        sort: 'update',
+      })
+      .then((it) => it.items),
   );
 };
 loadFavorite();

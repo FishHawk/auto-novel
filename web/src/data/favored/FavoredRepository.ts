@@ -109,6 +109,8 @@ export const createFavoredRepository = () => {
     updateFavored,
     deleteFavored,
     //
+    listFavoredWebNovel: FavoredApi.listFavoredWebNovel,
+    listFavoredWenkuNovel: FavoredApi.listFavoredWenkuNovel,
     favoriteNovel,
     unfavoriteNovel,
   };

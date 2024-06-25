@@ -6,6 +6,7 @@ import api.plugins.authenticateDb
 import api.plugins.user
 import infra.common.Page
 import infra.user.User
+import infra.user.UserRepository
 import infra.web.repository.WebNovelReadHistoryRepository
 import infra.web.repository.WebNovelMetadataRepository
 import io.ktor.resources.*
@@ -23,6 +24,11 @@ private class UserReadHistoryWebRes {
         val parent: UserReadHistoryWebRes,
         val page: Int,
         val pageSize: Int,
+    )
+
+    @Resource("/paused")
+    class Paused(
+        val parent: UserReadHistoryWebRes,
     )
 
     @Resource("/{providerId}/{novelId}")
@@ -55,6 +61,26 @@ fun Route.routeUserReadHistoryWeb() {
                 )
             }
         }
+
+        get<UserReadHistoryWebRes.Paused> {
+            val user = call.user()
+            call.tryRespond {
+                service.getReadHistoryPaused(user = user)
+            }
+        }
+        put<UserReadHistoryWebRes.Paused> {
+            val user = call.user()
+            call.tryRespond {
+                service.updateReadHistoryPaused(user = user, readHistoryPaused = true)
+            }
+        }
+        delete<UserReadHistoryWebRes.Paused> {
+            val user = call.user()
+            call.tryRespond {
+                service.updateReadHistoryPaused(user = user, readHistoryPaused = false)
+            }
+        }
+
         put<UserReadHistoryWebRes.Novel> { loc ->
             val user = call.user()
             val chapterId = call.receive<String>()
@@ -81,6 +107,7 @@ fun Route.routeUserReadHistoryWeb() {
 }
 
 class UserReadHistoryWebApi(
+    private val userRepo: UserRepository,
     private val historyRepo: WebNovelReadHistoryRepository,
     private val metadataRepo: WebNovelMetadataRepository,
 ) {
@@ -108,12 +135,33 @@ class UserReadHistoryWebApi(
         )
     }
 
+    suspend fun getReadHistoryPaused(
+        user: User,
+    ): Boolean {
+        return userRepo.isReadHistoryPaused(
+            userId = user.id,
+        )
+    }
+
+    suspend fun updateReadHistoryPaused(
+        user: User,
+        readHistoryPaused: Boolean,
+    ) {
+        userRepo.updateUserReadHistoryPaused(
+            userId = user.id,
+            readHistoryPause = readHistoryPaused,
+        )
+    }
+
     suspend fun updateReadHistory(
         user: User,
         providerId: String,
         novelId: String,
         chapterId: String,
     ) {
+        if (userRepo.isReadHistoryPaused(user.id)) {
+            return
+        }
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNotFound("小说不存在")
         historyRepo.updateReadHistory(

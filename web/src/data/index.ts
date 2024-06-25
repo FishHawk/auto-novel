@@ -11,6 +11,7 @@ import {
 import { createAuthRepository } from './auth/AuthRepository';
 import { createFavoredRepository } from './favored/FavoredRepository';
 import { createLocalVolumeRepository } from './local';
+import { createReadHistoryRepository } from './read-history/ReadHistoryRepository';
 import {
   createReaderSettingRepository,
   createSettingRepository,
@@ -86,4 +87,5 @@ export const Locator = {
   //
   authRepository: lazy(createAuthRepository),
   favoredRepository: lazy(createFavoredRepository),
+  readHistoryRepository: lazy(createReadHistoryRepository),
 };

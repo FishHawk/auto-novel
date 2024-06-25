@@ -75,7 +75,7 @@ const navToChapter = async (chapterId: string) => {
     if (result.ok) {
       document.title = result.value.titleJp;
       if (gnid.type === 'web' && isSignedIn) {
-        Locator.userRepository.updateReadHistoryWeb(
+        Locator.readHistoryRepository().updateReadHistoryWeb(
           gnid.providerId,
           gnid.novelId,
           chapterId,

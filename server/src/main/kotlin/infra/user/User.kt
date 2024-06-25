@@ -86,4 +86,6 @@ data class UserDbModel(
     //
     val favoredWeb: List<UserFavored>,
     val favoredWenku: List<UserFavored>,
+    //
+    val readHistoryPaused: Boolean = false,
 )

@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { runCatching } from '@/util/result';
 
 import { Loader } from '../list/components/NovelPage.vue';
 import { doAction } from '../util';
-import { Locator } from '@/data';
 
 defineProps<{
   page: number;
@@ -14,14 +14,19 @@ defineProps<{
 
 const message = useMessage();
 
-const userRepository = Locator.userRepository;
+const readHistoryRepository = Locator.readHistoryRepository();
+const { readHistoryPaused } = readHistoryRepository;
+
+onMounted(() => {
+  readHistoryRepository.loadReadHistoryPausedState();
+});
 
 const loader: Loader<WebNovelOutlineDto> = (page, _query, _selected) =>
-  runCatching(userRepository.listReadHistoryWeb({ page, pageSize: 30 }));
+  runCatching(readHistoryRepository.listReadHistoryWeb({ page, pageSize: 30 }));
 
 const clearHistory = () =>
   doAction(
-    userRepository.clearReadHistoryWeb().then(() => {
+    readHistoryRepository.clearReadHistoryWeb().then(() => {
       window.location.reload();
     }),
     '清空',
@@ -30,7 +35,7 @@ const clearHistory = () =>
 
 const deleteHistory = (providerId: string, novelId: string) =>
   doAction(
-    userRepository.deleteReadHistoryWeb(providerId, novelId).then(() => {
+    readHistoryRepository.deleteReadHistoryWeb(providerId, novelId).then(() => {
       window.location.reload();
     }),
     '删除',
@@ -48,7 +53,21 @@ const deleteHistory = (providerId: string, novelId: string) =>
         :icon="DeleteOutlineOutlined"
         @action="clearHistory()"
       />
+      <c-button
+        v-if="readHistoryPaused"
+        label="继续记录历史"
+        @action="readHistoryRepository.resumeReadHistory()"
+      />
+      <c-button
+        v-else
+        label="暂停记录历史"
+        @action="readHistoryRepository.pauseReadHistory()"
+      />
     </n-flex>
+
+    <n-text v-if="readHistoryPaused" type="warning">
+      注意：历史功能已暂停
+    </n-text>
 
     <novel-page :page="page" :loader="loader" :options="[]" v-slot="{ items }">
       <novel-list-web :items="items" simple>

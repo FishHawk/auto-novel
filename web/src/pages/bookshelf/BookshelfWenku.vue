@@ -37,7 +37,7 @@ const loader = computed<Loader<WenkuNovelOutlineDto>>(() => {
       }
     };
     return runCatching(
-      Locator.userRepository
+      Locator.favoredRepository()
         .listFavoredWenkuNovel(favoredId, {
           page,
           pageSize: 24,

@@ -1,7 +1,6 @@
 package infra.user
 
-import com.mongodb.client.model.Filters.eq
-import com.mongodb.client.model.Filters.or
+import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.Projections.*
 import com.mongodb.client.model.Updates.combine
 import com.mongodb.client.model.Updates.set
@@ -183,4 +182,25 @@ class UserRepository(
                 set(UserDbModel::role.field(), role.serialName()),
             )
     }
+
+    suspend fun isReadHistoryPaused(
+        userId: String,
+    ): Boolean =
+        userCollection
+            .countDocuments(
+                and(
+                    eq(UserDbModel::id.field(), ObjectId(userId)),
+                    ne(UserDbModel::readHistoryPaused.field(), true),
+                )
+            ) == 0L
+
+    suspend fun updateUserReadHistoryPaused(
+        userId: String,
+        readHistoryPause: Boolean,
+    ) =
+        userCollection
+            .updateOne(
+                eq(UserDbModel::id.field(), ObjectId(userId)),
+                set(UserDbModel::readHistoryPaused.field(), readHistoryPause),
+            )
 }
