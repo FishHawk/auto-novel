@@ -27,8 +27,8 @@ const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
     message.error(`上传失败:文件类型不允许\n文件名： ${file.name}`);
     return false;
   }
-  if (file.file?.size && file.file.size > 1024 * 1024 * 40) {
-    message.error(`上传失败:文件大小不能超过40MB\n文件名: ${file.name}`);
+  if (file.file?.size && file.file.size > 1024 * 1024 * 100) {
+    message.error(`上传失败:文件大小不能超过100MB\n文件名: ${file.name}`);
     return false;
   }
 };
