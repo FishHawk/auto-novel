@@ -14,7 +14,7 @@ import {
   WbSunnyOutlined,
   WorkspacesOutlined,
 } from '@vicons/material';
-import { MenuOption, NButton, NIcon, useOsTheme } from 'naive-ui';
+import { MenuOption, NButton, NIcon, NText, NTime, useOsTheme } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 
 import { Locator } from '@/data';
@@ -199,26 +199,66 @@ const readableRole = (role: UserRole) => {
 };
 
 const userDropdownOptions = computed<MenuOption[]>(() => {
-  const options: MenuOption[] = [
+  const renderHeader = () =>
+    h(
+      'div',
+      {
+        onClick: () => {
+          if (atLeastAdmin.value) {
+            authRepository.toggleAdminMode();
+          }
+        },
+        style: {
+          'margin-left': '36px',
+          'margin-right': '8px',
+        },
+      },
+      [
+        h('div', null, [
+          h(
+            NText,
+            { depth: 2 },
+            {
+              default: () =>
+                readableRole(profile.value!.role) + (asAdmin.value ? '+' : ''),
+            },
+          ),
+        ]),
+        h('div', null, [
+          h(
+            NText,
+            { depth: 3, style: 'font-size: 12px;' },
+            {
+              default: () =>
+                h(NTime, {
+                  time: profile.value!.createAt * 1000,
+                  type: 'date',
+                }),
+            },
+          ),
+        ]),
+      ],
+    );
+  return [
+    {
+      key: 'header',
+      type: 'render',
+      render: renderHeader,
+    },
+    {
+      key: 'header-divider',
+      type: 'divider',
+    },
     {
       label: '退出账号',
       key: 'sign-out',
       icon: renderIcon(LogOutOutlined),
     },
   ];
-  options.unshift({
-    label: readableRole(profile.value!.role) + (asAdmin.value ? '+' : ''),
-    key: 'toggle',
-  });
-  return options;
 });
 const handleUserDropdownSelect = (key: string | number) => {
   if (key === 'sign-out') {
     authRepository.signOut();
-  } else if (key === 'toggle') {
-    if (atLeastAdmin.value) {
-      authRepository.toggleAdminMode();
-    }
   }
 };
 
@@ -258,24 +298,27 @@ watch(
           </n-button>
         </router-link>
 
-        <n-dropdown
-          v-if="isSignedIn"
-          trigger="hover"
-          :keyboard="false"
-          :options="userDropdownOptions"
-          @select="handleUserDropdownSelect"
-        >
-          <n-button :focusable="false" quaternary>
-            @{{ profile?.username }}
-          </n-button>
-        </n-dropdown>
+        <div style="margin-right: 8px">
+          <n-dropdown
+            v-if="isSignedIn"
+            trigger="hover"
+            placement="bottom-end"
+            :keyboard="false"
+            :options="userDropdownOptions"
+            @select="handleUserDropdownSelect"
+          >
+            <n-button :focusable="false" quaternary>
+              @{{ profile?.username }}
+            </n-button>
+          </n-dropdown>
 
-        <router-link
-          v-else
-          :to="{ name: 'sign-in', query: { from: route.fullPath } }"
-        >
-          <n-button quaternary>登录/注册</n-button>
-        </router-link>
+          <router-link
+            v-else
+            :to="{ name: 'sign-in', query: { from: route.fullPath } }"
+          >
+            <n-button quaternary>登录/注册</n-button>
+          </router-link>
+        </div>
       </n-flex>
     </n-layout-header>
 
