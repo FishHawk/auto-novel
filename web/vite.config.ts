@@ -40,6 +40,7 @@ export default defineConfig(({ command, mode }) => {
       proxy,
     },
     build: {
+      target: ['es2015', 'edge88', 'firefox78', 'chrome87', 'safari14'],
       cssCodeSplit: false,
       rollupOptions: {
         output: {
