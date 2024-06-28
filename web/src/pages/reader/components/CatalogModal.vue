@@ -11,8 +11,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:show', show: boolean): void;
-  (e: 'nav', chapterId: string): void;
+  'update:show': [boolean];
+  nav: [chapterId: string];
 }>();
 
 type TocItem = {

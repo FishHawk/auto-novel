@@ -11,7 +11,9 @@ const props = defineProps<{
     | { type: 'web'; providerId: string; novelId: string }
     | { type: 'wenku'; novelId: string };
 }>();
-const emit = defineEmits<{ 'update:favored': [string | undefined] }>();
+const emit = defineEmits<{
+  'update:favored': [string | undefined];
+}>();
 
 const message = useMessage();
 

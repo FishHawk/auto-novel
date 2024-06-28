@@ -9,7 +9,9 @@ defineProps<{
   };
 }>();
 
-const emit = defineEmits<{ delete: [] }>();
+const emit = defineEmits<{
+  delete: [];
+}>();
 
 const showPreviewModal = ref(false);
 </script>

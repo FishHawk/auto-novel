@@ -5,8 +5,12 @@ import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
 
-const props = defineProps<{ favoredId?: string }>();
-const emit = defineEmits<{ done: [File] }>();
+const props = defineProps<{
+  favoredId?: string;
+}>();
+const emit = defineEmits<{
+  done: [File];
+}>();
 
 const message = useMessage();
 

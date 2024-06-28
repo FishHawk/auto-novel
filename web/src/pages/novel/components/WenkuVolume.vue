@@ -17,7 +17,9 @@ const { novelId, volume, getParams } = defineProps<{
   getParams: () => TranslateTaskParams;
 }>();
 
-const emit = defineEmits<{ delete: [] }>();
+const emit = defineEmits<{
+  delete: [];
+}>();
 
 const message = useMessage();
 

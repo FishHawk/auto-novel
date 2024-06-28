@@ -9,7 +9,7 @@ const props = defineProps<{
   worker?: SakuraWorker;
 }>();
 const emit = defineEmits<{
-  (e: 'update:show', show: boolean): void;
+  'update:show': [boolean];
 }>();
 
 const workspace = Locator.sakuraWorkspaceRepository();

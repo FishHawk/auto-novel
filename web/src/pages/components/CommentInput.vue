@@ -11,7 +11,9 @@ const { site, parent } = withDefaults(
   { parent: undefined },
 );
 
-const emit = defineEmits<{ replied: [] }>();
+const emit = defineEmits<{
+  replied: [];
+}>();
 
 const message = useMessage();
 
