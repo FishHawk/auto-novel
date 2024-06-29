@@ -211,6 +211,11 @@ const router = createRouter({
               meta: { title: '交互翻译' },
               component: () => import('./pages/workspace/Interactive.vue'),
             },
+            {
+              path: 'ocr-fix',
+              meta: { title: 'OCR修复' },
+              component: () => import('./pages/workspace/OcrFix.vue'),
+            },
           ],
         },
 

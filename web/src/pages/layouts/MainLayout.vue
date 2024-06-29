@@ -140,6 +140,10 @@ const menuOptions = computed<MenuOption[]>(() => {
           label: renderLabel('交互翻译', '/workspace/interactive'),
           key: '/workspace/interactive',
         },
+        {
+          label: renderLabel('OCR修复', '/workspace/ocr-fix'),
+          key: '/workspace/ocr-fix',
+        },
       ],
     },
     {
