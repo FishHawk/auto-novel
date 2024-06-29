@@ -12,7 +12,6 @@ import { WebNovelRepository, WenkuNovelRepository } from '@/data/api';
 import bannerUrl from '@/image/banner.webp';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
-import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useBreakPoints } from '@/pages/util';
 import { Result, runCatching } from '@/util/result';
 import { WebUtil } from '@/util/web';
@@ -99,17 +98,6 @@ const qqLink =
 
 const telegramLink = 'https://t.me/+Mphy0wV4LYZkNTI1';
 const githubLink = 'https://github.com/FishHawk/auto-novel';
-
-const notices = [
-  notice(
-    '如果发现Sakura某段翻译得不准确，可以提交错误，给网站收集数据帮助sakura训练。',
-  ),
-  notice(
-    '禁止使用脚本绕过翻译器提交翻译文本，哪怕你提交的是正经翻译。现在所有翻译功能都需要登录才可使用。',
-  ),
-  notice('因为种种原因，文库小说不再允许上传中文小说。'),
-  notice('本地小说的百度/有道翻译请到【我的收藏->本地小说】里面进行。'),
-];
 </script>
 
 <template>
@@ -193,7 +181,7 @@ const notices = [
     </n-flex>
     <div v-else style="height: 16px" />
 
-    <notice-board :notices="notices">
+    <bulletin>
       <n-flex>
         <n-button text type="primary" @click="showHowToUseModal = true">
           使用说明
@@ -207,7 +195,15 @@ const notices = [
         /
         <n-a :href="githubLink" target="_blank">Github</n-a>
       </n-flex>
-    </notice-board>
+      <n-p>
+        如果发现Sakura某段翻译得不准确，可以提交错误，给网站收集数据帮助sakura训练。
+      </n-p>
+      <n-p>
+        禁止使用脚本绕过翻译器提交翻译文本，哪怕你觉得自己提交的是正经翻译。
+      </n-p>
+      <n-p> 因为种种原因，文库小说不再允许上传中文小说。 </n-p>
+      <n-p> 本地小说的百度/有道翻译请到【我的收藏->本地小说】里面进行。 </n-p>
+    </bulletin>
 
     <template v-if="isSignedIn">
       <section-header title="我的收藏">

@@ -4,7 +4,6 @@ import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
 import { TranslateJob } from '@/model/Translator';
-import { notice } from '@/pages/components/NoticeBoard.vue';
 import { doAction, useIsWideScreen } from '@/pages/util';
 
 const message = useMessage();
@@ -78,15 +77,6 @@ const clearCache = async () =>
     '缓存清除',
     message,
   );
-
-const notices = [
-  notice(
-    '当您添加翻译器时，若链接留空，则表示将使用OpenAI官方链接，您也可以提供链接以使用第三方GPT代理。',
-  ),
-  notice(
-    '当使用GPT-3.5 Web且选择官方链接时，需要安装相应的插件，详情看使用教程。',
-  ),
-];
 </script>
 
 <template>
@@ -97,7 +87,7 @@ const notices = [
   >
     <n-h1>GPT工作区</n-h1>
 
-    <notice-board :notices="notices">
+    <bulletin>
       <n-flex>
         <c-a to="/forum/64f3d63f794cbb1321145c07" target="_blank">
           使用教程
@@ -112,8 +102,15 @@ const notices = [
         <n-a href="https://chat.openai.com/api/auth/session" target="_blank">
           AccessToken
         </n-a>
+        <n-p>
+          当您添加翻译器时，若链接留空，则表示将使用OpenAI官方链接，您也可以提供链接以使用第三方GPT代理。
+        </n-p>
+        <n-p>
+          当使用GPT-3.5
+          Web且选择官方链接时，需要安装相应的插件，详情看使用教程。
+        </n-p>
       </n-flex>
-    </notice-board>
+    </bulletin>
 
     <section-header title="翻译器">
       <c-button

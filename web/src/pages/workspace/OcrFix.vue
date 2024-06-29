@@ -94,14 +94,14 @@ const fix = (volume: LoadedVolume) => {
   <div class="layout-content">
     <n-h1>OCR修复</n-h1>
 
-    <notice-board :notices="[]">
+    <bulletin>
       <n-p>
         OCR输出的文本通常存在额外的换行符，这会导致翻译器错误。你可以上传txt文件来修复这一问题。
       </n-p>
       <n-p>
         当前的修复方法是检测每一行的结尾是否是字符（汉字/日文假名/韩文字符/英文字母），如果是的话则删除行尾的换行符。
       </n-p>
-    </notice-board>
+    </bulletin>
 
     <n-flex vertical>
       <n-upload

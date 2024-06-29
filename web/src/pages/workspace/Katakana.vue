@@ -5,7 +5,6 @@ import { UploadCustomRequestOptions } from 'naive-ui';
 import { Locator } from '@/data';
 import { Translator, TranslatorConfig } from '@/domain/translate';
 import { Glossary } from '@/model/Glossary';
-import { notice } from '@/pages/components/NoticeBoard.vue';
 import { useIsWideScreen } from '@/pages/util';
 import { Epub, Txt } from '@/util/file';
 
@@ -175,20 +174,20 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
 };
 
 const showListModal = ref(false);
-
-const notices = [
-  notice('术语表辅助制作工具正在开发中，当前方案分为识别和翻译两步。'),
-  notice('识别阶段：根据片假名词汇出现频率判断可能是术语的词汇。'),
-  notice('翻译阶段：直接翻译日语词汇。'),
-  notice('注意，这是辅助制作，不是全自动生成，使用前务必检查结果。', true),
-];
 </script>
 
 <template>
   <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
     <n-h1>术语表工作区</n-h1>
 
-    <notice-board :notices="notices" />
+    <bulletin>
+      <n-p>术语表辅助制作工具正在开发中，当前方案分为识别和翻译两步。</n-p>
+      <n-ul>
+        <n-li>识别阶段：根据片假名词汇出现频率判断可能是术语的词汇。</n-li>
+        <n-li>翻译阶段：直接翻译日语词汇。</n-li>
+      </n-ul>
+      <n-p><b>注意，这是辅助制作，不是全自动生成，使用前务必检查结果。</b></n-p>
+    </bulletin>
 
     <c-action-wrapper title="载入文件">
       <n-flex vertical style="margin: 20px 0">

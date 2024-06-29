@@ -96,7 +96,7 @@ const clearCache = async () =>
   >
     <n-h1>Sakura工作区</n-h1>
 
-    <notice-board :notices="[]">
+    <bulletin>
       <n-flex>
         <c-a to="/forum/656d60530286f15e3384fcf8" target="_blank">
           本地部署教程
@@ -150,7 +150,7 @@ const clearCache = async () =>
           {{ model }}
         </n-li>
       </n-ul>
-    </notice-board>
+    </bulletin>
 
     <section-header title="翻译器">
       <c-button
