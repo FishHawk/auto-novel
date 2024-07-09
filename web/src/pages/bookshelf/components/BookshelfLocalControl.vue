@@ -188,7 +188,8 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
     </n-list-item>
 
     <n-list-item v-if="favoreds.local.length > 1">
-      <n-flex vertical>
+      <n-p>移动小说功能暂时关闭</n-p>
+      <n-flex v-if="false" vertical>
         <b>移动小说</b>
 
         <n-radio-group v-model:value="targetFavoredId">
