@@ -116,6 +116,7 @@ fun Route.routeAuth() {
 }
 
 class AuthApi(
+    private val emailDisabled: Boolean,
     private val secret: String,
     private val userRepo: UserRepository,
     private val userCodeRepo: UserCodeRepository,
@@ -149,7 +150,7 @@ class AuthApi(
         if (password.length < 8) throwBadRequest("密码至少为8个字符")
         if (userRepo.getUserByEmail(email) != null) throwConflict("邮箱已经被使用")
         if (userRepo.getUserByUsername(username) != null) throwConflict("用户名已经被使用")
-        if (!userCodeRepo.verifyEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
+        if (!emailDisabled && !userCodeRepo.verifyEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
 
         val user = userRepo.addUser(
             email = email,
@@ -179,7 +180,11 @@ class AuthApi(
                         "这是系统邮件，请勿回复"
             )
         } catch (e: AddressException) {
-            throwInternalServerError("邮件发送失败")
+            if (emailDisabled) {
+                return
+            } else {
+                throwInternalServerError("邮件发送失败")
+            }
         }
 
         userCodeRepo.addEmailCode(email, emailCode)
@@ -201,7 +206,11 @@ class AuthApi(
                         "这是系统邮件，请勿回复"
             )
         } catch (e: AddressException) {
-            throwInternalServerError("邮件发送失败")
+            if (emailDisabled) {
+                return
+            } else {
+                throwInternalServerError("邮件发送失败")
+            }
         }
 
         userCodeRepo.addResetPasswordCode(user.id, token)
@@ -214,7 +223,7 @@ class AuthApi(
     ) {
         val user = userRepo.getUserByUsernameOrEmail(emailOrUsername)
             ?: throwUserNotFound()
-        if (!userCodeRepo.verifyResetPasswordToken(user.id, token)) {
+        if (!emailDisabled && !userCodeRepo.verifyResetPasswordToken(user.id, token)) {
             throwBadRequest("口令不合法")
         }
         userRepo.updatePassword(user.id, password)

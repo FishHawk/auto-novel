@@ -136,7 +136,6 @@ val appModule = module {
     singleOf(::UserRepository)
     singleOf(::UserCodeRepository)
     singleOf(::UserFavoredRepository)
-
     singleOf(::WebNovelMetadataRepository)
     singleOf(::WebNovelChapterRepository)
     singleOf(::WebNovelFileRepository)
@@ -149,7 +148,11 @@ val appModule = module {
 
     // App Layer
     single {
-        AuthApi(secret = env("JWT_SECRET")!!, get(), get())
+        AuthApi(
+            emailDisabled = env("EMAIL_PASSWORD") == null,
+            secret = env("JWT_SECRET")!!,
+            get(), get()
+        )
     }
     singleOf(::ArticleApi)
     singleOf(::CommentApi)
