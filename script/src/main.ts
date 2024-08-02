@@ -1,13 +1,10 @@
-import { generateWebIndex } from './GenerateWebIndex.js';
-import { generateWenkuIndex } from './GenerateWenkuIndex.js';
+import { removeWebNovel } from './RemoveWebNovel.js';
 import { es, mongo } from './config.js';
 
 async function run() {
-  try {
-    await generateWenkuIndex();
-  } finally {
-    await mongo.close();
-  }
+  await removeWebNovel('syosetu', 'n0646ie');
+  await removeWebNovel('kakuyomu', '16817330660019717771');
+  await mongo.close();
 }
 
 run();
