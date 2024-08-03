@@ -9,7 +9,7 @@ import { useIsWideScreen } from '@/pages/util';
 import { Epub, Txt } from '@/util/file';
 
 import LoadedVolume from './components/LoadedVolume.vue';
-
+const isEditable = ref(false)
 const message = useMessage();
 const isWideScreen = useIsWideScreen();
 const sakuraWorkspace = Locator.sakuraWorkspaceRepository().ref;
@@ -270,6 +270,16 @@ const showListModal = ref(false);
           </n-button-group>
         </n-flex>
       </c-action-wrapper>
+      <c-action-wrapper title="編輯模式">
+        <n-space>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-switch v-model:value="isEditable" />
+            </template>
+            使翻译后的术语表可编辑
+          </n-tooltip>
+        </n-space>
+      </c-action-wrapper>
     </n-flex>
 
     <n-divider />
@@ -288,6 +298,7 @@ const showListModal = ref(false);
               <input
                 v-if="katakanaTranslations[word] !== undefined"
                 v-model="katakanaTranslations[word]"
+                :readonly="!isEditable"
                 style="
                   margin-left: 16px;
                   border: none;
