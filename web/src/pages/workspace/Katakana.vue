@@ -285,12 +285,17 @@ const showListModal = ref(false);
             <td nowrap="nowrap">=></td>
             <td>
               {{ number }}
-              <n-text
-                v-if="katakanaTranslations[word]"
-                style="margin-left: 16px"
-              >
-                {{ katakanaTranslations[word] }}
-              </n-text>
+              <input
+                v-if="katakanaTranslations[word] !== undefined"
+                v-model="katakanaTranslations[word]"
+                style="
+                  margin-left: 16px;
+                  border: none;
+                  outline: none;
+                  background-color: transparent;
+                  width: auto;
+                "
+              />
             </td>
           </tr>
         </n-table>
