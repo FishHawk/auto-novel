@@ -11,7 +11,7 @@ const props = defineProps<{
   gnid?: GenericNovelId;
   value: Glossary;
 }>();
-
+const isEditable = ref(false);
 const message = useMessage();
 
 const glossary = ref<Glossary>({});
@@ -226,11 +226,33 @@ const importGlossary = () => {
         </td>
         <td>{{ wordJp }}</td>
         <td nowrap="nowrap">=></td>
-        <td>{{ glossary[wordJp] }}</td>
+        <td>
+          <input
+            v-model="glossary[wordJp]"
+            :readonly="!isEditable"
+            style="
+              border: none;
+              outline: none;
+              background-color: transparent;
+              width: auto;
+            "
+          />
+        </td>
       </tr>
     </n-table>
 
     <template #action>
+      <div style="margin-right: auto">
+        <n-space>
+          <span>编辑模式</span>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-switch v-model:value="isEditable" />
+            </template>
+            使翻译后的术语表可编辑
+          </n-tooltip>
+        </n-space>
+      </div>
       <c-button label="提交" type="primary" @action="submitGlossary()" />
     </template>
   </c-modal>

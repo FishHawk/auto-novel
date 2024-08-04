@@ -9,7 +9,7 @@ import { useIsWideScreen } from '@/pages/util';
 import { Epub, Txt } from '@/util/file';
 
 import LoadedVolume from './components/LoadedVolume.vue';
-const isEditable = ref(false)
+const isEditable = ref(false);
 const message = useMessage();
 const isWideScreen = useIsWideScreen();
 const sakuraWorkspace = Locator.sakuraWorkspaceRepository().ref;
@@ -270,7 +270,7 @@ const showListModal = ref(false);
           </n-button-group>
         </n-flex>
       </c-action-wrapper>
-      <c-action-wrapper title="編輯模式">
+      <c-action-wrapper title="编辑模式">
         <n-space>
           <n-tooltip trigger="hover">
             <template #trigger>
