@@ -536,10 +536,11 @@ class WebNovelApi(
                 wenkuId = wenkuId.takeIf { it.isNotBlank() },
             )
             val webId = "${providerId}/${novelId}"
+            if (originWenkuId != null) {
+                wenkuMetadataRepo.removeWebId(originWenkuId, webId)
+            }
             if (targetWenkuId != null) {
                 wenkuMetadataRepo.addWebId(targetWenkuId, webId)
-            } else {
-                wenkuMetadataRepo.removeWebId(originWenkuId!!, webId)
             }
         }
 
