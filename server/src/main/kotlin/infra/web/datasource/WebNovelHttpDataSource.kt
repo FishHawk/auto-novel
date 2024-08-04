@@ -76,9 +76,12 @@ class WebNovelHttpDataSource(
 private val disgustingFascistNovelList = mapOf(
     "syosetu" to listOf(
         "n0646ie",
+        "n8926ic",
+        "n4583he",
     ),
     "kakuyomu" to listOf(
         "16817330660019717771",
+        "1177354054901629921",
     )
 )
 
