@@ -9,7 +9,7 @@ import { useIsWideScreen } from '@/pages/util';
 import { Epub, Txt } from '@/util/file';
 
 import LoadedVolume from './components/LoadedVolume.vue';
-const isEditable = ref(false);
+
 const message = useMessage();
 const isWideScreen = useIsWideScreen();
 const sakuraWorkspace = Locator.sakuraWorkspaceRepository().ref;
@@ -117,9 +117,22 @@ const katakanaMerged = computed(() => {
   return map;
 });
 
+const katakanaDeleted = ref<string[]>([]);
+const undoDeleteKatakana = () => {
+  katakanaDeleted.value.pop();
+};
+const lastDeletedHint = computed(() => {
+  const last = katakanaDeleted.value[katakanaDeleted.value.length - 1];
+  if (last === undefined) return undefined;
+  return `${last} => ${katakanaTranslations.value[last]}`;
+});
+
 const katakanas = computed(() => {
   return new Map(
-    [...katakanaMerged.value].filter(([w, c]) => c > katakanaThredhold.value),
+    [...katakanaMerged.value].filter(
+      ([w, c]) =>
+        c > katakanaThredhold.value && !katakanaDeleted.value.includes(w),
+    ),
   );
 });
 
@@ -268,17 +281,24 @@ const showListModal = ref(false);
               @action="showSakuraSelectModal = true"
             />
           </n-button-group>
+
+          <n-flex align="center" :wrap="false">
+            <c-button
+              :disabled="katakanaDeleted.length === 0"
+              label="撤销删除"
+              :round="false"
+              size="small"
+              @action="undoDeleteKatakana"
+            />
+            <n-text
+              v-if="katakanaDeleted.length > 0"
+              depth="3"
+              style="font-size: 12px"
+            >
+              {{ lastDeletedHint }}
+            </n-text>
+          </n-flex>
         </n-flex>
-      </c-action-wrapper>
-      <c-action-wrapper title="编辑模式">
-        <n-space>
-          <n-tooltip trigger="hover">
-            <template #trigger>
-              <n-switch v-model:value="isEditable" />
-            </template>
-            使翻译后的术语表可编辑
-          </n-tooltip>
-        </n-space>
       </c-action-wrapper>
     </n-flex>
 
@@ -287,25 +307,32 @@ const showListModal = ref(false);
     <div v-if="katakanas.size !== 0">
       <n-scrollbar
         trigger="none"
-        style="max-height: 60vh; max-width: 400px; margin-top: 30px"
+        style="max-height: 60vh; max-width: 500px; margin-top: 30px"
       >
         <n-table striped size="small" style="font-size: 12px">
           <tr v-for="[word, number] in katakanas" :key="word">
+            <td>
+              <c-icon-button
+                tooltip="移除"
+                :icon="DeleteOutlineOutlined"
+                text
+                size="small"
+                type="error"
+                @action="katakanaDeleted.push(word)"
+              />
+            </td>
+            <td nowrap="nowrap">{{ number }}</td>
             <td style="min-width: 100px">{{ word }}</td>
             <td nowrap="nowrap">=></td>
-            <td>
-              {{ number }}
-              <input
-                v-if="katakanaTranslations[word] !== undefined"
-                v-model="katakanaTranslations[word]"
-                :readonly="!isEditable"
-                style="
-                  margin-left: 16px;
-                  border: none;
-                  outline: none;
-                  background-color: transparent;
-                  width: auto;
-                "
+            <td style="padding-right: 16px">
+              <n-input
+                v-model:value="katakanaTranslations[word]"
+                size="tiny"
+                placeholder="请输入中文翻译"
+                :theme-overrides="{
+                  border: '0',
+                  color: 'transprent',
+                }"
               />
             </td>
           </tr>
