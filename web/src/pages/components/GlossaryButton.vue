@@ -226,7 +226,17 @@ const importGlossary = () => {
         </td>
         <td>{{ wordJp }}</td>
         <td nowrap="nowrap">=></td>
-        <td>{{ glossary[wordJp] }}</td>
+        <td style="padding-right: 16px">
+          <n-input
+            v-model:value="glossary[wordJp]"
+            size="tiny"
+            placeholder="请输入中文翻译"
+            :theme-overrides="{
+              border: '0',
+              color: 'transprent',
+            }"
+          />
+        </td>
       </tr>
     </n-table>
 
