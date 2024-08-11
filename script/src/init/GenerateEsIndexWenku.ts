@@ -1,7 +1,9 @@
-import { es, mongo } from './config.js';
+import { ES } from './DbEs.js';
+import { MONGO } from './DbMongo.js';
 
-export const generateWenkuIndex = async () => {
-  const index = 'wenku.2024-05-15';
+export const generateEsIndexWenku = async () => {
+  const es = ES.client;
+  const index = ES.WENKU_INDEX;
 
   try {
     await es.indices.delete({ index });
@@ -28,7 +30,7 @@ export const generateWenkuIndex = async () => {
     { ignore: [400] }
   );
 
-  const col = mongo.db('main').collection('wenku-metadata');
+  const col = MONGO.col(MONGO.WENKU_NOVEL);
   const total = await col.countDocuments();
   const novels = col.find().project({
     title: 1,

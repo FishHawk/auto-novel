@@ -1,7 +1,9 @@
-import { es, mongo } from './config.js';
+import { ES } from './DbEs.js';
+import { MONGO } from './DbMongo.js';
 
-export const generateWebIndex = async () => {
-  const index = 'web.2024-06-10';
+export const generateEsIndexWeb = async () => {
+  const es = ES.client;
+  const index = ES.WEB_INDEX;
 
   try {
     await es.indices.delete({ index });
@@ -30,7 +32,7 @@ export const generateWebIndex = async () => {
     { ignore: [400] }
   );
 
-  const col = mongo.db('main').collection('metadata');
+  const col = MONGO.col(MONGO.WEB_NOVEL);
   const total = await col.estimatedDocumentCount();
   const novels = col.find().project({
     providerId: 1,
