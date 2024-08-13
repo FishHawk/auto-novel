@@ -134,6 +134,9 @@ const fontColor = computed(() => {
         :class="{ secondary: p.secondary }"
         :aria-hidden="!p.needSpeak"
       >
+        <n-tag v-if="p.source" size="small" class="secondary">
+          {{ p.source }}
+        </n-tag>
         {{ p.text }}
         <n-popconfirm
           v-if="p.popover !== undefined"
@@ -146,7 +149,7 @@ const fontColor = computed(() => {
           <template #trigger>
             <c-button
               text
-              style="opacity: 0.5"
+              style="opacity: 0.5; margin: 2px; vertical-align: middle"
               :icon="ErrorOutlineOutlined"
               @action="(e: MouseEvent) => e.stopPropagation()"
             />
