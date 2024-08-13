@@ -52,7 +52,9 @@ const setCustomFontColor = (color: string) =>
               :options="ReaderSetting.speakLanguagesOptions"
             />
           </c-action-wrapper>
-
+          <c-action-wrapper title="显示翻译来源" align="center">
+            <n-switch v-model:value="setting.enableSourceLabel" size="small" />
+          </c-action-wrapper>
           <c-action-wrapper title="Sakura报错按钮" align="center">
             <n-switch
               v-model:value="setting.enableSakuraReportButton"

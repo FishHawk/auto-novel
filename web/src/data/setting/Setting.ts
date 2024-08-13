@@ -123,6 +123,7 @@ export interface ReaderSetting {
   speakLanguages: string[];
   enableSakuraReportButton: boolean;
   trimLeadingSpaces: boolean;
+  enableSourceLabel: boolean;
   //
   fontWeight: number;
   fontSize: number;
@@ -145,6 +146,7 @@ export namespace ReaderSetting {
     speakLanguages: ['jp'],
     enableSakuraReportButton: true,
     trimLeadingSpaces: false,
+    enableSourceLabel: false,
     //
     fontWeight: 400,
     fontSize: 14,

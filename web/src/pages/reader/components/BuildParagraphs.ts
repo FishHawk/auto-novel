@@ -5,7 +5,13 @@ import { TranslatorId } from '@/model/Translator';
 import { ReaderChapter } from '../ReaderStore';
 
 export type ReaderParagraph =
-  | { text: string; secondary: boolean; needSpeak: boolean; popover?: number }
+  | {
+      text: string;
+      source?: string;
+      secondary: boolean;
+      needSpeak: boolean;
+      popover?: number;
+    }
   | { imageUrl: string }
   | undefined;
 
@@ -18,6 +24,7 @@ export const buildParagraphs = (
   const merged: ReaderParagraph[] = [];
   const styles: {
     paragraphs: string[];
+    source?: string;
     secondary: boolean;
     popover?: boolean;
     needSpeak: boolean;
@@ -63,6 +70,7 @@ export const buildParagraphs = (
           hasAnyTranslation = true;
           styles.push({
             paragraphs,
+            source: t,
             secondary: false,
             needSpeak: needSpeakZh,
             popover:
@@ -89,6 +97,7 @@ export const buildParagraphs = (
         if (paragraphs) {
           styles.push({
             paragraphs,
+            source: t,
             secondary: false,
             needSpeak: needSpeakZh && i === 0,
             popover: setting.enableSakuraReportButton && t === 'sakura',
@@ -126,6 +135,10 @@ export const buildParagraphs = (
         }
         merged.push({
           text,
+          source:
+            setting.enableSourceLabel === true
+              ? style.source?.slice(0, 1).toUpperCase()
+              : undefined,
           secondary: style.secondary,
           needSpeak: style.needSpeak,
           popover: style.popover === true ? i : undefined,
