@@ -10,7 +10,7 @@ import { Translator } from './Translator';
 
 export const translateLocal = async (
   { volumeId }: LocalTranslateTaskDesc,
-  { level }: TranslateTaskParams,
+  { level, startIndex, endIndex }: TranslateTaskParams,
   callback: TranslateTaskCallback,
   translator: Translator,
   signal?: AbortSignal,
@@ -47,9 +47,10 @@ export const translateLocal = async (
 
   const chapters = (() => {
     if (level === 'all') {
-      return metadata.toc.map((it) => it.chapterId);
+      return metadata.toc.slice(startIndex, endIndex).map((it) => it.chapterId);
     } else {
       const untranslatedChapters = metadata.toc
+        .slice(startIndex, endIndex)
         .filter((it) => it[translator.id] === undefined)
         .map((it) => it.chapterId);
       if (level === 'normal') {
@@ -57,6 +58,7 @@ export const translateLocal = async (
       }
 
       const expiredChapters = metadata.toc
+        .slice(startIndex, endIndex)
         .filter(
           (it) =>
             it[translator.id] !== undefined &&
@@ -82,8 +84,16 @@ export const translateLocal = async (
       }
       const textsJp = chapter?.paragraphs;
 
+      const oldTextsZh = await localVolumeRepository.getChapter(
+        volumeId,
+        chapterId,
+      );
       const textsZh = await translator.translate(textsJp, {
         glossary: metadata.glossary,
+        oldGlossary: chapter[translator.id]?.glossary,
+        oldTextZh: oldTextsZh
+          ? oldTextsZh[translator.id]?.paragraphs
+          : undefined,
         force: forceSeg,
         signal,
       });
