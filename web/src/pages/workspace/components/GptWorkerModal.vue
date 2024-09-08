@@ -81,11 +81,12 @@ const formRules: FormRules = {
   key: [
     emptyCheck('Key'),
     {
+      level: 'warning',
       validator: (rule: FormItemRule, value: string) =>
         workspaceRef.value.workers
           .filter(({ id }) => id !== props.worker?.id)
           .find(({ key }) => key === value) === undefined,
-      message: 'Key不能重复',
+      message: '有重复的Key (仅作为不支持并发的api的提醒)',
       trigger: 'input',
     },
   ],

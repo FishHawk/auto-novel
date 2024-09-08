@@ -10,6 +10,9 @@ import { downloadFile } from '@/util';
 
 import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';
 import { doAction } from '@/pages/util';
+import TranslateOptions from '@/pages/novel/components/TranslateOptions.vue';
+
+const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
 
 const props = defineProps<{
   type: 'gpt' | 'sakura';
@@ -59,11 +62,18 @@ const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
 };
 
 const shouldTopJob = useKeyModifier('Control');
-const queueVolume = (volumeId: string) => {
+const queueVolume = (volumeId: string, total: number = 65536) => {
+  const { startIndex, endIndex, level, forceMetadata } =
+    translateOptions.value!!.getTranslateTaskParams();
+  const taskNumber = translateOptions.value!!.getTaskNumber();
   const success = store.queueJobToWorkspace(volumeId, {
-    level: 'expire',
+    level: level,
     type: props.type,
     shouldTop: shouldTopJob.value ?? false,
+    startIndex: startIndex,
+    endIndex: endIndex,
+    taskNumber: taskNumber,
+    total: total,
   });
   if (success) {
     message.success('排队成功');
@@ -111,6 +121,12 @@ const progressFilterFunc = computed(() => {
 </script>
 
 <template>
+  <section-header title="本地翻译设置"></section-header>
+  <translate-options
+    ref="translateOptions"
+    :gnid="GenericNovelId.local('')"
+    :glossary="{}"
+  />
   <local-volume-list
     :filter="progressFilterFunc"
     :options="{ 全部排队: queueAllVolumes }"
@@ -149,7 +165,7 @@ const progressFilterFunc = computed(() => {
             label="排队"
             size="tiny"
             secondary
-            @action="queueVolume(volume.id)"
+            @action="queueVolume(volume.id, volume.toc.length)"
           />
 
           <router-link

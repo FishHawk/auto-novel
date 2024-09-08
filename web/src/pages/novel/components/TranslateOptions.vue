@@ -8,7 +8,7 @@ import { Glossary } from '@/model/Glossary';
 import { TranslateTaskParams } from '@/model/Translator';
 import { useIsWideScreen } from '@/pages/util';
 
-defineProps<{
+const probs = defineProps<{
   gnid: GenericNovelId;
   glossary: Glossary;
 }>();
@@ -17,7 +17,9 @@ const isWideScreen = useIsWideScreen(600);
 const { setting } = Locator.settingRepository();
 
 // 翻译设置
-const translateLevel = ref<'normal' | 'expire' | 'all' | 'sync'>('normal');
+const translateLevel = ref<'normal' | 'expire' | 'all' | 'sync'>(
+  probs.gnid.type === 'local' ? 'expire' : 'normal',
+);
 const forceMetadata = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
@@ -92,7 +94,10 @@ const showDownloadModal = ref(false);
       </n-flex>
     </c-action-wrapper>
 
-    <c-action-wrapper v-if="gnid.type === 'web'" title="范围">
+    <c-action-wrapper
+      v-if="gnid.type === 'web' || gnid.type === 'local'"
+      title="范围"
+    >
       <n-flex style="text-align: center">
         <div>
           <n-input-group>
@@ -123,7 +128,7 @@ const showDownloadModal = ref(false);
               v-model:value="taskNumber"
               :show-button="false"
               :min="1"
-              :max="10"
+              :max="gnid.type === 'local' ? 65536 : 10"
               style="width: 40px"
             />
             <n-input-group-label size="small">个任务</n-input-group-label>
@@ -141,7 +146,7 @@ const showDownloadModal = ref(false);
       </n-flex>
     </c-action-wrapper>
 
-    <c-action-wrapper title="操作">
+    <c-action-wrapper v-if="gnid.type !== 'local'" title="操作">
       <n-button-group size="small">
         <c-button
           label="下载设置"
