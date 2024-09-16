@@ -216,36 +216,38 @@ const showWebNovelsModal = ref(false);
           </n-list-item>
         </n-list>
 
-        <section-header title="中文" />
-        <upload-button v-if="atLeastMaintainer" type="zh" :novel-id="novelId" />
-        <n-ul>
-          <n-li v-for="volumeId in metadata.volumeZh" :key="volumeId">
-            <n-a
-              :href="`/files-wenku/${novelId}/${encodeURIComponent(volumeId)}`"
-              target="_blank"
-              :download="volumeId"
-            >
-              {{ volumeId }}
-            </n-a>
+        <template v-if="atLeastMaintainer">
+          <section-header title="中文" />
+          <upload-button type="zh" :novel-id="novelId" />
+          <n-ul>
+            <n-li v-for="volumeId in metadata.volumeZh" :key="volumeId">
+              <n-a
+                :href="`/files-wenku/${novelId}/${encodeURIComponent(volumeId)}`"
+                target="_blank"
+                :download="volumeId"
+              >
+                {{ volumeId }}
+              </n-a>
 
-            <n-popconfirm
-              v-if="atLeastMaintainer"
-              :show-icon="false"
-              @positive-click="deleteVolume(volumeId)"
-              :negative-text="null"
-              style="max-width: 300px"
-            >
-              <template #trigger>
-                <n-button text type="error" style="margin-left: 16px">
-                  删除
-                </n-button>
-              </template>
-              真的要删除吗？
-              <br />
-              {{ volumeId }}
-            </n-popconfirm>
-          </n-li>
-        </n-ul>
+              <n-popconfirm
+                v-if="atLeastMaintainer"
+                :show-icon="false"
+                @positive-click="deleteVolume(volumeId)"
+                :negative-text="null"
+                style="max-width: 300px"
+              >
+                <template #trigger>
+                  <n-button text type="error" style="margin-left: 16px">
+                    删除
+                  </n-button>
+                </template>
+                真的要删除吗？
+                <br />
+                {{ volumeId }}
+              </n-popconfirm>
+            </n-li>
+          </n-ul>
+        </template>
       </template>
       <n-p v-else>游客无法查看内容，请先登录。</n-p>
 

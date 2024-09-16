@@ -114,19 +114,6 @@ const clearCache = async () =>
             控制台
           </n-a>
         </span>
-        /
-        <span>
-          <c-a to="/forum/6630f091c92d3f7ad7f50f23" target="_blank">
-            Kaggle教程
-          </c-a>
-          :
-          <n-a
-            href="https://kaggle.com/kernels/welcome?src=https://github.com/FishHawk/auto-novel/blob/main/sakura-launcher/kaggle.ipynb"
-            target="_blank"
-          >
-            脚本
-          </n-a>
-        </span>
       </n-flex>
 
       <n-p> 允许上传的模型如下，禁止一切试图突破上传检查的操作。 </n-p>
