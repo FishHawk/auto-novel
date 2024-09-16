@@ -6,13 +6,10 @@ import { Ok, Result, runCatching } from '@/util/result';
 import { Comment1 } from '@/model/Comment';
 import { Page } from '@/model/Page';
 
-const { site } = withDefaults(
-  defineProps<{
-    site: string;
-    locked: boolean;
-  }>(),
-  { locked: false },
-);
+const props = defineProps<{
+  site: string;
+  locked: boolean;
+}>();
 
 const commentPage = ref<Result<Page<Comment1>>>();
 const currentPage = ref(1);
@@ -20,7 +17,7 @@ const currentPage = ref(1);
 async function loadComments(page: number) {
   const result = await runCatching(
     CommentRepository.listComment({
-      site,
+      site: props.site,
       page: page - 1,
       pageSize: 10,
     }),

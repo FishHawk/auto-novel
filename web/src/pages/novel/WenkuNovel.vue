@@ -252,6 +252,7 @@ const showWebNovelsModal = ref(false);
       <comment-list
         v-if="!setting.hideCommmentWenkuNovel"
         :site="`wenku-${novelId}`"
+        :locked="false"
       />
     </c-result>
   </div>

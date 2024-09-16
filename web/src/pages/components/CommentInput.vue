@@ -2,14 +2,11 @@
 import { CommentRepository } from '@/data/api';
 import { doAction } from '@/pages/util';
 
-const { site, parent } = withDefaults(
-  defineProps<{
-    site: string;
-    parent?: string;
-    placeholder?: string;
-  }>(),
-  { parent: undefined },
-);
+const props = defineProps<{
+  site: string;
+  parent?: string;
+  placeholder?: string;
+}>();
 
 const emit = defineEmits<{
   replied: [];
@@ -27,8 +24,8 @@ const reply = async () => {
 
   await doAction(
     CommentRepository.createComment({
-      site,
-      parent,
+      site: props.site,
+      parent: props.parent,
       content: content.value,
     }).then(() => {
       content.value = '';

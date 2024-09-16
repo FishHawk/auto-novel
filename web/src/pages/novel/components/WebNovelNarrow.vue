@@ -159,5 +159,6 @@ const showCatalogDrawer = ref(false);
   <comment-list
     v-if="!setting.hideCommmentWebNovel"
     :site="`web-${providerId}-${novelId}`"
+    :locked="false"
   />
 </template>
