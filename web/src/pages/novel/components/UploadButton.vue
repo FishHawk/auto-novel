@@ -11,16 +11,16 @@ import { useWenkuNovelStore } from '../WenkuNovelStore';
 import { RegexUtil } from '@/util';
 import { getFullContent } from '@/util/file';
 
-const { novelId, type } = defineProps<{
+const props = defineProps<{
   novelId: string;
-  type: 'jp' | 'zh';
+  allowZh: boolean;
 }>();
 
 const message = useMessage();
 
 const { isSignedIn } = Locator.authRepository();
 
-const store = useWenkuNovelStore(novelId);
+const store = useWenkuNovelStore(props.novelId);
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
   if (!isSignedIn.value) {
@@ -51,13 +51,19 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
   }
 
   const p = (charsCount.jp + charsCount.ko) / charsCount.total;
-  if (type === 'jp' && p < 0.33) {
-    message.error('日本/韩文过少，请不要上传中文小说');
-    return false;
+  if (p < 0.33) {
+    if (!props.allowZh) {
+      message.error('疑似中文小说，文库不允许上传');
+      return false;
+    } else {
+      file.url = 'zh';
+    }
+  } else {
+    file.url = 'jp';
   }
 }
 
-const customRequest = ({
+const customRequest = async ({
   file,
   onFinish,
   onError,
@@ -67,17 +73,17 @@ const customRequest = ({
     onError();
     return;
   }
-  store
-    .createVolume(file.name, type, file.file as File, (percent) =>
+
+  try {
+    const type = file.url === 'jp' ? 'jp' : 'zh';
+    await store.createVolume(file.name, type, file.file as File, (percent) =>
       onProgress({ percent }),
-    )
-    .then(() => {
-      onFinish();
-    })
-    .catch(async (e) => {
-      onError();
-      message.error(`上传失败:${await formatError(e)}`);
-    });
+    );
+    onFinish();
+  } catch (e) {
+    onError();
+    message.error(`上传失败:${await formatError(e)}`);
+  }
 };
 
 const ruleViewed = Locator.ruleViewedRepository().ref;

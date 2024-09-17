@@ -192,7 +192,7 @@ const showWebNovelsModal = ref(false);
 
       <section-header title="目录" />
       <template v-if="isSignedIn">
-        <upload-button type="jp" :novel-id="novelId" />
+        <upload-button :allow-zh="atLeastMaintainer" :novel-id="novelId" />
 
         <translate-options
           ref="translateOptions"
@@ -217,8 +217,8 @@ const showWebNovelsModal = ref(false);
         </n-list>
 
         <template v-if="atLeastMaintainer">
-          <section-header title="中文" />
-          <upload-button type="zh" :novel-id="novelId" />
+          <n-divider style="margin: 0" />
+
           <n-ul>
             <n-li v-for="volumeId in metadata.volumeZh" :key="volumeId">
               <n-a
@@ -248,6 +248,22 @@ const showWebNovelsModal = ref(false);
             </n-li>
           </n-ul>
         </template>
+
+        <n-empty
+          v-if="
+            metadata.volumeJp.length === 0 && metadata.volumeZh.length === 0
+          "
+          description="请不要创建一个空页面"
+        />
+
+        <n-empty
+          v-if="
+            !atLeastMaintainer &&
+            metadata.volumeJp.length === 0 &&
+            metadata.volumeZh.length > 0
+          "
+          description="网站已撤下中文小说板块，请上传日文生成翻译"
+        />
       </template>
       <n-p v-else>游客无法查看内容，请先登录。</n-p>
 
