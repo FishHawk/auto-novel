@@ -6,7 +6,7 @@ import { Locator } from '@/data';
 import { Translator, TranslatorConfig } from '@/domain/translate';
 import { Glossary } from '@/model/Glossary';
 import { useIsWideScreen } from '@/pages/util';
-import { Epub, Txt } from '@/util/file';
+import { getFullContent } from '@/util/file';
 
 import LoadedVolume from './components/LoadedVolume.vue';
 
@@ -51,21 +51,7 @@ const loadVolume = async (
     return;
   }
 
-  let content: string;
-  if (filename.endsWith('.txt') || filename.endsWith('.srt')) {
-    content = await Txt.readContent(file);
-  } else if (filename.endsWith('.epub')) {
-    const fullContent: string[] = [];
-    await Epub.forEachXHtmlFile(file, (_path, doc) => {
-      Array.from(doc.getElementsByClassName('rt')).forEach((node) =>
-        node.parentNode!!.removeChild(node),
-      );
-      fullContent.push(doc.body.textContent ?? '');
-    });
-    content = fullContent.join('\n');
-  } else {
-    return;
-  }
+  const content = await getFullContent(file);
   loadedVolumes.value.push({
     source,
     filename,

@@ -8,6 +8,8 @@ import {
 
 import { Locator, formatError } from '@/data';
 import { useWenkuNovelStore } from '../WenkuNovelStore';
+import { RegexUtil } from '@/util';
+import { getFullContent } from '@/util/file';
 
 const { novelId, type } = defineProps<{
   novelId: string;
@@ -25,8 +27,10 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     message.info('请先登录');
     return false;
   }
+  if (!file.file) {
+    return false;
+  }
   if (
-    file.file &&
     ['jp', 'zh', 'zh-jp', 'jp-zh'].some((prefix) =>
       file.file!!.name.startsWith(prefix),
     )
@@ -34,8 +38,21 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     message.error('不要上传本网站上生成的机翻文件');
     return false;
   }
-  if (file.file && file.file.size > 1024 * 1024 * 40) {
+  if (file.file.size > 1024 * 1024 * 40) {
     message.error('文件大小不能超过40MB');
+    return false;
+  }
+
+  const content = await getFullContent(file.file);
+  const charsCount = RegexUtil.countLanguageCharacters(content);
+  if (charsCount.total < 500) {
+    message.error('字数过少，请检查内容是不是图片');
+    return false;
+  }
+
+  const p = (charsCount.jp + charsCount.ko) / charsCount.total;
+  if (type === 'jp' && p < 0.33) {
+    message.error('日本/韩文过少，请不要上传中文小说');
     return false;
   }
 }
