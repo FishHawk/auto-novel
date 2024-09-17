@@ -68,6 +68,12 @@
         }
       })();
     </script>
+    <script>
+      // vite bug, see https://github.com/vitejs/vite/discussions/15794
+      if (!('hasOwn' in Object)) {
+        Object.hasOwn = Object.call.bind(Object.hasOwnProperty);
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
