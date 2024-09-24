@@ -125,7 +125,7 @@ const onTocItemClick = (chapterId: string | undefined) => {
         <template #default="{ item }">
           <div
             :key="item.index"
-            style="width: 100%"
+            style="width: 100%; cursor: pointer"
             @click="() => onTocItemClick(item.chapterId)"
           >
             <div style="padding-top: 12px">
