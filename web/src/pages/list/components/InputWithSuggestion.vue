@@ -49,7 +49,10 @@ const options = computed(() => {
               size: 'small',
               style: { cursor: 'pointer' },
               onClick() {
-                emit('update:value', [props.value, tag].join(' '));
+                emit(
+                  'update:value',
+                  props.value ? `${props.value} ${tag}` : tag,
+                );
               },
             },
             { default: () => tag },
