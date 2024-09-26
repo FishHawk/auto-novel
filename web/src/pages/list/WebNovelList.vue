@@ -3,6 +3,8 @@ import { Locator } from '@/data';
 import { WebNovelRepository } from '@/data/api';
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { runCatching } from '@/util/result';
+import { LanguageProcess } from '@/util/web/langprocess';
+import { onMounted, computed, watch } from 'vue';
 
 import { Loader } from './components/NovelPage.vue';
 
@@ -55,7 +57,11 @@ const options = [
 const favoredRepository = Locator.favoredRepository();
 onMounted(() => favoredRepository.loadRemoteFavoreds());
 
-const loader: Loader<WebNovelOutlineDto> = (page, query, selected) => {
+const loader: Loader<WebNovelOutlineDto> = async (page, query, selected) => {
+  query = LanguageProcess.processQuery(query);
+
+  await console.log(query);
+
   if (query !== '') {
     document.title = '网络小说 搜索：' + query;
   }
