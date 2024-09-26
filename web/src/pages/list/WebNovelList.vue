@@ -57,10 +57,8 @@ const options = [
 const favoredRepository = Locator.favoredRepository();
 onMounted(() => favoredRepository.loadRemoteFavoreds());
 
-const loader: Loader<WebNovelOutlineDto> = async (page, query, selected) => {
+const loader: Loader<WebNovelOutlineDto> = (page, query, selected) => {
   query = LanguageProcess.processQuery(query);
-
-  await console.log(query);
 
   if (query !== '') {
     document.title = '网络小说 搜索：' + query;
