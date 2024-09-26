@@ -41,6 +41,6 @@ export const mapper = [
 ];
 
 export const tryTranslateKeyword = (keyword: string) => {
-  mapper.forEach(([jp, zh]) => (keyword = keyword.replace(jp, zh)));
+  mapper.forEach(([jp, zh, _]) => (keyword = keyword.replace(jp, zh)));
   return keyword;
 };
