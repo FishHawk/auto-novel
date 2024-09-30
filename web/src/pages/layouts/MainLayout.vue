@@ -144,10 +144,6 @@ const menuOptions = computed<MenuOption[]>(() => {
           label: renderLabel('OCR修复', '/workspace/ocr-fix'),
           key: '/workspace/ocr-fix',
         },
-        {
-          label: renderLabel('EPUB修复', '/workspace/epub-fix'),
-          key: '/workspace/epub-fix',
-        },
       ],
     },
     {
