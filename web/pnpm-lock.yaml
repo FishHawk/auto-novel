@@ -110,6 +110,9 @@ importers:
       '@types/node':
         specifier: ^20.16.5
         version: 20.16.5
+      '@types/xml2js':
+        specifier: ^0.4.14
+        version: 0.4.14
       husky:
         specifier: ^9.1.6
         version: 9.1.6
@@ -700,6 +703,12 @@ packages:
     resolution:
       {
         integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==,
+      }
+
+  '@types/xml2js@0.4.14':
+    resolution:
+      {
+        integrity: sha512-4YnrRemBShWRO2QjvUin8ESA41rH+9nQGLUGZV/1IDhi3SL9OhdpNC/MrulTWuptXKwhx/aDxE7toV0f/ypIXQ==,
       }
 
   '@vicons/material@0.12.0':
@@ -2886,6 +2895,10 @@ snapshots:
   '@types/uuid@10.0.0': {}
 
   '@types/web-bluetooth@0.0.20': {}
+
+  '@types/xml2js@0.4.14':
+    dependencies:
+      '@types/node': 20.16.5
 
   '@vicons/material@0.12.0': {}
 
