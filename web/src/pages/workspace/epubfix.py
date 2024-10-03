@@ -27,7 +27,7 @@ class EpubTool:
         self.video_list = []   
         self.spine_list = []    
         self.other_list = []
-        self.errorOPF_log = []        
+        self.errorOPF_log = []       
         self._parse_opf()
     def _init_namelist(self):
         self.namelist = self.epub.namelist()

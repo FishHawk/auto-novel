@@ -22,3 +22,8 @@ export const getFullContent = async (file: File) => {
     return '';
   }
 };
+
+export const basename = (path: string): string => {
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1];
+};

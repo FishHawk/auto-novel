@@ -110,6 +110,9 @@ importers:
       '@types/node':
         specifier: ^20.16.5
         version: 20.16.5
+      '@types/path-browserify':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@types/xml2js':
         specifier: ^0.4.14
         version: 0.4.14

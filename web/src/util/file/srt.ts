@@ -38,6 +38,11 @@ const readContent = async (file: File) => {
     );
 };
 
+const basename = (path: string): string => {
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1];
+};
+
 const writeContent = (subtitles: SrtSubtitle[]) => {
   const lines = subtitles.flatMap((s) => [s.id, s.time, ...s.text, '']);
   return Txt.writeContent(lines);

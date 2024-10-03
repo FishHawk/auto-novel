@@ -1,48 +1,50 @@
-import { BlobReader, BlobWriter, TextWriter, ZipReader } from '@zip.js/zip.js';
-import * as path from 'path';
-import * as xml2js from 'xml2js';
-import * as fs from 'fs';
+import * as path from 'path-browserify';
 
-class EpubTool {
-  private epub_name: string;
-  private epub_file: File;
-  private epub_type: string = '';
-  private temp_dir: string = '';
-  private namelist: string[] = [];
-  private mime_map: Record<string, string> = {};
-  private id_to_h_m_p: Record<string, any> = {};
-  private manifest_list: any[] = [];
-  private id_to_href: Record<string, any> = {};
-  private href_to_id: Record<string, any> = {};
-  private text_list: any[] = [];
-  private css_list: any[] = [];
-  private image_list: any[] = [];
-  private font_list: any[] = [];
-  private audio_list: any[] = [];
-  private video_list: any[] = [];
-  private spine_list: any[] = [];
-  private other_list: any[] = [];
-  private errorOPF_log: Record<string, any> = {};
-  private errorLink_log: Record<string, any> = {};
-  private epubBlob: Blob | null = null;
-  private opf: string = '';
-  private opfpath: string = '';
-  private etree_opf: any = {};
-  private tocid: string = '';
-  private tocpath: string = '';
-  private metadata: Record<string, string> = {};
+export class EpubTool {
+  public epub_name: string;
+  public epub_file: File;
+  public epub_type: string = '';
+  public temp_dir: string = '';
+  public namelist: string[] = [];
+  public mime_map: Record<string, string> = {};
+  public id_to_h_m_p: Record<string, any> = {};
+  public manifest_list: any[] = [];
+  public id_to_href: Record<string, any> = {};
+  public href_to_id: Record<string, any> = {};
+  public text_list: any[] = [];
+  public css_list: any[] = [];
+  public image_list: any[] = [];
+  public font_list: any[] = [];
+  public audio_list: any[] = [];
+  public video_list: any[] = [];
+  public spine_list: any[] = [];
+  public other_list: any[] = [];
+  public errorOPF_log: Array<[string, any]> = [];
+  public errorLink_log: Record<string, any> = {};
+  public epubBlob: Blob | null = null;
+  public opf: string = '';
+  public opfpath: string = '';
+  public etree_opf: any = {};
+  public tocid: string = '';
+  public tocpath: string = '';
+  public metadata: Record<string, string> = {};
 
   constructor(epub_name: string, epub_file: File) {
     this.epub_name = epub_name;
     this.epub_file = epub_file;
-    this._init_mime_map();
-    this._init_opf();
-    this.loadEpub();
-    this._parse_opf();
+    this.initialize();
+  }
+
+  public async initialize(): Promise<void> {
+    await this._init_mime_map();
+    await this.loadEpub();
+    await this._init_opf();
+    await this._parse_opf();
   }
 
   // Initialize the ZipReader to load the EPUB file from the provided File object
   public async loadEpub(): Promise<void> {
+    const { BlobReader, ZipReader } = await import('@zip.js/zip.js');
     this.epubBlob = this.epub_file; // Directly assign the File object to the Blob
     const zipReader = new ZipReader(new BlobReader(this.epubBlob));
     const entries = await zipReader.getEntries();
@@ -94,6 +96,10 @@ class EpubTool {
   }
 
   public async _init_opf(): Promise<void> {
+    const { BlobReader, TextWriter, ZipReader } = await import(
+      '@zip.js/zip.js'
+    );
+
     const containerEntry = this.namelist.find(
       (name) => name === 'META-INF/container.xml',
     );
@@ -149,13 +155,15 @@ class EpubTool {
   }
 
   public async _parse_opf(): Promise<void> {
-    // Parse OPF XML using xml2js
-    const parser = new xml2js.Parser();
-    this.etree_opf['package'] = await parser.parseStringPromise(this.opf);
+    // Parse OPF XML using DOMParser
+    const parser = new DOMParser();
+    const opfDoc = parser.parseFromString(this.opf, 'application/xml');
+    this.etree_opf['package'] = opfDoc.documentElement;
 
-    for (const child of this.etree_opf['package']['package']) {
-      const tag = child.tagName.replace(/{.*?}/, ''); // Remove namespace
-      this.etree_opf[tag] = child;
+    for (const child of Array.from(this.etree_opf['package'].children)) {
+      const element = child as Element;
+      const tag = element.tagName.replace(/{.*?}/, ''); // Remove namespace
+      this.etree_opf[tag] = element;
     }
 
     await this._parse_metadata();
@@ -171,7 +179,7 @@ class EpubTool {
       this.manifest_list.push([id, href, mime, properties]);
     }
 
-    const epub_type = this.etree_opf['package']['package'].version;
+    const epub_type = this.etree_opf['package'].getAttribute('version');
 
     if (epub_type && ['2.0', '3.0'].includes(epub_type)) {
       this.epub_type = epub_type;
@@ -179,7 +187,7 @@ class EpubTool {
       throw new Error('此脚本不支持该EPUB类型');
     }
 
-    const tocid = this.etree_opf['spine']?.$?.toc || '';
+    const tocid = this.etree_opf['spine']?.getAttribute('toc') || '';
     this.tocid = tocid;
     const opf_dir = path.dirname(this.opfpath);
 
@@ -222,25 +230,28 @@ class EpubTool {
       cover: '',
     };
 
-    for (const meta of this.etree_opf['metadata']) {
-      const tag = meta.tag.replace(/{.*?}/, ''); // Remove namespace
+    const metadata = this.etree_opf['metadata'];
+    if (metadata && Array.isArray(metadata)) {
+      for (const meta of metadata) {
+        const tag = meta.tag.replace(/{.*?}/, ''); // Remove namespace
 
-      if (
-        [
-          'title',
-          'creator',
-          'language',
-          'subject',
-          'source',
-          'identifier',
-        ].includes(tag)
-      ) {
-        this.metadata[tag] = meta['#text'] || ''; // Use #text to access the content in xml2js
-      } else if (tag === 'meta') {
-        const name = meta.$?.name;
-        const content = meta.$?.content;
-        if (name && content) {
-          this.metadata['cover'] = content;
+        if (
+          [
+            'title',
+            'creator',
+            'language',
+            'subject',
+            'source',
+            'identifier',
+          ].includes(tag)
+        ) {
+          this.metadata[tag] = meta['#text'] || ''; // Use #text to access the content in xml2js
+        } else if (tag === 'meta') {
+          const name = meta.$?.name;
+          const content = meta.$?.content;
+          if (name && content) {
+            this.metadata['cover'] = content;
+          }
         }
       }
     }
@@ -251,26 +262,32 @@ class EpubTool {
     this.id_to_href = {};
     this.href_to_id = {};
 
-    for (const item of this.etree_opf['manifest']) {
-      const id = item.$.id;
-      const href = decodeURIComponent(item.$.href); // Use decodeURIComponent instead of unquote in TS
-      const mime = item.$['media-type'];
-      const properties = item.$.properties || '';
+    const manifest = this.etree_opf['manifest'];
+    if (manifest && Array.isArray(manifest)) {
+      for (const item of manifest) {
+        const id = item.$.id;
+        const href = decodeURIComponent(item.$.href); // Use decodeURIComponent instead of unquote in TS
+        const mime = item.$['media-type'];
+        const properties = item.$.properties || '';
 
-      this.id_to_h_m_p[id] = [href, mime, properties];
-      this.id_to_href[id] = href.toLowerCase();
-      this.href_to_id[href.toLowerCase()] = id;
+        this.id_to_h_m_p[id] = [href, mime, properties];
+        this.id_to_href[id] = href.toLowerCase();
+        this.href_to_id[href.toLowerCase()] = id;
+      }
     }
   }
 
   private async _parse_spine(): Promise<void> {
     this.spine_list = [];
 
-    for (const itemref of this.etree_opf['spine']) {
-      const sid = itemref.$.idref;
-      const linear = itemref.$.linear || '';
-      const properties = itemref.$.properties || '';
-      this.spine_list.push([sid, linear, properties]);
+    const spine = this.etree_opf['spine'];
+    if (spine && Array.isArray(spine)) {
+      for (const itemref of spine) {
+        const sid = itemref.$.idref;
+        const linear = itemref.$.linear || '';
+        const properties = itemref.$.properties || '';
+        this.spine_list.push([sid, linear, properties]);
+      }
     }
   }
 
@@ -391,7 +408,8 @@ class EpubTool {
     const allocate_id = (href: string): string => {
       let basename = path.basename(href);
       let new_id = /^[a-zA-Z]/.test(basename[0]) ? basename : 'x' + basename;
-      let [pre, suf] = [path.parse(new_id).name, path.parse(new_id).ext];
+      let pre = new_id.substring(0, new_id.lastIndexOf('.'));
+      let suf = new_id.substring(new_id.lastIndexOf('.'));
       let pre_ = pre;
       let i = 0;
 
@@ -474,7 +492,7 @@ class EpubTool {
     return referParts.concat(relativeParts).join('/');
   }
 
-  private async restructure(file: File): Promise<Blob> {
+  public async restructure(file: File): Promise<Blob> {
     const { BlobReader, BlobWriter, TextWriter, ZipReader, ZipWriter } =
       await import('@zip.js/zip.js');
 
@@ -637,12 +655,12 @@ class EpubTool {
       }
     };
 
-    await processResources(this.text_list, 'text', 'Text');
-    await processResources(this.css_list, 'css', 'Styles');
-    await processResources(this.image_list, 'image', 'Images');
-    await processResources(this.font_list, 'font', 'Fonts');
-    await processResources(this.audio_list, 'audio', 'Audio');
-    await processResources(this.video_list, 'video', 'Video');
+    // await processResources(this.text_list, 'text', 'Text');
+    // await processResources(this.css_list, 'css', 'Styles');
+    // await processResources(this.image_list, 'image', 'Images');
+    // await processResources(this.font_list, 'font', 'Fonts');
+    // await processResources(this.audio_list, 'audio', 'Audio');
+    // await processResources(this.video_list, 'video', 'Video');
 
     // Handle TOC updates if available
     if (this.tocpath) {
@@ -664,6 +682,7 @@ class EpubTool {
       );
     }
 
+    console.log(re_path_map['text']);
     for (const [xhtml_bkpath, new_name] of Object.entries(
       re_path_map['text'],
     )) {
@@ -776,6 +795,9 @@ class EpubTool {
           }
         },
       );
+
+      // Start of Selection
+      console.log(`Adding file OEBPS/Text/${new_name}`);
       await writer.add(
         'OEBPS/Text/' + new_name,
         new BlobReader(new Blob([text], { type: 'text/xml' })),
@@ -823,11 +845,15 @@ class EpubTool {
             }
           },
         );
+        // Start of Selection
+        console.log(`Replacing file OEBPS/Styles/${new_name}`);
+
         await writer.add(
           'OEBPS/Styles/' + new_name,
           new BlobReader(new Blob([css], { type: 'text/xml' })),
         );
-      } catch {
+      } catch (err) {
+        console.log(err);
         continue;
       }
     }
@@ -897,13 +923,13 @@ class EpubTool {
 
       if (mime === 'application/xhtml+xml') {
         const filename = re_path_map['text'][bkpath];
-        manifest_text += `    <item id="${id}" href="Text/${filename}" media-type="${mime}"${prop_attr}/>`;
+        manifest_text += `    <item id="${id}" href="Text/${filename}" media-type="${mime}"${prop_attr}/>\n`;
       } else if (mime === 'text/css') {
         const filename = re_path_map['css'][bkpath];
-        manifest_text += `    <item id="${id}" href="Styles/${filename}" media-type="${mime}"${prop_attr}/>`;
+        manifest_text += `    <item id="${id}" href="Styles/${filename}" media-type="${mime}"${prop_attr}/>\n`;
       } else if (mime.startsWith('image/')) {
         const filename = re_path_map['image'][bkpath];
-        manifest_text += `    <item id="${id}" href="Images/${filename}" media-type="${mime}"${prop_attr}/>`;
+        manifest_text += `    <item id="${id}" href="Images/${filename}" media-type="${mime}"${prop_attr}/>\n`;
       } else if (
         mime.startsWith('font/') ||
         href.toLowerCase().endsWith('.ttf') ||
@@ -911,18 +937,18 @@ class EpubTool {
         href.toLowerCase().endsWith('.woff')
       ) {
         const filename = re_path_map['font'][bkpath];
-        manifest_text += `    <item id="${id}" href="Fonts/${filename}" media-type="${mime}"${prop_attr}/>`;
+        manifest_text += `    <item id="${id}" href="Fonts/${filename}" media-type="${mime}"${prop_attr}/>\n`;
       } else if (mime.startsWith('audio/')) {
         const filename = re_path_map['audio'][bkpath];
-        manifest_text += `    <item id="${id}" href="Audio/${filename}" media-type="${mime}"${prop_attr}/>`;
+        manifest_text += `    <item id="${id}" href="Audio/${filename}" media-type="${mime}"${prop_attr}/>\n`;
       } else if (mime.startsWith('video/')) {
         const filename = re_path_map['video'][bkpath];
-        manifest_text += `    <item id="${id}" href="Video/${filename}" media-type="${mime}"${prop_attr}/>`;
+        manifest_text += `    <item id="${id}" href="Video/${filename}" media-type="${mime}"${prop_attr}/>\n`;
       } else if (id === this.tocid) {
-        manifest_text += `    <item id="${id}" href="toc.ncx" media-type="application/x-dtbncx+xml"/>`;
+        manifest_text += `    <item id="${id}" href="toc.ncx" media-type="application/x-dtbncx+xml"/>\n`;
       } else {
         const filename = re_path_map['other'][bkpath];
-        manifest_text += `    <item id="${id}" href="Misc/${filename}" media-type="${mime}"${prop_attr}/>`;
+        manifest_text += `    <item id="${id}" href="Misc/${filename}" media-type="${mime}"${prop_attr}/>\n`;
       }
     }
 
@@ -937,7 +963,7 @@ class EpubTool {
       /(<reference[^>]*href=([\'\"]))(.*?)(\2[^>]*\/>)/g,
       (match: string, p1: string, p2: string, href: string) => {
         href = decodeURIComponent(href).trim();
-        const basename = path.basename(href);
+        const basename = path.basename(href); // Use split and pop to get the basename
         if (!basename.endsWith('.ncx')) {
           return `${p1}../Text/${basename}${p2}`;
         }
