@@ -236,56 +236,124 @@ const showListModal = ref(false);
           min="1"
         />
       </c-action-wrapper>
+      // Start of Selection
+
       <c-action-wrapper title="操作">
-        <n-flex vertical>
-          <n-button-group size="small">
-            <c-button
-              label="复制术语表"
-              :round="false"
-              @action="copyTranslationJson()"
-            />
-            <c-button
-              label="百度翻译"
-              :round="false"
-              @action="translateKatakanas('baidu')"
-            />
-            <c-button
-              label="有道翻译"
-              :round="false"
-              @action="translateKatakanas('youdao')"
-            />
-          </n-button-group>
+        <n-radio-group
+          v-model="translationMode"
+          size="small"
+          style="margin-bottom: 16px"
+        >
+          <n-radio label="传统术语表翻译" value="traditional" />
+          <n-radio label="AI智能翻译" value="ai" />
+        </n-radio-group>
 
-          <n-button-group size="small">
-            <c-button
-              :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
-              :round="false"
-              @action="translateKatakanas('sakura')"
-            />
-            <c-button
-              label="选择翻译器"
-              :round="false"
-              @action="showSakuraSelectModal = true"
-            />
-          </n-button-group>
+        <template v-if="translationMode === 'traditional'">
+          <n-flex vertical>
+            <n-button-group size="small" style="margin-bottom: 8px">
+              <c-button
+                label="复制术语表"
+                :round="false"
+                @action="copyTranslationJson()"
+              />
+              <c-button
+                label="百度翻译"
+                :round="false"
+                @action="translateKatakanas('baidu')"
+              />
+              <c-button
+                label="有道翻译"
+                :round="false"
+                @action="translateKatakanas('youdao')"
+              />
+            </n-button-group>
 
-          <n-flex align="center" :wrap="false">
+            <n-button-group size="small" style="margin-bottom: 8px">
+              <c-button
+                :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
+                :round="false"
+                @action="translateKatakanas('sakura')"
+              />
+              <c-button
+                label="选择翻译器"
+                :round="false"
+                @action="showSakuraSelectModal = true"
+              />
+            </n-button-group>
+
+            <n-flex align="center" :wrap="false">
+              <c-button
+                :disabled="katakanaDeleted.length === 0"
+                label="撤销删除"
+                :round="false"
+                size="small"
+                @action="undoDeleteKatakana"
+              />
+              <n-text
+                v-if="katakanaDeleted.length > 0"
+                depth="3"
+                style="font-size: 12px; margin-left: 8px"
+              >
+                {{ lastDeletedHint }}
+              </n-text>
+            </n-flex>
+          </n-flex>
+        </template>
+        <template v-else-if="translationMode === 'ai'">
+          <n-flex vertical>
+            <n-radio-group
+              v-model="aiTranslationType"
+              size="small"
+              style="margin-bottom: 16px"
+            >
+              <n-radio label="OpenAI" value="openai" />
+              <n-radio label="本地" value="local" />
+            </n-radio-group>
+
+            <template v-if="aiTranslationType === 'openai'">
+              <n-input
+                v-model:value="openAILink"
+                placeholder="请输入Link"
+                size="small"
+                style="margin-bottom: 8px"
+                @update:value="handleOpenAILinkChange"
+              />
+              <n-input
+                v-model:value="openAIApi"
+                placeholder="请输入API"
+                size="small"
+                style="margin-bottom: 16px"
+                @update:value="handleOpenAIApiChange"
+              />
+            </template>
+            <template v-else-if="aiTranslationType === 'local'">
+              <n-input
+                v-model:value="localLink"
+                placeholder="请输入Link"
+                size="small"
+                style="margin-bottom: 16px"
+                @update:value="handleLocalLinkChange"
+              />
+            </template>
             <c-button
-              :disabled="katakanaDeleted.length === 0"
-              label="撤销删除"
+              label="开始提取术语表"
               :round="false"
               size="small"
-              @action="undoDeleteKatakana"
+              @action="startExtractGlossary()"
+              style="margin-bottom: 16px"
             />
-            <n-text
-              v-if="katakanaDeleted.length > 0"
-              depth="3"
-              style="font-size: 12px"
-            >
-              {{ lastDeletedHint }}
-            </n-text>
+            <n-scrollbar style="max-height: 150px; width: 100%">
+              <n-list>
+                <n-list-item
+                  v-for="(log, index) in translationLogs"
+                  :key="index"
+                >
+                  {{ log }}
+                </n-list-item>
+              </n-list>
+            </n-scrollbar>
           </n-flex>
-        </n-flex>
+        </template>
       </c-action-wrapper>
     </n-flex>
 
