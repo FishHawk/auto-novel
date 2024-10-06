@@ -2,12 +2,14 @@
 import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
 
 import { Locator } from '@/data';
-import { isDarkColor } from '@/pages/util';
 import { RegexUtil } from '@/util';
 
 // 激活权限
 const authRepository = Locator.authRepository();
 authRepository.activateAuth();
+
+const settingRepository = Locator.settingRepository();
+settingRepository.activateCC();
 
 // 清理pinia留下的垃圾
 Object.keys(window.localStorage).forEach((key) => {
@@ -20,8 +22,16 @@ Object.keys(window.localStorage).forEach((key) => {
 const route = useRoute();
 const osThemeRef = useOsTheme();
 
-const { setting } = Locator.settingRepository();
+const setting = settingRepository.setting;
 const { setting: readerSetting } = Locator.readerSettingRepository();
+
+const isDarkColor = (color: string) => {
+  const r = parseInt(color.substring(1, 3), 16);
+  const g = parseInt(color.substring(3, 5), 16);
+  const b = parseInt(color.substring(5, 7), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness < 120;
+};
 
 const buildTheme = (
   theme: 'light' | 'dark' | 'system' | 'custom',

@@ -136,6 +136,21 @@ const playSound = (source: string) => {
           </n-flex>
         </n-flex>
       </n-list-item>
+
+      <n-list-item>
+        <n-flex vertical>
+          <b>语言</b>
+          简繁转换目前只覆盖web章节内容。
+          <c-radio-group
+            v-model:value="setting.locale"
+            :options="Setting.localeOptions"
+            size="small"
+          />
+          <n-checkbox v-model:checked="setting.searchLocaleAware">
+            支持繁体搜索（不稳定）
+          </n-checkbox>
+        </n-flex>
+      </n-list-item>
     </n-list>
   </div>
 </template>
