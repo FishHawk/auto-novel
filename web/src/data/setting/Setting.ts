@@ -237,4 +237,8 @@ export namespace ReaderSetting {
     { bodyColor: '#000000', fontColor: '#FFFFFF' },
     { bodyColor: '#272727', fontColor: '#FFFFFF' },
   ];
+  export const katakanaTranslationModeOptions = [
+    { label: '传统术语表翻译', value: 'traditional' },
+    { label: 'AI智能翻译', value: 'ai' },
+  ];
 }

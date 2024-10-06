@@ -1,4 +1,5 @@
 import { useLocalStorage } from '@vueuse/core';
+import { KataKanaConfig, KataKanaInfo, VolumeHistory } from '@/model/KataKana';
 
 import {
   GptWorker,
@@ -156,3 +157,45 @@ export const createSakuraWorkspaceRepository = () =>
       });
     },
   );
+
+export const createKataKanaWorkSpaceRepository = (
+  migrate?: (ref: KataKanaConfig) => void,
+) => {
+  const ref = useLocalStorage<KataKanaConfig>('katakana-workspace', {
+    mode: 'traditional',
+    aiTranslationType: 'openai',
+    api_key: 'sk-no-key-required',
+    base_url: 'http://127.0.0.1:8080',
+    model_name: 'glm-4-9b-chat',
+    max_workers: 4,
+    request_timeout: 120,
+    translate_surface_mode: 1,
+    translate_context_mode: 1,
+    history: [],
+  });
+  if (migrate) {
+    migrate(ref.value);
+  }
+
+  const addHistory = (volume: VolumeHistory) => {
+    ref.value.history.push(volume);
+  };
+
+  const deleteHistory = (filename: string) => {
+    ref.value.history = ref.value.history.filter(
+      (volume) => volume.filename !== filename,
+    );
+  };
+
+  const updateSettings = (newSettings: Partial<KataKanaConfig>) => {
+    ref.value = { ...ref.value, ...newSettings };
+  };
+
+  return {
+    ref,
+    //
+    addHistory,
+    deleteHistory,
+    updateSettings,
+  };
+};

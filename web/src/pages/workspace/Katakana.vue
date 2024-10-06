@@ -7,32 +7,58 @@ import { Translator, TranslatorConfig } from '@/domain/translate';
 import { Glossary } from '@/model/Glossary';
 import { useIsWideScreen } from '@/pages/util';
 import { getFullContent } from '@/util/file';
-
 import LoadedVolume from './components/LoadedVolume.vue';
+import { KataKanaInfo } from '@/model/KataKana';
+import { ref } from 'vue';
 
 const message = useMessage();
 const isWideScreen = useIsWideScreen();
 const sakuraWorkspace = Locator.sakuraWorkspaceRepository().ref;
+const katakanaWorkspace = Locator.katakanaWorkSpaceRepository().ref;
+
+const loadedVolumes = ref<LoadedVolume[]>([]);
+
+const KataKanaModeOptions = [
+  { value: 'traditional', label: '传统术语表翻译' },
+  { value: 'ai', label: 'AI智能翻译' },
+];
+const katakanaMode = ref<'traditional' | 'ai'>(katakanaWorkspace.value.mode);
 
 interface LoadedVolume {
   source: 'tmp' | 'local';
   filename: string;
   content: string;
-  katakanas: Map<string, number>;
+  katakanas: Map<string, KataKanaInfo>;
 }
 
-const loadedVolumes = ref<LoadedVolume[]>([]);
-
-const countKatakana = (content: string) => {
+const countKatakana = (content: string): Map<string, KataKanaInfo> => {
   const regexp = /[\u30A0-\u30FF]{2,}/g;
   const matches = content.matchAll(regexp);
-  const katakanaCounter = new Map<string, number>();
+  const katakanaCounter = new Map<string, KataKanaInfo>();
   for (const match of matches) {
     const w = match[0];
-    katakanaCounter.set(w, (katakanaCounter.get(w) || 0) + 1);
+    const existingInfo = katakanaCounter.get(w);
+    if (existingInfo) {
+      existingInfo.count += 1;
+    } else {
+      katakanaCounter.set(w, {
+        wordTranslations: {
+          translations: [],
+          translationNotes: '',
+        },
+        count: 1,
+        intelligentSummary: '',
+        gender: '',
+        summary: '',
+        originalContextText: '',
+        translatedContextText: '',
+      });
+    }
   }
   const sortedKatakanaCounter = new Map(
-    [...katakanaCounter].sort(([_w1, c1], [_w2, c2]) => c2 - c1),
+    Array.from(katakanaCounter.entries()).sort(
+      (a, b) => b[1].count - a[1].count,
+    ),
   );
   return sortedKatakanaCounter;
 };
@@ -97,7 +123,7 @@ const katakanaMerged = computed(() => {
   const map = new Map<string, number>();
   loadedVolumes.value.forEach(({ katakanas }) => {
     katakanas.forEach((value, key) => {
-      map.set(key, (map.get(key) ?? 0) + value);
+      map.set(key, (map.get(key) ?? 0) + value.count);
     });
   });
   return map;
@@ -236,124 +262,129 @@ const showListModal = ref(false);
           min="1"
         />
       </c-action-wrapper>
-      // Start of Selection
 
       <c-action-wrapper title="操作">
-        <n-radio-group
-          v-model="translationMode"
-          size="small"
-          style="margin-bottom: 16px"
-        >
-          <n-radio label="传统术语表翻译" value="traditional" />
-          <n-radio label="AI智能翻译" value="ai" />
-        </n-radio-group>
-
-        <template v-if="translationMode === 'traditional'">
-          <n-flex vertical>
-            <n-button-group size="small" style="margin-bottom: 8px">
+        <c-button
+          label="复制术语表"
+          :round="false"
+          @action="copyTranslationJson()"
+        />
+        <n-flex vertical>
+          <n-space style="margin-bottom: 16px">
+            <n-button-group size="small">
               <c-button
-                label="复制术语表"
+                label="传统模式"
                 :round="false"
-                @action="copyTranslationJson()"
+                :type="katakanaMode === 'traditional' ? 'primary' : 'default'"
+                @click="katakanaMode = 'traditional'"
               />
               <c-button
-                label="百度翻译"
+                label="AI模式"
                 :round="false"
-                @action="translateKatakanas('baidu')"
-              />
-              <c-button
-                label="有道翻译"
-                :round="false"
-                @action="translateKatakanas('youdao')"
+                :type="katakanaMode === 'ai' ? 'primary' : 'default'"
+                @click="katakanaMode = 'ai'"
               />
             </n-button-group>
+          </n-space>
 
-            <n-button-group size="small" style="margin-bottom: 8px">
-              <c-button
-                :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
-                :round="false"
-                @action="translateKatakanas('sakura')"
-              />
-              <c-button
-                label="选择翻译器"
-                :round="false"
-                @action="showSakuraSelectModal = true"
-              />
-            </n-button-group>
+          <template v-if="katakanaMode === 'traditional'">
+            <n-flex vertical>
+              <n-button-group size="small" style="margin-bottom: 8px">
+                <c-button
+                  label="百度翻译"
+                  :round="false"
+                  @action="translateKatakanas('baidu')"
+                />
+                <c-button
+                  label="有道翻译"
+                  :round="false"
+                  @action="translateKatakanas('youdao')"
+                />
+              </n-button-group>
 
-            <n-flex align="center" :wrap="false">
-              <c-button
-                :disabled="katakanaDeleted.length === 0"
-                label="撤销删除"
-                :round="false"
-                size="small"
-                @action="undoDeleteKatakana"
-              />
-              <n-text
-                v-if="katakanaDeleted.length > 0"
-                depth="3"
-                style="font-size: 12px; margin-left: 8px"
-              >
-                {{ lastDeletedHint }}
-              </n-text>
-            </n-flex>
-          </n-flex>
-        </template>
-        <template v-else-if="translationMode === 'ai'">
-          <n-flex vertical>
-            <n-radio-group
-              v-model="aiTranslationType"
-              size="small"
-              style="margin-bottom: 16px"
-            >
-              <n-radio label="OpenAI" value="openai" />
-              <n-radio label="本地" value="local" />
-            </n-radio-group>
+              <n-button-group size="small" style="margin-bottom: 8px">
+                <c-button
+                  :label="`Sakura翻译-${selectedSakuraWorkerId ?? '未选中'}`"
+                  :round="false"
+                  @action="translateKatakanas('sakura')"
+                />
+                <c-button
+                  label="选择翻译器"
+                  :round="false"
+                  @action="showSakuraSelectModal = true"
+                />
+              </n-button-group>
 
-            <template v-if="aiTranslationType === 'openai'">
-              <n-input
-                v-model:value="openAILink"
-                placeholder="请输入Link"
-                size="small"
-                style="margin-bottom: 8px"
-                @update:value="handleOpenAILinkChange"
-              />
-              <n-input
-                v-model:value="openAIApi"
-                placeholder="请输入API"
-                size="small"
-                style="margin-bottom: 16px"
-                @update:value="handleOpenAIApiChange"
-              />
-            </template>
-            <template v-else-if="aiTranslationType === 'local'">
-              <n-input
-                v-model:value="localLink"
-                placeholder="请输入Link"
-                size="small"
-                style="margin-bottom: 16px"
-                @update:value="handleLocalLinkChange"
-              />
-            </template>
-            <c-button
-              label="开始提取术语表"
-              :round="false"
-              size="small"
-              @action="startExtractGlossary()"
-              style="margin-bottom: 16px"
-            />
-            <n-scrollbar style="max-height: 150px; width: 100%">
-              <n-list>
-                <n-list-item
-                  v-for="(log, index) in translationLogs"
-                  :key="index"
+              <n-flex align="center" :wrap="false">
+                <c-button
+                  :disabled="katakanaDeleted.length === 0"
+                  label="撤销删除"
+                  :round="false"
+                  size="small"
+                  @action="undoDeleteKatakana"
+                />
+                <n-text
+                  v-if="katakanaDeleted.length > 0"
+                  depth="3"
+                  style="font-size: 12px; margin-left: 8px"
                 >
-                  {{ log }}
-                </n-list-item>
-              </n-list>
-            </n-scrollbar>
-          </n-flex>
-        </template>
+                  {{ lastDeletedHint }}
+                </n-text>
+              </n-flex>
+            </n-flex>
+          </template>
+          <template v-else-if="katakanaMode === 'ai'">
+            <n-flex vertical>
+              <n-radio-group
+                v-model="katakanaWorkspace.aiTranslationType"
+                size="small"
+                style="margin-bottom: 16px"
+              >
+                <n-radio label="OpenAI" value="openai" />
+                <n-radio label="本地" value="local" />
+              </n-radio-group>
+
+              <template v-if="katakanaWorkspace.aiTranslationType === 'openai'">
+                <n-input
+                  v-model:value="katakanaWorkspace.base_url"
+                  placeholder="请输入Link"
+                  size="small"
+                  style="margin-bottom: 8px"
+                />
+                <n-input
+                  v-model:value="katakanaWorkspace.api_key"
+                  placeholder="请输入API"
+                  size="small"
+                  style="margin-bottom: 16px"
+                />
+              </template>
+              <template
+                v-else-if="katakanaWorkspace.aiTranslationType === 'local'"
+              >
+                <n-input
+                  v-model:value="katakanaWorkspace.base_url"
+                  placeholder="请输入Link"
+                  size="small"
+                  style="margin-bottom: 16px"
+                />
+              </template>
+              <c-button
+                label="开始提取术语表"
+                :round="false"
+                size="small"
+                @action=""
+                style="margin-bottom: 16px"
+              />
+              <n-scrollbar style="max-height: 150px; width: 100%">
+                <n-list>
+                  <n-list-item v-for="(log, index) in []" :key="index">
+                    {{ log }}
+                  </n-list-item>
+                </n-list>
+              </n-scrollbar>
+            </n-flex>
+          </template>
+        </n-flex>
       </c-action-wrapper>
     </n-flex>
 

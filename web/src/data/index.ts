@@ -23,6 +23,7 @@ import {
   createSakuraWorkspaceRepository,
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
+  createKataKanaWorkSpaceRepository,
 } from './stores';
 import {
   createAmazonRepository,
@@ -70,6 +71,7 @@ export const Locator = {
   wenkuSearchHistoryRepository: lazy(createWenkuSearchHistoryRepository),
   gptWorkspaceRepository: lazy(createGptWorkspaceRepository),
   sakuraWorkspaceRepository: lazy(createSakuraWorkspaceRepository),
+  katakanaWorkSpaceRepository: lazy(createKataKanaWorkSpaceRepository),
   //
   amazonRepository: lazy(createAmazonRepository),
   baiduRepository: lazy(createBaiduRepository),
