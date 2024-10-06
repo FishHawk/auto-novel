@@ -22,14 +22,16 @@ const convert = (query: string): string[] => {
 const processQuery = (input: string): string => {
   const queries = input.split(' ');
   const result: string[] = [];
-  for (const query of queries) {
+
+  queryloop: for (const query of queries) {
     if (query.includes('$')) {
       for (const [_, cns, cnt] of mapper) {
         if (query.replace(/^-+|[-$]+$/g, '') == cnt) {
           result.push(query.replace(cnt, cns));
-          break;
+          continue queryloop;
         }
       }
+      result.push(query);
     } else {
       const translated = convert(query);
       result.push(
