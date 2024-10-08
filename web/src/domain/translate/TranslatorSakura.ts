@@ -40,6 +40,7 @@ export class SakuraTranslator implements SegmentTranslator {
       if (model.includes('0.8')) this.version = '0.8';
       else if (model.includes('0.9')) this.version = '0.9';
       else if (model.includes('0.10')) this.version = '0.10';
+      else if (model.includes('1.0')) this.version = '1.0';
     }
     this.model = model;
     this.fingerprint = fingerprint;
@@ -239,7 +240,7 @@ export class SakuraTranslator implements SegmentTranslator {
       String.fromCharCode(ch.charCodeAt(0) - 0xfee0),
     );
 
-    if (this.version === '0.10') {
+    if (this.version === '0.10' || this.version === '1.0') {
       system(
         '你是一个轻小说翻译模型，可以流畅通顺地使用给定的术语表以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，注意不要混淆使役态和被动态的主语和宾语，不要擅自添加原文中没有的代词，也不要擅自增加或减少换行。',
       );
