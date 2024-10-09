@@ -184,7 +184,7 @@ export class SakuraTranslator implements SegmentTranslator {
     const text = '国境の長いトンネルを抜けると雪国であった';
     const completion = await this.api
       .llamacppCheck({
-        prompt: `<|im_start|>system\n你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文 ，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。<|im_end|>\n<|im_start|>user\n将下面的日文文本翻译成中文：${text}<|im_end|>\n<|im_start|>assistant\n`,
+        prompt: `<|im_start|>system\n你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。<|im_end|>\n<|im_start|>user\n将下面的日文文本翻译成中文：${text}<|im_end|>\n<|im_start|>assistant\n`,
         temperature: 1,
         top_p: 1,
         n_predict: 1,
@@ -240,7 +240,26 @@ export class SakuraTranslator implements SegmentTranslator {
       String.fromCharCode(ch.charCodeAt(0) - 0xfee0),
     );
 
-    if (this.version === '1.0' || this.version === '0.10') {
+    if (this.version === '1.0') {
+      system(
+        '你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。',
+      );
+      if (prevText !== '') {
+        assistant(prevText);
+      }
+
+      if (Object.keys(glossary).length === 0) {
+        user(`将下面的日文文本翻译成中文：${text}`);
+      } else {
+        const glossaryHint = Object.entries(glossary)
+          .map(([wordJp, wordZh]) => `${wordJp}->${wordZh}`)
+          .join('\n');
+        user(
+          `根据以下术语表（可以为空）：\n${glossaryHint}\n` +
+            `将下面的日文文本根据对应关系和备注翻译成中文：${text}`,
+        );
+      }
+    } else if (this.version === '0.10') {
       system(
         '你是一个轻小说翻译模型，可以流畅通顺地使用给定的术语表以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，注意不要混淆使役态和被动态的主语和宾语，不要擅自添加原文中没有的代词，也不要擅自增加或减少换行。',
       );
