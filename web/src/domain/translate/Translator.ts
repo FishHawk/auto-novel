@@ -47,7 +47,7 @@ export class Translator {
 
   sakuraModel() {
     if (this.segTranslator instanceof SakuraTranslator) {
-      return this.segTranslator.model ?? '未知';
+      return this.segTranslator.model?.id ?? '未知';
     } else {
       return '';
     }
@@ -142,7 +142,7 @@ export class Translator {
         let extra: any = { glossary };
         if (this.segTranslator instanceof SakuraTranslator) {
           extra.version = this.segTranslator.version;
-          extra.fingerprint = this.segTranslator.fingerprint;
+          extra.model = this.segTranslator.model;
         }
         cacheKey = this.segCache.cacheKey(seg, extra);
         const cachedSegOutput = await this.segCache.get(cacheKey);

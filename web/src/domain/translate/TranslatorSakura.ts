@@ -13,8 +13,10 @@ export class SakuraTranslator implements SegmentTranslator {
   log: (message: string, detail?: string[]) => void;
   private api;
   version: string = '0.9';
-  model?: string;
-  fingerprint?: number[];
+  model?: {
+    id: string;
+    meta: SakuraTranslator.ModelMeta;
+  };
   segmentor = createLengthSegmentor(500);
   segLength = 500;
   prevSegLength = 500;
@@ -35,18 +37,16 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   async init() {
-    const { model, fingerprint } = await this.detectModel();
-    if (model !== undefined) {
-      if (model.includes('0.8')) this.version = '0.8';
-      else if (model.includes('0.9')) this.version = '0.9';
-      else if (model.includes('0.10')) this.version = '0.10';
-      else if (model.includes('1.0')) this.version = '1.0';
+    this.model = await this.detectModel();
+    const id = this.model?.id;
+    if (id !== undefined) {
+      if (id.includes('0.8')) this.version = '0.8';
+      else if (id.includes('0.9')) this.version = '0.9';
+      else if (id.includes('0.10')) this.version = '0.10';
+      else if (id.includes('1.0')) this.version = '1.0';
     }
-    this.model = model;
-    this.fingerprint = fingerprint;
-    console.log('模型/指纹:');
+    console.log('Model:');
     console.log(this.model);
-    console.log(this.fingerprint);
     return this;
   }
 
@@ -61,53 +61,25 @@ export class SakuraTranslator implements SegmentTranslator {
     }
 
     if (this.model === undefined) {
-      this.log('无法确定模型名称');
+      this.log('无法获取模型元数据，可能需要升级llamacpp版本');
       return false;
     }
 
-    const isModelAllowed = SakuraTranslator.allowModels
-      .map((it) => it.model)
-      .some((it) => it === this.model || it === this.model + '.gguf');
-    if (isModelAllowed) {
-      this.log(`模型为${this.model}，允许上传`);
-    } else {
-      this.log(`模型为${this.model}，禁止上传`);
+    const metaCurrent = this.model.meta;
+    const metaExpected = SakuraTranslator.allowModels[this.model.id]?.meta;
+    if (metaExpected === undefined) {
+      this.log(`模型为${this.model.id}，禁止上传`);
       return false;
     }
 
-    if (this.fingerprint === undefined) {
-      this.log('无法确定模型指纹');
-      return false;
-    }
-
-    const fingerprint = this.fingerprint;
-    const fingerprintKnownList = SakuraTranslator.allowModels
-      .map((it) => it.fingerprint)
-      .flat();
-    const calculateDistance = (a: number[], b: number[]) => {
-      let d = 0;
-      for (let i = 0; i < a.length; i++) {
-        const numA = a[i];
-        const numB = b[i] ?? 0;
-        d += Math.abs(numA - numB) ** 2;
+    for (const key in metaExpected) {
+      if (metaCurrent[key] !== metaExpected[key]) {
+        this.log(`元数据检查未通过，不要尝试欺骗模型检查`);
+        return false;
       }
-      return d;
-    };
-
-    const distanceList = fingerprintKnownList.map((known) => {
-      const distance = calculateDistance(known, fingerprint);
-      console.log(`距离:${distance}`);
-      return distance;
-    });
-
-    const isFingerprintLegal = distanceList.some((it) => it < 0.001);
-    if (!isFingerprintLegal) {
-      this.log('指纹检查未通过，请找站长反馈');
-      return false;
-    } else {
-      this.log('指纹检查通过');
-      return true;
     }
+    this.log(`模型为${this.model.id}，允许上传`);
+    return true;
   };
 
   async translate(
@@ -181,36 +153,12 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   private async detectModel() {
-    const text = '国境の長いトンネルを抜けると雪国であった';
-    const completion = await this.api
-      .llamacppCheck({
-        prompt: `<|im_start|>system\n你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。<|im_end|>\n<|im_start|>user\n将下面的日文文本翻译成中文：${text}<|im_end|>\n<|im_start|>assistant\n`,
-        temperature: 1,
-        top_p: 1,
-        n_predict: 1,
-        n_probs: 10,
-        min_keep: 10,
-        seed: 0,
-      })
-      .catch(() => undefined);
-
-    if (completion === undefined) {
-      return {};
+    const modelsPage = await this.api.listModels().catch(() => undefined);
+    const model = modelsPage?.data[0];
+    if (model === undefined) {
+      return undefined;
     }
-
-    const model = completion.model;
-    if (
-      completion.completion_probabilities === undefined ||
-      completion.completion_probabilities.length === 0
-    ) {
-      return { model };
-    }
-
-    const fingerprint = completion.completion_probabilities[0].probs.map(
-      (it) => it.prob,
-    );
-
-    return { model, fingerprint };
+    return { id: model.id.replace(/(.gguf)$/, ''), meta: model.meta };
   }
 
   private async createChatCompletions(
@@ -331,110 +279,42 @@ export namespace SakuraTranslator {
     fingerprint,
   });
 
-  export const allowModels = [
-    model(
-      'SakuraLLM/Sakura-32B-Qwen2beta-v0.9-GGUF',
-      'sakura-32b-qwen2beta-v0.9-iq4xs.gguf',
-      [
-        [
-          0.637474775314331, 0.2745130658149719, 0.03205988556146622,
-          0.013636616989970207, 0.009562249295413494, 0.0072726053185760975,
-          0.007086690980941057, 0.007071454077959061, 0.006449921987950802,
-          0.00487272534519434,
-        ],
-        [
-          0.612946629524231, 0.29618123173713684, 0.033997636288404465,
-          0.013719908893108368, 0.010187946259975433, 0.0077759381383657455,
-          0.007326382678002119, 0.006830626633018255, 0.0067310151644051075,
-          0.004302578046917915,
-        ],
-        [
-          0.5563070774078369, 0.298783540725708, 0.03193163499236107,
-          0.026846086606383324, 0.022715333849191666, 0.016506964340806007,
-          0.014548671431839466, 0.011763382703065872, 0.010536867193877697,
-          0.010060448199510574,
-        ],
-      ],
-    ),
-    model(
-      'SakuraLLM/Sakura-32B-Qwen2beta-v0.9.1-GGUF',
-      'sakura-32b-qwen2beta-v0.9.1-iq4xs.gguf',
-      [
-        [
-          0.5895127058029175, 0.3742421269416809, 0.008571512065827847,
-          0.005501568783074617, 0.0046662273816764355, 0.004656270146369934,
-          0.003773320000618696, 0.0034761286806315184, 0.0031783662270754576,
-          0.002421919722110033,
-        ],
-        [
-          0.49625661969184875, 0.4707738757133484, 0.008472394198179245,
-          0.00468214089050889, 0.0041005234234035015, 0.0035940087400376797,
-          0.0035077850334346294, 0.00345810828730464, 0.00293041137047112,
-          0.002223958494141698,
-        ],
-        [
-          0.5316017270088196, 0.4387364983558655, 0.0072052511386573315,
-          0.0043828608468174934, 0.0035255481489002705, 0.0033778706565499306,
-          0.003230227390304208, 0.00316042872145772, 0.0026986137963831425,
-          0.0020809166599065065,
-        ],
-        [
-          0.6628226041793823, 0.29875755310058594, 0.009163768030703068,
-          0.0061043850146234035, 0.0049050115048885345, 0.0048668403178453445,
-          0.004130433779209852, 0.003451106371358037, 0.0032930688466876745,
-          0.0025052346754819155,
-        ],
-      ],
-    ),
-    model(
-      'SakuraLLM/Sakura-14B-Qwen2beta-v0.9.1-GGUF',
-      'sakura-14b-qwen2beta-v0.9.1-iq4xs.gguf',
-      [
-        [
-          0.44965803623199463, 0.4034508168697357, 0.05095893144607544,
-          0.023245327174663544, 0.017602942883968353, 0.014538204297423363,
-          0.011166810058057308, 0.010693884454667568, 0.009813597425818443,
-          0.008871445432305336,
-        ],
-      ],
-    ),
-    model(
-      'SakuraLLM/Sakura-14B-Qwen2beta-v0.9.2-GGUF',
-      'sakura-14b-qwen2beta-v0.9.2-iq4xs.gguf',
-      [
-        [
-          0.5601178407669067, 0.10090667009353638, 0.07124997675418854,
-          0.050760358572006226, 0.048443447798490524, 0.04311312735080719,
-          0.034672778099775314, 0.03223879635334015, 0.03134223446249962,
-          0.027154725044965744,
-        ],
-        // b2859
-        [
-          0.5544909238815308, 0.09134039282798767, 0.0702454224228859,
-          0.055606868118047714, 0.05284511670470238, 0.04588409513235092,
-          0.039813119918107986, 0.0325898602604866, 0.030937371775507927,
-          0.026246793568134308,
-        ],
-        // https://books.fishhawk.top/forum/66601b3fe9f682238b4174a3
-        [
-          0.5889551043510437, 0.08219610154628754, 0.06368642300367355,
-          0.05597573518753052, 0.04624505341053009, 0.044758766889572144,
-          0.03576425090432167, 0.030524807050824165, 0.029894692823290825,
-          0.021998988464474678,
-        ],
-      ],
-    ),
-    model(
-      'SakuraLLM/Sakura-14B-Qwen2beta-v0.9.2-GGUF',
-      'sakura-14b-qwen2beta-v0.9.2-q4km.gguf',
-      [
-        [
-          0.6689561605453491, 0.07981256395578384, 0.052107073366642,
-          0.04577327147126198, 0.04422539845108986, 0.030705934390425682,
-          0.020494865253567696, 0.020072637125849724, 0.019512630999088287,
-          0.018339477479457855,
-        ],
-      ],
-    ),
-  ];
+  export type ModelMeta = Record<string, any>;
+  export const allowModels: {
+    [key: string]: { repo: string; meta: ModelMeta };
+  } = {
+    'sakura-14b-qwen2.5-v1.0-iq4xs': {
+      repo: 'SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF',
+      meta: {
+        vocab_type: 2,
+        n_vocab: 152064,
+        n_ctx_train: 131072,
+        n_embd: 5120,
+        n_params: 14770033664,
+        size: 8180228096,
+      },
+    },
+    'sakura-14b-qwen2beta-v0.9.2-iq4xs': {
+      repo: 'SakuraLLM/Sakura-14B-Qwen2beta-v0.9.2-GGUF',
+      meta: {
+        vocab_type: 2,
+        n_vocab: 152064,
+        n_ctx_train: 32768,
+        n_embd: 5120,
+        n_params: 14167290880,
+        size: 7908392960,
+      },
+    },
+    'sakura-32b-qwen2beta-v0.9-iq4xs': {
+      repo: 'SakuraLLM/Sakura-32B-Qwen2beta-v0.9-GGUF',
+      meta: {
+        vocab_type: 2,
+        n_vocab: 152064,
+        n_ctx_train: 32768,
+        n_embd: 5120,
+        n_params: 32512218112,
+        size: 17728790528,
+      },
+    },
+  };
 }
