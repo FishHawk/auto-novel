@@ -200,6 +200,7 @@ export class SakuraTranslator implements SegmentTranslator {
         user(`将下面的日文文本翻译成中文：${text}`);
       } else {
         const glossaryHint = Object.entries(glossary)
+          .filter(([wordJp]) => text.includes(wordJp))
           .map(([wordJp, wordZh]) => `${wordJp}->${wordZh}`)
           .join('\n');
         user(
@@ -216,6 +217,7 @@ export class SakuraTranslator implements SegmentTranslator {
       }
 
       const glossaryHint = Object.entries(glossary)
+        .filter(([wordJp]) => text.includes(wordJp))
         .map(([wordJp, wordZh]) => `${wordJp}->${wordZh}`)
         .join('\n');
 
