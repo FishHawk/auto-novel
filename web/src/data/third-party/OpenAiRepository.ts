@@ -15,6 +15,9 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
     retry: 0,
   });
 
+  const listModels = (options?: Options): Promise<ModelsPage> =>
+    client.get('v1/models', options).json<ModelsPage>();
+
   const createChatCompletionsStream = (
     json: ChatCompletion.Params & { stream: true },
     options?: Options,
@@ -32,39 +35,25 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
       .post('v1/chat/completions', { json, ...options })
       .json<ChatCompletion>();
 
-  // llamacpp特有
-  const llamacppCheck = (
-    json: {
-      prompt: string;
-      n_predict?: number;
-      temperature?: number;
-      top_k?: number;
-      top_p?: number;
-      repeat_penalty?: number;
-      frequency_penalty?: number;
-      n_probs?: number;
-      min_keep?: number;
-      seed?: number;
-    },
-    options?: Options,
-  ) =>
-    client.post('completion', { json, ...options }).json<{
-      completion_probabilities?: Array<{
-        content: string;
-        probs: Array<{
-          prob: number;
-          tok_str: string;
-        }>;
-      }>;
-      model: string;
-    }>();
-
   return {
+    listModels,
     createChatCompletionsStream,
     createChatCompletions,
-    llamacppCheck,
   };
 };
+
+interface ModelsPage {
+  object: 'list';
+  data: Model[];
+}
+
+interface Model {
+  id: string;
+  object: 'model';
+  created: number;
+  owned_by: string;
+  meta: any;
+}
 
 interface ChatCompletionChunk {
   id: string;

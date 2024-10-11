@@ -118,18 +118,18 @@ const clearCache = async () =>
 
       <n-p> 允许上传的模型如下，禁止一切试图突破上传检查的操作。 </n-p>
       <n-ul>
-        <n-li v-for="{ repo, model } of SakuraTranslator.allowModels">
+        <n-li v-for="({ repo }, model) in SakuraTranslator.allowModels">
           [
           <n-a
             target="_blank"
-            :href="`https://huggingface.co/${repo}/blob/main/${model}`"
+            :href="`https://huggingface.co/${repo}/blob/main/${model}.gguf`"
           >
             HF
           </n-a>
           /
           <n-a
             target="_blank"
-            :href="`https://hf-mirror.com/${repo}/blob/main/${model}`"
+            :href="`https://hf-mirror.com/${repo}/blob/main/${model}.gguf`"
           >
             国内镜像
           </n-a>
