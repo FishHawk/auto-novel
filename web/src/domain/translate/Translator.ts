@@ -159,7 +159,7 @@ export class Translator {
     // 翻译
     this.log(logPrefix);
     const segOutput = await this.segTranslator.translate(seg, {
-      glossary,
+      glossary: segGlossary,
       prevSegs,
       signal,
     });
