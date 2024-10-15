@@ -294,6 +294,17 @@ export namespace SakuraTranslator {
         size: 8180228096,
       },
     },
+    'sakura-14b-qwen2.5-v1.0-q6k': {
+      repo: 'SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF',
+      meta: {
+        vocab_type: 2,
+        n_vocab: 152064,
+        n_ctx_train: 131072,
+        n_embd: 5120,
+        n_params: 14770033664,
+        size: 12118716416,
+      },
+    },
     'sakura-14b-qwen2beta-v0.9.2-iq4xs': {
       repo: 'SakuraLLM/Sakura-14B-Qwen2beta-v0.9.2-GGUF',
       meta: {
