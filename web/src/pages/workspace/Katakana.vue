@@ -233,6 +233,7 @@ const showListModal = ref(false);
           clearable
           size="small"
           style="width: 16em"
+          min="1"
         />
       </c-action-wrapper>
       <c-action-wrapper title="操作">
