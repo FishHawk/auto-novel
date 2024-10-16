@@ -65,7 +65,7 @@ const type = computed(() => {
   </component>
 </template>
 
-<style>
+<style scoped>
 .toc:hover .toc-title {
   text-decoration: underline;
 }

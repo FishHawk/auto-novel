@@ -28,6 +28,7 @@ store.loadNovel().then((result) => {
   }
 });
 
+// TODO: 代码抽离
 const vars = useThemeVars();
 const mixColor = () => {
   const color = vars.value.primaryColor;
@@ -63,8 +64,12 @@ const visitedColor = mixColor();
   </div>
 </template>
 
-<style>
-.toc:visited .toc-title-visited {
+<style scoped>
+:deep(.toc) {
+  cursor: default;
+}
+
+:deep(.toc:visited .toc-title-visited) {
   color: v-bind('visitedColor');
 }
 </style>

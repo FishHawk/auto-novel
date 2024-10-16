@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import CA from '@/pages/components/CA.vue';
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { useWebNovelStore } from '@/pages/novel/WebNovelStore';
@@ -90,10 +91,24 @@ const currentKey = computed(() => {
 
 const onTocItemClick = (chapterId: string | undefined) => {
   if (chapterId !== undefined) {
-    emit('nav', chapterId);
     emit('update:show', false);
   }
 };
+
+const vars = useThemeVars();
+const mixColor = () => {
+  const color = vars.value.primaryColor;
+  const r = parseInt(color.substring(1, 3), 16);
+  const g = parseInt(color.substring(3, 5), 16);
+  const b = parseInt(color.substring(5, 7), 16);
+
+  const p = 0.5;
+  const mr = (r * p + 255 * (1 - p)).toFixed(0);
+  const mg = (g * p).toFixed(0);
+  const mb = (b * p).toFixed(0);
+  return `rgb(${mr}, ${mg}, ${mb})`;
+};
+const visitedColor = mixColor();
 </script>
 
 <template>
@@ -101,6 +116,7 @@ const onTocItemClick = (chapterId: string | undefined) => {
     :show="show"
     @update:show="$emit('update:show', $event)"
     style="min-height: 30vh"
+    :style="{ '--visited-color': visitedColor }"
   >
     <template #header>
       目录
@@ -124,30 +140,56 @@ const onTocItemClick = (chapterId: string | undefined) => {
       >
         <template #default="{ item }">
           <div
-            :key="item.index"
-            style="width: 100%; cursor: pointer"
-            @click="() => onTocItemClick(item.chapterId)"
+            :key="
+              item.chapterId === undefined ? `/${item.titleJp}` : item.chapterId
+            "
           >
-            <div style="padding-top: 12px">
-              <n-text
-                :type="
-                  item.key === currentKey
-                    ? 'warning'
-                    : item.chapterId
-                      ? 'success'
-                      : 'default'
-                "
-              >
-                {{ item.titleJp }}
-              </n-text>
-              <br />
-              <n-text depth="3">
-                {{ item.titleZh }}
-              </n-text>
-            </div>
+            <component
+              :is="item.chapterId !== undefined ? CA : 'div'"
+              :to="`/novel/${gnid.providerId}/${gnid.novelId}/${item.chapterId}`"
+              class="toc"
+              style="width: 100%"
+              @click="() => onTocItemClick(item.chapterId)"
+            >
+              <div style="padding-top: 12px">
+                <n-text
+                  :class="{
+                    'toc-title-visited': item.key !== currentKey,
+                    'toc-title': true,
+                  }"
+                  :type="
+                    item.key === currentKey
+                      ? 'warning'
+                      : item.chapterId
+                        ? 'success'
+                        : 'default'
+                  "
+                >
+                  {{ item.titleJp }}
+                </n-text>
+                <br />
+                <n-text depth="3">
+                  {{ item.titleZh }}
+                </n-text>
+              </div>
+            </component>
           </div>
         </template>
       </n-virtual-list>
     </c-result>
   </c-modal>
 </template>
+
+<style scoped>
+.toc {
+  cursor: default;
+}
+
+.toc:visited .toc-title-visited {
+  color: var(--visited-color);
+}
+
+a.toc .toc-title:hover {
+  text-decoration: underline;
+}
+</style>
