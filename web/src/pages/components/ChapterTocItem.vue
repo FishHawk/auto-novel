@@ -1,12 +1,7 @@
 <script lang="ts" setup>
 import { NText } from 'naive-ui';
 import CA from '@/pages/components/CA.vue';
-import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
-
-type ReadableTocItem = WebNovelTocItemDto & {
-  key: number;
-  order?: number;
-};
+import { ReadableTocItem } from '@/model/WebNovel';
 
 const props = defineProps<{
   providerId: string;
