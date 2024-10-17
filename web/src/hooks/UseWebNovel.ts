@@ -1,7 +1,7 @@
 import { computed, ComputedRef } from 'vue';
 import { WebNovelDto, ReadableTocItem } from '@/model/WebNovel';
 
-export function useToc(novel: WebNovelDto) {
+export const useToc = (novel: WebNovelDto) => {
   const toc = computed(() => {
     const novelToc = novel.toc as ReadableTocItem[];
     let order = 0;
@@ -13,12 +13,12 @@ export function useToc(novel: WebNovelDto) {
     return novelToc;
   });
   return { toc };
-}
+};
 
-export function useLastReadChapter(
+export const useLastReadChapter = (
   novel: WebNovelDto,
   toc: ComputedRef<ReadableTocItem[]>,
-) {
+) => {
   const lastReadChapter = computed(() => {
     if (novel.lastReadChapterId) {
       return toc.value.find((it) => it.chapterId === novel.lastReadChapterId);
@@ -26,4 +26,4 @@ export function useLastReadChapter(
     return undefined;
   });
   return { lastReadChapter };
-}
+};
