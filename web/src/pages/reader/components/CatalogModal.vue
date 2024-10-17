@@ -91,6 +91,12 @@ const currentKey = computed(() => {
       ?.key;
   }
 });
+
+const onTocItemClick = (chapterId: string | undefined) => {
+  if (chapterId !== undefined) {
+    emit('update:show', false);
+  }
+};
 </script>
 
 <template>
@@ -130,6 +136,7 @@ const currentKey = computed(() => {
               :novel-id="gnid.novelId"
               :toc-item="item"
               :last-read="chapterId"
+              @click="() => onTocItemClick(item.chapterId)"
             />
           </div>
         </template>
