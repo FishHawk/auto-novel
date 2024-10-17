@@ -63,3 +63,8 @@ export interface WebNovelChapterDto {
   gptParagraphs?: string[];
   sakuraParagraphs?: string[];
 }
+
+export type ReadableTocItem = WebNovelTocItemDto & {
+  key: number;
+  order?: number;
+};
