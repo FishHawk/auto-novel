@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import CA from '@/pages/components/CA.vue';
+import { SortOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { useWebNovelStore } from '@/pages/novel/WebNovelStore';
@@ -97,6 +97,8 @@ const onTocItemClick = (chapterId: string | undefined) => {
     emit('update:show', false);
   }
 };
+
+const { setting } = Locator.settingRepository();
 </script>
 
 <template>
@@ -106,21 +108,29 @@ const onTocItemClick = (chapterId: string | undefined) => {
     style="min-height: 30vh"
   >
     <template #header>
-      目录
-      <n-text
-        v-if="tocNumber !== undefined"
-        depth="3"
-        style="font-size: 12px; margin-left: 12px"
-      >
-        共{{ tocNumber }}章
-      </n-text>
+      <div class="header">
+        <span>目录</span>
+        <n-text
+          v-if="tocNumber !== undefined"
+          depth="3"
+          style="font-size: 12px; margin-left: 12px"
+        >
+          共{{ tocNumber }}章
+        </n-text>
+        <c-button
+          :label="setting.tocSortReverse ? '倒序' : '正序'"
+          :icon="SortOutlined"
+          class="sort-btn"
+          @action="setting.tocSortReverse = !setting.tocSortReverse"
+        />
+      </div>
     </template>
 
     <c-result :result="tocResult" v-slot="{ value: toc }">
       <n-virtual-list
         :item-size="20"
         item-resizable
-        :items="toc"
+        :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
         :default-scroll-key="currentKey"
         :scrollbar-props="{ trigger: 'none' }"
         style="max-height: 60vh"
@@ -144,3 +154,13 @@ const onTocItemClick = (chapterId: string | undefined) => {
     </c-result>
   </c-modal>
 </template>
+
+<style scoped>
+.header {
+  display: flex;
+  align-items: baseline;
+}
+.header .sort-btn {
+  margin: 0 12px 0 auto;
+}
+</style>
