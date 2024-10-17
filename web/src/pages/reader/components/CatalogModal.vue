@@ -40,14 +40,17 @@ watch(
         const store = useWebNovelStore(providerId, novelId);
         const result = await store.loadNovel();
         if (result.ok) {
+          let order = 0;
           return Ok(
-            result.value.toc.map(
-              (it, index) =>
-                <TocItem>{
-                  ...it,
-                  key: index,
-                },
-            ),
+            result.value.toc.map((it, index) => {
+              const tocItem = <TocItem>{
+                ...it,
+                key: index,
+                order: it.chapterId ? order : undefined,
+              };
+              if (it.chapterId) order += 1;
+              return tocItem;
+            }),
           );
         } else {
           return result;
@@ -88,27 +91,6 @@ const currentKey = computed(() => {
       ?.key;
   }
 });
-
-const onTocItemClick = (chapterId: string | undefined) => {
-  if (chapterId !== undefined) {
-    emit('update:show', false);
-  }
-};
-
-const vars = useThemeVars();
-const mixColor = () => {
-  const color = vars.value.primaryColor;
-  const r = parseInt(color.substring(1, 3), 16);
-  const g = parseInt(color.substring(3, 5), 16);
-  const b = parseInt(color.substring(5, 7), 16);
-
-  const p = 0.5;
-  const mr = (r * p + 255 * (1 - p)).toFixed(0);
-  const mg = (g * p).toFixed(0);
-  const mb = (b * p).toFixed(0);
-  return `rgb(${mr}, ${mg}, ${mb})`;
-};
-const visitedColor = mixColor();
 </script>
 
 <template>
@@ -116,7 +98,6 @@ const visitedColor = mixColor();
     :show="show"
     @update:show="$emit('update:show', $event)"
     style="min-height: 30vh"
-    :style="{ '--visited-color': visitedColor }"
   >
     <template #header>
       目录
@@ -144,52 +125,15 @@ const visitedColor = mixColor();
               item.chapterId === undefined ? `/${item.titleJp}` : item.chapterId
             "
           >
-            <component
-              :is="item.chapterId !== undefined ? CA : 'div'"
-              :to="`/novel/${gnid.providerId}/${gnid.novelId}/${item.chapterId}`"
-              class="toc"
-              style="width: 100%"
-              @click="() => onTocItemClick(item.chapterId)"
-            >
-              <div style="padding-top: 12px">
-                <n-text
-                  :class="{
-                    'toc-title-visited': item.key !== currentKey,
-                    'toc-title': true,
-                  }"
-                  :type="
-                    item.key === currentKey
-                      ? 'warning'
-                      : item.chapterId
-                        ? 'success'
-                        : 'default'
-                  "
-                >
-                  {{ item.titleJp }}
-                </n-text>
-                <br />
-                <n-text depth="3">
-                  {{ item.titleZh }}
-                </n-text>
-              </div>
-            </component>
+            <chapter-toc-item
+              :provider-id="gnid.providerId"
+              :novel-id="gnid.novelId"
+              :toc-item="item"
+              :last-read="chapterId"
+            />
           </div>
         </template>
       </n-virtual-list>
     </c-result>
   </c-modal>
 </template>
-
-<style scoped>
-.toc {
-  cursor: default;
-}
-
-.toc:visited .toc-title-visited {
-  color: var(--visited-color);
-}
-
-a.toc .toc-title:hover {
-  text-decoration: underline;
-}
-</style>

@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { NText } from 'naive-ui';
-
 import CA from '@/pages/components/CA.vue';
+import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
-import { ReadableTocItem } from './common';
+type ReadableTocItem = WebNovelTocItemDto & {
+  key: number;
+  order?: number;
+};
 
 const props = defineProps<{
   providerId: string;
@@ -27,7 +30,6 @@ const type = computed(() => {
   }
 });
 
-// TODO: 代码抽离
 const vars = useThemeVars();
 const mixColor = () => {
   const color = vars.value.primaryColor;

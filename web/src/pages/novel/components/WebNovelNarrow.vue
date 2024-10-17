@@ -68,7 +68,7 @@ const showCatalogDrawer = ref(false);
   <n-divider />
 
   <template v-if="setting.tocCollapseInNarrowScreen">
-    <web-novel-toc-item
+    <chapter-toc-item
       v-if="startReadChapter !== undefined"
       :provider-id="providerId"
       :novel-id="novelId"
@@ -99,7 +99,7 @@ const showCatalogDrawer = ref(false);
         content-style="padding: 6px 0px 0px;"
       >
         <b style="padding-left: 6px">上次读到:</b>
-        <web-novel-toc-item
+        <chapter-toc-item
           :provider-id="providerId"
           :novel-id="novelId"
           :toc-item="lastReadChapter"
@@ -111,7 +111,7 @@ const showCatalogDrawer = ref(false);
         :key="tocItem.key"
         style="padding: 0px"
       >
-        <web-novel-toc-item
+        <chapter-toc-item
           :provider-id="providerId"
           :novel-id="novelId"
           :toc-item="tocItem"
@@ -145,7 +145,7 @@ const showCatalogDrawer = ref(false);
     >
       <template #default="{ item }">
         <div :key="item.key" style="padding-left: 8px; padding-right: 8px">
-          <web-novel-toc-item
+          <chapter-toc-item
             :provider-id="providerId"
             :novel-id="novelId"
             :toc-item="item"

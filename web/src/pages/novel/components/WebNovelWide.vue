@@ -87,7 +87,7 @@ const lastReadChapter = computed(() => {
               item.chapterId === undefined ? `/${item.titleJp}` : item.chapterId
             "
           >
-            <web-novel-toc-item
+            <chapter-toc-item
               :provider-id="providerId"
               :novel-id="novelId"
               :toc-item="item"
