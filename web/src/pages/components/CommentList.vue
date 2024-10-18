@@ -13,8 +13,11 @@ const props = defineProps<{
 
 const commentPage = ref<Result<Page<Comment1>>>();
 const currentPage = ref(1);
+const loading = ref(false);
+const commentSectionRef = ref<any>(null);
 
 async function loadComments(page: number) {
+  loading.value = true;
   const result = await runCatching(
     CommentRepository.listComment({
       site: props.site,
@@ -22,6 +25,7 @@ async function loadComments(page: number) {
       pageSize: 10,
     }),
   );
+  loading.value = false;
   if (result.ok) {
     commentPage.value = Ok({
       ...result.value,
@@ -34,6 +38,17 @@ async function loadComments(page: number) {
 }
 
 watch(currentPage, (page) => loadComments(page), { immediate: true });
+watch(commentPage, (value, oldValue) => {
+  if (oldValue && value) {
+    const node = commentSectionRef.value?.$el as HTMLDivElement | null;
+    if (!node) return;
+    const prevTop = node.getBoundingClientRect().top;
+    nextTick(() => {
+      const currentTop = node.getBoundingClientRect().top;
+      window.scrollBy(0, currentTop - prevTop);
+    });
+  }
+});
 
 function onReplied() {
   showInput.value = false;
@@ -46,7 +61,7 @@ const showInput = ref(false);
 </script>
 
 <template>
-  <section-header title="评论">
+  <section-header title="评论" ref="commentSectionRef">
     <c-button
       v-if="!locked"
       label="发表评论"
@@ -67,7 +82,11 @@ const showInput = ref(false);
     <n-divider />
   </template>
 
+  <div v-if="loading" class="loading-box">
+    <n-spin />
+  </div>
   <c-result
+    v-else
     :result="commentPage"
     :show-empty="(it: Page<Comment1>) => it.items.length === 0 && !locked"
     v-slot="{ value }"
@@ -86,3 +105,13 @@ const showInput = ref(false);
     />
   </c-result>
 </template>
+
+<style scoped>
+.loading-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 0;
+  color: #999;
+}
+</style>
