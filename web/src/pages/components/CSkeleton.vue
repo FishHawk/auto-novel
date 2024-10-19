@@ -33,13 +33,13 @@ const isMobile = checkIsMobile();
         <n-skeleton text :repeat="2" style="width: 60%" />
         <n-skeleton text style="width: 40%" />
         <n-skeleton text style="width: 15%" />
-        <n-skeleton :width="30" round />
+        <n-skeleton :width="30" round v-if="type === 'webNovelHistory'" />
       </template>
       <template v-else>
         <n-skeleton text :repeat="2" />
         <n-skeleton text style="width: 80%" />
         <n-skeleton text style="width: 40%" />
-        <n-skeleton :width="30" round />
+        <n-skeleton :width="30" round v-if="type === 'webNovelHistory'" />
       </template>
       <n-divider />
     </n-space>
