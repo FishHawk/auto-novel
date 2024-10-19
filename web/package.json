@@ -43,6 +43,7 @@
     "pinia": "^2.3.0",
     "typescript": "^5.7.2",
     "unplugin-auto-import": "^0.17.8",
+    "unplugin-imagemin": "^0.5.18",
     "unplugin-vue-components": "^0.27.5",
     "uuid": "^10.0.0",
     "vite": "^5.4.11",
