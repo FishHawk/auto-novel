@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 defineProps<{
-  type: 'webNovel' | 'wenkuNovel';
+  type: 'webNovel' | 'wenkuNovel' | 'webNovelLite' | 'webNovelHistory';
 }>();
 import { checkIsMobile } from '@/pages/util';
 const isMobile = checkIsMobile();
@@ -22,6 +22,24 @@ const isMobile = checkIsMobile();
         <n-skeleton text :repeat="2" />
         <n-skeleton text style="width: 80%" />
         <n-skeleton text style="width: 40%" />
+      </template>
+      <n-divider />
+    </n-space>
+  </template>
+
+  <template v-if="type === 'webNovelLite' || type === 'webNovelHistory'">
+    <n-space size="small" vertical v-for="item in 20">
+      <template v-if="!isMobile">
+        <n-skeleton text :repeat="2" style="width: 60%" />
+        <n-skeleton text style="width: 40%" />
+        <n-skeleton text style="width: 15%" />
+        <n-skeleton :width="30" round />
+      </template>
+      <template v-else>
+        <n-skeleton text :repeat="2" />
+        <n-skeleton text style="width: 80%" />
+        <n-skeleton text style="width: 40%" />
+        <n-skeleton :width="30" round />
       </template>
       <n-divider />
     </n-space>
