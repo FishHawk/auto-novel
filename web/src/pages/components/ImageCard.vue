@@ -5,10 +5,11 @@ defineProps<{
   src: string;
   title: string;
 }>();
+const vars = useThemeVars();
 </script>
 
 <template>
-  <n-flex :size="0" vertical>
+  <n-flex :size="0" vertical class="image-card">
     <img
       :src="src ? src : coverPlaceholder"
       alt="cover"
@@ -29,3 +30,14 @@ defineProps<{
     </n-text>
   </n-flex>
 </template>
+
+<style scoped>
+.image-card:hover {
+  perspective: 500;
+  transform: scale(1.01);
+  transition: transform 0.5s;
+}
+.image-card:hover :deep(.n-text) {
+  color: v-bind('vars.primaryColor');
+}
+</style>
