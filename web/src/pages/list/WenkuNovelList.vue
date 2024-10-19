@@ -103,6 +103,7 @@ watch(
       :loader="loader"
       :search="search"
       :options="options"
+      loadingType="wenkuNovel"
       v-slot="{ items }"
     >
       <novel-list-wenku :items="items" />

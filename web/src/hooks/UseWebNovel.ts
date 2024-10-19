@@ -7,7 +7,7 @@ export const useToc = (novel: WebNovelDto) => {
     let order = 0;
     for (const [index, it] of novelToc.entries()) {
       it.key = index;
-      it.order = it.chapterId ? order : undefined;
+      it.order = it.chapterId ? order : void 0;
       if (it.chapterId) order += 1;
     }
     return novelToc;
@@ -23,7 +23,7 @@ export const useLastReadChapter = (
     if (novel.lastReadChapterId) {
       return toc.value.find((it) => it.chapterId === novel.lastReadChapterId);
     }
-    return undefined;
+    return void 0;
   });
   return { lastReadChapter };
 };
