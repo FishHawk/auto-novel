@@ -19,7 +19,7 @@ const props = defineProps<{
   loader: Loader<T>;
   search?: { suggestions: string[]; tags: string[] };
   options: { label: string; tags: string[]; multiple?: boolean }[];
-  loadingType?: 'webNovel' | 'wenkuNovel';
+  loadingType?: 'webNovel' | 'wenkuNovel' | 'webNovelLite' | 'webNovelHistory';
 }>();
 
 const route = useRoute();

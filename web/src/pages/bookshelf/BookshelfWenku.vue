@@ -81,6 +81,7 @@ const novelListRef = ref<InstanceType<typeof NovelListWenku>>();
       :selected="selected"
       :loader="loader"
       :options="options"
+      loadingType="wenkuNovel"
       v-slot="{ items }"
     >
       <novel-list-wenku
