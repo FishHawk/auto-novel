@@ -19,6 +19,7 @@ const props = defineProps<{
   loader: Loader<T>;
   search?: { suggestions: string[]; tags: string[] };
   options: { label: string; tags: string[]; multiple?: boolean }[];
+  loadingType?: 'webNovel' | 'wenkuNovel';
 }>();
 
 const route = useRoute();
@@ -195,7 +196,12 @@ const invertSelection = (optionIndex: number) => {
     </c-action-wrapper>
   </n-flex>
 
-  <c-page :page="page" :loader="loader" v-slot="{ items }">
+  <c-page
+    :page="page"
+    :loader="loader"
+    :loadingType="loadingType"
+    v-slot="{ items }"
+  >
     <slot :items="items" />
   </c-page>
 </template>

@@ -143,6 +143,7 @@ watch(
       :loader="loader"
       :search="search"
       :options="options"
+      loadingType="webNovel"
       v-slot="{ items }"
     >
       <novel-list-web :items="items" />

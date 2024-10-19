@@ -16,6 +16,7 @@ const router = useRouter();
 const props = defineProps<{
   page: number;
   loader: Loader<T>;
+  loadingType?: 'webNovel' | 'wenkuNovel';
 }>();
 
 const { setting } = Locator.settingRepository();
@@ -179,9 +180,12 @@ const loadMore = async () => {
     />
     <n-divider />
 
-    <div v-if="loading" class="loading-box">
+    <c-skeleton :type="loadingType" v-if="loading && loadingType"></c-skeleton>
+
+    <div v-else-if="loading" class="loading-box">
       <n-spin />
     </div>
+
     <c-result
       v-else
       :result="pageContent"
