@@ -16,7 +16,7 @@ const router = useRouter();
 const props = defineProps<{
   page: number;
   loader: Loader<T>;
-  loadingType?: 'webNovel' | 'wenkuNovel';
+  loadingType?: 'webNovel' | 'wenkuNovel' | 'webNovelLite' | 'webNovelHistory';
 }>();
 
 const { setting } = Locator.settingRepository();
@@ -40,6 +40,7 @@ const loader = computed(() => {
     if (loadId.value !== currentLoadId) return;
 
     loading.value = false;
+
     return res;
   };
 });
@@ -214,14 +215,20 @@ const loadMore = async () => {
     >
       <slot :items="page.items" />
     </c-result>
-    <div class="loading-box" v-if="pageContent?.ok !== false">
-      <template v v-if="loading">
-        <n-spin />
-      </template>
-      <template v-else-if="innerPage >= pageNumber && pageNumber > 1"
-        >没有更多了</template
-      >
-    </div>
+    <template v-if="pageContent?.ok !== false">
+      <c-skeleton
+        :type="loadingType"
+        v-if="loading && loadingType && page === 1"
+      ></c-skeleton>
+      <div class="loading-box" v-else>
+        <template v-if="loading">
+          <n-spin />
+        </template>
+        <template v-else-if="innerPage >= pageNumber && pageNumber > 1">
+          没有更多了
+        </template>
+      </div>
+    </template>
   </template>
 </template>
 
