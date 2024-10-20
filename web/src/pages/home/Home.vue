@@ -48,7 +48,6 @@ const loadFavorite = async () => {
       .then((it) => it.items),
   );
 };
-loadFavorite();
 
 const mostVisitedWeb = ref<Result<WebNovelOutlineDto[]>>();
 const loadWeb = async () => {
@@ -62,7 +61,6 @@ const loadWeb = async () => {
     }).then((it) => it.items),
   );
 };
-loadWeb();
 
 const latestUpdateWenku = ref<Result<WenkuNovelOutlineDto[]>>();
 const loadWenku = async () => {
@@ -74,7 +72,6 @@ const loadWenku = async () => {
     }).then((it) => it.items),
   );
 };
-loadWenku();
 
 const showHowToUseModal = ref(false);
 const linkExample = [
@@ -98,6 +95,18 @@ const qqLink =
 
 const telegramLink = 'https://t.me/+Mphy0wV4LYZkNTI1';
 const githubLink = 'https://github.com/FishHawk/auto-novel';
+
+const loading = ref(false);
+onMounted(async () => {
+  try {
+    loading.value = true;
+    await Promise.all([loadFavorite(), loadWeb(), loadWenku()]);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
 
 <template>
@@ -201,8 +210,8 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
       <n-p>
         禁止使用脚本绕过翻译器提交翻译文本，哪怕你觉得自己提交的是正经翻译。
       </n-p>
-      <n-p> 因为种种原因，文库小说不再支持中文翻译小说。 </n-p>
-      <n-p> 本地小说的百度/有道翻译请到【我的收藏->本地小说】里面进行。 </n-p>
+      <n-p>因为种种原因，文库小说不再支持中文翻译小说。</n-p>
+      <n-p>本地小说的百度/有道翻译请到【我的收藏->本地小说】里面进行。</n-p>
     </bulletin>
 
     <template v-if="isSignedIn">
@@ -211,7 +220,8 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
           <c-button label="更多" :icon="ReadMoreOutlined" />
         </router-link>
       </section-header>
-      <PanelWebNovel :list-result="favoriteList" />
+      <c-skeleton type="webNovelLite" :length="4" v-if="loading"></c-skeleton>
+      <PanelWebNovel v-else :list-result="favoriteList" />
       <n-divider />
     </template>
 
@@ -220,7 +230,8 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
         <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>
-    <PanelWebNovel :list-result="mostVisitedWeb" />
+    <c-skeleton type="webNovelLite" :length="4" v-if="loading"></c-skeleton>
+    <PanelWebNovel v-else :list-result="mostVisitedWeb" />
     <n-divider />
 
     <section-header title="文库小说-最新更新">
@@ -228,7 +239,8 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
         <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>
-    <PanelWenkuNovel :list-result="latestUpdateWenku" />
+    <c-skeleton type="wenkuNovel" :length="8" v-if="loading"></c-skeleton>
+    <PanelWenkuNovel v-else :list-result="latestUpdateWenku" />
     <n-divider />
   </div>
 
@@ -240,7 +252,7 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
       <c-a to="/forum">论坛</c-a>
       中发帖讨论。
     </n-p>
-    <n-p> 支持的小说站如下: </n-p>
+    <n-p>支持的小说站如下:</n-p>
     <n-p v-for="[name, link] of linkExample">
       <b>{{ name }}</b>
       <br />
