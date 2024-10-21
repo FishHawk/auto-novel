@@ -220,7 +220,7 @@ onMounted(async () => {
           <c-button label="更多" :icon="ReadMoreOutlined" />
         </router-link>
       </section-header>
-      <c-skeleton type="webNovelLite" :length="4" v-if="loading"></c-skeleton>
+      <c-skeleton type="webNovelHome" :length="8" v-if="loading"></c-skeleton>
       <PanelWebNovel v-else :list-result="favoriteList" />
       <n-divider />
     </template>
@@ -230,7 +230,7 @@ onMounted(async () => {
         <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>
-    <c-skeleton type="webNovelLite" :length="4" v-if="loading"></c-skeleton>
+    <c-skeleton type="webNovelHome" :length="8" v-if="loading"></c-skeleton>
     <PanelWebNovel v-else :list-result="mostVisitedWeb" />
     <n-divider />
 
@@ -239,7 +239,7 @@ onMounted(async () => {
         <c-button label="更多" :icon="ReadMoreOutlined" />
       </router-link>
     </section-header>
-    <c-skeleton type="wenkuNovel" :length="8" v-if="loading"></c-skeleton>
+    <c-skeleton type="wenkuNovelHome" :length="12" v-if="loading"></c-skeleton>
     <PanelWenkuNovel v-else :list-result="latestUpdateWenku" />
     <n-divider />
   </div>
