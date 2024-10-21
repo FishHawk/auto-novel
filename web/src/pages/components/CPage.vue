@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useThrottleFn } from '@vueuse/core';
 
 import { Page } from '@/model/Page';
+import { LoadingType } from '@/model/Skeleton';
 import { Result } from '@/util/result';
 
 import { onKeyDown } from '../util';
@@ -16,13 +17,7 @@ const router = useRouter();
 const props = defineProps<{
   page: number;
   loader: Loader<T>;
-  loadingType?:
-    | 'webNovel'
-    | 'wenkuNovel'
-    | 'webNovelLite'
-    | 'webNovelHistory'
-    | 'wenkuNovelHome'
-    | 'webNovelHome';
+  loadingType?: LoadingType;
 }>();
 
 const { setting } = Locator.settingRepository();
