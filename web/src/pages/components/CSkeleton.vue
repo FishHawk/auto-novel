@@ -1,13 +1,8 @@
 <script lang="ts" setup>
+import { LoadingType } from '@/model/Skeleton';
 withDefaults(
   defineProps<{
-    type:
-      | 'webNovel'
-      | 'wenkuNovel'
-      | 'webNovelLite'
-      | 'webNovelHistory'
-      | 'wenkuNovelHome'
-      | 'webNovelHome';
+    type: LoadingType;
     length?: number;
   }>(),
   {

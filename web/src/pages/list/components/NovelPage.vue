@@ -3,6 +3,7 @@ import { SyncAltOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { Page } from '@/model/Page';
+import { LoadingType } from '@/model/Skeleton';
 import { Result } from '@/util/result';
 import { RegexUtil } from '@/util';
 
@@ -19,7 +20,7 @@ const props = defineProps<{
   loader: Loader<T>;
   search?: { suggestions: string[]; tags: string[] };
   options: { label: string; tags: string[]; multiple?: boolean }[];
-  loadingType?: 'webNovel' | 'wenkuNovel' | 'webNovelLite' | 'webNovelHistory';
+  loadingType?: LoadingType;
 }>();
 
 const route = useRoute();
