@@ -1,7 +1,13 @@
 <script lang="ts" setup>
 withDefaults(
   defineProps<{
-    type: 'webNovel' | 'wenkuNovel' | 'webNovelLite' | 'webNovelHistory';
+    type:
+      | 'webNovel'
+      | 'wenkuNovel'
+      | 'webNovelLite'
+      | 'webNovelHistory'
+      | 'wenkuNovelHome'
+      | 'webNovelHome';
     length?: number;
   }>(),
   {
@@ -63,8 +69,38 @@ const isMobile = checkIsMobile();
       </n-space>
     </template>
 
+    <template v-if="type === 'webNovelHome'">
+      <n-grid :x-gap="12" :y-gap="12" cols="1 850:4">
+        <n-grid-item v-for="item in length" style="padding: 8px">
+          <n-skeleton text />
+          <n-skeleton
+            text
+            :style="{ width: Math.floor(Math.random() * 100) + 1 + '%' }"
+          />
+          <n-skeleton text />
+          <n-skeleton
+            text
+            :style="{ width: Math.floor(Math.random() * 100) + 1 + '%' }"
+          />
+          <n-skeleton text :repeat="2" />
+        </n-grid-item>
+      </n-grid>
+    </template>
+
     <template v-if="type === 'wenkuNovel'">
       <n-grid :x-gap="12" :y-gap="12" cols="2 500:3 800:4">
+        <n-grid-item v-for="(item, index) in length" :key="index">
+          <div class="skeleton-cover">
+            <n-skeleton class="skeleton-img" />
+            <img class="skeleton-bg" src="@/image/girl.webp" alt="girl" />
+          </div>
+          <n-skeleton class="skeleton-title" text style="width: 80%" />
+        </n-grid-item>
+      </n-grid>
+    </template>
+
+    <template v-if="type === 'wenkuNovelHome'">
+      <n-grid :x-gap="12" :y-gap="12" cols="3 600:6">
         <n-grid-item v-for="(item, index) in length" :key="index">
           <div class="skeleton-cover">
             <n-skeleton class="skeleton-img" />
