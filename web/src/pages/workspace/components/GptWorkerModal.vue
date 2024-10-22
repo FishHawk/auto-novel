@@ -17,37 +17,23 @@ const workspaceRef = workspace.ref;
 
 const initFormValue = (): {
   id: string;
-  type: 'web' | 'api';
-  modelWeb: string;
-  modelApi: string;
-  endpointWeb: string;
-  endpointApi: string;
+  model: string;
+  endpoint: string;
   key: string;
 } => {
   const worker = props.worker;
   if (worker === undefined) {
     return {
       id: '',
-      type: 'web',
-      modelWeb: 'text-davinci-002-render-sha',
-      modelApi: 'gpt-3.5-turbo',
-      endpointWeb: 'https://chat.openai.com/backend-api',
-      endpointApi: 'https://api.openai.com',
+      model: 'deepseek-chat',
+      endpoint: 'https://api.deepseek.com',
       key: '',
     };
   } else {
     return {
       id: worker.id,
-      type: worker.type,
-      modelWeb:
-        worker.type === 'web' ? worker.model : 'text-davinci-002-render-sha',
-      modelApi: worker.type === 'api' ? worker.model : 'gpt-3.5-turbo',
-      endpointWeb:
-        worker.type === 'web'
-          ? worker.endpoint
-          : 'https://chat.openai.com/backend-api',
-      endpointApi:
-        worker.type === 'api' ? worker.endpoint : 'https://api.openai.com',
+      model: worker.model,
+      endpoint: worker.endpoint,
       key: worker.key,
     };
   }
@@ -101,13 +87,12 @@ const submit = async () => {
   });
   if (!validated) return;
 
-  const { id, type, modelWeb, modelApi, endpointWeb, endpointApi, key } =
-    formValue.value;
+  const { id, model, endpoint, key } = formValue.value;
   const worker = {
     id: id.trim(),
-    type,
-    model: type === 'web' ? modelWeb.trim() : modelApi.trim(),
-    endpoint: type === 'web' ? endpointWeb.trim() : endpointApi.trim(),
+    type: 'api' as const,
+    model: model.trim(),
+    endpoint: endpoint.trim(),
     key: key.trim(),
   };
   try {
@@ -151,71 +136,41 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
-      <n-form-item-row path="type" label="类型">
-        <n-radio-group v-model:value="formValue.type" name="type">
-          <n-flex>
-            <n-radio value="web">Web</n-radio>
-            <n-radio value="api">Api</n-radio>
-          </n-flex>
-        </n-radio-group>
+
+      <n-form-item-row path="modelApi" label="模型">
+        <n-input
+          v-model:value="formValue.model"
+          placeholder="模型名称"
+          :input-props="{ spellcheck: false }"
+        />
       </n-form-item-row>
-
-      <template v-if="formValue.type === 'web'">
-        <n-form-item-row path="modelWeb" label="模型">
-          <n-input
-            v-model:value="formValue.modelWeb"
-            disabled
-            placeholder="模型名称"
-            :input-props="{ spellcheck: false }"
-          />
-        </n-form-item-row>
-        <n-form-item-row path="endpointWeb" label="链接">
-          <n-input
-            v-model:value="formValue.endpointWeb"
-            placeholder="OpenAI链接，可以使用第三方中转"
-            :input-props="{ spellcheck: false }"
-          />
-        </n-form-item-row>
-      </template>
-
-      <template v-else>
-        <n-form-item-row path="modelApi" label="模型">
-          <n-input
-            v-model:value="formValue.modelApi"
-            placeholder="模型名称"
-            :input-props="{ spellcheck: false }"
-          />
-        </n-form-item-row>
-        <n-form-item-row path="endpointApi" label="链接">
-          <n-input
-            v-model:value="formValue.endpointApi"
-            placeholder="OpenAI链接，可以使用第三方中转"
-            :input-props="{ spellcheck: false }"
-          />
-        </n-form-item-row>
-      </template>
+      <n-form-item-row path="endpointApi" label="链接">
+        <n-input
+          v-model:value="formValue.endpoint"
+          placeholder="兼容OpenAI的API链接，默认使用deepseek"
+          :input-props="{ spellcheck: false }"
+        />
+      </n-form-item-row>
 
       <n-form-item-row path="key" label="Key">
         <n-input
           v-model:value="formValue.key"
-          :placeholder="
-            formValue.type === 'web' ? '请输入Access token' : '请输入Api key'
-          "
+          placeholder="请输入Api key"
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
 
       <n-text depth="3" style="font-size: 12px">
-        {{
-          formValue.type === 'web'
-            ? '# 链接例子：https://chatgpt-proxy.lss233.com/api'
-            : '# 链接例子：https://gpt.mnxcc.com，后面不要加‘/v1’'
-        }}
+        # 链接例子：https://api.deepseek.com，后面不要加‘/v1’
       </n-text>
     </n-form>
 
     <template #action>
-      <c-button label="添加" type="primary" @action="submit" />
+      <c-button
+        :label="worker === undefined ? '添加' : '更新'"
+        type="primary"
+        @action="submit"
+      />
     </template>
   </c-modal>
 </template>

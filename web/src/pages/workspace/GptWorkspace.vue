@@ -93,22 +93,14 @@ const clearCache = async () =>
           使用教程
         </c-a>
         /
-        <n-a href="https://github.com/eujc/ChatGPT" target="_blank">
-          帐号注册教程
+        <n-a href="https://chat.deepseek.com" target="_blank">
+          DeepSeek Chat
         </n-a>
         /
-        <n-a href="https://chat.openai.com/" target="_blank"> ChatGPT </n-a>
-        /
-        <n-a href="https://chat.openai.com/api/auth/session" target="_blank">
-          AccessToken
+        <n-a href="https://platform.deepseek.com/usage" target="_blank">
+          DeepSeek API
         </n-a>
-        <n-p>
-          当您添加翻译器时，若链接留空，则表示将使用OpenAI官方链接，您也可以提供链接以使用第三方GPT代理。
-        </n-p>
-        <n-p>
-          当使用GPT-3.5
-          Web且选择官方链接时，需要安装相应的插件，详情看使用教程。
-        </n-p>
+        <n-p> 不再支持GPT web，推荐使用deepseek API，价格很低。 </n-p>
       </n-flex>
     </bulletin>
 
