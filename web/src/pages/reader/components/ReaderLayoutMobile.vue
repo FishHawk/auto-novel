@@ -65,7 +65,7 @@ const onGlobalClick = (event: MouseEvent) => {
         <side-button
           quaternary
           :disable="!chapter.prevId"
-          text="上一话"
+          text="上一章"
           :icon="ArrowBackIosOutlined"
           @click="emit('nav', chapter.prevId!!)"
           style="width: 100%"
@@ -101,7 +101,7 @@ const onGlobalClick = (event: MouseEvent) => {
         <side-button
           quaternary
           :disable="!chapter.nextId"
-          text="下一话"
+          text="下一章"
           :icon="ArrowForwardIosOutlined"
           @click="emit('nav', chapter.nextId!!)"
           style="width: 100%"

@@ -5,7 +5,7 @@ defineProps<{ icon: Component; text: string }>();
 <template>
   <n-button :focusable="false" style="height: 64px">
     <div>
-      <n-icon size="24" :component="icon" />
+      <n-icon size="24" :component="icon" style="margin-bottom: 4px" />
       <br />
       {{ text }}
     </div>

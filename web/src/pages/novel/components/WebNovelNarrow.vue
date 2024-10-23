@@ -4,7 +4,7 @@ import { SortOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
-import { ReadableTocItem } from './common';
+import { useToc, useLastReadChapter } from './UseWebNovel';
 
 const props = defineProps<{
   providerId: string;
@@ -14,24 +14,8 @@ const props = defineProps<{
 
 const { setting } = Locator.settingRepository();
 
-const toc = computed(() => {
-  const { novel } = props;
-  const novelToc = novel.toc as ReadableTocItem[];
-  let order = 0;
-  for (const [index, it] of novelToc.entries()) {
-    it.key = index;
-    it.order = it.chapterId ? order : undefined;
-    if (it.chapterId) order += 1;
-  }
-  return novelToc;
-});
-
-const lastReadChapter = computed(() => {
-  const { novel } = props;
-  if (novel.lastReadChapterId) {
-    return toc.value.find((it) => it.chapterId === novel.lastReadChapterId);
-  }
-});
+const { toc } = useToc(props.novel);
+const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 const startReadChapter = computed(() => {
   if (lastReadChapter.value !== undefined) {
     return lastReadChapter.value;
@@ -68,7 +52,7 @@ const showCatalogDrawer = ref(false);
   <n-divider />
 
   <template v-if="setting.tocCollapseInNarrowScreen">
-    <web-novel-toc-item
+    <chapter-toc-item
       v-if="startReadChapter !== undefined"
       :provider-id="providerId"
       :novel-id="novelId"
@@ -99,7 +83,7 @@ const showCatalogDrawer = ref(false);
         content-style="padding: 6px 0px 0px;"
       >
         <b style="padding-left: 6px">上次读到:</b>
-        <web-novel-toc-item
+        <chapter-toc-item
           :provider-id="providerId"
           :novel-id="novelId"
           :toc-item="lastReadChapter"
@@ -111,7 +95,7 @@ const showCatalogDrawer = ref(false);
         :key="tocItem.key"
         style="padding: 0px"
       >
-        <web-novel-toc-item
+        <chapter-toc-item
           :provider-id="providerId"
           :novel-id="novelId"
           :toc-item="tocItem"
@@ -145,7 +129,7 @@ const showCatalogDrawer = ref(false);
     >
       <template #default="{ item }">
         <div :key="item.key" style="padding-left: 8px; padding-right: 8px">
-          <web-novel-toc-item
+          <chapter-toc-item
             :provider-id="providerId"
             :novel-id="novelId"
             :toc-item="item"

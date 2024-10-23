@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { SortOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { useWebNovelStore } from '@/pages/novel/WebNovelStore';
@@ -12,7 +13,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [boolean];
-  nav: [chapterId: string];
 }>();
 
 type TocItem = {
@@ -39,14 +39,17 @@ watch(
         const store = useWebNovelStore(providerId, novelId);
         const result = await store.loadNovel();
         if (result.ok) {
+          let order = 0;
           return Ok(
-            result.value.toc.map(
-              (it, index) =>
-                <TocItem>{
-                  ...it,
-                  key: index,
-                },
-            ),
+            result.value.toc.map((it, index) => {
+              const tocItem = <TocItem>{
+                ...it,
+                key: index,
+                order: it.chapterId ? order : undefined,
+              };
+              if (it.chapterId) order += 1;
+              return tocItem;
+            }),
           );
         } else {
           return result;
@@ -90,10 +93,11 @@ const currentKey = computed(() => {
 
 const onTocItemClick = (chapterId: string | undefined) => {
   if (chapterId !== undefined) {
-    emit('nav', chapterId);
     emit('update:show', false);
   }
 };
+
+const { setting } = Locator.settingRepository();
 </script>
 
 <template>
@@ -103,48 +107,50 @@ const onTocItemClick = (chapterId: string | undefined) => {
     style="min-height: 30vh"
   >
     <template #header>
-      目录
-      <n-text
-        v-if="tocNumber !== undefined"
-        depth="3"
-        style="font-size: 12px; margin-left: 12px"
-      >
-        共{{ tocNumber }}章
-      </n-text>
+      <div style="display: flex; align-items: baseline">
+        <span>目录</span>
+        <n-text
+          v-if="tocNumber !== undefined"
+          depth="3"
+          style="font-size: 12px; margin-left: 12px"
+        >
+          共{{ tocNumber }}章
+        </n-text>
+        <div style="flex: 1" />
+        <c-button
+          :label="setting.tocSortReverse ? '倒序' : '正序'"
+          :icon="SortOutlined"
+          quaternary
+          size="small"
+          :round="false"
+          @action="setting.tocSortReverse = !setting.tocSortReverse"
+        />
+      </div>
     </template>
 
     <c-result :result="tocResult" v-slot="{ value: toc }">
       <n-virtual-list
+        v-if="gnid.type == 'web'"
         :item-size="20"
         item-resizable
-        :items="toc"
+        :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
         :default-scroll-key="currentKey"
         :scrollbar-props="{ trigger: 'none' }"
         style="max-height: 60vh"
       >
         <template #default="{ item }">
           <div
-            :key="item.index"
-            style="width: 100%; cursor: pointer"
-            @click="() => onTocItemClick(item.chapterId)"
+            :key="
+              item.chapterId === undefined ? `/${item.titleJp}` : item.chapterId
+            "
           >
-            <div style="padding-top: 12px">
-              <n-text
-                :type="
-                  item.key === currentKey
-                    ? 'warning'
-                    : item.chapterId
-                      ? 'success'
-                      : 'default'
-                "
-              >
-                {{ item.titleJp }}
-              </n-text>
-              <br />
-              <n-text depth="3">
-                {{ item.titleZh }}
-              </n-text>
-            </div>
+            <chapter-toc-item
+              :provider-id="gnid.providerId"
+              :novel-id="gnid.novelId"
+              :toc-item="item"
+              :last-read="chapterId"
+              @click="() => onTocItemClick(item.chapterId)"
+            />
           </div>
         </template>
       </n-virtual-list>

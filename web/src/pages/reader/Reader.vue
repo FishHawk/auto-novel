@@ -269,7 +269,6 @@ onKeyDown(['Enter'], (e) => {
       v-model:show="showCatalogModal"
       :gnid="gnid"
       :chapter-id="currentChapterId"
-      @nav="navToChapter"
     />
   </div>
 </template>
