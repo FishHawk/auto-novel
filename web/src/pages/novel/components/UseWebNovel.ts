@@ -1,5 +1,7 @@
 import { computed, ComputedRef } from 'vue';
-import { WebNovelDto, ReadableTocItem } from '@/model/WebNovel';
+import { WebNovelDto } from '@/model/WebNovel';
+
+import { ReadableTocItem } from './common';
 
 export const useToc = (novel: WebNovelDto) => {
   const toc = computed(() => {

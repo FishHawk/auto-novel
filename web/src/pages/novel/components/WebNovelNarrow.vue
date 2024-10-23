@@ -3,7 +3,8 @@ import { SortOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
-import { useToc, useLastReadChapter } from '@/hooks/useWebNovel';
+
+import { useToc, useLastReadChapter } from './UseWebNovel';
 
 const props = defineProps<{
   providerId: string;

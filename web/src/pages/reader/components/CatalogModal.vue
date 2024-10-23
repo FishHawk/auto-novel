@@ -13,7 +13,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [boolean];
-  nav: [chapterId: string];
 }>();
 
 type TocItem = {
@@ -108,7 +107,7 @@ const { setting } = Locator.settingRepository();
     style="min-height: 30vh"
   >
     <template #header>
-      <div class="header">
+      <div style="display: flex; align-items: baseline">
         <span>目录</span>
         <n-text
           v-if="tocNumber !== undefined"
@@ -117,10 +116,13 @@ const { setting } = Locator.settingRepository();
         >
           共{{ tocNumber }}章
         </n-text>
+        <div style="flex: 1" />
         <c-button
           :label="setting.tocSortReverse ? '倒序' : '正序'"
           :icon="SortOutlined"
-          class="sort-btn"
+          quaternary
+          size="small"
+          :round="false"
           @action="setting.tocSortReverse = !setting.tocSortReverse"
         />
       </div>
@@ -128,6 +130,7 @@ const { setting } = Locator.settingRepository();
 
     <c-result :result="tocResult" v-slot="{ value: toc }">
       <n-virtual-list
+        v-if="gnid.type == 'web'"
         :item-size="20"
         item-resizable
         :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
@@ -154,13 +157,3 @@ const { setting } = Locator.settingRepository();
     </c-result>
   </c-modal>
 </template>
-
-<style scoped>
-.header {
-  display: flex;
-  align-items: baseline;
-}
-.header .sort-btn {
-  margin: 0 12px 0 auto;
-}
-</style>
