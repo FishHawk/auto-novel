@@ -100,7 +100,8 @@ const clearCache = async () =>
         <n-a href="https://platform.deepseek.com/usage" target="_blank">
           DeepSeek API
         </n-a>
-        <n-p> 不再支持GPT web，推荐使用deepseek API，价格很低。 </n-p>
+        <n-p>不再支持GPT web，推荐使用deepseek API，价格很低。</n-p>
+        <n-p>本地小说支持韩语等其他语种，网络小说/文库小说暂时只允许日语。</n-p>
       </n-flex>
     </bulletin>
 
