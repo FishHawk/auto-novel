@@ -3,6 +3,7 @@ import { SyncAltOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { Page } from '@/model/Page';
+import { LoadingType } from '@/model/Skeleton';
 import { Result } from '@/util/result';
 import { RegexUtil } from '@/util';
 
@@ -19,6 +20,7 @@ const props = defineProps<{
   loader: Loader<T>;
   search?: { suggestions: string[]; tags: string[] };
   options: { label: string; tags: string[]; multiple?: boolean }[];
+  loadingType?: LoadingType;
 }>();
 
 const route = useRoute();
@@ -195,7 +197,12 @@ const invertSelection = (optionIndex: number) => {
     </c-action-wrapper>
   </n-flex>
 
-  <c-page :page="page" :loader="loader" v-slot="{ items }">
+  <c-page
+    :page="page"
+    :loader="loader"
+    :loadingType="loadingType"
+    v-slot="{ items }"
+  >
     <slot :items="items" />
   </c-page>
 </template>

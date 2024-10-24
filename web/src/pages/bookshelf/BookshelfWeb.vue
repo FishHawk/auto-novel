@@ -87,6 +87,7 @@ const novelListRef = ref<InstanceType<typeof NovelListWeb>>();
       :selected="selected"
       :loader="loader"
       :options="options"
+      loadingType="webNovelLite"
       v-slot="{ items }"
     >
       <novel-list-web
