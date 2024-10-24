@@ -5,6 +5,7 @@ import Components from 'unplugin-vue-components/vite';
 import { ProxyOptions, defineConfig, loadEnv } from 'vite';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import imagemin from 'unplugin-imagemin/vite';
 
 export default defineConfig(({ command, mode }) => {
   const proxy: Record<string, ProxyOptions> = {};
@@ -62,6 +63,7 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       vue(),
+      imagemin(),
       createHtmlPlugin({
         minify: {
           minifyJS: true,
