@@ -17,8 +17,14 @@ export namespace CCUtil {
     } else if (locale === 'zh-tw') {
       const opencc: any = await import('opencc-js');
       const ccLocale = opencc.Locale;
+      const customDict = [
+        ['託', '托'],
+        ['孃', '娘'],
+      ];
       return {
-        toView: opencc.ConverterFactory(ccLocale.from.cn, ccLocale.to.tw),
+        toView: opencc.ConverterFactory(ccLocale.from.cn, ccLocale.to.tw, [
+          customDict,
+        ]),
         toData: opencc.ConverterFactory(ccLocale.from.tw, ccLocale.to.cn),
       };
     }
