@@ -8,6 +8,19 @@ const md = new MarkdownIt({
   breaks: true,
   linkify: true,
 }).use(MarkdownItAnchor);
+
+md.linkify.add('http:', {
+  validate: function (text, pos, self) {
+    const tail = text.slice(pos);
+    if (!self.re.customHTTP) {
+      self.re.customHTTP =
+        /(\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,6}(?:[/?][a-zA-Z0-9-_/?=&%*#+]+)?)/g;
+    }
+
+    return tail.match(self.re.customHTTP)?.[0].length || 0;
+  },
+});
+
 const vars = useThemeVars();
 </script>
 
