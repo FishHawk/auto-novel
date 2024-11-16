@@ -64,7 +64,7 @@ const onGlobalClick = (event: MouseEvent) => {
       <div style="flex: 1 1 0px">
         <side-button
           quaternary
-          :disable="!chapter.prevId"
+          :disabled="!chapter.prevId"
           text="上一章"
           :icon="ArrowBackIosOutlined"
           @click="emit('nav', chapter.prevId!!)"
@@ -100,7 +100,7 @@ const onGlobalClick = (event: MouseEvent) => {
       <div style="flex: 1 1 0px">
         <side-button
           quaternary
-          :disable="!chapter.nextId"
+          :disabled="!chapter.nextId"
           text="下一章"
           :icon="ArrowForwardIosOutlined"
           @click="emit('nav', chapter.nextId!!)"
