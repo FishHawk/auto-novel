@@ -7,7 +7,7 @@ import {
   RefreshOutlined,
 } from '@vicons/material';
 
-import { WorkspaceJob } from './Workspace';
+import { WorkspaceJob } from './WorkspaceStore';
 
 const props = defineProps<{
   job: WorkspaceJob;
