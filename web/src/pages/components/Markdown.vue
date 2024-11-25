@@ -21,6 +21,19 @@ md.linkify.add('http:', {
   },
 });
 
+const defaultRender =
+  md.renderer.rules.link_open ||
+  function (tokens, idx, options, env, self) {
+    return self.renderToken(tokens, idx, options);
+  };
+
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  const href = tokens[idx].attrGet('href');
+  if (href && !href.startsWith('#')) tokens[idx].attrSet('target', '_blank');
+
+  return defaultRender(tokens, idx, options, env, self);
+};
+
 const vars = useThemeVars();
 </script>
 
@@ -29,6 +42,10 @@ const vars = useThemeVars();
 </template>
 
 <style>
+.markdown {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 .markdown a {
   transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
   cursor: pointer;

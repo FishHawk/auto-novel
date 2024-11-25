@@ -295,7 +295,16 @@ const router = createRouter({
     },
   ],
 
-  scrollBehavior(_to, _from, savedPosition) {
+  scrollBehavior(to, _from, savedPosition) {
+    if (to.hash) {
+      const decodedHash = encodeURIComponent(to.hash.substring(1));
+      const element = document.getElementById(decodedHash);
+      if (element) {
+        const top = element.getBoundingClientRect().top + window.scrollY - 58; // 50 是 navbar 的高度
+        setTimeout(() => window.scrollTo({ top }));
+        return { top };
+      }
+    }
     return { top: savedPosition?.top ?? 0 };
   },
 });
