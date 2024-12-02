@@ -26,9 +26,15 @@ const onClick = async (e: MouseEvent) => {
     message.warning('处理中...');
     return;
   }
-  running.value = true;
-  await props.onAction(e);
-  running.value = false;
+  const ret = props.onAction(e);
+  if (ret instanceof Promise) {
+    try {
+      running.value = true;
+      await ret;
+    } finally {
+      running.value = false;
+    }
+  }
 };
 </script>
 
