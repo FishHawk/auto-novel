@@ -1,6 +1,6 @@
 import ky from 'ky';
 
-let client = ky.create({ prefixUrl: window.origin + '/api' });
+let client = ky.create({ prefixUrl: '/api', timeout: 60000 });
 let authToken: string | undefined = undefined;
 
 export { client };
