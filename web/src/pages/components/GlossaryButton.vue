@@ -14,6 +14,8 @@ const props = defineProps<{
 
 const message = useMessage();
 
+const { atLeastMaintainer } = Locator.authRepository();
+
 const glossary = ref<Glossary>({});
 
 const showGlossaryModal = ref(false);
@@ -82,6 +84,10 @@ const lastDeletedTerm = computed(() => {
   if (last === undefined) return undefined;
   return `${last[0]} => ${last[1]}`;
 });
+
+const clearTerm = () => {
+  glossary.value = {};
+};
 
 const undoDeleteTerm = () => {
   if (deletedTerms.value.length === 0) return;
@@ -190,6 +196,15 @@ const importGlossary = () => {
         </n-input-group>
 
         <n-flex align="center" :wrap="false">
+          <c-button
+            v-if="atLeastMaintainer"
+            secondary
+            type="error"
+            label="清空"
+            :round="false"
+            size="small"
+            @action="clearTerm"
+          />
           <c-button
             :disabled="deletedTerms.length === 0"
             label="撤销删除"
