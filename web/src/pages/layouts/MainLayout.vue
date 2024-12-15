@@ -31,7 +31,7 @@ watch(hasSider, () => (showMenuModal.value = false));
 const route = useRoute();
 
 const authRepository = Locator.authRepository();
-const { profile, isSignedIn, atLeastAdmin, asAdmin } = authRepository;
+const { whoami } = authRepository;
 
 const { setting } = Locator.settingRepository();
 const menuCollapsed = computed(() => {
@@ -67,7 +67,7 @@ const menuOptions = computed<MenuOption[]>(() => {
     {
       label: renderLabel(
         '我的收藏',
-        isSignedIn.value ? '/favorite/web' : '/favorite/local',
+        whoami.value.isSignedIn ? '/favorite/web' : '/favorite/local',
       ),
       icon: renderIcon(StarBorderOutlined),
       key: '/favorite',
@@ -76,7 +76,7 @@ const menuOptions = computed<MenuOption[]>(() => {
       label: renderLabel('阅读历史', '/read-history'),
       icon: renderIcon(HistoryOutlined),
       key: '/read-history',
-      show: isSignedIn.value,
+      show: whoami.value.isSignedIn,
     },
     {
       label: renderLabel('网络小说', '/novel'),
@@ -178,7 +178,7 @@ const menuOptions = computed<MenuOption[]>(() => {
       label: renderLabel('控制台', '/admin'),
       icon: renderIcon(SettingsOutlined),
       key: '/admin',
-      show: asAdmin.value,
+      show: whoami.value.asMaintainer,
     },
   ];
 });
@@ -193,13 +193,13 @@ const menuKey = computed(() => {
   return path;
 });
 
-const readableRole = (role: UserRole) => {
+const roleToString = (role: UserRole) => {
   if (role === 'normal') return '普通用户';
   else if (role === 'trusted') return '信任用户';
   else if (role === 'maintainer') return '维护者';
   else if (role === 'admin') return '管理员';
   else if (role === 'banned') return '封禁用户';
-  else return '未知';
+  else return role satisfies never;
 };
 
 const userDropdownOptions = computed<MenuOption[]>(() => {
@@ -208,8 +208,8 @@ const userDropdownOptions = computed<MenuOption[]>(() => {
       'div',
       {
         onClick: () => {
-          if (atLeastAdmin.value) {
-            authRepository.toggleAdminMode();
+          if (whoami.value.isMaintainer) {
+            authRepository.toggleManageMode();
           }
         },
         style: {
@@ -224,7 +224,8 @@ const userDropdownOptions = computed<MenuOption[]>(() => {
             { depth: 2 },
             {
               default: () =>
-                readableRole(profile.value!.role) + (asAdmin.value ? '+' : ''),
+                roleToString(whoami.value.role!) +
+                (whoami.value.asMaintainer ? '+' : ''),
             },
           ),
         ]),
@@ -235,7 +236,7 @@ const userDropdownOptions = computed<MenuOption[]>(() => {
             {
               default: () =>
                 h(NTime, {
-                  time: profile.value!.createAt * 1000,
+                  time: whoami.value.createAt! * 1000,
                   type: 'date',
                 }),
             },
@@ -295,7 +296,7 @@ watch(
 
         <router-link
           v-if="!hasSider"
-          :to="isSignedIn ? '/favorite/web' : '/favorite/local'"
+          :to="whoami.isSignedIn ? '/favorite/web' : '/favorite/local'"
         >
           <n-button size="large" quaternary circle :focusable="false">
             <n-icon size="20" :component="StarBorderOutlined" />
@@ -304,7 +305,7 @@ watch(
 
         <div style="margin-right: 8px">
           <n-dropdown
-            v-if="isSignedIn"
+            v-if="whoami.isSignedIn"
             trigger="hover"
             placement="bottom-end"
             :keyboard="false"
@@ -312,7 +313,7 @@ watch(
             @select="handleUserDropdownSelect"
           >
             <n-button :focusable="false" quaternary>
-              @{{ profile?.username }}
+              @{{ whoami.username }}
             </n-button>
           </n-dropdown>
 

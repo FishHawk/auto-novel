@@ -17,11 +17,11 @@ const emit = defineEmits<{
 
 const message = useMessage();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 const favoredRepository = Locator.favoredRepository();
 
 onMounted(async () => {
-  if (isSignedIn.value) {
+  if (whoami.value.isSignedIn) {
     try {
       await favoredRepository.loadRemoteFavoreds();
     } catch (e) {

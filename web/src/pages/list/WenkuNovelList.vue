@@ -16,12 +16,12 @@ defineProps<{
 
 const route = useRoute();
 
-const { createAtLeastOneMonth } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const options = [
   {
     label: '分级',
-    tags: createAtLeastOneMonth.value
+    tags: whoami.value.allowNsfw
       ? ['一般向', '成人向', '严肃向']
       : ['一般向', '严肃向'],
   },
@@ -35,7 +35,7 @@ const loader: Loader<WenkuNovelOutlineDto> = (page, query, selected) => {
     document.title = '文库小说 搜索：' + query;
   }
   let level = selected[0] + 1;
-  if (!createAtLeastOneMonth.value && level === 2) {
+  if (!whoami.value.allowNsfw && level === 2) {
     level = 3;
   }
   return runCatching(

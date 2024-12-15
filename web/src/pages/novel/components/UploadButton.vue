@@ -18,12 +18,12 @@ const props = defineProps<{
 
 const message = useMessage();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const store = useWenkuNovelStore(props.novelId);
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
-  if (!isSignedIn.value) {
+  if (!whoami.value.isSignedIn) {
     message.info('请先登录');
     return false;
   }
@@ -69,7 +69,7 @@ const customRequest = async ({
   onError,
   onProgress,
 }: UploadCustomRequestOptions) => {
-  if (!isSignedIn) {
+  if (!whoami.value.isSignedIn) {
     onError();
     return;
   }

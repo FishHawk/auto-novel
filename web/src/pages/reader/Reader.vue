@@ -20,7 +20,7 @@ const router = useRouter();
 const isWideScreen = useIsWideScreen(600);
 const isMobile = checkIsMobile();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 const { setting } = Locator.readerSettingRepository();
 
 const gnid = ((): GenericNovelId => {
@@ -74,7 +74,7 @@ const navToChapter = async (chapterId: string) => {
   if (currentChapterId.value !== chapterId) {
     if (result.ok) {
       document.title = result.value.titleJp;
-      if (gnid.type === 'web' && isSignedIn) {
+      if (gnid.type === 'web' && whoami.value.isSignedIn) {
         Locator.readHistoryRepository().updateReadHistoryWeb(
           gnid.providerId,
           gnid.novelId,

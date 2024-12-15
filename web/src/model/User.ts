@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'maintainer' | 'trusted' | 'normal' | 'banned';
+export type UserRole = 'admin' | 'maintainer' | 'trusted' | 'normal';
 
 export interface UserReference {
   username: string;

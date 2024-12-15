@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const message = useMessage();
 
-const { atLeastMaintainer } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const glossary = ref<Glossary>({});
 
@@ -197,7 +197,7 @@ const importGlossary = () => {
 
         <n-flex align="center" :wrap="false">
           <c-button
-            v-if="atLeastMaintainer"
+            v-if="whoami.isMaintainer"
             secondary
             type="error"
             label="清空"

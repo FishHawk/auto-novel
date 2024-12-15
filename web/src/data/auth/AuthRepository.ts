@@ -1,20 +1,24 @@
-import { jwtDecode } from 'jwt-decode';
-
-import { UserRole } from '@/model/User';
 import { useLocalStorage } from '@vueuse/core';
+import { jwtDecode } from 'jwt-decode';
 
 import { formatError } from '@/data/api';
 import { updateToken } from '@/data/api/client';
-import { AuthProfile } from './Auth';
+import { UserRole } from '@/model/User';
+
 import { AuthApi, SignInBody, SignUpBody } from './AuthApi';
 
-type AuthProfileFull = AuthProfile & {
+interface AuthProfile {
+  id: string;
+  email: string;
+  username: string;
+  role: UserRole;
+  createAt: number;
   token: string;
   expireAt: number;
-};
+}
 
 interface AuthData {
-  profile?: AuthProfileFull;
+  profile?: AuthProfile;
   renewedAt?: number;
   adminMode: boolean;
 }
@@ -26,45 +30,45 @@ export const createAuthRepository = () => {
     adminMode: false,
   });
 
-  const profile = computed<AuthProfile | undefined>(
-    () => authData.value.profile,
-  );
+  const whoami = computed(() => {
+    const { profile, adminMode: manageMode } = authData.value;
 
-  const isSignedIn = computed(() => profile.value !== undefined);
+    const roleToNumber = {
+      admin: 4,
+      maintainer: 3,
+      trusted: 2,
+      normal: 1,
+    };
+    const roleNumber = profile ? roleToNumber[profile.role] : 0;
 
-  const createAtLeastOneMonth = computed(() => {
-    const days = 30;
-    const createAt = authData.value.profile?.createAt;
-    if (!createAt) return false;
-    return Date.now() / 1000 - createAt > days * 24 * 3600;
+    const isAdmin = roleNumber >= roleToNumber.admin;
+    const isMaintainer = roleNumber >= roleToNumber.maintainer;
+    const isSignedIn = roleNumber >= roleToNumber.normal;
+
+    const createAtLeast = (days: number) => {
+      if (!profile) return false;
+      return Date.now() / 1000 - profile.createAt > days * 24 * 3600;
+    };
+
+    return {
+      username: profile?.username,
+      role: profile?.role,
+      createAt: profile?.createAt,
+      isAdmin,
+      isMaintainer,
+      isSignedIn,
+      asAdmin: isAdmin && manageMode,
+      asMaintainer: isMaintainer && manageMode,
+      allowNsfw: createAtLeast(30),
+      allowAdvancedFeatures: createAtLeast(30),
+      isMe: (username: string) => profile?.username === username,
+    };
   });
 
-  const userRoleAtLeast = (role: UserRole) => {
-    const myRole = authData.value.profile?.role;
-    if (!myRole) {
-      return false;
-    }
-    const roleToNumber: Map<UserRole, number> = new Map([
-      ['admin', 4],
-      ['maintainer', 3],
-      ['trusted', 2],
-      ['normal', 1],
-      ['banned', 0],
-    ]);
-    return roleToNumber.get(myRole)! >= roleToNumber.get(role)!;
-  };
-
-  const atLeastAdmin = computed(() => userRoleAtLeast('admin'));
-  const atLeastMaintainer = computed(() => userRoleAtLeast('maintainer'));
-  const asAdmin = computed(
-    () => atLeastAdmin.value && authData.value.adminMode,
-  );
-
-  const toggleAdminMode = () => {
+  const toggleManageMode = () => {
     authData.value.adminMode = !authData.value.adminMode;
   };
 
-  //
   const setProfile = (token: string) => {
     const { id, email, username, role, createAt, exp } = jwtDecode<{
       id: string;
@@ -74,7 +78,8 @@ export const createAuthRepository = () => {
       createAt: number;
       exp: number;
     }>(token);
-    const profile: AuthProfileFull = {
+    authData.value.renewedAt = Date.now();
+    authData.value.profile = {
       id,
       email,
       username,
@@ -83,8 +88,6 @@ export const createAuthRepository = () => {
       token,
       expireAt: exp,
     };
-    authData.value.renewedAt = Date.now();
-    authData.value.profile = profile;
   };
 
   const activateAuth = async () => {
@@ -115,23 +118,6 @@ export const createAuthRepository = () => {
           });
       }
     }
-
-    // 2024-06-21
-    if ((authData as any).info !== undefined) {
-      //  30天后可删除
-      updateToken((authData as any).info.token);
-      await AuthApi.renew().then((token) => {
-        setProfile(token);
-        delete (authData as any).info;
-      });
-    }
-
-    // 2024-06-26 createAt不停变小
-    if (authData.value.profile) {
-      if (authData.value.profile.createAt < 2000000) {
-        authData.value.profile = undefined;
-      }
-    }
   };
 
   const signUp = async (json: SignUpBody) => {
@@ -147,18 +133,8 @@ export const createAuthRepository = () => {
   };
 
   return {
-    profile,
-    isSignedIn,
-    //
-    createAtLeastOneMonth,
-    //
-    atLeastAdmin,
-    atLeastMaintainer,
-    asAdmin,
-    //
-    setProfile,
-    toggleAdminMode,
-    //
+    whoami,
+    toggleManageMode,
     activateAuth,
     signUp,
     signIn,

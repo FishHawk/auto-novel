@@ -24,7 +24,7 @@ const emit = defineEmits<{
 const message = useMessage();
 
 const { setting } = Locator.settingRepository();
-const { atLeastMaintainer } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') => {
@@ -118,7 +118,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
         />
 
         <n-popconfirm
-          v-if="atLeastMaintainer"
+          v-if="whoami.asMaintainer"
           :show-icon="false"
           @positive-click="emit('delete')"
           :negative-text="null"

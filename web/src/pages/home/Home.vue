@@ -22,7 +22,7 @@ const showShortcut = bp.smaller('tablet');
 const router = useRouter();
 const vars = useThemeVars();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const url = ref('');
 const query = (url: string) => {
@@ -141,7 +141,7 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
       style="margin: 8px 0px"
     >
       <router-link
-        :to="isSignedIn ? '/favorite/web' : '/favorite/local'"
+        :to="whoami.isSignedIn ? '/favorite/web' : '/favorite/local'"
         style="flex: 1"
       >
         <n-button quaternary style="width: 100%; height: 64px">
@@ -205,7 +205,7 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
       <n-p> 本地小说的百度/有道翻译请到【我的收藏->本地小说】里面进行。 </n-p>
     </bulletin>
 
-    <template v-if="isSignedIn">
+    <template v-if="whoami.isSignedIn">
       <section-header title="我的收藏">
         <router-link to="/favorite/web">
           <c-button label="更多" :icon="ReadMoreOutlined" />

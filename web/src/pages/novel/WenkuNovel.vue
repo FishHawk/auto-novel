@@ -22,7 +22,7 @@ const message = useMessage();
 const vars = useThemeVars();
 
 const { setting } = Locator.settingRepository();
-const { isSignedIn, atLeastMaintainer } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const store = useWenkuNovelStore(novelId);
 const { novelResult } = storeToRefs(store);
@@ -191,8 +191,8 @@ const showWebNovelsModal = ref(false);
       </template>
 
       <section-header title="目录" />
-      <template v-if="isSignedIn">
-        <upload-button :allow-zh="atLeastMaintainer" :novel-id="novelId" />
+      <template v-if="whoami.isSignedIn">
+        <upload-button :allow-zh="whoami.isMaintainer" :novel-id="novelId" />
 
         <translate-options
           ref="translateOptions"
@@ -216,7 +216,7 @@ const showWebNovelsModal = ref(false);
           </n-list-item>
         </n-list>
 
-        <template v-if="atLeastMaintainer">
+        <template v-if="whoami.isMaintainer">
           <n-divider style="margin: 0" />
 
           <n-ul>
@@ -230,7 +230,7 @@ const showWebNovelsModal = ref(false);
               </n-a>
 
               <n-popconfirm
-                v-if="atLeastMaintainer"
+                v-if="whoami.asMaintainer"
                 :show-icon="false"
                 @positive-click="deleteVolume(volumeId)"
                 :negative-text="null"
@@ -258,7 +258,7 @@ const showWebNovelsModal = ref(false);
 
         <n-empty
           v-if="
-            !atLeastMaintainer &&
+            !whoami.isMaintainer &&
             metadata.volumeJp.length === 0 &&
             metadata.volumeZh.length > 0
           "

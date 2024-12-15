@@ -6,7 +6,7 @@ import { Locator } from '@/data';
 const router = useRouter();
 const route = useRoute();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const path = route.path;
 const handleUpdateValue = (path: string) => router.push({ path });
@@ -14,7 +14,7 @@ const handleUpdateValue = (path: string) => router.push({ path });
 
 <template>
   <div class="layout-content">
-    <template v-if="isSignedIn">
+    <template v-if="whoami.isSignedIn">
       <n-h1>控制台</n-h1>
       <n-tabs
         type="line"

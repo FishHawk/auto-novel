@@ -14,16 +14,8 @@ defineProps<{
 
 const route = useRoute();
 
-const { createAtLeastOneMonth } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
-const oldAssOptions = createAtLeastOneMonth.value
-  ? [
-      {
-        label: '分级',
-        tags: ['全部', '一般向', 'R18'],
-      },
-    ]
-  : [];
 const options = [
   {
     label: '来源',
@@ -41,7 +33,14 @@ const options = [
     label: '类型',
     tags: ['全部', '连载中', '已完结', '短篇'],
   },
-  ...oldAssOptions,
+  ...(whoami.value.allowNsfw
+    ? [
+        {
+          label: '分级',
+          tags: ['全部', '一般向', 'R18'],
+        },
+      ]
+    : []),
   {
     label: '翻译',
     tags: ['全部', 'GPT', 'Sakura'],
@@ -81,7 +80,7 @@ const loader: Loader<WebNovelOutlineDto> = (page, query, selected) => {
       query,
       provider: parseProviderBitFlags(0),
       type: selected[1],
-      ...(createAtLeastOneMonth.value
+      ...(whoami.value.allowNsfw
         ? {
             level: selected[2],
             translate: selected[3],

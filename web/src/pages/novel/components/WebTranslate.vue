@@ -34,10 +34,9 @@ const emit = defineEmits<{
   'update:gpt': [number];
 }>();
 
-const isMobile = checkIsMobile();
 const message = useMessage();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 const { setting } = Locator.settingRepository();
 
 const translateOptions = ref<InstanceType<typeof TranslateOptions>>();
@@ -154,7 +153,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 </script>
 
 <template>
-  <n-text v-if="!isSignedIn"> 游客无法使用翻译功能，请先登录。 </n-text>
+  <n-text v-if="!whoami.isSignedIn"> 游客无法使用翻译功能，请先登录。 </n-text>
   <n-text v-else-if="setting.enabledTranslator.length === 0">
     没有翻译器启用。
   </n-text>
@@ -171,7 +170,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
       Sakura {{ sakura }}
     </n-text>
 
-    <template v-if="isSignedIn && setting.enabledTranslator.length > 0">
+    <template v-if="whoami.isSignedIn && setting.enabledTranslator.length > 0">
       <n-button-group>
         <c-button
           v-if="setting.enabledTranslator.includes('baidu')"

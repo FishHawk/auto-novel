@@ -7,13 +7,13 @@ import BookshelfMenuItem from './BookshelfMenuItem.vue';
 
 const message = useMessage();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const favoredRepository = Locator.favoredRepository();
 const favoreds = favoredRepository.favoreds;
 
 onMounted(async () => {
-  if (isSignedIn.value) {
+  if (whoami.value.isSignedIn) {
     try {
       await favoredRepository.loadRemoteFavoreds();
     } catch (e) {
@@ -39,7 +39,7 @@ const menuOptions = computed(() => {
       menuOption('local', id, title),
     ),
   };
-  if (isSignedIn.value) {
+  if (whoami.value.isSignedIn) {
     return [
       {
         type: 'group',

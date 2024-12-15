@@ -5,12 +5,12 @@ const props = defineProps<{ from?: string }>();
 
 const router = useRouter();
 
-const { isSignedIn } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 watch(
-  isSignedIn,
-  (isSignedIn) => {
-    if (isSignedIn) {
+  whoami,
+  (whoami) => {
+    if (whoami.isSignedIn) {
       const from = props.from;
       if (from) {
         router.replace(from);

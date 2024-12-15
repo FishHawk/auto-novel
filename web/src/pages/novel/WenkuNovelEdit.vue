@@ -33,7 +33,7 @@ const router = useRouter();
 const isWideScreen = useIsWideScreen();
 const message = useMessage();
 
-const { atLeastMaintainer, createAtLeastOneMonth } = Locator.authRepository();
+const { whoami } = Locator.authRepository();
 
 const allowSubmit = ref(novelId === undefined);
 const formRef = ref<FormInst>();
@@ -84,7 +84,7 @@ const formRules: FormRules = {
   level: [
     {
       validator: (_rule: FormItemRule, value: string) =>
-        value !== '成人向' || createAtLeastOneMonth.value,
+        value !== '成人向' || whoami.value.allowNsfw,
       message: '你太年轻了，无法创建成人向页面',
       trigger: 'input',
     },
@@ -396,7 +396,7 @@ const levelOptions = [
             @action="populateNovelFromAmazon('', true)"
           />
           <c-button
-            v-if="atLeastMaintainer"
+            v-if="whoami.isMaintainer"
             type="error"
             secondary
             label="标记重复"
