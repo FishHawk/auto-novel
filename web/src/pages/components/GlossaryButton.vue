@@ -111,12 +111,12 @@ const addTerm = () => {
 };
 
 const exportGlossary = () => {
-  navigator.clipboard.writeText(Glossary.encodeToText(glossary.value));
+  navigator.clipboard.writeText(Glossary.toText(glossary.value));
   message.info('导出成功，已经将术语表复制到剪切板');
 };
 
 const importGlossary = () => {
-  const importedGlossary = Glossary.decodeFromText(importGlossaryRaw.value);
+  const importedGlossary = Glossary.fromText(importGlossaryRaw.value);
   if (importedGlossary === undefined) {
     message.error('导入失败：术语表格式不正确');
   } else {
@@ -174,13 +174,16 @@ const importGlossary = () => {
           />
         </n-input-group>
 
-        <n-input-group>
-          <n-input
-            v-model:value="importGlossaryRaw"
-            size="small"
-            placeholder="批量导入术语表"
-            :input-props="{ spellcheck: false }"
-          />
+        <n-input
+          v-model:value="importGlossaryRaw"
+          type="textarea"
+          size="small"
+          placeholder="批量导入术语表"
+          :input-props="{ spellcheck: false }"
+          :rows="1"
+        />
+
+        <n-flex align="center" :wrap="false">
           <c-button
             label="导出"
             :round="false"
@@ -193,9 +196,6 @@ const importGlossary = () => {
             size="small"
             @action="importGlossary"
           />
-        </n-input-group>
-
-        <n-flex align="center" :wrap="false">
           <c-button
             v-if="whoami.isMaintainer"
             secondary
