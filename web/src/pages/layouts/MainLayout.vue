@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   BookOutlined,
+  CandlestickChartOutlined,
   DarkModeOutlined,
   ForumOutlined,
   HistoryOutlined,
@@ -176,7 +177,7 @@ const menuOptions = computed<MenuOption[]>(() => {
     },
     {
       label: renderLabel('控制台', '/admin'),
-      icon: renderIcon(SettingsOutlined),
+      icon: renderIcon(CandlestickChartOutlined),
       key: '/admin',
       show: whoami.value.asMaintainer,
     },
@@ -343,7 +344,7 @@ watch(
       @expand="setting.menuCollapsed = false"
     >
       <n-scrollbar
-        style="margin-top: 50px; position: fixed; top: 0; padding-bottom: 64px"
+        style="margin-top: 50px; position: fixed; top: 0"
         :style="{ width: menuCollapsed ? '64px' : '240px' }"
       >
         <n-menu
@@ -353,7 +354,7 @@ watch(
           :collapsed="menuCollapsed"
           :collapsed-width="64"
           :collapsed-icon-size="22"
-          :default-expanded-keys="['/workspace']"
+          style="margin-bottom: 64px"
         />
       </n-scrollbar>
     </n-layout-sider>
