@@ -70,15 +70,19 @@ const roleToReadableText = (role: UserRole) => {
     <n-table :bordered="false">
       <thead>
         <tr>
-          <th><b>用户名</b></th>
-          <th><b>邮箱</b></th>
+          <th style="width: 150px"><b>用户名</b></th>
+          <th style="width: 80px"><b>角色</b></th>
+          <th style="width: 150px"><b>邮箱</b></th>
+          <th style="width: 150px"><b>创建时间</b></th>
           <th><b>操作</b></th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="user in value.items" :key="user.id">
-          <td>{{ roleToReadableText(user.role) }}-{{ user.username }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ roleToReadableText(user.role) }}</td>
           <td>{{ user.email }}</td>
+          <td><n-time :time="user.createdAt * 1000" /></td>
           <td></td>
         </tr>
       </tbody>

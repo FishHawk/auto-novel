@@ -10,5 +10,5 @@ export interface UserOutline {
   email: string;
   username: boolean;
   role: UserRole;
-  createAt: number;
+  createdAt: number;
 }
