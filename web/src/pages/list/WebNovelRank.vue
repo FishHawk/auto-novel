@@ -182,6 +182,7 @@ const loader = computed<Loader<WebNovelOutlineDto>>(() => {
           : undefined
       "
       :options="descriptior.options"
+      loadingType="webNovel"
       v-slot="{ items }"
     >
       <novel-list-web :items="items" />
