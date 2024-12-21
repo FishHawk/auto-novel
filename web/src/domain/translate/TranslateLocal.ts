@@ -5,7 +5,6 @@ import {
   TranslateTaskCallback,
   TranslateTaskParams,
 } from '@/model/Translator';
-
 import { Translator } from './Translator';
 
 export const translateLocal = async (
@@ -75,12 +74,19 @@ export const translateLocal = async (
   }
 
   const forceSeg = level === 'all';
-  for (const chapterId of chapters) {
+
+  // 对章节的并发翻译
+  const chapterPromises = chapters.map(async (chapterId, index) => {
     try {
-      callback.log(`\n[${0}] ${volumeId}/${chapterId}`);
+      // 检查是否已被取消
+      if (signal?.aborted) {
+        throw new Error('翻译任务已被取消');
+      }
+
+      callback.log(`\n[${index}] ${volumeId}/${chapterId}`);
       const chapter = await getChapter(chapterId);
       if (chapter === undefined) {
-        throw new Error('章节不存在');
+        throw new Error(`章节  ${index + 1} 不存在`); // 更改：打印章节序号
       }
       const textsJp = chapter?.paragraphs;
 
@@ -89,16 +95,17 @@ export const translateLocal = async (
         chapterId,
       );
       const textsZh = await translator.translate(textsJp, {
+        chapterId: index + 1, // 新增：传递章节序号
         glossary: metadata.glossary,
         oldGlossary: chapter[translator.id]?.glossary,
         oldTextZh: oldTextsZh
           ? oldTextsZh[translator.id]?.paragraphs
           : undefined,
         force: forceSeg,
-        signal,
+        signal, // 传递 AbortSignal
       });
 
-      callback.log('上传章节');
+      callback.log(`上传章节 ${index + 1}`);
       const state = await updateTranslation(chapterId, {
         glossaryId: metadata.glossaryId,
         glossary: metadata.glossary,
@@ -106,16 +113,33 @@ export const translateLocal = async (
       });
       callback.onChapterSuccess({ zh: state });
     } catch (e: any) {
-      if (e === 'quit') {
-        callback.log(`发生错误，结束翻译任务`);
-        return;
+      if (e.message === '翻译任务已被取消') {
+        callback.log(`章节 ${index + 1} 被取消，停止翻译任务`);
+        // 可以选择抛出错误以停止 Promise.allSettled
+        throw e;
       } else if (e.name === 'AbortError') {
-        callback.log(`中止翻译任务`);
-        return 'abort';
+        callback.log(`中止章节 ${index + 1} 的翻译任务`); // 更改：打印章节序号
+        // 同上，记录中止信息
       } else {
-        callback.log(`发生错误，跳过：${await formatError(e)}`);
+        callback.log(
+          `章节 ${index + 1} 发生错误，跳过：${await formatError(e)}`,
+        ); // 更改：打印章节序号
         callback.onChapterFailure();
       }
+    }
+  });
+
+  // 等待所有章节的处理完成
+  try {
+    await Promise.allSettled(chapterPromises);
+  } catch (e: any) {
+    // 处理取消操作
+    if (e instanceof Error && e.message === '翻译任务已被取消') {
+      callback.log('翻译任务已被取消，所有并发操作已停止');
+    } else if (e.name === 'AbortError') {
+      callback.log('翻译任务中止，所有并发操作已停止');
+    } else {
+      throw e;
     }
   }
 };
