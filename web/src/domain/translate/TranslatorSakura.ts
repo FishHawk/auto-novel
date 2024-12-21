@@ -84,7 +84,7 @@ export class SakuraTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    { glossary, prevSegs, signal }: SegmentContext,
+    { chapterId, sectionId, glossary, prevSegs, signal }: SegmentContext,
   ): Promise<string[]> {
     const concatedSeg = seg.join('\n');
     const prevSegCount = -Math.ceil(this.prevSegLength / this.segLength);
@@ -103,8 +103,15 @@ export class SakuraTranslator implements SegmentTranslator {
         retry > 1,
       );
       const splitText = text.replaceAll('<|im_end|>', '').split('\n');
-
-      const parts: string[] = [`第${retry}次`];
+      var chapterString = '';
+      if (chapterId !== undefined) {
+        chapterString = `章节${chapterId}-`; // 新增：打印章节序
+      }
+      var sectionString = '';
+      if (sectionId !== undefined) {
+        sectionString += `分段${sectionId}\t`; // 新增：打印分段序号
+      }
+      const parts: string[] = [`${chapterString}${sectionString}第${retry}次`]; // 更改：打印章节序号和分段序号
       const linesNotMatched = seg.length !== splitText.length;
       if (hasDegradation) {
         parts.push('退化');

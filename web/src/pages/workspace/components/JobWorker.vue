@@ -18,6 +18,7 @@ import {
   TranslateTaskDescriptor,
 } from '@/model/Translator';
 import TranslateTask from '@/pages/components/TranslateTask.vue';
+import { setGlobalSemaphore } from '@/domain/translate/Semaphore';
 
 const props = defineProps<{
   worker:
@@ -86,6 +87,7 @@ const running = computed(() => currentJob.value !== undefined);
 let abortHandler = () => {};
 
 const processTasks = async () => {
+  setGlobalSemaphore(); // 限制并发数
   const controller = new AbortController();
   const { signal } = controller;
   abortHandler = () => controller.abort();

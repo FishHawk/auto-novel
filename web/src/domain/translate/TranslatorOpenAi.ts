@@ -37,10 +37,9 @@ export class OpenAiTranslator implements SegmentTranslator {
 
   async translate(
     seg: string[],
-    { glossary, signal }: SegmentContext,
+    { chapterId, sectionId, glossary, signal }: SegmentContext, // 新增：接收章节序号和分段序号
   ): Promise<string[]> {
     let enableBypass = false;
-
     const logSegInfo = ({
       retry,
       binaryRange,
@@ -54,7 +53,15 @@ export class OpenAiTranslator implements SegmentTranslator {
     }) => {
       const parts: string[] = [];
       if (retry !== undefined) {
-        parts.push(`第${retry + 1}次`);
+        var chapterString = '';
+        if (chapterId !== undefined) {
+          chapterString = `章节${chapterId}-`; // 新增：打印章节序
+        }
+        var sectionString = '';
+        if (sectionId !== undefined) {
+          sectionString += `分段${sectionId}\t`; // 新增：打印分段序号
+        }
+        parts.push(`${chapterString}${sectionString}第${retry + 1}次`); // 更改：打印章节序号和分段序号
       }
       if (binaryRange !== undefined) {
         const [left, right] = binaryRange;
