@@ -27,16 +27,19 @@ const parseSearch = (doc: Document) => {
       const title = it.getElementsByTagName('h2')[0].textContent!;
       const cover = it.getElementsByTagName('img')[0].getAttribute('src')!;
 
-      const serialAsin = Array.from(
-        it
-          .getElementsByTagName('h2')[0]
-          .nextElementSibling?.getElementsByTagName('a') ?? [],
-      )
-        .map((el) => el.getAttribute('href')!)
-        .filter((href) => href.startsWith('/dp/'))
-        .map((href) => extractAsin(href))
+      const serialAsin = Array.from(it.getElementsByTagName('a'))
+        .filter((it) => {
+          const href = it.getAttribute('href')!;
+          const child = it.firstElementChild;
+          return (
+            child &&
+            child.tagName === 'SPAN' &&
+            child.classList.length === 0 &&
+            (href.startsWith('/-/zh/dp/') || href.startsWith('/dp/'))
+          );
+        })
+        .map((it) => extractAsin(it.getAttribute('href')!))
         .find((asin) => asin);
-
       return { asin, title, cover, serialAsin };
     });
 };
