@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useThrottleFn } from '@vueuse/core';
 
 import { Page } from '@/model/Page';
+import { LoadingType } from '@/model/Skeleton';
 import { Result } from '@/util/result';
 
 import { onKeyDown } from '../util';
@@ -16,6 +17,7 @@ const router = useRouter();
 const props = defineProps<{
   page: number;
   loader: Loader<T>;
+  loadingType?: LoadingType;
 }>();
 
 const { setting } = Locator.settingRepository();
@@ -39,6 +41,7 @@ const loader = computed(() => {
     if (loadId.value !== currentLoadId) return;
 
     loading.value = false;
+
     return res;
   };
 });
@@ -179,9 +182,12 @@ const loadMore = async () => {
     />
     <n-divider />
 
-    <div v-if="loading" class="loading-box">
+    <c-skeleton :type="loadingType" v-if="loading && loadingType"></c-skeleton>
+
+    <div v-else-if="loading" class="loading-box">
       <n-spin />
     </div>
+
     <c-result
       v-else
       :result="pageContent"
@@ -210,14 +216,20 @@ const loadMore = async () => {
     >
       <slot :items="page.items" />
     </c-result>
-    <div class="loading-box" v-if="pageContent?.ok !== false">
-      <template v v-if="loading">
-        <n-spin />
-      </template>
-      <template v-else-if="innerPage >= pageNumber && pageNumber > 1"
-        >没有更多了</template
-      >
-    </div>
+    <template v-if="pageContent?.ok !== false">
+      <c-skeleton
+        :type="loadingType"
+        v-if="loading && loadingType"
+      ></c-skeleton>
+      <div class="loading-box" v-else>
+        <template v-if="loading">
+          <n-spin />
+        </template>
+        <template v-else-if="innerPage >= pageNumber && pageNumber > 1">
+          没有更多了
+        </template>
+      </div>
+    </template>
   </template>
 </template>
 

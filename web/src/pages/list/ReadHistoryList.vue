@@ -69,7 +69,13 @@ const deleteHistory = (providerId: string, novelId: string) =>
       注意：历史功能已暂停
     </n-text>
 
-    <novel-page :page="page" :loader="loader" :options="[]" v-slot="{ items }">
+    <novel-page
+      :page="page"
+      :loader="loader"
+      :options="[]"
+      loadingType="webNovelHistory"
+      v-slot="{ items }"
+    >
       <novel-list-web :items="items" simple>
         <template #action="item">
           <c-button
