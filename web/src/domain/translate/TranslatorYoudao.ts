@@ -20,8 +20,8 @@ export class YoudaoTranslator implements SegmentTranslator {
 
   async init() {
     try {
-      this.api.rlog();
-      this.api.refreshKey();
+      await this.api.rlog();
+      await this.api.refreshKey();
     } catch (e) {
       this.log('无法获得Key，使用默认值');
     }
