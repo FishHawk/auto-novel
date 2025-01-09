@@ -7,7 +7,8 @@ import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 import { TranslateTaskParams } from '@/model/Translator';
 import { useIsWideScreen } from '@/pages/util';
-
+import { ref, watch } from 'vue';
+import { setMaxConcurrency } from '@/domain/translate/Semaphore';
 const probs = defineProps<{
   gnid: GenericNovelId;
   glossary: Glossary;
@@ -24,6 +25,17 @@ const forceMetadata = ref(false);
 const startIndex = ref<number | null>(0);
 const endIndex = ref<number | null>(65536);
 const taskNumber = ref<number | null>(1);
+const maxConcurrency = ref<number | null>(1);
+
+watch(maxConcurrency, (newVal, oldVal) => {
+  // 检查输入是否为有效数字
+  if (newVal === null || isNaN(newVal)) {
+    setMaxConcurrency(1);
+  } else {
+    console.log(`输入值从 ${oldVal} 变为 ${newVal}`);
+    setMaxConcurrency(newVal);
+  }
+});
 
 defineExpose({
   getTranslateTaskParams: (): TranslateTaskParams => ({
@@ -120,6 +132,30 @@ const showDownloadModal = ref(false);
             />
           </n-input-group>
         </div>
+
+        <div>
+          <n-input-group>
+            <n-input-group-label size="small">并发</n-input-group-label>
+            <n-input-number
+              size="small"
+              v-model:value="maxConcurrency"
+              :show-button="false"
+              :min="1"
+              :max="gnid.type === 'local' ? 65536 : 10"
+              style="width: 40px"
+            />
+            <n-input-group-label size="small">条请求</n-input-group-label>
+          </n-input-group>
+        </div>
+        <n-tooltip trigger="hover" placement="top" style="max-width: 200px">
+          <template #trigger>
+            <n-button text>
+              <n-icon depth="4" :component="InfoOutlined" />
+            </n-button>
+          </template>
+          最大并发量应在自己的API的允许范围内设置。
+        </n-tooltip>
+
         <div>
           <n-input-group>
             <n-input-group-label size="small">均分</n-input-group-label>
