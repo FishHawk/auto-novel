@@ -4,7 +4,6 @@ import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
 import { SakuraTranslator } from '@/domain/translate';
-import { TranslateJob } from '@/model/Translator';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
@@ -18,31 +17,8 @@ const { setting } = Locator.settingRepository();
 const showCreateWorkerModal = ref(false);
 
 const store = useWorkspaceStore('sakura');
-const { jobs, workspace } = storeToRefs(store);
 
-// const onProgressUpdated = (
-//   task: string,
-//   state:
-//     | { state: 'finish'; abort: boolean }
-//     | { state: 'processed'; finished: number; error: number; total: number },
-// ) => {
-//   if (state.state === 'finish') {
-//     const job = processedJobs.value.get(task)!!;
-//     processedJobs.value.delete(task);
-//     if (!state.abort) {
-//       job.finishAt = Date.now();
-//       workspace.addJobRecord(job as any);
-//       workspace.deleteJob(task);
-//     }
-//   } else {
-//     const job = processedJobs.value.get(task)!!;
-//     job.progress = {
-//       finished: state.finished,
-//       error: state.error,
-//       total: state.total,
-//     };
-//   }
-// };
+const { jobs, workspace } = storeToRefs(store);
 
 const clearCache = async () =>
   doAction(store.cleanCache(), '缓存清除', message);
@@ -129,16 +105,17 @@ const clearCache = async () =>
         <n-list-item v-for="worker of workspace.workers">
           <job-worker-x
             :worker="{ translatorId: 'sakura', ...worker }"
-            :next="() => undefined"
+            :request-seg="() => undefined"
+            :post-seg="(it) => {}"
           />
         </n-list-item>
       </vue-draggable>
     </n-list>
 
-    <!--  <section-header title="任务队列">
+    <section-header title="任务队列">
       <n-popconfirm
         :show-icon="false"
-        @positive-click="deleteAllJobs"
+        @positive-click="store.deleteAllJobs"
         :negative-text="null"
         style="max-width: 300px"
       >
@@ -148,26 +125,23 @@ const clearCache = async () =>
         真的要清空队列吗？
       </n-popconfirm>
     </section-header>
-    <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
+    <n-empty v-if="workspace.jobs.length === 0" description="没有任务" />
     <n-list>
       <vue-draggable
-        v-model="workspaceRef.jobs"
+        v-model="workspace.jobs"
         :animation="150"
         handle=".drag-trigger"
       >
-        <n-list-item v-for="job of workspaceRef.jobs" :key="job.task">
-          <job-queue
-            :job="job"
-            :progress="processedJobs.get(job.task)?.progress"
-            @top-job="workspace.topJob(job)"
-            @bottom-job="workspace.bottomJob(job)"
-            @delete-job="deleteJob(job.task)"
+        <n-list-item v-for="job of workspace.jobs" :key="job.task">
+          <job-queue-x
+            :job="jobs.get(job.task)!!"
+            @move-to-top="store.moveToTop(job.task)"
+            @move-to-bottom="store.moveToBottom(job.task)"
+            @delete="store.deleteJob(job.task)"
           />
         </n-list-item>
       </vue-draggable>
     </n-list>
-
-    <job-record-section id="sakura" /> -->
 
     <template #sidebar>
       <local-volume-list-specific-translation type="sakura" />

@@ -19,7 +19,6 @@ export interface WorkspaceTask {
 
 export interface WorkspaceSegment {
   state: 'pending' | 'processing' | 'success' | 'fallback-success' | 'failed';
-  srcPrev: string[];
   src: string[];
   dst: string[];
   log: string[];
@@ -39,7 +38,7 @@ export const useWorkspaceStore = (id: 'sakura' | 'gpt') =>
       () => workspaceRef.value.jobs,
       async (tjobs) => {
         for (const tjob of tjobs) {
-          if (jobs.value.has(tjob.task)) {
+          if (!jobs.value.has(tjob.task)) {
             jobs.value.set(tjob.task, {
               state: 'pending',
               name: tjob.description,
@@ -49,9 +48,19 @@ export const useWorkspaceStore = (id: 'sakura' | 'gpt') =>
             });
           }
         }
+
+        console.log(jobs.value);
       },
       { immediate: true },
     );
+
+    const moveToTop = (descriptor: string) => {
+      workspace.topJob(descriptor);
+    };
+
+    const moveToBottom = (descriptor: string) => {
+      workspace.bottomJob(descriptor);
+    };
 
     const deleteJob = async (task: string) => {
       const job = jobs.value.get(task);
@@ -84,6 +93,8 @@ export const useWorkspaceStore = (id: 'sakura' | 'gpt') =>
     return {
       jobs,
       workspace: workspaceRef,
+      moveToTop,
+      moveToBottom,
       deleteJob,
       deleteAllJobs,
       cleanCache,

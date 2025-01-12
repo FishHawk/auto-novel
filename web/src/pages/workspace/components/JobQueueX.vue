@@ -7,17 +7,17 @@ import {
   RefreshOutlined,
 } from '@vicons/material';
 
-import { WorkspaceJob } from './WorkspaceStore';
+import { WorkspaceJob } from '../WorkspaceStore';
 
 const props = defineProps<{
   job: WorkspaceJob;
 }>();
 
 const emit = defineEmits<{
-  retryJob: [];
-  topJob: [];
-  bottomJob: [];
-  deleteJob: [];
+  retry: [];
+  moveToTop: [];
+  moveToBottom: [];
+  delete: [];
 }>();
 
 const countTotal = computed(() => {
@@ -78,26 +78,26 @@ const progressPercentage = computed(() => {
           v-if="job.state === 'finished'"
           tooltip="重试"
           :icon="RefreshOutlined"
-          @action="emit('retryJob')"
+          @action="emit('retry')"
         />
 
         <c-icon-button
           tooltip="置顶"
           :icon="KeyboardDoubleArrowUpOutlined"
-          @action="emit('topJob')"
+          @action="emit('moveToTop')"
         />
 
         <c-icon-button
           tooltip="置底"
           :icon="KeyboardDoubleArrowDownOutlined"
-          @action="emit('bottomJob')"
+          @action="emit('moveToBottom')"
         />
 
         <c-icon-button
           tooltip="删除"
           :icon="DeleteOutlineOutlined"
           type="error"
-          @action="emit('deleteJob')"
+          @action="emit('delete')"
         />
       </n-flex>
     </template>
@@ -115,15 +115,26 @@ const progressPercentage = computed(() => {
           :percentage="progressPercentage"
           style="max-width: 600px"
         />
-        <n-flex v-for="task in job.tasks" :wrap="false">
-          {{ task.name }}
-          <n-flex>
-            <div
+        <n-flex :size="[4, 4]">
+          <template v-for="task in job.tasks" :wrap="false">
+            <n-el
+              tag="div"
+              style="
+                width: 28px;
+                height: 12px;
+                font-size: 8px;
+                text-align: center;
+              "
+            >
+              {{ task.descriptor }}
+            </n-el>
+            <n-el
               v-for="seg in task.segs"
+              tag="div"
               class="workspace-seg"
               :data-state="seg.state"
-            ></div>
-          </n-flex>
+            ></n-el>
+          </template>
         </n-flex>
       </n-flex>
     </template>
@@ -132,22 +143,23 @@ const progressPercentage = computed(() => {
 
 <style scoped>
 .workspace-seg {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
 }
-.workspace-seg div[data-state='pending'] {
-  background-color: grey;
+.workspace-seg[data-state='pending'] {
+  background-color: var(--text-color-disabled);
 }
-.workspace-seg div[data-state='processing'] {
-  background-color: blue;
+.workspace-seg[data-state='processing'] {
+  background-color: var(--info-color);
 }
-.workspace-seg div[data-state='success'] {
-  background-color: green;
+.workspace-seg[data-state='success'] {
+  background-color: var(--primary-color);
 }
-.workspace-seg div[data-state='fallback-success'] {
-  background-color: yellow;
+.workspace-seg[data-state='fallback-success'] {
+  background-color: var(--warning-color);
 }
-.workspace-seg div[data-state='failed'] {
-  background-color: red;
+.workspace-seg[data-state='failed'] {
+  background-color: var(--error-color);
 }
 </style>

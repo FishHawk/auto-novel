@@ -9,22 +9,28 @@ import {
 } from '@vicons/material';
 
 import { Locator } from '@/data';
-import { Translator, TranslatorConfig } from '@/domain/translate';
 import {
-  GptWorker,
-  SakuraWorker,
-  TranslateTaskDescriptor,
-} from '@/model/Translator';
+  SegmentTranslator,
+  Translator,
+  TranslatorConfig,
+} from '@/domain/translate';
+import { GptWorker, SakuraWorker } from '@/model/Translator';
 import { WorkspaceSegment } from '../WorkspaceStore';
 import { Glossary } from '@/model/Glossary';
-import { delay, parallelExecInfinite } from '@/util';
-import { abort } from 'process';
+import { parallelExecInfinite } from '@/util';
 
 const props = defineProps<{
   worker:
     | ({ translatorId: 'sakura' } & SakuraWorker)
     | ({ translatorId: 'gpt' } & GptWorker);
-  next: () => { seg: WorkspaceSegment; glossary: Glossary } | undefined;
+  requestSeg: () =>
+    | {
+        segId: [string, string];
+        seg: WorkspaceSegment;
+        glossary: Glossary;
+      }
+    | undefined;
+  postSeg: (id: [string, string]) => void;
 }>();
 
 const message = useMessage();
@@ -70,12 +76,11 @@ const startTranslate = async () => {
   const { signal } = controller;
   abortTranslate = () => controller.abort();
 
-  let translator: Translator;
+  let translator: SegmentTranslator;
   try {
-    translator = await Translator.create(
-      translatorConfig.value,
-      true,
+    translator = await Translator.createSegmentTranslator(
       (message, detail) => {},
+      translatorConfig.value,
     );
   } catch (e: any) {
     message.error(`创建翻译器失败：${e}`);
@@ -85,12 +90,24 @@ const startTranslate = async () => {
   const concurrent = 1;
   await parallelExecInfinite(
     () => {
-      const next = props.next();
-      if (next === undefined) return next;
-      const { seg, glossary } = next;
-      const fn = async () => {
-        await translator.translate(seg.src, { glossary, signal });
-      };
+      const segResult = props.requestSeg();
+      if (segResult === undefined) return undefined;
+      const { segId, seg, glossary } = segResult;
+      const fn = () =>
+        translator
+          .translate(seg.src, { glossary, prevSegs: [], signal })
+          .then((dst: string[]) => {
+            seg.state = 'success';
+            seg.dst = dst;
+            props.postSeg(segId);
+          })
+          .catch(() => {
+            if (signal.aborted) {
+              seg.state = 'pending';
+            } else {
+              seg.state = 'failed';
+            }
+          });
       return fn();
     },
     concurrent,
