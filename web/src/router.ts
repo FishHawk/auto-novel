@@ -216,6 +216,11 @@ const router = createRouter({
               meta: { title: 'OCR修复' },
               component: () => import('./pages/workspace/OcrFix.vue'),
             },
+            {
+              path: 'epub-txt-converter',
+              meta: { title: 'EPUB/TXT转换' },
+              component: () => import('./pages/workspace/EpubTxtConverter.vue'),
+            },
           ],
         },
 
