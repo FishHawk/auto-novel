@@ -44,7 +44,7 @@ const customRequest = ({
 
 const downloadTxt = async (volume: LoadedVolume) => {
   downloadFile(
-    volume.filename.replace('.epub', '.txt'),
+    volume.filename.replace(/\.epub$/, '.txt'),
     new Blob([volume.content], { type: 'text/plain' }),
   );
 };
