@@ -197,6 +197,7 @@ export class OpenAiTranslator implements SegmentTranslator {
   > {
     const parseAnswer = (answer: string) => {
       return answer
+        .replace(/^<think>[\s\S]*?<\/think>/i, '')
         .split('\n')
         .filter((s) => s.trim())
         .map((s, i) =>
