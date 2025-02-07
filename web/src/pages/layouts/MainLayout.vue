@@ -142,12 +142,8 @@ const menuOptions = computed<MenuOption[]>(() => {
           key: '/workspace/interactive',
         },
         {
-          label: renderLabel('OCR修复', '/workspace/ocr-fix'),
-          key: '/workspace/ocr-fix',
-        },
-        {
-          label: renderLabel('EPUB/TXT转换', '/workspace/epub-txt-converter'),
-          key: '/workspace/epub-txt-converter',
+          label: renderLabel('小说工具箱', '/workspace/toolbox'),
+          key: '/workspace/toolbox',
         },
       ],
     },

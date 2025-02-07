@@ -201,8 +201,10 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
       <n-p>
         禁止使用脚本绕过翻译器提交翻译文本，哪怕你觉得自己提交的是正经翻译。
       </n-p>
-      <n-p> 因为种种原因，文库小说不再支持中文翻译小说。 </n-p>
-      <n-p> 本地小说的百度/有道翻译请到【我的收藏->本地小说】里面进行。 </n-p>
+      <n-p> 工作区的OCR修复和EPUB转TXT合并成小说工具箱 </n-p>
+      <n-p>
+        FishHawk长期996,网站开发速度大幅下降已成常态，论坛反馈目前没有精力维护，有问题加群at吧
+      </n-p>
     </bulletin>
 
     <template v-if="whoami.isSignedIn">
