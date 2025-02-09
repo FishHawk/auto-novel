@@ -17,6 +17,8 @@ const message = useMessage();
 type ToolboxFile = Epub | Txt | Srt;
 
 const files = ref<ToolboxFile[]>([]);
+const epubFiles = computed(() => files.value.filter((e) => e instanceof Epub));
+const txtFiles = computed(() => files.value.filter((e) => e instanceof Txt));
 
 const loadFile = async (file: File) => {
   if (files.value.find((it) => it.name === file.name) !== undefined) {
@@ -68,15 +70,15 @@ const fixOcr = () => Toolbox.fixOcr(files.value);
 
 const convertToTxt = () => (files.value = Toolbox.convertToTxt(files.value));
 
-const download = async () => {
-  if (files.value.length === 0) {
+const download = async (files: ToolboxFile[]) => {
+  if (files.length === 0) {
     message.info('未载入文件');
-  } else if (files.value.length === 1) {
-    const file = files.value[0];
+  } else if (files.length === 1) {
+    const file = files[0];
     await downloadFile(file.name, await file.toBlob());
   } else {
     const filesToDownload: [string, Blob][] = [];
-    for (const file of files.value) {
+    for (const file of files) {
       filesToDownload.push([file.name, await file.toBlob()]);
     }
     await downloadFilesPacked(filesToDownload);
@@ -87,6 +89,19 @@ const download = async () => {
 <template>
   <div class="layout-content">
     <n-h1>小说工具箱</n-h1>
+    <bulletin>
+      <n-p>TXT工具</n-p>
+      <n-p
+        ><b>修复OCR换行</b
+        >：OCR输出的文本通常存在额外的换行符，导致翻译器错误。当前修复方法是检测每一行的结尾是否是字符（汉字/日文假名/韩文字符/英文字母），如果是的话则删除行尾的换行符。</n-p
+      >
+      <n-p>　</n-p>
+      <n-p>EPUB工具</n-p>
+      <n-p
+        ><b>图片压缩</b
+        >：压缩Epub内的图片，可以选择压缩格式、压缩质量、图片缩小比例、不压缩的图片</n-p
+      >
+    </bulletin>
 
     <section-header title="文件列表">
       <c-button
@@ -114,34 +129,41 @@ const download = async () => {
       </n-upload-dragger>
     </n-upload>
 
-    <n-flex vertical>
-      <n-text v-for="file of files">
-        <toolbox-file-card :name="file.name" @delete="removeFile(file.name)" />
-      </n-text>
-      <n-empty v-if="files.length === 0" description="未载入文件" />
-    </n-flex>
-
-    <n-list bordered style="margin-top: 20px">
-      <n-list-item>
-        <n-flex vertical>
-          <b>修复OCR换行（只支持TXT格式）</b>
-          OCR输出的文本通常存在额外的换行符，导致翻译器错误。当前修复方法是检测每一行的结尾是否是字符（汉字/日文假名/韩文字符/英文字母），如果是的话则删除行尾的换行符。
-          <n-flex>
-            <c-button label="修复" size="small" @action="fixOcr" />
+    <div v-if="txtFiles.length > 0">
+      <n-h2>TXT</n-h2>
+      <n-list>
+        <n-list-item v-for="file of txtFiles">
+          <toolbox-file-card :file="file" @delete="removeFile(file.name)" />
+        </n-list-item>
+      </n-list>
+      <c-action-wrapper title="批量处理">
+        <n-flex vertical style="margin: 20px 0">
+          <n-flex style="margin-bottom: 8px">
+            <c-button label="修复OCR换行" size="small" @action="fixOcr" />
+            <c-button label="下载" size="small" @action="download(txtFiles)" />
           </n-flex>
         </n-flex>
-      </n-list-item>
+      </c-action-wrapper>
+    </div>
 
-      <n-list-item>
-        <n-flex vertical>
-          <b>下载</b>
+    <div v-if="epubFiles.length > 0">
+      <n-h2>EPUB</n-h2>
+      <n-list>
+        <n-list-item v-for="file of epubFiles">
+          <toolbox-file-card :file="file" @delete="removeFile(file.name)" />
+        </n-list-item>
+      </n-list>
+      <c-action-wrapper title="批量处理">
+        <n-flex vertical style="margin: 20px 0">
           <n-flex>
             <c-button label="转换成TXT" size="small" @action="convertToTxt" />
-            <c-button label="下载" size="small" @action="download" />
+            <c-button label="下载" size="small" @action="download(epubFiles)" />
           </n-flex>
         </n-flex>
-      </n-list-item>
-    </n-list>
+      </c-action-wrapper>
+    </div>
+
+    <n-empty v-if="files.length === 0" description="未载入文件" />
 
     <c-drawer-right v-model:show="showListModal" title="本地小说">
       <div style="padding: 24px 16px">
