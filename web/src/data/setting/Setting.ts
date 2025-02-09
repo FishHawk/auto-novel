@@ -131,7 +131,6 @@ export interface ReaderSetting {
   translationsMode: 'parallel' | 'priority';
   translations: TranslatorId[];
   speakLanguages: string[];
-  enableSakuraReportButton: boolean;
   trimLeadingSpaces: boolean;
   enableSourceLabel: boolean;
   //
@@ -154,7 +153,6 @@ export namespace ReaderSetting {
     translationsMode: 'priority',
     translations: ['sakura', 'gpt', 'youdao', 'baidu'],
     speakLanguages: ['jp'],
-    enableSakuraReportButton: true,
     trimLeadingSpaces: false,
     enableSourceLabel: false,
     //

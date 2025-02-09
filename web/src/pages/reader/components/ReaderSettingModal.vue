@@ -55,13 +55,6 @@ const setCustomFontColor = (color: string) =>
           <c-action-wrapper title="显示翻译来源" align="center">
             <n-switch v-model:value="setting.enableSourceLabel" size="small" />
           </c-action-wrapper>
-          <c-action-wrapper title="Sakura报错按钮" align="center">
-            <n-switch
-              v-model:value="setting.enableSakuraReportButton"
-              size="small"
-            />
-          </c-action-wrapper>
-
           <c-action-wrapper title="去除缩进" align="center">
             <n-switch v-model:value="setting.trimLeadingSpaces" size="small" />
           </c-action-wrapper>

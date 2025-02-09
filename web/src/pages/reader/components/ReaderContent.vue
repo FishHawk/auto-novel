@@ -3,7 +3,6 @@ import { ErrorOutlineOutlined } from '@vicons/material';
 import { useOsTheme } from 'naive-ui';
 import { useScroll } from '@vueuse/core';
 
-import { SakuraRepository } from '@/data/api';
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { WebNovelChapterDto } from '@/model/WebNovel';
@@ -43,69 +42,6 @@ onMounted(async () => {
   }
 });
 
-const createWebIncorrectCase = async (
-  index: number,
-  chapter: WebNovelChapterDto,
-) => {
-  if (props.gnid.type !== 'web') return;
-
-  const jp = chapter.paragraphs[index];
-  const zh = chapter.sakuraParagraphs!![index];
-
-  function truncateParagraphs(
-    paragraphsJp: string[],
-    paragraphsZh: string[],
-    maxLength: number,
-  ) {
-    const truncatedJp: string[] = [];
-    const truncatedZh: string[] = [];
-    let currentLength = 0;
-
-    for (let i = 0; i < paragraphsJp.length; i++) {
-      const pJp = paragraphsJp[i];
-      const pZh = paragraphsZh[i];
-      if (pJp.trim().length === 0 || pJp.startsWith('<图片>')) {
-        continue;
-      }
-      if (currentLength + pJp.length > maxLength) {
-        break;
-      }
-      currentLength += pJp.length;
-      truncatedJp.push(pJp);
-      truncatedZh.push(pZh);
-    }
-    return { jp: truncatedJp, zh: truncatedZh };
-  }
-
-  const { jp: contextJpBefore, zh: contextZhBefore } = truncateParagraphs(
-    chapter.paragraphs.slice(0, index).reverse(),
-    chapter.sakuraParagraphs!.slice(0, index).reverse(),
-    512 - jp.length,
-  );
-  const { jp: contextJpAfter, zh: contextZhAfter } = truncateParagraphs(
-    chapter.paragraphs.slice(index + 1, chapter.paragraphs.length),
-    chapter.sakuraParagraphs!.slice(index + 1, chapter.paragraphs.length),
-    512 - jp.length,
-  );
-
-  const contextJp = [...contextJpBefore.reverse(), jp, ...contextJpAfter];
-  const contextZh = [...contextZhBefore.reverse(), zh, ...contextZhAfter];
-
-  await doAction(
-    SakuraRepository.createWebIncorrectCase({
-      providerId: props.gnid.providerId,
-      novelId: props.gnid.novelId,
-      chapterId: props.chapterId,
-      jp,
-      zh,
-      contextJp,
-      contextZh,
-    }),
-    '提交',
-    message,
-  );
-};
-
 const { setting } = Locator.readerSettingRepository();
 const fontColor = computed(() => {
   const theme = setting.value.theme;
@@ -138,24 +74,6 @@ const fontColor = computed(() => {
           {{ p.source }}
         </n-tag>
         {{ p.text }}
-        <n-popconfirm
-          v-if="p.popover !== undefined"
-          :show-icon="false"
-          placement="top-start"
-          positive-text="提交"
-          :negative-text="null"
-          @positive-click="createWebIncorrectCase(p.popover, chapter)"
-        >
-          <template #trigger>
-            <c-button
-              text
-              style="opacity: 0.5; margin: 2px; vertical-align: middle"
-              :icon="ErrorOutlineOutlined"
-              @action="(e: MouseEvent) => e.stopPropagation()"
-            />
-          </template>
-          这段话翻得不准确？
-        </n-popconfirm>
       </n-p>
       <br v-else-if="!p" />
       <img

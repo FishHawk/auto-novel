@@ -196,9 +196,6 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
         <n-a :href="githubLink" target="_blank">Github</n-a>
       </n-flex>
       <n-p>
-        如果发现Sakura某段翻译得不准确，可以提交错误，给网站收集数据帮助sakura训练。
-      </n-p>
-      <n-p>
         禁止使用脚本绕过翻译器提交翻译文本，哪怕你觉得自己提交的是正经翻译。
       </n-p>
       <n-p> 工作区的OCR修复和EPUB转TXT合并成小说工具箱 </n-p>

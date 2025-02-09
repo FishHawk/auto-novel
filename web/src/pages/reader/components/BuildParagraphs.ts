@@ -10,7 +10,6 @@ export type ReaderParagraph =
       source?: string;
       secondary: boolean;
       needSpeak: boolean;
-      popover?: number;
     }
   | { imageUrl: string }
   | undefined;
@@ -27,7 +26,6 @@ export const buildParagraphs = (
     paragraphs: string[];
     source?: string;
     secondary: boolean;
-    popover?: boolean;
     needSpeak: boolean;
   }[] = [];
   const needSpeakJp =
@@ -74,10 +72,6 @@ export const buildParagraphs = (
             source: t,
             secondary: false,
             needSpeak: needSpeakZh,
-            popover:
-              setting.enableSakuraReportButton &&
-              gnid.type === 'web' &&
-              t === 'sakura',
           });
           break;
         } else {
@@ -101,7 +95,6 @@ export const buildParagraphs = (
             source: t,
             secondary: false,
             needSpeak: needSpeakZh && i === 0,
-            popover: setting.enableSakuraReportButton && t === 'sakura',
           });
         } else {
           merged.push({
@@ -142,7 +135,6 @@ export const buildParagraphs = (
               : undefined,
           secondary: style.secondary,
           needSpeak: style.needSpeak,
-          popover: style.popover === true ? i : undefined,
         });
       }
     }
