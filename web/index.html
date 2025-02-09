@@ -16,6 +16,7 @@
     <meta name="renderer" content="webkit" />
     <meta name="force-rendering" content="webkit" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="theme-color" content="white" />
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-QD8MZ90XFJ"
@@ -41,30 +42,49 @@
     </script>
     <script>
       (() => {
-        function createBodyStyle(backgroundColor) {
+        function applyTheme(toolbarColor, backgroundColor) {
+          document.querySelector("meta[name='theme-color']").content =
+            toolbarColor;
+
           const style = document.createElement('style');
           style.innerHTML = `body { background-color: ${backgroundColor}; }`;
           document.head.appendChild(style);
         }
-        const reg = [
-          /\/novel\/(\w+)\/(\w+)\/(\w+)/,
-          /\/workspace\/reader\/(\w+)\/(\w+)/,
-        ];
-        const isReader = reg.some((r) => r.test(window.location.pathname));
-        const setting = localStorage.getItem(
-          isReader ? 'readerSetting' : 'setting',
-        );
-        if (!setting) return;
-        const json = JSON.parse(setting);
-        const theme = isReader ? json.theme.mode : json.theme;
-        if (
-          theme === 'dark' ||
-          (theme === 'system' &&
-            window.matchMedia('(prefers-color-scheme: dark)').matches)
-        ) {
-          createBodyStyle('rgb(16, 16, 20)');
-        } else if (theme === 'custom') {
-          createBodyStyle(json.theme.bodyColor);
+        function getAndApplyTheme() {
+          const reg = [
+            /\/novel\/(\w+)\/(\w+)\/(\w+)/,
+            /\/workspace\/reader\/(\w+)\/(\w+)/,
+          ];
+          const isReader = reg.some((r) => r.test(window.location.pathname));
+          const setting = localStorage.getItem(
+            isReader ? 'readerSetting' : 'setting',
+          );
+          if (!setting) return;
+          const json = JSON.parse(setting);
+          const theme = isReader ? json.theme.mode : json.theme;
+          if (theme === 'custom') {
+            applyTheme(json.theme.bodyColor, json.theme.bodyColor);
+          } else if (
+            theme === 'dark' ||
+            (theme === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          ) {
+            applyTheme('rgb(24, 24, 28)', 'rgb(16, 16, 20)');
+          } else {
+            applyTheme('white', 'white');
+          }
+        }
+        getAndApplyTheme();
+        if (window.history) {
+          const oldPushState = history.pushState;
+          history.pushState = function pushState() {
+            const ret = oldPushState.apply(this, arguments);
+            getAndApplyTheme();
+            return ret;
+          };
+          window.addEventListener('popstate', () => {
+            getAndApplyTheme();
+          });
         }
       })();
     </script>
