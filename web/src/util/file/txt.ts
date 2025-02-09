@@ -3,7 +3,7 @@ export class Txt {
   name: string;
   text: string;
 
-  private constructor(name: string, text: string) {
+  constructor(name: string, text: string) {
     this.name = name;
     this.text = text;
   }

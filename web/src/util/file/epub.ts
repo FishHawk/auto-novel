@@ -20,7 +20,7 @@ export class Epub {
   opf: Document;
   resources: EpubResource[];
 
-  private constructor(
+  constructor(
     name: string,
     opfDir: string,
     opf: Document,

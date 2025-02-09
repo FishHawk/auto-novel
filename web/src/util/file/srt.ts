@@ -11,7 +11,7 @@ export class Srt {
   name: string;
   subtitles: SrtSubtitle[];
 
-  private constructor(name: string, subtitles: SrtSubtitle[]) {
+  constructor(name: string, subtitles: SrtSubtitle[]) {
     this.name = name;
     this.subtitles = subtitles;
   }

@@ -1,11 +1,23 @@
 import { get } from 'lodash-es';
 
-export const downloadFile = (filename: string, blob: Blob): void => {
+export const downloadFile = (filename: string, blob: Blob) => {
   const el = document.createElement('a');
   el.href = URL.createObjectURL(blob);
   el.target = '_blank';
   el.download = filename;
   el.click();
+};
+
+export const downloadFilesPacked = async (files: [string, Blob][]) => {
+  const { BlobReader, BlobWriter, ZipWriter } = await import('@zip.js/zip.js');
+  const zipBlobWriter = new BlobWriter();
+  const writer = new ZipWriter(zipBlobWriter);
+  await Promise.all(
+    files.map(([filename, blob]) => writer.add(filename, new BlobReader(blob))),
+  );
+  await writer.close();
+  const zipBlob = await zipBlobWriter.getData();
+  downloadFile(`批量下载[${files.length}].zip`, zipBlob);
 };
 
 export const querySearch = <T>(

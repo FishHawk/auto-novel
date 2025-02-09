@@ -32,7 +32,7 @@ export const parseFile = async (
 ) => {
   const ext = file.name.split('.').pop()?.toLowerCase();
   if (ext === undefined) throw '无法获取文件后缀名';
-  if (ext in allowExts) {
+  if (allowExts.includes(ext)) {
     try {
       if (ext === 'txt') {
         return await Txt.fromFile(file);
