@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { Epub, Srt, Txt } from '@/util/file';
+import { parseFile, Srt } from '@/util/file';
 
 import { EpubParserV1 } from './EpubParser';
 import { LocalVolumeDao } from './LocalVolumeDao';
@@ -17,25 +17,27 @@ export const createVolume = async (
 
   const chapters: { chapterId: string; paragraphs: string[] }[] = [];
 
-  if (id.endsWith('.txt')) {
-    const content = await Txt.readContent(file);
-    const jpLines = content.split('\n');
+  const myFile = await parseFile(file);
+
+  if (myFile.type === 'txt') {
+    const lines = myFile.text.split('\n');
     const chunkSize = 1000;
-    for (let i = 0; i < jpLines.length; i += chunkSize) {
-      const paragraphs = jpLines.slice(i, i + chunkSize);
+    for (let i = 0; i < lines.length; i += chunkSize) {
+      const paragraphs = lines.slice(i, i + chunkSize);
       chapters.push({ chapterId: i.toString(), paragraphs });
     }
-  } else if (id.endsWith('.epub')) {
-    await Epub.forEachXHtmlFile(file, (path, doc) => {
-      const paragraphs = EpubParserV1.extractText(doc);
-      chapters.push({ chapterId: path, paragraphs });
+  } else if (myFile.type === 'epub') {
+    myFile.resources.forEach((res) => {
+      if (res.type === 'doc') {
+        const paragraphs = EpubParserV1.extractText(res.doc);
+        chapters.push({ chapterId: res.path, paragraphs });
+      }
     });
-  } else if (id.endsWith('.srt')) {
-    const subtitles = await Srt.readContent(file);
-    const jpLines = subtitles
+  } else if (myFile.type === 'srt') {
+    const lines = myFile.subtitles
       .flatMap((it) => it.text)
       .map((it) => Srt.cleanFormat(it));
-    chapters.push({ chapterId: '0'.toString(), paragraphs: jpLines });
+    chapters.push({ chapterId: '0'.toString(), paragraphs: lines });
   }
 
   for (const { chapterId, paragraphs } of chapters) {

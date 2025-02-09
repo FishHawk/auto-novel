@@ -1,4 +1,4 @@
-import { Epub, Srt, Txt } from '@/util/file';
+import { parseFile } from '@/util/file';
 
 import { EpubParserV1 } from './EpubParser';
 import { LocalVolumeDao } from './LocalVolumeDao';
@@ -46,7 +46,12 @@ export const getTranslationFile = async (
     return { jpLines, zhLinesList };
   };
 
-  if (id.endsWith('.txt')) {
+  const file = await dao.getFile(id);
+  if (file === undefined) throw Error('原始文件不存在');
+
+  const myFile = await parseFile(file.file);
+
+  if (myFile.type === 'txt') {
     const buffer = [];
     for (const { chapterId } of metadata.toc) {
       const { jpLines, zhLinesList } = await getZhLinesList(chapterId);
@@ -65,64 +70,36 @@ export const getTranslationFile = async (
         }
       }
     }
-    return {
-      filename,
-      blob: Txt.writeContent(buffer),
-    };
-  } else if (id.endsWith('.epub')) {
-    const file = await dao.getFile(id);
-    if (file === undefined) throw Error('原始文件不存在');
+    myFile.text = buffer.join('\n');
+  } else if (myFile.type === 'epub') {
+    // 防止部分阅读器使用竖排
+    myFile.opf
+      .getElementsByTagName('spine')
+      .item(0)
+      ?.removeAttribute('page-progression-direction');
 
-    const parseXHtmlBlob = async (blob: Blob) => {
-      const text = await blob.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'application/xhtml+xml');
-      return doc;
-    };
-    const generated = await Epub.modify(file.file, async (path, blobIn) => {
-      if (metadata.toc.some((it) => it.chapterId === path)) {
-        const doc = await parseXHtmlBlob(blobIn);
-        const { zhLinesList } = await getZhLinesList(path);
-        if (zhLinesList.length === 0) return blobIn;
-        await EpubParserV1.injectTranslation(doc, mode, zhLinesList);
-        return new Blob([doc.documentElement.outerHTML], {
-          type: 'text/plain',
-        });
-      } else if (path.endsWith('opf')) {
-        const doc = await parseXHtmlBlob(blobIn);
-        // 防止部分阅读器使用竖排
-        doc
-          .getElementsByTagName('spine')
-          .item(0)
-          ?.removeAttribute('page-progression-direction');
-        return new Blob([doc.documentElement.outerHTML], {
-          type: 'text/plain',
-        });
-      } else if (path.endsWith('css')) {
-        return new Blob([''], { type: 'text/plain' });
-      } else {
-        return blobIn;
+    for (const res of myFile.resources) {
+      if (res.type === 'doc') {
+        if (metadata.toc.some((it) => it.chapterId === res.path)) {
+          const { zhLinesList } = await getZhLinesList(res.path);
+          if (zhLinesList.length > 0) {
+            await EpubParserV1.injectTranslation(res.doc, mode, zhLinesList);
+          }
+        }
+      } else if (res.path.endsWith('css')) {
+        // 清除css格式
+        res.blob = new Blob([''], { type: 'text/plain' });
       }
-    });
-    return {
-      filename,
-      blob: generated,
-    };
-  } else if (id.endsWith('.srt')) {
-    const file = await dao.getFile(id);
-    if (file === undefined) throw Error('原始文件不存在');
-
+    }
+  } else if (myFile.type === 'srt') {
     const { zhLinesList } = await getZhLinesList('0');
-
-    const subtitles = await Srt.readContent(file.file);
-    const newSubtitles: typeof subtitles = [];
-    for (const s of subtitles) {
+    const newSubtitles: typeof myFile.subtitles = [];
+    for (const s of myFile.subtitles) {
       let texts: string[][] = [];
       for (const zhLines of zhLinesList) {
         texts.push(zhLines.slice(0, s.text.length));
         zhLines.splice(0, s.text.length);
       }
-
       if (mode === 'jp-zh') {
         texts.unshift(s.text);
       } else if (mode === 'zh-jp') {
@@ -137,11 +114,11 @@ export const getTranslationFile = async (
         });
       }
     }
-
-    return {
-      filename,
-      blob: Srt.writeContent(newSubtitles),
-    };
+    myFile.subtitles = newSubtitles;
   }
-  throw new Error('不支持的文件格式');
+
+  return {
+    filename,
+    blob: await myFile.toBlob(),
+  };
 };

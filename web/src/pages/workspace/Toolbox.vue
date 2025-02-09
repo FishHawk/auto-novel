@@ -7,12 +7,12 @@ import {
 import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
-import { Epub, Txt } from '@/util/file';
+import { Epub, parseFile, Srt, Txt } from '@/util/file';
 import { downloadFile, RegexUtil } from '@/util';
 
 const message = useMessage();
 
-type ToolboxFile = Epub | Txt;
+type ToolboxFile = Epub | Txt | Srt;
 
 const files = ref<ToolboxFile[]>([]);
 
@@ -21,25 +21,11 @@ const loadFile = async (file: File) => {
     message.warning('文件已经载入');
     return;
   }
-
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (ext === 'txt') {
-    const txt = await Txt.fromFile(file);
-    if (txt === undefined) {
-      message.warning(`无法打开TXT文件:${file.name}`);
-      return;
-    }
-    files.value.push(txt);
-  } else if (ext === 'epub') {
-    const epub = await Epub.fromFile(file);
-    if (epub === undefined) {
-      message.warning(`无法打开EPUB文件:${file.name}`);
-      return;
-    }
-    files.value.push(epub);
-  } else {
-    message.warning(`不支持的文件格式:${file.name}`);
-    return;
+  try {
+    const toolboxFile = await parseFile(file, ['txt', 'epub']);
+    files.value.push(toolboxFile);
+  } catch (e) {
+    message.warning(`${e}`);
   }
 };
 
@@ -128,7 +114,7 @@ const downloadAsTxt = async () => {
   for (const file of files.value) {
     if (file.type === 'txt') {
       downloadFile(file.name, await file.toBlob());
-    } else {
+    } else if (file.type === 'epub') {
       downloadFile(
         file.name.replace(/\.epub$/, '.txt'),
         new Blob([file.getText()], { type: 'text/plain' }),
