@@ -229,22 +229,15 @@ const showWebNovelsModal = ref(false);
                 {{ volumeId }}
               </n-a>
 
-              <n-popconfirm
+              <c-button-confirm
                 v-if="whoami.asMaintainer"
-                :show-icon="false"
-                @positive-click="deleteVolume(volumeId)"
-                :negative-text="null"
-                style="max-width: 300px"
-              >
-                <template #trigger>
-                  <n-button text type="error" style="margin-left: 16px">
-                    删除
-                  </n-button>
-                </template>
-                真的要删除吗？
-                <br />
-                {{ volumeId }}
-              </n-popconfirm>
+                :hint="`真的要删除《${volumeId}》吗？`"
+                label="删除"
+                text
+                type="error"
+                style="margin-left: 16px"
+                @action="deleteVolume(volumeId)"
+              />
             </n-li>
           </n-ul>
         </template>

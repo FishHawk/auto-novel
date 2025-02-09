@@ -7,10 +7,9 @@ import { SakuraTranslator } from '@/domain/translate';
 import { TranslateJob } from '@/model/Translator';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
-import { doAction, useIsWideScreen } from '@/pages/util';
+import { doAction } from '@/pages/util';
 
 const message = useMessage();
-const isWideScreen = useIsWideScreen();
 
 const { setting } = Locator.settingRepository();
 
@@ -18,6 +17,7 @@ const workspace = Locator.sakuraWorkspaceRepository();
 const workspaceRef = workspace.ref;
 
 const showCreateWorkerModal = ref(false);
+const showLocalVolumeDrawer = ref(false);
 
 type ProcessedJob = TranslateJob & {
   progress?: { finished: number; error: number; total: number };
@@ -89,11 +89,7 @@ const clearCache = async () =>
 </script>
 
 <template>
-  <c-layout
-    :sidebar="isWideScreen && !setting.hideLocalVolumeListInWorkspace"
-    :sidebar-width="320"
-    class="layout-content"
-  >
+  <div class="layout-content">
     <n-h1>Sakura工作区</n-h1>
 
     <bulletin>
@@ -145,18 +141,12 @@ const clearCache = async () =>
         :icon="PlusOutlined"
         @action="showCreateWorkerModal = true"
       />
-
-      <n-popconfirm
-        :show-icon="false"
-        @positive-click="clearCache"
-        :negative-text="null"
-        style="max-width: 300px"
-      >
-        <template #trigger>
-          <c-button label="清空缓存" :icon="DeleteOutlineOutlined" />
-        </template>
-        真的要清空缓存吗？
-      </n-popconfirm>
+      <c-button-confirm
+        hint="真的要清空缓存吗？"
+        label="清空缓存"
+        :icon="DeleteOutlineOutlined"
+        @action="clearCache"
+      />
     </section-header>
 
     <n-empty
@@ -180,17 +170,17 @@ const clearCache = async () =>
     </n-list>
 
     <section-header title="任务队列">
-      <n-popconfirm
-        :show-icon="false"
-        @positive-click="deleteAllJobs"
-        :negative-text="null"
-        style="max-width: 300px"
-      >
-        <template #trigger>
-          <c-button label="清空队列" :icon="DeleteOutlineOutlined" />
-        </template>
-        真的要清空队列吗？
-      </n-popconfirm>
+      <c-button
+        label="添加本地小说"
+        :icon="PlusOutlined"
+        @action="showLocalVolumeDrawer = true"
+      />
+      <c-button-confirm
+        hint="真的要清空队列吗？"
+        label="清空队列"
+        :icon="DeleteOutlineOutlined"
+        @action="deleteAllJobs"
+      />
     </section-header>
     <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
     <n-list>
@@ -212,11 +202,12 @@ const clearCache = async () =>
     </n-list>
 
     <job-record-section id="sakura" />
+  </div>
 
-    <template #sidebar>
-      <local-volume-list-specific-translation type="sakura" />
-    </template>
-  </c-layout>
+  <local-volume-list-specific-translation
+    v-model:show="showLocalVolumeDrawer"
+    type="sakura"
+  />
 
   <sakura-worker-modal v-model:show="showCreateWorkerModal" />
 </template>

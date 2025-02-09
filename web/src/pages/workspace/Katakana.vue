@@ -5,13 +5,11 @@ import { UploadCustomRequestOptions } from 'naive-ui';
 import { Locator } from '@/data';
 import { Translator, TranslatorConfig } from '@/domain/translate';
 import { Glossary } from '@/model/Glossary';
-import { useIsWideScreen } from '@/pages/util';
 import { getFullContent } from '@/util/file';
 
 import LoadedVolume from './components/LoadedVolume.vue';
 
 const message = useMessage();
-const isWideScreen = useIsWideScreen();
 const sakuraWorkspace = Locator.sakuraWorkspaceRepository().ref;
 
 interface LoadedVolume {
@@ -176,7 +174,7 @@ const showListModal = ref(false);
 </script>
 
 <template>
-  <c-layout :sidebar="isWideScreen" :sidebar-width="320" class="layout-content">
+  <div class="layout-content">
     <n-h1>术语表工作区</n-h1>
 
     <bulletin>
@@ -192,7 +190,6 @@ const showListModal = ref(false);
       <n-flex vertical style="margin: 20px 0">
         <n-flex style="margin-bottom: 8px">
           <c-button
-            v-if="!isWideScreen"
             label="加载本地小说"
             :icon="PlusOutlined"
             size="small"
@@ -326,21 +323,12 @@ const showListModal = ref(false);
         </n-table>
       </n-scrollbar>
     </div>
+  </div>
 
-    <template #sidebar>
-      <local-volume-list-katakana @volume-loaded="loadLocalFile" />
-    </template>
-
-    <c-drawer-right
-      v-if="!isWideScreen"
-      v-model:show="showListModal"
-      title="本地小说"
-    >
-      <div style="padding: 24px 16px">
-        <local-volume-list-katakana hide-title @volume-loaded="loadLocalFile" />
-      </div>
-    </c-drawer-right>
-  </c-layout>
+  <local-volume-list-katakana
+    v-model:show="showListModal"
+    @volume-loaded="loadLocalFile"
+  />
 
   <c-modal title="选择Sakura翻译器" v-model:show="showSakuraSelectModal">
     <n-radio-group v-model:value="selectedSakuraWorkerId">

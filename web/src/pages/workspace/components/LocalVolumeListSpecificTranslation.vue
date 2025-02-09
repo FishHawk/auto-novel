@@ -121,18 +121,18 @@ const progressFilterFunc = computed(() => {
 </script>
 
 <template>
-  <section-header title="本地翻译设置"></section-header>
-  <translate-options
-    ref="translateOptions"
-    :gnid="GenericNovelId.local('')"
-    :glossary="{}"
-  />
   <local-volume-list
     :filter="progressFilterFunc"
     :options="{ 全部排队: queueAllVolumes }"
     @volume-add="queueVolume($event.name)"
   >
     <template #extra>
+      <translate-options
+        ref="translateOptions"
+        :gnid="GenericNovelId.local('')"
+        :glossary="{}"
+      />
+      <n-divider style="margin: 12px 0" />
       <c-action-wrapper title="状态">
         <c-radio-group
           v-model:value="progressFilter"
@@ -192,19 +192,15 @@ const progressFilterFunc = computed(() => {
 
           <div style="flex: 1" />
 
-          <n-popconfirm
-            :show-icon="false"
-            @positive-click="deleteVolume(volume.id)"
-            :negative-text="null"
-            style="max-width: 300px"
-          >
-            <template #trigger>
-              <c-icon-button :icon="DeleteOutlineOutlined" type="error" />
-            </template>
-            真的要删除吗？
-            <br />
-            {{ volume.id }}
-          </n-popconfirm>
+          <c-button-confirm
+            :hint="`真的要删除《${volume.id}》吗？`"
+            :icon="DeleteOutlineOutlined"
+            size="tiny"
+            secondary
+            circle
+            type="error"
+            @action="deleteVolume(volume.id)"
+          />
         </n-flex>
       </n-flex>
     </template>

@@ -65,11 +65,6 @@ const playSound = (source: string) => {
             <n-checkbox v-model:checked="setting.hideCommmentWenkuNovel">
               隐藏文库小说评论
             </n-checkbox>
-            <n-checkbox
-              v-model:checked="setting.hideLocalVolumeListInWorkspace"
-            >
-              隐藏GPT/Sakura工作区本地小说列表
-            </n-checkbox>
             <n-checkbox v-model:checked="setting.showTagInWebFavored">
               显示收藏夹里网络小说的标签
             </n-checkbox>

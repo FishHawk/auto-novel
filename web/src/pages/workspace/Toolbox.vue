@@ -165,10 +165,9 @@ const download = async (files: ToolboxFile[]) => {
 
     <n-empty v-if="files.length === 0" description="未载入文件" />
 
-    <c-drawer-right v-model:show="showListModal" title="本地小说">
-      <div style="padding: 24px 16px">
-        <local-volume-list-katakana hide-title @volume-loaded="loadLocalFile" />
-      </div>
-    </c-drawer-right>
+    <local-volume-list-katakana
+      v-model:show="showListModal"
+      @volume-loaded="loadLocalFile"
+    />
   </div>
 </template>

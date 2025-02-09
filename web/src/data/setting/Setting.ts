@@ -8,7 +8,6 @@ export interface Setting {
   tocCollapseInNarrowScreen: boolean;
   hideCommmentWebNovel: boolean;
   hideCommmentWenkuNovel: boolean;
-  hideLocalVolumeListInWorkspace: boolean;
   showTagInWebFavored: boolean;
   favoriteCreateTimeFirst: boolean;
   //
@@ -41,7 +40,6 @@ export namespace Setting {
     tocCollapseInNarrowScreen: true,
     hideCommmentWebNovel: false,
     hideCommmentWenkuNovel: false,
-    hideLocalVolumeListInWorkspace: false,
     showTagInWebFavored: false,
     favoriteCreateTimeFirst: false,
     //
