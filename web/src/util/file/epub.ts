@@ -72,7 +72,7 @@ export class Epub {
         continue;
       }
 
-      if (entry.filename.endsWith('xhtml')) {
+      if (entry.filename.endsWith('xhtml') || entry.filename.endsWith('html')) {
         resources.push({
           path: entry.filename,
           type: 'doc',
