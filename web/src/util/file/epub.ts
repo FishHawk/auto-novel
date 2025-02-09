@@ -68,7 +68,9 @@ export class Epub {
 
     const resources: EpubResource[] = [];
     for (const entry of entries.values()) {
-      if (entry.filename in ['mimetype', 'META-INF/container.xml']) {
+      if (
+        ['mimetype', 'META-INF/container.xml', opfPath].includes(entry.filename)
+      ) {
         continue;
       }
 
@@ -107,9 +109,9 @@ export class Epub {
     await writeText('mimetype', templateMimetype);
     await writeText(
       'META-INF/container.xml',
-      templateContainer.replace('OEBPS/content.opf', this.opfDir),
+      templateContainer.replace('OEBPS/', this.opfDir),
     );
-    await writeDoc(this.opfDir, this.opf);
+    await writeDoc(this.opfDir + 'content.opf', this.opf);
 
     for (const res of this.resources) {
       if (res.type === 'doc') {
