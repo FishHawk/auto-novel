@@ -4,17 +4,16 @@ import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
 import { TranslateJob } from '@/model/Translator';
-import { doAction, useIsWideScreen } from '@/pages/util';
+
+import { doAction } from '@/pages/util';
 
 const message = useMessage();
-const isWideScreen = useIsWideScreen();
-
-const { setting } = Locator.settingRepository();
 
 const workspace = Locator.gptWorkspaceRepository();
 const workspaceRef = workspace.ref;
 
 const showCreateWorkerModal = ref(false);
+const showLocalVolumeDrawer = ref(false);
 
 type ProcessedJob = TranslateJob & {
   progress?: { finished: number; error: number; total: number };
@@ -80,11 +79,7 @@ const clearCache = async () =>
 </script>
 
 <template>
-  <c-layout
-    :sidebar="isWideScreen && !setting.hideLocalVolumeListInWorkspace"
-    :sidebar-width="320"
-    class="layout-content"
-  >
+  <div class="layout-content">
     <n-h1>GPT工作区</n-h1>
 
     <bulletin>
@@ -140,6 +135,11 @@ const clearCache = async () =>
 
     <section-header title="任务队列">
       <c-button
+        label="添加本地小说"
+        :icon="PlusOutlined"
+        @action="showLocalVolumeDrawer = true"
+      />
+      <c-button
         label="清空队列"
         :icon="DeleteOutlineOutlined"
         @action="deleteAllJobs()"
@@ -165,11 +165,12 @@ const clearCache = async () =>
     </n-list>
 
     <job-record-section id="gpt" />
+  </div>
 
-    <template #sidebar>
-      <local-volume-list-specific-translation type="gpt" />
-    </template>
-  </c-layout>
+  <local-volume-list-specific-translation
+    v-model:show="showLocalVolumeDrawer"
+    type="sakura"
+  />
 
   <gpt-worker-modal v-model:show="showCreateWorkerModal" />
 </template>

@@ -121,18 +121,18 @@ const progressFilterFunc = computed(() => {
 </script>
 
 <template>
-  <section-header title="本地翻译设置"></section-header>
-  <translate-options
-    ref="translateOptions"
-    :gnid="GenericNovelId.local('')"
-    :glossary="{}"
-  />
   <local-volume-list
     :filter="progressFilterFunc"
     :options="{ 全部排队: queueAllVolumes }"
     @volume-add="queueVolume($event.name)"
   >
     <template #extra>
+      <translate-options
+        ref="translateOptions"
+        :gnid="GenericNovelId.local('')"
+        :glossary="{}"
+      />
+      <n-divider style="margin: 12px 0" />
       <c-action-wrapper title="状态">
         <c-radio-group
           v-model:value="progressFilter"
