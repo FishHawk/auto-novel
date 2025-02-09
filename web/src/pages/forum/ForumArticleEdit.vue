@@ -18,13 +18,20 @@ const router = useRouter();
 const isWideScreen = useIsWideScreen();
 const message = useMessage();
 
+const { whoami } = Locator.authRepository();
+
 const store = articleId !== undefined ? useArticleStore(articleId) : undefined;
 
-const articleCategoryOptions = [
-  { value: 'General', label: '小说交流' },
-  { value: 'Guide', label: '使用指南' },
-  { value: 'Support', label: '反馈与建议' },
-];
+const articleCategoryOptions = whoami.value.asMaintainer
+  ? [
+      { value: 'General', label: '小说交流' },
+      { value: 'Guide', label: '使用指南' },
+      { value: 'Support', label: '反馈与建议' },
+    ]
+  : [
+      { value: 'General', label: '小说交流' },
+      { value: 'Support', label: '反馈与建议' },
+    ];
 
 const allowSubmit = ref(articleId === undefined);
 const formRef = ref<FormInst>();
