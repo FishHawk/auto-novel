@@ -95,9 +95,9 @@ const clearCache = async () =>
         <n-a href="https://platform.deepseek.com/usage" target="_blank">
           DeepSeek API
         </n-a>
-        <n-p>不再支持GPT web，推荐使用deepseek API，价格很低。</n-p>
-        <n-p>本地小说支持韩语等其他语种，网络小说/文库小说暂时只允许日语。</n-p>
       </n-flex>
+      <n-p>不再支持GPT web，推荐使用deepseek API，价格很低。</n-p>
+      <n-p>本地小说支持韩语等其他语种，网络小说/文库小说暂时只允许日语。</n-p>
     </bulletin>
 
     <section-header title="翻译器">
@@ -106,7 +106,8 @@ const clearCache = async () =>
         :icon="PlusOutlined"
         @action="showCreateWorkerModal = true"
       />
-      <c-button
+      <c-button-confirm
+        hint="真的要清空缓存吗？"
         label="清空缓存"
         :icon="DeleteOutlineOutlined"
         @action="clearCache"
@@ -139,10 +140,11 @@ const clearCache = async () =>
         :icon="PlusOutlined"
         @action="showLocalVolumeDrawer = true"
       />
-      <c-button
+      <c-button-confirm
+        hint="真的要清空队列吗？"
         label="清空队列"
         :icon="DeleteOutlineOutlined"
-        @action="deleteAllJobs()"
+        @action="deleteAllJobs"
       />
     </section-header>
     <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
@@ -169,7 +171,7 @@ const clearCache = async () =>
 
   <local-volume-list-specific-translation
     v-model:show="showLocalVolumeDrawer"
-    type="sakura"
+    type="gpt"
   />
 
   <gpt-worker-modal v-model:show="showCreateWorkerModal" />
