@@ -46,19 +46,15 @@ const deleteVolume = (volumeId: string) =>
 
           <div style="flex: 1" />
 
-          <n-popconfirm
-            :show-icon="false"
-            @positive-click="deleteVolume(volume.id)"
-            :negative-text="null"
-            style="max-width: 300px"
-          >
-            <template #trigger>
-              <c-icon-button :icon="DeleteOutlineOutlined" type="error" />
-            </template>
-            真的要删除吗？
-            <br />
-            {{ volume.id }}
-          </n-popconfirm>
+          <c-button-confirm
+            :hint="`真的要删除《${volume.id}》吗？`"
+            :icon="DeleteOutlineOutlined"
+            size="tiny"
+            secondary
+            circle
+            type="error"
+            @action="deleteVolume(volume.id)"
+          />
         </n-flex>
       </n-flex>
     </template>

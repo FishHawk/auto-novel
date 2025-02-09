@@ -141,18 +141,12 @@ const clearCache = async () =>
         :icon="PlusOutlined"
         @action="showCreateWorkerModal = true"
       />
-
-      <n-popconfirm
-        :show-icon="false"
-        @positive-click="clearCache"
-        :negative-text="null"
-        style="max-width: 300px"
-      >
-        <template #trigger>
-          <c-button label="清空缓存" :icon="DeleteOutlineOutlined" />
-        </template>
-        真的要清空缓存吗？
-      </n-popconfirm>
+      <c-button-confirm
+        hint="真的要清空缓存吗？"
+        label="清空缓存"
+        :icon="DeleteOutlineOutlined"
+        @action="clearCache"
+      />
     </section-header>
 
     <n-empty
@@ -181,17 +175,12 @@ const clearCache = async () =>
         :icon="PlusOutlined"
         @action="showLocalVolumeDrawer = true"
       />
-      <n-popconfirm
-        :show-icon="false"
-        @positive-click="deleteAllJobs"
-        :negative-text="null"
-        style="max-width: 300px"
-      >
-        <template #trigger>
-          <c-button label="清空队列" :icon="DeleteOutlineOutlined" />
-        </template>
-        真的要清空队列吗？
-      </n-popconfirm>
+      <c-button-confirm
+        hint="真的要清空队列吗？"
+        label="清空队列"
+        :icon="DeleteOutlineOutlined"
+        @action="deleteAllJobs"
+      />
     </section-header>
     <n-empty v-if="workspaceRef.jobs.length === 0" description="没有任务" />
     <n-list>
