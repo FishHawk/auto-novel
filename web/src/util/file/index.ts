@@ -5,6 +5,7 @@ import { Txt } from './txt';
 export { Epub };
 export { Srt };
 export { Txt };
+export type ParsedFile = Epub | Srt | Txt;
 
 export const getFullContent = async (file: File) => {
   if (file.name.endsWith('.txt') || file.name.endsWith('.srt')) {

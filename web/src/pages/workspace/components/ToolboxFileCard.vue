@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, RemoveRedEyeOutlined } from '@vicons/material';
-import { Epub, Txt, Srt } from '@/util/file';
-import { downloadFile } from '@/util';
+
+import { ParsedFile } from '@/util/file';
 
 defineProps<{
-  file: Epub | Txt | Srt;
+  file: ParsedFile;
 }>();
 
 const emit = defineEmits<{

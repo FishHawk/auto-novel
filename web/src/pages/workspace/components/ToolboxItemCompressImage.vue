@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { Epub } from '@/util/file';
+import { Epub, ParsedFile } from '@/util/file';
+
+const props = defineProps<{
+  files: ParsedFile[];
+}>();
 
 const compressionRate = ref(0.8);
 const scaleRatio = ref(1.0);
