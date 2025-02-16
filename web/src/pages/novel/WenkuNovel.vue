@@ -108,7 +108,7 @@ const showWebNovelsModal = ref(false);
             </n-h2>
 
             <ReuseTagGroup label="作者" :tags="novelResult.value.authors" />
-            <ReuseTagGroup label="插图" :tags="novelResult.value.artists" />
+            <ReuseTagGroup label="画师" :tags="novelResult.value.artists" />
             <ReuseTagGroup
               label="出版"
               :tags="[
