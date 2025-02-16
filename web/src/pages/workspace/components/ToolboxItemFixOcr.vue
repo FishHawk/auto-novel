@@ -47,10 +47,13 @@ const fixOcrTxt = (txt: Txt) => {
   txt.text = lines.join('\n');
 };
 
-const fixOcr = () =>
-  Toolbox.apply(props.files, {
-    txt: fixOcrTxt,
-  });
+const fixOcr = () => {
+  for (const file of props.files) {
+    if (file.type === 'txt') {
+      fixOcrTxt(file);
+    }
+  }
+};
 </script>
 
 <template>

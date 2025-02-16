@@ -16,8 +16,12 @@ const imageFormatOptions = [
   { label: 'WEBP', value: 'image/webp' },
 ];
 
-const compressEpubImages = async () => {
-  //   const file = epub_file.copy(); //创建深层复制，防止对文件造成不可逆的修改
+const showImagePreview = ref(false);
+
+const showImageSelector = ref(false);
+const blacklist = ref([]);
+
+const compressEpubImages = async (epub: Epub) => {
   //   if (
   //     compress_setting.format === '' &&
   //     compress_setting.compression_rate === 1 &&
@@ -66,6 +70,14 @@ const compressEpubImages = async () => {
   //     e.path = newPath;
   //   });
 };
+
+const compressImages = () => {
+  for (const file of props.files) {
+    if (file.type === 'epub') {
+      compressEpubImages(file);
+    }
+  }
+};
 </script>
 
 <template>
@@ -109,19 +121,24 @@ const compressEpubImages = async () => {
         </n-text>
       </c-action-wrapper>
 
-      <!--
-      <c-action-wrapper title="黑名单（不处理的图片）" align="center">
+      <n-button-group size="small">
+        <c-button label="确定" @action="compressImages" />
+        <c-button label="预览" @action="showImagePreview = !showImagePreview" />
         <c-button
-          :label="`选中图片 (${setting.img.blacklist.length})`"
-          size="tiny"
-          secondary
-          @action="showImgs = !showImgs"
+          label="黑名单"
+          @action="showImageSelector = !showImageSelector"
         />
-      </c-action-wrapper> -->
+      </n-button-group>
 
-      <n-flex>
-        <c-button label="确定" size="small" @action="compressEpubImages" />
-      </n-flex>
+      <template v-if="showImagePreview">
+        <n-p>图片压缩效果预览</n-p>
+        <n-p>未实现</n-p>
+      </template>
+
+      <template v-if="showImageSelector">
+        <n-p>手动选择不压缩的图片，已选择 {{ blacklist.length }}</n-p>
+        <n-p>未实现</n-p>
+      </template>
     </n-flex>
   </n-flex>
 </template>
