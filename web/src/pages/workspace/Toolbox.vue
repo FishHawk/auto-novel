@@ -7,16 +7,14 @@ import {
 import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
-import { Epub, parseFile, Srt, Txt } from '@/util/file';
+import { ParsedFile, parseFile } from '@/util/file';
 import { downloadFile, downloadFilesPacked } from '@/util';
 
 import { Toolbox } from './Toolbox';
 
 const message = useMessage();
 
-type ToolboxFile = Epub | Txt | Srt;
-
-const files = ref<ToolboxFile[]>([]);
+const files = ref<ParsedFile[]>([]);
 
 const loadFile = async (file: File) => {
   if (files.value.find((it) => it.name === file.name) !== undefined) {
@@ -64,8 +62,6 @@ const customRequest = ({
 
 const showListModal = ref(false);
 
-const fixOcr = () => Toolbox.fixOcr(files.value);
-
 const convertToTxt = () => (files.value = Toolbox.convertToTxt(files.value));
 
 const download = async () => {
@@ -88,19 +84,6 @@ const download = async () => {
   <div class="layout-content">
     <n-h1>小说工具箱</n-h1>
 
-    <section-header title="文件列表">
-      <c-button
-        label="加载本地小说"
-        :icon="PlusOutlined"
-        @action="showListModal = true"
-      />
-      <c-button
-        label="清空"
-        :icon="DeleteOutlineOutlined"
-        @action="clearFile"
-      />
-    </section-header>
-
     <n-upload
       :show-file-list="false"
       accept=".txt,.epub"
@@ -114,22 +97,33 @@ const download = async () => {
       </n-upload-dragger>
     </n-upload>
 
+    <n-flex>
+      <c-button
+        label="加载本地小说"
+        :icon="PlusOutlined"
+        @action="showListModal = true"
+      />
+      <c-button
+        label="清空"
+        :icon="DeleteOutlineOutlined"
+        @action="clearFile"
+      />
+    </n-flex>
+
     <n-flex vertical>
       <n-text v-for="file of files">
-        <toolbox-file-card :name="file.name" @delete="removeFile(file.name)" />
+        <toolbox-file-card :file="file" @delete="removeFile(file.name)" />
       </n-text>
       <n-empty v-if="files.length === 0" description="未载入文件" />
     </n-flex>
 
     <n-list bordered style="margin-top: 20px">
       <n-list-item>
-        <n-flex vertical>
-          <b>修复OCR换行（只支持TXT格式）</b>
-          OCR输出的文本通常存在额外的换行符，导致翻译器错误。当前修复方法是检测每一行的结尾是否是字符（汉字/日文假名/韩文字符/英文字母），如果是的话则删除行尾的换行符。
-          <n-flex>
-            <c-button label="修复" size="small" @action="fixOcr" />
-          </n-flex>
-        </n-flex>
+        <toolbox-item-compress-image :files="files" />
+      </n-list-item>
+
+      <n-list-item>
+        <toolbox-item-fix-ocr :files="files" />
       </n-list-item>
 
       <n-list-item>
