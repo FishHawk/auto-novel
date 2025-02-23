@@ -2,8 +2,6 @@
 import { ParsedFile, Txt } from '@/util/file';
 import { RegexUtil } from '@/util';
 
-import { Toolbox } from '../Toolbox';
-
 const props = defineProps<{
   files: ParsedFile[];
 }>();

@@ -10,8 +10,6 @@ import { Locator } from '@/data';
 import { ParsedFile, parseFile } from '@/util/file';
 import { downloadFile, downloadFilesPacked } from '@/util';
 
-import { Toolbox } from './Toolbox';
-
 const message = useMessage();
 
 const files = ref<ParsedFile[]>([]);
@@ -62,10 +60,6 @@ const customRequest = ({
 
 const showListModal = ref(false);
 
-const convertToTxt = async () => {
-  files.value = await Toolbox.convertToTxt(files.value);
-};
-
 const download = async () => {
   if (files.value.length === 0) {
     message.info('未载入文件');
@@ -110,6 +104,7 @@ const download = async () => {
         :icon="DeleteOutlineOutlined"
         @action="clearFile"
       />
+      <c-button label="下载" @action="download" />
     </n-flex>
 
     <n-flex vertical>
@@ -129,13 +124,7 @@ const download = async () => {
       </n-list-item>
 
       <n-list-item>
-        <n-flex vertical>
-          <b>下载</b>
-          <n-flex>
-            <c-button label="转换成TXT" size="small" @action="convertToTxt" />
-            <c-button label="下载" size="small" @action="download" />
-          </n-flex>
-        </n-flex>
+        <toolbox-item-convert v-model:files="files" />
       </n-list-item>
     </n-list>
 
