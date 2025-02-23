@@ -78,18 +78,21 @@ export const getTranslationFile = async (
       .item(0)
       ?.removeAttribute('page-progression-direction');
 
-    for (const res of myFile.resources) {
-      if (res.type === 'doc') {
-        if (metadata.toc.some((it) => it.chapterId === res.path)) {
-          const { zhLinesList } = await getZhLinesList(res.path);
-          if (zhLinesList.length > 0) {
-            await EpubParserV1.injectTranslation(res.doc, mode, zhLinesList);
-          }
+    for await (const [res, doc] of myFile.iterDoc()) {
+      if (metadata.toc.some((it) => it.chapterId === res.href)) {
+        const { zhLinesList } = await getZhLinesList(res.href);
+        if (zhLinesList.length > 0) {
+          await EpubParserV1.injectTranslation(doc, mode, zhLinesList);
         }
-      } else if (res.path.endsWith('css')) {
-        // 清除css格式
-        res.blob = new Blob([''], { type: 'text/plain' });
       }
+      res.blob = new Blob([doc.documentElement.outerHTML], {
+        type: res.blob.type,
+      });
+    }
+
+    // 清除css格式
+    for await (const res of myFile.iter('text/css')) {
+      res.blob = new Blob([''], { type: 'text/css' });
     }
   } else if (myFile.type === 'srt') {
     const { zhLinesList } = await getZhLinesList('0');

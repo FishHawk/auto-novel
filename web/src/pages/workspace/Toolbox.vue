@@ -62,7 +62,9 @@ const customRequest = ({
 
 const showListModal = ref(false);
 
-const convertToTxt = () => (files.value = Toolbox.convertToTxt(files.value));
+const convertToTxt = async () => {
+  files.value = await Toolbox.convertToTxt(files.value);
+};
 
 const download = async () => {
   if (files.value.length === 0) {

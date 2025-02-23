@@ -27,12 +27,10 @@ export const createVolume = async (
       chapters.push({ chapterId: i.toString(), paragraphs });
     }
   } else if (myFile.type === 'epub') {
-    myFile.resources.forEach((res) => {
-      if (res.type === 'doc') {
-        const paragraphs = EpubParserV1.extractText(res.doc);
-        chapters.push({ chapterId: res.path, paragraphs });
-      }
-    });
+    for await (const [res, doc] of myFile.iterDoc()) {
+      const paragraphs = EpubParserV1.extractText(doc);
+      chapters.push({ chapterId: res.href, paragraphs });
+    }
   } else if (myFile.type === 'srt') {
     const lines = myFile.subtitles
       .flatMap((it) => it.text)

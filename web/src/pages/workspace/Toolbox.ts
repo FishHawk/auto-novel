@@ -1,17 +1,19 @@
 import { Epub, ParsedFile, Txt } from '@/util/file';
 
-const convertEpubToTxt = (epub: Epub) => {
-  return new Txt(epub.name.replace(/\.epub$/i, '.txt'), epub.getText());
+const convertEpubToTxt = async (epub: Epub) => {
+  return new Txt(epub.name.replace(/\.epub$/i, '.txt'), await epub.getText());
 };
 
 export namespace Toolbox {
-  export const convertToTxt = (files: ParsedFile[]) => {
-    return files.map((file) => {
+  export const convertToTxt = async (files: ParsedFile[]) => {
+    const newFiles: ParsedFile[] = [];
+    for (const file of files) {
       if (file.type === 'epub') {
-        return convertEpubToTxt(file);
+        newFiles.push(await convertEpubToTxt(file));
       } else {
-        return file;
+        newFiles.push(file);
       }
-    });
+    }
+    return newFiles;
   };
 }
