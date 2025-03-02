@@ -24,7 +24,7 @@ const compressImage = async (blob: Blob) => {
   const ctx = canvas.getContext('2d')!;
   const img = await createImageBitmap(blob);
 
-  const scaleRatioValue = Math.max(1, scaleRatio.value);
+  const scaleRatioValue = Math.min(1, scaleRatio.value);
   canvas.width = img.width * scaleRatioValue;
   canvas.height = img.height * scaleRatioValue;
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -69,6 +69,7 @@ interface EpubImage {
   blob: Blob;
   uri: string;
   blobCompressed: Blob | undefined;
+  uriCompressed: string;
 }
 interface EpubDetail {
   name: string;
@@ -97,6 +98,7 @@ const getEpubDetailList = async () => {
           blob: res.blob,
           uri: URL.createObjectURL(res.blob),
           blobCompressed,
+          uriCompressed: URL.createObjectURL(blobCompressed ?? res.blob),
         });
         detail.size += res.blob.size;
         detail.sizeCompressed += (blobCompressed ?? res.blob).size;
@@ -166,7 +168,7 @@ const toggleShowDetail = async () => {
       </n-button-group>
 
       <template v-if="showDetail">
-        <n-text>点击图片预览压缩效果（未完成）</n-text>
+        <n-text>点击图片预览压缩效果</n-text>
         <n-empty v-if="detailList.length === 0" description="未载入文件" />
         <template v-for="detail of detailList">
           <n-text>
@@ -182,7 +184,7 @@ const toggleShowDetail = async () => {
                   v-for="image of detail.images"
                   height="150"
                   :src="image.uri"
-                  :preview-src="image.uri"
+                  :preview-src="image.uriCompressed"
                   :alt="image.id"
                   style="border-radius: 2px"
                 />

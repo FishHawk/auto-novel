@@ -107,7 +107,7 @@ const download = async () => {
       <c-button label="下载" @action="download" />
     </n-flex>
 
-    <n-flex vertical>
+    <n-flex vertical style="margin-top: 16px">
       <n-text v-for="file of files">
         <toolbox-file-card :file="file" @delete="removeFile(file.name)" />
       </n-text>
