@@ -115,12 +115,18 @@ const download = async () => {
     </n-flex>
 
     <n-divider />
-    <toolbox-item-compress-image :files="files" />
-    <n-divider />
-    <toolbox-item-fix-ocr :files="files" />
-    <n-divider />
-    <toolbox-item-convert v-model:files="files" />
-    <n-divider />
+
+    <n-tabs type="segment" animated>
+      <n-tab-pane name="1" tab="EPUB：压缩图片">
+        <toolbox-item-compress-image :files="files" />
+      </n-tab-pane>
+      <n-tab-pane name="2" tab="TXT：修复OCR换行">
+        <toolbox-item-fix-ocr :files="files" />
+      </n-tab-pane>
+      <n-tab-pane name="3" tab="EPUB：转换成TXT">
+        <toolbox-item-convert v-model:files="files" />
+      </n-tab-pane>
+    </n-tabs>
 
     <local-volume-list-katakana
       v-model:show="showListModal"

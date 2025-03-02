@@ -125,74 +125,68 @@ const toggleShowDetail = async () => {
 
 <template>
   <n-flex vertical>
-    <b>EPUB：压缩图片</b>
+    <c-action-wrapper title="格式">
+      <c-radio-group
+        v-model:value="imageFormat"
+        :options="imageFormatOptions"
+        size="small"
+      />
+    </c-action-wrapper>
 
-    <n-flex vertical>
-      <c-action-wrapper title="格式">
-        <c-radio-group
-          v-model:value="imageFormat"
-          :options="imageFormatOptions"
-          size="small"
-        />
-      </c-action-wrapper>
+    <c-action-wrapper title="压缩率" align="center">
+      <n-slider
+        v-model:value="quality"
+        :max="1"
+        :min="0.1"
+        :step="0.05"
+        :format-tooltip="(value: number) => `${(value * 100).toFixed(0)}%`"
+        style="max-width: 400px"
+      />
+      <n-text style="width: 6em"> {{ (quality * 100).toFixed(0) }}% </n-text>
+    </c-action-wrapper>
 
-      <c-action-wrapper title="压缩率" align="center">
-        <n-slider
-          v-model:value="quality"
-          :max="1"
-          :min="0.1"
-          :step="0.05"
-          :format-tooltip="(value: number) => `${(value * 100).toFixed(0)}%`"
-          style="max-width: 400px"
-        />
-        <n-text style="width: 6em"> {{ (quality * 100).toFixed(0) }}% </n-text>
-      </c-action-wrapper>
+    <c-action-wrapper title="尺寸" align="center">
+      <n-slider
+        v-model:value="scaleRatio"
+        :max="1"
+        :min="0.1"
+        :step="0.05"
+        :format-tooltip="(value: number) => `${(value * 100).toFixed(0)}%`"
+        style="max-width: 400px"
+      />
+      <n-text style="width: 6em"> {{ (scaleRatio * 100).toFixed(0) }}% </n-text>
+    </c-action-wrapper>
 
-      <c-action-wrapper title="尺寸" align="center">
-        <n-slider
-          v-model:value="scaleRatio"
-          :max="1"
-          :min="0.1"
-          :step="0.05"
-          :format-tooltip="(value: number) => `${(value * 100).toFixed(0)}%`"
-          style="max-width: 400px"
-        />
-        <n-text style="width: 6em">
-          {{ (scaleRatio * 100).toFixed(0) }}%
+    <n-button-group size="small">
+      <c-button label="确定" @action="compressImages" />
+      <c-button label="详情" @action="toggleShowDetail" />
+    </n-button-group>
+
+    <template v-if="showDetail">
+      <n-text>点击图片预览压缩效果</n-text>
+      <n-empty v-if="detailList.length === 0" description="未载入文件" />
+      <template v-for="detail of detailList">
+        <n-text>
+          [{{ Humanize.bytes(detail.size) }}
+          =>
+          {{ Humanize.bytes(detail.sizeCompressed) }}]
+          {{ detail.name }}
         </n-text>
-      </c-action-wrapper>
-
-      <n-button-group size="small">
-        <c-button label="确定" @action="compressImages" />
-        <c-button label="详情" @action="toggleShowDetail" />
-      </n-button-group>
-
-      <template v-if="showDetail">
-        <n-text>点击图片预览压缩效果</n-text>
-        <n-empty v-if="detailList.length === 0" description="未载入文件" />
-        <template v-for="detail of detailList">
-          <n-text>
-            [{{ Humanize.bytes(detail.size) }}
-            =>
-            {{ Humanize.bytes(detail.sizeCompressed) }}]
-            {{ detail.name }}
-          </n-text>
-          <c-x-scrollbar style="margin-top: 16px">
-            <n-image-group show-toolbar-tooltip>
-              <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
-                <n-image
-                  v-for="image of detail.images"
-                  height="150"
-                  :src="image.uri"
-                  :preview-src="image.uriCompressed"
-                  :alt="image.id"
-                  style="border-radius: 2px"
-                />
-              </n-flex>
-            </n-image-group>
-          </c-x-scrollbar>
-        </template>
+        <c-x-scrollbar style="margin-top: 16px">
+          <n-image-group show-toolbar-tooltip>
+            <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
+              <n-image
+                v-for="image of detail.images"
+                height="150"
+                :src="image.uri"
+                :preview-src="image.uriCompressed"
+                :alt="image.id"
+                style="border-radius: 2px"
+              />
+            </n-flex>
+          </n-image-group>
+        </c-x-scrollbar>
       </template>
-    </n-flex>
+    </template>
   </n-flex>
 </template>

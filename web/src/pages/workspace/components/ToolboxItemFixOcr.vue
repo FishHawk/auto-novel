@@ -56,7 +56,6 @@ const fixOcr = () => {
 
 <template>
   <n-flex vertical>
-    <b>TXT：修复OCR换行</b>
     OCR输出的文本通常存在额外的换行符，导致翻译器错误。当前修复方法是检测每一行的结尾是否是字符（汉字/日文假名/韩文字符/英文字母），如果是的话则删除行尾的换行符。
     <n-flex>
       <c-button label="修复" size="small" @action="fixOcr" />

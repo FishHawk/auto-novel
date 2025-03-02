@@ -28,7 +28,6 @@ const convertToTxt = async () => {
 
 <template>
   <n-flex vertical>
-    <b>EPUB：转换成TXT</b>
     <n-flex>
       <c-button label="转换" size="small" @action="convertToTxt" />
     </n-flex>
