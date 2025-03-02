@@ -64,11 +64,11 @@ export class Epub {
     const resources: EpubResource[] = [];
     for (const item of Array.from(manifest.getElementsByTagName('item'))) {
       const id = item.getAttribute('id');
-      if (id === null) throw 'manifest的item缺少id字段';
+      if (id === null) throw 'item缺少id字段';
       const href = item.getAttribute('href');
-      if (href === null) throw 'manifest的item缺少href字段';
+      if (href === null) throw 'item缺少href字段';
       const mediaType = item.getAttribute('media-type');
-      if (mediaType === null) throw 'manifest的item缺少media-type字段';
+      if (mediaType === null) throw 'item缺少media-type字段';
 
       const entry = entries.get(opfDir + href);
       if (entry === undefined) throw '文件缺失';
@@ -76,15 +76,18 @@ export class Epub {
       const blob = new Blob([await entry.getData!(new BlobWriter())], {
         type: mediaType,
       });
-      resources.push({ id, href, blob });
+      resources.push({ id, href: opfDir + href, blob });
     }
     return new Epub(file.name, opfDir, opf, resources);
   }
 
   async toBlob() {
+    this.autoFix();
+
     const { BlobReader, BlobWriter, ZipWriter, TextReader } = await import(
       '@zip.js/zip.js'
     );
+
     const zipBlobWriter = new BlobWriter();
     const writer = new ZipWriter(zipBlobWriter);
 
@@ -148,6 +151,14 @@ export class Epub {
       contents.push(doc.body.textContent ?? '');
     }
     return contents.join('\n');
+  }
+
+  private autoFix() {
+    for (const res of this.resources) {
+      const item = this.opf.getElementById(res.id);
+      if (item === null) throw 'opf中找不到Item';
+      item.setAttribute('media-type', res.blob.type);
+    }
   }
 
   // async updateLinks(
