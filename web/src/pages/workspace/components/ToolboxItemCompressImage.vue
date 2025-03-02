@@ -1,11 +1,14 @@
 <script lang="ts" setup>
+import { Humanize } from '@/util';
 import { Epub, ParsedFile } from '@/util/file';
 
 const props = defineProps<{
   files: ParsedFile[];
 }>();
 
-const compressionRate = ref(0.8);
+const message = useMessage();
+
+const quality = ref(0.8);
 const scaleRatio = ref(1.0);
 
 const imageFormat = ref('image/webp');
@@ -16,66 +19,104 @@ const imageFormatOptions = [
   { label: 'WEBP', value: 'image/webp' },
 ];
 
-const showImagePreview = ref(false);
+const compressImage = async (blob: Blob) => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  const img = await createImageBitmap(blob);
 
-const showImageSelector = ref(false);
-const blacklist = ref([]);
+  const scaleRatioValue = Math.max(1, scaleRatio.value);
+  canvas.width = img.width * scaleRatioValue;
+  canvas.height = img.height * scaleRatioValue;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-const compressEpubImages = async (epub: Epub) => {
-  //   if (
-  //     compress_setting.format === '' &&
-  //     compress_setting.compression_rate === 1 &&
-  //     compress_setting.ratio === 1
-  //   ) {
-  //     return;
-  //   }
-  //   file.getImages().forEach(async (e) => {
-  //     if (compress_setting.blacklist.includes(e.path)) {
-  //       return;
-  //     }
-  //     const canvas = document.createElement('canvas');
-  //     const ctx = canvas.getContext('2d')!;
-  //     const img = await createImageBitmap(e.blob);
-  //     // 计算缩放后尺寸
-  //     const scale = compress_setting.ratio > 1 ? 1 : compress_setting.ratio;
-  //     const width = img.width * scale;
-  //     const height = img.height * scale;
-  //     // 绘制到画布
-  //     canvas.width = width;
-  //     canvas.height = height;
-  //     ctx.drawImage(img, 0, 0, width, height);
-  //     // 转换格式
-  //     const quality = Math.min(1, compress_setting.compression_rate);
-  //     const mimeType = compress_setting.format
-  //       ? compress_setting.format
-  //       : undefined;
-  //     const newPath = mimeType
-  //       ? e.path.replace(/(jpg|jpeg|png|webp)$/i, mimeType.split('/')[1])
-  //       : e.path;
-  //     e.blob = await new Promise((resolve, reject) => {
-  //       canvas.toBlob(
-  //         (newBlob) => {
-  //           if (newBlob) {
-  //             resolve(newBlob);
-  //           } else {
-  //             reject(new Error(`压缩图片${e.path}失败`));
-  //           }
-  //         },
-  //         mimeType,
-  //         quality,
-  //       );
-  //     });
-  //     // 更新图片的路径与相关引用
-  //     file.updateLinks(e.path, newPath, mimeType);
-  //     e.path = newPath;
-  //   });
+  const imageFormatValue = imageFormat.value;
+  const qualityValue = quality.value;
+
+  return await new Promise<Blob | undefined>((resolve, _reject) => {
+    canvas.toBlob(
+      (newBlob) => {
+        resolve(newBlob ?? undefined);
+      },
+      imageFormatValue,
+      qualityValue,
+    );
+  });
 };
 
-const compressImages = () => {
+const compressImages = async () => {
+  const stagedResults: [Epub.Resource, Blob][] = [];
   for (const file of props.files) {
     if (file.type === 'epub') {
-      compressEpubImages(file);
+      for await (const res of file.iterImage()) {
+        const newBlob = await compressImage(res.blob);
+        if (newBlob === undefined) {
+          message.error(`压缩失败\n文件:{file.name}\n图片:{res.href}`);
+          return;
+        }
+        stagedResults.push([res, newBlob]);
+      }
     }
+  }
+  for (const [res, blob] of stagedResults) {
+    console.log(blob.type);
+    res.blob = blob;
+  }
+};
+
+interface EpubImage {
+  id: string;
+  href: string;
+  blob: Blob;
+  uri: string;
+  blobCompressed: Blob | undefined;
+}
+interface EpubDetail {
+  name: string;
+  images: EpubImage[];
+  size: number;
+  sizeCompressed: number;
+  failed: number;
+}
+
+const getEpubDetailList = async () => {
+  const detailList: EpubDetail[] = [];
+  for (const file of props.files) {
+    if (file.type === 'epub') {
+      const detail: EpubDetail = {
+        name: file.name,
+        images: [],
+        size: 0,
+        sizeCompressed: 0,
+        failed: 0,
+      };
+      for await (const res of file.iterImage()) {
+        const blobCompressed = await compressImage(res.blob);
+        detail.images.push({
+          id: res.id,
+          href: res.href,
+          blob: res.blob,
+          uri: URL.createObjectURL(res.blob),
+          blobCompressed,
+        });
+        detail.size += res.blob.size;
+        detail.sizeCompressed += (blobCompressed ?? res.blob).size;
+        if (!blobCompressed) detail.failed += 1;
+      }
+      detailList.push(detail);
+    }
+  }
+  return detailList;
+};
+
+const showDetail = ref(false);
+const detailList = ref<EpubDetail[]>([]);
+const toggleShowDetail = async () => {
+  if (showDetail.value) {
+    showDetail.value = false;
+    detailList.value = [];
+  } else {
+    showDetail.value = true;
+    detailList.value = await getEpubDetailList();
   }
 };
 </script>
@@ -95,16 +136,14 @@ const compressImages = () => {
 
       <c-action-wrapper title="压缩率" align="center">
         <n-slider
-          v-model:value="compressionRate"
+          v-model:value="quality"
           :max="1"
           :min="0.1"
           :step="0.05"
           :format-tooltip="(value: number) => `${(value * 100).toFixed(0)}%`"
           style="max-width: 400px"
         />
-        <n-text style="width: 6em">
-          {{ (compressionRate * 100).toFixed(0) }}%
-        </n-text>
+        <n-text style="width: 6em"> {{ (quality * 100).toFixed(0) }}% </n-text>
       </c-action-wrapper>
 
       <c-action-wrapper title="尺寸" align="center">
@@ -123,21 +162,34 @@ const compressImages = () => {
 
       <n-button-group size="small">
         <c-button label="确定" @action="compressImages" />
-        <c-button label="预览" @action="showImagePreview = !showImagePreview" />
-        <c-button
-          label="黑名单"
-          @action="showImageSelector = !showImageSelector"
-        />
+        <c-button label="详情" @action="toggleShowDetail" />
       </n-button-group>
 
-      <template v-if="showImagePreview">
-        <n-p>图片压缩效果预览</n-p>
-        <n-p>未实现</n-p>
-      </template>
-
-      <template v-if="showImageSelector">
-        <n-p>手动选择不压缩的图片，已选择 {{ blacklist.length }}</n-p>
-        <n-p>未实现</n-p>
+      <template v-if="showDetail">
+        <n-text>点击图片预览压缩效果（未完成）</n-text>
+        <n-empty v-if="detailList.length === 0" description="未载入文件" />
+        <template v-for="detail of detailList">
+          <n-text>
+            [{{ Humanize.bytes(detail.size) }}
+            =>
+            {{ Humanize.bytes(detail.sizeCompressed) }}]
+            {{ detail.name }}
+          </n-text>
+          <c-x-scrollbar style="margin-top: 16px">
+            <n-image-group show-toolbar-tooltip>
+              <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
+                <n-image
+                  v-for="image of detail.images"
+                  height="150"
+                  :src="image.uri"
+                  :preview-src="image.uri"
+                  :alt="image.id"
+                  style="border-radius: 2px"
+                />
+              </n-flex>
+            </n-image-group>
+          </c-x-scrollbar>
+        </template>
       </template>
     </n-flex>
   </n-flex>

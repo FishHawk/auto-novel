@@ -72,7 +72,6 @@ export class Epub {
 
       const entry = entries.get(opfDir + href);
       if (entry === undefined) throw '文件缺失';
-      console.log(opfDir + href);
 
       const blob = new Blob([await entry.getData!(new BlobWriter())], {
         type: mediaType,
@@ -130,7 +129,7 @@ export class Epub {
     }
   }
 
-  async *iterImage() {
+  iterImage() {
     return this.iter(
       'image/gif',
       'image/jpeg',
@@ -196,6 +195,10 @@ export class Epub {
   //       });
   //   }
   // }
+}
+
+export namespace Epub {
+  export type Resource = EpubResource;
 }
 
 /**

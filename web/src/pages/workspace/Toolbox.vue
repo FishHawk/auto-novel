@@ -114,19 +114,13 @@ const download = async () => {
       <n-empty v-if="files.length === 0" description="未载入文件" />
     </n-flex>
 
-    <n-list bordered style="margin-top: 20px">
-      <n-list-item>
-        <toolbox-item-compress-image :files="files" />
-      </n-list-item>
-
-      <n-list-item>
-        <toolbox-item-fix-ocr :files="files" />
-      </n-list-item>
-
-      <n-list-item>
-        <toolbox-item-convert v-model:files="files" />
-      </n-list-item>
-    </n-list>
+    <n-divider />
+    <toolbox-item-compress-image :files="files" />
+    <n-divider />
+    <toolbox-item-fix-ocr :files="files" />
+    <n-divider />
+    <toolbox-item-convert v-model:files="files" />
+    <n-divider />
 
     <local-volume-list-katakana
       v-model:show="showListModal"
