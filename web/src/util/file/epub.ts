@@ -154,10 +154,26 @@ export class Epub {
   }
 
   private autoFix() {
+    const mimeToAllowedExtensions: { [key: string]: string[] } = {
+      'image/gif': ['.gif'],
+      'image/jpeg': ['.jpg', '.jpeg', '.jpe', '.jif', '.jfif'],
+      'image/png': ['.png'],
+      'image/svg+xml': ['.svg'],
+      'image/webp': ['.webp'],
+    };
     for (const res of this.resources) {
       const item = this.opf.getElementById(res.id);
       if (item === null) throw 'opf中找不到Item';
-      item.setAttribute('media-type', res.blob.type);
+      const mime = res.blob.type;
+      item.setAttribute('media-type', mime);
+
+      if (mime in mimeToAllowedExtensions) {
+        const allowedExtensions = mimeToAllowedExtensions[mime];
+        const ext = '.' + res.href.split('.')[-1];
+        if (!allowedExtensions.includes(ext)) {
+          console.log(ext);
+        }
+      }
     }
   }
 
