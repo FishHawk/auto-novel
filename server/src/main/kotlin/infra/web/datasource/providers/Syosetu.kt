@@ -199,7 +199,7 @@ class Syosetu(
                 }
             }
         infotypeEl
-            .selectFirst("#age_limit")
+            .selectFirst(".p-infotop-type__r18")
             ?.text()
             ?.let {
                 if (it == "R18") attentions.add(WebNovelAttention.R18)

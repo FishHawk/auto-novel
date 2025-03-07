@@ -3,8 +3,11 @@ package infra.provider.providers
 import koinExtensions
 import infra.web.datasource.WebNovelHttpDataSource
 import infra.web.datasource.providers.Syosetu
+import infra.web.WebNovelAttention
+import infra.web.WebNovelType
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -64,6 +67,8 @@ class SyosetuTest : DescribeSpec(), KoinTest {
                 // https://ncode.syosetu.com/n5305eg
                 val metadata = provider.getMetadata("n5305eg")
                 metadata.title.shouldBe("【web版】エロいスキルで異世界無双")
+                metadata.attentions.shouldContain(WebNovelAttention.R18)
+                metadata.type.shouldBe(WebNovelType.已完结)
             }
             it("短篇") {
                 // https://ncode.syosetu.com/n0916hw
