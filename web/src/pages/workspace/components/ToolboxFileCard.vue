@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, RemoveRedEyeOutlined } from '@vicons/material';
 
+import { ParsedFile } from '@/util/file';
+
 defineProps<{
-  name: string;
+  file: ParsedFile;
 }>();
 
 const emit = defineEmits<{
@@ -30,7 +32,7 @@ const showPreviewModal = ref(false);
       type="error"
       @action="emit('delete')"
     />
-    <n-text>{{ name }}</n-text>
+    <n-text>{{ file.name }}</n-text>
   </n-flex>
 
   <c-modal title="预览（前100行）" v-model:show="showPreviewModal">

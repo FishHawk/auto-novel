@@ -5,6 +5,7 @@ import { Txt } from './txt';
 export { Epub };
 export { Srt };
 export { Txt };
+export type ParsedFile = Epub | Srt | Txt;
 
 export const getFullContent = async (file: File) => {
   if (file.name.endsWith('.txt') || file.name.endsWith('.srt')) {
@@ -12,15 +13,7 @@ export const getFullContent = async (file: File) => {
     return txt.text;
   } else if (file.name.endsWith('.epub')) {
     const epub = await Epub.fromFile(file);
-    return epub.resources
-      .filter((it) => it.type === 'doc')
-      .map((it) => {
-        Array.from(it.doc.getElementsByClassName('rt')).forEach((node) =>
-          node.parentNode!!.removeChild(node),
-        );
-        return it.doc.body.textContent ?? '';
-      })
-      .join('\n');
+    return await epub.getText();
   } else {
     return '';
   }

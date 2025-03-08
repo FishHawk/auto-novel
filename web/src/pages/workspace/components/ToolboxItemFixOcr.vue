@@ -1,5 +1,10 @@
+<script lang="ts" setup>
+import { ParsedFile, Txt } from '@/util/file';
 import { RegexUtil } from '@/util';
-import { Epub, Srt, Txt } from '@/util/file';
+
+const props = defineProps<{
+  files: ParsedFile[];
+}>();
 
 const fixOcrTxt = (txt: Txt) => {
   const endsCorrectly = (s: string) => {
@@ -40,39 +45,20 @@ const fixOcrTxt = (txt: Txt) => {
   txt.text = lines.join('\n');
 };
 
-const convertEpubToTxt = (epub: Epub) => {
-  return new Txt(epub.name.replace(/\.epub$/i, '.txt'), epub.getText());
-};
-
-type UnpackFile = Txt | Epub | Srt;
-type FileHandle<T> = (file: T) => void;
-type FileHandles = {
-  txt?: FileHandle<Txt>;
-  epub?: FileHandle<Epub>;
-  srt?: FileHandle<Srt>;
-};
-
-const toolboxActionWarp = (handles: FileHandles) => {
-  return (files: UnpackFile[]) => {
-    for (const file of files) {
-      const handle = handles[file.type];
-      if (handle) handle(file as any);
+const fixOcr = () => {
+  for (const file of props.files) {
+    if (file.type === 'txt') {
+      fixOcrTxt(file);
     }
-  };
+  }
 };
+</script>
 
-export namespace Toolbox {
-  export const fixOcr = toolboxActionWarp({
-    txt: fixOcrTxt,
-  });
-
-  export const convertToTxt = (files: UnpackFile[]) => {
-    return files.map((file) => {
-      if (file.type === 'epub') {
-        return convertEpubToTxt(file);
-      } else {
-        return file;
-      }
-    });
-  };
-}
+<template>
+  <n-flex vertical>
+    OCR输出的文本通常存在额外的换行符，导致翻译器错误。当前修复方法是检测每一行的结尾是否是字符（汉字/日文假名/韩文字符/英文字母），如果是的话则删除行尾的换行符。
+    <n-flex>
+      <c-button label="修复" size="small" @action="fixOcr" />
+    </n-flex>
+  </n-flex>
+</template>
