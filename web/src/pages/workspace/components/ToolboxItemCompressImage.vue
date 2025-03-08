@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { ImgComparisonSlider } from '@img-comparison-slider/vue';
+
 import { Humanize } from '@/util';
 import { Epub, ParsedFile } from '@/util/file';
 
@@ -120,6 +122,14 @@ const toggleShowDetail = async () => {
     detailList.value = await getEpubDetailList();
   }
 };
+
+const showCompare = ref(false);
+const compareImages = ref({ old: '', new: '' });
+const showPreview = (image: EpubImage) => {
+  showCompare.value = true;
+  compareImages.value.old = image.uri;
+  compareImages.value.new = image.uriCompressed;
+};
 </script>
 
 <template>
@@ -141,7 +151,7 @@ const toggleShowDetail = async () => {
         :format-tooltip="(value: number) => `${(value * 100).toFixed(0)}%`"
         style="max-width: 400px"
       />
-      <n-text style="width: 6em"> {{ (quality * 100).toFixed(0) }}% </n-text>
+      <n-text style="width: 6em">{{ (quality * 100).toFixed(0) }}%</n-text>
     </c-action-wrapper>
 
     <c-action-wrapper title="尺寸" align="center">
@@ -153,7 +163,7 @@ const toggleShowDetail = async () => {
         :format-tooltip="(value: number) => `${(value * 100).toFixed(0)}%`"
         style="max-width: 400px"
       />
-      <n-text style="width: 6em"> {{ (scaleRatio * 100).toFixed(0) }}% </n-text>
+      <n-text style="width: 6em">{{ (scaleRatio * 100).toFixed(0) }}%</n-text>
     </c-action-wrapper>
 
     <n-button-group size="small">
@@ -178,14 +188,22 @@ const toggleShowDetail = async () => {
                 v-for="image of detail.images"
                 height="150"
                 :src="image.uri"
-                :preview-src="image.uriCompressed"
+                preview-disabled
                 :alt="image.id"
                 style="border-radius: 2px"
+                @click="showPreview(image)"
               />
             </n-flex>
           </n-image-group>
         </c-x-scrollbar>
       </template>
     </template>
+
+    <c-modal v-model:show="showCompare" style="width: auto; max-width: 95%">
+      <img-comparison-slider>
+        <img style="width: 100%" slot="first" :src="compareImages.old" />
+        <img style="width: 100%" slot="second" :src="compareImages.new" />
+      </img-comparison-slider>
+    </c-modal>
   </n-flex>
 </template>

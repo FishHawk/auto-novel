@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vue-tsc --noEmit",
+    "build": "vue-tsc --noEmit",
     "check": "vue-tsc --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
@@ -20,6 +20,7 @@
     "vitest": "^3.0.5"
   },
   "dependencies": {
+    "@img-comparison-slider/vue": "^8.0.0",
     "@types/diff": "^5.2.3",
     "@types/lodash-es": "^4.17.12",
     "@types/markdown-it": "^14.1.2",
