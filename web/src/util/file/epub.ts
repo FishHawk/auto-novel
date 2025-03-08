@@ -181,7 +181,7 @@ export class Epub {
   }
 
   private updatePackage() {
-    const items = this.items.values().map((item) => {
+    const items = [...this.items.values()].map((item) => {
       const itemEl = document.createElement('item');
       itemEl.setAttribute('id', item.id);
       itemEl.setAttribute('href', item.href);
@@ -208,10 +208,10 @@ export class Epub {
 
     const writeText = (path: string, text: string) =>
       writer.add(path, new TextReader(text));
-    const writeDoc = (path: string, doc: Document) =>
-      writer.add(path, new TextReader(doc.documentElement.outerHTML));
     const writeBlob = (path: string, blob: Blob) =>
       writer.add(path, new BlobReader(blob));
+    const writeDoc = (path: string, doc: Document) =>
+      writeText(path, new XMLSerializer().serializeToString(doc));
 
     await writeText(MIMETYPE_PATH, MIMETYPE_TEMPLATE);
     await writeText(
@@ -240,11 +240,10 @@ export class Epub {
   // ==============================
 
   iterDoc() {
-    return this.items.values().filter((item) => 'doc' in item);
+    return [...this.items.values()].filter((item) => 'doc' in item);
   }
   iterBlob(mediaTypes: string[]) {
-    return this.items
-      .values()
+    return [...this.items.values()]
       .filter((item) => 'blob' in item)
       .filter((item) => mediaTypes.includes(item.mediaType));
   }
