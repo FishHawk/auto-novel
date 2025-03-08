@@ -73,27 +73,22 @@ export const getTranslationFile = async (
     myFile.text = buffer.join('\n');
   } else if (myFile.type === 'epub') {
     // 防止部分阅读器使用竖排
-    myFile.opf
+    myFile.packageDoc
       .getElementsByTagName('spine')
       .item(0)
       ?.removeAttribute('page-progression-direction');
 
-    for await (const [res, doc] of myFile.iterDoc()) {
-      if (metadata.toc.some((it) => it.chapterId === res.href)) {
-        const { zhLinesList } = await getZhLinesList(res.href);
+    for await (const item of myFile.iterDoc()) {
+      if (metadata.toc.some((it) => it.chapterId === item.href)) {
+        const { zhLinesList } = await getZhLinesList(item.href);
         if (zhLinesList.length > 0) {
-          await EpubParserV1.injectTranslation(doc, mode, zhLinesList);
+          await EpubParserV1.injectTranslation(item.doc, mode, zhLinesList);
         }
       }
-      res.blob = new Blob([doc.documentElement.outerHTML], {
-        type: res.blob.type,
-      });
     }
 
     // 清除css格式
-    for await (const res of myFile.iter('text/css')) {
-      res.blob = new Blob([''], { type: 'text/css' });
-    }
+    myFile.cleanStyle();
   } else if (myFile.type === 'srt') {
     const { zhLinesList } = await getZhLinesList('0');
     const newSubtitles: typeof myFile.subtitles = [];

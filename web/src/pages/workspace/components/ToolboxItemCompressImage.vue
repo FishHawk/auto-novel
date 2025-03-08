@@ -44,22 +44,21 @@ const compressImage = async (blob: Blob) => {
 };
 
 const compressImages = async () => {
-  const stagedResults: [Epub.Resource, Blob][] = [];
+  const stagedResults: [Epub, string, Blob][] = [];
   for (const file of props.files) {
     if (file.type === 'epub') {
-      for await (const res of file.iterImage()) {
-        const newBlob = await compressImage(res.blob);
+      for await (const item of file.iterImage()) {
+        const newBlob = await compressImage(item.blob);
         if (newBlob === undefined) {
-          message.error(`压缩失败\n文件:{file.name}\n图片:{res.href}`);
+          message.error(`压缩失败\n文件:${file.name}\n图片:${item.href}`);
           return;
         }
-        stagedResults.push([res, newBlob]);
+        stagedResults.push([file, item.id, newBlob]);
       }
     }
   }
-  for (const [res, blob] of stagedResults) {
-    console.log(blob.type);
-    res.blob = blob;
+  for (const [epub, id, blob] of stagedResults) {
+    epub.updateImage(id, blob);
   }
 };
 
@@ -90,18 +89,18 @@ const getEpubDetailList = async () => {
         sizeCompressed: 0,
         failed: 0,
       };
-      for await (const res of file.iterImage()) {
-        const blobCompressed = await compressImage(res.blob);
+      for await (const item of file.iterImage()) {
+        const blobCompressed = await compressImage(item.blob);
         detail.images.push({
-          id: res.id,
-          href: res.href,
-          blob: res.blob,
-          uri: URL.createObjectURL(res.blob),
+          id: item.id,
+          href: item.href,
+          blob: item.blob,
+          uri: URL.createObjectURL(item.blob),
           blobCompressed,
-          uriCompressed: URL.createObjectURL(blobCompressed ?? res.blob),
+          uriCompressed: URL.createObjectURL(blobCompressed ?? item.blob),
         });
-        detail.size += res.blob.size;
-        detail.sizeCompressed += (blobCompressed ?? res.blob).size;
+        detail.size += item.blob.size;
+        detail.sizeCompressed += (blobCompressed ?? item.blob).size;
         if (!blobCompressed) detail.failed += 1;
       }
       detailList.push(detail);

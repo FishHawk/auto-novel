@@ -27,9 +27,9 @@ export const createVolume = async (
       chapters.push({ chapterId: i.toString(), paragraphs });
     }
   } else if (myFile.type === 'epub') {
-    for await (const [res, doc] of myFile.iterDoc()) {
-      const paragraphs = EpubParserV1.extractText(doc);
-      chapters.push({ chapterId: res.href, paragraphs });
+    for await (const item of myFile.iterDoc()) {
+      const paragraphs = EpubParserV1.extractText(item.doc);
+      chapters.push({ chapterId: item.href, paragraphs });
     }
   } else if (myFile.type === 'srt') {
     const lines = myFile.subtitles

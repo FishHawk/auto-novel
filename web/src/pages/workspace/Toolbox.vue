@@ -7,12 +7,12 @@ import {
 import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
-import { ParsedFile, parseFile } from '@/util/file';
+import { Epub, ParsedFile, parseFile } from '@/util/file';
 import { downloadFile, downloadFilesPacked } from '@/util';
 
 const message = useMessage();
 
-const files = ref<ParsedFile[]>([]);
+const files: Ref<Epub[]> = ref<Epub[]>([]);
 
 const loadFile = async (file: File) => {
   if (files.value.find((it) => it.name === file.name) !== undefined) {
