@@ -192,11 +192,6 @@ const router = createRouter({
           redirect: '/workspace/sakura',
           children: [
             {
-              path: 'katakana',
-              meta: { title: '术语表工作区' },
-              component: () => import('./pages/workspace/Katakana.vue'),
-            },
-            {
               path: 'gpt',
               meta: { title: 'GPT工作区' },
               component: () => import('./pages/workspace/GptWorkspace.vue'),

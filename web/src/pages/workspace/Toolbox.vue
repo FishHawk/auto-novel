@@ -1,9 +1,5 @@
 <script lang="ts" setup>
-import {
-  DeleteOutlineOutlined,
-  DriveFolderUploadOutlined,
-  PlusOutlined,
-} from '@vicons/material';
+import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
 import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
@@ -22,6 +18,7 @@ const loadFile = async (file: File) => {
   try {
     const toolboxFile = await parseFile(file, ['txt', 'epub']);
     files.value.push(toolboxFile);
+    files.value = [...files.value];
     triggerRef(files);
   } catch (e) {
     message.warning(`${e}`);
@@ -83,20 +80,19 @@ const download = async () => {
   <div class="layout-content">
     <n-h1>小说工具箱</n-h1>
 
-    <n-upload
-      :show-file-list="false"
-      accept=".txt,.epub"
-      multiple
-      directory-dnd
-      :custom-request="customRequest"
-    >
-      <n-upload-dragger style="margin: 16px 0">
-        <n-icon size="32" :component="DriveFolderUploadOutlined" />
-        <div>拖拽文件到这里加载进工作区，支持TXT、EPUB格式</div>
-      </n-upload-dragger>
-    </n-upload>
-
     <n-flex>
+      <div>
+        <n-upload
+          :show-file-list="false"
+          accept=".txt,.epub"
+          multiple
+          directory-dnd
+          :custom-request="customRequest"
+        >
+          <c-button label="加载文件" :icon="PlusOutlined" />
+        </n-upload>
+      </div>
+
       <c-button
         label="加载本地小说"
         :icon="PlusOutlined"
@@ -114,12 +110,14 @@ const download = async () => {
       <n-text v-for="file of files">
         <toolbox-file-card :file="file" @delete="removeFile(file.name)" />
       </n-text>
-      <n-empty v-if="files.length === 0" description="未载入文件" />
     </n-flex>
 
     <n-divider />
 
     <n-tabs type="segment" animated>
+      <n-tab-pane name="0" tab="术语表">
+        <toolbox-item-glossary :files="files" />
+      </n-tab-pane>
       <n-tab-pane name="1" tab="EPUB：压缩图片">
         <toolbox-item-compress-image :files="files" />
       </n-tab-pane>

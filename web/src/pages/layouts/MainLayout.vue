@@ -126,8 +126,8 @@ const menuOptions = computed<MenuOption[]>(() => {
       key: '/workspace',
       children: [
         {
-          label: renderLabel('术语表工作区', '/workspace/katakana'),
-          key: '/workspace/katakana',
+          label: renderLabel('小说工具箱', '/workspace/toolbox'),
+          key: '/workspace/toolbox',
         },
         {
           label: renderLabel('GPT工作区', '/workspace/gpt'),
@@ -140,10 +140,6 @@ const menuOptions = computed<MenuOption[]>(() => {
         {
           label: renderLabel('交互翻译', '/workspace/interactive'),
           key: '/workspace/interactive',
-        },
-        {
-          label: renderLabel('小说工具箱', '/workspace/toolbox'),
-          key: '/workspace/toolbox',
         },
       ],
     },
