@@ -112,7 +112,7 @@ const clearCache = async () =>
         </span>
       </n-flex>
 
-      <n-p> 允许上传的模型如下，禁止一切试图突破上传检查的操作。 </n-p>
+      <n-p>允许上传的模型如下，禁止一切试图突破上传检查的操作。</n-p>
       <n-ul>
         <n-li v-for="({ repo }, model) in SakuraTranslator.allowModels">
           [
@@ -133,6 +133,9 @@ const clearCache = async () =>
           {{ model }}
         </n-li>
       </n-ul>
+      <n-p>
+        感谢@H接手，共享Sakura现在可以开放使用了，目前在测试中，欢迎使用。
+      </n-p>
     </bulletin>
 
     <section-header title="翻译器">

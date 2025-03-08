@@ -142,6 +142,7 @@ export const createSakuraWorkspaceRepository = () =>
   createWorkspaceRepository<SakuraWorker>(
     'sakura-workspace',
     [
+      { id: '共享', endpoint: 'https://sakura-share.one' },
       { id: '本机', endpoint: 'http://127.0.0.1:8080' },
       { id: 'AutoDL', endpoint: 'http://127.0.0.1:6006' },
     ],
@@ -154,5 +155,17 @@ export const createSakuraWorkspaceRepository = () =>
           it.testSegLength = undefined;
         }
       });
+
+      // 2025-2-21
+      if (
+        workspace.value.workers.find(
+          (it) => it.endpoint === 'https://sakura-share.one',
+        ) === undefined
+      ) {
+        workspace.value.workers.unshift({
+          id: '共享',
+          endpoint: 'https://sakura-share.one',
+        });
+      }
     },
   );

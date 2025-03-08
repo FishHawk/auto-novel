@@ -160,11 +160,11 @@ class Syosetu(
             .selectFirst("h1")!!
             .text()
 
-        val infodataEl = doc2.getElementById("infodata")!!
-        val preInfoEl = infodataEl.getElementById("pre_info")!!
+        val infodataEl = doc2.getElementsByClass("p-infotop-data").first()!!
+        val infotypeEl = doc2.getElementsByClass("p-infotop-type").first()!!
 
         fun row(label: String) = infodataEl
-            .selectFirst("th:containsOwn(${label})")
+            .selectFirst("dt:containsOwn(${label})")
             ?.nextElementSibling()
 
         val author = row("作者名")!!
@@ -175,10 +175,7 @@ class Syosetu(
                 )
             }
 
-        val type = (
-                preInfoEl.selectFirst("#noveltype_notend")
-                    ?: preInfoEl.selectFirst("#noveltype")!!
-                )
+        val type = infotypeEl.selectFirst(".p-infotop-type__type")!!
             .text()
             .let {
                 when (it) {
@@ -201,8 +198,8 @@ class Syosetu(
                     else -> keywords.add(it)
                 }
             }
-        preInfoEl
-            .selectFirst("#age_limit")
+        infotypeEl
+            .selectFirst(".p-infotop-type__r18")
             ?.text()
             ?.let {
                 if (it == "R18") attentions.add(WebNovelAttention.R18)

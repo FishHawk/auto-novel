@@ -20,7 +20,7 @@ defineProps<{ op: OperationWenkuEdit }>();
     作者：{{ op.old?.authors }} => {{ op.new.authors }}
   </n-p>
   <n-p v-if="!isEqual(op.old?.artists, op.new.artists)">
-    插图：{{ op.old?.artists }} => {{ op.new.artists }}
+    画师：{{ op.old?.artists }} => {{ op.new.artists }}
   </n-p>
   <n-p v-if="op.old?.introduction !== op.new.introduction">
     简介：{{ op.old?.introduction }} => {{ op.new.introduction }}
