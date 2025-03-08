@@ -74,7 +74,7 @@ defineExpose({
   </DefineTag>
 
   <n-list>
-    <n-list-item v-for="item of items">
+    <n-list-item v-for="item of items" class="web-novel-item">
       <n-flex vertical :size="0">
         <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
           <n-text type="warning" v-if="item.favored">
@@ -144,3 +144,9 @@ defineExpose({
     </n-list-item>
   </n-list>
 </template>
+
+<style scoped>
+.web-novel-item {
+  cursor: default;
+}
+</style>
