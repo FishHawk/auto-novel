@@ -25,14 +25,17 @@ const MIME = {
   CSS: ['text/css'],
 };
 
-type EpubItem = {
+type EpubItemBase = {
   id: string;
   href: string;
   mediaType: string;
   overlay: string | null;
   properties: string | null;
   fallback: string | null;
-} & ({ doc: Document } | { blob: Blob });
+};
+type EpubItemDoc = EpubItemBase & { doc: Document };
+type EpubItemBlob = EpubItemBase & { blob: Blob };
+type EpubItem = EpubItemDoc | EpubItemBlob;
 
 export class Epub extends BaseFile {
   type = 'epub' as const;
@@ -85,7 +88,7 @@ export class Epub extends BaseFile {
       const mediaType = itemEl.getAttribute('media-type');
       if (!mediaType) throw new Error('Manifest item does not have media type');
 
-      const itemCommon = {
+      const itemBase: EpubItemBase = {
         id,
         href,
         mediaType,
@@ -93,12 +96,7 @@ export class Epub extends BaseFile {
         properties: itemEl.getAttribute('properties'),
         fallback: itemEl.getAttribute('fallback'),
       };
-
-      if (mediaType === 'application/xhtml+xml') {
-        this.items.set(id, { ...itemCommon, doc: undefined as any });
-      } else {
-        this.items.set(id, { ...itemCommon, blob: undefined as any });
-      }
+      this.items.set(id, itemBase as any);
     }
   }
 
@@ -111,13 +109,21 @@ export class Epub extends BaseFile {
       (await reader.getEntries()).map((obj) => [obj.filename, obj] as const),
     );
 
-    const readDoc = async (path: string) => {
+    const readDocWithType = async (
+      path: string,
+      type: DOMParserSupportedType,
+    ) => {
       const entry = entries.get(path);
       if (!entry) throw new Error(`Entry not found: ${path}`);
       const text = await entry.getData!(new TextWriter());
       const parser = new DOMParser();
-      return parser.parseFromString(text, 'application/xhtml+xml');
+      return parser.parseFromString(text, type);
     };
+
+    const readDoc = async (path: string) =>
+      readDocWithType(path, 'application/xhtml+xml');
+    const readDocLegacy = async (path: string) =>
+      readDocWithType(path, 'text/html');
 
     const readBlob = async (path: string, type: string) => {
       const entry = entries.get(path);
@@ -131,10 +137,14 @@ export class Epub extends BaseFile {
 
     for (const item of this.items.values()) {
       const path = this.resolve(item.href);
-      if ('doc' in item) {
-        item.doc = await readDoc(path);
+
+      if (item.mediaType === 'application/xhtml+xml') {
+        (item as EpubItemDoc).doc = await readDoc(path);
+      } else if (item.mediaType === 'text/html') {
+        item.mediaType = 'application/xhtml+xml';
+        (item as EpubItemDoc).doc = await readDocLegacy(path);
       } else {
-        item.blob = await readBlob(path, item.mediaType);
+        (item as EpubItemBlob).blob = await readBlob(path, item.mediaType);
       }
     }
   }
