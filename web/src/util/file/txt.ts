@@ -27,6 +27,9 @@ export class Txt extends BaseFile {
       throw '未知编码';
     }
 
+    // 修复换行符格式
+    text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
     this.text = text;
   }
 

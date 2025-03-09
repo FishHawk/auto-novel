@@ -165,9 +165,9 @@ const showPreview = (image: EpubImage) => {
       <n-text style="width: 6em">{{ (scaleRatio * 100).toFixed(0) }}%</n-text>
     </c-action-wrapper>
 
-    <n-button-group size="small">
-      <c-button label="确定" @action="compressImages" />
-      <c-button label="详情" @action="toggleShowDetail" />
+    <n-button-group>
+      <c-button label="压缩" @action="compressImages" />
+      <c-button label="预览效果" @action="toggleShowDetail" />
     </n-button-group>
 
     <template v-if="showDetail">
