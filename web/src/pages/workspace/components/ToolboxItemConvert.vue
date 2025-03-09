@@ -1,35 +1,31 @@
 <script lang="ts" setup>
 import { Epub, ParsedFile, Txt } from '@/util/file';
+import { Toolbox } from './Toolbox';
 
 const props = defineProps<{
   files: ParsedFile[];
 }>();
 
-const emit = defineEmits<{
-  'update:files': [ParsedFile[]];
-}>();
+const message = useMessage();
 
 const convertEpubToTxt = async (epub: Epub) => {
-  return new Txt(epub.name.replace(/\.epub$/i, '.txt'), await epub.getText());
+  const name = epub.name.replace(/\.epub$/i, '.txt');
+  const text = await epub.getText();
+  return Txt.fromText(name, text);
 };
 
-const convertToTxt = async () => {
-  const newFiles: ParsedFile[] = [];
-  for (const file of props.files) {
-    if (file.type === 'epub') {
-      newFiles.push(await convertEpubToTxt(file));
-    } else {
-      newFiles.push(file);
-    }
-  }
-  emit('update:files', newFiles);
-};
+const convertAll = () =>
+  Toolbox.convertFiles(
+    props.files.filter((file) => file.type === 'epub'),
+    convertEpubToTxt,
+    (e) => message.error(`发生错误：${e}`),
+  );
 </script>
 
 <template>
   <n-flex vertical>
     <n-flex>
-      <c-button label="转换" size="small" @action="convertToTxt" />
+      <c-button label="转换" size="small" @action="convertAll" />
     </n-flex>
   </n-flex>
 </template>

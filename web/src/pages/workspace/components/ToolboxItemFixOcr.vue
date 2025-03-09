@@ -2,11 +2,15 @@
 import { ParsedFile, Txt } from '@/util/file';
 import { RegexUtil } from '@/util';
 
+import { Toolbox } from './Toolbox';
+
 const props = defineProps<{
   files: ParsedFile[];
 }>();
 
-const fixOcrTxt = (txt: Txt) => {
+const message = useMessage();
+
+const fixOcrForTxt = async (txt: Txt) => {
   const endsCorrectly = (s: string) => {
     if (s.length === 0) {
       return true;
@@ -45,13 +49,12 @@ const fixOcrTxt = (txt: Txt) => {
   txt.text = lines.join('\n');
 };
 
-const fixOcr = () => {
-  for (const file of props.files) {
-    if (file.type === 'txt') {
-      fixOcrTxt(file);
-    }
-  }
-};
+const fixOcr = () =>
+  Toolbox.modifyFiles(
+    props.files.filter((file) => file.type === 'txt'),
+    fixOcrForTxt,
+    (e) => message.error(`发生错误：${e}`),
+  );
 </script>
 
 <template>

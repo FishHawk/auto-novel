@@ -1,14 +1,10 @@
-export class Txt {
+import { BaseFile } from './base';
+
+export class Txt extends BaseFile {
   type = 'txt' as const;
-  name: string;
-  text: string;
+  text: string = '';
 
-  constructor(name: string, text: string) {
-    this.name = name;
-    this.text = text;
-  }
-
-  static async fromFile(file: File) {
+  private async parseFile(file: File) {
     const buffer = await file.arrayBuffer();
 
     const tryDecode = async (label: string) => {
@@ -31,7 +27,25 @@ export class Txt {
       throw '未知编码';
     }
 
-    return new Txt(file.name, text);
+    this.text = text;
+  }
+
+  static async fromFile(file: File) {
+    const txt = new Txt(file.name, file);
+    await txt.parseFile(file);
+    return txt;
+  }
+
+  static async fromText(name: string, text: string) {
+    const txt = new Txt(name);
+    txt.text = text;
+    return txt;
+  }
+
+  async clone() {
+    if (!this.rawFile)
+      throw new Error('Cannot clone manually constructed file.');
+    return Txt.fromFile(this.rawFile);
   }
 
   async toBlob() {

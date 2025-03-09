@@ -1,3 +1,4 @@
+import { BaseFile } from './base';
 import { Txt } from './txt';
 
 interface SrtSubtitle {
@@ -6,20 +7,14 @@ interface SrtSubtitle {
   text: string[];
 }
 
-export class Srt {
+export class Srt extends BaseFile {
   type = 'srt' as const;
-  name: string;
-  subtitles: SrtSubtitle[];
+  subtitles: SrtSubtitle[] = [];
 
-  constructor(name: string, subtitles: SrtSubtitle[]) {
-    this.name = name;
-    this.subtitles = subtitles;
-  }
-
-  static async fromFile(file: File) {
+  private async parseFile(file: File) {
     const txt = await Txt.fromFile(file);
     const blocks = dividerByEmptyLine(txt.text.split('\n'));
-    const subtitles = blocks
+    this.subtitles = blocks
       .filter((block) => block.length >= 3)
       .map(
         (block) =>
@@ -29,7 +24,18 @@ export class Srt {
             text: block.slice(2),
           },
       );
-    return new Srt(file.name, subtitles);
+  }
+
+  static async fromFile(file: File) {
+    const epub = new Srt(file.name, file);
+    await epub.parseFile(file);
+    return epub;
+  }
+
+  async clone() {
+    if (!this.rawFile)
+      throw new Error('Cannot clone manually constructed file.');
+    return Srt.fromFile(this.rawFile);
   }
 
   async toBlob() {

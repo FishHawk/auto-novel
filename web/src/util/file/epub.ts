@@ -1,3 +1,5 @@
+import { BaseFile } from './base';
+
 const MIMETYPE_PATH = 'mimetype';
 const MIMETYPE_TEMPLATE = 'application/epub+zip';
 
@@ -32,16 +34,11 @@ type EpubItem = {
   fallback: string | null;
 } & ({ doc: Document } | { blob: Blob });
 
-export class Epub {
+export class Epub extends BaseFile {
   type = 'epub' as const;
-  name: string;
   private packagePath: string = '';
   packageDoc!: Document;
   private items = new Map<string, EpubItem>();
-
-  constructor(name: string) {
-    this.name = name;
-  }
 
   private resolve(path: string) {
     const dir = this.packagePath.substring(
@@ -143,9 +140,15 @@ export class Epub {
   }
 
   static async fromFile(file: File) {
-    const epub = new Epub(file.name);
+    const epub = new Epub(file.name, file);
     await epub.parseFile(file);
     return epub;
+  }
+
+  async clone() {
+    if (!this.rawFile)
+      throw new Error('Cannot clone manually constructed file.');
+    return Epub.fromFile(this.rawFile);
   }
 
   // ==============================

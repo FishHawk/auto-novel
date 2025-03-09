@@ -4,6 +4,8 @@ import { ImgComparisonSlider } from '@img-comparison-slider/vue';
 import { Humanize } from '@/util';
 import { Epub, ParsedFile } from '@/util/file';
 
+import { Toolbox } from './Toolbox';
+
 const props = defineProps<{
   files: ParsedFile[];
 }>();
@@ -45,24 +47,21 @@ const compressImage = async (blob: Blob) => {
   });
 };
 
-const compressImages = async () => {
-  const stagedResults: [Epub, string, Blob][] = [];
-  for (const file of props.files) {
-    if (file.type === 'epub') {
-      for await (const item of file.iterImage()) {
-        const newBlob = await compressImage(item.blob);
-        if (newBlob === undefined) {
-          message.error(`压缩失败\n文件:${file.name}\n图片:${item.href}`);
-          return;
-        }
-        stagedResults.push([file, item.id, newBlob]);
-      }
-    }
-  }
-  for (const [epub, id, blob] of stagedResults) {
-    epub.updateImage(id, blob);
+const compressImagesForEpub = async (epub: Epub) => {
+  for await (const item of epub.iterImage()) {
+    const newBlob = await compressImage(item.blob);
+    if (!newBlob)
+      throw new Error(`压缩失败\n文件:${epub.name}\n图片:${item.href}`);
+    epub.updateImage(item.id, newBlob);
   }
 };
+
+const compressImages = () =>
+  Toolbox.modifyFiles(
+    props.files.filter((file) => file.type === 'epub'),
+    compressImagesForEpub,
+    (e) => message.error(`发生错误：${e}`),
+  );
 
 interface EpubImage {
   id: string;

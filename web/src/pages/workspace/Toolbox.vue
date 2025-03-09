@@ -4,7 +4,6 @@ import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
 import { ParsedFile, parseFile } from '@/util/file';
-import { downloadFile, downloadFilesPacked } from '@/util';
 
 const message = useMessage();
 
@@ -59,21 +58,6 @@ const customRequest = ({
 };
 
 const showListModal = ref(false);
-
-const download = async () => {
-  if (files.value.length === 0) {
-    message.info('未载入文件');
-  } else if (files.value.length === 1) {
-    const file = files.value[0];
-    await downloadFile(file.name, await file.toBlob());
-  } else {
-    const filesToDownload: [string, Blob][] = [];
-    for (const file of files.value) {
-      filesToDownload.push([file.name, await file.toBlob()]);
-    }
-    await downloadFilesPacked(filesToDownload);
-  }
-};
 </script>
 
 <template>
@@ -103,7 +87,6 @@ const download = async () => {
         :icon="DeleteOutlineOutlined"
         @action="clearFile"
       />
-      <c-button label="下载" @action="download" />
     </n-flex>
 
     <n-flex vertical style="margin-top: 16px">
@@ -112,9 +95,7 @@ const download = async () => {
       </n-text>
     </n-flex>
 
-    <n-divider />
-
-    <n-tabs type="segment" animated>
+    <n-tabs type="segment" animated style="margin-top: 48px">
       <n-tab-pane name="0" tab="术语表">
         <toolbox-item-glossary :files="files" />
       </n-tab-pane>
