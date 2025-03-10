@@ -1,8 +1,6 @@
 import { isEqual } from 'lodash-es';
-
 import { Glossary } from '@/model/Glossary';
 import { TranslatorId } from '@/model/Translator';
-
 import { BaiduTranslator } from './TranslatorBaidu';
 import { OpenAiTranslator } from './TranslatorOpenAi';
 import { SakuraTranslator } from './TranslatorSakura';
@@ -14,6 +12,7 @@ import {
   createSegIndexedDbCache,
 } from './Common';
 import { RegexUtil } from '@/util';
+import { globalSemaphore } from './Semaphore'; // 引入全局信号量
 
 export type TranslatorConfig =
   | { id: 'baidu' }
@@ -61,6 +60,7 @@ export class Translator {
   async translate(
     textJp: string[],
     context?: {
+      chapterId?: number | undefined; // 新增：接收章节序号
       glossary?: Glossary;
       oldTextZh?: string[] | undefined;
       oldGlossary?: Glossary;
@@ -75,27 +75,40 @@ export class Translator {
       // throw new Error('旧翻译行数不匹配。不应当出现，请反馈给站长。');
     }
 
+    // 分段的并发翻译
     const textZh = await emptyLineFilterWrapper(
       textJp,
       oldTextZh,
       async (textJp, oldTextZh) => {
         if (textJp.length === 0) return [];
 
-        const segsZh: string[][] = [];
         const segs = this.segTranslator.segmentor(textJp, oldTextZh);
         const size = segs.length;
-        for (const [index, [segJp, oldSegZh]] of segs.entries()) {
-          const segZh = await this.translateSeg(segJp, {
-            logPrefix: `分段${index + 1}/${size}`,
-            ...context,
-            prevSegs: segsZh,
-            oldSegZh,
-          });
-          if (segJp.length !== segZh.length) {
-            throw new Error('翻译结果行数不匹配。不应当出现，请反馈给站长。');
-          }
-          segsZh.push(segZh);
+
+        // 使用 Promise.all 并发执行句段翻译
+        var chapterString = '';
+        if (context?.chapterId !== undefined) {
+          chapterString = `章节 ${context?.chapterId} `; // 新增：打印章节序号
         }
+        const segsZh = await Promise.all(
+          segs.map(async ([segJp, oldSegZh], index) => {
+            const segZh = await this.translateSeg(segJp, {
+              chapterId: context?.chapterId, // 新增：传递章节序号
+              sectionId: index + 1, // 新增：传递分段序号
+              logPrefix: `${chapterString}分段${index + 1}/${size}`, // 更改：打印章节序号
+              ...context,
+              prevSegs: [],
+              oldSegZh,
+            });
+            if (segJp.length !== segZh.length) {
+              throw new Error(
+                `${chapterString}翻译结果行数不匹配。不应当出现，请反馈给站长。`,
+              );
+            }
+            return segZh;
+          }),
+        );
+
         return segsZh.flat();
       },
     );
@@ -105,6 +118,8 @@ export class Translator {
   private async translateSeg(
     seg: string[],
     {
+      chapterId, // 新增：接收章节序号
+      sectionId, // 新增：接收分段序号
       logPrefix,
       glossary,
       oldSegZh,
@@ -113,6 +128,8 @@ export class Translator {
       force,
       signal,
     }: {
+      chapterId?: number; // 新增：接收章节序号
+      sectionId?: number; // 新增：接收分段序号
       logPrefix: string;
       glossary?: Glossary;
       oldSegZh?: string[];
@@ -156,36 +173,47 @@ export class Translator {
       }
     }
 
-    // 翻译
-    this.log(logPrefix);
-    const segOutput = await this.segTranslator.translate(seg, {
-      glossary: segGlossary,
-      prevSegs,
-      signal,
-    });
-    if (segOutput.length !== seg.length) {
-      throw new Error('分段翻译结果行数不匹配，请反馈给站长');
-    }
+    // 获取信号量，传入 AbortSignal
+    const release = await globalSemaphore.acquire(signal);
+    try {
+      // 翻译
+      this.log(logPrefix);
 
-    // 翻译器通常不会保留行首空格，尝试手动恢复
-    for (let i = 0; i < seg.length; i++) {
-      const lineJp = seg[i];
-      if (lineJp.trim().length === 0) continue;
-      const space = RegexUtil.getLeadingSpaces(lineJp);
-      segOutput[i] = space + segOutput[i].trimStart();
-    }
+      const segOutput = await this.segTranslator.translate(seg, {
+        chapterId, // 新增：传递章节序号
+        sectionId, // 新增：传递分段序号
+        glossary: segGlossary,
+        prevSegs,
+        signal, // 传递 AbortSignal 给翻译器
+      });
 
-    // 保存分段缓存
-    if (this.segCache && cacheKey !== undefined) {
-      try {
-        await this.segCache.save(cacheKey, segOutput);
-      } catch (e) {
-        console.error('缓存保存失败');
-        console.error(e);
+      if (segOutput.length !== seg.length) {
+        throw new Error('分段翻译结果行数不匹配，请反馈给站长');
       }
-    }
 
-    return segOutput;
+      // 翻译器通常不会保留行首空格，尝试手动恢复
+      for (let i = 0; i < seg.length; i++) {
+        const lineJp = seg[i];
+        if (lineJp.trim().length === 0) continue;
+        const space = RegexUtil.getLeadingSpaces(lineJp);
+        segOutput[i] = space + segOutput[i].trimStart();
+      }
+
+      // 保存分段缓存
+      if (this.segCache && cacheKey !== undefined) {
+        try {
+          await this.segCache.save(cacheKey, segOutput);
+        } catch (e) {
+          console.error('缓存保存失败');
+          console.error(e);
+        }
+      }
+
+      return segOutput;
+    } finally {
+      // 始终释放信号量
+      release();
+    }
   }
 }
 

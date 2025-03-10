@@ -13,6 +13,8 @@ export type Segmentor = (
 export type Logger = (message: string, detail?: string[]) => void;
 
 export type SegmentContext = {
+  chapterId?: number; // 新增：章节序号
+  sectionId?: number; // 新增：分段序号
   glossary: Glossary;
   prevSegs: string[][];
   signal?: AbortSignal;
