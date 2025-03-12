@@ -6,7 +6,6 @@ import infra.*
 import infra.article.ArticleRepository
 import infra.comment.CommentRepository
 import infra.oplog.OperationHistoryRepository
-import infra.sakura.SakuraFeedbackRepository
 import infra.web.repository.WebNovelFavoredRepository
 import infra.wenku.repository.WenkuNovelFavoredRepository
 import infra.web.repository.WebNovelReadHistoryRepository
@@ -72,8 +71,6 @@ fun main() {
             routeComment()
             routeOperationHistory()
             //
-            routeSakura()
-            //
             routeUser()
             routeUserFavoredWeb()
             routeUserFavoredWenku()
@@ -131,7 +128,6 @@ val appModule = module {
     singleOf(::ArticleRepository)
     singleOf(::CommentRepository)
     singleOf(::OperationHistoryRepository)
-    singleOf(::SakuraFeedbackRepository)
 
     singleOf(::UserRepository)
     singleOf(::UserCodeRepository)
@@ -157,8 +153,6 @@ val appModule = module {
     singleOf(::ArticleApi)
     singleOf(::CommentApi)
     singleOf(::OperationHistoryApi)
-
-    singleOf(::SakuraApi)
 
     singleOf(::UserApi)
     singleOf(::UserFavoredWebApi)
