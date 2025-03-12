@@ -2,6 +2,7 @@
 import { BookOutlined, EditNoteOutlined } from '@vicons/material';
 import { NA, NText } from 'naive-ui';
 
+import { Locator } from '@/data';
 import { WebNovelDto } from '@/model/WebNovel';
 import { WebUtil } from '@/util/web';
 
@@ -14,6 +15,8 @@ const props = defineProps<{
 }>();
 
 const isWideScreen = useIsWideScreen();
+
+const { whoami } = Locator.authRepository();
 
 const labels = computed(() => {
   const readableNumber = (num: number | undefined) => {
@@ -79,9 +82,9 @@ const latestChapterCreateAt = computed(() => {
 
 <template>
   <n-h3 prefix="bar">
-    <n-a :href="WebUtil.buildNovelUrl(providerId, novelId)">{{
-      novel.titleJp
-    }}</n-a>
+    <n-a :href="WebUtil.buildNovelUrl(providerId, novelId)">
+      {{ novel.titleJp }}
+    </n-a>
     <br />
     <n-text depth="3">{{ novel.titleZh }}</n-text>
   </n-h3>
@@ -104,7 +107,10 @@ const latestChapterCreateAt = computed(() => {
     </router-link>
     <c-button v-else label="开始阅读" disabled />
 
-    <router-link :to="`/novel-edit/${providerId}/${novelId}`">
+    <router-link
+      v-if="whoami.asMaintainer"
+      :to="`/novel-edit/${providerId}/${novelId}`"
+    >
       <c-button label="编辑" :icon="EditNoteOutlined" />
     </router-link>
 
@@ -128,10 +134,10 @@ const latestChapterCreateAt = computed(() => {
       <n-time :time="latestChapterCreateAt * 1000" type="date" />
       /
     </template>
-    <c-a :to="generateSearchUrl(novel.titleJp)"> 搜索标题 </c-a>
+    <c-a :to="generateSearchUrl(novel.titleJp)">搜索标题</c-a>
     <template v-if="novel.authors">
       /
-      <c-a :to="generateSearchUrl(novel.authors[0].name)"> 搜索作者 </c-a>
+      <c-a :to="generateSearchUrl(novel.authors[0].name)">搜索作者</c-a>
     </template>
   </n-p>
 

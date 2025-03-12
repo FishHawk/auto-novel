@@ -360,6 +360,7 @@ class WenkuNovelApi(
         user: User,
         body: MetadataCreateBody,
     ): String {
+        user.shouldBeOldAss()
         val novelId = metadataRepo.create(
             title = body.title,
             titleZh = body.titleZh,
@@ -393,6 +394,7 @@ class WenkuNovelApi(
         novelId: String,
         body: MetadataCreateBody,
     ) {
+        user.shouldBeAtLeast(UserRole.Maintainer)
         val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
 

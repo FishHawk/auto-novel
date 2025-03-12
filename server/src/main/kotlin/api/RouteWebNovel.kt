@@ -2,15 +2,13 @@ package api
 
 import api.model.WebNovelOutlineDto
 import api.model.asDto
-import api.plugins.authenticateDb
-import api.plugins.isOldAss
-import api.plugins.user
-import api.plugins.userOrNull
+import api.plugins.*
 import infra.common.*
 import infra.oplog.Operation
 import infra.oplog.OperationHistoryRepository
 import infra.user.User
 import infra.user.UserFavoredRepository
+import infra.user.UserRole
 import infra.web.*
 import infra.web.datasource.providers.NovelIdShouldBeReplacedException
 import infra.web.datasource.providers.Syosetu
@@ -504,6 +502,8 @@ class WebNovelApi(
         wenkuId: String,
         toc: Map<String, String>,
     ) {
+        user.shouldBeAtLeast(UserRole.Maintainer)
+
         if (wenkuId.isNotBlank() && wenkuMetadataRepo.get(wenkuId) == null) {
             throwNotFound("文库版不存在")
         }

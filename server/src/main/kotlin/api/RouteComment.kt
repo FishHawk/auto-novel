@@ -169,7 +169,7 @@ class CommentApi(
         user: User,
         id: String,
     ) {
-        user.shouldBeAtLeast(UserRole.Admin)
+        user.shouldBeAtLeast(UserRole.Maintainer)
         val isDeleted = commentRepo.deleteComment(id)
         if (!isDeleted) throwNotFound("评论不存在")
     }
@@ -180,6 +180,9 @@ class CommentApi(
         parent: String?,
         content: String,
     ) {
+        if (!site.startsWith("article-")) {
+            user.shouldBeOldAss()
+        }
         if (content.isBlank()) {
             throwBadRequest("回复内容不能为空")
         }
@@ -211,9 +214,7 @@ class CommentApi(
         id: String,
         hidden: Boolean,
     ) {
-        if (!(user.role atLeast UserRole.Admin) && !commentRepo.isCommentCreateBy(id = id, userId = user.id)) {
-            throwUnauthorized("只有评论作者才有权限隐藏")
-        }
+        user.shouldBeAtLeast(UserRole.Maintainer)
         val isUpdated = commentRepo.updateCommentHidden(
             id = id,
             hidden = hidden,

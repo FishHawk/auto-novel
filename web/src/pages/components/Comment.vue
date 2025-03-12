@@ -91,7 +91,7 @@ const splitByLinks = (text: string): [string, boolean][] => {
       </n-text>
 
       <c-button
-        v-if="reply"
+        v-if="reply && whoami.allowAdvancedFeatures"
         label="回复"
         :icon="CommentOutlined"
         require-login
@@ -101,9 +101,7 @@ const splitByLinks = (text: string): [string, boolean][] => {
         @action="showInput = !showInput"
       />
 
-      <template
-        v-if="whoami.isMe(comment.user.username) || whoami.asMaintainer"
-      >
+      <template v-if="whoami.asMaintainer">
         <c-button
           v-if="comment.hidden"
           label="解除隐藏"
@@ -125,7 +123,7 @@ const splitByLinks = (text: string): [string, boolean][] => {
 
     <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
       <n-p style="white-space: pre-wrap">
-        <n-text v-if="comment.hidden" depth="3">[隐藏] </n-text>
+        <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
         <template v-for="[part, isLink] in splitByLinks(comment.content)">
           <n-a v-if="isLink" :href="part" target="_blank">{{ part }}</n-a>
           <template v-else>{{ part }}</template>
