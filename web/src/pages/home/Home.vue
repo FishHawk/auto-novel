@@ -207,6 +207,11 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
           感谢@H接手，共享Sakura现在可以开放使用了，目前在测试中，欢迎使用。
         </b>
       </n-p>
+      <n-p style="color: red">
+        <b>
+          由于畜生倒狗创了一堆小号乱编辑小说给他引流，机翻站小说编辑权限不再开放，评论要求注册一个月才能发布。
+        </b>
+      </n-p>
     </bulletin>
 
     <template v-if="whoami.isSignedIn">
