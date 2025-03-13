@@ -209,7 +209,7 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
       </n-p>
       <n-p style="color: red">
         <b>
-          由于畜生倒狗创了一堆小号乱编辑小说给他引流，机翻站小说编辑权限不再开放，评论要求注册一个月才能发布。
+          由于畜生倒狗创了一堆小号在所有他能打字的地方发广告引流，现在机翻站小说编辑、评论、修改术语表均需要注册一个月。
         </b>
       </n-p>
     </bulletin>

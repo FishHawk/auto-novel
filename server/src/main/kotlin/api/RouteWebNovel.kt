@@ -8,7 +8,6 @@ import infra.oplog.Operation
 import infra.oplog.OperationHistoryRepository
 import infra.user.User
 import infra.user.UserFavoredRepository
-import infra.user.UserRole
 import infra.web.*
 import infra.web.datasource.providers.NovelIdShouldBeReplacedException
 import infra.web.datasource.providers.Syosetu
@@ -502,7 +501,7 @@ class WebNovelApi(
         wenkuId: String,
         toc: Map<String, String>,
     ) {
-        user.shouldBeAtLeast(UserRole.Maintainer)
+        user.shouldBeOldAss()
 
         if (wenkuId.isNotBlank() && wenkuMetadataRepo.get(wenkuId) == null) {
             throwNotFound("文库版不存在")
@@ -576,6 +575,7 @@ class WebNovelApi(
         novelId: String,
         glossary: Map<String, String>,
     ) {
+        user.shouldBeOldAss()
         val novel = metadataRepo.get(providerId, novelId)
             ?: throwNovelNotFound()
         if (novel.glossary == glossary)

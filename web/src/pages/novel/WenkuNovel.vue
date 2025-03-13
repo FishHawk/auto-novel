@@ -125,7 +125,10 @@ const showWebNovelsModal = ref(false);
   <div class="layout-content">
     <c-result :result="novelResult" v-slot="{ value: metadata }">
       <n-flex>
-        <router-link v-if="whoami.asMaintainer" :to="`/wenku-edit/${novelId}`">
+        <router-link
+          v-if="whoami.allowAdvancedFeatures"
+          :to="`/wenku-edit/${novelId}`"
+        >
           <c-button label="编辑" :icon="EditNoteOutlined" />
         </router-link>
 

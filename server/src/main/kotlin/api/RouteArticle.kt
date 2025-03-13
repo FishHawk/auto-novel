@@ -305,9 +305,8 @@ class ArticleApi(
     ) {
         validateTitle(title)
         validateContent(content)
-        user.shouldBeOldAss()
 
-        if (!(user.role atLeast UserRole.Admin) && !articleRepo.isArticleCreateBy(id = id, userId = user.id)) {
+        if (!(user.role atLeast UserRole.Maintainer) && !articleRepo.isArticleCreateBy(id = id, userId = user.id)) {
             throwUnauthorized("只有文章作者才有权限编辑")
         }
 

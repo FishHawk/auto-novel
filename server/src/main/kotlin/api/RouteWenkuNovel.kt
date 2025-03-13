@@ -394,7 +394,7 @@ class WenkuNovelApi(
         novelId: String,
         body: MetadataCreateBody,
     ) {
-        user.shouldBeAtLeast(UserRole.Maintainer)
+        user.shouldBeOldAss()
         val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
 
@@ -450,6 +450,7 @@ class WenkuNovelApi(
         novelId: String,
         glossary: Map<String, String>,
     ) {
+        user.shouldBeOldAss()
         val novel = metadataRepo.get(novelId)
             ?: throwNovelNotFound()
         if (glossary == novel.glossary)
