@@ -16,6 +16,7 @@ import {
   createSettingRepository,
 } from './setting/SettingRepository';
 import {
+  createDraftRepository,
   createGptWorkspaceRepository,
   createReadPositionRepository,
   createRuleViewedRepository,
@@ -61,6 +62,7 @@ export const Locator = {
   //
   cachedSegRepository: lazyAsync(createCachedSegRepository),
   //
+  draftRepository: lazy(createDraftRepository),
   ruleViewedRepository: lazy(createRuleViewedRepository),
   readPositionRepository: lazy(createReadPositionRepository),
   settingRepository: lazy(createSettingRepository),
