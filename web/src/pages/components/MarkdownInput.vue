@@ -28,17 +28,45 @@ const saveDraft = (text: string) => {
   }
 };
 
-const formatExample: [string, string][] = [
-  ['段落之间要有空行', '第一段巴拉巴拉\n\n第二段巴拉巴拉'],
-  ['粗体', '**随机文本**'],
-  ['斜体', '*随机文本*'],
-  ['删除线', '~~随机文本~~'],
-  ['分隔线', '---'],
-  ['列表', '- 第一项\n- 第二项\n- 第三项\n'],
-  ['链接', '[链接名称](https://books.fishhawk.top)'],
-  ['网络图片', `![](${avaterUrl})`],
-  ['多级标题', '# 一级标题\n\n## 二级标题\n\n### 三级标题'],
-];
+const markdownGuide = `# 一级标题
+## 二级标题
+### 三级标题
+
+使用空行分割段落，不用空行就会像下面这样
+
+**粗体**
+*斜体*
+~~删除线~~
+
+[链接](https://books.fishhawk.top)
+
+- 无序列表
+- 无序列表
+  - 加空格可以缩进
+  - 加空格可以缩进
+- 无序列表
+
+1. 有序列表
+1. 有序列表
+1. 有序列表
+
+> 引用
+
+下面是分隔线，和文本要用空行隔开
+
+---
+
+| 表格第一列 | 左对齐 | 居中 | 右对齐 |
+| - | :- | :-: | -: |
+| 文本 | 文本 | 文本 | 文本 |
+| 文本 | 文本 | 文本 | 文本 |
+
+
+下面是图片
+
+![](${avaterUrl})
+
+`;
 </script>
 
 <template>
@@ -82,23 +110,21 @@ const formatExample: [string, string][] = [
         </div>
       </n-tab-pane>
       <n-tab-pane tab="格式帮助" :name="2">
-        <div style="padding: 8px 16px 16px">
+        <div style="padding: 8px 16px">
           <n-table :bordered="false">
             <thead>
               <tr>
-                <th><b>格式</b></th>
-                <th><b>文本</b></th>
+                <th><b>语法</b></th>
                 <th><b>预览</b></th>
               </tr>
             </thead>
-            <tbody>
-              <tr v-for="[name, code] of formatExample">
-                <td>
-                  <b>{{ name }}</b>
+            <tbody style="vertical-align: top">
+              <tr>
+                <td style="white-space: pre-wrap">
+                  {{ markdownGuide }}
                 </td>
-                <td style="white-space: pre-wrap">{{ code }}</td>
                 <td>
-                  <Markdown :source="code" />
+                  <Markdown :source="markdownGuide" />
                 </td>
               </tr>
             </tbody>
