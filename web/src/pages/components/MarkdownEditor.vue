@@ -18,7 +18,7 @@ const restoreDraft = (text: string) => {
   value.value = text;
 };
 const saveDraft = (text: string) => {
-  if (props.draftId && props.createdAt && text !== '') {
+  if (props.draftId && props.createdAt && text.trim() !== '') {
     Locator.draftRepository().addDraft(props.draftId, props.createdAt, text);
   }
 };
