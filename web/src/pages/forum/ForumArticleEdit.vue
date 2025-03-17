@@ -158,7 +158,6 @@ const submit = async () => {
           :draft-id="draftId"
           v-model:value="formValue.content"
           placeholder="请输入正文"
-          :autosize="{ minRows: 8 }"
           maxlength="20000"
           style="width: 100%"
         />
