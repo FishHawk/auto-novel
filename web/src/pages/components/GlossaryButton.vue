@@ -5,7 +5,7 @@ import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 
-import { doAction } from '@/pages/util';
+import { doAction, copyToClipBoard } from '@/pages/util';
 
 const props = defineProps<{
   gnid?: GenericNovelId;
@@ -110,9 +110,12 @@ const addTerm = () => {
   }
 };
 
+/** 复制的临时文本区 */
+const TempGlossaryTextAreaID = 'temp_glossary_text_area';
+
 const exportGlossary = () => {
-  navigator.clipboard.writeText(Glossary.toText(glossary.value));
-  message.info('导出成功，已经将术语表复制到剪切板');
+  let ele = document.getElementById(TempGlossaryTextAreaID);
+  copyToClipBoard(Glossary.toText(glossary.value), message, ele);
 };
 
 const importGlossary = () => {
@@ -141,6 +144,7 @@ const importGlossary = () => {
     v-model:show="showGlossaryModal"
     :extra-height="120"
   >
+    <p :id="TempGlossaryTextAreaID" />
     <template #header-extra>
       <n-flex
         vertical
@@ -152,7 +156,7 @@ const importGlossary = () => {
 
           <n-text>
             使用前务必先阅读
-            <c-a to="/forum/660ab4da55001f583649a621"> 术语表使用指南 </c-a>
+            <c-a to="/forum/660ab4da55001f583649a621">术语表使用指南</c-a>
             ，不要滥用术语表。
           </n-text>
         </template>

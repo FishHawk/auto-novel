@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { CommentOutlined } from '@vicons/material';
+import { CommentOutlined, CopyAllOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { Locator } from '@/data';
@@ -7,7 +7,7 @@ import { CommentRepository } from '@/data/api';
 import { Comment1 } from '@/model/Comment';
 import { runCatching } from '@/util/result';
 
-import { doAction } from '../util';
+import { doAction, copyToClipBoard } from '../util';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;
@@ -72,12 +72,6 @@ const unhideComment = (comment: Comment1) =>
   );
 
 const showInput = ref(false);
-
-const splitByLinks = (text: string): [string, boolean][] => {
-  const regExp =
-    /((?:http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,6}(?:[/?][a-zA-Z0-9-_/?=&%*#+]+)?)/g;
-  return text.split(regExp).map((part) => [part, regExp.test(part)]);
-};
 </script>
 
 <template>
@@ -119,16 +113,21 @@ const splitByLinks = (text: string): [string, boolean][] => {
           @action="hideComment(comment)"
         />
       </template>
+
+      <c-button
+        v-if="!comment.hidden"
+        label="复制"
+        :icon="CopyAllOutlined"
+        quaternary
+        type="tertiary"
+        size="tiny"
+        @action="copyToClipBoard(comment.content, message)"
+      />
     </n-flex>
 
     <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
-      <n-p style="white-space: pre-wrap">
-        <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
-        <template v-for="[part, isLink] in splitByLinks(comment.content)">
-          <n-a v-if="isLink" :href="part" target="_blank">{{ part }}</n-a>
-          <template v-else>{{ part }}</template>
-        </template>
-      </n-p>
+      <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
+      <markdown v-else :source="comment.content" />
     </n-card>
   </DefineCommentContent>
 
