@@ -133,7 +133,11 @@ const showInput = ref(false);
 
     <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
       <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
-      <markdown v-else :source="comment.content" />
+      <markdown
+        v-else
+        :source="comment.content"
+        style="margin-top: -1em; margin-bottom: -1em"
+      />
     </n-card>
   </DefineCommentContent>
 

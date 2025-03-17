@@ -1,32 +1,18 @@
 <script setup lang="ts">
-import { Locator } from '@/data';
 import avaterUrl from '@/image/avater.jpg';
 
 const props = defineProps<{
-  value: string;
   draftId?: string;
+  autosize?:
+    | boolean
+    | {
+        minRows?: number;
+        maxRows?: number;
+      };
 }>();
-
-const emit = defineEmits<{
-  'update:value': [string];
-}>();
-
-const getDrafts = () => {
-  if (props.draftId === undefined) return [];
-  return Locator.draftRepository().getDraft(props.draftId);
-};
-const drafts = getDrafts();
+const value = defineModel<string>('value', { required: true });
 
 const createdAt = Date.now();
-
-const restoreDraft = (text: string) => {
-  emit('update:value', text);
-};
-const saveDraft = (text: string) => {
-  if (props.draftId) {
-    Locator.draftRepository().addDraft(props.draftId, createdAt, text);
-  }
-};
 
 const markdownGuide = `# 一级标题
 ## 二级标题
@@ -74,33 +60,12 @@ const markdownGuide = `# 一级标题
     <n-tabs class="tabs" type="card" size="small">
       <n-tab-pane tab="编辑" :name="0">
         <div style="padding: 0 8px 8px">
-          <n-flex
-            v-if="drafts.length > 0"
-            vertical
-            :size="0"
-            style="margin-bottom: 8px"
-          >
-            <n-text type="warning" style="font-size: 12px">
-              <b>* 检测到以下未恢复的草稿，点击恢复</b>
-            </n-text>
-            <n-text
-              v-for="draft of drafts"
-              style="font-size: 12px; margin-left: 16px"
-            >
-              <n-button text size="tiny" @click="restoreDraft(draft.text)">
-                保存于{{ draft.createdAt.toLocaleString('zh-CN') }}
-              </n-button>
-            </n-text>
-          </n-flex>
-
-          <n-input
+          <markdown-editor
+            v-model:value="value"
             v-bind="$attrs"
-            type="textarea"
-            show-count
-            :input-props="{ spellcheck: false }"
-            :value="value"
-            @update-value="(it) => emit('update:value', it)"
-            @input="saveDraft"
+            :draft-id="draftId"
+            :created-at="createdAt"
+            :autosize="autosize ?? { minRows: 8 }"
           />
         </div>
       </n-tab-pane>
