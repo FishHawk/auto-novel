@@ -35,11 +35,20 @@ const reply = async () => {
     message,
   );
 };
-const showMarkdownEditorModal = ref(false);
+const showMarkdownEditor = ref(false);
 </script>
 
 <template>
+  <markdown-input
+    v-if="showMarkdownEditor"
+    draft-id="Comment"
+    v-model:value="content"
+    placeholder="请输入正文"
+    maxlength="1000"
+    style="width: 100%"
+  />
   <n-input
+    v-else
     v-model:value="content"
     type="textarea"
     :placeholder="placeholder"
@@ -65,35 +74,8 @@ const showMarkdownEditorModal = ref(false);
       label="MD编辑器"
       require-login
       :round="false"
-      @action="showMarkdownEditorModal = true"
+      @action="showMarkdownEditor = !showMarkdownEditor"
       style="margin-top: 10px"
     />
   </n-flex>
-
-  <c-drawer-down v-model:show="showMarkdownEditorModal" title="MD编辑器">
-    <template #action>
-      <c-button
-        label="发布"
-        require-login
-        :round="false"
-        type="primary"
-        @action="reply()"
-        style="margin-top: 10px"
-      />
-      <c-button
-        label="关闭"
-        require-login
-        :round="false"
-        @action="showMarkdownEditorModal = false"
-        style="margin-top: 10px"
-      />
-    </template>
-    <markdown-input
-      draft-id="Comment"
-      v-model:value="content"
-      placeholder="请输入正文"
-      maxlength="1000"
-      style="width: 100%"
-    />
-  </c-drawer-down>
 </template>
