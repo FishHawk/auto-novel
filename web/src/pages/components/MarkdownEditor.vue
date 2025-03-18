@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { Locator } from '@/data';
+import {
+  FormatBoldOutlined,
+  FormatItalicOutlined,
+  DraftsFilled,
+  DeleteFilled,
+  DeleteOutlineFilled,
+} from '@vicons/material';
+import { DropdownOption, NIcon } from 'naive-ui';
 
 const props = defineProps<{
   draftId?: string;
@@ -12,11 +20,49 @@ const getDrafts = () => {
   if (props.draftId === undefined) return [];
   return Locator.draftRepository().getDraft(props.draftId);
 };
+
 const drafts = ref(getDrafts());
+const draftOptions = ref<DropdownOption[]>([]);
+
+// 更新草稿的下拉列表
+watch(
+  drafts,
+  () => {
+    draftOptions.value = [];
+    for (const draft of drafts.value) {
+      draftOptions.value.push({
+        label: draft.createdAt.toLocaleString('zh-CN'),
+        key: draft.text,
+      });
+    }
+    draftOptions.value.push(
+      ...[
+        {
+          type: 'divider',
+        },
+        {
+          label: '删除',
+          key: 'deleteAllDrafts',
+          icon: () => h(NIcon, null, { default: () => h(DeleteOutlineFilled) }),
+        },
+      ],
+    );
+  },
+  { immediate: true },
+);
+
+const handleSelectDraft = (key: string) => {
+  if (key === 'deleteAllDrafts') {
+    clearDrafts();
+  } else {
+    restoreDraft(key);
+  }
+};
 
 const restoreDraft = (text: string) => {
   value.value = text;
 };
+
 const saveDraft = (text: string) => {
   if (props.draftId && props.createdAt && text.trim() !== '') {
     Locator.draftRepository().addDraft(props.draftId, props.createdAt, text);
@@ -29,43 +75,98 @@ const clearDrafts = () => {
     drafts.value = getDrafts();
   }
 };
+
+const processSelection = (
+  select_func: ((str: string) => string) | null,
+  insert_str: string = '',
+) => {
+  const selectedText = window.getSelection()?.toString();
+  if (selectedText && select_func) {
+    document.execCommand('insertText', false, `${select_func(selectedText)}`);
+  } else {
+    document.execCommand('insertText', false, `${selectedText}${insert_str}`);
+  }
+};
+
+const toolbarButtons: {
+  icon?: typeof FormatBoldOutlined;
+  label?: string;
+  action: () => void;
+}[] = [
+  {
+    icon: FormatBoldOutlined,
+    action: () => {
+      processSelection((str: string) => `**${str}**`, '**粗体**');
+    },
+  },
+  {
+    icon: FormatItalicOutlined,
+    action: () => {
+      processSelection((str: string) => `*${str}*`, '*斜体*');
+    },
+  },
+];
 </script>
 
 <template>
   <div>
-    <!-- 草稿提示 -->
-    <n-flex
-      v-if="drafts.length > 0"
-      vertical
-      :size="0"
-      style="margin-bottom: 8px"
+    <!-- 工具栏 -->
+    <n-card
+      :bordered="false"
+      size="small"
+      header-style="padding-bottom: 0;"
+      content-style="padding-top: 0;"
     >
-      <n-text type="warning" style="font-size: 12px">
-        <b>* 检测到以下未恢复的草稿，点击恢复</b>
-      </n-text>
-      <n-text
-        v-for="draft in drafts"
-        style="font-size: 12px; margin-left: 16px"
-      >
-        <n-button text size="tiny" @click="restoreDraft(draft.text)">
-          保存于{{ draft.createdAt.toLocaleString('zh-CN') }}
-        </n-button>
-      </n-text>
-      <n-text style="font-size: 12px">
-        <n-button text type="error" size="tiny" @click="clearDrafts">
-          清除所有草稿
-        </n-button>
-      </n-text>
-    </n-flex>
+      <template #header>
+        <n-flex justify="start" style="margin-bottom: 8px">
+          <!-- 工具按钮 -->
+          <n-button
+            v-for="button in toolbarButtons"
+            quaternary
+            @click="button.action"
+          >
+            <template v-if="button.icon && button.label" #icon>
+              <n-icon :component="button.icon" />
+            </template>
+            {{ button.label }}
+            <template v-if="button.icon && !button.label">
+              <n-icon size="20px" :component="button.icon" />
+            </template>
+          </n-button>
+        </n-flex>
+      </template>
+      <template #header-extra>
+        <n-flex justify="start" style="margin-bottom: 8px">
+          <!-- 草稿箱 -->
+          <n-dropdown
+            :options="draftOptions"
+            trigger="click"
+            @select="handleSelectDraft"
+          >
+            <n-button quaternary>
+              <template #icon>
+                <n-badge
+                  :value="drafts.length"
+                  color="rgba(255, 0, 0, 0.3)"
+                  show-zero
+                >
+                  <n-text style="font-size: medium">草稿</n-text>
+                </n-badge>
+              </template>
+            </n-button>
+          </n-dropdown>
+        </n-flex>
+      </template>
 
-    <!-- 编辑框 -->
-    <n-input
-      v-bind="$attrs"
-      v-model:value="value"
-      type="textarea"
-      show-count
-      :input-props="{ spellcheck: false }"
-      @input="saveDraft"
-    />
+      <!-- 编辑框 -->
+      <n-input
+        v-bind="$attrs"
+        v-model:value="value"
+        type="textarea"
+        show-count
+        :input-props="{ spellcheck: false }"
+        @input="saveDraft"
+      />
+    </n-card>
   </div>
 </template>
