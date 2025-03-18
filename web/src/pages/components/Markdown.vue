@@ -1,13 +1,56 @@
 <script lang="ts" setup>
+import { Locator } from '@/data';
 import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownIt from 'markdown-it';
+import { spoiler } from '@mdit/plugin-spoiler';
+import { container } from '@mdit/plugin-container';
+
+const { setting } = Locator.settingRepository();
 
 defineProps<{ source: string }>();
 
 const md = new MarkdownIt({
   breaks: true,
   linkify: true,
-}).use(MarkdownItAnchor);
+})
+  .use(MarkdownItAnchor)
+  // spoiler会在点击时切换高亮（未点击时是hover高亮）
+  .use(spoiler, {
+    tag: 'span',
+    attrs: [
+      ['class', 'spoiler'],
+      [
+        'onclick',
+        "this.style.color = this.style.color === 'var(--spoiler-color)' ? 'var(--spoiler-bg-color)' : 'var(--spoiler-color)'",
+      ],
+      ['tabindex', '-1'],
+    ],
+  })
+  .use(container, {
+    name: 'details',
+    validate: (params) => params.trim().split(' ', 2)[0] === 'details',
+    openRender: (tokens, index, _options) => {
+      const info = tokens[index].info.trim().slice(8).trim();
+      return `<details dir="auto"><summary>${info}</summary>`;
+    },
+    closeRender: (tokens, idx) => {
+      return '</details>';
+    },
+  });
+
+// 根据主题设置spoilder的颜色
+watchEffect(() => {
+  // 背景颜色
+  document.documentElement.style.setProperty(
+    '--spoiler-bg-color',
+    setting.value.theme === 'light' ? 'black' : 'white',
+  );
+  // 文字高亮颜色
+  document.documentElement.style.setProperty(
+    '--spoiler-color',
+    setting.value.theme === 'light' ? 'white' : 'black',
+  );
+});
 
 md.linkify.add('http:', {
   validate: function (text, pos, self) {
@@ -106,5 +149,19 @@ const vars = useThemeVars();
 .markdown tr th:not(:last-child),
 .markdown td:not(:last-child) {
   border-right: 1px solid v-bind('vars.dividerColor');
+}
+
+/* spoiler的css */
+.spoiler {
+  background-color: var(--spoiler-bg-color);
+  color: var(--spoiler-bg-color);
+  transition: color ease 0.2s;
+  padding: 0.05em 0.2em;
+}
+
+.spoiler:hover,
+.spoiler:focus {
+  background-color: var(--spoiler-bg-color);
+  color: var(--spoiler-color);
 }
 </style>

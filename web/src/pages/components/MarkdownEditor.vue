@@ -3,8 +3,6 @@ import { Locator } from '@/data';
 import {
   FormatBoldOutlined,
   FormatItalicOutlined,
-  DraftsFilled,
-  DeleteFilled,
   DeleteOutlineFilled,
 } from '@vicons/material';
 import { DropdownOption, NIcon } from 'naive-ui';
@@ -103,6 +101,21 @@ const toolbarButtons: {
     icon: FormatItalicOutlined,
     action: () => {
       processSelection((str: string) => `*${str}*`, '*斜体*');
+    },
+  },
+  {
+    label: '剧透',
+    action: () => {
+      processSelection((str: string) => `!!${str}!!`, '!!剧透!!');
+    },
+  },
+  {
+    label: '折叠',
+    action: () => {
+      processSelection(
+        (str: string) => `::: details 详情\n${str}\n:::\n`,
+        '::: details 详情\n此文本将被隐藏\n:::\n',
+      );
     },
   },
 ];
