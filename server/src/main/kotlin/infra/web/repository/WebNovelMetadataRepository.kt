@@ -12,6 +12,7 @@ import infra.web.*
 import infra.web.datasource.WebNovelEsDataSource
 import infra.web.datasource.WebNovelHttpDataSource
 import infra.web.datasource.providers.Hameln
+import infra.web.datasource.providers.Pixiv
 import infra.web.datasource.providers.RemoteNovelListItem
 import infra.web.datasource.providers.Syosetu
 import kotlinx.coroutines.flow.firstOrNull
@@ -181,7 +182,7 @@ class WebNovelMetadataRepository(
         }
 
         // 在数据库中，暂停更新
-        if (local.pauseUpdate) {
+        if (local.pauseUpdate || providerId == Pixiv.id) {
             return Result.success(local)
         }
 

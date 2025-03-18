@@ -1,5 +1,5 @@
 import { useLocalStorage } from '@vueuse/core';
-import { debounce } from 'lodash-es';
+import { throttle } from 'lodash-es';
 
 interface Draft {
   text: string;
@@ -23,7 +23,7 @@ export const createDraftRepository = () => {
     );
   };
 
-  const addDraft = debounce(
+  const addDraft = throttle(
     (draftId: string, createdAt: number, text: string) => {
       if (!(draftId in registry.value)) {
         registry.value[draftId] = {};
@@ -34,7 +34,7 @@ export const createDraftRepository = () => {
         registry.value[draftId][createdAt] = text;
       }
     },
-    1000,
+    5000,
   );
 
   const removeDraft = (draftId: string) => {
