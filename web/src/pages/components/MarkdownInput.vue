@@ -23,7 +23,7 @@ const createdAt = Date.now();
             v-bind="$attrs"
             :draft-id="draftId"
             :created-at="createdAt"
-            :autosize="autosize ?? { minRows: 8 }"
+            :autosize="autosize || { minRows: 8 }"
           />
         </div>
       </n-tab-pane>
