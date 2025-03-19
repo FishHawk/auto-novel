@@ -31,10 +31,10 @@ const md = new MarkdownIt({
     validate: (params) => params.trim().split(' ', 2)[0] === 'details',
     openRender: (tokens, index, _options) => {
       const info = tokens[index].info.trim().slice(8).trim();
-      return `<details dir="auto"><summary>${info}</summary>`;
+      return `<p><details dir="auto"><summary>${info}</summary>`;
     },
     closeRender: (tokens, idx) => {
-      return '</details>';
+      return '</details></p>';
     },
   });
 
