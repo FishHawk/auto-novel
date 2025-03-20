@@ -44,7 +44,7 @@ const md = new MarkdownIt({
     validate: (params) => params.trim().split(' ', 2)[0] === 'star',
     openRender: (tokens, index, _options) => {
       const info = tokens[index].info.trim().slice(5).trim();
-      const starValue = !isNaN(Number(info)) && info !== '' ? info : '5';
+      const starValue = !isNaN(Number(info)) && info !== '' ? info : '0';
       return `<p><div class="starRating" data-star=${starValue}></div></p>`;
     },
   });
@@ -67,7 +67,7 @@ watchEffect(() => {
 onMounted(() => {
   const starElements = document.querySelectorAll('.starRating');
   starElements.forEach((starEl) => {
-    const starValue = starEl.getAttribute('data-star') || '5';
+    const starValue = starEl.getAttribute('data-star') || '0';
     const vnode = h(NRate, {
       value: Number(starValue),
       readonly: true,
