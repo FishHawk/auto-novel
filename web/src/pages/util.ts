@@ -71,3 +71,53 @@ export const onKeyDown = (
   onActivated(() => document.addEventListener('keydown', listener));
   onDeactivated(() => document.removeEventListener('keydown', listener));
 };
+
+/** !!! 对于modal内的复制，需要传入一个 modal 内部的元素作为 parentNode 来储存临时文本，不然移动端（传统复制方法fallbackCopy）无法复制*/
+export const copyToClipBoard = (
+  content: string,
+  message: MessageApi,
+  parentNode?: HTMLElement | null,
+) => {
+  if (!content) return;
+  // 优先使用 navigator 提供的复制方法
+  // 有些移动端不支持，所以调用传统的复制方法
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard
+      .writeText(content)
+      .then(() => message.success('已复制到剪贴板'))
+      .catch(() => fallbackCopy(content, message, parentNode));
+  } else {
+    fallbackCopy(content, message, parentNode);
+  }
+};
+
+/** 传统的复制方法：调用 document.execCommand('copy') */
+const fallbackCopy = (
+  text: string,
+  message: MessageApi,
+  parentNode?: HTMLElement | null,
+) => {
+  let targetNode = parentNode ?? document.body;
+  // 创建一个div并选取div区域来复制
+  // 如果这是创建textarea元素，然后使用textarea.select()，会导致输入法瞬时弹出
+  const editableDiv = document.createElement('div');
+  editableDiv.innerText = text;
+  editableDiv.style.cssText = `position:fixed; top:-9999px; left:-9999px; opacity:0;`;
+  // editableDiv.setAttribute('contenteditable', 'true');
+
+  targetNode.appendChild(editableDiv);
+  const range = document.createRange();
+  const selection = window.getSelection();
+
+  try {
+    range.selectNodeContents(editableDiv);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    const successful = document.execCommand('copy');
+    message.success(successful ? '已复制到剪贴板(移动端)' : '复制失败');
+  } catch (err) {
+    message.error('复制失败');
+  } finally {
+    editableDiv.parentNode?.removeChild(editableDiv);
+  }
+};

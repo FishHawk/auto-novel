@@ -35,10 +35,20 @@ const reply = async () => {
     message,
   );
 };
+const showMarkdownEditor = ref(false);
 </script>
 
 <template>
+  <markdown-input
+    v-if="showMarkdownEditor"
+    draft-id="Comment"
+    v-model:value="content"
+    placeholder="请输入正文"
+    maxlength="1000"
+    style="width: 100%"
+  />
   <n-input
+    v-else
     v-model:value="content"
     type="textarea"
     :placeholder="placeholder"
@@ -51,12 +61,21 @@ const reply = async () => {
     style="margin-top: 10px"
     :input-props="{ spellcheck: false }"
   />
-  <c-button
-    label="发布"
-    require-login
-    :round="false"
-    type="primary"
-    @action="reply()"
-    style="margin-top: 10px"
-  />
+  <n-flex>
+    <c-button
+      label="发布"
+      require-login
+      :round="false"
+      type="primary"
+      @action="reply()"
+      style="margin-top: 10px"
+    />
+    <c-button
+      label="MD编辑器"
+      require-login
+      :round="false"
+      @action="showMarkdownEditor = !showMarkdownEditor"
+      style="margin-top: 10px"
+    />
+  </n-flex>
 </template>
