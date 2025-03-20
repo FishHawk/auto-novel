@@ -4,6 +4,8 @@ import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownIt from 'markdown-it';
 import { spoiler } from '@mdit/plugin-spoiler';
 import { container } from '@mdit/plugin-container';
+import { NRate } from 'naive-ui';
+import { render } from 'vue';
 
 const { setting } = Locator.settingRepository();
 
@@ -36,6 +38,15 @@ const md = new MarkdownIt({
     closeRender: (tokens, idx) => {
       return '</details></p>';
     },
+  })
+  .use(container, {
+    name: 'star',
+    validate: (params) => params.trim().split(' ', 2)[0] === 'star',
+    openRender: (tokens, index, _options) => {
+      const info = tokens[index].info.trim().slice(5).trim();
+      const starValue = !isNaN(Number(info)) && info !== '' ? info : '5';
+      return `<p><div class="starRating" data-star=${starValue}></div></p>`;
+    },
   });
 
 // 根据主题设置spoilder的颜色
@@ -50,6 +61,24 @@ watchEffect(() => {
     '--spoiler-color',
     setting.value.theme === 'light' ? 'white' : 'black',
   );
+});
+
+// 将 class=starRating 渲染为rating 组件
+onMounted(() => {
+  const starElements = document.querySelectorAll('.starRating');
+  starElements.forEach((starEl) => {
+    const starValue = starEl.getAttribute('data-star') || '5';
+    const vnode = h(NRate, {
+      value: Number(starValue),
+      readonly: true,
+      allowHalf: true,
+      color: '#4fb233',
+    });
+
+    const mountPoint = document.createElement('p');
+    starEl.replaceWith(mountPoint);
+    render(vnode, mountPoint);
+  });
 });
 
 md.linkify.add('http:', {
