@@ -77,7 +77,7 @@ const playSound = (source: string) => {
         <n-flex vertical>
           <b>自定义功能</b>
           <n-flex vertical>
-            <n-checkbox v-model:checked="setting.autoTopWhenAddTask">
+            <n-checkbox v-model:checked="setting.autoTopJobWhenAddTask">
               工作区添加时自动置顶
             </n-checkbox>
           </n-flex>

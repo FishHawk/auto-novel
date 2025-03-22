@@ -11,7 +11,7 @@ export interface Setting {
   showTagInWebFavored: boolean;
   favoriteCreateTimeFirst: boolean;
   //
-  autoTopWhenAddTask: boolean;
+  autoTopJobWhenAddTask: boolean;
   //
   menuCollapsed: boolean;
   //
@@ -45,7 +45,7 @@ export namespace Setting {
     showTagInWebFavored: false,
     favoriteCreateTimeFirst: false,
     //
-    autoTopWhenAddTask: false,
+    autoTopJobWhenAddTask: false,
     //
     menuCollapsed: false,
     //

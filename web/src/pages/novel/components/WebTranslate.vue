@@ -138,7 +138,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     };
     const success = workspace.addJob(job);
     if (success) {
-      if (setting.value.autoTopWhenAddTask || pressControl.value) {
+      if (setting.value.autoTopJobWhenAddTask || pressControl.value) {
         workspace.topJob(job);
       }
     }
