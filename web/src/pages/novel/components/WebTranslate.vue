@@ -89,7 +89,7 @@ const importToWorkspace = async () => {
     .catch((error) => message.error(`导入失败:${error}`));
 };
 
-const shouldTopJob = useKeyModifier('Control');
+const pressControl = useKeyModifier('Control');
 const submitJob = (id: 'gpt' | 'sakura') => {
   const { startIndex, endIndex, level, forceMetadata } =
     translateOptions.value!!.getTranslateTaskParams();
@@ -138,7 +138,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     };
     const success = workspace.addJob(job);
     if (success) {
-      if (shouldTopJob.value) {
+      if (setting.value.autoTopJobWhenAddTask || pressControl.value) {
         workspace.topJob(job);
       }
     }
@@ -153,7 +153,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
 </script>
 
 <template>
-  <n-text v-if="!whoami.isSignedIn"> 游客无法使用翻译功能，请先登录。 </n-text>
+  <n-text v-if="!whoami.isSignedIn">游客无法使用翻译功能，请先登录。</n-text>
   <n-text v-else-if="setting.enabledTranslator.length === 0">
     没有翻译器启用。
   </n-text>

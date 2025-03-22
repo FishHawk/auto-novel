@@ -43,9 +43,7 @@ const playSound = (source: string) => {
           <b>快捷键说明</b>
           <n-ul>
             <n-li>列表页面，可以使用左右方向键翻页。</n-li>
-            <n-li>
-              GPT/Sakura排队按钮，按住Ctrl键点击，会将任务自动置顶。
-            </n-li>
+            <n-li>GPT/Sakura排队按钮，按住Ctrl键点击，会将任务自动置顶。</n-li>
             <n-li>阅读页面，可以使用左右方向键跳转上/下一章。</n-li>
             <n-li>阅读页面，可以使用数字键1～4快速切换翻译。</n-li>
           </n-ul>
@@ -70,6 +68,17 @@ const playSound = (source: string) => {
             </n-checkbox>
             <n-checkbox v-model:checked="setting.favoriteCreateTimeFirst">
               收藏时间排序优先
+            </n-checkbox>
+          </n-flex>
+        </n-flex>
+      </n-list-item>
+
+      <n-list-item>
+        <n-flex vertical>
+          <b>自定义功能</b>
+          <n-flex vertical>
+            <n-checkbox v-model:checked="setting.autoTopJobWhenAddTask">
+              工作区添加时自动置顶
             </n-checkbox>
           </n-flex>
         </n-flex>
@@ -104,12 +113,14 @@ const playSound = (source: string) => {
               任务全部完成
             </n-checkbox>
 
-            [<c-button
+            [
+            <c-button
               label="点击播放"
               text
               type="primary"
               @action="playSound(SoundAllTaskCompleted)"
-            />]
+            />
+            ]
           </n-flex>
         </n-flex>
       </n-list-item>
