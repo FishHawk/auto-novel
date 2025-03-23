@@ -5,11 +5,13 @@ import {
   FormatItalicOutlined,
   StarOutlineFilled,
   StrikethroughSOutlined,
+  WarningAmberOutlined,
+  MenuOpenOutlined,
 } from '@vicons/material';
 import { DropdownOption, NIcon } from 'naive-ui';
+import { Component } from 'vue';
 
 import { Locator } from '@/data';
-import MarkdownEdiorToolbarStar from './MarkdownEdiorToolbarStar.vue';
 
 const props = defineProps<{
   draftId?: string;
@@ -22,6 +24,11 @@ const props = defineProps<{
 }>();
 
 const value = defineModel<string>('value', { required: true });
+
+const showEditorToolbar = ref(true);
+const onTabUpdate = (value: number) => {
+  showEditorToolbar.value = value === 0;
+};
 
 // ==============================
 // 草稿
@@ -47,7 +54,7 @@ watch(
   drafts,
   () => {
     draftOptions.value = [];
-    for (const draft of drafts.value) {
+    for (const draft of drafts.value.reverse()) {
       draftOptions.value.push({
         label: draft.createdAt.toLocaleString('zh-CN'),
         key: draft.createdAt.getTime(),
@@ -75,121 +82,81 @@ const handleSelectDraft = (key: string, option: DropdownOption) => {
 // 编辑
 // ==============================
 
-const storedRange = ref<{
-  anchorNode?: Node | null;
-  start: number;
-  end: number;
-}>({ start: 0, end: 0 });
+const elEditor = useTemplateRef('editor');
 
-const getTextArea = (anchorNode?: Node | null) => {
-  if (anchorNode) {
-    const targetElement =
-      anchorNode instanceof HTMLElement
-        ? anchorNode
-        : anchorNode?.parentElement;
-    return targetElement?.parentElement?.querySelector('textarea');
-  }
-};
-/** 储存选中的文本区域。这个方法会在每次点击工具栏button或dropdown时调用，以防止因改变焦点失去选区而无法插入或替换文本 */
-const storeSelection = () => {
-  const anchorNode = window.getSelection()?.anchorNode;
-  const textarea = getTextArea(anchorNode);
-  if (textarea) {
-    storedRange.value = {
-      anchorNode: anchorNode,
-      start: textarea.selectionStart,
-      end: textarea.selectionEnd,
-    };
-  }
-};
-const restoreSelection = () => {
-  const textarea = getTextArea(storedRange.value.anchorNode);
-  if (textarea) {
-    textarea.focus();
-    textarea.setSelectionRange(storedRange.value.start, storedRange.value.end);
-    // 选中缓存中的文本区域后，将缓存清除。不然线先点击其他地方让文本区失去选择，紧接再着点击其它按钮时会使用这个缓存区域
-    storedRange.value.anchorNode = null;
-  }
-};
-/* 处理文本，两种情况：1. 处理选中的文本，2. 未选中时插入样例文本 */
 const processSelection = (
-  select_func?: ((str: string) => string) | null,
-  insert_str: string = '',
+  processer: (str: string) => string,
+  fallbackText: string = '',
 ) => {
-  // 恢复选中区
-  restoreSelection();
-  const selectedText = window.getSelection()?.toString() || '';
-  const result =
-    select_func && selectedText
-      ? select_func(selectedText)
-      : selectedText + insert_str;
-  document.execCommand('insertText', false, result);
+  const elTextarea = elEditor.value?.textareaElRef;
+  if (!elTextarea) return;
+  elTextarea.focus();
+
+  const { selectionStart, selectionEnd } = elTextarea;
+  const selectedText = elTextarea.value.substring(selectionStart, selectionEnd);
+  if (selectedText.length > 0) {
+    const processedText = processer(selectedText);
+    elTextarea.setRangeText(processedText);
+  } else {
+    elTextarea.setRangeText(fallbackText);
+    elTextarea.selectionStart += fallbackText.length;
+  }
+  elTextarea.dispatchEvent(new Event('input'));
+};
+
+const warpProcesser = (warp: string) => {
+  return (text: string) => {
+    if (
+      text.length >= warp.length * 2 &&
+      text.startsWith(warp) &&
+      text.endsWith(warp)
+    ) {
+      return text.substring(warp.length, text.length - warp.length);
+    } else {
+      return warp + text + warp;
+    }
+  };
 };
 
 const toolbarButtons: {
-  icon?: typeof FormatBoldOutlined;
-  label?: string;
+  icon: Component;
+  label: string;
   action: () => void;
 }[] = [
   {
     icon: FormatBoldOutlined,
-    action: () => {
-      processSelection((str: string) => `**${str}**`, '**粗体**');
-    },
+    label: '粗体',
+    action: () => processSelection(warpProcesser('**'), '**粗体**'),
   },
   {
     icon: FormatItalicOutlined,
-    action: () => {
-      processSelection((str: string) => `*${str}*`, '*斜体*');
-    },
+    label: '斜体',
+    action: () => processSelection(warpProcesser('*'), '*斜体*'),
   },
   {
     icon: StrikethroughSOutlined,
-    action: () => {
-      processSelection((str: string) => `~~${str}~~`, '~~删除线~~');
-    },
+    label: '删除线',
+    action: () => processSelection(warpProcesser('~~'), '~~删除线~~'),
   },
-  {
-    label: '剧透',
-    action: () => {
-      processSelection((str: string) => `!!${str}!!`, '!!剧透!!');
-    },
-  },
-  {
-    label: '折叠',
-    action: () => {
-      processSelection(
-        (str: string) => `::: details 详情\n${str}\n:::\n`,
-        '::: details 详情\n此文本将被隐藏\n:::\n',
-      );
-    },
-  },
-];
-
-const showToolBarStar = ref(false);
-
-const toolbarDropdowns: {
-  icon?: typeof FormatBoldOutlined;
-  label?: string;
-  show?: Ref<boolean, boolean>;
-  options: DropdownOption[];
-  handleSelect?: () => void;
-}[] = [
   {
     icon: StarOutlineFilled,
-    show: showToolBarStar,
-    options: [
-      {
-        type: 'render',
-        render: () =>
-          h(MarkdownEdiorToolbarStar, {
-            onClick: (star) => {
-              showToolBarStar.value = false;
-              processSelection(null, `::: star ${star}\n`);
-            },
-          }),
-      },
-    ],
+    label: '评分',
+    action: () =>
+      processSelection((_str: string) => `::: star 5\n`, `::: star 5\n`),
+  },
+  {
+    icon: WarningAmberOutlined,
+    label: '剧透',
+    action: () => processSelection(warpProcesser('!!'), '!!剧透!!'),
+  },
+  {
+    icon: MenuOpenOutlined,
+    label: '折叠',
+    action: () =>
+      processSelection(
+        (str: string) => `\n::: details 点击展开\n${str}\n:::\n`,
+        '\n::: details 点击展开\n此文本将被折叠\n:::\n',
+      ),
   },
 ];
 
@@ -235,8 +202,14 @@ const markdownGuide = `# 一级标题
 
 <template>
   <n-el tag="div" class="markdown-input">
-    <n-tabs class="tabs" type="card" size="small">
-      <template #suffix>
+    <n-tabs
+      ref="tab"
+      class="tabs"
+      type="card"
+      size="small"
+      @update:value="onTabUpdate"
+    >
+      <template v-if="showEditorToolbar" #suffix>
         <n-dropdown
           v-if="drafts.length"
           :options="draftOptions"
@@ -248,65 +221,31 @@ const markdownGuide = `# 一级标题
           </n-button>
         </n-dropdown>
 
-        <n-button
-          v-for="button in toolbarButtons"
-          quaternary
-          size="small"
-          @click="
-            () => {
-              storeSelection();
-              button.action();
-            }
-          "
-        >
-          <template v-if="button.icon && button.label" #icon>
-            <n-icon :component="button.icon" />
+        <n-tooltip v-for="button in toolbarButtons" trigger="hover">
+          <template #trigger>
+            <n-button
+              quaternary
+              size="small"
+              @mousedown="
+                (e) => {
+                  button.action();
+                  e.preventDefault();
+                }
+              "
+            >
+              <template #icon>
+                <n-icon :component="button.icon" />
+              </template>
+            </n-button>
           </template>
           {{ button.label }}
-          <template v-if="button.icon && !button.label">
-            <n-icon size="20px" :component="button.icon" />
-          </template>
-        </n-button>
-        <!-- 工具下拉菜单按钮，点击时会 storeSelection，失焦时或选中下拉菜单选项时会 restoreSelection 并隐藏下拉菜单 -->
-        <n-dropdown
-          v-for="dropdown in toolbarDropdowns"
-          trigger="click"
-          :options="dropdown.options"
-          :show="dropdown.show?.value"
-          @update-show="
-            (v) => {
-              if (dropdown.show) dropdown.show.value = v;
-            }
-          "
-          @clickoutside="
-            () => {
-              restoreSelection();
-              if (dropdown.show) dropdown.show.value = false;
-            }
-          "
-          @select="
-            () => {
-              restoreSelection();
-              if (dropdown.show) dropdown.show.value = false;
-              if (dropdown.handleSelect) dropdown.handleSelect();
-            }
-          "
-        >
-          <n-button quaternary size="small" @click="storeSelection">
-            <template v-if="dropdown.icon && dropdown.label" #icon>
-              <n-icon :component="dropdown.icon" />
-            </template>
-            {{ dropdown.label }}
-            <template v-if="dropdown.icon && !dropdown.label">
-              <n-icon size="20px" :component="dropdown.icon" />
-            </template>
-          </n-button>
-        </n-dropdown>
+        </n-tooltip>
       </template>
 
       <n-tab-pane tab="编辑" :name="0">
         <div style="padding: 0 8px 8px">
           <n-input
+            ref="editor"
             v-bind="$attrs"
             v-model:value="value"
             type="textarea"
