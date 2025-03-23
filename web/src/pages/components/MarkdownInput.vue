@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import avaterUrl from '@/image/avater.jpg';
-import { Locator } from '@/data';
 import {
   FormatBoldOutlined,
   FormatItalicOutlined,
-  DeleteOutlineFilled,
   StarOutlineFilled,
   StrikethroughSOutlined,
 } from '@vicons/material';
 import { DropdownOption, NIcon } from 'naive-ui';
+
+import { Locator } from '@/data';
 import MarkdownEdiorToolbarStar from './MarkdownEdiorToolbarStar.vue';
 
 const props = defineProps<{
@@ -20,7 +20,12 @@ const props = defineProps<{
         maxRows?: number;
       };
 }>();
+
 const value = defineModel<string>('value', { required: true });
+
+// ==============================
+// 草稿
+// ==============================
 
 const createdAt = Date.now();
 
@@ -29,14 +34,15 @@ const getDrafts = () => {
   return Locator.draftRepository().getDraft(props.draftId);
 };
 
+const saveDraft = (text: string) => {
+  if (props.draftId && createdAt && text.trim() !== '') {
+    Locator.draftRepository().addDraft(props.draftId, createdAt, text);
+  }
+};
+
 const drafts = ref(getDrafts());
 const draftOptions = ref<DropdownOption[]>([]);
 
-/** dropdown的options中的icon需要的值为一个渲染icon的函数 */
-const renderIcon = (icon: typeof FormatBoldOutlined) => () =>
-  h(NIcon, null, { default: () => h(icon) });
-
-// 更新草稿的下拉列表
 watch(
   drafts,
   () => {
@@ -44,49 +50,30 @@ watch(
     for (const draft of drafts.value) {
       draftOptions.value.push({
         label: draft.createdAt.toLocaleString('zh-CN'),
-        key: draft.text,
+        key: draft.createdAt.getTime(),
+        draftText: draft.text,
       });
     }
     draftOptions.value.push(
-      ...[
-        {
-          type: 'divider',
-        },
-        {
-          label: '删除',
-          key: 'deleteAllDrafts',
-          icon: renderIcon(DeleteOutlineFilled),
-        },
-      ],
+      ...[{ type: 'divider' }, { label: '清空', key: '清空' }],
     );
   },
   { immediate: true },
 );
 
-const handleSelectDraft = (key: string) => {
-  if (key === 'deleteAllDrafts') {
-    clearDrafts();
-  } else {
-    restoreDraft(key);
-  }
-};
-
-const restoreDraft = (text: string) => {
-  value.value = text;
-};
-
-const saveDraft = (text: string) => {
-  if (props.draftId && createdAt && text.trim() !== '') {
-    Locator.draftRepository().addDraft(props.draftId, createdAt, text);
-  }
-};
-const clearDrafts = () => {
-  if (props.draftId) {
+const handleSelectDraft = (key: string, option: DropdownOption) => {
+  if (!props.draftId) return;
+  if (key === '清空') {
     Locator.draftRepository().removeDraft(props.draftId);
-    // 更新draft
     drafts.value = getDrafts();
+  } else {
+    value.value = option.draftText as string;
   }
 };
+
+// ==============================
+// 编辑
+// ==============================
 
 const storedRange = ref<{
   anchorNode?: Node | null;
@@ -251,18 +238,13 @@ const markdownGuide = `# 一级标题
     <n-tabs class="tabs" type="card" size="small">
       <template #suffix>
         <n-dropdown
+          v-if="drafts.length"
           :options="draftOptions"
           trigger="click"
           @select="handleSelectDraft"
         >
           <n-button size="small" quaternary>
-            <n-badge
-              :value="drafts.length"
-              color="rgba(255, 0, 0, 0.3)"
-              show-zero
-            >
-              草稿
-            </n-badge>
+            <n-badge :value="drafts.length" dot :offset="[8, -4]">草稿</n-badge>
           </n-button>
         </n-dropdown>
 
@@ -324,7 +306,6 @@ const markdownGuide = `# 一级标题
 
       <n-tab-pane tab="编辑" :name="0">
         <div style="padding: 0 8px 8px">
-          <!-- 编辑框 -->
           <n-input
             v-bind="$attrs"
             v-model:value="value"
@@ -337,7 +318,7 @@ const markdownGuide = `# 一级标题
         </div>
       </n-tab-pane>
       <n-tab-pane tab="预览" :name="1">
-        <div style="padding: 8px 16px 16px">
+        <div style="padding: 0px 16px">
           <markdown :source="(value as string) || '没有可预览的内容'" />
         </div>
       </n-tab-pane>
