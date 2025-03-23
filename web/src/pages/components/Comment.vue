@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { CommentOutlined } from '@vicons/material';
+import { CommentOutlined, CopyAllOutlined } from '@vicons/material';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { Locator } from '@/data';
@@ -7,7 +7,7 @@ import { CommentRepository } from '@/data/api';
 import { Comment1 } from '@/model/Comment';
 import { runCatching } from '@/util/result';
 
-import { doAction } from '../util';
+import { doAction, copyToClipBoard } from '../util';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;
@@ -71,6 +71,12 @@ const unhideComment = (comment: Comment1) =>
     message,
   );
 
+const copyComment = (comment: Comment1) =>
+  copyToClipBoard(comment.content).then((isSuccess) => {
+    if (isSuccess) message.success('复制成功');
+    else message.error('复制失败');
+  });
+
 const showInput = ref(false);
 
 const splitByLinks = (text: string): [string, boolean][] => {
@@ -119,6 +125,16 @@ const splitByLinks = (text: string): [string, boolean][] => {
           @action="hideComment(comment)"
         />
       </template>
+
+      <c-button
+        v-if="!comment.hidden"
+        label="复制"
+        :icon="CopyAllOutlined"
+        quaternary
+        type="tertiary"
+        size="tiny"
+        @action="copyComment(comment)"
+      />
     </n-flex>
 
     <n-card embedded :bordered="false" size="small" style="margin-top: 2px">

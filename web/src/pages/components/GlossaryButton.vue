@@ -5,7 +5,7 @@ import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 
-import { doAction } from '@/pages/util';
+import { doAction, copyToClipBoard } from '@/pages/util';
 
 const props = defineProps<{
   gnid?: GenericNovelId;
@@ -110,9 +110,16 @@ const addTerm = () => {
   }
 };
 
-const exportGlossary = () => {
-  navigator.clipboard.writeText(Glossary.toText(glossary.value));
-  message.info('导出成功，已经将术语表复制到剪切板');
+const exportGlossary = async (ev: MouseEvent) => {
+  const isSuccess = await copyToClipBoard(
+    Glossary.toText(glossary.value),
+    ev.target as HTMLElement,
+  );
+  if (isSuccess) {
+    message.success('导出成功：已复制到剪贴板');
+  } else {
+    message.success('导出失败');
+  }
 };
 
 const importGlossary = () => {
@@ -152,7 +159,7 @@ const importGlossary = () => {
 
           <n-text>
             使用前务必先阅读
-            <c-a to="/forum/660ab4da55001f583649a621"> 术语表使用指南 </c-a>
+            <c-a to="/forum/660ab4da55001f583649a621">术语表使用指南</c-a>
             ，不要滥用术语表。
           </n-text>
         </template>
