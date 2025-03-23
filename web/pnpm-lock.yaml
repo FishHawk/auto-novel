@@ -10,6 +10,12 @@ importers:
       '@img-comparison-slider/vue':
         specifier: ^8.0.0
         version: 8.0.0
+      '@mdit/plugin-container':
+        specifier: ^0.16.0
+        version: 0.16.0(markdown-it@14.1.0)
+      '@mdit/plugin-spoiler':
+        specifier: ^0.16.0
+        version: 0.16.0(markdown-it@14.1.0)
       '@types/diff':
         specifier: ^5.2.3
         version: 5.2.3
@@ -812,6 +818,30 @@ packages:
       {
         integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==,
       }
+
+  '@mdit/plugin-container@0.16.0':
+    resolution:
+      {
+        integrity: sha512-NCsyEiOmoJvXSEVJSY6vaEcvbE11sciRSx5qXBvQQZxUYGYsB+ObYSFVZDFPezsEN35X3b07rurLx8P2Mi9DgQ==,
+      }
+    engines: { node: '>= 18' }
+    peerDependencies:
+      markdown-it: ^14.1.0
+    peerDependenciesMeta:
+      markdown-it:
+        optional: true
+
+  '@mdit/plugin-spoiler@0.16.0':
+    resolution:
+      {
+        integrity: sha512-lm2lLx5H6649igzmbEe7KGsYfS6EOHn3Ps1ZdOHIFo0AY9eEh//gbjPOuJNJU58vtMnzLYzQHQKp/JqViYTIQQ==,
+      }
+    engines: { node: '>= 18' }
+    peerDependencies:
+      markdown-it: ^14.1.0
+    peerDependenciesMeta:
+      markdown-it:
+        optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     resolution:
@@ -3903,6 +3933,18 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.0
 
   '@juggle/resize-observer@3.4.0': {}
+
+  '@mdit/plugin-container@0.16.0(markdown-it@14.1.0)':
+    dependencies:
+      '@types/markdown-it': 14.1.2
+    optionalDependencies:
+      markdown-it: 14.1.0
+
+  '@mdit/plugin-spoiler@0.16.0(markdown-it@14.1.0)':
+    dependencies:
+      '@types/markdown-it': 14.1.2
+    optionalDependencies:
+      markdown-it: 14.1.0
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
