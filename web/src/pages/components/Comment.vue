@@ -71,7 +71,19 @@ const unhideComment = (comment: Comment1) =>
     message,
   );
 
+const copyComment = (comment: Comment1) =>
+  copyToClipBoard(comment.content).then((isSuccess) => {
+    if (isSuccess) message.success('复制成功');
+    else message.error('复制失败');
+  });
+
 const showInput = ref(false);
+
+const splitByLinks = (text: string): [string, boolean][] => {
+  const regExp =
+    /((?:http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,6}(?:[/?][a-zA-Z0-9-_/?=&%*#+]+)?)/g;
+  return text.split(regExp).map((part) => [part, regExp.test(part)]);
+};
 </script>
 
 <template>
@@ -121,13 +133,18 @@ const showInput = ref(false);
         quaternary
         type="tertiary"
         size="tiny"
-        @action="copyToClipBoard(comment.content, message)"
+        @action="copyComment(comment)"
       />
     </n-flex>
 
     <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
-      <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
-      <markdown v-else :source="comment.content" />
+      <n-p style="white-space: pre-wrap">
+        <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
+        <template v-for="[part, isLink] in splitByLinks(comment.content)">
+          <n-a v-if="isLink" :href="part" target="_blank">{{ part }}</n-a>
+          <template v-else>{{ part }}</template>
+        </template>
+      </n-p>
     </n-card>
   </DefineCommentContent>
 
