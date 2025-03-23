@@ -110,12 +110,11 @@ const addTerm = () => {
   }
 };
 
-/** 复制的临时文本区 */
-const TempGlossaryTextAreaID = 'temp_glossary_text_area';
-
-const exportGlossary = async () => {
-  let el = document.getElementById(TempGlossaryTextAreaID);
-  const isSuccess = await copyToClipBoard(Glossary.toText(glossary.value), el);
+const exportGlossary = async (ev: MouseEvent) => {
+  const isSuccess = await copyToClipBoard(
+    Glossary.toText(glossary.value),
+    ev.target as HTMLElement,
+  );
   if (isSuccess) {
     message.success('导出成功：已复制到剪贴板');
   } else {
@@ -149,7 +148,6 @@ const importGlossary = () => {
     v-model:show="showGlossaryModal"
     :extra-height="120"
   >
-    <p :id="TempGlossaryTextAreaID" />
     <template #header-extra>
       <n-flex
         vertical

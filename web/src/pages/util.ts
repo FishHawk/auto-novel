@@ -85,7 +85,6 @@ export const copyToClipBoard = async (
   } catch {}
 
   // 回退到传统复制方法
-
   // 创建临时可编辑元素，使用div元素避免弹出输入法
   const textEl = document.createElement('div');
   textEl.innerText = text;
@@ -95,6 +94,7 @@ export const copyToClipBoard = async (
     left: '-9999px',
     opacity: '0',
   });
+  textEl.contentEditable = 'true';
 
   // modal 内的复制，需要一个 modal 内部的元素作为 parentNode 来储存临时文本
   const targetNode = parentNode ?? document.body;
