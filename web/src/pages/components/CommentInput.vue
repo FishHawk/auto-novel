@@ -39,7 +39,7 @@ const reply = async () => {
 
 <template>
   <markdown-input
-    draft-id="Comment"
+    :draft-id="`comment-${site}`"
     v-model:value="content"
     :placeholder="placeholder"
     :autosize="{ minRows: 4, maxRows: 12 }"
