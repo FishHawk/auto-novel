@@ -155,6 +155,7 @@ const submit = async () => {
       </n-form-item-row>
       <n-form-item-row path="content" label="正文">
         <markdown-input
+          mode="article"
           :draft-id="draftId"
           v-model:value="formValue.content"
           placeholder="请输入正文"

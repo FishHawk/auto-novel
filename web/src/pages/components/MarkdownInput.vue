@@ -1,32 +1,165 @@
 <script setup lang="ts">
-import { Locator } from '@/data';
 import avaterUrl from '@/image/avater.jpg';
+import {
+  FormatBoldOutlined,
+  FormatItalicOutlined,
+  StarOutlineFilled,
+  StrikethroughSOutlined,
+  WarningAmberOutlined,
+  MenuOpenOutlined,
+} from '@vicons/material';
+import { DropdownOption, NIcon } from 'naive-ui';
+import { Component } from 'vue';
+
+import { Locator } from '@/data';
 
 const props = defineProps<{
-  value: string;
+  mode: 'article' | 'comment';
   draftId?: string;
+  autosize?:
+    | boolean
+    | {
+        minRows?: number;
+        maxRows?: number;
+      };
 }>();
 
-const emit = defineEmits<{
-  'update:value': [string];
-}>();
+const value = defineModel<string>('value', { required: true });
+
+const showEditorToolbar = ref(true);
+const onTabUpdate = (value: number) => {
+  showEditorToolbar.value = value === 0;
+};
+
+// ==============================
+// 草稿
+// ==============================
+
+const createdAt = Date.now();
 
 const getDrafts = () => {
   if (props.draftId === undefined) return [];
   return Locator.draftRepository().getDraft(props.draftId);
 };
-const drafts = getDrafts();
 
-const createdAt = Date.now();
-
-const restoreDraft = (text: string) => {
-  emit('update:value', text);
-};
 const saveDraft = (text: string) => {
-  if (props.draftId) {
+  if (props.draftId && createdAt && text.trim() !== '') {
     Locator.draftRepository().addDraft(props.draftId, createdAt, text);
   }
 };
+
+const drafts = ref(getDrafts());
+const draftOptions = ref<DropdownOption[]>([]);
+
+watch(
+  drafts,
+  () => {
+    draftOptions.value = [];
+    for (const draft of drafts.value.reverse()) {
+      draftOptions.value.push({
+        label: draft.createdAt.toLocaleString('zh-CN'),
+        key: draft.createdAt.getTime(),
+        draftText: draft.text,
+      });
+    }
+    draftOptions.value.push(
+      ...[{ type: 'divider' }, { label: '清空', key: '清空' }],
+    );
+  },
+  { immediate: true },
+);
+
+const handleSelectDraft = (key: string, option: DropdownOption) => {
+  if (!props.draftId) return;
+  if (key === '清空') {
+    Locator.draftRepository().removeDraft(props.draftId);
+    drafts.value = getDrafts();
+  } else {
+    value.value = option.draftText as string;
+  }
+};
+
+// ==============================
+// 编辑
+// ==============================
+
+const elEditor = useTemplateRef('editor');
+
+const processSelection = (
+  processer: (str: string) => string,
+  fallbackText: string = '',
+) => {
+  const elTextarea = elEditor.value?.textareaElRef;
+  if (!elTextarea) return;
+  elTextarea.focus();
+
+  const { selectionStart, selectionEnd } = elTextarea;
+  const selectedText = elTextarea.value.substring(selectionStart, selectionEnd);
+  if (selectedText.length > 0) {
+    const processedText = processer(selectedText);
+    elTextarea.setRangeText(processedText);
+  } else {
+    elTextarea.setRangeText(fallbackText);
+    elTextarea.selectionStart += fallbackText.length;
+  }
+  elTextarea.dispatchEvent(new Event('input'));
+};
+
+const warpProcesser = (warp: string) => {
+  return (text: string) => {
+    if (
+      text.length >= warp.length * 2 &&
+      text.startsWith(warp) &&
+      text.endsWith(warp)
+    ) {
+      return text.substring(warp.length, text.length - warp.length);
+    } else {
+      return warp + text + warp;
+    }
+  };
+};
+
+const toolbarButtons: {
+  icon: Component;
+  label: string;
+  action: () => void;
+}[] = [
+  {
+    icon: FormatBoldOutlined,
+    label: '粗体',
+    action: () => processSelection(warpProcesser('**'), '**粗体**'),
+  },
+  {
+    icon: FormatItalicOutlined,
+    label: '斜体',
+    action: () => processSelection(warpProcesser('*'), '*斜体*'),
+  },
+  {
+    icon: StrikethroughSOutlined,
+    label: '删除线',
+    action: () => processSelection(warpProcesser('~~'), '~~删除线~~'),
+  },
+  {
+    icon: StarOutlineFilled,
+    label: '评分',
+    action: () =>
+      processSelection((_str: string) => `::: star 5\n`, `::: star 5\n`),
+  },
+  {
+    icon: WarningAmberOutlined,
+    label: '剧透',
+    action: () => processSelection(warpProcesser('!!'), '!!剧透!!'),
+  },
+  {
+    icon: MenuOpenOutlined,
+    label: '折叠',
+    action: () =>
+      processSelection(
+        (str: string) => `\n::: details 点击展开\n${str}\n:::\n`,
+        '\n::: details 点击展开\n此文本将被折叠\n:::\n',
+      ),
+  },
+];
 
 const markdownGuide = `# 一级标题
 ## 二级标题
@@ -65,52 +198,75 @@ const markdownGuide = `# 一级标题
 下面是图片
 
 ![](${avaterUrl})
-
 `;
 </script>
 
 <template>
   <n-el tag="div" class="markdown-input">
-    <n-tabs class="tabs" type="card" size="small">
+    <n-tabs
+      ref="tab"
+      class="tabs"
+      type="card"
+      size="small"
+      @update:value="onTabUpdate"
+    >
+      <template v-if="showEditorToolbar" #suffix>
+        <n-dropdown
+          v-if="drafts.length"
+          :options="draftOptions"
+          trigger="click"
+          @select="handleSelectDraft"
+        >
+          <n-button size="small" quaternary>
+            <n-badge :value="drafts.length" dot :offset="[8, -4]">草稿</n-badge>
+          </n-button>
+        </n-dropdown>
+
+        <n-tooltip v-for="button in toolbarButtons" trigger="hover">
+          <template #trigger>
+            <n-button
+              quaternary
+              size="small"
+              @mousedown="
+                (e) => {
+                  button.action();
+                  e.preventDefault();
+                }
+              "
+            >
+              <template #icon>
+                <n-icon :component="button.icon" />
+              </template>
+            </n-button>
+          </template>
+          {{ button.label }}
+        </n-tooltip>
+      </template>
+
       <n-tab-pane tab="编辑" :name="0">
         <div style="padding: 0 8px 8px">
-          <n-flex
-            v-if="drafts.length > 0"
-            vertical
-            :size="0"
-            style="margin-bottom: 8px"
-          >
-            <n-text type="warning" style="font-size: 12px">
-              <b>* 检测到以下未恢复的草稿，点击恢复</b>
-            </n-text>
-            <n-text
-              v-for="draft of drafts"
-              style="font-size: 12px; margin-left: 16px"
-            >
-              <n-button text size="tiny" @click="restoreDraft(draft.text)">
-                保存于{{ draft.createdAt.toLocaleString('zh-CN') }}
-              </n-button>
-            </n-text>
-          </n-flex>
-
           <n-input
+            ref="editor"
             v-bind="$attrs"
+            v-model:value="value"
             type="textarea"
             show-count
             :input-props="{ spellcheck: false }"
-            :value="value"
-            @update-value="(it) => emit('update:value', it)"
             @input="saveDraft"
+            :autosize="autosize || { minRows: 8 }"
           />
         </div>
       </n-tab-pane>
       <n-tab-pane tab="预览" :name="1">
-        <div style="padding: 8px 16px 16px">
-          <markdown :source="(value as string) || '没有可预览的内容'" />
+        <div style="padding: 0px 16px">
+          <markdown
+            :mode="mode"
+            :source="(value as string) || '没有可预览的内容'"
+          />
         </div>
       </n-tab-pane>
       <n-tab-pane tab="格式帮助" :name="2">
-        <div style="padding: 8px 16px">
+        <div style="padding: 8px 16px 16px">
           <n-table :bordered="false">
             <thead>
               <tr>
@@ -124,7 +280,7 @@ const markdownGuide = `# 一级标题
                   {{ markdownGuide }}
                 </td>
                 <td>
-                  <Markdown :source="markdownGuide" />
+                  <markdown :mode="mode" :source="markdownGuide" />
                 </td>
               </tr>
             </tbody>

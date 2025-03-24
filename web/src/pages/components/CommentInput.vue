@@ -38,18 +38,13 @@ const reply = async () => {
 </script>
 
 <template>
-  <n-input
+  <markdown-input
+    mode="comment"
+    :draft-id="`comment-${site}`"
     v-model:value="content"
-    type="textarea"
     :placeholder="placeholder"
-    :autosize="{
-      minRows: 2,
-      maxRows: 10,
-    }"
+    :autosize="{ minRows: 4, maxRows: 12 }"
     maxlength="1000"
-    show-count
-    style="margin-top: 10px"
-    :input-props="{ spellcheck: false }"
   />
   <c-button
     label="发布"
