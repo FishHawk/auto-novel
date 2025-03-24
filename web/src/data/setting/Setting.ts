@@ -11,6 +11,8 @@ export interface Setting {
   showTagInWebFavored: boolean;
   favoriteCreateTimeFirst: boolean;
   //
+  autoTopJobWhenAddTask: boolean;
+  //
   menuCollapsed: boolean;
   //
   downloadFilenameType: 'jp' | 'zh';
@@ -42,6 +44,8 @@ export namespace Setting {
     hideCommmentWenkuNovel: false,
     showTagInWebFavored: false,
     favoriteCreateTimeFirst: false,
+    //
+    autoTopJobWhenAddTask: false,
     //
     menuCollapsed: false,
     //
