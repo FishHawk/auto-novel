@@ -23,10 +23,8 @@ store.loadArticle().then((result) => {
       <n-h1 prefix="bar">{{ article.title }}</n-h1>
       <n-text v-if="article.hidden" depth="3">[隐藏]</n-text>
       <n-p>
-        {{ article.updateAt === article.createAt ? '发布' : '更新' }}于<n-time
-          :time="article.updateAt * 1000"
-          type="relative"
-        />
+        {{ article.updateAt === article.createAt ? '发布' : '更新' }}于
+        <n-time :time="article.updateAt * 1000" type="relative" />
         by {{ article.user.username }}
         <template
           v-if="whoami.isMe(article.user.username) || whoami.asMaintainer"
@@ -39,7 +37,7 @@ store.loadArticle().then((result) => {
       </n-p>
       <n-divider />
 
-      <Markdown :source="article.content" />
+      <markdown mode="article" :source="article.content" />
 
       <comment-list :site="`article-${articleId}`" :locked="article.locked" />
     </c-result>

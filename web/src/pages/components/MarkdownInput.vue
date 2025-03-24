@@ -14,6 +14,7 @@ import { Component } from 'vue';
 import { Locator } from '@/data';
 
 const props = defineProps<{
+  mode: 'article' | 'comment';
   draftId?: string;
   autosize?:
     | boolean
@@ -258,7 +259,10 @@ const markdownGuide = `# 一级标题
       </n-tab-pane>
       <n-tab-pane tab="预览" :name="1">
         <div style="padding: 0px 16px">
-          <markdown :source="(value as string) || '没有可预览的内容'" />
+          <markdown
+            :mode="mode"
+            :source="(value as string) || '没有可预览的内容'"
+          />
         </div>
       </n-tab-pane>
       <n-tab-pane tab="格式帮助" :name="2">
@@ -276,7 +280,7 @@ const markdownGuide = `# 一级标题
                   {{ markdownGuide }}
                 </td>
                 <td>
-                  <Markdown :source="markdownGuide" />
+                  <markdown :mode="mode" :source="markdownGuide" />
                 </td>
               </tr>
             </tbody>

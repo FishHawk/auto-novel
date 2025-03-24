@@ -9,9 +9,36 @@ import { render } from 'vue';
 
 const { setting } = Locator.settingRepository();
 
-defineProps<{ source: string }>();
+const props = defineProps<{
+  mode: 'article' | 'comment';
+  source: string;
+}>();
+
+const getRules = (mode: 'article' | 'comment') => {
+  if (mode === 'article') {
+    return [];
+  } else if (mode === 'comment') {
+    return [
+      'backticks',
+      'blockquote',
+      'code',
+      'entity',
+      'escape',
+      'fence',
+      'heading',
+      'hr',
+      'image',
+      'lheading',
+      'reference',
+      'table',
+    ];
+  } else {
+    return mode satisfies never;
+  }
+};
 
 const md = new MarkdownIt({
+  html: false,
   breaks: true,
   linkify: true,
 })
@@ -47,7 +74,8 @@ const md = new MarkdownIt({
       const starValue = !isNaN(Number(info)) && info !== '' ? info : '0';
       return `<p><div class="starRating" data-star=${starValue}></div></p>`;
     },
-  });
+  })
+  .disable(getRules(props.mode));
 
 // 根据主题设置spoilder的颜色
 watchEffect(() => {

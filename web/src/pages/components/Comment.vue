@@ -135,6 +135,7 @@ const showInput = ref(false);
       <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
       <markdown
         v-else
+        mode="comment"
         :source="comment.content"
         style="margin-top: -1em; margin-bottom: -1em"
       />
