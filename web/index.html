@@ -61,7 +61,8 @@
           );
           if (!setting) return;
           const json = JSON.parse(setting);
-          const theme = isReader ? json.theme.mode : json.theme;
+          let theme = isReader ? json.theme.mode : json.theme;
+          if (!theme) theme = 'system';
           if (theme === 'custom') {
             applyTheme(json.theme.bodyColor, json.theme.bodyColor);
           } else if (

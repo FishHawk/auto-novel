@@ -35,7 +35,7 @@ export interface Setting {
 
 export namespace Setting {
   export const defaultValue: Setting = {
-    theme: 'light',
+    theme: 'system',
     enabledTranslator: ['baidu', 'youdao', 'gpt', 'sakura'],
     tocSortReverse: false,
     //
@@ -163,7 +163,7 @@ export namespace ReaderSetting {
     lineSpace: 1.0,
     pageWidth: 800,
     theme: {
-      mode: 'light',
+      mode: 'system',
       bodyColor: '#FFFFFF',
       fontColor: '#000000',
     },
