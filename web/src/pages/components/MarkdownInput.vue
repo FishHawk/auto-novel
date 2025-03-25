@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import avaterUrl from '@/image/avater.jpg';
 import { Locator } from '@/data';
 
 import { useIsWideScreen } from '@/pages/util';
@@ -50,45 +49,6 @@ const clearDraft = () => {
 };
 
 const elEditor = useTemplateRef('editor');
-
-const markdownGuide = `# 一级标题
-## 二级标题
-### 三级标题
-
-使用空行分割段落，不用空行就会像下面这样
-
-**粗体**
-*斜体*
-~~删除线~~
-
-[链接](https://books.fishhawk.top)
-
-- 无序列表
-- 无序列表
-  - 加空格可以缩进
-  - 加空格可以缩进
-- 无序列表
-
-1. 有序列表
-1. 有序列表
-1. 有序列表
-
-> 引用
-
-下面是分隔线，和文本要用空行隔开
-
----
-
-| 表格第一列 | 左对齐 | 居中 | 右对齐 |
-| - | :- | :-: | -: |
-| 文本 | 文本 | 文本 | 文本 |
-| 文本 | 文本 | 文本 | 文本 |
-
-
-下面是图片
-
-![](${avaterUrl})
-`;
 </script>
 
 <template>
@@ -140,28 +100,6 @@ const markdownGuide = `# 一级标题
             :mode="mode"
             :source="(value as string) || '没有可预览的内容'"
           />
-        </div>
-      </n-tab-pane>
-      <n-tab-pane tab="格式帮助" :name="2">
-        <div style="padding: 8px 16px 16px">
-          <n-table :bordered="false">
-            <thead>
-              <tr>
-                <th><b>语法</b></th>
-                <th><b>预览</b></th>
-              </tr>
-            </thead>
-            <tbody style="vertical-align: top">
-              <tr>
-                <td style="white-space: pre-wrap">
-                  {{ markdownGuide }}
-                </td>
-                <td>
-                  <markdown :mode="mode" :source="markdownGuide" />
-                </td>
-              </tr>
-            </tbody>
-          </n-table>
         </div>
       </n-tab-pane>
     </n-tabs>

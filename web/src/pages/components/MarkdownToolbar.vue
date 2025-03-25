@@ -2,6 +2,7 @@
 import {
   FormatBoldOutlined,
   FormatItalicOutlined,
+  HelpOutlineOutlined,
   StarOutlineFilled,
   StrikethroughSOutlined,
   WarningAmberOutlined,
@@ -59,6 +60,8 @@ const handleSelectDraft = (key: string, option: DropdownOption) => {
 // ==============================
 // 编辑
 // ==============================
+
+const showGuideModal = ref(false);
 
 const processSelection = (
   processer: (str: string) => string,
@@ -134,6 +137,11 @@ const toolbarButtons: {
         '\n::: details 点击展开\n此文本将被折叠\n:::\n',
       ),
   },
+  {
+    icon: HelpOutlineOutlined,
+    label: '格式帮助',
+    action: () => (showGuideModal.value = true),
+  },
 ];
 </script>
 
@@ -168,4 +176,6 @@ const toolbarButtons: {
     </template>
     {{ button.label }}
   </n-tooltip>
+
+  <markdown-guide-modal v-model:show="showGuideModal" />
 </template>
