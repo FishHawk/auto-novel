@@ -1,7 +1,7 @@
 import { useLocalStorage } from '@vueuse/core';
 import { throttle } from 'lodash-es';
 
-interface Draft {
+export interface Draft {
   text: string;
   createdAt: Date;
 }

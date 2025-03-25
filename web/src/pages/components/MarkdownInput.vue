@@ -1,17 +1,8 @@
 <script setup lang="ts">
 import avaterUrl from '@/image/avater.jpg';
-import {
-  FormatBoldOutlined,
-  FormatItalicOutlined,
-  StarOutlineFilled,
-  StrikethroughSOutlined,
-  WarningAmberOutlined,
-  MenuOpenOutlined,
-} from '@vicons/material';
-import { DropdownOption, NIcon } from 'naive-ui';
-import { Component } from 'vue';
-
 import { Locator } from '@/data';
+
+import { useIsWideScreen } from '@/pages/util';
 
 const props = defineProps<{
   mode: 'article' | 'comment';
@@ -25,6 +16,8 @@ const props = defineProps<{
 }>();
 
 const value = defineModel<string>('value', { required: true });
+
+const isWideScreen = useIsWideScreen(600);
 
 const showEditorToolbar = ref(true);
 const onTabUpdate = (value: number) => {
@@ -43,123 +36,20 @@ const getDrafts = () => {
 };
 
 const saveDraft = (text: string) => {
-  if (props.draftId && createdAt && text.trim() !== '') {
+  if (props.draftId && text.trim() !== '') {
     Locator.draftRepository().addDraft(props.draftId, createdAt, text);
   }
 };
 
 const drafts = ref(getDrafts());
-const draftOptions = ref<DropdownOption[]>([]);
 
-watch(
-  drafts,
-  () => {
-    draftOptions.value = [];
-    for (const draft of drafts.value.reverse()) {
-      draftOptions.value.push({
-        label: draft.createdAt.toLocaleString('zh-CN'),
-        key: draft.createdAt.getTime(),
-        draftText: draft.text,
-      });
-    }
-    draftOptions.value.push(
-      ...[{ type: 'divider' }, { label: '清空', key: '清空' }],
-    );
-  },
-  { immediate: true },
-);
-
-const handleSelectDraft = (key: string, option: DropdownOption) => {
+const clearDraft = () => {
   if (!props.draftId) return;
-  if (key === '清空') {
-    Locator.draftRepository().removeDraft(props.draftId);
-    drafts.value = getDrafts();
-  } else {
-    value.value = option.draftText as string;
-  }
+  Locator.draftRepository().removeDraft(props.draftId);
+  drafts.value = getDrafts();
 };
-
-// ==============================
-// 编辑
-// ==============================
 
 const elEditor = useTemplateRef('editor');
-
-const processSelection = (
-  processer: (str: string) => string,
-  fallbackText: string = '',
-) => {
-  const elTextarea = elEditor.value?.textareaElRef;
-  if (!elTextarea) return;
-  elTextarea.focus();
-
-  const { selectionStart, selectionEnd } = elTextarea;
-  const selectedText = elTextarea.value.substring(selectionStart, selectionEnd);
-  if (selectedText.length > 0) {
-    const processedText = processer(selectedText);
-    elTextarea.setRangeText(processedText);
-  } else {
-    elTextarea.setRangeText(fallbackText);
-    elTextarea.selectionStart += fallbackText.length;
-  }
-  elTextarea.dispatchEvent(new Event('input'));
-};
-
-const warpProcesser = (warp: string) => {
-  return (text: string) => {
-    if (
-      text.length >= warp.length * 2 &&
-      text.startsWith(warp) &&
-      text.endsWith(warp)
-    ) {
-      return text.substring(warp.length, text.length - warp.length);
-    } else {
-      return warp + text + warp;
-    }
-  };
-};
-
-const toolbarButtons: {
-  icon: Component;
-  label: string;
-  action: () => void;
-}[] = [
-  {
-    icon: FormatBoldOutlined,
-    label: '粗体',
-    action: () => processSelection(warpProcesser('**'), '**粗体**'),
-  },
-  {
-    icon: FormatItalicOutlined,
-    label: '斜体',
-    action: () => processSelection(warpProcesser('*'), '*斜体*'),
-  },
-  {
-    icon: StrikethroughSOutlined,
-    label: '删除线',
-    action: () => processSelection(warpProcesser('~~'), '~~删除线~~'),
-  },
-  {
-    icon: StarOutlineFilled,
-    label: '评分',
-    action: () =>
-      processSelection((_str: string) => `::: star 5\n`, `::: star 5\n`),
-  },
-  {
-    icon: WarningAmberOutlined,
-    label: '剧透',
-    action: () => processSelection(warpProcesser('!!'), '!!剧透!!'),
-  },
-  {
-    icon: MenuOpenOutlined,
-    label: '折叠',
-    action: () =>
-      processSelection(
-        (str: string) => `\n::: details 点击展开\n${str}\n:::\n`,
-        '\n::: details 点击展开\n此文本将被折叠\n:::\n',
-      ),
-  },
-];
 
 const markdownGuide = `# 一级标题
 ## 二级标题
@@ -210,40 +100,27 @@ const markdownGuide = `# 一级标题
       size="small"
       @update:value="onTabUpdate"
     >
-      <template v-if="showEditorToolbar" #suffix>
-        <n-dropdown
-          v-if="drafts.length"
-          :options="draftOptions"
-          trigger="click"
-          @select="handleSelectDraft"
-        >
-          <n-button size="small" quaternary>
-            <n-badge :value="drafts.length" dot :offset="[8, -4]">草稿</n-badge>
-          </n-button>
-        </n-dropdown>
-
-        <n-tooltip v-for="button in toolbarButtons" trigger="hover">
-          <template #trigger>
-            <n-button
-              quaternary
-              size="small"
-              @mousedown="
-                (e) => {
-                  button.action();
-                  e.preventDefault();
-                }
-              "
-            >
-              <template #icon>
-                <n-icon :component="button.icon" />
-              </template>
-            </n-button>
-          </template>
-          {{ button.label }}
-        </n-tooltip>
+      <template v-if="showEditorToolbar && isWideScreen" #suffix>
+        <markdown-toolbar
+          :el-textarea="elEditor?.textareaElRef ?? undefined"
+          :drafts="drafts"
+          @save-draft="clearDraft"
+        />
       </template>
-
       <n-tab-pane tab="编辑" :name="0">
+        <n-flex
+          v-if="!isWideScreen"
+          :size="0"
+          align="center"
+          style="margin-left: 8px; margin-bottom: 8px"
+        >
+          <markdown-toolbar
+            :el-textarea="elEditor?.textareaElRef ?? undefined"
+            :drafts="drafts"
+            @save-draft="clearDraft"
+          />
+        </n-flex>
+
         <div style="padding: 0 8px 8px">
           <n-input
             ref="editor"
