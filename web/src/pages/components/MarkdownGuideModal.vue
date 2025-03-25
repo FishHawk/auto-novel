@@ -42,6 +42,7 @@ const guides = [
 
 <template>
   <c-modal title="格式教程">
+    <n-p>评论不支持标题、表格、图片等高级功能。</n-p>
     <n-table :bordered="false" style="table-layout: fixed; width: 100%">
       <thead>
         <tr>
