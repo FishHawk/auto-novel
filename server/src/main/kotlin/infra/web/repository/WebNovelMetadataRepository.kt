@@ -182,7 +182,7 @@ class WebNovelMetadataRepository(
         }
 
         // 在数据库中，暂停更新
-        if (local.pauseUpdate || providerId == Pixiv.id) {
+        if (local.pauseUpdate) {
             return Result.success(local)
         }
 

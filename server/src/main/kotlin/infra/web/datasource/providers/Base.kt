@@ -6,6 +6,7 @@ import infra.web.WebNovelAuthor
 import infra.web.WebNovelType
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.json.*
@@ -13,6 +14,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 data class RemoteNovelMetadata(
     val title: String,
@@ -78,3 +80,39 @@ class NovelIdShouldBeReplacedException(
     targetNovelId: String,
 ) : Exception("小说ID不合适，应当使用：/${providerId}/${targetNovelId}")
 
+class NovelRateLimitedException
+    : Exception("源站获取频率太快")
+
+class NovelAccessDeniedException
+    : Exception("当前账号无法获取该小说资源")
+
+// Rate limit
+
+class TokenBucketRateLimiter(
+    private val capacity: Long,
+    private val refillRate: Double  // 令牌/毫秒
+) {
+    private val tokens = AtomicLong(capacity)
+    private var lastRefillTime = Clock.System.now().epochSeconds
+
+    @Synchronized
+    fun tryAcquire(): Boolean {
+        refillTokens()
+        return if (tokens.get() > 0) {
+            tokens.decrementAndGet()
+            true
+        } else {
+            false
+        }
+    }
+
+    private fun refillTokens() {
+        val now = Clock.System.now().epochSeconds
+        val elapsed = now - lastRefillTime
+        val newTokens = (elapsed * refillRate).toLong()
+        if (newTokens > 0) {
+            tokens.set(minOf(capacity, tokens.get() + newTokens))
+            lastRefillTime = now
+        }
+    }
+}
