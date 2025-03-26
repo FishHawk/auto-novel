@@ -20,9 +20,8 @@
 - 生成多种机翻，支持的翻译器有：
   - 百度
   - 有道
-  - GPT3.5 [Web](https://chat.openai.com/)/API
-  - GPT4 API
-  - [Sakura](https://huggingface.co/sakuraumi/Sakura-13B-Galgame)
+  - GPT/DeepSeek API
+  - [Sakura](https://huggingface.co/SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF)
 - 支持术语表。
 - 支持多种格式，包括日文、中文以及中日对比。
 - 支持生成 EPUB 和 TXT 文件。
