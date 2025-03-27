@@ -236,8 +236,12 @@ class Pixiv(
     }
 
     private val rubyPattern = """\[\[rb:([^>]+) > ([^]]+)]]""".toRegex()
-    private fun cleanRuby(line: String): String {
-        return line.replace(rubyPattern) { it.groupValues[1] }
+    private val chapterPattern = """\[charpter:([^]]+)]""".toRegex()
+    private fun cleanFormat(line: String): String {
+        return line
+            .replace(rubyPattern, "$1")
+            .replace(chapterPattern, "章节：$1")
+            .replace("[newpage]", "")
     }
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
@@ -252,7 +256,7 @@ class Pixiv(
                 ?: parseImageUrlPattern2(line, chapterId)
 
             if (imageUrl == null) {
-                cleanRuby(line)
+                cleanFormat(line)
             } else {
                 "<图片>${imageUrl}"
             }

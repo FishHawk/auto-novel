@@ -101,6 +101,7 @@ class PixivTest : DescribeSpec(), KoinTest {
                 // https://www.pixiv.net/novel/show.php?id=10618179
                 // [[rb:久世彩葉 > くぜ いろは]]
                 val chapter = provider.getChapter("s10618179", "10618179")
+                println(chapter.paragraphs[2])
                 chapter.paragraphs[2].shouldStartWith("　私、久世彩葉がその")
             }
         }
