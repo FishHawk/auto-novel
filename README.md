@@ -30,7 +30,12 @@
 
 ## 贡献
 
-欢迎提交 pull request。对于重大更改，请先打开一个 issue 来讨论你要进行的更改。
+欢迎参与开发，为了高效协作，请遵循以下规范。
+
+- 在编写代码前，请先通过 Issue 或群组讨论你的变更计划，确保与现有开发方向一致。
+- 提交 Pull Request 时，请保持内容精简，每次聚焦一个独立的修改点，以便快速检视和合入。
+- 如果对当前代码设计有疑问，可以在群组里@FishHawk提问。
+- 如果使用 AI 辅助编写，请务必自己检视一遍。
 
 <a href="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors?repo_id=559577341" target="_blank" style="display: block" align="left">
   <picture>
