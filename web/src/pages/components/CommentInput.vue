@@ -39,7 +39,7 @@ const reply = async () => {
 </script>
 
 <template>
-  <markdown-input
+  <MarkdownEditor
     mode="comment"
     :draft-id="draftId"
     v-model:value="content"

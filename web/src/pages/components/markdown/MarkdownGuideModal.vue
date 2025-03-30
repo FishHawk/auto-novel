@@ -56,7 +56,7 @@ const guides = [
             {{ guide.trimStart() }}
           </td>
           <td>
-            <markdown mode="article" :source="guide" />
+            <MarkdownView mode="article" :source="guide" />
           </td>
         </tr>
       </tbody>

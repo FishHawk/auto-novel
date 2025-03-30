@@ -37,7 +37,7 @@ store.loadArticle().then((result) => {
       </n-p>
       <n-divider />
 
-      <markdown mode="article" :source="article.content" />
+      <MarkdownView mode="article" :source="article.content" />
 
       <comment-list :site="`article-${articleId}`" :locked="article.locked" />
     </c-result>

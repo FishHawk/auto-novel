@@ -176,5 +176,5 @@ const toolbarButtons: {
     {{ button.label }}
   </n-tooltip>
 
-  <markdown-guide-modal v-model:show="showGuideModal" />
+  <MarkdownGuideModal v-model:show="showGuideModal" />
 </template>

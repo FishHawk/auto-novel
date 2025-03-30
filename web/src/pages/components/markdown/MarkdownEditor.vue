@@ -61,7 +61,7 @@ const elEditor = useTemplateRef('editor');
       @update:value="onTabUpdate"
     >
       <template v-if="showEditorToolbar && isWideScreen" #suffix>
-        <markdown-toolbar
+        <MarkdownToolbar
           :el-textarea="elEditor?.textareaElRef ?? undefined"
           :drafts="drafts"
           @clear-draft="clearDraft"
@@ -74,7 +74,7 @@ const elEditor = useTemplateRef('editor');
           align="center"
           style="margin-left: 8px; margin-bottom: 8px"
         >
-          <markdown-toolbar
+          <MarkdownToolbar
             :el-textarea="elEditor?.textareaElRef ?? undefined"
             :drafts="drafts"
             @clear-draft="clearDraft"
@@ -96,7 +96,7 @@ const elEditor = useTemplateRef('editor');
       </n-tab-pane>
       <n-tab-pane tab="预览" :name="1">
         <div style="padding: 0px 16px">
-          <markdown
+          <MarkdownView
             :mode="mode"
             :source="(value as string) || '没有可预览的内容'"
           />

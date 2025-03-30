@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Locator } from '@/data';
 import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownIt from 'markdown-it';
 import { spoiler } from '@mdit/plugin-spoiler';
@@ -7,12 +6,16 @@ import { container } from '@mdit/plugin-container';
 import { NRate } from 'naive-ui';
 import { render } from 'vue';
 
+import { Locator } from '@/data';
+
 const { setting } = Locator.settingRepository();
 
 const props = defineProps<{
   mode: 'article' | 'comment';
   source: string;
 }>();
+
+const vars = useThemeVars();
 
 const getRules = (mode: 'article' | 'comment') => {
   if (mode === 'article') {
@@ -133,8 +136,6 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 
   return defaultRender(tokens, idx, options, env, self);
 };
-
-const vars = useThemeVars();
 </script>
 
 <template>

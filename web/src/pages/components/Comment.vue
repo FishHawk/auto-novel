@@ -138,7 +138,7 @@ const showInput = ref(false);
 
     <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
       <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
-      <markdown
+      <MarkdownView
         v-else
         mode="comment"
         :source="comment.content"
