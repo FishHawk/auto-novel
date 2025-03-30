@@ -6,16 +6,10 @@ import { container } from '@mdit/plugin-container';
 import { NRate } from 'naive-ui';
 import { render } from 'vue';
 
-import { Locator } from '@/data';
-
-const { setting } = Locator.settingRepository();
-
 const props = defineProps<{
   mode: 'article' | 'comment';
   source: string;
 }>();
-
-const vars = useThemeVars();
 
 const getRules = (mode: 'article' | 'comment') => {
   if (mode === 'article') {
@@ -50,10 +44,10 @@ const md = new MarkdownIt({
   .use(spoiler, {
     tag: 'span',
     attrs: [
-      ['class', 'spoiler'],
+      ['data-hide', 'true'],
       [
         'onclick',
-        "this.style.color = this.style.color === 'var(--spoiler-color)' ? 'var(--spoiler-bg-color)' : 'var(--spoiler-color)'",
+        "this.dataset.hide = this.dataset.hide === 'true' ? 'false' : 'true'",
       ],
       ['tabindex', '-1'],
     ],
@@ -79,20 +73,6 @@ const md = new MarkdownIt({
     },
   })
   .disable(getRules(props.mode));
-
-// 根据主题设置spoilder的颜色
-watchEffect(() => {
-  // 背景颜色
-  document.documentElement.style.setProperty(
-    '--spoiler-bg-color',
-    setting.value.theme === 'light' ? 'black' : 'white',
-  );
-  // 文字高亮颜色
-  document.documentElement.style.setProperty(
-    '--spoiler-color',
-    setting.value.theme === 'light' ? 'white' : 'black',
-  );
-});
 
 // 将 class=starRating 渲染为rating 组件
 onMounted(() => {
@@ -139,7 +119,7 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 </script>
 
 <template>
-  <div class="markdown" v-html="md.render(source)" />
+  <n-el tag="div" class="markdown" v-html="md.render(source)" />
 </template>
 
 <style>
@@ -147,42 +127,43 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
   overflow-wrap: break-word;
   word-break: break-word;
 }
+
+.markdown a,
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown li {
+  transition: color 0.3s var(--cubic-bezier-ease-in-out);
+  line-height: var(--line-height);
+  font-size: var(--font-size);
+}
+
 .markdown a {
-  transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
-  cursor: pointer;
   text-decoration: none;
-  color: v-bind('vars.primaryColor');
+  color: var(--primary-color);
 }
 .markdown p {
-  transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
-  box-sizing: border-box;
   margin: 16px 0 16px 0;
-  font-size: v-bind('vars.fontSize');
-  line-height: v-bind('vars.lineHeight');
-  color: v-bind('vars.textColor2');
+  color: var(--text-color-2);
 }
 .markdown ul,
 .markdown ol {
-  font-size: v-bind('vars.fontSize');
   padding: 0 0 0 2em;
 }
 .markdown li {
-  transition: color 0.3s v-bind('vars.cubicBezierEaseInOut');
-  line-height: v-bind('vars.lineHeight');
   margin: 0.25em 0 0 0;
-  margin-bottom: 0;
-  color: v-bind('vars.textColor2');
+  color: var(--text-color-2);
 }
 .markdown code {
   transition:
-    color 0.3s v-bind('vars.cubicBezierEaseInOut'),
-    background-color 0.3s v-bind('vars.cubicBezierEaseInOut'),
-    border-color 0.3s v-bind('vars.cubicBezierEaseInOut');
+    color 0.3s var(--cubic-bezier-ease-in-out) background-color 0.3s
+      var(--cubic-bezier-ease-in-out),
+    border-color 0.3s var(--cubic-bezier-ease-in-out);
   padding: 0.05em 0.35em 0 0.35em;
   font-size: 0.9em;
-  color: v-bind('vars.textColor2');
-  background-color: v-bind('vars.codeColor');
-  border-radius: v-bind('vars.borderRadiusSmall');
+  color: var(--text-color-2);
+  background-color: var(--code-color);
+  border-radius: var(--border-radius-small);
   border: 1px solid #0000;
   line-height: 1.4;
   box-sizing: border-box;
@@ -197,29 +178,34 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 }
 .markdown th {
   white-space: nowrap;
-  background-color: v-bind('vars.actionColor');
+  background-color: var(--action-color);
 }
 .markdown th,
 .markdown td {
   padding: 12px;
-  border-bottom: 1px solid v-bind('vars.dividerColor');
+  border-bottom: 1px solid var(--divider-color);
 }
 .markdown tr th:not(:last-child),
 .markdown td:not(:last-child) {
-  border-right: 1px solid v-bind('vars.dividerColor');
+  border-right: 1px solid var(--divider-color);
 }
 
-/* spoiler的css */
-.spoiler {
-  background-color: var(--spoiler-bg-color);
-  color: var(--spoiler-bg-color);
+.markdown span[data-hide] {
+  background-color: var(--text-color-1);
   transition: color ease 0.2s;
   padding: 0.05em 0.2em;
 }
 
-.spoiler:hover,
-.spoiler:focus {
-  background-color: var(--spoiler-bg-color);
-  color: var(--spoiler-color);
+.markdown span[data-hide='true'] {
+  color: transparent;
+}
+
+.markdown span[data-hide='false'] {
+  color: var(--body-color);
+}
+
+.markdown span[data-hide='true']:hover,
+.markdown span[data-hide='true']:focus {
+  color: var(--body-color);
 }
 </style>
