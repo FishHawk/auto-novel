@@ -27,6 +27,9 @@ const { whoami } = Locator.authRepository();
 const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
 
+const draftRepo = Locator.draftRepository();
+const draftId = `comment-${site}`;
+
 const loadReplies = async (page: number) => {
   const result = await runCatching(
     CommentRepository.listComment({
@@ -51,6 +54,8 @@ function onReplied() {
   if (currentPage >= pageCount) {
     loadReplies(currentPage.value);
   }
+  draftRepo.addDraft.cancel();
+  draftRepo.removeDraft(draftId);
 }
 
 const hideComment = (comment: Comment1) =>
@@ -145,9 +150,10 @@ const showInput = ref(false);
   <div ref="topElement" />
   <ReuseCommentContent :comment="comment" :reply="!locked" />
 
-  <CommentInput
+  <comment-input
     v-if="showInput"
     :site="site"
+    :draft-id="draftId"
     :parent="comment.id"
     :placeholder="`回复${comment.user.username}`"
     @replied="onReplied()"

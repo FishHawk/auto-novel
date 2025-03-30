@@ -4,6 +4,7 @@ import { doAction } from '@/pages/util';
 
 const props = defineProps<{
   site: string;
+  draftId: string;
   parent?: string;
   placeholder?: string;
 }>();
@@ -40,7 +41,7 @@ const reply = async () => {
 <template>
   <markdown-input
     mode="comment"
-    :draft-id="`comment-${site}`"
+    :draft-id="draftId"
     v-model:value="content"
     :placeholder="placeholder"
     :autosize="{ minRows: 4, maxRows: 12 }"

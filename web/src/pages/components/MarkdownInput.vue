@@ -64,7 +64,7 @@ const elEditor = useTemplateRef('editor');
         <markdown-toolbar
           :el-textarea="elEditor?.textareaElRef ?? undefined"
           :drafts="drafts"
-          @save-draft="clearDraft"
+          @clear-draft="clearDraft"
         />
       </template>
       <n-tab-pane tab="编辑" :name="0">
@@ -77,7 +77,7 @@ const elEditor = useTemplateRef('editor');
           <markdown-toolbar
             :el-textarea="elEditor?.textareaElRef ?? undefined"
             :drafts="drafts"
-            @save-draft="clearDraft"
+            @clear-draft="clearDraft"
           />
         </n-flex>
 

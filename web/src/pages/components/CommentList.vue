@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { CommentOutlined } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { CommentRepository } from '@/data/api';
 import { Ok, Result, runCatching } from '@/util/result';
 import { Comment1 } from '@/model/Comment';
@@ -15,6 +16,9 @@ const commentPage = ref<Result<Page<Comment1>>>();
 const currentPage = ref(1);
 const loading = ref(false);
 const commentSectionRef = ref<any>(null);
+
+const draftRepo = Locator.draftRepository();
+const draftId = `comment-${props.site}`;
 
 async function loadComments(page: number) {
   loading.value = true;
@@ -55,6 +59,8 @@ function onReplied() {
   if (commentPage.value?.ok && currentPage.value === 1) {
     loadComments(currentPage.value);
   }
+  draftRepo.addDraft.cancel();
+  draftRepo.removeDraft(draftId);
 }
 
 const showInput = ref(false);
@@ -74,8 +80,9 @@ const showInput = ref(false);
   <n-p v-if="locked">评论区已锁定，不能再回复。</n-p>
 
   <template v-if="showInput">
-    <CommentInput
+    <comment-input
       :site="site"
+      :draft-id="draftId"
       :placeholder="`发表回复`"
       @replied="onReplied()"
     />

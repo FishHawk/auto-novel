@@ -31,17 +31,16 @@ const draftOptions = ref<DropdownOption[]>([]);
 watch(
   props.drafts,
   (drafts) => {
-    draftOptions.value = [];
-    for (const draft of drafts.reverse()) {
-      draftOptions.value.push({
+    const draftOptionsValue: DropdownOption[] = [];
+    for (const draft of drafts.slice().reverse()) {
+      draftOptionsValue.push({
         label: draft.createdAt.toLocaleString('zh-CN'),
         key: draft.createdAt.getTime(),
         draftText: draft.text,
       });
     }
-    draftOptions.value.push(
-      ...[{ type: 'divider' }, { label: '清空', key: '清空' }],
-    );
+    draftOptionsValue.push({ type: 'divider' }, { label: '清空', key: '清空' });
+    draftOptions.value = draftOptionsValue;
   },
   { immediate: true },
 );
