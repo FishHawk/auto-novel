@@ -156,25 +156,14 @@ const toolbarButtons: {
     </n-button>
   </n-dropdown>
 
-  <n-tooltip v-for="button in toolbarButtons" trigger="hover">
-    <template #trigger>
-      <n-button
-        quaternary
-        size="small"
-        @mousedown="
-          (e) => {
-            button.action();
-            e.preventDefault();
-          }
-        "
-      >
-        <template #icon>
-          <n-icon :component="button.icon" />
-        </template>
-      </n-button>
-    </template>
-    {{ button.label }}
-  </n-tooltip>
+  <MarkdownToolbarButton
+    v-for="button in toolbarButtons"
+    :key="button.label"
+    :label="button.label"
+    :icon="button.icon"
+    @action="button.action"
+  />
+  <div style="width: 8px" />
 
   <MarkdownGuideModal v-model:show="showGuideModal" />
 </template>
