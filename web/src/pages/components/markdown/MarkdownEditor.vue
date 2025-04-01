@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const value = defineModel<string>('value', { required: true });
 
-const isWideScreen = useIsWideScreen(600);
+const isWideScreen = useIsWideScreen(620);
 
 const showEditorToolbar = ref(true);
 const onTabUpdate = (value: number) => {

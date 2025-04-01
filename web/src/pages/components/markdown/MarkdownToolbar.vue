@@ -3,13 +3,13 @@ import {
   FormatBoldOutlined,
   FormatItalicOutlined,
   HelpOutlineOutlined,
+  LinkOutlined,
+  MenuOpenOutlined,
   StarOutlineFilled,
   StrikethroughSOutlined,
   WarningAmberOutlined,
-  MenuOpenOutlined,
 } from '@vicons/material';
-import { DropdownOption, NIcon } from 'naive-ui';
-import { Component } from 'vue';
+import { DropdownOption } from 'naive-ui';
 
 import { Draft } from '@/data/stores/DraftRepository';
 
@@ -62,86 +62,85 @@ const handleSelectDraft = (key: string, option: DropdownOption) => {
 
 const showGuideModal = ref(false);
 
-const processSelection = (
-  processer: (str: string) => string,
-  fallbackText: string = '',
-) => {
+type TextSelection = {
+  before: string;
+  middle: string;
+  after: string;
+};
+
+type Processor = (selection: TextSelection) => TextSelection;
+
+const applyFormat = (formatter: Processor) => {
   const { elTextarea } = props;
   if (!elTextarea) return;
   elTextarea.focus();
 
-  const { selectionStart, selectionEnd } = elTextarea;
-  const selectedText = elTextarea.value.substring(selectionStart, selectionEnd);
-  if (selectedText.length > 0) {
-    const processedText = processer(selectedText);
-    elTextarea.setRangeText(processedText);
-  } else {
-    elTextarea.setRangeText(fallbackText);
-    elTextarea.selectionStart += fallbackText.length;
-  }
+  const { value, selectionStart, selectionEnd } = elTextarea;
+
+  const { before, middle, after } = formatter({
+    before: value.slice(0, selectionStart),
+    middle: value.slice(selectionStart, selectionEnd),
+    after: value.slice(selectionEnd),
+  });
+
+  const newValue = before + middle + after;
+  const newSelectionStart = before.length;
+  const newSelectionEnd = newSelectionStart + middle.length;
+
+  elTextarea.value = newValue;
+  elTextarea.setSelectionRange(newSelectionStart, newSelectionEnd);
   elTextarea.dispatchEvent(new Event('input'));
 };
 
-const warpProcesser = (warp: string) => {
-  return (text: string) => {
-    if (
-      text.length >= warp.length * 2 &&
-      text.startsWith(warp) &&
-      text.endsWith(warp)
+const warp = (
+  prefix: string,
+  suffix: string,
+  placeholder: string,
+  inline: boolean = true,
+) => {
+  applyFormat(({ before, middle, after }: TextSelection) => {
+    if (before.endsWith(prefix) && after.startsWith(suffix)) {
+      before = before.slice(0, -prefix.length);
+      after = after.slice(after.length);
+    } else if (
+      middle.length >= prefix.length + suffix.length &&
+      middle.startsWith(prefix) &&
+      middle.endsWith(suffix)
     ) {
-      return text.substring(warp.length, text.length - warp.length);
+      middle = middle.slice(prefix.length, -after.length);
     } else {
-      return warp + text + warp;
+      if (!inline) {
+        if (!before.endsWith('\n') && before) before = before + '\n';
+        if (!after.startsWith('\n')) after = '\n' + after;
+      }
+      before = before + prefix;
+      after = suffix + after;
+      if (middle.length === 0) {
+        middle = placeholder;
+      }
     }
-  };
+    return { before, middle, after };
+  });
 };
 
-const toolbarButtons: {
-  icon: Component;
-  label: string;
-  action: () => void;
-}[] = [
-  {
-    icon: FormatBoldOutlined,
-    label: '粗体',
-    action: () => processSelection(warpProcesser('**'), '**粗体**'),
-  },
-  {
-    icon: FormatItalicOutlined,
-    label: '斜体',
-    action: () => processSelection(warpProcesser('*'), '*斜体*'),
-  },
-  {
-    icon: StrikethroughSOutlined,
-    label: '删除线',
-    action: () => processSelection(warpProcesser('~~'), '~~删除线~~'),
-  },
-  {
-    icon: StarOutlineFilled,
-    label: '评分',
-    action: () =>
-      processSelection((_str: string) => `::: star 5\n`, `::: star 5\n`),
-  },
-  {
-    icon: WarningAmberOutlined,
-    label: '剧透',
-    action: () => processSelection(warpProcesser('!!'), '!!剧透!!'),
-  },
-  {
-    icon: MenuOpenOutlined,
-    label: '折叠',
-    action: () =>
-      processSelection(
-        (str: string) => `\n::: details 点击展开\n${str}\n:::\n`,
-        '\n::: details 点击展开\n此文本将被折叠\n:::\n',
-      ),
-  },
-  {
-    icon: HelpOutlineOutlined,
-    label: '格式帮助',
-    action: () => (showGuideModal.value = true),
-  },
-];
+const insert = (text: string) => {
+  applyFormat(({ before, middle, after }: TextSelection) => {
+    if (!before.endsWith('\n') && before) before = before + '\n';
+    if (!after.startsWith('\n')) after = '\n' + after;
+    middle = text;
+    return { before, middle, after };
+  });
+};
+
+const formatBold = () => warp('**', '**', '粗体');
+const formatItalic = () => warp('*', '*', '斜体');
+const formatStrikethrough = () => warp('~~', '~~', '删除线');
+const formatLink = () => warp('[', '](链接)', '');
+const formatSpoiler = () => warp('!!', '!!', '剧透');
+
+const formatStar = () => insert('::: star 5');
+const formatCollapsibleBlock = () =>
+  warp('::: details 点击展开\n', '\n:::', '折叠内容', false);
 </script>
 
 <template>
@@ -157,11 +156,45 @@ const toolbarButtons: {
   </n-dropdown>
 
   <MarkdownToolbarButton
-    v-for="button in toolbarButtons"
-    :key="button.label"
-    :label="button.label"
-    :icon="button.icon"
-    @action="button.action"
+    label="粗体"
+    :icon="FormatBoldOutlined"
+    @action="formatBold"
+  />
+  <MarkdownToolbarButton
+    label="斜体"
+    :icon="FormatItalicOutlined"
+    @action="formatItalic"
+  />
+  <MarkdownToolbarButton
+    label="删除线"
+    :icon="StrikethroughSOutlined"
+    @action="formatStrikethrough"
+  />
+  <MarkdownToolbarButton
+    label="链接"
+    :icon="LinkOutlined"
+    @action="formatLink"
+  />
+  <MarkdownToolbarButton
+    label="剧透"
+    :icon="WarningAmberOutlined"
+    @action="formatSpoiler"
+  />
+  <n-divider vertical />
+  <MarkdownToolbarButton
+    label="评分"
+    :icon="StarOutlineFilled"
+    @action="formatStar"
+  />
+  <MarkdownToolbarButton
+    label="折叠"
+    :icon="MenuOpenOutlined"
+    @action="formatCollapsibleBlock"
+  />
+  <MarkdownToolbarButton
+    label="格式帮助"
+    :icon="HelpOutlineOutlined"
+    @action="() => (showGuideModal = true)"
   />
   <div style="width: 8px" />
 
