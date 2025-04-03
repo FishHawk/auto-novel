@@ -67,7 +67,7 @@ const elEditor = useTemplateRef('editor');
           @clear-draft="clearDraft"
         />
       </template>
-      <n-tab-pane tab="编辑" :name="0">
+      <n-tab-pane tab="编辑" :name="0" display-directive="show">
         <n-flex
           v-if="!isWideScreen"
           :size="0"
