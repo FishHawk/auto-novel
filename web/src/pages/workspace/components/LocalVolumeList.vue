@@ -104,7 +104,10 @@ const sortedVolumes = computed(() => {
 <template>
   <c-drawer-right title="本地小说">
     <template #action>
-      <bookshelf-local-add-button @done="emit('volumeAdd', $event)" />
+      <bookshelf-local-add-button
+        :favored-id="selectedFavored"
+        @done="emit('volumeAdd', $event)"
+      />
 
       <n-dropdown
         trigger="click"
