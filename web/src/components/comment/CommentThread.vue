@@ -1,17 +1,9 @@
 <script lang="ts" setup>
-import { CommentOutlined, CopyAllOutlined } from '@vicons/material';
-import { createReusableTemplate } from '@vueuse/core';
-
 import { Locator } from '@/data';
 import { CommentRepository } from '@/data/api';
 import { Comment1 } from '@/model/Comment';
 import { runCatching } from '@/util/result';
 import { doAction, copyToClipBoard } from '@/pages//util';
-
-const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
-  comment: Comment1;
-  reply: boolean;
-}>();
 
 const { site, comment } = defineProps<{
   site: string;
@@ -20,8 +12,6 @@ const { site, comment } = defineProps<{
 }>();
 
 const message = useMessage();
-
-const { whoami } = Locator.authRepository();
 
 const currentPage = ref(1);
 const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
@@ -85,84 +75,37 @@ const showInput = ref(false);
 </script>
 
 <template>
-  <DefineCommentContent v-slot="{ comment, reply }">
-    <n-flex align="center">
-      <n-text>
-        <b>{{ comment.user.username }}</b>
-      </n-text>
-      <n-text depth="3" style="font-size: 12px">
-        <n-time :time="comment.createAt * 1000" type="relative" />
-      </n-text>
-
-      <c-button
-        v-if="reply && whoami.allowAdvancedFeatures"
-        label="回复"
-        :icon="CommentOutlined"
-        require-login
-        quaternary
-        type="tertiary"
-        size="tiny"
-        @action="showInput = !showInput"
-      />
-
-      <template v-if="whoami.asMaintainer">
-        <c-button
-          v-if="comment.hidden"
-          label="解除隐藏"
-          quaternary
-          type="tertiary"
-          size="tiny"
-          @action="unhideComment(comment)"
-        />
-        <c-button
-          v-else
-          label="隐藏"
-          quaternary
-          type="tertiary"
-          size="tiny"
-          @action="hideComment(comment)"
-        />
-      </template>
-
-      <c-button
-        v-if="!comment.hidden"
-        label="复制"
-        :icon="CopyAllOutlined"
-        quaternary
-        type="tertiary"
-        size="tiny"
-        @action="copyComment(comment)"
-      />
-    </n-flex>
-
-    <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
-      <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
-      <MarkdownView
-        v-else
-        mode="comment"
-        :source="comment.content"
-        style="margin-top: -1em; margin-bottom: -1em"
-      />
-    </n-card>
-  </DefineCommentContent>
-
   <div ref="topElement" />
-  <ReuseCommentContent :comment="comment" :reply="!locked" />
+  <CommentItem
+    :comment="comment"
+    top-level
+    @hide="hideComment"
+    @unhide="unhideComment"
+    @copy="copyComment"
+    @reply="showInput = !showInput"
+  />
 
-  <comment-input
+  <CommentEditor
     v-if="showInput"
     :site="site"
     :draft-id="draftId"
     :parent="comment.id"
     :placeholder="`回复${comment.user.username}`"
+    style="padding-top: 8px"
     @replied="onReplied()"
+    @cancel="showInput = false"
   />
 
   <div
     v-for="replyComment in comment.replies"
     style="margin-left: 30px; margin-top: 20px"
   >
-    <ReuseCommentContent :comment="replyComment" :reply="false" />
+    <CommentItem
+      :comment="replyComment"
+      @hide="hideComment"
+      @unhide="unhideComment"
+      @copy="copyComment"
+    />
   </div>
 
   <n-pagination

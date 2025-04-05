@@ -80,11 +80,12 @@ const showInput = ref(false);
   <n-p v-if="locked">评论区已锁定，不能再回复。</n-p>
 
   <template v-if="showInput">
-    <comment-input
+    <CommentEditor
       :site="site"
       :draft-id="draftId"
       :placeholder="`发表回复`"
       @replied="onReplied()"
+      @cancel="showInput = false"
     />
     <n-divider />
   </template>
@@ -99,7 +100,7 @@ const showInput = ref(false);
     v-slot="{ value }"
   >
     <template v-for="comment in value.items">
-      <Comment :site="site" :comment="comment" :locked="locked" />
+      <CommentThread :site="site" :comment="comment" :locked="locked" />
       <n-divider />
     </template>
 
