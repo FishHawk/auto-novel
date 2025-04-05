@@ -229,10 +229,12 @@ export namespace BookshelfLocalUtil {
     {
       query,
       enableRegexMode,
+      favoredId,
       order,
     }: {
       query: string;
       enableRegexMode: boolean;
+      favoredId?: string;
       order: {
         value: 'byCreateAt' | 'byReadAt' | 'byId';
         desc: boolean;
@@ -244,25 +246,27 @@ export namespace BookshelfLocalUtil {
       enableRegexMode,
     });
 
-    return volumes.sort((a, b) => {
-      let delta = 0;
-      switch (order.value) {
-        case 'byId':
-          delta = b.id.localeCompare(a.id);
-          break;
-        case 'byCreateAt': {
-          delta = a.createAt - b.createAt;
-          break;
+    return volumes
+      .filter((v) => favoredId === undefined || v.favoredId === favoredId)
+      .sort((a, b) => {
+        let delta = 0;
+        switch (order.value) {
+          case 'byId':
+            delta = b.id.localeCompare(a.id);
+            break;
+          case 'byCreateAt': {
+            delta = a.createAt - b.createAt;
+            break;
+          }
+          case 'byReadAt': {
+            delta = (a.readAt ?? 0) - (b.readAt ?? 0);
+            break;
+          }
+          default:
+            console.error(`未支持${order.value}排序`);
+            break;
         }
-        case 'byReadAt': {
-          delta = (a.readAt ?? 0) - (b.readAt ?? 0);
-          break;
-        }
-        default:
-          console.error(`未支持${order.value}排序`);
-          break;
-      }
-      return order.desc ? -delta : delta;
-    });
+        return order.desc ? -delta : delta;
+      });
   };
 }

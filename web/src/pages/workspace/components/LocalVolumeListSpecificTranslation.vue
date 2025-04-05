@@ -155,8 +155,9 @@ const progressFilterFunc = computed(() => {
         <n-text>{{ volume.id }}</n-text>
 
         <n-text depth="3">
-          <n-time :time="volume.createAt" type="relative" /> / 总计
-          {{ volume.toc.length }} / 完成 {{ calculateFinished(volume) }} / 过期
+          <n-time :time="volume.createAt" type="relative" />
+          / 总计 {{ volume.toc.length }} / 完成
+          {{ calculateFinished(volume) }} / 过期
           {{ calculateExpired(volume) }}
         </n-text>
 

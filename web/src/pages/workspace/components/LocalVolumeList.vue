@@ -78,6 +78,16 @@ const search = reactive({
   enableRegexMode: false,
 });
 
+const favoredRepository = Locator.favoredRepository();
+const favoreds = favoredRepository.favoreds;
+const selectedFavored = ref<string | undefined>(favoreds.value.local.at(0)?.id);
+const favoredsOptions = computed(() => {
+  return favoreds.value.local.map(({ id, title }) => ({
+    label: title,
+    value: id,
+  }));
+});
+
 const sortedVolumes = computed(() => {
   const filteredVolumes =
     props.filter === undefined
@@ -85,6 +95,7 @@ const sortedVolumes = computed(() => {
       : volumes.value.filter(props.filter);
   return BookshelfLocalUtil.filterAndSortVolumes(filteredVolumes, {
     ...search,
+    favoredId: selectedFavored.value,
     order: setting.value.localVolumeOrder,
   });
 });
@@ -113,6 +124,14 @@ const sortedVolumes = computed(() => {
           <search-input
             v-model:value="search"
             placeholder="搜索文件名"
+            style="max-width: 400px"
+          />
+        </c-action-wrapper>
+
+        <c-action-wrapper v-if="favoreds.local.length > 1" title="收藏">
+          <n-select
+            v-model:value="selectedFavored"
+            :options="favoredsOptions"
             style="max-width: 400px"
           />
         </c-action-wrapper>
