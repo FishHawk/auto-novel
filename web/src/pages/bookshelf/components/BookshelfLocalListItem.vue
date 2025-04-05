@@ -4,7 +4,7 @@ import { GenericNovelId } from '@/model/Common';
 import { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { TranslatorId } from '@/model/Translator';
 
-import TranslateTask from '@/pages/components/TranslateTask.vue';
+import TranslateTask from '@/components/TranslateTask.vue';
 
 const props = defineProps<{
   volume: LocalVolumeMetadata;

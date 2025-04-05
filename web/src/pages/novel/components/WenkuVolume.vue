@@ -9,7 +9,7 @@ import {
   TranslateTaskParams,
 } from '@/model/Translator';
 import { VolumeJpDto } from '@/model/WenkuNovel';
-import TranslateTask from '@/pages/components/TranslateTask.vue';
+import TranslateTask from '@/components/TranslateTask.vue';
 
 const { novelId, volume, getParams } = defineProps<{
   novelId: string;

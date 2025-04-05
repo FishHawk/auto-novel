@@ -4,9 +4,9 @@ defineProps<{ title: string; align?: 'baseline' | 'center' }>();
 
 <template>
   <n-flex :align="align ?? 'baseline'" :wrap="false">
-    <n-text depth="3" style="white-space: nowrap; font-size: 12px">{{
-      title
-    }}</n-text>
+    <n-text depth="3" style="white-space: nowrap; font-size: 12px">
+      {{ title }}
+    </n-text>
     <slot />
   </n-flex>
 </template>

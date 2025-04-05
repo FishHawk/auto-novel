@@ -5,7 +5,7 @@ import { useThrottleFn } from '@vueuse/core';
 import { Page } from '@/model/Page';
 import { Result } from '@/util/result';
 
-import { onKeyDown } from '../util';
+import { onKeyDown } from '@/pages/util';
 import { Locator } from '@/data';
 
 export type Loader<T extends any> = (page: number) => Promise<Result<Page<T>>>;
@@ -214,9 +214,9 @@ const loadMore = async () => {
       <template v v-if="loading">
         <n-spin />
       </template>
-      <template v-else-if="innerPage >= pageNumber && pageNumber > 1"
-        >没有更多了</template
-      >
+      <template v-else-if="innerPage >= pageNumber && pageNumber > 1">
+        没有更多了
+      </template>
     </div>
   </template>
 </template>

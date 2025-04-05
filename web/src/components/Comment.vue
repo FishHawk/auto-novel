@@ -6,8 +6,7 @@ import { Locator } from '@/data';
 import { CommentRepository } from '@/data/api';
 import { Comment1 } from '@/model/Comment';
 import { runCatching } from '@/util/result';
-
-import { doAction, copyToClipBoard } from '../util';
+import { doAction, copyToClipBoard } from '@/pages//util';
 
 const [DefineCommentContent, ReuseCommentContent] = createReusableTemplate<{
   comment: Comment1;

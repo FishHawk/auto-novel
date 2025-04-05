@@ -8,11 +8,17 @@ const value = defineModel<{
   required: true,
 });
 
-const attrs = useAttrs()
+const attrs = useAttrs();
 </script>
 <template>
-  <n-input clearable size="small" v-model:value="value.query" type="text" v-bind="attrs">
-    <template #suffix> <n-icon :component="SearchOutlined" /> </template>
+  <n-input
+    clearable
+    size="small"
+    v-model:value="value.query"
+    type="text"
+    v-bind="attrs"
+  >
+    <template #suffix><n-icon :component="SearchOutlined" /></template>
   </n-input>
 
   <tag-button label="正则" v-model:checked="value.enableRegexMode" />

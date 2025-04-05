@@ -17,7 +17,7 @@ import {
   SakuraWorker,
   TranslateTaskDescriptor,
 } from '@/model/Translator';
-import TranslateTask from '@/pages/components/TranslateTask.vue';
+import TranslateTask from '@/components/TranslateTask.vue';
 
 const props = defineProps<{
   worker:

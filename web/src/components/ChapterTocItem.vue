@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { NText } from 'naive-ui';
-import CA from '@/pages/components/CA.vue';
+import CA from '@/components/CA.vue';
 
-import { ReadableTocItem } from '../novel/components/common';
+import { ReadableTocItem } from '@/pages/novel/components/common';
 
 const props = defineProps<{
   providerId: string;

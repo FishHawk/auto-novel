@@ -17,7 +17,7 @@ const router = createRouter({
   routes: [
     {
       path: '/*',
-      component: () => import('./pages/layouts/AuthLayout.vue'),
+      component: () => import('./pages/auth/AuthLayout.vue'),
       children: [
         {
           path: '/sign-in',
@@ -38,7 +38,7 @@ const router = createRouter({
     {
       path: '/*',
       meta: { isReader: true },
-      component: () => import('./pages/layouts/ReaderLayout.vue'),
+      component: () => import('./pages/reader/ReaderLayout.vue'),
       children: [
         {
           path: '/novel/:providerId/:novelId/:chapterId',
@@ -57,7 +57,7 @@ const router = createRouter({
 
     {
       path: '/*',
-      component: () => import('./pages/layouts/MainLayout.vue'),
+      component: () => import('./pages/MainLayout.vue'),
       children: [
         {
           path: '/',
@@ -258,7 +258,7 @@ const router = createRouter({
         {
           path: '/admin',
           redirect: '/admin/user',
-          component: () => import('./pages/layouts/AdminLayout.vue'),
+          component: () => import('./pages/admin/AdminLayout.vue'),
           children: [
             {
               path: 'user',

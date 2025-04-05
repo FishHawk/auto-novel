@@ -7,8 +7,7 @@ import { WebNovelRepository } from '@/data/api';
 import { GenericNovelId } from '@/model/Common';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 
-import TranslateTask from '@/pages/components/TranslateTask.vue';
-import { checkIsMobile } from '@/pages/util';
+import TranslateTask from '@/components/TranslateTask.vue';
 import TranslateOptions from './TranslateOptions.vue';
 
 const props = defineProps<{
