@@ -5,19 +5,15 @@ defineProps<{
   src: string;
   title: string;
 }>();
+const vars = useThemeVars();
 </script>
 
 <template>
-  <n-flex :size="0" vertical>
+  <n-flex :size="0" vertical class="image-card">
     <img
       :src="src ? src : coverPlaceholder"
+      class="cover"
       alt="cover"
-      style="
-        width: 100%;
-        aspect-ratio: 1 / 1.5;
-        object-fit: cover;
-        border-radius: 2px;
-      "
       loading="lazy"
     />
 
@@ -29,3 +25,23 @@ defineProps<{
     </n-text>
   </n-flex>
 </template>
+
+<style scoped>
+.image-card:hover {
+  perspective: 500;
+  transform: scale(1.01);
+  transition: transform 0.5s;
+}
+.image-card .cover {
+  width: 100%;
+  aspect-ratio: 1 / 1.5;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.image-card:hover .cover {
+  box-shadow: v-bind('vars.boxShadow1');
+}
+.image-card:hover :deep(.n-text) {
+  color: v-bind('vars.primaryColor');
+}
+</style>
