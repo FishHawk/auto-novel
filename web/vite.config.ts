@@ -39,6 +39,8 @@ export default defineConfig(({ command, mode }) => {
   return {
     server: {
       proxy,
+      port: 3000, // 在这里设置您想要的端口号，例如 3000
+      host: '127.0.0.1', // 可选：强制使用 IPv4
     },
     build: {
       target: ['es2015', 'edge88', 'firefox78', 'chrome87', 'safari14'],
