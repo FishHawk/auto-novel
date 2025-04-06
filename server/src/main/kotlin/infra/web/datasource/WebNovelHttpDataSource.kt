@@ -90,26 +90,39 @@ class WebNovelHttpDataSource(
         Syosetu.id to Syosetu(client),
     )
     val limiters = mapOf(
-        Alphapolis.id to TokenBucketRateLimiter(20, 0.1),
+        // Alphapolis.id to TokenBucketRateLimiter(20, 0.1),
         Hameln.id to TokenBucketRateLimiter(20, 0.1),
-        Kakuyomu.id to TokenBucketRateLimiter(20, 0.1),
-        Novelup.id to TokenBucketRateLimiter(20, 0.1),
+        // Kakuyomu.id to TokenBucketRateLimiter(20, 0.1),
+        // Novelup.id to TokenBucketRateLimiter(20, 0.1),
         Pixiv.id to TokenBucketRateLimiter(20, 0.1),
-        Syosetu.id to TokenBucketRateLimiter(20, 0.1),
+        // Syosetu.id to TokenBucketRateLimiter(20, 0.1),
     )
 
-    private suspend fun <T> doAction(providerId: String, block: suspend (WebNovelProvider) -> T): Result<T> {
+    private suspend fun <T> doActionWithLimiter(
+        providerId: String,
+        block: suspend (WebNovelProvider) -> T,
+    ): Result<T> {
         val provider = providers[providerId]!!
-        val limiter = limiters[providerId]!!
+        val limiter = limiters[providerId]
         return runCatching {
-            if (!limiter.tryAcquire()) {
+            if (limiter != null && !limiter.tryAcquire()) {
                 throw NovelRateLimitedException()
             }
             block(provider)
         }.onFailure {
             if (it !is WebNovelProviderException) {
-                limiter.cooldown()
+                limiter?.cooldown()
             }
+        }
+    }
+
+    private suspend fun <T> doAction(
+        providerId: String,
+        block: suspend (WebNovelProvider) -> T,
+    ): Result<T> {
+        val provider = providers[providerId]!!
+        return runCatching {
+            block(provider)
         }
     }
 
@@ -119,7 +132,7 @@ class WebNovelHttpDataSource(
         }
 
     suspend fun getMetadata(providerId: String, novelId: String): Result<RemoteNovelMetadata> =
-        doAction(providerId) {
+        doActionWithLimiter(providerId) {
             rejectFascistNovel(providerId, novelId)
             it.getMetadata(novelId)
         }
