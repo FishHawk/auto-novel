@@ -17,17 +17,16 @@ import infra.wenku.repository.WenkuNovelVolumeRepository
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.resources.*
-import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
+import io.ktor.utils.io.*
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 import org.koin.ktor.ext.inject
-import java.io.InputStream
 
 @Resource("/wenku")
 private class WenkuNovelRes {
@@ -146,7 +145,7 @@ fun Route.routeWenkuNovel() {
                         user = user,
                         novelId = loc.parent.novelId,
                         volumeId = loc.volumeId,
-                        inputStream = filePart.streamProvider(),
+                        inputStream = filePart.provider(),
                         unpack = filePart.name == "jp",
                     )
                 }
@@ -478,7 +477,7 @@ class WenkuNovelApi(
         user: User,
         novelId: String,
         volumeId: String,
-        inputStream: InputStream,
+        inputStream: ByteReadChannel,
         unpack: Boolean,
     ): Int {
         validateNovelId(novelId)

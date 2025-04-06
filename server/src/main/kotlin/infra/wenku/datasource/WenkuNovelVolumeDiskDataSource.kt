@@ -6,19 +6,21 @@ import infra.common.TranslatorId
 import infra.wenku.WenkuChapterGlossary
 import infra.wenku.WenkuNovelVolumeJp
 import infra.wenku.WenkuNovelVolumeList
+import io.ktor.util.cio.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 import util.epub.Epub
 import util.serialName
-import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Path
 import kotlin.io.path.*
+import kotlin.io.use
 
 sealed class VolumeCreateException(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class VolumeAlreadyExist : VolumeCreateException("卷已经存在")
@@ -67,7 +69,7 @@ class WenkuNovelVolumeDiskDataSource {
     suspend fun createVolume(
         volumesDir: Path,
         volumeId: String,
-        inputStream: InputStream,
+        inputStream: ByteReadChannel,
         unpack: Boolean,
     ) = withContext(Dispatchers.IO) {
         if (!volumesDir.exists()) {
@@ -83,14 +85,14 @@ class WenkuNovelVolumeDiskDataSource {
         val volumeTooLarge = volumeOutputStream.use { out ->
             var bytesCopied: Long = 0
             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-            var bytes = inputStream.read(buffer)
+            var bytes = inputStream.readAvailable(buffer)
             while (bytes >= 0) {
                 bytesCopied += bytes
                 if (bytesCopied > 1024 * 1024 * 40) {
                     return@use true
                 }
                 out.write(buffer, 0, bytes)
-                bytes = inputStream.read(buffer)
+                bytes = inputStream.readAvailable(buffer)
             }
             return@use false
         }

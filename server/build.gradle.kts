@@ -1,8 +1,6 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     application
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.1.20"
     kotlin("plugin.serialization") version "2.0.0"
 }
 
@@ -24,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.11"
+    val ktorVersion = "3.1.2"
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -47,8 +45,8 @@ dependencies {
     implementation("org.codehaus.janino:janino:3.1.9")
     implementation("ch.qos.logback:logback-classic:1.5.6")
 
-    val koinVersion = "3.5.6"
-    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    val koinVersion = "4.1.0-Beta1"
+    implementation("io.insert-koin:koin-ktor3:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     testImplementation("io.insert-koin:koin-test:$koinVersion")
 
@@ -60,7 +58,7 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.15.3")
 
-    implementation("com.jillesvangurp:search-client:2.2.1")
+    implementation("com.jillesvangurp:search-client:2.4.1")
 
     implementation("io.github.crackthecodeabhi:kreds:0.9.1")
 

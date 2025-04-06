@@ -2,7 +2,7 @@ package infra.wenku.repository
 
 import infra.wenku.WenkuNovelVolumeList
 import infra.wenku.datasource.WenkuNovelVolumeDiskDataSource
-import java.io.InputStream
+import io.ktor.utils.io.*
 import kotlin.io.path.Path
 
 class WenkuNovelVolumeRepository(
@@ -17,7 +17,7 @@ class WenkuNovelVolumeRepository(
     suspend fun createVolume(
         novelId: String,
         volumeId: String,
-        inputStream: InputStream,
+        inputStream: ByteReadChannel,
         unpack: Boolean,
     ) = fs.createVolume(
         volumesDir = volumesDir(novelId),

@@ -15,7 +15,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 
-@OptIn(ExperimentalSerializationApi::class)
 fun Application.contentNegotiation() {
     install(ContentNegotiation) {
         json(Json {
