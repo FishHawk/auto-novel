@@ -30,17 +30,11 @@ class Pixiv(
         }
     }
 
-    private val rateLimiter = TokenBucketRateLimiter(20, 0.1)
-
     override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
         return emptyPage()
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
-        if (!rateLimiter.tryAcquire()) {
-            throw NovelRateLimitedException()
-        }
-
         if (novelId.startsWith("s")) {
             val chapterId = novelId.removePrefix("s")
             val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"

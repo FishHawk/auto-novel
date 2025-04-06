@@ -11,7 +11,45 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import java.util.concurrent.atomic.AtomicLong
+
+
+class TokenBucketRateLimiter(
+    private val capacity: Long,
+    private val refillRate: Double  // 令牌/毫秒
+) {
+    private val tokens = AtomicLong(capacity)
+    private var lastRefillTime = Clock.System.now().epochSeconds
+
+    @Synchronized
+    fun tryAcquire(): Boolean {
+        refillTokens()
+        return if (tokens.get() > 0) {
+            tokens.decrementAndGet()
+            true
+        } else {
+            false
+        }
+    }
+
+    private fun refillTokens() {
+        val now = Clock.System.now().epochSeconds
+        val elapsed = now - lastRefillTime
+        val newTokens = (elapsed * refillRate).toLong()
+        if (newTokens > 0) {
+            tokens.set(minOf(capacity, tokens.get() + newTokens))
+            lastRefillTime = now
+        }
+    }
+
+    fun cooldown() {
+        val now = Clock.System.now().epochSeconds
+        lastRefillTime = now + 60
+        tokens.set(0)
+    }
+}
 
 class WebNovelHttpDataSource(
     httpsProxy: String?,
@@ -51,26 +89,44 @@ class WebNovelHttpDataSource(
         Pixiv.id to Pixiv(client),
         Syosetu.id to Syosetu(client),
     )
+    val limiters = mapOf(
+        Alphapolis.id to TokenBucketRateLimiter(20, 0.1),
+        Hameln.id to TokenBucketRateLimiter(20, 0.1),
+        Kakuyomu.id to TokenBucketRateLimiter(20, 0.1),
+        Novelup.id to TokenBucketRateLimiter(20, 0.1),
+        Pixiv.id to TokenBucketRateLimiter(20, 0.1),
+        Syosetu.id to TokenBucketRateLimiter(20, 0.1),
+    )
 
-    suspend fun listRank(providerId: String, options: Map<String, String>): Result<Page<RemoteNovelListItem>> {
+    private suspend fun <T> doAction(providerId: String, block: suspend (WebNovelProvider) -> T): Result<T> {
+        val provider = providers[providerId]!!
+        val limiter = limiters[providerId]!!
         return runCatching {
-            providers[providerId]!!.getRank(options)
+            if (!limiter.tryAcquire()) {
+                throw NovelRateLimitedException()
+            }
+            block(provider)
+        }.onFailure {
+            limiter.cooldown()
         }
     }
 
-    suspend fun getMetadata(providerId: String, novelId: String): Result<RemoteNovelMetadata> {
-        return runCatching {
+    suspend fun listRank(providerId: String, options: Map<String, String>): Result<Page<RemoteNovelListItem>> =
+        doAction(providerId) {
+            it.getRank(options)
+        }
+
+    suspend fun getMetadata(providerId: String, novelId: String): Result<RemoteNovelMetadata> =
+        doAction(providerId) {
             rejectFascistNovel(providerId, novelId)
-            providers[providerId]!!.getMetadata(novelId)
+            it.getMetadata(novelId)
         }
-    }
 
-    suspend fun getChapter(providerId: String, novelId: String, chapterId: String): Result<RemoteChapter> {
-        return runCatching {
+    suspend fun getChapter(providerId: String, novelId: String, chapterId: String): Result<RemoteChapter> =
+        doAction(providerId) {
             rejectFascistNovel(providerId, novelId)
-            providers[providerId]!!.getChapter(novelId, chapterId)
+            it.getChapter(novelId, chapterId)
         }
-    }
 }
 
 private val disgustingFascistNovelList = mapOf(
