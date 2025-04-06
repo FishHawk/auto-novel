@@ -132,15 +132,19 @@ class WebNovelHttpDataSource(
 }
 
 private val disgustingFascistNovelList = mapOf(
-    "syosetu" to listOf(
+    Syosetu.id to listOf(
         "n0646ie",
         "n8926ic",
         "n4583he",
     ),
-    "kakuyomu" to listOf(
+    Kakuyomu.id to listOf(
         "16817330660019717771",
         "1177354054901629921",
-    )
+        "16818093082836701336",
+    ),
+    Hameln.id to listOf(
+        "291561",
+    ),
 )
 
 private fun rejectFascistNovel(providerId: String, novelId: String) {
