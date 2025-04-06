@@ -107,7 +107,9 @@ class WebNovelHttpDataSource(
             }
             block(provider)
         }.onFailure {
-            limiter.cooldown()
+            if (it !is WebNovelProviderException) {
+                limiter.cooldown()
+            }
         }
     }
 

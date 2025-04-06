@@ -75,13 +75,15 @@ fun JsonObject.obj(field: String) = get(field)!!.jsonObject
 fun JsonObject.objOrNull(field: String) = get(field)!!.takeUnless { it is JsonNull }?.jsonObject
 
 // Exception
+open class WebNovelProviderException(msg: String) : Exception(msg)
+
 class NovelIdShouldBeReplacedException(
     providerId: String,
     targetNovelId: String,
-) : Exception("小说ID不合适，应当使用：/${providerId}/${targetNovelId}")
+) : WebNovelProviderException("小说ID不合适，应当使用：/${providerId}/${targetNovelId}")
 
 class NovelRateLimitedException
-    : Exception("源站获取频率太快")
+    : WebNovelProviderException("源站获取频率太快")
 
 class NovelAccessDeniedException
-    : Exception("当前账号无法获取该小说资源")
+    : WebNovelProviderException("当前账号无法获取该小说资源")
