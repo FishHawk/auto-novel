@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useEventListener } from '@vueuse/core';
+
 import { Locator } from '@/data';
 
 import { useIsWideScreen } from '@/pages/util';
@@ -15,6 +17,13 @@ const props = defineProps<{
 }>();
 
 const value = defineModel<string>('value', { required: true });
+
+useEventListener(window, 'beforeunload', (e) => {
+  if (value.value.trim()) {
+    e.preventDefault();
+    return '有未保存的编辑，确定要离开吗？';
+  }
+});
 
 const isWideScreen = useIsWideScreen(620);
 
