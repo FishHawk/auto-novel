@@ -1,18 +1,27 @@
 <script lang="ts" setup>
-import { DeleteOutlineOutlined, RefreshOutlined } from '@vicons/material';
+import {
+  DeleteOutlineOutlined,
+  FileDownloadOutlined,
+  RefreshOutlined,
+} from '@vicons/material';
 
 import { Locator } from '@/data';
-import { TranslateJob } from '@/model/Translator';
+import { TranslateJob, TranslateTaskDescriptor } from '@/model/Translator';
+import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';
 
 const props = defineProps<{
   id: 'gpt' | 'sakura';
 }>();
+
+const message = useMessage();
 
 const workspace =
   props.id === 'gpt'
     ? Locator.gptWorkspaceRepository()
     : Locator.sakuraWorkspaceRepository();
 const workspaceRef = workspace.ref;
+
+const store = useBookshelfLocalStore();
 
 const progressFilter = ref<'all' | 'finished' | 'unfinished'>('all');
 const progressFilterOptions = [
@@ -31,6 +40,21 @@ const records = computed(() => {
     return recordsAll;
   }
 });
+
+const downloadVolumes = async () => {
+  const volumeIds = records.value
+    .map((it) => TranslateTaskDescriptor.parse(it.task).desc)
+    .filter((it) => it.type === 'local')
+    .map((it) => it.volumeId);
+
+  if (volumeIds.length === 0) {
+    message.info('列表为空，没有文件需要下载');
+    return;
+  }
+
+  const { success, failed } = await store.downloadVolumes(volumeIds);
+  message.info(`${success}本小说被打包，${failed}本失败`);
+};
 </script>
 
 <template>
@@ -53,7 +77,12 @@ const records = computed(() => {
           @action="workspace.retryAllJobRecords()"
         />
         <c-button
-          label="删除所有记录"
+          label="下载本地小说"
+          :icon="FileDownloadOutlined"
+          @click="downloadVolumes"
+        />
+        <c-button
+          label="清空"
           :icon="DeleteOutlineOutlined"
           :round="false"
           @action="workspace.deleteAllJobRecords()"

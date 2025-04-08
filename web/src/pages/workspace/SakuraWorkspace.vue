@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { DeleteOutlineOutlined, PlusOutlined } from '@vicons/material';
+import {
+  BookOutlined,
+  DeleteOutlineOutlined,
+  PlusOutlined,
+} from '@vicons/material';
 import { VueDraggable } from 'vue-draggable-plus';
 
 import { Locator } from '@/data';
@@ -174,8 +178,8 @@ const clearCache = async () =>
 
     <section-header title="任务队列">
       <c-button
-        label="添加本地小说"
-        :icon="PlusOutlined"
+        label="本地书架"
+        :icon="BookOutlined"
         @action="showLocalVolumeDrawer = true"
       />
       <c-button-confirm

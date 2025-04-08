@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { MoreVertOutlined } from '@vicons/material';
+import { FileDownloadOutlined, MoreVertOutlined } from '@vicons/material';
 
 import { Locator } from '@/data';
 import { Setting } from '@/data/setting/Setting';
@@ -28,17 +28,15 @@ const { volumes } = storeToRefs(store);
 store.loadVolumes();
 
 const options = computed(() => {
-  return [...Object.keys(props.options ?? {}), '批量删除', '批量下载'].map(
-    (it) => ({ label: it, key: it }),
-  );
+  return [...Object.keys(props.options ?? {}), '批量删除'].map((it) => ({
+    label: it,
+    key: it,
+  }));
 });
 const handleSelect = (key: string) => {
   switch (key) {
     case '批量删除':
       openDeleteModal();
-      break;
-    case '批量下载':
-      downloadVolumes();
       break;
     default:
       props.options?.[key]?.(volumes.value ?? []);
@@ -108,7 +106,11 @@ const sortedVolumes = computed(() => {
         :favored-id="selectedFavored"
         @done="emit('volumeAdd', $event)"
       />
-
+      <c-button
+        label="下载"
+        :icon="FileDownloadOutlined"
+        @click="downloadVolumes"
+      />
       <n-dropdown
         trigger="click"
         :options="options"
