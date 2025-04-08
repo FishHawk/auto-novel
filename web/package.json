@@ -36,7 +36,7 @@
     "diff": "^5.2.0",
     "idb": "^8.0.2",
     "jwt-decode": "^4.0.0",
-    "ky": "^1.8.0",
+    "ky": "1.7.5",
     "lodash-es": "^4.17.21",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
