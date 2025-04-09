@@ -96,7 +96,7 @@ class WebNovelHttpDataSource(
     )
     val limiters = mapOf(
         // Alphapolis.id to TokenBucketRateLimiter(20, 0.1),
-        // Hameln.id to TokenBucketRateLimiter(20, 0.1),
+         Hameln.id to TokenBucketRateLimiter(20, 0.1),
         // Kakuyomu.id to TokenBucketRateLimiter(20, 0.1),
         // Novelup.id to TokenBucketRateLimiter(20, 0.1),
         Pixiv.id to TokenBucketRateLimiter(20, 0.1),
