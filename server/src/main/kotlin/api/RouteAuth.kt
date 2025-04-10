@@ -7,7 +7,6 @@ import infra.user.User
 import infra.user.UserCodeRepository
 import infra.user.UserRepository
 import io.ktor.resources.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -16,7 +15,7 @@ import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
-import util.Email
+import infra.EmailClient
 import java.util.*
 
 @Resource("/auth")
@@ -116,8 +115,8 @@ fun Route.routeAuth() {
 }
 
 class AuthApi(
-    private val emailDisabled: Boolean,
     private val secret: String,
+    private val emailClient: EmailClient,
     private val userRepo: UserRepository,
     private val userCodeRepo: UserCodeRepository,
 ) {
@@ -150,7 +149,7 @@ class AuthApi(
         if (password.length < 8) throwBadRequest("密码至少为8个字符")
         if (userRepo.getUserByEmail(email) != null) throwConflict("邮箱已经被使用")
         if (userRepo.getUserByUsername(username) != null) throwConflict("用户名已经被使用")
-        if (!emailDisabled && !userCodeRepo.verifyEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
+        if (emailClient.enabled && !userCodeRepo.verifyEmailCode(email, emailCode)) throwBadRequest("邮箱验证码错误")
 
         val user = userRepo.addUser(
             email = email,
@@ -161,56 +160,41 @@ class AuthApi(
     }
 
     suspend fun sendVerifyEmail(email: String) {
+        if (!emailClient.enabled) return
+
         try {
             InternetAddress(email).apply { validate() }
         } catch (e: AddressException) {
             throwBadRequest("邮箱不合法")
         }
 
-        if (userRepo.getUserByEmail(email) != null) throwConflict("邮箱已经被使用")
+        if (userRepo.getUserByEmail(email) != null) {
+            throwConflict("邮箱已经被使用")
+        }
 
         val emailCode = String.format("%06d", Random().nextInt(999999))
 
         try {
-            Email.send(
-                to = email,
-                subject = "$emailCode 日本网文机翻机器人 注册激活码",
-                text = "您的注册激活码为 $emailCode\n" +
-                        "激活码将会在15分钟后失效,请尽快完成注册\n" +
-                        "这是系统邮件，请勿回复"
-            )
-        } catch (e: AddressException) {
-            if (emailDisabled) {
-                return
-            } else {
-                throwInternalServerError("邮件发送失败")
-            }
+            emailClient.sendVerifyEmail(email, emailCode)
+        } catch (e: Exception) {
+            throwInternalServerError("邮件发送失败")
         }
 
         userCodeRepo.addEmailCode(email, emailCode)
     }
 
     suspend fun sendResetPasswordTokenEmail(emailOrUsername: String) {
+        if (!emailClient.enabled) return
+
         val user = userRepo.getUserByUsernameOrEmail(emailOrUsername)
             ?: throwUserNotFound()
 
         val token = UUID.randomUUID().toString()
 
         try {
-            Email.send(
-                to = user.email,
-                subject = "日本网文机翻机器人 重置密码口令",
-                text = "您的重置密码口令为 $token\n" +
-                        "口令将会在15分钟后失效,请尽快重置密码\n" +
-                        "如果发送了多个口令，请使用最新的口令，旧的口令将失效\n" +
-                        "这是系统邮件，请勿回复"
-            )
+            emailClient.sendResetPasswordTokenEmail(user.email, token)
         } catch (e: AddressException) {
-            if (emailDisabled) {
-                return
-            } else {
-                throwInternalServerError("邮件发送失败")
-            }
+            throwInternalServerError("邮件发送失败")
         }
 
         userCodeRepo.addResetPasswordCode(user.id, token)
@@ -223,7 +207,7 @@ class AuthApi(
     ) {
         val user = userRepo.getUserByUsernameOrEmail(emailOrUsername)
             ?: throwUserNotFound()
-        if (!emailDisabled && !userCodeRepo.verifyResetPasswordToken(user.id, token)) {
+        if (emailClient.enabled && !userCodeRepo.verifyResetPasswordToken(user.id, token)) {
             throwBadRequest("口令不合法")
         }
         userRepo.updatePassword(user.id, password)

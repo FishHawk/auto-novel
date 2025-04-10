@@ -15,7 +15,7 @@ services:
       - mongo
     environment:
       - HTTPS_PROXY
-      - EMAIL_PASSWORD
+      - MAILGUN_API_KEY
       - JWT_SECRET
       - PIXIV_COOKIE_PHPSESSID
       - DB_HOST_MONGO=mongo

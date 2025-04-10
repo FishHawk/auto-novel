@@ -94,6 +94,11 @@ val appModule = module {
         env(name)?.toIntOrNull()
 
     single {
+        EmailClient(
+            apiKey = env("MAILGUN_API_KEY")
+        )
+    }
+    single {
         MongoClient(
             host = envDbHost("DB_HOST_MONGO"),
             port = envDbPort("DB_PORT_MONGO"),
@@ -145,9 +150,8 @@ val appModule = module {
     // App Layer
     single {
         AuthApi(
-            emailDisabled = env("EMAIL_PASSWORD") == null,
             secret = env("JWT_SECRET")!!,
-            get(), get()
+            get(), get(), get()
         )
     }
     singleOf(::ArticleApi)
