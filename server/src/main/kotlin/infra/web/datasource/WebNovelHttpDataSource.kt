@@ -46,7 +46,7 @@ class TokenBucketRateLimiter(
 
     fun cooldown() {
         val now = Clock.System.now().epochSeconds
-        lastRefillTime = now + 60
+        lastRefillTime = now + 10
         tokens.set(0)
     }
 }
@@ -96,7 +96,7 @@ class WebNovelHttpDataSource(
     )
     val limiters = mapOf(
         // Alphapolis.id to TokenBucketRateLimiter(20, 0.1),
-         Hameln.id to TokenBucketRateLimiter(20, 0.1),
+        Hameln.id to TokenBucketRateLimiter(20, 0.1),
         // Kakuyomu.id to TokenBucketRateLimiter(20, 0.1),
         // Novelup.id to TokenBucketRateLimiter(20, 0.1),
         Pixiv.id to TokenBucketRateLimiter(20, 0.1),
@@ -162,6 +162,7 @@ private val disgustingFascistNovelList = mapOf(
     ),
     Hameln.id to listOf(
         "291561",
+        "1472",
     ),
 )
 

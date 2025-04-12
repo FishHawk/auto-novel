@@ -28,14 +28,18 @@ class Hameln(
         }
     }
 
+    private val originUrl = "https://syosetu.org"
+    private val proxyUrl = "https://hameln.hink.top"
+    private val baseUrl = proxyUrl
+
     override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
         return emptyPage()
     }
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
         val (doc1, doc2) = coroutineScope {
-            val url1 = "https://syosetu.org/novel/$novelId"
-            val url2 = "https://syosetu.org/?mode=ss_detail&nid=$novelId"
+            val url1 = "$baseUrl/novel/$novelId"
+            val url2 = "$baseUrl/?mode=ss_detail&nid=$novelId"
             return@coroutineScope listOf(
                 async { client.get(url1).document() },
                 async { client.get(url2).document() },
@@ -55,7 +59,9 @@ class Hameln(
             .let { el ->
                 WebNovelAuthor(
                     name = el.text(),
-                    link = el.selectFirst("a")?.attr("href"),
+                    link = el.selectFirst("a")
+                        ?.attr("href")
+                        ?.replace(baseUrl, originUrl),
                 )
             }
 
@@ -140,8 +146,8 @@ class Hameln(
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
         val url =
-            if (chapterId == "default") "https://syosetu.org/novel/$novelId"
-            else "https://syosetu.org/novel/$novelId/$chapterId.html"
+            if (chapterId == "default") "$baseUrl/novel/$novelId"
+            else "$baseUrl/novel/$novelId/$chapterId.html"
         val paragraphs = client.get(url).document()
             .selectFirst("div#honbun")!!
             .getElementsByTag("p")
