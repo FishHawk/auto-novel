@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useWindowSize } from '@vueuse/core';
 
-defineProps<{ title: string }>();
+defineProps<{ title: string; disableScroll?: boolean }>();
 
 const { width } = useWindowSize();
 const drawerWidth = computed(() =>
@@ -10,14 +10,9 @@ const drawerWidth = computed(() =>
 </script>
 
 <template>
-  <n-drawer
-    :width="drawerWidth"
-    :auto-focus="false"
-    :block-scroll="false"
-    placement="right"
-  >
+  <n-drawer :width="drawerWidth" :auto-focus="false" placement="right">
     <n-drawer-content
-      :native-scrollbar="false"
+      :native-scrollbar="disableScroll ?? false"
       :scrollbar-props="{ trigger: 'none' }"
     >
       <template #header>

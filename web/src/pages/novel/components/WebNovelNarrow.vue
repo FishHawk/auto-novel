@@ -110,6 +110,7 @@ const showCatalogDrawer = ref(false);
     :width="320"
     v-model:show="showCatalogDrawer"
     title="目录"
+    disable-scroll
   >
     <template #action>
       <c-button
@@ -125,7 +126,6 @@ const showCatalogDrawer = ref(false);
       item-resizable
       :default-scroll-key="lastReadChapter?.key"
       :scrollbar-props="{ trigger: 'none' }"
-      style="height: calc(100vh - 68px)"
     >
       <template #default="{ item }">
         <div :key="item.key" style="padding-left: 8px; padding-right: 8px">
