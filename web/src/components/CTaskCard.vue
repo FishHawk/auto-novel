@@ -35,7 +35,7 @@ watch(
   () => {
     if (enableAutoScroll.value) {
       nextTick(() => {
-        logRef.value?.scrollTo({ top: Number.MAX_SAFE_INTEGER });
+        logRef.value?.scrollBy({ top: 100 });
       });
     }
   },
