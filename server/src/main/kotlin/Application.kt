@@ -116,6 +116,7 @@ val appModule = module {
             port = envDbPort("DB_PORT_REDIS"),
         )
     }
+    singleOf(::TempFileClient)
 
     // Data layer: Data Source
     singleOf(::WebNovelEsDataSource)

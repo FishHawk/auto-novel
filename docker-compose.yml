@@ -4,7 +4,7 @@ services:
     ports:
       - 80:80
     volumes:
-      - ${DATA_PATH}/files-web:/data/files-web
+      - ${DATA_PATH}/files-temp:/data/files-temp
       - ${DATA_PATH}/files-wenku:/data/files-wenku
       - ${DATA_PATH}/files-extra:/data/files-extra
     restart: always
@@ -24,7 +24,7 @@ services:
     ports:
       - 8081:8081
     volumes:
-      - ${DATA_PATH}/files-web:/data/files-web
+      - ${DATA_PATH}/files-temp:/data/files-temp
       - ${DATA_PATH}/files-wenku:/data/files-wenku
       - ${DATA_PATH}/files-extra:/data/files-extra
     restart: always

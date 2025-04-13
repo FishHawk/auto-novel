@@ -24,6 +24,7 @@ import io.ktor.server.resources.*
 import io.ktor.server.resources.post
 import io.ktor.server.resources.put
 import io.ktor.server.routing.*
+import io.ktor.server.util.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
@@ -264,7 +265,7 @@ fun Route.routeWebNovel() {
                 type = loc.type,
             )
             val encodedFilename = loc.filename.encodeURLParameter(spaceToPlus = true)
-            "../../../../../../../files-web/${path}?filename=${encodedFilename}"
+            "/files-temp/web/${path.encodeURLParameter()}?filename=${encodedFilename}"
         }
     }
 }

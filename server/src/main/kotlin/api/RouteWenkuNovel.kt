@@ -216,7 +216,7 @@ fun Route.routeWenkuNovel() {
                 translations = loc.translations,
             )
             val encodedFilename = loc.filename.encodeURLParameter(spaceToPlus = true)
-            "../../../../../../${path}?filename=${encodedFilename}"
+            "/files-temp/wenku/${path.encodeURLParameter()}?filename=${encodedFilename}"
         }
     }
 }
@@ -542,15 +542,15 @@ class WenkuNovelApi(
         if (mode == NovelFileMode.Jp)
             throwBadRequest("不支持的类型")
 
-        val volume = volumeRepo.getVolume(novelId, volumeId)
-            ?: throwNotFound("卷不存在")
-
-        val newFileName = volume.makeTranslationVolumeFile(
+        val newFileName = volumeRepo.makeTranslationVolumeFile(
+            novelId = novelId,
+            volumeId = volumeId,
             mode = mode,
             translationsMode = translationsMode,
             translations = translations.distinct(),
-        )
-        return "files-wenku/${novelId}/${volumeId.encodeURLPathPart()}.unpack/$newFileName"
+        ) ?: throwNotFound("卷不存在")
+
+        return newFileName
     }
 }
 

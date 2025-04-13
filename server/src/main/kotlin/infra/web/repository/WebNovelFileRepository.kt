@@ -2,23 +2,20 @@ package infra.web.repository
 
 import infra.MongoClient
 import infra.MongoCollectionNames
+import infra.TempFileClient
+import infra.TempFileType
 import infra.common.NovelFileMode
 import infra.common.NovelFileTranslationsMode
 import infra.common.NovelFileType
 import infra.common.TranslatorId
-import infra.web.WebNovelChapter
 import infra.web.WebNovel
+import infra.web.WebNovelChapter
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.datetime.toKotlinInstant
 import util.serialName
-import java.nio.file.attribute.BasicFileAttributes
-import kotlin.io.path.Path
-import kotlin.io.path.div
-import kotlin.io.path.exists
-import kotlin.io.path.readAttributes
 
 class WebNovelFileRepository(
     mongo: MongoClient,
+    private val temp: TempFileClient,
 ) {
     private val webNovelMetadataCollection =
         mongo.database.getCollection<WebNovel>(
@@ -28,8 +25,6 @@ class WebNovelFileRepository(
         mongo.database.getCollection<WebNovelChapter>(
             MongoCollectionNames.WEB_CHAPTER,
         )
-
-    private val root = Path("./data/files-web")
 
     suspend fun makeFile(
         providerId: String,
@@ -61,17 +56,20 @@ class WebNovelFileRepository(
             append(type.serialName())
         }
 
-        val zhPath = root / zhFilename
 
-        val shouldMake = if (zhPath.exists()) {
-            val createAt = zhPath.readAttributes<BasicFileAttributes>()
-                .creationTime()
-                .toInstant()
-                .toKotlinInstant()
-            novel.changeAt > createAt
-        } else true
+        if (temp.isFileModifiedAfter(
+                TempFileType.Web,
+                zhFilename,
+                novel.changeAt,
+            )
+        ) {
+            return zhFilename
+        }
 
-        if (!shouldMake) return zhFilename
+        val zhPath = temp.createFile(
+            TempFileType.Web,
+            zhFilename,
+        )
 
         val chapters = novel.toc
             .mapNotNull { it.chapterId }

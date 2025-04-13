@@ -10,6 +10,7 @@ script/node_modules/
 
 # Server
 server/.gradle/
+server/.kotlin
 server/build/
 server/data/
 

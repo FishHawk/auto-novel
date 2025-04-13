@@ -1,26 +1,20 @@
 package infra.wenku.datasource
 
-import infra.common.NovelFileMode
-import infra.common.NovelFileTranslationsMode
+import infra.TempFileClient
 import infra.common.TranslatorId
 import infra.wenku.WenkuChapterGlossary
 import infra.wenku.WenkuNovelVolumeJp
 import infra.wenku.WenkuNovelVolumeList
-import io.ktor.util.cio.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import org.jsoup.Jsoup
-import org.jsoup.parser.Parser
 import util.epub.Epub
 import util.serialName
 import java.nio.charset.Charset
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Path
 import kotlin.io.path.*
-import kotlin.io.use
 
 sealed class VolumeCreateException(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class VolumeAlreadyExist : VolumeCreateException("卷已经存在")
@@ -28,7 +22,9 @@ sealed class VolumeCreateException(message: String, cause: Throwable? = null) : 
 }
 
 @OptIn(ExperimentalPathApi::class)
-class WenkuNovelVolumeDiskDataSource {
+class WenkuNovelVolumeDiskDataSource(
+    private val temp: TempFileClient,
+) {
     suspend fun listVolumes(
         volumesDir: Path,
     ) = withContext(Dispatchers.IO) {
@@ -154,23 +150,14 @@ class WenkuNovelVolumeDiskDataSource {
         volumesDir: Path,
         volumeId: String,
     ) = withContext(Dispatchers.IO) {
-        val trashDir = volumesDir.parent / "trash"
-
-        if (trashDir.notExists()) {
-            trashDir.createDirectories()
-        }
-
         val volumePath = volumesDir / volumeId
         val unpackPath = volumesDir / "$volumeId.unpack"
 
-        val volumeTrashPath = trashDir / "${volumesDir.fileName}.${volumeId}"
-        val unpackTrashPath = trashDir / "${volumesDir.fileName}.${volumeId}.unpack"
-
         if (volumePath.exists()) {
-            volumePath.moveTo(volumeTrashPath)
+            temp.trash(volumePath)
         }
         if (unpackPath.exists()) {
-            unpackPath.moveTo(unpackTrashPath)
+            unpackPath.deleteRecursively()
         }
     }
 
@@ -191,7 +178,7 @@ class WenkuNovelVolumeDiskDataSource {
 private fun String.escapePath() =
     replace('/', '.')
 
-class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
+class VolumeAccessor(val volumesDir: Path, val volumeId: String) {
     val unpacked
         get() = (volumesDir / "${volumeId}.unpack").exists()
 
@@ -283,138 +270,6 @@ class VolumeAccessor(private val volumesDir: Path, val volumeId: String) {
         sakuraVersion = sakuraVersion,
     )
 
-    //
-    suspend fun makeTranslationVolumeFile(
-        mode: NovelFileMode,
-        translationsMode: NovelFileTranslationsMode,
-        translations: List<TranslatorId>,
-    ) = withContext(Dispatchers.IO) {
-        val zhFilename = buildString {
-            append(mode.serialName())
-            append('.')
-            append(
-                when (translationsMode) {
-                    NovelFileTranslationsMode.Parallel -> "B"
-                    NovelFileTranslationsMode.Priority -> "Y"
-                }
-            )
-            translations.forEach {
-                append(it.serialName()[0])
-            }
-        }
-
-        suspend fun getZhLinesList(chapterId: String): List<List<String>> {
-            return when (translationsMode) {
-                NovelFileTranslationsMode.Parallel ->
-                    translations.mapNotNull { getTranslation(it, chapterId) }
-
-                NovelFileTranslationsMode.Priority ->
-                    translations.firstNotNullOfOrNull { getTranslation(it, chapterId) }
-                        ?.let { listOf(it) }
-                        ?: emptyList()
-            }
-        }
-
-        if (volumeId.endsWith(".txt")) {
-            val zhPath = volumesDir / "$volumeId.unpack" / "${zhFilename}.txt"
-
-            if (zhPath.notExists()) {
-                zhPath.createFile()
-            }
-
-            zhPath.bufferedWriter().use { bf ->
-                listChapter().sorted().forEach { chapterId ->
-                    val zhLinesList = getZhLinesList(chapterId)
-                    if (zhLinesList.isEmpty()) {
-                        bf.appendLine("// 该分段翻译缺失。")
-                    } else {
-                        val jpLines = getChapter(chapterId)!!
-                        val linesList = when (mode) {
-                            NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
-                            NovelFileMode.Zh -> zhLinesList
-                            NovelFileMode.JpZh -> listOf(jpLines) + zhLinesList
-                            NovelFileMode.ZhJp -> zhLinesList + listOf(jpLines)
-                        }
-                        for (i in jpLines.indices) {
-                            linesList.forEach { lines ->
-                                bf.appendLine(lines[i])
-                            }
-                        }
-                    }
-                }
-            }
-            return@withContext "${zhFilename}.txt"
-        } else {
-            val zhPath = volumesDir / "$volumeId.unpack" / "${zhFilename}.epub"
-            val jpPath = volumesDir / volumeId
-
-            val chapters = listChapter()
-            Epub.modify(srcPath = jpPath, dstPath = zhPath) { name, bytesIn ->
-                // 为了兼容ChapterId以斜杠开头的旧格式
-                val chapterId = if ("/${name}".escapePath() in chapters) {
-                    "/${name}".escapePath()
-                } else if (name.escapePath() in chapters) {
-                    name.escapePath()
-                } else {
-                    null
-                }
-
-                if (chapterId != null) {
-                    // XHtml文件，尝试生成翻译版
-                    val zhLinesList = getZhLinesList(chapterId)
-                    if (zhLinesList.isEmpty()) {
-                        bytesIn
-                    } else {
-                        val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
-                        doc.select("p")
-                            .filter { el -> el.text().isNotBlank() }
-                            .forEachIndexed { index, el ->
-                                when (mode) {
-                                    NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
-                                    NovelFileMode.Zh -> {
-                                        zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}</p>")
-                                        }
-                                        el.remove()
-                                    }
-
-                                    NovelFileMode.JpZh -> {
-                                        zhLinesList.asReversed().forEach { lines ->
-                                            el.after("<p>${lines[index]}</p>")
-                                        }
-                                        el.attr("style", "opacity:0.4;")
-                                    }
-
-                                    NovelFileMode.ZhJp -> {
-                                        zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}</p>")
-                                        }
-                                        el.attr("style", "opacity:0.4;")
-                                    }
-                                }
-                            }
-                        doc.outputSettings().prettyPrint(true)
-                        doc.html().toByteArray()
-                    }
-                } else if (name.endsWith("opf")) {
-                    val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
-
-                    // 防止部分阅读器使用竖排
-                    doc
-                        .selectFirst("spine")
-                        ?.removeAttr("page-progression-direction")
-
-                    doc.outputSettings().prettyPrint(true)
-                    doc.html().toByteArray()
-                } else if (name.endsWith("css")) {
-                    "".toByteArray()
-                } else {
-                    bytesIn
-                }
-            }
-            return@withContext "${zhFilename}.epub"
-        }
-    }
 }
 
 private suspend fun getGlossary(path: Path) =
