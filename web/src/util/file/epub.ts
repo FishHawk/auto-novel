@@ -209,7 +209,7 @@ export class Epub extends BaseFile {
   }
 
   async toBlob() {
-    this.fixHrefExtension();
+    // this.fixHrefExtension();
     this.updatePackage();
 
     const { BlobReader, BlobWriter, ZipWriter, TextReader } = await import(
