@@ -37,16 +37,8 @@ class Pixiv(
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
         if (novelId.startsWith("s")) {
             val chapterId = novelId.removePrefix("s")
-            val url = "https://www.pixiv.net/novel/show.php?id=$chapterId"
-            val doc = client.get(url).document()
-
-            val obj = doc
-                .selectFirst("meta#meta-preload-data")!!
-                .attr("content")
-                .let { Json.parseToJsonElement(it) }
-                .jsonObject
-                .obj("novel")
-                .obj(chapterId)
+            val url = "https://www.pixiv.net/ajax/novel/$chapterId"
+            val obj = client.get(url).json().obj("body")
 
             val seriesData = obj.objOrNull("seriesNavData")
             if (seriesData != null) {
