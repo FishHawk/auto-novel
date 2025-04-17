@@ -53,14 +53,15 @@ class TokenBucketRateLimiter(
 
 class WebNovelHttpDataSource(
     httpsProxy: String?,
+    hamelnToken: String?,
     pixivPhpsessid: String?,
 ) {
     private val client = HttpClient(Java) {
         install(HttpCookies) {
             default {
                 Alphapolis.addCookies(this)
-                Hameln.addCookies(this)
-                Pixiv.addCookies(this, phpsessid = pixivPhpsessid)
+                Hameln.addCookies(this, token = hamelnToken ?: "")
+                Pixiv.addCookies(this, phpsessid = pixivPhpsessid ?: "")
                 Syosetu.addCookies(this)
             }
         }

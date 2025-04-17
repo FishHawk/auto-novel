@@ -24,10 +24,14 @@ class Hameln(
         private const val URL_PROXY = "https://hml.xkvi.top"
         private const val URL_BASE = URL_PROXY
 
-        suspend fun addCookies(cookies: CookiesStorage) {
+        suspend fun addCookies(cookies: CookiesStorage, token: String) {
             cookies.addCookie(
                 URL_BASE,
                 Cookie(name = "over18", value = "off", domain = ".syosetu.org")
+            )
+            cookies.addCookie(
+                URL_BASE,
+                Cookie(name = "token", value = token, domain = ".hml.xkvi.top")
             )
         }
     }

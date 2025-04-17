@@ -9,7 +9,6 @@ import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -20,13 +19,11 @@ class Pixiv(
     companion object {
         const val id = "pixiv"
 
-        suspend fun addCookies(cookies: CookiesStorage, phpsessid: String?) {
-            if (phpsessid != null) {
-                cookies.addCookie(
-                    "https://www.pixiv.net",
-                    Cookie(name = "PHPSESSID", value = phpsessid, domain = ".pixiv.net")
-                )
-            }
+        suspend fun addCookies(cookies: CookiesStorage, phpsessid: String) {
+            cookies.addCookie(
+                "https://www.pixiv.net",
+                Cookie(name = "PHPSESSID", value = phpsessid, domain = ".pixiv.net")
+            )
         }
     }
 

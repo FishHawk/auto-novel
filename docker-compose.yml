@@ -17,6 +17,7 @@ services:
       - HTTPS_PROXY
       - MAILGUN_API_KEY
       - JWT_SECRET
+      - HAMELN_TOKEN
       - PIXIV_COOKIE_PHPSESSID
       - DB_HOST_MONGO=mongo
       - DB_HOST_ES=elasticsearch
