@@ -16,13 +16,14 @@ const createComment = (json: {
   content: string;
 }) => client.post('comment', { json });
 
+const deleteComment = (id: string) => client.delete(`comment/${id}`);
 const hideComment = (id: string) => client.put(`comment/${id}/hidden`);
 const unhideComment = (id: string) => client.delete(`comment/${id}/hidden`);
 
 export const CommentRepository = {
   listComment,
   createComment,
-
+  deleteComment,
   hideComment,
   unhideComment,
 };

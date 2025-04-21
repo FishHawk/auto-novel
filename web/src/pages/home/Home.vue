@@ -202,16 +202,7 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
         FishHawk长期996,网站开发速度大幅下降已成常态，论坛反馈目前没有精力维护，有问题加群@吧
       </n-p>
       <n-p>文件解析正在大改，如果出现小说文件相关问题，加群@FishHawk。</n-p>
-      <n-p>
-        <b>
-          感谢@H接手，共享Sakura现在可以开放使用了，目前在测试中，欢迎使用。
-        </b>
-      </n-p>
-      <n-p style="color: red">
-        <b>
-          由于畜生倒狗创了一堆小号在所有他能打字的地方发广告引流，现在机翻站小说编辑、评论、修改术语表均需要注册一个月。
-        </b>
-      </n-p>
+      <n-p>支持删除一天内发布的评论</n-p>
     </bulletin>
 
     <template v-if="whoami.isSignedIn">

@@ -80,6 +80,13 @@ fun Route.routeComment() {
             }
         }
 
+        delete<CommentRes.Id> { loc ->
+            val user = call.user()
+            call.tryRespond {
+                service.deleteComment(user = user, id = loc.id)
+            }
+        }
+
         put<CommentRes.Id.Hidden> { loc ->
             val user = call.user()
             call.tryRespond {
@@ -164,12 +171,13 @@ class CommentApi(
             }
     }
 
-    @Suppress("unused")
     suspend fun deleteComment(
         user: User,
         id: String,
     ) {
-        user.shouldBeAtLeast(UserRole.Maintainer)
+        if (!(user.role atLeast UserRole.Maintainer) && !commentRepo.isCommentCanRevoke(id = id, userId = user.id)) {
+            throwUnauthorized("只有评论作者才有权限删除")
+        }
         val isDeleted = commentRepo.deleteComment(id)
         if (!isDeleted) throwNotFound("评论不存在")
     }

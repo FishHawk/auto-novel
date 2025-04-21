@@ -10,9 +10,10 @@ const { comment, topLevel } = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  copy: [Comment1];
+  delete: [Comment1];
   hide: [Comment1];
   unhide: [Comment1];
-  copy: [Comment1];
   reply: [Comment1];
 }>();
 
@@ -37,12 +38,24 @@ const options = computed(() => {
       });
     }
   }
+  if (
+    whoami.value.asMaintainer ||
+    (whoami.value.username === comment.user.username &&
+      Date.now() / 1000 - comment.createAt < 3600 * 24)
+  ) {
+    options.push({
+      label: '删除',
+      key: 'delete',
+    });
+  }
   return options;
 });
 
 const handleSelect = (key: string) => {
   if (key === 'copy') {
     emit('copy', comment);
+  } else if (key === 'delete') {
+    emit('delete', comment);
   } else if (key === 'hide') {
     emit('hide', comment);
   } else if (key === 'unhide') {

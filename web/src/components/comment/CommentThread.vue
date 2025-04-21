@@ -47,6 +47,21 @@ function onReplied() {
   draftRepo.removeDraft(draftId);
 }
 
+const copyComment = (comment: Comment1) =>
+  copyToClipBoard(comment.content).then((isSuccess) => {
+    if (isSuccess) message.success('复制成功');
+    else message.error('复制失败');
+  });
+
+const deleteComment = (comment: Comment1) =>
+  doAction(
+    CommentRepository.deleteComment(comment.id).then(() => {
+      loadReplies(currentPage.value);
+    }),
+    '删除',
+    message,
+  );
+
 const hideComment = (comment: Comment1) =>
   doAction(
     CommentRepository.hideComment(comment.id).then(
@@ -65,12 +80,6 @@ const unhideComment = (comment: Comment1) =>
     message,
   );
 
-const copyComment = (comment: Comment1) =>
-  copyToClipBoard(comment.content).then((isSuccess) => {
-    if (isSuccess) message.success('复制成功');
-    else message.error('复制失败');
-  });
-
 const showInput = ref(false);
 </script>
 
@@ -79,9 +88,10 @@ const showInput = ref(false);
   <CommentItem
     :comment="comment"
     top-level
+    @copy="copyComment"
+    @delete="deleteComment"
     @hide="hideComment"
     @unhide="unhideComment"
-    @copy="copyComment"
     @reply="showInput = !showInput"
   />
 
@@ -102,9 +112,10 @@ const showInput = ref(false);
   >
     <CommentItem
       :comment="replyComment"
+      @copy="copyComment"
+      @delete="deleteComment"
       @hide="hideComment"
       @unhide="unhideComment"
-      @copy="copyComment"
     />
   </div>
 
