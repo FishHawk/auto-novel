@@ -10,7 +10,7 @@ import { Locator } from '@/data';
 import { WebNovelTocItemDto, WebNovelDto } from '@/model/WebNovel';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
-import { useTocExpansion } from './useTocExpansion';
+import { useTocExpansion } from './UseTocExpansion';
 
 const props = defineProps<{
   providerId: string;
@@ -82,7 +82,6 @@ const {
       <n-virtual-list
         :item-size="78"
         :items="finalToc"
-        item-resizable
         :default-scroll-key="lastReadChapter?.key"
         :scrollbar-props="{ trigger: 'none' }"
         style="flex: 1"

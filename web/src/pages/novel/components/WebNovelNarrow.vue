@@ -10,7 +10,7 @@ import { Locator } from '@/data';
 import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
-import { useTocExpansion } from './useTocExpansion';
+import { useTocExpansion } from './UseTocExpansion';
 
 const props = defineProps<{
   providerId: string;
@@ -150,9 +150,7 @@ const {
               : undefined
           "
           @toggle-expand="
-            item.order === undefined
-              ? () => toggleSection(item.titleJp)
-              : () => {}
+            item.order === undefined ? toggleSection(item.titleJp) : () => {}
           "
         />
       </n-list-item>
@@ -183,7 +181,6 @@ const {
     <n-virtual-list
       :item-size="78"
       :items="finalToc"
-      item-resizable
       :default-scroll-key="lastReadChapter?.key"
       :scrollbar-props="{ trigger: 'none' }"
     >

@@ -9,7 +9,7 @@ import { GenericNovelId } from '@/model/Common';
 import { useWebNovelStore } from '@/pages/novel/WebNovelStore';
 import { Ok, Result, runCatching } from '@/util/result';
 import { ReadableTocItem } from '@/pages/novel/components/common';
-import { useTocExpansion } from '@/pages/novel/components/useTocExpansion';
+import { useTocExpansion } from '@/pages/novel/components/UseTocExpansion';
 
 const props = defineProps<{
   show: boolean;
@@ -150,7 +150,6 @@ const onTocItemClick = (chapterId: string | undefined) => {
       <n-virtual-list
         v-if="gnid.type == 'web'"
         :item-size="78"
-        item-resizable
         :items="finalToc"
         :default-scroll-key="currentKey"
         :scrollbar-props="{ trigger: 'none' }"
@@ -188,7 +187,6 @@ const onTocItemClick = (chapterId: string | undefined) => {
       <n-virtual-list
         v-else-if="gnid.type == 'local'"
         :item-size="78"
-        item-resizable
         :items="finalToc"
         :default-scroll-key="currentKey"
         :scrollbar-props="{ trigger: 'none' }"
