@@ -89,8 +89,9 @@ const isDeletable = computed(() => {
       @action="emit('reply', comment)"
     />
 
-    <c-button
+    <c-button-confirm
       v-if="isDeletable"
+      hint="真的要删除评论吗？"
       label="删除"
       :icon="DeleteOutlined"
       require-login
