@@ -101,13 +101,13 @@ const warp = (
   applyFormat(({ before, middle, after }: TextSelection) => {
     if (before.endsWith(prefix) && after.startsWith(suffix)) {
       before = before.slice(0, -prefix.length);
-      after = after.slice(after.length);
+      after = after.slice(suffix.length);
     } else if (
       middle.length >= prefix.length + suffix.length &&
       middle.startsWith(prefix) &&
       middle.endsWith(suffix)
     ) {
-      middle = middle.slice(prefix.length, -after.length);
+      middle = middle.slice(prefix.length, -suffix.length);
     } else {
       if (!inline) {
         if (!before.endsWith('\n') && before) before = before + '\n';
