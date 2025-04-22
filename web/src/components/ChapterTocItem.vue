@@ -52,14 +52,12 @@ const visitedColor = mixColor();
 <template>
   <component
     :is="!isSeparator ? CA : 'div'"
-    :to="
-      !isSeparator
-        ? `/novel/${providerId}/${novelId}/${tocItem.chapterId}`
-        : undefined
-    "
+    :to="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
     class="toc"
+    :class="{ 'toc-separator': isSeparator }"
     style="width: calc(100% - 12px); display: block; padding: 6px"
     :style="{ 'font-size': !isSeparator ? '14px' : '12px' }"
+    @click="isSeparator ? emit('toggleExpand') : undefined"
   >
     <div
       style="display: flex; align-items: center; justify-content: space-between"
@@ -96,7 +94,7 @@ const visitedColor = mixColor();
           padding: 6px 0 6px 12px;
           margin: -6px 0 -6px -12px;
         "
-        @click.stop="emit('toggleExpand')"
+        @click.stop="isSeparator ? undefined : emit('toggleExpand')"
       >
         <n-icon>
           <component
@@ -111,6 +109,9 @@ const visitedColor = mixColor();
 <style scoped>
 .toc {
   cursor: default;
+}
+.toc-separator {
+  cursor: pointer;
 }
 .toc:hover .toc-title {
   text-decoration: underline;
