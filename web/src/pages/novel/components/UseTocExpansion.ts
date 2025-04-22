@@ -105,6 +105,7 @@ export function useTocExpansion(
           chapters: isExpanded ? section.chapters : [],
         };
       }
+      return section;
     });
 
     let result: ReadableTocItem[] = [];

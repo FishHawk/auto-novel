@@ -68,7 +68,7 @@ const {
       <section-header title="目录">
         <c-button
           v-if="hasSeparators"
-          :label="isAnyExpanded ? '折叠' : '展开'"
+          :label="isAnyExpanded ? '全部折叠' : '全部展开'"
           :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
           @action="toggleAll"
         />

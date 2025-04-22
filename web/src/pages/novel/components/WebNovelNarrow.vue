@@ -96,7 +96,7 @@ const {
     >
       <c-button
         v-if="hasSeparators"
-        :label="isAnyExpanded ? '折叠所有' : '展开所有'"
+        :label="isAnyExpanded ? '全部折叠' : '全部展开'"
         :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
         @action="toggleAll"
         quaternary
