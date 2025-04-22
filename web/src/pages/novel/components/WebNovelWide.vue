@@ -4,13 +4,13 @@ import {
   KeyboardArrowUpRound,
   KeyboardArrowDownRound,
 } from '@vicons/material';
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
 
 import { Locator } from '@/data';
 import { WebNovelTocItemDto, WebNovelDto } from '@/model/WebNovel';
-import { ReadableTocItem } from './common';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
+import { useTocExpansion } from './useTocExpansion';
 
 const props = defineProps<{
   providerId: string;
@@ -19,116 +19,19 @@ const props = defineProps<{
 }>();
 
 const { setting } = Locator.settingRepository();
+const sortReverse = computed(() => setting.value.tocSortReverse);
 
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 
-const expandedState = ref(new Map<string, boolean>());
-
-watch(
-  toc,
-  (newToc) => {
-    for (const item of newToc) {
-      if (item.order === undefined) {
-        const key = item.titleJp;
-        if (!expandedState.value.has(key)) {
-          expandedState.value.set(key, true);
-        }
-      }
-    }
-  },
-  { immediate: true, deep: true },
-);
-
-const hasSeparators = computed(() => {
-  return toc.value.some((item) => item.order === undefined);
-});
-
-const isAnyExpanded = computed(() => {
-  if (!hasSeparators.value) {
-    return false;
-  }
-  for (const item of toc.value) {
-    if (item.order === undefined) {
-      const key = item.titleJp;
-      if (expandedState.value.get(key)) {
-        return true;
-      }
-    }
-  }
-  return false;
-});
-
-const toggleAll = () => {
-  const targetState = !isAnyExpanded.value;
-  for (const item of toc.value) {
-    if (item.order === undefined) {
-      expandedState.value.set(item.titleJp, targetState);
-    }
-  }
-};
-
-const toggleSection = (separatorKey: string) => {
-  expandedState.value.set(separatorKey, !expandedState.value.get(separatorKey));
-};
-
-interface TocSection {
-  separator: ReadableTocItem | null;
-  chapters: ReadableTocItem[];
-}
-
-const finalToc = computed(() => {
-  const sections: TocSection[] = [];
-  let currentSection: TocSection = { separator: null, chapters: [] };
-
-  for (const item of toc.value) {
-    if (item.order === undefined) {
-      if (currentSection.separator || currentSection.chapters.length > 0) {
-        sections.push(currentSection);
-      }
-      const key = item.titleJp;
-      if (!expandedState.value.has(key)) {
-        expandedState.value.set(key, true);
-      }
-      currentSection = { separator: item, chapters: [] };
-    } else {
-      currentSection.chapters.push(item);
-    }
-  }
-  sections.push(currentSection);
-
-  const filteredSections = sections.map((section) => {
-    if (section.separator) {
-      const isExpanded =
-        expandedState.value.get(section.separator.titleJp) ?? true;
-      return {
-        ...section,
-        chapters: isExpanded ? section.chapters : [],
-      };
-    }
-    return section;
-  });
-
-  let result: ReadableTocItem[] = [];
-  if (!setting.value.tocSortReverse) {
-    filteredSections.forEach((section) => {
-      if (section.separator) {
-        result.push(section.separator);
-      }
-      result.push(...section.chapters);
-    });
-  } else {
-    const reversedSections = filteredSections.slice().reverse();
-    reversedSections.forEach((section) => {
-      if (section.separator) {
-        result.push(section.separator);
-      }
-      result.push(...section.chapters.reverse());
-    });
-  }
-
-  return result;
-});
+const {
+  expandedState,
+  hasSeparators,
+  isAnyExpanded,
+  toggleAll,
+  toggleSection,
+  finalToc,
+} = useTocExpansion(toc, sortReverse);
 </script>
 
 <template>
@@ -165,7 +68,7 @@ const finalToc = computed(() => {
       <section-header title="目录">
         <c-button
           v-if="hasSeparators"
-          :label="isAnyExpanded ? '全部折叠' : '全部展开'"
+          :label="isAnyExpanded ? '折叠' : '展开'"
           :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
           @action="toggleAll"
         />
