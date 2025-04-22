@@ -86,22 +86,11 @@ const visitedColor = mixColor();
           />
         </n-text>
       </div>
-      <n-button
-        v-if="isSeparator"
-        text
-        style="
-          font-size: 20px;
-          padding: 6px 0 6px 12px;
-          margin: -6px 0 -6px -12px;
-        "
-        @click.stop="isSeparator ? undefined : emit('toggleExpand')"
-      >
-        <n-icon>
-          <component
-            :is="isExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
-          />
-        </n-icon>
-      </n-button>
+      <n-icon v-if="isSeparator" :size="16">
+        <component
+          :is="isExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+        />
+      </n-icon>
     </div>
   </component>
 </template>
