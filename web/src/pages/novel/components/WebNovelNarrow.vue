@@ -94,21 +94,24 @@ const {
         margin-bottom: 16px;
       "
     >
+      <div style="flex: 1"></div>
       <c-button
         v-if="hasSeparators"
         :label="isAnyExpanded ? '全部折叠' : '全部展开'"
         :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
-        @action="toggleAll"
         quaternary
         size="small"
+        :round="false"
+        @action="toggleAll"
+        style="margin-right: 8px"
       />
-      <div v-else style="flex: 1"></div>
       <c-button
         :label="setting.tocSortReverse ? '倒序' : '正序'"
         :icon="SortOutlined"
-        @action="setting.tocSortReverse = !setting.tocSortReverse"
         quaternary
         size="small"
+        :round="false"
+        @action="setting.tocSortReverse = !setting.tocSortReverse"
       />
     </div>
     <n-list>
@@ -167,13 +170,20 @@ const {
     <template #action>
       <c-button
         v-if="hasSeparators"
-        :label="isAnyExpanded ? '折叠' : '展开'"
+        :label="isAnyExpanded ? '全部折叠' : '全部展开'"
         :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+        quaternary
+        size="small"
+        :round="false"
         @action="toggleAll"
+        style="margin-right: 8px"
       />
       <c-button
         :label="setting.tocSortReverse ? '倒序' : '正序'"
         :icon="SortOutlined"
+        quaternary
+        size="small"
+        :round="false"
         @action="setting.tocSortReverse = !setting.tocSortReverse"
       />
     </template>
