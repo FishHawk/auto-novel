@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import { CommentOutlined, MoreVertOutlined } from '@vicons/material';
+import {
+  CommentOutlined,
+  MoreVertOutlined,
+  DeleteOutlined,
+} from '@vicons/material';
 
 import { Locator } from '@/data';
 import { Comment1 } from '@/model/Comment';
@@ -38,16 +42,6 @@ const options = computed(() => {
       });
     }
   }
-  if (
-    whoami.value.asMaintainer ||
-    (whoami.value.username === comment.user.username &&
-      Date.now() / 1000 - comment.createAt < 3600 * 24)
-  ) {
-    options.push({
-      label: '删除',
-      key: 'delete',
-    });
-  }
   return options;
 });
 
@@ -62,6 +56,14 @@ const handleSelect = (key: string) => {
     emit('unhide', comment);
   }
 };
+
+const isDeletable = computed(() => {
+  return (
+    whoami.value.asMaintainer ||
+    (whoami.value.username === comment.user.username &&
+      Date.now() / 1000 - comment.createAt < 3600 * 24)
+  );
+});
 </script>
 
 <template>
@@ -85,6 +87,18 @@ const handleSelect = (key: string) => {
       size="tiny"
       style="margin-right: 4px"
       @action="emit('reply', comment)"
+    />
+
+    <c-button
+      v-if="isDeletable"
+      label="删除"
+      :icon="DeleteOutlined"
+      require-login
+      quaternary
+      type="tertiary"
+      size="tiny"
+      style="margin-right: 4px"
+      @action="emit('delete', comment)"
     />
 
     <n-dropdown trigger="click" :options="options" @select="handleSelect">
