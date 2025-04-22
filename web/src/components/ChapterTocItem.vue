@@ -91,7 +91,11 @@ const visitedColor = mixColor();
       <n-button
         v-if="isSeparator"
         text
-        style="font-size: 20px"
+        style="
+          font-size: 20px;
+          padding: 10px 0 10px 20px;
+          margin: -10px 0 -10px -20px;
+        "
         @click.stop="emit('toggleExpand')"
       >
         <n-icon>
