@@ -19,6 +19,10 @@ const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
 const draftRepo = Locator.draftRepository();
 const draftId = `comment-${site}`;
 
+const emit = defineEmits<{
+  deleted: [];
+}>();
+
 const loadReplies = async (page: number) => {
   const result = await runCatching(
     CommentRepository.listComment({
@@ -53,10 +57,14 @@ const copyComment = (comment: Comment1) =>
     else message.error('复制失败');
   });
 
-const deleteComment = (comment: Comment1) =>
+const deleteComment = (commentToDelete: Comment1) =>
   doAction(
-    CommentRepository.deleteComment(comment.id).then(() => {
-      loadReplies(currentPage.value);
+    CommentRepository.deleteComment(commentToDelete.id).then(() => {
+      if (commentToDelete.id === comment.id) {
+        emit('deleted');
+      } else {
+        loadReplies(currentPage.value);
+      }
     }),
     '删除',
     message,

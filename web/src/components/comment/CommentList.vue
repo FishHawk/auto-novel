@@ -100,7 +100,12 @@ const showInput = ref(false);
     v-slot="{ value }"
   >
     <template v-for="comment in value.items">
-      <CommentThread :site="site" :comment="comment" :locked="locked" />
+      <CommentThread
+        :site="site"
+        :comment="comment"
+        :locked="locked"
+        @deleted="loadComments(currentPage)"
+      />
       <n-divider />
     </template>
 
