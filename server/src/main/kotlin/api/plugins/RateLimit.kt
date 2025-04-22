@@ -31,7 +31,7 @@ fun Application.rateLimit() = install(RateLimit) {
         requestKey { call -> call.user().id }
     }
     register(RateLimitNames.CreateWenkuVolume) {
-        rateLimiter(limit = 100, refillPeriod = 1.days)
+        rateLimiter(limit = 500, refillPeriod = 1.days)
         requestKey { call -> call.user().id }
     }
 }
