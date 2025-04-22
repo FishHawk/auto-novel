@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { NText } from 'naive-ui';
+import { NText, NButton, NIcon } from 'naive-ui';
+import { KeyboardArrowUpRound, KeyboardArrowDownRound } from '@vicons/material';
 import CA from '@/components/CA.vue';
 
 import { ReadableTocItem } from '@/pages/novel/components/common';
@@ -9,6 +10,12 @@ const props = defineProps<{
   novelId: string;
   tocItem: ReadableTocItem;
   lastRead?: string;
+  isSeparator: boolean;
+  isExpanded?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'toggleExpand'): void;
 }>();
 
 const type = computed(() => {
@@ -44,44 +51,56 @@ const visitedColor = mixColor();
 
 <template>
   <component
-    :is="tocItem.order !== undefined ? CA : 'div'"
+    :is="!isSeparator ? CA : 'div'"
     :to="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
     class="toc"
+    :class="{ 'toc-separator': isSeparator }"
     style="width: calc(100% - 12px); display: block; padding: 6px"
-    :style="{ 'font-size': tocItem.order !== undefined ? '14px' : '12px' }"
+    :style="{ 'font-size': !isSeparator ? '14px' : '12px' }"
+    @click="isSeparator ? emit('toggleExpand') : undefined"
   >
-    <n-text
-      :class="{
-        'toc-title-visited': type !== undefined && type !== 'warning',
-        'toc-title': type !== undefined,
-      }"
-      :type="type"
+    <div
+      style="display: flex; align-items: center; justify-content: space-between"
     >
-      {{ tocItem.titleJp }}
-    </n-text>
-    <br />
-    <n-text depth="3">
-      {{ tocItem.titleZh }}
-    </n-text>
-    <br />
-    <n-text
-      v-if="tocItem.order !== undefined"
-      depth="3"
-      style="font-size: 12px"
-    >
-      [{{ tocItem.order }}]
-      <n-time
-        v-if="tocItem.createAt"
-        :time="tocItem.createAt * 1000"
-        format="yyyy-MM-dd HH:mm"
-      />
-    </n-text>
+      <div>
+        <n-text
+          :class="{
+            'toc-title-visited': type !== undefined && type !== 'warning',
+            'toc-title': type !== undefined,
+          }"
+          :type="type"
+        >
+          {{ tocItem.titleJp }}
+        </n-text>
+        <br />
+        <n-text depth="3">
+          {{ tocItem.titleZh }}
+        </n-text>
+        <br />
+        <n-text v-if="!isSeparator" depth="3" style="font-size: 12px">
+          [{{ tocItem.order }}]
+          <n-time
+            v-if="tocItem.createAt"
+            :time="tocItem.createAt * 1000"
+            format="yyyy-MM-dd HH:mm"
+          />
+        </n-text>
+      </div>
+      <n-icon v-if="isSeparator" :size="16">
+        <component
+          :is="isExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+        />
+      </n-icon>
+    </div>
   </component>
 </template>
 
 <style scoped>
 .toc {
   cursor: default;
+}
+.toc-separator {
+  cursor: pointer;
 }
 .toc:hover .toc-title {
   text-decoration: underline;

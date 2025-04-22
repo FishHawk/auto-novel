@@ -1,10 +1,16 @@
 <script lang="ts" setup>
-import { SortOutlined } from '@vicons/material';
+import {
+  SortOutlined,
+  KeyboardArrowUpRound,
+  KeyboardArrowDownRound,
+} from '@vicons/material';
+import { computed } from 'vue';
 
 import { Locator } from '@/data';
 import { WebNovelTocItemDto, WebNovelDto } from '@/model/WebNovel';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
+import { useTocExpansion } from './UseTocExpansion';
 
 const props = defineProps<{
   providerId: string;
@@ -13,9 +19,19 @@ const props = defineProps<{
 }>();
 
 const { setting } = Locator.settingRepository();
+const sortReverse = computed(() => setting.value.tocSortReverse);
 
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
+
+const {
+  expandedState,
+  hasSeparators,
+  isAnyExpanded,
+  toggleAll,
+  toggleSection,
+  finalToc,
+} = useTocExpansion(toc, sortReverse);
 </script>
 
 <template>
@@ -51,6 +67,12 @@ const { lastReadChapter } = useLastReadChapter(props.novel, toc);
     <template #sidebar>
       <section-header title="目录">
         <c-button
+          v-if="hasSeparators"
+          :label="isAnyExpanded ? '全部折叠' : '全部展开'"
+          :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+          @action="toggleAll"
+        />
+        <c-button
           :label="setting.tocSortReverse ? '倒序' : '正序'"
           :icon="SortOutlined"
           @action="setting.tocSortReverse = !setting.tocSortReverse"
@@ -59,8 +81,7 @@ const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 
       <n-virtual-list
         :item-size="78"
-        :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
-        item-resizable
+        :items="finalToc"
         :default-scroll-key="lastReadChapter?.key"
         :scrollbar-props="{ trigger: 'none' }"
         style="flex: 1"
@@ -68,7 +89,9 @@ const { lastReadChapter } = useLastReadChapter(props.novel, toc);
         <template #default="{ item }">
           <div
             :key="
-              item.chapterId === undefined ? `/${item.titleJp}` : item.chapterId
+              item.order === undefined
+                ? `sep-${item.titleJp}`
+                : `ch-${item.chapterId}`
             "
           >
             <chapter-toc-item
@@ -76,6 +99,17 @@ const { lastReadChapter } = useLastReadChapter(props.novel, toc);
               :novel-id="novelId"
               :toc-item="item"
               :last-read="novel.lastReadChapterId"
+              :is-separator="item.order === undefined"
+              :is-expanded="
+                item.order === undefined
+                  ? expandedState.get(item.titleJp)
+                  : undefined
+              "
+              @toggle-expand="
+                item.order === undefined
+                  ? toggleSection(item.titleJp)
+                  : () => {}
+              "
             />
           </div>
         </template>

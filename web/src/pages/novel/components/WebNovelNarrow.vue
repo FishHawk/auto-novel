@@ -1,10 +1,16 @@
 <script lang="ts" setup>
-import { SortOutlined } from '@vicons/material';
+import {
+  SortOutlined,
+  KeyboardArrowUpRound,
+  KeyboardArrowDownRound,
+} from '@vicons/material';
+import { ref, computed } from 'vue';
 
 import { Locator } from '@/data';
 import { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
+import { useTocExpansion } from './UseTocExpansion';
 
 const props = defineProps<{
   providerId: string;
@@ -13,6 +19,7 @@ const props = defineProps<{
 }>();
 
 const { setting } = Locator.settingRepository();
+const sortReverse = computed(() => setting.value.tocSortReverse);
 
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
@@ -24,6 +31,15 @@ const startReadChapter = computed(() => {
 });
 
 const showCatalogDrawer = ref(false);
+
+const {
+  expandedState,
+  hasSeparators,
+  isAnyExpanded,
+  toggleAll,
+  toggleSection,
+  finalToc,
+} = useTocExpansion(toc, sortReverse);
 </script>
 
 <template>
@@ -58,6 +74,8 @@ const showCatalogDrawer = ref(false);
       :novel-id="novelId"
       :toc-item="startReadChapter"
       :last-read="novel.lastReadChapterId"
+      :is-separator="false"
+      :is-expanded="false"
     />
     <c-button
       v-if="novel.toc.length > 1"
@@ -68,12 +86,31 @@ const showCatalogDrawer = ref(false);
     />
   </template>
   <template v-else>
-    <c-button
-      :label="setting.tocSortReverse ? '倒序' : '正序'"
-      :icon="SortOutlined"
-      @action="setting.tocSortReverse = !setting.tocSortReverse"
-      style="margin-bottom: 16px"
-    />
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      "
+    >
+      <c-button
+        v-if="hasSeparators"
+        :label="isAnyExpanded ? '全部折叠' : '全部展开'"
+        :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+        @action="toggleAll"
+        quaternary
+        size="small"
+      />
+      <div v-else style="flex: 1"></div>
+      <c-button
+        :label="setting.tocSortReverse ? '倒序' : '正序'"
+        :icon="SortOutlined"
+        @action="setting.tocSortReverse = !setting.tocSortReverse"
+        quaternary
+        size="small"
+      />
+    </div>
     <n-list>
       <n-card
         v-if="lastReadChapter !== undefined"
@@ -88,18 +125,33 @@ const showCatalogDrawer = ref(false);
           :novel-id="novelId"
           :toc-item="lastReadChapter"
           :last-read="novel.lastReadChapterId"
+          :is-separator="false"
+          :is-expanded="false"
         />
       </n-card>
       <n-list-item
-        v-for="tocItem in setting.tocSortReverse ? toc.slice().reverse() : toc"
-        :key="tocItem.key"
+        v-for="item in finalToc"
+        :key="
+          item.order === undefined
+            ? `sep-${item.titleJp}`
+            : `ch-${item.chapterId}`
+        "
         style="padding: 0px"
       >
         <chapter-toc-item
           :provider-id="providerId"
           :novel-id="novelId"
-          :toc-item="tocItem"
+          :toc-item="item"
           :last-read="novel.lastReadChapterId"
+          :is-separator="item.order === undefined"
+          :is-expanded="
+            item.order === undefined
+              ? expandedState.get(item.titleJp)
+              : undefined
+          "
+          @toggle-expand="
+            item.order === undefined ? toggleSection(item.titleJp) : () => {}
+          "
         />
       </n-list-item>
     </n-list>
@@ -114,6 +166,12 @@ const showCatalogDrawer = ref(false);
   >
     <template #action>
       <c-button
+        v-if="hasSeparators"
+        :label="isAnyExpanded ? '折叠' : '展开'"
+        :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+        @action="toggleAll"
+      />
+      <c-button
         :label="setting.tocSortReverse ? '倒序' : '正序'"
         :icon="SortOutlined"
         @action="setting.tocSortReverse = !setting.tocSortReverse"
@@ -122,18 +180,33 @@ const showCatalogDrawer = ref(false);
 
     <n-virtual-list
       :item-size="78"
-      :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
-      item-resizable
+      :items="finalToc"
       :default-scroll-key="lastReadChapter?.key"
       :scrollbar-props="{ trigger: 'none' }"
     >
       <template #default="{ item }">
-        <div :key="item.key" style="padding-left: 8px; padding-right: 8px">
+        <div
+          :key="
+            item.order === undefined
+              ? `sep-${item.titleJp}`
+              : `ch-${item.chapterId}`
+          "
+          style="padding-left: 8px; padding-right: 8px"
+        >
           <chapter-toc-item
             :provider-id="providerId"
             :novel-id="novelId"
             :toc-item="item"
             :last-read="novel.lastReadChapterId"
+            :is-separator="item.order === undefined"
+            :is-expanded="
+              item.order === undefined
+                ? expandedState.get(item.titleJp)
+                : undefined
+            "
+            @toggle-expand="
+              item.order === undefined ? toggleSection(item.titleJp) : () => {}
+            "
           />
         </div>
       </template>

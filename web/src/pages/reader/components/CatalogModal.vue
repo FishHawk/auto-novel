@@ -1,9 +1,15 @@
 <script lang="ts" setup>
-import { SortOutlined } from '@vicons/material';
+import {
+  SortOutlined,
+  KeyboardArrowUpRound,
+  KeyboardArrowDownRound,
+} from '@vicons/material';
 import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { useWebNovelStore } from '@/pages/novel/WebNovelStore';
 import { Ok, Result, runCatching } from '@/util/result';
+import { ReadableTocItem } from '@/pages/novel/components/common';
+import { useTocExpansion } from '@/pages/novel/components/UseTocExpansion';
 
 const props = defineProps<{
   show: boolean;
@@ -15,21 +21,31 @@ const emit = defineEmits<{
   'update:show': [boolean];
 }>();
 
-type TocItem = {
+type TocItem = ReadableTocItem & {
   key: number;
-  titleJp: string;
-  titleZh?: string;
-  chapterId?: string;
-  createAt?: number;
 };
+
 const tocResult = shallowRef<Result<TocItem[]>>();
 
+const tocData = computed(() =>
+  tocResult.value?.ok ? tocResult.value.value : undefined,
+);
+
 const tocNumber = computed(() => {
-  if (tocResult.value?.ok === true) {
-    return tocResult.value.value.filter((it) => it.chapterId !== undefined)
-      .length;
-  }
+  return tocData.value?.filter((it) => it.chapterId !== undefined).length;
 });
+
+const { setting } = Locator.settingRepository();
+const sortReverse = computed(() => setting.value.tocSortReverse);
+
+const {
+  expandedState,
+  hasSeparators,
+  isAnyExpanded,
+  toggleAll,
+  toggleSection,
+  finalToc,
+} = useTocExpansion(tocData, sortReverse);
 
 watch(
   () => props.show,
@@ -40,17 +56,16 @@ watch(
         const result = await store.loadNovel();
         if (result.ok) {
           let order = 0;
-          return Ok(
-            result.value.toc.map((it, index) => {
-              const tocItem = <TocItem>{
-                ...it,
-                key: index,
-                order: it.chapterId ? order : undefined,
-              };
-              if (it.chapterId) order += 1;
-              return tocItem;
-            }),
-          );
+          const tocItems = result.value.toc.map((it, index) => {
+            const tocItem = <TocItem>{
+              ...it,
+              key: index,
+              order: it.chapterId ? order : undefined,
+            };
+            if (it.chapterId) order += 1;
+            return tocItem;
+          });
+          return Ok(tocItems);
         } else {
           return result;
         }
@@ -83,12 +98,7 @@ watch(
 );
 
 const currentKey = computed(() => {
-  if (tocResult.value?.ok !== true) {
-    return undefined;
-  } else {
-    return tocResult.value.value.find((it) => it.chapterId === props.chapterId)
-      ?.key;
-  }
+  return tocData.value?.find((it) => it.chapterId === props.chapterId)?.key;
 });
 
 const onTocItemClick = (chapterId: string | undefined) => {
@@ -96,8 +106,6 @@ const onTocItemClick = (chapterId: string | undefined) => {
     emit('update:show', false);
   }
 };
-
-const { setting } = Locator.settingRepository();
 </script>
 
 <template>
@@ -118,6 +126,16 @@ const { setting } = Locator.settingRepository();
         </n-text>
         <div style="flex: 1" />
         <c-button
+          v-if="hasSeparators"
+          :label="isAnyExpanded ? '全部折叠' : '全部展开'"
+          :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+          quaternary
+          size="small"
+          :round="false"
+          @action="toggleAll"
+          style="margin-right: 8px"
+        />
+        <c-button
           :label="setting.tocSortReverse ? '倒序' : '正序'"
           :icon="SortOutlined"
           quaternary
@@ -128,12 +146,11 @@ const { setting } = Locator.settingRepository();
       </div>
     </template>
 
-    <c-result :result="tocResult" v-slot="{ value: toc }">
+    <c-result :result="tocResult" v-slot="{ value: _ }">
       <n-virtual-list
         v-if="gnid.type == 'web'"
-        :item-size="20"
-        item-resizable
-        :items="setting.tocSortReverse ? toc.slice().reverse() : toc"
+        :item-size="78"
+        :items="finalToc"
         :default-scroll-key="currentKey"
         :scrollbar-props="{ trigger: 'none' }"
         style="max-height: 60vh"
@@ -141,7 +158,9 @@ const { setting } = Locator.settingRepository();
         <template #default="{ item }">
           <div
             :key="
-              item.chapterId === undefined ? `/${item.titleJp}` : item.chapterId
+              item.order === undefined
+                ? `sep-${item.titleJp}`
+                : `ch-${item.chapterId}`
             "
           >
             <chapter-toc-item
@@ -149,6 +168,39 @@ const { setting } = Locator.settingRepository();
               :novel-id="gnid.novelId"
               :toc-item="item"
               :last-read="chapterId"
+              :is-separator="item.order === undefined"
+              :is-expanded="
+                item.order === undefined
+                  ? expandedState.get(item.titleJp)
+                  : undefined
+              "
+              @click="() => onTocItemClick(item.chapterId)"
+              @toggle-expand="
+                item.order === undefined
+                  ? toggleSection(item.titleJp)
+                  : () => {}
+              "
+            />
+          </div>
+        </template>
+      </n-virtual-list>
+      <n-virtual-list
+        v-else-if="gnid.type == 'local'"
+        :item-size="78"
+        :items="finalToc"
+        :default-scroll-key="currentKey"
+        :scrollbar-props="{ trigger: 'none' }"
+        style="max-height: 60vh"
+      >
+        <template #default="{ item }">
+          <div :key="item.key">
+            <chapter-toc-item
+              :provider-id="gnid.volumeId"
+              :novel-id="gnid.volumeId"
+              :toc-item="item"
+              :last-read="chapterId"
+              :is-separator="false"
+              :is-expanded="false"
               @click="() => onTocItemClick(item.chapterId)"
             />
           </div>
