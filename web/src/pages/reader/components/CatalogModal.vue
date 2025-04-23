@@ -38,6 +38,8 @@ const tocNumber = computed(() => {
 const { setting } = Locator.settingRepository();
 const sortReverse = computed(() => setting.value.tocSortReverse);
 
+const defaultTocExpanded = ref(true);
+
 const {
   expandedState,
   hasSeparators,
@@ -45,7 +47,7 @@ const {
   toggleAll,
   toggleSection,
   finalToc,
-} = useTocExpansion(tocData, sortReverse);
+} = useTocExpansion(tocData, sortReverse, defaultTocExpanded);
 
 watch(
   () => props.show,

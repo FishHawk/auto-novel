@@ -24,6 +24,8 @@ const sortReverse = computed(() => setting.value.tocSortReverse);
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 
+const defaultTocExpanded = ref(true);
+
 const {
   expandedState,
   hasSeparators,
@@ -31,7 +33,7 @@ const {
   toggleAll,
   toggleSection,
   finalToc,
-} = useTocExpansion(toc, sortReverse);
+} = useTocExpansion(toc, sortReverse, defaultTocExpanded);
 </script>
 
 <template>
@@ -70,11 +72,18 @@ const {
           v-if="hasSeparators"
           :label="isAnyExpanded ? '全部折叠' : '全部展开'"
           :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
+          quaternary
+          size="small"
+          :round="false"
           @action="toggleAll"
+          style="margin-right: 8px"
         />
         <c-button
           :label="setting.tocSortReverse ? '倒序' : '正序'"
           :icon="SortOutlined"
+          quaternary
+          size="small"
+          :round="false"
           @action="setting.tocSortReverse = !setting.tocSortReverse"
         />
       </section-header>
