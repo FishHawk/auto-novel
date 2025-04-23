@@ -169,7 +169,6 @@ const toggleAllLabel = computed(() => {
         :items="finalToc"
         :default-scroll-key="currentKey"
         :scrollbar-props="{ trigger: 'none' }"
-        style="max-height: 60vh"
       >
         <template #default="{ item }">
           <div
@@ -206,7 +205,6 @@ const toggleAllLabel = computed(() => {
         :items="finalToc"
         :default-scroll-key="currentKey"
         :scrollbar-props="{ trigger: 'none' }"
-        style="max-height: 60vh"
       >
         <template #default="{ item }">
           <div :key="item.key">
