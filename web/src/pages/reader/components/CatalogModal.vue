@@ -108,20 +108,6 @@ const onTocItemClick = (chapterId: string | undefined) => {
     emit('update:show', false);
   }
 };
-
-const isMobile = computed(() => {
-  return window.innerWidth < 768;
-});
-
-const toggleAllLabel = computed(() => {
-  return isAnyExpanded.value
-    ? isMobile.value
-      ? '折叠'
-      : '全部折叠'
-    : isMobile.value
-      ? '展开'
-      : '全部展开';
-});
 </script>
 
 <template>
@@ -143,7 +129,7 @@ const toggleAllLabel = computed(() => {
         <div style="flex: 1" />
         <c-button
           v-if="hasSeparators"
-          :label="toggleAllLabel"
+          :label="isAnyExpanded ? '折叠' : '展开'"
           :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
           quaternary
           size="small"

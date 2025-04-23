@@ -101,7 +101,7 @@ const {
       <div style="flex: 1"></div>
       <c-button
         v-if="hasSeparators"
-        :label="isAnyExpanded ? '全部折叠' : '全部展开'"
+        :label="isAnyExpanded ? '折叠' : '展开'"
         :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
         quaternary
         size="small"
