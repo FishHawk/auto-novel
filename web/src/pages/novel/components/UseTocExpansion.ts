@@ -11,25 +11,29 @@ export function useTocExpansion(
     | Ref<ReadableTocItem[] | undefined>
     | ComputedRef<ReadableTocItem[] | undefined>,
   sortReverse: Ref<boolean> | ComputedRef<boolean>,
+  defaultExpanded: Ref<boolean> | ComputedRef<boolean>,
 ) {
   const expandedState = ref(new Map<string, boolean>());
 
   watch(
-    toc,
-    (newToc) => {
+    [toc, defaultExpanded],
+    ([newToc, newDefaultExpanded]) => {
       if (!newToc) return;
-      let hasNewSeparator = false;
+      let needsUpdate = false;
+      const currentState = expandedState.value;
+      const newState = new Map(currentState);
+
       for (const item of newToc) {
         if (item.order === undefined) {
           const key = item.titleJp;
-          if (!expandedState.value.has(key)) {
-            expandedState.value.set(key, true);
-            hasNewSeparator = true;
+          if (!currentState.has(key)) {
+            newState.set(key, newDefaultExpanded ?? true);
+            needsUpdate = true;
           }
         }
       }
-      if (hasNewSeparator) {
-        expandedState.value = new Map(expandedState.value);
+      if (needsUpdate) {
+        expandedState.value = newState;
       }
     },
     { immediate: true, deep: true },
@@ -46,7 +50,7 @@ export function useTocExpansion(
     for (const item of toc.value) {
       if (item.order === undefined) {
         const key = item.titleJp;
-        if (expandedState.value.get(key) ?? true) {
+        if (expandedState.value.get(key) ?? defaultExpanded.value) {
           return true;
         }
       }
@@ -67,7 +71,8 @@ export function useTocExpansion(
   };
 
   const toggleSection = (separatorKey: string) => {
-    const currentState = expandedState.value.get(separatorKey) ?? true;
+    const currentState =
+      expandedState.value.get(separatorKey) ?? defaultExpanded.value;
     const newState = new Map(expandedState.value);
     newState.set(separatorKey, !currentState);
     expandedState.value = newState;
@@ -85,10 +90,6 @@ export function useTocExpansion(
         if (currentSection.separator || currentSection.chapters.length > 0) {
           sections.push(currentSection);
         }
-        const key = item.titleJp;
-        if (!expandedState.value.has(key)) {
-          expandedState.value.set(key, true);
-        }
         currentSection = { separator: item, chapters: [] };
       } else {
         currentSection.chapters.push(item);
@@ -99,7 +100,8 @@ export function useTocExpansion(
     const filteredSections = sections.map((section) => {
       if (section.separator) {
         const isExpanded =
-          expandedState.value.get(section.separator.titleJp) ?? true;
+          expandedState.value.get(section.separator.titleJp) ??
+          defaultExpanded.value;
         return {
           ...section,
           chapters: isExpanded ? section.chapters : [],

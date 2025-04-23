@@ -21,6 +21,10 @@ const props = defineProps<{
 const { setting } = Locator.settingRepository();
 const sortReverse = computed(() => setting.value.tocSortReverse);
 
+const defaultTocExpanded = computed(
+  () => setting.value.tocCollapseInNarrowScreen,
+);
+
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 const startReadChapter = computed(() => {
@@ -39,7 +43,7 @@ const {
   toggleAll,
   toggleSection,
   finalToc,
-} = useTocExpansion(toc, sortReverse);
+} = useTocExpansion(toc, sortReverse, defaultTocExpanded);
 </script>
 
 <template>
@@ -149,7 +153,7 @@ const {
           :is-separator="item.order === undefined"
           :is-expanded="
             item.order === undefined
-              ? expandedState.get(item.titleJp)
+              ? expandedState.get(item.titleJp) ?? defaultTocExpanded
               : undefined
           "
           @toggle-expand="
@@ -170,7 +174,7 @@ const {
     <template #action>
       <c-button
         v-if="hasSeparators"
-        :label="isAnyExpanded ? '全部折叠' : '全部展开'"
+        :label="isAnyExpanded ? '折叠' : '展开'"
         :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
         quaternary
         size="small"
@@ -211,7 +215,7 @@ const {
             :is-separator="item.order === undefined"
             :is-expanded="
               item.order === undefined
-                ? expandedState.get(item.titleJp)
+                ? expandedState.get(item.titleJp) ?? defaultTocExpanded
                 : undefined
             "
             @toggle-expand="
