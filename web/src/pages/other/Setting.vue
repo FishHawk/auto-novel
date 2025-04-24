@@ -2,6 +2,7 @@
 import { Locator } from '@/data';
 import { Setting } from '@/data/setting/Setting';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
+import { InfoOutlined } from '@vicons/material';
 
 const message = useMessage();
 
@@ -59,6 +60,22 @@ const playSound = (source: string) => {
             </n-checkbox>
             <n-checkbox v-model:checked="setting.tocExpandAllInNarrowScreen">
               (移动端) 小说目录默认展开所有章节
+              <n-tooltip
+                trigger="hover"
+                placement="top"
+                style="max-width: 200px"
+              >
+                <template #trigger>
+                  <n-button text @click.stop>
+                    <n-icon depth="4" :component="InfoOutlined" size="12" />
+                  </n-button>
+                </template>
+                开启：默认展开所有章节（可能导致性能问题）
+                <br />
+                关闭：只展开上次阅读的章节（如无记录则展开第一个章节）
+                <br />
+                不影响无分章的网络小说
+              </n-tooltip>
             </n-checkbox>
             <n-checkbox v-model:checked="setting.hideCommmentWebNovel">
               隐藏网络小说评论
