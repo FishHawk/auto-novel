@@ -46,7 +46,7 @@ export function useTocExpansion(
   });
 
   const isMobile = checkIsMobile();
-  const maxChaptersAllowingExpansion = isMobile ? 500 : 2000;
+  const maxChaptersAllowingExpansion = isMobile ? 1000 : 5000;
 
   watch(
     [separatorKeys, defaultExpanded, tocSections, lastReadChapterId],
