@@ -165,7 +165,11 @@ const onTocItemClick = (item: ReadableTocItem) => {
         :provider-id="gnid.providerId"
         :novel-id="gnid.novelId"
         :sort-reverse="sortReverse"
-        :item-size="78"
+        :mode="{
+          narrow: !isWideScreen,
+          catalog: true,
+          collapse: false,
+        }"
         @item-click="onTocItemClick"
         style="height: 100%"
       />
@@ -177,7 +181,11 @@ const onTocItemClick = (item: ReadableTocItem) => {
         :provider-id="gnid.volumeId"
         :novel-id="gnid.volumeId"
         :sort-reverse="sortReverse"
-        :item-size="78"
+        :mode="{
+          narrow: !isWideScreen,
+          catalog: true,
+          collapse: false,
+        }"
         @item-click="onTocItemClick"
         style="height: 100%"
       />

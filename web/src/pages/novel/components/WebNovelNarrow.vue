@@ -144,7 +144,11 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         :provider-id="providerId"
         :novel-id="novelId"
         :sort-reverse="sortReverse"
-        :item-size="78"
+        :mode="{
+          narrow: true,
+          catalog: false,
+          collapse: false,
+        }"
       />
     </n-scrollbar>
   </template>
@@ -184,7 +188,11 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         :provider-id="providerId"
         :novel-id="novelId"
         :sort-reverse="sortReverse"
-        :item-size="78"
+        :mode="{
+          narrow: true,
+          catalog: false,
+          collapse: true,
+        }"
         style="height: 100%"
       />
     </div>

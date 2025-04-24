@@ -16,7 +16,11 @@ const props = defineProps<{
   providerId: string;
   novelId: string;
   sortReverse: boolean;
-  itemSize?: number;
+  mode: {
+    narrow: boolean;
+    catalog: boolean;
+    collapse: boolean;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -39,9 +43,12 @@ const sortedSections = computed(() => {
   return props.sortReverse ? sections.slice().reverse() : sections;
 });
 
-const chapterItemSize = computed(() => props.itemSize ?? 78);
+const noNeedScroll = computed(() => {
+  return props.mode.narrow && !props.mode.catalog && !props.mode.collapse;
+});
 
 const scrollToLastRead = async () => {
+  if (noNeedScroll.value) return;
   if (!props.lastReadChapterId) return;
 
   await nextTick();
@@ -62,12 +69,6 @@ const scrollToLastRead = async () => {
 onMounted(() => {
   scrollToLastRead();
 });
-
-// watch(() => props.lastReadChapterId, (newId, oldId) => {
-//   if (newId && newId !== oldId) {
-//     scrollToLastRead();
-//   }
-// });
 </script>
 
 <template>
@@ -94,7 +95,7 @@ onMounted(() => {
         <n-virtual-list
           v-if="section.chapters.length > 0"
           :items="sortedChapters(section.chapters)"
-          :item-size="chapterItemSize"
+          :item-size="78"
           :scrollbar-props="{ trigger: 'none' }"
           item-resizable
         >
@@ -118,7 +119,7 @@ onMounted(() => {
       <n-virtual-list
         v-else-if="section.chapters.length > 0"
         :items="sortedChapters(section.chapters)"
-        :item-size="chapterItemSize"
+        :item-size="78"
         :scrollbar-props="{ trigger: 'none' }"
         item-resizable
       >
