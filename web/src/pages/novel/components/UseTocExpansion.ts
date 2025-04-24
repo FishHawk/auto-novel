@@ -11,6 +11,7 @@ export function useTocExpansion(
     | Ref<ReadableTocItem[] | undefined>
     | ComputedRef<ReadableTocItem[] | undefined>,
   defaultExpanded: Ref<boolean> | ComputedRef<boolean>,
+  lastReadChapterId: Ref<string | undefined> | ComputedRef<string | undefined>,
 ) {
   const expandedNames = ref<string[]>([]);
 
@@ -20,35 +21,6 @@ export function useTocExpansion(
       .filter((item) => item.order === undefined)
       .map((item) => item.titleJp);
   });
-
-  watch(
-    [separatorKeys, defaultExpanded],
-    ([keys, expandedDefault]) => {
-      if (expandedDefault) {
-        expandedNames.value = [...keys];
-      } else {
-        expandedNames.value = [];
-      }
-    },
-    { immediate: true },
-  );
-
-  const hasSeparators = computed(() => {
-    return separatorKeys.value.length > 0;
-  });
-
-  const isAnyExpanded = computed(() => {
-    return expandedNames.value.length > 0;
-  });
-
-  const toggleAll = () => {
-    if (!toc.value) return;
-    if (isAnyExpanded.value) {
-      expandedNames.value = [];
-    } else {
-      expandedNames.value = [...separatorKeys.value];
-    }
-  };
 
   const tocSections = computed<TocSection[]>(() => {
     if (!toc.value) {
@@ -71,6 +43,65 @@ export function useTocExpansion(
 
     return sections;
   });
+
+  watch(
+    [separatorKeys, defaultExpanded, tocSections, lastReadChapterId],
+    ([keys, expandedDefault, sections, lastReadId]) => {
+      if (expandedDefault) {
+        expandedNames.value = [...keys];
+      } else {
+        if (sections.length > 0) {
+          let targetSectionKey: string | undefined = undefined;
+
+          if (lastReadId) {
+            const sectionContainingLastRead = sections.find((section) =>
+              section.chapters.some(
+                (chapter) => chapter.chapterId === lastReadId,
+              ),
+            );
+            if (sectionContainingLastRead?.separator) {
+              targetSectionKey = sectionContainingLastRead.separator.titleJp;
+            }
+          }
+
+          if (!targetSectionKey) {
+            const firstSectionWithSeparator = sections.find(
+              (section) => section.separator,
+            );
+            if (firstSectionWithSeparator?.separator) {
+              targetSectionKey = firstSectionWithSeparator.separator.titleJp;
+            }
+          }
+
+          if (targetSectionKey) {
+            expandedNames.value = [targetSectionKey];
+          } else {
+            expandedNames.value = [];
+          }
+        } else {
+          expandedNames.value = [];
+        }
+      }
+    },
+    { immediate: true },
+  );
+
+  const hasSeparators = computed(() => {
+    return separatorKeys.value.length > 0;
+  });
+
+  const isAnyExpanded = computed(() => {
+    return expandedNames.value.length > 0;
+  });
+
+  const toggleAll = () => {
+    if (!toc.value) return;
+    if (isAnyExpanded.value) {
+      expandedNames.value = [];
+    } else {
+      expandedNames.value = [...separatorKeys.value];
+    }
+  };
 
   return {
     expandedNames,

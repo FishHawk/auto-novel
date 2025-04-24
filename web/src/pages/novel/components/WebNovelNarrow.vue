@@ -41,7 +41,11 @@ const startReadChapter = computed(() => {
 const showCatalogDrawer = ref(false);
 
 const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
-  useTocExpansion(toc, defaultTocExpanded);
+  useTocExpansion(
+    toc,
+    defaultTocExpanded,
+    computed(() => props.novel.lastReadChapterId),
+  );
 </script>
 
 <template>

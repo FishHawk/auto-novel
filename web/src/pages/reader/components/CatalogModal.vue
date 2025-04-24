@@ -49,7 +49,11 @@ const defaultTocExpanded = computed(
 );
 
 const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
-  useTocExpansion(tocData, defaultTocExpanded);
+  useTocExpansion(
+    tocData,
+    defaultTocExpanded,
+    computed(() => props.chapterId),
+  );
 
 watch(
   () => props.show,
