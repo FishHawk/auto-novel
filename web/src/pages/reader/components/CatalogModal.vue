@@ -11,6 +11,7 @@ import { Ok, Result, runCatching } from '@/util/result';
 import { ReadableTocItem } from '@/pages/novel/components/common';
 import { useTocExpansion } from '@/pages/novel/components/UseTocExpansion';
 import ChapterTocList from '@/components/ChapterTocList.vue';
+import { useIsWideScreen } from '@/pages/util';
 
 const props = defineProps<{
   show: boolean;
@@ -39,14 +40,12 @@ const tocNumber = computed(() => {
 const { setting } = Locator.settingRepository();
 const sortReverse = computed(() => setting.value.tocSortReverse);
 
-const isMobile = computed(() => {
-  return window.innerWidth < 840;
-});
+const isWideScreen = useIsWideScreen();
 
 // const defaultTocExpanded = ref(true);
-const defaultTocExpanded = computed(
-  () => !isMobile.value || setting.value.tocExpandAllInNarrowScreen,
-);
+const defaultTocExpanded = computed(() => {
+  return isWideScreen.value || setting.value.tocExpandAllInNarrowScreen;
+});
 
 const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
   useTocExpansion(
