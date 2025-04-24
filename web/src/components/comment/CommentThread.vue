@@ -94,10 +94,6 @@ const blockUserComment = async (comment: Comment1) =>
   doAction(
     (async () => {
       blockUserCommentRepository.add(comment.user.username);
-      console.log(
-        'blockUserCommentRepository',
-        blockUserCommentRepository.ref.value.usernames,
-      );
     })(),
     '屏蔽用户评论',
     message,
