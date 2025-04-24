@@ -4,13 +4,16 @@ import {
   KeyboardArrowUpRound,
   KeyboardArrowDownRound,
 } from '@vicons/material';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import { Locator } from '@/data';
 import { WebNovelTocItemDto, WebNovelDto } from '@/model/WebNovel';
+import ChapterTocList from '@/components/ChapterTocList.vue';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
 import { useTocExpansion } from './UseTocExpansion';
+
+import { NScrollbar } from 'naive-ui';
 
 const props = defineProps<{
   providerId: string;
@@ -24,16 +27,14 @@ const sortReverse = computed(() => setting.value.tocSortReverse);
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 
-const defaultTocExpanded = ref(true);
+const defaultTocExpanded = computed(() => setting.value.tocExpandAll);
 
-const {
-  expandedState,
-  hasSeparators,
-  isAnyExpanded,
-  toggleAll,
-  toggleSection,
-  finalToc,
-} = useTocExpansion(toc, sortReverse, defaultTocExpanded);
+const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
+  useTocExpansion(
+    toc,
+    defaultTocExpanded,
+    computed(() => props.novel.lastReadChapterId),
+  );
 </script>
 
 <template>
@@ -70,7 +71,7 @@ const {
       <section-header title="目录">
         <c-button
           v-if="hasSeparators"
-          :label="isAnyExpanded ? '全部折叠' : '全部展开'"
+          :label="isAnyExpanded ? '折叠' : '展开'"
           :icon="isAnyExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
           quaternary
           size="small"
@@ -88,41 +89,21 @@ const {
         />
       </section-header>
 
-      <n-virtual-list
-        :item-size="78"
-        :items="finalToc"
-        :default-scroll-key="lastReadChapter?.key"
-        :scrollbar-props="{ trigger: 'none' }"
-        style="flex: 1"
-      >
-        <template #default="{ item }">
-          <div
-            :key="
-              item.order === undefined
-                ? `sep-${item.titleJp}`
-                : `ch-${item.chapterId}`
-            "
-          >
-            <chapter-toc-item
-              :provider-id="providerId"
-              :novel-id="novelId"
-              :toc-item="item"
-              :last-read="novel.lastReadChapterId"
-              :is-separator="item.order === undefined"
-              :is-expanded="
-                item.order === undefined
-                  ? expandedState.get(item.titleJp)
-                  : undefined
-              "
-              @toggle-expand="
-                item.order === undefined
-                  ? toggleSection(item.titleJp)
-                  : () => {}
-              "
-            />
-          </div>
-        </template>
-      </n-virtual-list>
+      <n-scrollbar style="flex: 1; min-height: 0; padding: 0 16px 0 0">
+        <chapter-toc-list
+          :toc-sections="tocSections"
+          v-model:expanded-names="expandedNames"
+          :last-read-chapter-id="novel.lastReadChapterId"
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :sort-reverse="sortReverse"
+          :mode="{
+            narrow: false,
+            catalog: false,
+            collapse: false,
+          }"
+        />
+      </n-scrollbar>
     </template>
   </c-layout>
 </template>

@@ -6,6 +6,7 @@ export interface Setting {
   tocSortReverse: boolean;
   //
   tocCollapseInNarrowScreen: boolean;
+  tocExpandAll: boolean;
   hideCommmentWebNovel: boolean;
   hideCommmentWenkuNovel: boolean;
   showTagInWebFavored: boolean;
@@ -40,6 +41,7 @@ export namespace Setting {
     tocSortReverse: false,
     //
     tocCollapseInNarrowScreen: true,
+    tocExpandAll: true,
     hideCommmentWebNovel: false,
     hideCommmentWenkuNovel: false,
     showTagInWebFavored: false,
