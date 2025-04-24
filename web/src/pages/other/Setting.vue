@@ -55,7 +55,10 @@ const playSound = (source: string) => {
           <b>自定义UI</b>
           <n-flex vertical>
             <n-checkbox v-model:checked="setting.tocCollapseInNarrowScreen">
-              移动端折叠网络小说目录
+              (移动端) 小说目录折叠在侧边栏
+            </n-checkbox>
+            <n-checkbox v-model:checked="setting.tocExpandAllInNarrowScreen">
+              (移动端) 小说目录默认展开所有章节
             </n-checkbox>
             <n-checkbox v-model:checked="setting.hideCommmentWebNovel">
               隐藏网络小说评论

@@ -39,7 +39,14 @@ const tocNumber = computed(() => {
 const { setting } = Locator.settingRepository();
 const sortReverse = computed(() => setting.value.tocSortReverse);
 
-const defaultTocExpanded = ref(true);
+const isMobile = computed(() => {
+  return window.innerWidth < 840;
+});
+
+// const defaultTocExpanded = ref(true);
+const defaultTocExpanded = computed(
+  () => !isMobile.value || setting.value.tocExpandAllInNarrowScreen,
+);
 
 const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
   useTocExpansion(tocData, defaultTocExpanded);

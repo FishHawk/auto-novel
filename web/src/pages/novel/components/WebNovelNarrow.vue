@@ -24,7 +24,9 @@ const { setting } = Locator.settingRepository();
 const sortReverse = computed(() => setting.value.tocSortReverse);
 
 const defaultTocExpanded = computed(
-  () => setting.value.tocCollapseInNarrowScreen,
+  () =>
+    setting.value.tocCollapseInNarrowScreen &&
+    setting.value.tocExpandAllInNarrowScreen,
 );
 
 const { toc } = useToc(props.novel);
