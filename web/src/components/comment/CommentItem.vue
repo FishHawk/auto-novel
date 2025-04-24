@@ -18,10 +18,13 @@ const emit = defineEmits<{
   delete: [Comment1];
   hide: [Comment1];
   unhide: [Comment1];
+  block: [Comment1];
+  unblock: [Comment1];
   reply: [Comment1];
 }>();
 
 const { whoami } = Locator.authRepository();
+const blockUserCommentRepository = Locator.blockUserCommentRepository();
 const options = computed(() => {
   const options = [
     {
@@ -42,6 +45,21 @@ const options = computed(() => {
       });
     }
   }
+  if (
+    blockUserCommentRepository.ref.value.usernames.includes(
+      comment.user.username,
+    )
+  ) {
+    options.push({
+      label: '解除屏蔽',
+      key: 'unblock',
+    });
+  } else {
+    options.push({
+      label: '屏蔽用户评论',
+      key: 'block',
+    });
+  }
   return options;
 });
 
@@ -54,6 +72,10 @@ const handleSelect = (key: string) => {
     emit('hide', comment);
   } else if (key === 'unhide') {
     emit('unhide', comment);
+  } else if (key === 'block') {
+    emit('block', comment);
+  } else if (key === 'unblock') {
+    emit('unblock', comment);
   }
 };
 
@@ -62,6 +84,12 @@ const isDeletable = computed(() => {
     whoami.value.asMaintainer ||
     (whoami.value.username === comment.user.username &&
       Date.now() / 1000 - comment.createAt < 3600 * 24)
+  );
+});
+
+const isBlocked = computed(() => {
+  return blockUserCommentRepository.ref.value.usernames.includes(
+    comment.user.username,
   );
 });
 </script>
@@ -111,6 +139,7 @@ const isDeletable = computed(() => {
 
   <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
     <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
+    <n-text v-else-if="isBlocked" depth="3">[被用户屏蔽]</n-text>
     <MarkdownView
       v-else
       mode="comment"
