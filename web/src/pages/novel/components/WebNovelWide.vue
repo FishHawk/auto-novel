@@ -30,7 +30,11 @@ const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 const defaultTocExpanded = ref(true);
 
 const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
-  useTocExpansion(toc, defaultTocExpanded);
+  useTocExpansion(
+    toc,
+    defaultTocExpanded,
+    computed(() => props.novel.lastReadChapterId),
+  );
 </script>
 
 <template>
