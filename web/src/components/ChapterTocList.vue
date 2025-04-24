@@ -2,7 +2,7 @@
 import { NCollapse, NCollapseItem, NVirtualList } from 'naive-ui';
 import ChapterTocItem from '@/components/ChapterTocItem.vue';
 import type { ReadableTocItem } from '@/pages/novel/components/common';
-import { computed } from 'vue';
+import { computed, onMounted, nextTick, watch } from 'vue';
 
 interface TocSection {
   separator: ReadableTocItem | null;
@@ -40,6 +40,34 @@ const sortedSections = computed(() => {
 });
 
 const chapterItemSize = computed(() => props.itemSize ?? 78);
+
+const scrollToLastRead = async () => {
+  if (!props.lastReadChapterId) return;
+
+  await nextTick();
+
+  const elementId = `chapterTocItem-${props.lastReadChapterId}`;
+  let element: HTMLElement | null = null;
+
+  for (let i = 0; i < 5; i++) {
+    element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'instant', block: 'center' });
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100 + i * 50));
+  }
+};
+
+onMounted(() => {
+  scrollToLastRead();
+});
+
+// watch(() => props.lastReadChapterId, (newId, oldId) => {
+//   if (newId && newId !== oldId) {
+//     scrollToLastRead();
+//   }
+// });
 </script>
 
 <template>

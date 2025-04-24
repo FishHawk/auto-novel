@@ -63,6 +63,7 @@ const visitedColor = mixColor();
   >
     <div
       style="display: flex; align-items: center; justify-content: space-between"
+      :id="`chapterTocItem-${tocItem.chapterId}`"
     >
       <div>
         <n-text

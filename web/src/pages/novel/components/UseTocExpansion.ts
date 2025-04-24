@@ -44,12 +44,17 @@ export function useTocExpansion(
     return sections;
   });
 
+  // max number of chapters allowed to be expanded upon loading
+  const maxChaptersAllowingExpansion = 2000;
+
   watch(
     [separatorKeys, defaultExpanded, tocSections, lastReadChapterId],
     ([keys, expandedDefault, sections, lastReadId]) => {
-      if (expandedDefault) {
-        expandedNames.value = [...keys];
-      } else {
+      if (
+        !expandedDefault ||
+        !toc.value ||
+        toc.value.length > maxChaptersAllowingExpansion
+      ) {
         if (sections.length > 0) {
           let targetSectionKey: string | undefined = undefined;
 
@@ -81,6 +86,8 @@ export function useTocExpansion(
         } else {
           expandedNames.value = [];
         }
+      } else {
+        expandedNames.value = [...keys];
       }
     },
     { immediate: true },
