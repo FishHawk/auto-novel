@@ -42,10 +42,7 @@ const sortReverse = computed(() => setting.value.tocSortReverse);
 
 const isWideScreen = useIsWideScreen();
 
-// const defaultTocExpanded = ref(true);
-const defaultTocExpanded = computed(() => {
-  return isWideScreen.value || setting.value.tocExpandAllInNarrowScreen;
-});
+const defaultTocExpanded = computed(() => setting.value.tocExpandAll);
 
 const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
   useTocExpansion(

@@ -27,7 +27,7 @@ const sortReverse = computed(() => setting.value.tocSortReverse);
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 
-const defaultTocExpanded = ref(true);
+const defaultTocExpanded = computed(() => setting.value.tocExpandAll);
 
 const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
   useTocExpansion(

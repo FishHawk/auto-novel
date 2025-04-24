@@ -23,11 +23,7 @@ const props = defineProps<{
 const { setting } = Locator.settingRepository();
 const sortReverse = computed(() => setting.value.tocSortReverse);
 
-const defaultTocExpanded = computed(
-  () =>
-    setting.value.tocCollapseInNarrowScreen &&
-    setting.value.tocExpandAllInNarrowScreen,
-);
+const defaultTocExpanded = computed(() => setting.value.tocExpandAll);
 
 const { toc } = useToc(props.novel);
 const { lastReadChapter } = useLastReadChapter(props.novel, toc);
