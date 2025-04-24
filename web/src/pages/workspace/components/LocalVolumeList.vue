@@ -78,7 +78,7 @@ const search = reactive({
 
 const favoredRepository = Locator.favoredRepository();
 const favoreds = favoredRepository.favoreds;
-const selectedFavored = ref<string | undefined>(favoreds.value.local.at(0)?.id);
+const selectedFavored = ref<string | undefined>(favoreds.value.local[0]?.id);
 const favoredsOptions = computed(() => {
   return favoreds.value.local.map(({ id, title }) => ({
     label: title,
