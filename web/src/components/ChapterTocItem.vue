@@ -11,7 +11,7 @@ const props = defineProps<{
   novelId: string;
   tocItem: ReadableTocItem;
   lastRead?: string;
-  isSeparator: boolean; // Keep for styling/linking logic
+  isSeparator: boolean;
 }>();
 
 const type = computed(() => {
@@ -57,7 +57,7 @@ const visitedColor = mixColor();
     :class="{ 'toc-separator': isSeparator }"
     style="width: calc(100% - 12px); display: block"
     :style="{
-      padding: isSeparator ? '2px' : '6px',
+      padding: isSeparator ? '0 6px' : '4px 6px',
       'font-size': isSeparator ? '12px' : '14px',
     }"
   >

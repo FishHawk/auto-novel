@@ -34,6 +34,11 @@ const sortedChapters = (chapters: ReadableTocItem[]) => {
   return props.sortReverse ? chapters.slice().reverse() : chapters;
 };
 
+const sortedSections = computed(() => {
+  const sections = props.tocSections;
+  return props.sortReverse ? sections.slice().reverse() : sections;
+});
+
 const chapterItemSize = computed(() => props.itemSize ?? 78);
 </script>
 
@@ -43,7 +48,7 @@ const chapterItemSize = computed(() => props.itemSize ?? 78);
     @update:expanded-names="$emit('update:expandedNames', $event)"
     arrow-placement="right"
   >
-    <template v-for="(section, index) in tocSections" :key="index">
+    <template v-for="(section, index) in sortedSections" :key="index">
       <n-collapse-item
         v-if="section.separator"
         :name="section.separator.titleJp"
@@ -55,7 +60,7 @@ const chapterItemSize = computed(() => props.itemSize ?? 78);
             :novel-id="novelId"
             :toc-item="section.separator"
             :is-separator="true"
-            style="width: 100%; cursor: pointer"
+            style="width: 100%"
           />
         </template>
         <n-virtual-list

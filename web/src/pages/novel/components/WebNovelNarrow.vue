@@ -12,6 +12,7 @@ import ChapterTocList from '@/components/ChapterTocList.vue';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
 import { useTocExpansion } from './UseTocExpansion';
+import { NScrollbar } from 'naive-ui';
 
 const props = defineProps<{
   providerId: string;
@@ -129,8 +130,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         :is-separator="false"
       />
     </n-card>
-    <!-- Wrap ChapterTocList in a scrollable container for non-drawer mode -->
-    <div style="max-height: 70vh; overflow-y: auto">
+    <n-scrollbar>
       <chapter-toc-list
         :toc-sections="tocSections"
         v-model:expanded-names="expandedNames"
@@ -140,7 +140,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         :sort-reverse="sortReverse"
         :item-size="78"
       />
-    </div>
+    </n-scrollbar>
   </template>
 
   <c-drawer-right
@@ -170,16 +170,18 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
       />
     </template>
 
-    <chapter-toc-list
-      :toc-sections="tocSections"
-      v-model:expanded-names="expandedNames"
-      :last-read-chapter-id="novel.lastReadChapterId"
-      :provider-id="providerId"
-      :novel-id="novelId"
-      :sort-reverse="sortReverse"
-      :item-size="78"
-      style="flex: 1; min-height: 0; padding-bottom: 16px"
-    />
+    <div style="flex: 1; min-height: 0; padding: 16px 16px 16px 8px">
+      <chapter-toc-list
+        :toc-sections="tocSections"
+        v-model:expanded-names="expandedNames"
+        :last-read-chapter-id="novel.lastReadChapterId"
+        :provider-id="providerId"
+        :novel-id="novelId"
+        :sort-reverse="sortReverse"
+        :item-size="78"
+        style="height: 100%"
+      />
+    </div>
   </c-drawer-right>
 
   <comment-list

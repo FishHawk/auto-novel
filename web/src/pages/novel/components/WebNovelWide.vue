@@ -13,6 +13,8 @@ import ChapterTocList from '@/components/ChapterTocList.vue';
 import { useToc, useLastReadChapter } from './UseWebNovel';
 import { useTocExpansion } from './UseTocExpansion';
 
+import { NScrollbar } from 'naive-ui';
+
 const props = defineProps<{
   providerId: string;
   novelId: string;
@@ -83,8 +85,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         />
       </section-header>
 
-      <!-- Wrap ChapterTocList in a scrollable flex container -->
-      <div style="flex: 1; overflow-y: auto; min-height: 0">
+      <n-scrollbar style="flex: 1; min-height: 0; padding: 0 16px 0 0">
         <chapter-toc-list
           :toc-sections="tocSections"
           v-model:expanded-names="expandedNames"
@@ -94,7 +95,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
           :sort-reverse="sortReverse"
           :item-size="78"
         />
-      </div>
+      </n-scrollbar>
     </template>
   </c-layout>
 </template>
