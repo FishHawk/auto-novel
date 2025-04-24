@@ -4,10 +4,11 @@ import {
   KeyboardArrowUpRound,
   KeyboardArrowDownRound,
 } from '@vicons/material';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import { Locator } from '@/data';
 import { WebNovelTocItemDto, WebNovelDto } from '@/model/WebNovel';
+import ChapterTocList from '@/components/ChapterTocList.vue';
 
 import { useToc, useLastReadChapter } from './UseWebNovel';
 import { useTocExpansion } from './UseTocExpansion';
@@ -26,14 +27,8 @@ const { lastReadChapter } = useLastReadChapter(props.novel, toc);
 
 const defaultTocExpanded = ref(true);
 
-const {
-  expandedState,
-  hasSeparators,
-  isAnyExpanded,
-  toggleAll,
-  toggleSection,
-  finalToc,
-} = useTocExpansion(toc, sortReverse, defaultTocExpanded);
+const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
+  useTocExpansion(toc, defaultTocExpanded);
 </script>
 
 <template>
@@ -88,41 +83,18 @@ const {
         />
       </section-header>
 
-      <n-virtual-list
-        :item-size="78"
-        :items="finalToc"
-        :default-scroll-key="lastReadChapter?.key"
-        :scrollbar-props="{ trigger: 'none' }"
-        style="flex: 1"
-      >
-        <template #default="{ item }">
-          <div
-            :key="
-              item.order === undefined
-                ? `sep-${item.titleJp}`
-                : `ch-${item.chapterId}`
-            "
-          >
-            <chapter-toc-item
-              :provider-id="providerId"
-              :novel-id="novelId"
-              :toc-item="item"
-              :last-read="novel.lastReadChapterId"
-              :is-separator="item.order === undefined"
-              :is-expanded="
-                item.order === undefined
-                  ? expandedState.get(item.titleJp)
-                  : undefined
-              "
-              @toggle-expand="
-                item.order === undefined
-                  ? toggleSection(item.titleJp)
-                  : () => {}
-              "
-            />
-          </div>
-        </template>
-      </n-virtual-list>
+      <!-- Wrap ChapterTocList in a scrollable flex container -->
+      <div style="flex: 1; overflow-y: auto; min-height: 0">
+        <chapter-toc-list
+          :toc-sections="tocSections"
+          v-model:expanded-names="expandedNames"
+          :last-read-chapter-id="novel.lastReadChapterId"
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :sort-reverse="sortReverse"
+          :item-size="78"
+        />
+      </div>
     </template>
   </c-layout>
 </template>

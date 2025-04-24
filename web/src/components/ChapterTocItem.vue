@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { NText, NButton, NIcon } from 'naive-ui';
+import { NText, NButton, NIcon, NTime, useThemeVars } from 'naive-ui';
 import { KeyboardArrowUpRound, KeyboardArrowDownRound } from '@vicons/material';
 import CA from '@/components/CA.vue';
+import { computed } from 'vue';
 
 import { ReadableTocItem } from '@/pages/novel/components/common';
 
@@ -10,12 +11,7 @@ const props = defineProps<{
   novelId: string;
   tocItem: ReadableTocItem;
   lastRead?: string;
-  isSeparator: boolean;
-  isExpanded?: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: 'toggleExpand'): void;
+  isSeparator: boolean; // Keep for styling/linking logic
 }>();
 
 const type = computed(() => {
@@ -52,12 +48,18 @@ const visitedColor = mixColor();
 <template>
   <component
     :is="!isSeparator ? CA : 'div'"
-    :to="`/novel/${providerId}/${novelId}/${tocItem.chapterId}`"
+    :to="
+      !isSeparator
+        ? `/novel/${providerId}/${novelId}/${tocItem.chapterId}`
+        : undefined
+    "
     class="toc"
     :class="{ 'toc-separator': isSeparator }"
-    style="width: calc(100% - 12px); display: block; padding: 6px"
-    :style="{ 'font-size': !isSeparator ? '14px' : '12px' }"
-    @click="isSeparator ? emit('toggleExpand') : undefined"
+    style="width: calc(100% - 12px); display: block"
+    :style="{
+      padding: isSeparator ? '2px' : '6px',
+      'font-size': isSeparator ? '12px' : '14px',
+    }"
   >
     <div
       style="display: flex; align-items: center; justify-content: space-between"
@@ -86,11 +88,6 @@ const visitedColor = mixColor();
           />
         </n-text>
       </div>
-      <n-icon v-if="isSeparator" :size="16">
-        <component
-          :is="isExpanded ? KeyboardArrowUpRound : KeyboardArrowDownRound"
-        />
-      </n-icon>
     </div>
   </component>
 </template>
