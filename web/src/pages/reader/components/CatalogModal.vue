@@ -47,48 +47,50 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
 watch(
   () => props.show,
   async (show) => {
-    if (show && tocResult.value?.ok !== true) {
-      const getWebToc = async (providerId: string, novelId: string) => {
-        const store = useWebNovelStore(providerId, novelId);
-        const result = await store.loadNovel();
-        if (result.ok) {
-          let order = 0;
-          const tocItems = result.value.toc.map((it, index) => {
-            const tocItem = <TocItem>{
-              ...it,
-              key: index,
-              order: it.chapterId ? order : undefined,
-            };
-            if (it.chapterId) order += 1;
-            return tocItem;
-          });
-          return Ok(tocItems);
+    if (show) {
+      if (tocResult.value?.ok !== true) {
+        const getWebToc = async (providerId: string, novelId: string) => {
+          const store = useWebNovelStore(providerId, novelId);
+          const result = await store.loadNovel();
+          if (result.ok) {
+            let order = 0;
+            const tocItems = result.value.toc.map((it, index) => {
+              const tocItem = <TocItem>{
+                ...it,
+                key: index,
+                order: it.chapterId ? order : undefined,
+              };
+              if (it.chapterId) order += 1;
+              return tocItem;
+            });
+            return Ok(tocItems);
+          } else {
+            return result;
+          }
+        };
+
+        const getLocalToc = async (volumeId: string) => {
+          const repo = await Locator.localVolumeRepository();
+          const volume = await repo.getVolume(volumeId);
+          if (volume === undefined) throw Error('小说不存在');
+          return volume.toc.map(
+            (it, index) =>
+              <TocItem>{
+                titleJp: it.chapterId,
+                chapterId: it.chapterId,
+                key: index,
+              },
+          );
+        };
+
+        const gnid = props.gnid;
+        if (gnid.type === 'web') {
+          tocResult.value = await getWebToc(gnid.providerId, gnid.novelId);
+        } else if (gnid.type === 'wenku') {
+          throw '不支持文库';
         } else {
-          return result;
+          tocResult.value = await runCatching(getLocalToc(gnid.volumeId));
         }
-      };
-
-      const getLocalToc = async (volumeId: string) => {
-        const repo = await Locator.localVolumeRepository();
-        const volume = await repo.getVolume(volumeId);
-        if (volume === undefined) throw Error('小说不存在');
-        return volume.toc.map(
-          (it, index) =>
-            <TocItem>{
-              titleJp: it.chapterId,
-              chapterId: it.chapterId,
-              key: index,
-            },
-        );
-      };
-
-      const gnid = props.gnid;
-      if (gnid.type === 'web') {
-        tocResult.value = await getWebToc(gnid.providerId, gnid.novelId);
-      } else if (gnid.type === 'wenku') {
-        throw '不支持文库';
-      } else {
-        tocResult.value = await runCatching(getLocalToc(gnid.volumeId));
       }
     }
   },
