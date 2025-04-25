@@ -56,7 +56,7 @@ const options = computed(() => {
     });
   } else {
     options.push({
-      label: '屏蔽用户评论',
+      label: '屏蔽用户',
       key: 'block',
     });
   }
@@ -139,7 +139,7 @@ const isBlocked = computed(() => {
 
   <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
     <n-text v-if="comment.hidden" depth="3">[隐藏]</n-text>
-    <n-text v-else-if="isBlocked" depth="3">[被用户屏蔽]</n-text>
+    <n-text v-else-if="isBlocked" depth="3">[屏蔽]</n-text>
     <MarkdownView
       v-else
       mode="comment"

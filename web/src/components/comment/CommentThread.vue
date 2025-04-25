@@ -95,7 +95,7 @@ const blockUserComment = async (comment: Comment1) =>
     (async () => {
       blockUserCommentRepository.add(comment.user.username);
     })(),
-    '屏蔽用户评论',
+    '屏蔽用户',
     message,
   );
 
@@ -104,7 +104,7 @@ const unblockUserComment = async (comment: Comment1) =>
     (async () => {
       blockUserCommentRepository.remove(comment.user.username);
     })(),
-    '解除屏蔽用户评论',
+    '解除屏蔽用户',
     message,
   );
 
