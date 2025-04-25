@@ -134,6 +134,7 @@ export interface ReaderSetting {
   mode: 'jp' | 'zh' | 'zh-jp' | 'jp-zh';
   translationsMode: 'parallel' | 'priority';
   translations: TranslatorId[];
+  clickArea: 'default' | 'left-right' | 'up-down' | 'none';
   speakLanguages: string[];
   trimLeadingSpaces: boolean;
   enableSourceLabel: boolean;
@@ -156,6 +157,7 @@ export namespace ReaderSetting {
     mode: 'zh-jp',
     translationsMode: 'priority',
     translations: ['sakura', 'gpt', 'youdao', 'baidu'],
+    clickArea: 'default',
     speakLanguages: ['jp'],
     trimLeadingSpaces: false,
     enableSourceLabel: false,
@@ -211,6 +213,13 @@ export namespace ReaderSetting {
   export const translationModeOptions = [
     { label: '优先', value: 'priority' },
     { label: '并列', value: 'parallel' },
+  ];
+
+  export const clickAreaOptions = [
+    { label: '默认', value: 'default' },
+    { label: '左右', value: 'left-right' },
+    { label: '上下', value: 'up-down' },
+    { label: '关闭', value: 'none' },
   ];
 
   export const speakLanguagesOptions = [

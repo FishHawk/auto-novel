@@ -7,7 +7,6 @@ import { Locator } from '@/data';
 import { GenericNovelId } from '@/model/Common';
 import { WebNovelChapterDto } from '@/model/WebNovel';
 
-import { doAction } from '@/pages/util';
 import { buildParagraphs } from './BuildParagraphs';
 
 const props = defineProps<{

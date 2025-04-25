@@ -7,6 +7,7 @@ import {
   TuneOutlined,
 } from '@vicons/material';
 
+import { Locator } from '@/data';
 import { WebNovelChapterDto } from '@/model/WebNovel';
 
 defineProps<{
@@ -22,6 +23,8 @@ const emit = defineEmits<{
 
 const showMenu = ref(false);
 
+const { setting } = Locator.readerSettingRepository();
+
 const onGlobalClick = (event: MouseEvent) => {
   const scrollBy = (y: number) => {
     window.scrollBy({
@@ -29,12 +32,28 @@ const onGlobalClick = (event: MouseEvent) => {
       behavior: 'smooth',
     });
   };
-  const p = event.clientY / window.innerHeight;
-  const t = 0.15;
-  if (p < t) {
-    scrollBy(-0.8);
-  } else if (p > 1 - t) {
-    scrollBy(0.8);
+
+  const scrollByIfNeed = (p: number) => {
+    const t = 0.15;
+    const distance = 0.8;
+    if (p < t) {
+      scrollBy(-distance);
+    } else if (p > 1 - t) {
+      scrollBy(distance);
+    } else {
+      showMenu.value = true;
+    }
+  };
+
+  if (
+    setting.value.clickArea === 'default' ||
+    setting.value.clickArea === 'up-down'
+  ) {
+    const py = event.clientY / window.innerHeight;
+    scrollByIfNeed(py);
+  } else if (setting.value.clickArea === 'left-right') {
+    const px = event.clientX / window.innerWidth;
+    scrollByIfNeed(px);
   } else {
     showMenu.value = true;
   }

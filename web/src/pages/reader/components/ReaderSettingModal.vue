@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { Locator } from '@/data';
 import { ReaderSetting } from '@/data/setting/Setting';
-import { useIsWideScreen } from '@/pages/util';
+import { checkIsMobile, useIsWideScreen } from '@/pages/util';
 
+const isMobile = checkIsMobile();
 const isWideScreen = useIsWideScreen(600);
 const { setting } = Locator.readerSettingRepository();
 
@@ -45,7 +46,14 @@ const setCustomFontColor = (color: string) =>
             </n-flex>
           </c-action-wrapper>
 
-          <c-action-wrapper title="朗读">
+          <c-action-wrapper v-if="isMobile" title="点按区域">
+            <c-radio-group
+              v-model:value="setting.clickArea"
+              :options="ReaderSetting.clickAreaOptions"
+            />
+          </c-action-wrapper>
+
+          <c-action-wrapper title="朗读语言">
             <c-radio-group
               :value="setting.speakLanguages[0]"
               @update-value="(it) => (setting.speakLanguages = [it])"
