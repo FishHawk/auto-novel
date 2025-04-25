@@ -5,6 +5,7 @@ import infra.web.WebNovel
 import infra.web.WebNovelTocItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import util.MachineTranslationSignature
 import java.io.BufferedWriter
 import java.nio.file.Path
 import kotlin.io.path.bufferedWriter
@@ -73,6 +74,10 @@ private class TxtWriter(
         write("${translation}翻译缺失。\n\n")
     }
 
+    private fun BufferedWriter.writeMachineTranslationSig() {
+        if (zh) write("※ ${MachineTranslationSignature()}\n")
+    }
+
     fun BufferedWriter.writeNovel(
         novel: WebNovel,
         chapters: Map<String, ChapterWriteData>,
@@ -80,6 +85,8 @@ private class TxtWriter(
         writeTitle(novel)
         write("\n")
         writeAuthor(novel)
+        write("\n")
+        writeMachineTranslationSig()
         write("\n")
         write("#".repeat(12) + "\n")
         writeIntroduction(novel)

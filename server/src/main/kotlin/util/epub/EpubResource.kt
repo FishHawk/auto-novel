@@ -20,6 +20,7 @@ private const val TEMPLATE_XHTML = """<?xml version="1.0" encoding="utf-8"?>
   <head>
     <title/>
     <meta charset="utf-8"/>
+    <meta name="translation" content="本内容为机器翻译" />
   </head>
   <body />
 </html>"""

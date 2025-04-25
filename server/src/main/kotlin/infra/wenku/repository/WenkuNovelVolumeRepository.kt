@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
+import org.jsoup.nodes.Element
+import util.MachineTranslationSignature
 import util.epub.Epub
 import util.serialName
 import java.security.MessageDigest
@@ -114,6 +116,10 @@ class WenkuNovelVolumeRepository(
                     if (zhLinesList.isEmpty()) {
                         bf.appendLine("// 该分段翻译缺失。")
                     } else {
+                        // 添加机翻标识, Issue #134
+                        bf.appendLine("※ ${MachineTranslationSignature()}")
+                        bf.appendLine("")
+
                         val jpLines = volume.getChapter(chapterId)!!
                         val linesList = when (mode) {
                             NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
@@ -135,6 +141,8 @@ class WenkuNovelVolumeRepository(
 
             val chapters = volume.listChapter()
             Epub.modify(srcPath = jpPath, dstPath = zhPath) { name, bytesIn ->
+                var bytesOut = bytesIn
+
                 // 为了兼容ChapterId以斜杠开头的旧格式
                 val chapterId = if ("/${name}".escapePath() in chapters) {
                     "/${name}".escapePath()
@@ -144,57 +152,71 @@ class WenkuNovelVolumeRepository(
                     null
                 }
 
+                // FIXME(kuriko): 这个可能会给服务器带来更大的负载（每次都需要重新跑正则），
+                //  可能需要在上传的时候进行这个 fix，之后将结果 cache 起来
+                if (name.endsWith("html") || name.endsWith("xhtml")) {
+                    val fixedDoc = Epub.fixInvalidEpub(bytesOut.decodeToString())
+                    bytesOut =  fixedDoc.toByteArray()
+                }
+
                 if (chapterId != null) {
                     // XHtml文件，尝试生成翻译版
                     val zhLinesList = getZhLinesList(chapterId)
                     if (zhLinesList.isEmpty()) {
-                        bytesIn
+                        bytesOut
                     } else {
-                        val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
-                        doc.select("p")
-                            .filter { el -> el.text().isNotBlank() }
-                            .forEachIndexed { index, el ->
-                                when (mode) {
-                                    NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
-                                    NovelFileMode.Zh -> {
-                                        zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}</p>")
-                                        }
-                                        el.remove()
-                                    }
-
-                                    NovelFileMode.JpZh -> {
-                                        zhLinesList.asReversed().forEach { lines ->
-                                            el.after("<p>${lines[index]}</p>")
-                                        }
-                                        el.attr("style", "opacity:0.4;")
-                                    }
-
-                                    NovelFileMode.ZhJp -> {
-                                        zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}</p>")
-                                        }
-                                        el.attr("style", "opacity:0.4;")
-                                    }
-                                }
-                            }
+                        val doc = Jsoup.parse(bytesOut.decodeToString(), Parser.xmlParser())
+                        Epub.replaceWithTranslation(doc, zhLinesList, mode);
                         doc.outputSettings().prettyPrint(true)
                         doc.html().toByteArray()
                     }
                 } else if (name.endsWith("opf")) {
-                    val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
+                    val doc = Jsoup.parse(bytesOut.decodeToString(), Parser.xmlParser())
 
                     // 防止部分阅读器使用竖排
                     doc
                         .selectFirst("spine")
                         ?.removeAttr("page-progression-direction")
 
+                    // 修改 EPUB 语言为简体中文（让 iOS iBook 阅读器可以使用中文字体）
+                    // Fix Issue #58
+                    doc
+                        .selectFirst("metadata")
+                        ?.apply {
+                            selectFirst("dc|language")
+                            ?.text("zh-CN")
+                            ?: appendChild(Element("dc:language").text("zh-CN"))
+                        }
+
+                    // 添加机翻标识, Issue #134
+                    doc
+                        .selectFirst("metadata")
+                        ?.appendChild(
+                            Element("dc:description")
+                                .text(MachineTranslationSignature()
+                            )
+                        )
+
+                    // fix: 竖排转横排文本后，翻页方向问题。 Issue #107
+                    //     <meta name="primary-writing-mode" content="vertical-rl"/>
+                    //     <meta name="primary-writing-mode" content="horizontal-lr"/>
+                    doc
+                        .selectFirst("metadata")
+                        ?.apply {
+                            val metaNode = Element("meta")
+                                .attr("name", "primary-writing-mode")
+                                .attr("content", "horizontal-lr")
+                            selectFirst("meta[name=primary-writing-mode]")
+                                ?.replaceWith(metaNode)
+                                ?: appendChild(metaNode)
+                        }
+
                     doc.outputSettings().prettyPrint(true)
                     doc.html().toByteArray()
                 } else if (name.endsWith("css")) {
                     "".toByteArray()
                 } else {
-                    bytesIn
+                    bytesOut
                 }
             }
             return@withContext zhFilename
