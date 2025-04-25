@@ -12,6 +12,7 @@ const props = defineProps<{
   tocItem: ReadableTocItem;
   lastRead?: string;
   isSeparator: boolean;
+  isSpecialChapter?: boolean;
 }>();
 
 const type = computed(() => {
@@ -63,7 +64,7 @@ const visitedColor = mixColor();
   >
     <div
       style="display: flex; align-items: center; justify-content: space-between"
-      :id="`chapterTocItem-${tocItem.chapterId}`"
+      :id="isSpecialChapter ? undefined : `chapterTocItem-${tocItem.chapterId}`"
     >
       <div>
         <n-text

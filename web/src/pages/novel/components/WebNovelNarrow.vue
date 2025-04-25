@@ -77,7 +77,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
       :toc-item="startReadChapter"
       :last-read="novel.lastReadChapterId"
       :is-separator="false"
-      :is-expanded="false"
+      :is-special-chapter="true"
     />
     <c-button
       v-if="novel.toc.length > 1"
@@ -130,6 +130,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         :toc-item="lastReadChapter"
         :last-read="novel.lastReadChapterId"
         :is-separator="false"
+        :is-special-chapter="true"
       />
     </n-card>
     <n-scrollbar>

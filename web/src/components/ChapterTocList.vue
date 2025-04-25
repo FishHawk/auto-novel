@@ -57,6 +57,7 @@ const scrollToLastRead = async () => {
   let element: HTMLElement | null = null;
 
   for (let i = 0; i < 5; i++) {
+    // console.debug('attempting to scroll to last read chapter', elementId, 'for attempt', i);
     element = document.getElementById(elementId);
     if (element) {
       element.scrollIntoView({ behavior: 'instant', block: 'center' });
