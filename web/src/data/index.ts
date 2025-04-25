@@ -23,6 +23,7 @@ import {
   createSakuraWorkspaceRepository,
   createWebSearchHistoryRepository,
   createWenkuSearchHistoryRepository,
+  createBlockUserCommentRepository,
 } from './stores';
 import {
   createAmazonRepository,
@@ -88,4 +89,5 @@ export const Locator = {
   authRepository: lazy(createAuthRepository),
   favoredRepository: lazy(createFavoredRepository),
   readHistoryRepository: lazy(createReadHistoryRepository),
+  blockUserCommentRepository: lazy(createBlockUserCommentRepository),
 };

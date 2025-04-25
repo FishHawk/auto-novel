@@ -19,6 +19,8 @@ const pageCount = ref(Math.floor((comment.numReplies + 9) / 10));
 const draftRepo = Locator.draftRepository();
 const draftId = `comment-${site}`;
 
+const blockUserCommentRepository = Locator.blockUserCommentRepository();
+
 const emit = defineEmits<{
   deleted: [];
 }>();
@@ -88,6 +90,24 @@ const unhideComment = (comment: Comment1) =>
     message,
   );
 
+const blockUserComment = async (comment: Comment1) =>
+  doAction(
+    (async () => {
+      blockUserCommentRepository.add(comment.user.username);
+    })(),
+    '屏蔽用户',
+    message,
+  );
+
+const unblockUserComment = async (comment: Comment1) =>
+  doAction(
+    (async () => {
+      blockUserCommentRepository.remove(comment.user.username);
+    })(),
+    '解除屏蔽用户',
+    message,
+  );
+
 const showInput = ref(false);
 </script>
 
@@ -100,6 +120,8 @@ const showInput = ref(false);
     @delete="deleteComment"
     @hide="hideComment"
     @unhide="unhideComment"
+    @block="blockUserComment"
+    @unblock="unblockUserComment"
     @reply="showInput = !showInput"
   />
 
@@ -124,6 +146,8 @@ const showInput = ref(false);
       @delete="deleteComment"
       @hide="hideComment"
       @unhide="unhideComment"
+      @block="blockUserComment"
+      @unblock="unblockUserComment"
     />
   </div>
 
