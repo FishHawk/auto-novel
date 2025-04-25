@@ -3,7 +3,6 @@ import { NCollapse, NCollapseItem, NVirtualList } from 'naive-ui';
 import ChapterTocItem from '@/components/ChapterTocItem.vue';
 import type { ReadableTocItem } from '@/pages/novel/components/common';
 import { computed, onMounted, nextTick, watch } from 'vue';
-import LegacyChapterTocItem from './LegacyChapterTocItem.vue';
 
 interface TocSection {
   separator: ReadableTocItem | null;
@@ -77,6 +76,22 @@ const scrollToLastRead = async () => {
 onMounted(() => {
   scrollToLastRead();
 });
+
+const noSeparatorMaxHeight = computed(() => {
+  if (props.mode.catalog) {
+    if (props.mode.narrow) {
+      return '59vh';
+    }
+    return '60vh';
+  }
+  if (!props.mode.narrow) {
+    return '80vh';
+  }
+  if (props.mode.collapse) {
+    return '90vh';
+  }
+  return '100vh';
+});
 </script>
 
 <template>
@@ -85,10 +100,13 @@ onMounted(() => {
     :items="sortedChapters(props.tocSections[0].chapters)"
     :item-size="75.2"
     :default-scroll-key="lastReadChapterId"
-    style="max-height: 100vh; overflow-y: auto"
+    style="overflow: auto"
+    :style="{
+      maxHeight: noSeparatorMaxHeight,
+    }"
   >
     <template #default="{ item: chapter }">
-      <div :id="`test-${chapter.chapterId}`">
+      <div :key="chapter.chapterId">
         <chapter-toc-item
           :provider-id="providerId"
           :novel-id="novelId"
