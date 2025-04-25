@@ -80,13 +80,13 @@ onMounted(() => {
 const noSeparatorMaxHeight = computed(() => {
   if (props.mode.catalog) {
     return 'calc(60vh - 16px)';
-  } // modal (80vh) - header (77.8px)
+  }
   if (!props.mode.narrow) {
     return 'calc(100vh - 150px)';
   } // sidebar (100vh - 50px) - header (83.2px)
   if (props.mode.collapse) {
-    return 'calc(90vh - 16px)';
-  }
+    return 'calc(100vh - 100px)';
+  } // drawer (100vh) - header (61px)
   // return '100vh';
   return `${75.2 * props.tocSections[0].chapters.length + 16}px`;
 });
@@ -97,7 +97,6 @@ const noSeparatorMaxHeight = computed(() => {
     v-if="noSeparator"
     :items="sortedChapters(props.tocSections[0].chapters)"
     :item-size="75.2"
-    :default-scroll-key="lastReadChapterId"
     style="overflow: auto"
     :style="{
       maxHeight: noSeparatorMaxHeight,
