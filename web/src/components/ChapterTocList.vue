@@ -84,14 +84,17 @@ onMounted(() => {
     v-if="noSeparator"
     :items="sortedChapters(props.tocSections[0].chapters)"
     :item-size="75.2"
+    :default-scroll-key="lastReadChapterId"
+    style="max-height: 100vh; overflow-y: auto"
   >
     <template #default="{ item: chapter }">
       <div :id="`test-${chapter.chapterId}`">
-        <legacy-chapter-toc-item
+        <chapter-toc-item
           :provider-id="providerId"
           :novel-id="novelId"
           :toc-item="chapter"
           :last-read="lastReadChapterId"
+          :is-separator="false"
           @click="handleItemClick(chapter)"
         />
       </div>
