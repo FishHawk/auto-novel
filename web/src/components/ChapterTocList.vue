@@ -13,6 +13,7 @@ const props = defineProps<{
   tocSections: TocSection[];
   expandedNames: string[];
   lastReadChapterId?: string;
+  defaultScrollKey?: number;
   providerId: string;
   novelId: string;
   sortReverse: boolean;
@@ -97,6 +98,7 @@ const noSeparatorMaxHeight = computed(() => {
     v-if="noSeparator"
     :items="sortedChapters(props.tocSections[0].chapters)"
     :item-size="75.2"
+    :default-scroll-key="defaultScrollKey"
     style="overflow: auto"
     :style="{
       maxHeight: noSeparatorMaxHeight,
