@@ -47,9 +47,16 @@ const noNeedScroll = computed(() => {
   return props.mode.narrow && !props.mode.catalog && !props.mode.collapse;
 });
 
+const noSeparator = computed(() => {
+  return (
+    props.tocSections.length === 1 && props.tocSections[0].separator === null
+  );
+});
+
 const scrollToLastRead = async () => {
-  if (noNeedScroll.value) return;
-  if (!props.lastReadChapterId) return;
+  if (noNeedScroll.value || noSeparator.value || !props.lastReadChapterId) {
+    return;
+  }
 
   await nextTick();
 
@@ -57,7 +64,6 @@ const scrollToLastRead = async () => {
   let element: HTMLElement | null = null;
 
   for (let i = 0; i < 5; i++) {
-    // console.debug('attempting to scroll to last read chapter', elementId, 'for attempt', i);
     element = document.getElementById(elementId);
     if (element) {
       element.scrollIntoView({ behavior: 'instant', block: 'center' });
@@ -73,7 +79,19 @@ onMounted(() => {
 </script>
 
 <template>
+  <n-virtual-list
+    v-if="noSeparator"
+    :items="sortedChapters(props.tocSections[0].chapters)"
+    :item-size="12"
+  >
+    <template #default="{ item: chapter }">
+      <div :id="`test-${chapter.chapterId}`">
+        {{ chapter.chapterId }}
+      </div>
+    </template>
+  </n-virtual-list>
   <n-collapse
+    v-else
     :expanded-names="expandedNames"
     @update:expanded-names="$emit('update:expandedNames', $event)"
     arrow-placement="right"
