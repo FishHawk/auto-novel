@@ -3,6 +3,7 @@ import { NCollapse, NCollapseItem, NVirtualList } from 'naive-ui';
 import ChapterTocItem from '@/components/ChapterTocItem.vue';
 import type { ReadableTocItem } from '@/pages/novel/components/common';
 import { computed, onMounted, nextTick, watch } from 'vue';
+import LegacyChapterTocItem from './LegacyChapterTocItem.vue';
 
 interface TocSection {
   separator: ReadableTocItem | null;
@@ -82,11 +83,17 @@ onMounted(() => {
   <n-virtual-list
     v-if="noSeparator"
     :items="sortedChapters(props.tocSections[0].chapters)"
-    :item-size="12"
+    :item-size="75.2"
   >
     <template #default="{ item: chapter }">
       <div :id="`test-${chapter.chapterId}`">
-        {{ chapter.chapterId }}
+        <legacy-chapter-toc-item
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :toc-item="chapter"
+          :last-read="lastReadChapterId"
+          @click="handleItemClick(chapter)"
+        />
       </div>
     </template>
   </n-virtual-list>
