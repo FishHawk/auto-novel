@@ -79,18 +79,16 @@ onMounted(() => {
 
 const noSeparatorMaxHeight = computed(() => {
   if (props.mode.catalog) {
-    if (props.mode.narrow) {
-      return '59vh';
-    }
-    return '60vh';
-  }
+    return 'calc(60vh - 16px)';
+  } // modal (80vh) - header (77.8px)
   if (!props.mode.narrow) {
-    return '80vh';
-  }
+    return 'calc(100vh - 150px)';
+  } // sidebar (100vh - 50px) - header (83.2px)
   if (props.mode.collapse) {
-    return '90vh';
+    return 'calc(90vh - 16px)';
   }
-  return '100vh';
+  // return '100vh';
+  return `${75.2 * props.tocSections[0].chapters.length + 16}px`;
 });
 </script>
 
