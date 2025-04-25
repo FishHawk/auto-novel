@@ -12,6 +12,7 @@ const props = defineProps<{
   tocItem: ReadableTocItem;
   lastRead?: string;
   isSeparator: boolean;
+  isSpecialChapter?: boolean;
 }>();
 
 const type = computed(() => {
@@ -57,13 +58,13 @@ const visitedColor = mixColor();
     :class="{ 'toc-separator': isSeparator }"
     style="width: calc(100% - 12px); display: block"
     :style="{
-      padding: isSeparator ? '0 6px' : '4px 6px',
+      padding: isSeparator ? '0 12px' : '4px 12px',
       'font-size': isSeparator ? '12px' : '14px',
     }"
   >
     <div
       style="display: flex; align-items: center; justify-content: space-between"
-      :id="`chapterTocItem-${tocItem.chapterId}`"
+      :id="isSpecialChapter ? undefined : `chapterTocItem-${tocItem.chapterId}`"
     >
       <div>
         <n-text
