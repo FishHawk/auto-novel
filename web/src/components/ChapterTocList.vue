@@ -80,16 +80,16 @@ onMounted(() => {
 
 const noSeparatorMaxHeight = computed(() => {
   if (props.mode.catalog) {
-    return 'calc(60vh - 16px)';
-  }
+    return 'calc(80vh - 170px)';
+  } // modal (80vh)
   if (!props.mode.narrow) {
     return 'calc(100vh - 150px)';
   } // sidebar (100vh - 50px) - header (83.2px)
   if (props.mode.collapse) {
     return 'calc(100vh - 100px)';
-  } // drawer (100vh) - header (61px)
+  } // drawer (100vh)
   // return '100vh';
-  return `${75.2 * props.tocSections[0].chapters.length + 16}px`;
+  return `${97.6 * props.tocSections[0].chapters.length}px`;
 });
 </script>
 
@@ -142,8 +142,6 @@ const noSeparatorMaxHeight = computed(() => {
           v-if="section.chapters.length > 0"
           :items="sortedChapters(section.chapters)"
           :item-size="75.2"
-          :scrollbar-props="{ trigger: 'none' }"
-          item-resizable
         >
           <template #default="{ item: chapter }">
             <div :key="`ch-${chapter.chapterId}`">
