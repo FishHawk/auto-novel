@@ -13,6 +13,7 @@ const props = defineProps<{
   tocSections: TocSection[];
   expandedNames: string[];
   lastReadChapterId?: string;
+  defaultScrollKey?: number;
   providerId: string;
   novelId: string;
   sortReverse: boolean;
@@ -47,9 +48,16 @@ const noNeedScroll = computed(() => {
   return props.mode.narrow && !props.mode.catalog && !props.mode.collapse;
 });
 
+const noSeparator = computed(() => {
+  return (
+    props.tocSections.length === 1 && props.tocSections[0].separator === null
+  );
+});
+
 const scrollToLastRead = async () => {
-  if (noNeedScroll.value) return;
-  if (!props.lastReadChapterId) return;
+  if (noNeedScroll.value || noSeparator.value || !props.lastReadChapterId) {
+    return;
+  }
 
   await nextTick();
 
@@ -57,7 +65,6 @@ const scrollToLastRead = async () => {
   let element: HTMLElement | null = null;
 
   for (let i = 0; i < 5; i++) {
-    // console.debug('attempting to scroll to last read chapter', elementId, 'for attempt', i);
     element = document.getElementById(elementId);
     if (element) {
       element.scrollIntoView({ behavior: 'instant', block: 'center' });
@@ -70,10 +77,48 @@ const scrollToLastRead = async () => {
 onMounted(() => {
   scrollToLastRead();
 });
+
+const noSeparatorMaxHeight = computed(() => {
+  if (props.mode.catalog) {
+    return 'calc(80vh - 170px)';
+  } // modal (80vh)
+  if (!props.mode.narrow) {
+    return 'calc(100vh - 150px)';
+  } // sidebar (100vh - 50px) - header (83.2px)
+  if (props.mode.collapse) {
+    return 'calc(100vh - 100px)';
+  } // drawer (100vh)
+  // return '100vh';
+  return `${97.6 * props.tocSections[0].chapters.length}px`;
+});
 </script>
 
 <template>
+  <n-virtual-list
+    v-if="noSeparator"
+    :items="sortedChapters(props.tocSections[0].chapters)"
+    :item-size="75.2"
+    :default-scroll-key="defaultScrollKey"
+    style="overflow: auto"
+    :style="{
+      maxHeight: noSeparatorMaxHeight,
+    }"
+  >
+    <template #default="{ item: chapter }">
+      <div :key="chapter.chapterId">
+        <chapter-toc-item
+          :provider-id="providerId"
+          :novel-id="novelId"
+          :toc-item="chapter"
+          :last-read="lastReadChapterId"
+          :is-separator="false"
+          @click="handleItemClick(chapter)"
+        />
+      </div>
+    </template>
+  </n-virtual-list>
   <n-collapse
+    v-else
     :expanded-names="expandedNames"
     @update:expanded-names="$emit('update:expandedNames', $event)"
     arrow-placement="right"

@@ -94,6 +94,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
           :toc-sections="tocSections"
           v-model:expanded-names="expandedNames"
           :last-read-chapter-id="novel.lastReadChapterId"
+          :default-scroll-key="lastReadChapter?.key"
           :provider-id="providerId"
           :novel-id="novelId"
           :sort-reverse="sortReverse"
