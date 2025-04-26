@@ -136,6 +136,7 @@ export interface ReaderSetting {
   translations: TranslatorId[];
   clickArea: 'default' | 'left-right' | 'up-down' | 'none';
   speakLanguages: string[];
+  enableClickAnimition: boolean;
   trimLeadingSpaces: boolean;
   enableSourceLabel: boolean;
   //
@@ -159,6 +160,7 @@ export namespace ReaderSetting {
     translations: ['sakura', 'gpt', 'youdao', 'baidu'],
     clickArea: 'default',
     speakLanguages: ['jp'],
+    enableClickAnimition: true,
     trimLeadingSpaces: false,
     enableSourceLabel: false,
     //

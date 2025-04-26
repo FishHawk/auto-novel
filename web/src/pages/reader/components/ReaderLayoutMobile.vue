@@ -29,7 +29,7 @@ const onGlobalClick = (event: MouseEvent) => {
   const scrollBy = (y: number) => {
     window.scrollBy({
       top: y * window.innerHeight,
-      behavior: 'smooth',
+      behavior: setting.value.enableClickAnimition ? 'smooth' : 'instant',
     });
   };
 

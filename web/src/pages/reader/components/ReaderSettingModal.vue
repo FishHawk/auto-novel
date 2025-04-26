@@ -60,6 +60,12 @@ const setCustomFontColor = (color: string) =>
               :options="ReaderSetting.speakLanguagesOptions"
             />
           </c-action-wrapper>
+          <c-action-wrapper v-if="isMobile" title="点按动画" align="center">
+            <n-switch
+              v-model:value="setting.enableClickAnimition"
+              size="small"
+            />
+          </c-action-wrapper>
           <c-action-wrapper title="显示翻译来源" align="center">
             <n-switch v-model:value="setting.enableSourceLabel" size="small" />
           </c-action-wrapper>
