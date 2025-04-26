@@ -144,7 +144,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         :sort-reverse="sortReverse"
         :mode="{
           narrow: true,
-          catalog: false,
+          modal: false,
           collapse: false,
         }"
       />
@@ -189,7 +189,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         :sort-reverse="sortReverse"
         :mode="{
           narrow: true,
-          catalog: false,
+          modal: false,
           collapse: true,
         }"
         style="height: 100%"

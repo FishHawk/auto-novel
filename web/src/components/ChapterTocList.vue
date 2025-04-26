@@ -19,7 +19,7 @@ const props = defineProps<{
   sortReverse: boolean;
   mode: {
     narrow: boolean;
-    catalog: boolean;
+    modal: boolean;
     collapse: boolean;
   };
 }>();
@@ -45,7 +45,7 @@ const sortedSections = computed(() => {
 });
 
 const noNeedScroll = computed(() => {
-  return props.mode.narrow && !props.mode.catalog && !props.mode.collapse;
+  return props.mode.narrow && !props.mode.modal && !props.mode.collapse;
 });
 
 const noSeparator = computed(() => {
@@ -78,18 +78,17 @@ onMounted(() => {
   scrollToLastRead();
 });
 
-const noSeparatorMaxHeight = computed(() => {
-  if (props.mode.catalog) {
-    return 'calc(80vh - 170px)';
-  } // modal (80vh)
+const noSeparatorClass = computed(() => {
+  if (props.mode.modal) {
+    return 'modal-virtual-list';
+  }
   if (!props.mode.narrow) {
-    return 'calc(100vh - 150px)';
-  } // sidebar (100vh - 50px) - header (83.2px)
+    return 'wide-virtual-list';
+  }
   if (props.mode.collapse) {
-    return 'calc(100vh - 100px)';
-  } // drawer (100vh)
-  // return '100vh';
-  return `${97.6 * props.tocSections[0].chapters.length}px`;
+    return 'collapse-virtual-list';
+  }
+  return 'nocollapse-virtual-list';
 });
 </script>
 
@@ -100,9 +99,7 @@ const noSeparatorMaxHeight = computed(() => {
     :item-size="75.2"
     :default-scroll-key="defaultScrollKey"
     style="overflow: auto"
-    :style="{
-      maxHeight: noSeparatorMaxHeight,
-    }"
+    :class="noSeparatorClass"
   >
     <template #default="{ item: chapter }">
       <div :key="chapter.chapterId">
@@ -182,3 +179,30 @@ const noSeparatorMaxHeight = computed(() => {
     </template>
   </n-collapse>
 </template>
+<style scoped>
+@supports (height: 100dvh) {
+  .modal-virtual-list {
+    max-height: calc(80dvh - 200px);
+  }
+  .wide-virtual-list {
+    max-height: calc(100dvh - 150px);
+  }
+  .collapse-virtual-list {
+    max-height: calc(100dvh - 100px);
+  }
+}
+@supports not (height: 100dvh) {
+  .modal-virtual-list {
+    max-height: calc(80vh - 200px);
+  }
+  .wide-virtual-list {
+    max-height: calc(100vh - 150px);
+  }
+  .collapse-virtual-list {
+    max-height: calc(100vh - 100px);
+  }
+}
+.nocollapse-virtual-list {
+  max-height: auto;
+}
+</style>
