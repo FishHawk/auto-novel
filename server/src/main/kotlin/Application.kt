@@ -37,13 +37,26 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
+private fun env(name: String): String? =
+    System.getenv(name)
+
+private fun envNotNull(name: String): String =
+    System.getenv(name) ?: ""
+
+private fun envDbHost(name: String) =
+    env(name) ?: env("DB_HOST_TEST") ?: "localhost"
+
+private fun envDbPort(name: String) =
+    env(name)?.toIntOrNull()
+
+
 fun main() {
     embeddedServer(Netty, 8081) {
         install(Koin) {
             slf4jLogger()
             modules(appModule)
         }
-        authentication(secret = System.getenv("JWT_SECRET")!!)
+        authentication(secret = envNotNull("JWT_SECRET"))
         rateLimit()
         install(Resources)
         install(CachingHeaders)
@@ -84,15 +97,6 @@ fun main() {
 
 val appModule = module {
     // Data layer: Client
-    fun env(name: String): String? =
-        System.getenv(name)
-
-    fun envDbHost(name: String) =
-        env(name) ?: env("DB_HOST_TEST") ?: "localhost"
-
-    fun envDbPort(name: String) =
-        env(name)?.toIntOrNull()
-
     single {
         EmailClient(
             apiKey = env("MAILGUN_API_KEY")
@@ -152,7 +156,7 @@ val appModule = module {
     // App Layer
     single {
         AuthApi(
-            secret = env("JWT_SECRET")!!,
+            secret = envNotNull("JWT_SECRET"),
             get(), get(), get()
         )
     }

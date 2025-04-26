@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "LOCAL=1 vite",
     "build": "vite build && vue-tsc --noEmit",
     "check": "vue-tsc --noEmit",
     "preview": "vite preview",

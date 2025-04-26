@@ -89,7 +89,7 @@ class WebNovelHttpDataSource(
 
     val providers = mapOf(
         Alphapolis.id to Alphapolis(client),
-        Hameln.id to Hameln(client),
+        Hameln.id to Hameln(client, useProxy = hamelnToken != null),
         Kakuyomu.id to Kakuyomu(client),
         Novelup.id to Novelup(client),
         Pixiv.id to Pixiv(client),
