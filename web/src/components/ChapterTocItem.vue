@@ -56,9 +56,9 @@ const visitedColor = mixColor();
     "
     class="toc"
     :class="{ 'toc-separator': isSeparator }"
-    style="width: calc(100% - 12px); display: block"
+    style="width: calc(100% - 24px); display: block"
     :style="{
-      padding: isSeparator ? '0 6px' : '4px 14px',
+      padding: isSeparator ? '0 6px' : '4px 12px',
       'font-size': isSeparator ? '12px' : '14px',
     }"
   >
