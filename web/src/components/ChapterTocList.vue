@@ -142,6 +142,8 @@ const noSeparatorMaxHeight = computed(() => {
           v-if="section.chapters.length > 0"
           :items="sortedChapters(section.chapters)"
           :item-size="75.2"
+          :scrollbar-props="{ trigger: 'none' }"
+          item-resizable
         >
           <template #default="{ item: chapter }">
             <div :key="`ch-${chapter.chapterId}`">
