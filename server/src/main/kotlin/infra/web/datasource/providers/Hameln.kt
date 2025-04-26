@@ -16,25 +16,28 @@ import org.jsoup.nodes.Element
 
 class Hameln(
     private val client: HttpClient,
+    useProxy: Boolean,
 ) : WebNovelProvider {
     companion object {
         const val id = "hameln"
 
         private const val URL_ORIGIN = "https://syosetu.org"
         private const val URL_PROXY = "https://hml.xkvi.top"
-        private const val URL_BASE = URL_PROXY
 
         suspend fun addCookies(cookies: CookiesStorage, token: String) {
             cookies.addCookie(
-                URL_BASE,
+                URL_ORIGIN,
                 Cookie(name = "over18", value = "off", domain = ".syosetu.org")
             )
             cookies.addCookie(
-                URL_BASE,
+                URL_PROXY,
                 Cookie(name = "token", value = token, domain = ".hml.xkvi.top")
             )
         }
     }
+
+    private val baseUrl =
+        if (useProxy) URL_PROXY else URL_ORIGIN
 
     override suspend fun getRank(options: Map<String, String>): Page<RemoteNovelListItem> {
         return emptyPage()
@@ -42,8 +45,8 @@ class Hameln(
 
     override suspend fun getMetadata(novelId: String): RemoteNovelMetadata {
         val (doc1, doc2) = coroutineScope {
-            val url1 = "$URL_BASE/novel/$novelId"
-            val url2 = "$URL_BASE/?mode=ss_detail&nid=$novelId"
+            val url1 = "$baseUrl/novel/$novelId"
+            val url2 = "$baseUrl/?mode=ss_detail&nid=$novelId"
             return@coroutineScope listOf(
                 async { client.get(url1).document() },
                 async { client.get(url2).document() },
@@ -65,7 +68,7 @@ class Hameln(
                     name = el.text(),
                     link = el.selectFirst("a")
                         ?.attr("href")
-                        ?.replace(URL_BASE, URL_ORIGIN),
+                        ?.replace(baseUrl, URL_ORIGIN),
                 )
             }
 
@@ -150,8 +153,8 @@ class Hameln(
 
     override suspend fun getChapter(novelId: String, chapterId: String): RemoteChapter {
         val url =
-            if (chapterId == "default") "$URL_BASE/novel/$novelId"
-            else "$URL_BASE/novel/$novelId/$chapterId.html"
+            if (chapterId == "default") "$baseUrl/novel/$novelId"
+            else "$baseUrl/novel/$novelId/$chapterId.html"
         val paragraphs = client.get(url).document()
             .selectFirst("div#honbun")!!
             .getElementsByTag("p")

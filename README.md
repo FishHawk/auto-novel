@@ -10,18 +10,8 @@
 
 ## 功能
 
-- 浏览日本网络小说，支持的网站有：
-  - [Kakuyomu](https://kakuyomu.jp/)
-  - [小説家になろう](https://syosetu.com/)
-  - [Novelup](https://novelup.plus/)
-  - [Hameln](https://syosetu.org/)
-  - [Pixiv](https://www.pixiv.net/)
-  - [Alphapolis](https://www.alphapolis.co.jp/)
-- 生成多种机翻，支持的翻译器有：
-  - 百度
-  - 有道
-  - GPT/DeepSeek API
-  - [Sakura](https://huggingface.co/SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF)
+- 浏览日本网络小说，支持的网站有：[Kakuyomu](https://kakuyomu.jp/)、[小説家になろう](https://syosetu.com/)、[Novelup](https://novelup.plus/)、[Hameln](https://syosetu.org/)、[Pixiv](https://www.pixiv.net/)、[Alphapolis](https://www.alphapolis.co.jp/)。
+- 生成多种机翻，支持的翻译器有：百度、有道、OpenAI-like API（例如 DeepSeek API）、[Sakura](https://huggingface.co/SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF)。
 - 支持术语表。
 - 支持多种格式，包括日文、中文以及中日对比。
 - 支持生成 EPUB 和 TXT 文件。
@@ -30,12 +20,7 @@
 
 ## 贡献
 
-欢迎参与开发，为了高效协作，请遵循以下规范。
-
-- 在编写代码前，请先通过 Issue 或群组讨论你的变更计划，确保与现有开发方向一致。
-- 提交 Pull Request 时，请保持内容精简，每次聚焦一个独立的修改点，以便快速检视和合入。
-- 如果对当前代码设计有疑问，可以在群组里@FishHawk提问。
-- 如果使用 AI 辅助编写，请务必自己检视一遍。
+请参考 [CONTRIBUTING.md](https://github.com/FishHawk/auto-novel/blob/main/CONTRIBUTING.md)
 
 <a href="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors?repo_id=559577341" target="_blank" style="display: block" align="left">
   <picture>
@@ -44,16 +29,36 @@
   </picture>
 </a>
 
-### 如何参与前端开发
+## 部署
 
-网站基于 Vue3 + TypeScript + Vite + [Naive ui](https://www.naiveui.com/zh-CN)开发，你可以按照下述步骤初始化开发环境。
+> [!WARNING]
+> 注意：本项目并不是为了个人部署设计的，不保证所有功能可用和前向兼容
 
-```shell
-git clone git@github.com:FishHawk/auto-novel.git
-cd web
-pnpm install --frozen-lockfile  # 安装依赖
-pnpm run prepare # 设置Git钩子
-pnpm run dev  # 启动开发服务器
+### Docker
+
+```bash
+> git clone https://github.com/FishHawk/auto-novel.git
+> cd auto-novel
 ```
 
-开发服务器将实时反映代码的变化。注意，开发服务器直接与网站后端通信，请避免在开发过程中污染网站数据库。出于安全考虑，章节翻译的上传请求将被拦截。
+创建并编辑 `.env` 文件，内容如下:
+
+```bash
+DATA_PATH=./data                      # 数据的存储位置
+HTTPS_PROXY=https://127.0.0.1:1234    # web 小说代理，可以为空
+PIXIV_COOKIE_PHPSESSID=               # Pixiv cookies，不使用 Pixiv 可以不填
+```
+
+打开 `docker-compose.yml` 文件，酌情修改。
+
+运行 `docker compose up [-d]` (`-d` 为后台运行)。
+
+访问 `http://localhost` 即可。
+
+### NixOS
+
+NixOS 可以使用第三方的 [`flake.nix`](https://gist.github.com/kurikomoe/9dd60f9613e0b8f75c137779d223da4f)。由于用了 `devenv`，可能需要 `--impure` 启动。
+
+```envrc
+use flake . --impure
+```
