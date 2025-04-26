@@ -165,7 +165,7 @@ const onTocItemClick = (item: ReadableTocItem) => {
         :sort-reverse="sortReverse"
         :mode="{
           narrow: !isWideScreen,
-          catalog: true,
+          modal: true,
           collapse: false,
         }"
         @item-click="onTocItemClick"
@@ -182,7 +182,7 @@ const onTocItemClick = (item: ReadableTocItem) => {
         :sort-reverse="sortReverse"
         :mode="{
           narrow: !isWideScreen,
-          catalog: true,
+          modal: true,
           collapse: false,
         }"
         @item-click="onTocItemClick"

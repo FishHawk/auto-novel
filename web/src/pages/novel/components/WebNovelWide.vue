@@ -100,7 +100,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
           :sort-reverse="sortReverse"
           :mode="{
             narrow: false,
-            catalog: false,
+            modal: false,
             collapse: false,
           }"
         />
