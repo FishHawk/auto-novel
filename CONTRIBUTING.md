@@ -32,9 +32,9 @@ pnpm dev --host # 启动开发服务器，暴露到局域网，可以使用手�
 
 ## 如何参与后端开发
 
-后端基于 Kotlin + Ktor 开发，推荐使用 IntelliJ IDEA 打开项目。
+后端基于 JVM17 + Kotlin + Ktor 开发，推荐使用 IntelliJ IDEA 打开项目。
 
-如果你的修改涉及数据库，你需要自己部署数据库并设置环境变量：
+如果你的修改涉及数据库，你需要自己[部署数据库](https://github.com/FishHawk/auto-novel/blob/main/README.md#部署)并设置环境变量：
 
 ```bash
 DB_HOST_TEST=1127.0.0.1 # 数据库 IP 地址

@@ -34,7 +34,7 @@
 > [!WARNING]
 > 注意：本项目并不是为了个人部署设计的，不保证所有功能可用和前向兼容
 
-### Docker
+下载项目：
 
 ```bash
 > git clone https://github.com/FishHawk/auto-novel.git
@@ -54,11 +54,3 @@ PIXIV_COOKIE_PHPSESSID=               # Pixiv cookies，不使用 Pixiv 可以�
 运行 `docker compose up [-d]` (`-d` 为后台运行)。
 
 访问 `http://localhost` 即可。
-
-### NixOS
-
-NixOS 可以使用第三方的 [`flake.nix`](https://gist.github.com/kurikomoe/9dd60f9613e0b8f75c137779d223da4f)。由于用了 `devenv`，可能需要 `--impure` 启动。
-
-```envrc
-use flake . --impure
-```
