@@ -32,7 +32,7 @@
 ## 部署
 
 > [!WARNING]
-> 注意：本项目并不是为了个人部署设计的，不保证所有功能可用和前向兼容
+> 注意：本项目并不是为了个人部署设计的，不保证所有功能可用和前向兼容。
 
 下载项目：
 
@@ -45,7 +45,7 @@
 
 ```bash
 DATA_PATH=./data                      # 数据的存储位置
-HTTPS_PROXY=https://127.0.0.1:1234    # web 小说代理，可以为空
+HTTPS_PROXY=https://127.0.0.1:7890    # web 小说代理，可以为空
 PIXIV_COOKIE_PHPSESSID=               # Pixiv cookies，不使用 Pixiv 可以不填
 ```
 
