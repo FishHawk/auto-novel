@@ -78,10 +78,14 @@ const textUnderlineOffset = computed(() => {
         <n-tag v-if="p.source" size="small" class="secondary">
           {{ p.source }}
         </n-tag>
-        <span class="leading-space" v-if="!setting.trimLeadingSpaces">
-          {{ p.leadingSpace }}
+        <span
+          class="text-content"
+          :style="{
+            marginLeft: setting.trimLeadingSpaces ? '0' : p.marginLeft,
+          }"
+        >
+          {{ p.text }}
         </span>
-        <span class="text-content">{{ p.text }}</span>
       </n-p>
       <br v-else-if="!p" />
       <img
@@ -107,6 +111,7 @@ const textUnderlineOffset = computed(() => {
   opacity: v-bind('setting.mixZhOpacity');
 }
 #chapter-content p .text-content {
+  display: inline-block;
   text-decoration-line: v-bind(
     "setting.textUnderline === 'none' ? 'none' : 'underline'"
   );

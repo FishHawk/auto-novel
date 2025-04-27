@@ -206,7 +206,7 @@ export namespace ReaderSetting {
         };
       }
     }
-    // 2024-07-16
+    // 2025-04-27
     if (setting.textUnderline === undefined) {
       setting.textUnderline = 'none';
     }

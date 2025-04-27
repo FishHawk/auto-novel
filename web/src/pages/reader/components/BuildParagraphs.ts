@@ -4,9 +4,24 @@ import { TranslatorId } from '@/model/Translator';
 
 import { ReaderChapter } from '../ReaderStore';
 
+const calculateMarginLeft = (spaces: string): string => {
+  let width = 0;
+  // assume all spaces are of the same type
+  if (spaces.length > 0) {
+    if (spaces[0] === '\u3000') {
+      width = spaces.length;
+    } else if (spaces[0] === ' ') {
+      width = spaces.length * 0.5;
+    } else {
+      width = spaces.length * 0.5;
+    }
+  }
+  return `${width}em`;
+};
+
 export type ReaderParagraph =
   | {
-      leadingSpace?: string;
+      marginLeft?: string;
       text: string;
       source?: string;
       secondary: boolean;
@@ -126,12 +141,20 @@ export const buildParagraphs = (
     } else {
       for (const style of styles) {
         let paragraphText = style.paragraphs[i];
-        const firstCharIndex = paragraphText.search(/\S|$/);
-        const leadingSpace = paragraphText.slice(0, firstCharIndex);
-        const text = paragraphText.slice(firstCharIndex);
+        let marginLeft: string | undefined = undefined;
+        let text = paragraphText;
+
+        if (!setting.trimLeadingSpaces) {
+          const firstCharIndex = paragraphText.search(/\S|$/);
+          const leadingSpace = paragraphText.slice(0, firstCharIndex);
+          text = paragraphText.slice(firstCharIndex);
+          marginLeft = calculateMarginLeft(leadingSpace);
+        } else {
+          text = paragraphText.trimStart();
+        }
 
         merged.push({
-          leadingSpace,
+          marginLeft,
           text,
           source:
             setting.enableSourceLabel === true
