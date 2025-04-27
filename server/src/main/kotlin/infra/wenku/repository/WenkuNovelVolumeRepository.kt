@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 import org.jsoup.nodes.Element
-import util.MachineTranslationSignature
+import util.Signature as Sig
 import util.epub.Epub
 import util.serialName
 import java.security.MessageDigest
@@ -117,7 +117,7 @@ class WenkuNovelVolumeRepository(
                         bf.appendLine("// 该分段翻译缺失。")
                     } else {
                         // 添加机翻标识, Issue #134
-                        bf.appendLine("※ ${MachineTranslationSignature()}")
+                        bf.appendLine("※ ${Sig.text()}")
                         bf.appendLine("")
 
                         val jpLines = volume.getChapter(chapterId)!!
@@ -140,6 +140,22 @@ class WenkuNovelVolumeRepository(
             val jpPath = volume.volumesDir / volumeId
 
             val chapters = volume.listChapter()
+
+            val contentOpfDoc = Epub.readContentOpf(jpPath)
+            // 通过 content.opf 查找第一个文件
+            val firstFile = contentOpfDoc
+                ?.selectFirst("manifest")
+                ?.selectFirst("item[href\$=html], item[href\$=xhtml]")
+                ?.attr("href")
+                ?: ""
+            val navFile = contentOpfDoc
+                ?.selectFirst("item[properties=nav]")
+                ?.attr("href")
+                ?: "nav file not found"
+            // TODO(kuriko): 对于 EPUB v3 标准，nav 是必须的 (v2 使用 nav.ncx)
+            //  因此这里可以添加一个检测，是否存在 nav 缺失。
+            //  不过目前似乎没有遇到过有 epub 存在这种问题。
+
             Epub.modify(srcPath = jpPath, dstPath = zhPath) { name, bytesIn ->
                 var bytesOut = bytesIn
 
@@ -170,49 +186,14 @@ class WenkuNovelVolumeRepository(
                         doc.outputSettings().prettyPrint(true)
                         doc.html().toByteArray()
                     }
+                } else if (name.contains(navFile)) {
+                    bytesOut = Epub.addSigToNav(bytesOut)
+                    bytesOut
                 } else if (name.endsWith("opf")) {
-                    val doc = Jsoup.parse(bytesOut.decodeToString(), Parser.xmlParser())
-
-                    // 防止部分阅读器使用竖排
-                    doc
-                        .selectFirst("spine")
-                        ?.removeAttr("page-progression-direction")
-
-                    // 修改 EPUB 语言为简体中文（让 iOS iBook 阅读器可以使用中文字体）
-                    // Fix Issue #58
-                    doc
-                        .selectFirst("metadata")
-                        ?.apply {
-                            selectFirst("dc|language")
-                            ?.text("zh-CN")
-                            ?: appendChild(Element("dc:language").text("zh-CN"))
-                        }
-
-                    // 添加机翻标识, Issue #134
-                    doc
-                        .selectFirst("metadata")
-                        ?.appendChild(
-                            Element("dc:description")
-                                .text(MachineTranslationSignature()
-                            )
-                        )
-
-                    // fix: 竖排转横排文本后，翻页方向问题。 Issue #107
-                    //     <meta name="primary-writing-mode" content="vertical-rl"/>
-                    //     <meta name="primary-writing-mode" content="horizontal-lr"/>
-                    doc
-                        .selectFirst("metadata")
-                        ?.apply {
-                            val metaNode = Element("meta")
-                                .attr("name", "primary-writing-mode")
-                                .attr("content", "horizontal-lr")
-                            selectFirst("meta[name=primary-writing-mode]")
-                                ?.replaceWith(metaNode)
-                                ?: appendChild(metaNode)
-                        }
-
-                    doc.outputSettings().prettyPrint(true)
-                    doc.html().toByteArray()
+                    bytesOut = Epub.fixInvalidOpf(bytesOut)
+                    bytesOut
+                } else if (name.endsWith("ncx")) { // toc.ncx file
+                    Epub.addSigToNcx(bytesOut, firstFile)
                 } else if (name.endsWith("css")) {
                     "".toByteArray()
                 } else {
