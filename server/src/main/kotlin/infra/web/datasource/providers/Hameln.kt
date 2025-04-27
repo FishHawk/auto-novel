@@ -86,6 +86,9 @@ class Hameln(
 
         val attentions = mutableSetOf<WebNovelAttention>()
         val keywords = mutableListOf<String>()
+        row("原作").select("a").map { it.text() }.forEach {
+            keywords.add(it)
+        }
         listOf("タグ", "必須タグ")
             .flatMap { row(it).select("a") }
             .map { it.text() }
