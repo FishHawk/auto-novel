@@ -59,8 +59,7 @@ const fontColor = computed(() => {
 
 const textUnderlineOffset = computed(() => {
   const fontSize = setting.value.fontSize;
-  console.log('fontSize', fontSize);
-  const offset = Math.max(Math.floor(fontSize / 4), 5);
+  const offset = Math.round(fontSize / 4);
   return `${offset}px`;
 });
 </script>
@@ -112,7 +111,10 @@ const textUnderlineOffset = computed(() => {
     "setting.textUnderline === 'none' ? 'none' : 'underline'"
   );
   text-decoration-style: v-bind('setting.textUnderline');
-  text-decoration-thickness: 1px;
+  text-decoration-thickness: v-bind(
+    "setting.textUnderline === 'dotted' ? '2px' : '1px'"
+  );
+  text-decoration-color: #999999;
   text-underline-offset: v-bind('textUnderlineOffset');
 }
 #chapter-content .secondary {
