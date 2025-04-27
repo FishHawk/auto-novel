@@ -81,7 +81,7 @@ const textUnderlineOffset = computed(() => {
         <span
           class="text-content"
           :style="{
-            marginLeft: setting.trimLeadingSpaces ? '0' : p.marginLeft,
+            textIndent: setting.trimLeadingSpaces ? '0' : p.indent,
           }"
         >
           {{ p.text }}
@@ -109,6 +109,10 @@ const textUnderlineOffset = computed(() => {
   margin: v-bind('`${setting.fontSize * setting.lineSpace}px 0`');
   color: v-bind('fontColor');
   opacity: v-bind('setting.mixZhOpacity');
+}
+#chapter-content p .n-tag {
+  vertical-align: top;
+  margin-right: 4px;
 }
 #chapter-content p .text-content {
   display: inline-block;

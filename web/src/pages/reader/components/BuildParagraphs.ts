@@ -4,7 +4,7 @@ import { TranslatorId } from '@/model/Translator';
 
 import { ReaderChapter } from '../ReaderStore';
 
-const calculateMarginLeft = (spaces: string): string => {
+const calculateIndent = (spaces: string): string => {
   let width = 0;
   // assume all spaces are of the same type
   if (spaces.length > 0) {
@@ -21,7 +21,7 @@ const calculateMarginLeft = (spaces: string): string => {
 
 export type ReaderParagraph =
   | {
-      marginLeft?: string;
+      indent?: string;
       text: string;
       source?: string;
       secondary: boolean;
@@ -141,20 +141,20 @@ export const buildParagraphs = (
     } else {
       for (const style of styles) {
         let paragraphText = style.paragraphs[i];
-        let marginLeft: string | undefined = undefined;
+        let indent: string | undefined = undefined;
         let text = paragraphText;
 
         if (!setting.trimLeadingSpaces) {
           const firstCharIndex = paragraphText.search(/\S|$/);
           const leadingSpace = paragraphText.slice(0, firstCharIndex);
           text = paragraphText.slice(firstCharIndex);
-          marginLeft = calculateMarginLeft(leadingSpace);
+          indent = calculateIndent(leadingSpace);
         } else {
           text = paragraphText.trimStart();
         }
 
         merged.push({
-          marginLeft,
+          indent,
           text,
           source:
             setting.enableSourceLabel === true
