@@ -5,7 +5,7 @@ import infra.web.WebNovel
 import infra.web.WebNovelTocItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import util.MachineTranslationSignature
+import util.Signature as Sig;
 import java.io.BufferedWriter
 import java.nio.file.Path
 import kotlin.io.path.bufferedWriter
@@ -75,7 +75,7 @@ private class TxtWriter(
     }
 
     private fun BufferedWriter.writeMachineTranslationSig() {
-        if (zh) write("※ ${MachineTranslationSignature()}\n")
+        if (zh) write("※ ${Sig.text()}\n")
     }
 
     fun BufferedWriter.writeNovel(
