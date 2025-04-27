@@ -14,7 +14,7 @@ const setCustomFontColor = (color: string) =>
 </script>
 
 <template>
-  <c-modal content-style="padding: 0;">
+  <c-modal content-style="padding: 0;" :max-height-percentage="80">
     <n-tabs
       type="line"
       size="large"
