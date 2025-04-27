@@ -6,6 +6,7 @@ import { ReaderChapter } from '../ReaderStore';
 
 export type ReaderParagraph =
   | {
+      leadingSpace?: string;
       text: string;
       source?: string;
       secondary: boolean;
@@ -117,17 +118,20 @@ export const buildParagraphs = (
   }
 
   for (let i = 0; i < chapter.paragraphs.length; i++) {
-    if (chapter.paragraphs[i].trim().length === 0) {
+    const curParagraph = chapter.paragraphs[i];
+    if (curParagraph.trim().length === 0) {
       merged.push(undefined);
-    } else if (chapter.paragraphs[i].startsWith('<图片>')) {
-      merged.push({ imageUrl: chapter.paragraphs[i].slice(4) });
+    } else if (curParagraph.startsWith('<图片>')) {
+      merged.push({ imageUrl: curParagraph.slice(4) });
     } else {
       for (const style of styles) {
-        let text = style.paragraphs[i];
-        if (setting.trimLeadingSpaces) {
-          text = text.trimStart();
-        }
+        let paragraphText = style.paragraphs[i];
+        const firstCharIndex = paragraphText.search(/\S|$/);
+        const leadingSpace = paragraphText.slice(0, firstCharIndex);
+        const text = paragraphText.slice(firstCharIndex);
+
         merged.push({
+          leadingSpace,
           text,
           source:
             setting.enableSourceLabel === true

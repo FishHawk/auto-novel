@@ -56,6 +56,13 @@ const fontColor = computed(() => {
     return specificTheme === 'light' ? 'black' : 'white';
   }
 });
+
+const textUnderlineOffset = computed(() => {
+  const fontSize = setting.value.fontSize;
+  console.log('fontSize', fontSize);
+  const offset = Math.max(Math.floor(fontSize / 4), 5);
+  return `${offset}px`;
+});
 </script>
 
 <template>
@@ -72,7 +79,10 @@ const fontColor = computed(() => {
         <n-tag v-if="p.source" size="small" class="secondary">
           {{ p.source }}
         </n-tag>
-        {{ p.text }}
+        <span class="leading-space" v-if="!setting.trimLeadingSpaces">
+          {{ p.leadingSpace }}
+        </span>
+        <span class="text-content">{{ p.text }}</span>
       </n-p>
       <br v-else-if="!p" />
       <img
@@ -96,6 +106,14 @@ const fontColor = computed(() => {
   margin: v-bind('`${setting.fontSize * setting.lineSpace}px 0`');
   color: v-bind('fontColor');
   opacity: v-bind('setting.mixZhOpacity');
+}
+#chapter-content p .text-content {
+  text-decoration-line: v-bind(
+    "setting.textUnderline === 'none' ? 'none' : 'underline'"
+  );
+  text-decoration-style: v-bind('setting.textUnderline');
+  text-decoration-thickness: 1px;
+  text-underline-offset: v-bind('textUnderlineOffset');
 }
 #chapter-content .secondary {
   opacity: v-bind('setting.mixJpOpacity');

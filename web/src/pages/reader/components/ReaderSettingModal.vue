@@ -125,6 +125,13 @@ const setCustomFontColor = (color: string) =>
             <n-text style="width: 6em">{{ setting.pageWidth }}px</n-text>
           </c-action-wrapper>
 
+          <c-action-wrapper title="下划线">
+            <c-radio-group
+              v-model:value="setting.textUnderline"
+              :options="ReaderSetting.textUnderlineOptions"
+            />
+          </c-action-wrapper>
+
           <c-action-wrapper title="主题">
             <n-flex size="large" vertical>
               <c-radio-group

@@ -151,6 +151,7 @@ export interface ReaderSetting {
   };
   mixJpOpacity: number;
   mixZhOpacity: number;
+  textUnderline: 'none' | 'solid' | 'dashed' | 'dotted';
 }
 
 export namespace ReaderSetting {
@@ -175,6 +176,7 @@ export namespace ReaderSetting {
     },
     mixJpOpacity: 0.4,
     mixZhOpacity: 0.75,
+    textUnderline: 'none',
   };
 
   export const migrate = (setting: ReaderSetting) => {
@@ -204,6 +206,10 @@ export namespace ReaderSetting {
         };
       }
     }
+    // 2024-07-16
+    if (setting.textUnderline === undefined) {
+      setting.textUnderline = 'none';
+    }
   };
 
   export const modeOptions = [
@@ -232,6 +238,13 @@ export namespace ReaderSetting {
   export const fontWeightOptions = [
     { label: '正常', value: 400 },
     { label: '加粗', value: 600 },
+  ];
+
+  export const textUnderlineOptions = [
+    { label: '关闭', value: 'none' },
+    { label: '实线', value: 'solid' },
+    { label: '虚线', value: 'dashed' },
+    { label: '点状', value: 'dotted' },
   ];
 
   export const themeModeOptions = [
