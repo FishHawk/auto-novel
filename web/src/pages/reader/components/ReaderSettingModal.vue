@@ -14,7 +14,7 @@ const setCustomFontColor = (color: string) =>
 </script>
 
 <template>
-  <c-modal content-style="padding: 0;">
+  <c-modal content-style="padding: 0;" :max-height-percentage="80">
     <n-tabs
       type="line"
       size="large"
@@ -123,6 +123,13 @@ const setCustomFontColor = (color: string) =>
               :format-tooltip="(value: number) => `${value}px`"
             />
             <n-text style="width: 6em">{{ setting.pageWidth }}px</n-text>
+          </c-action-wrapper>
+
+          <c-action-wrapper title="下划线">
+            <c-radio-group
+              v-model:value="setting.textUnderline"
+              :options="ReaderSetting.textUnderlineOptions"
+            />
           </c-action-wrapper>
 
           <c-action-wrapper title="主题">

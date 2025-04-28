@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useWindowSize } from '@vueuse/core';
 
-defineProps<{ extraHeight?: number }>();
+defineProps<{ maxHeightPercentage?: number; extraHeight?: number }>();
 
 const { height } = useWindowSize();
 </script>
@@ -24,7 +24,9 @@ const { height } = useWindowSize();
 
     <n-scrollbar
       trigger="none"
-      :style="{ 'max-height': `${0.6 * height - (extraHeight ?? 0)}px` }"
+      :style="{
+        'max-height': `${((maxHeightPercentage ?? 60) / 100) * height - (extraHeight ?? 0)}px`,
+      }"
     >
       <div style="padding-right: 16px">
         <slot />

@@ -6,6 +6,7 @@ import { ReaderChapter } from '../ReaderStore';
 
 export type ReaderParagraph =
   | {
+      indent: string;
       text: string;
       source?: string;
       secondary: boolean;
@@ -36,6 +37,7 @@ export const buildParagraphs = (
   if (setting.mode === 'jp') {
     styles.push({
       paragraphs: chapter.paragraphs,
+      source: 'J',
       secondary: false,
       needSpeak: needSpeakJp,
     });
@@ -43,6 +45,7 @@ export const buildParagraphs = (
     if (setting.mode === 'jp-zh') {
       styles.push({
         paragraphs: chapter.paragraphs,
+        source: 'J',
         secondary: true,
         needSpeak: needSpeakJp,
       });
@@ -69,13 +72,14 @@ export const buildParagraphs = (
           hasAnyTranslation = true;
           styles.push({
             paragraphs: paragraphs.map((it) => cc.toView(it)),
-            source: t,
+            source: t[0].toUpperCase(),
             secondary: false,
             needSpeak: needSpeakZh,
           });
           break;
         } else {
           merged.push({
+            indent: '',
             text: label + '翻译不存在',
             secondary: true,
             needSpeak: true,
@@ -92,12 +96,13 @@ export const buildParagraphs = (
         if (paragraphs) {
           styles.push({
             paragraphs: paragraphs.map((it) => cc.toView(it)),
-            source: t,
+            source: t[0].toUpperCase(),
             secondary: false,
             needSpeak: needSpeakZh && i === 0,
           });
         } else {
           merged.push({
+            indent: '',
             text: label + '翻译不存在',
             secondary: true,
             needSpeak: true,
@@ -110,6 +115,7 @@ export const buildParagraphs = (
     if (setting.mode === 'zh-jp') {
       styles.push({
         paragraphs: chapter.paragraphs,
+        source: 'J',
         secondary: true,
         needSpeak: needSpeakJp,
       });
@@ -117,22 +123,27 @@ export const buildParagraphs = (
   }
 
   for (let i = 0; i < chapter.paragraphs.length; i++) {
-    if (chapter.paragraphs[i].trim().length === 0) {
+    const curParagraph = chapter.paragraphs[i];
+    if (curParagraph.trim().length === 0) {
       merged.push(undefined);
-    } else if (chapter.paragraphs[i].startsWith('<图片>')) {
-      merged.push({ imageUrl: chapter.paragraphs[i].slice(4) });
+    } else if (curParagraph.startsWith('<图片>')) {
+      merged.push({ imageUrl: curParagraph.slice(4) });
     } else {
+      let indentLongest: string = '';
       for (const style of styles) {
-        let text = style.paragraphs[i];
-        if (setting.trimLeadingSpaces) {
-          text = text.trimStart();
-        }
+        const paragraphText = style.paragraphs[i];
+        const firstCharIndex = paragraphText.search(/\S|$/);
+        const indent = paragraphText.slice(0, firstCharIndex);
+        if (indent) indentLongest = indent;
+      }
+
+      for (const style of styles) {
+        const paragraphText = style.paragraphs[i];
+        const text = paragraphText.trimStart();
         merged.push({
+          indent: indentLongest,
           text,
-          source:
-            setting.enableSourceLabel === true
-              ? style.source?.slice(0, 1).toUpperCase()
-              : undefined,
+          source: style.source,
           secondary: style.secondary,
           needSpeak: style.needSpeak,
         });
