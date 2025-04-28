@@ -4,24 +4,9 @@ import { TranslatorId } from '@/model/Translator';
 
 import { ReaderChapter } from '../ReaderStore';
 
-const calculateIndent = (spaces: string): string => {
-  let width = 0;
-  // assume all spaces are of the same type
-  if (spaces.length > 0) {
-    if (spaces[0] === '\u3000') {
-      width = spaces.length;
-    } else if (spaces[0] === ' ') {
-      width = spaces.length * 0.5;
-    } else {
-      width = spaces.length * 0.5;
-    }
-  }
-  return `${width}em`;
-};
-
 export type ReaderParagraph =
   | {
-      indent?: string;
+      indent: string;
       text: string;
       source?: string;
       secondary: boolean;
@@ -52,6 +37,7 @@ export const buildParagraphs = (
   if (setting.mode === 'jp') {
     styles.push({
       paragraphs: chapter.paragraphs,
+      source: 'J',
       secondary: false,
       needSpeak: needSpeakJp,
     });
@@ -59,6 +45,7 @@ export const buildParagraphs = (
     if (setting.mode === 'jp-zh') {
       styles.push({
         paragraphs: chapter.paragraphs,
+        source: 'J',
         secondary: true,
         needSpeak: needSpeakJp,
       });
@@ -85,13 +72,14 @@ export const buildParagraphs = (
           hasAnyTranslation = true;
           styles.push({
             paragraphs: paragraphs.map((it) => cc.toView(it)),
-            source: t,
+            source: t[0].toUpperCase(),
             secondary: false,
             needSpeak: needSpeakZh,
           });
           break;
         } else {
           merged.push({
+            indent: '',
             text: label + '翻译不存在',
             secondary: true,
             needSpeak: true,
@@ -108,12 +96,13 @@ export const buildParagraphs = (
         if (paragraphs) {
           styles.push({
             paragraphs: paragraphs.map((it) => cc.toView(it)),
-            source: t,
+            source: t[0].toUpperCase(),
             secondary: false,
             needSpeak: needSpeakZh && i === 0,
           });
         } else {
           merged.push({
+            indent: '',
             text: label + '翻译不存在',
             secondary: true,
             needSpeak: true,
@@ -126,6 +115,7 @@ export const buildParagraphs = (
     if (setting.mode === 'zh-jp') {
       styles.push({
         paragraphs: chapter.paragraphs,
+        source: 'J',
         secondary: true,
         needSpeak: needSpeakJp,
       });
@@ -139,27 +129,21 @@ export const buildParagraphs = (
     } else if (curParagraph.startsWith('<图片>')) {
       merged.push({ imageUrl: curParagraph.slice(4) });
     } else {
+      let indentLongest: string = '';
       for (const style of styles) {
-        let paragraphText = style.paragraphs[i];
-        let indent: string | undefined = undefined;
-        let text = paragraphText;
+        const paragraphText = style.paragraphs[i];
+        const firstCharIndex = paragraphText.search(/\S|$/);
+        const indent = paragraphText.slice(0, firstCharIndex);
+        if (indent) indentLongest = indent;
+      }
 
-        if (!setting.trimLeadingSpaces) {
-          const firstCharIndex = paragraphText.search(/\S|$/);
-          const leadingSpace = paragraphText.slice(0, firstCharIndex);
-          text = paragraphText.slice(firstCharIndex);
-          indent = calculateIndent(leadingSpace);
-        } else {
-          text = paragraphText.trimStart();
-        }
-
+      for (const style of styles) {
+        const paragraphText = style.paragraphs[i];
+        const text = paragraphText.trimStart();
         merged.push({
-          indent,
+          indent: indentLongest,
           text,
-          source:
-            setting.enableSourceLabel === true
-              ? style.source?.slice(0, 1).toUpperCase()
-              : undefined,
+          source: style.source,
           secondary: style.secondary,
           needSpeak: style.needSpeak,
         });

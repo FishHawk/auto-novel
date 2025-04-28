@@ -206,10 +206,6 @@ export namespace ReaderSetting {
         };
       }
     }
-    // 2025-04-27
-    if (setting.textUnderline === undefined) {
-      setting.textUnderline = 'none';
-    }
   };
 
   export const modeOptions = [

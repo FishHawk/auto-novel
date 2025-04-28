@@ -70,20 +70,14 @@ const textUnderlineOffset = computed(() => {
       v-for="(p, index) of paragraphs"
       :key="`${chapter.prevId}/${index}`"
     >
-      <n-p
-        v-if="p && 'text' in p"
-        :class="{ secondary: p.secondary }"
-        :aria-hidden="!p.needSpeak"
-      >
-        <n-tag v-if="p.source" size="small" class="secondary">
+      <n-p v-if="p && 'text' in p" :aria-hidden="!p.needSpeak">
+        <span v-if="setting.enableSourceLabel && p.source" class="source">
           {{ p.source }}
-        </n-tag>
-        <span
-          class="text-content"
-          :style="{
-            marginLeft: setting.trimLeadingSpaces ? '0' : p.indent,
-          }"
-        >
+        </span>
+        <span v-if="!setting.trimLeadingSpaces">
+          {{ p.indent }}
+        </span>
+        <span :class="[p.secondary ? 'second' : 'first', 'text-content']">
           {{ p.text }}
         </span>
       </n-p>
@@ -108,10 +102,21 @@ const textUnderlineOffset = computed(() => {
   font-size: v-bind('`${setting.fontSize}px`');
   margin: v-bind('`${setting.fontSize * setting.lineSpace}px 0`');
   color: v-bind('fontColor');
+}
+#chapter-content p .source {
+  display: inline-block;
+  user-select: none;
+  width: 1em;
+  text-align: center;
+  opacity: 0.4;
+  font-size: 0.75em;
+  margin-right: 0.5em;
+}
+#chapter-content p .first {
   opacity: v-bind('setting.mixZhOpacity');
 }
-#chapter-content .n-tag {
-  margin-right: 0.25rem;
+#chapter-content p .second {
+  opacity: v-bind('setting.mixJpOpacity');
 }
 #chapter-content p .text-content {
   text-decoration-line: v-bind(
@@ -121,10 +126,6 @@ const textUnderlineOffset = computed(() => {
   text-decoration-thickness: v-bind(
     "setting.textUnderline === 'dotted' ? '2px' : '1px'"
   );
-  text-decoration-color: #999999;
   text-underline-offset: v-bind('textUnderlineOffset');
-}
-#chapter-content .secondary {
-  opacity: v-bind('setting.mixJpOpacity');
 }
 </style>
