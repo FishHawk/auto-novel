@@ -190,3 +190,9 @@ export namespace Humanize {
   export const bytes = (rawNum: number) =>
     unit(rawNum, ['B', 'KB', 'MB', 'GB', 'TB', 'PB'], 1024);
 }
+
+export namespace VueUtil {
+  export function buildKey(idx: number, key: string): string {
+    return `${idx}-${key}`;
+  }
+}

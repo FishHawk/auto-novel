@@ -12,7 +12,7 @@ defineProps<{ listResult?: Result<WenkuNovelOutlineDto[]> }>();
     v-slot="{ value: list }"
   >
     <n-grid :x-gap="12" :y-gap="12" cols="3 600:6">
-      <n-grid-item v-for="item in list">
+      <n-grid-item v-for="item in list" :key="item.id">
         <router-link :to="`/wenku/${item.id}`">
           <ImageCard
             :src="item.cover"
