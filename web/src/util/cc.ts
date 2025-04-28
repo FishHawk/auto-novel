@@ -15,6 +15,7 @@ export namespace CCUtil {
     if (locale === 'zh-cn') {
       return defaultConverter;
     } else if (locale === 'zh-tw') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const opencc: any = await import('opencc-js');
       const ccLocale = opencc.Locale;
       const customDict = [

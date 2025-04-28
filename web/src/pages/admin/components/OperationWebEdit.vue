@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { OperationWebEdit } from '@/model/Operation';
+import { VueUtil } from '@/util';
 
 defineProps<{ op: OperationWebEdit }>();
 </script>
@@ -19,5 +20,9 @@ defineProps<{ op: OperationWebEdit }>();
     :zh-new="op.new.introductionZh"
   />
 
-  <TextDiff v-for="(toc, idx) of op.toc" :zh-old="toc.old" :zh-new="toc.new" />
+  <TextDiff
+    v-for="(toc, idx) of op.toc" :key="VueUtil.buildKey(idx, toc.jp)"
+    :zh-old="toc.old"
+    :zh-new="toc.new"
+  />
 </template>

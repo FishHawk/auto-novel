@@ -86,6 +86,7 @@ export namespace Setting {
     } else if ((setting.downloadFormat.mode as string) === 'jp') {
       setting.downloadFormat.mode = 'zh';
     }
+
     // 2024-03-05
     if (setting.workspaceSound === undefined) {
       setting.workspaceSound = false;
@@ -185,9 +186,9 @@ export namespace ReaderSetting {
         (setting.fontSize as string).replace(/[^0-9]/g, ''),
       );
     }
-    if ((setting.mode as unknown) === 'mix') {
+    if ((setting.mode as string) === 'mix') {
       setting.mode = 'zh-jp';
-    } else if ((setting.mode as unknown) === 'mix-reverse') {
+    } else if ((setting.mode as string) === 'mix-reverse') {
       setting.mode = 'jp-zh';
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -2,6 +2,7 @@
 import { Locator } from '@/data';
 import { ReaderSetting } from '@/data/setting/Setting';
 import { checkIsMobile, useIsWideScreen } from '@/pages/util';
+import { VueUtil } from '@/util';
 
 const isMobile = checkIsMobile();
 const isWideScreen = useIsWideScreen(600);
@@ -141,7 +142,10 @@ const setCustomFontColor = (color: string) =>
               <template v-if="setting.theme.mode === 'custom'">
                 <n-flex>
                   <n-radio
-                    v-for="theme of ReaderSetting.themeOptions"
+                    v-for="(theme, idx) of ReaderSetting.themeOptions"
+                    :key="
+                      VueUtil.buildKey(idx, theme.bodyColor + theme.fontColor)
+                    "
                     :checked="theme.bodyColor == setting.theme.bodyColor"
                     @update:checked="
                       setting.theme = { mode: 'custom', ...theme }

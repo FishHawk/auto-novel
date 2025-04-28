@@ -100,7 +100,7 @@ const showInput = ref(false);
     :show-empty="(it: Page<Comment1>) => it.items.length === 0 && !locked"
     v-slot="{ value }"
   >
-    <template v-for="comment in value.items">
+    <template v-for="comment in value.items" :key="comment.id">
       <CommentThread
         :site="site"
         :comment="comment"

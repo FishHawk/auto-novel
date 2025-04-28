@@ -37,7 +37,7 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   async init() {
-    this.model = await this.detectModel();
+    this.model = (await this.detectModel()) as typeof this.model;
     const id = this.model?.id;
     if (id !== undefined) {
       if (id.includes('0.8')) this.version = '0.8';
@@ -287,7 +287,7 @@ export namespace SakuraTranslator {
     fingerprint,
   });
 
-  export type ModelMeta = Record<string, any>;
+  export type ModelMeta = Record<string, unknown>;
   export const allowModels: {
     [key: string]: { repo: string; meta: ModelMeta };
   } = {

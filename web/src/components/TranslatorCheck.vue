@@ -42,6 +42,7 @@ const calculateTranslatorOrderLabel = (id: TranslatorId) => {
   <n-button-group>
     <n-button
       v-for="option in translationOptions"
+      :key="option.label"
       :focusable="false"
       ghost
       :type="value.includes(option.value) ? 'primary' : 'default'"

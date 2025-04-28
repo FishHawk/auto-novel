@@ -15,7 +15,7 @@ const listArticle = (params: {
 const getArticle = (id: string) => client.get(`article/${id}`).json<Article>();
 const deleteArticle = (id: string) => client.delete(`article/${id}`);
 
-interface ArticleBody {
+export interface ArticleBody {
   title: string;
   content: string;
   category: ArticleCategory;

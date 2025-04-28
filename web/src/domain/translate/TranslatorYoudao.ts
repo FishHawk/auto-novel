@@ -39,6 +39,7 @@ export class YoudaoTranslator implements SegmentTranslator {
     );
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   async translateInner(seg: string[], signal?: AbortSignal): Promise<string[]> {
     let from = 'auto';
     const segText = seg.join('\n');
@@ -70,6 +71,7 @@ export class YoudaoTranslator implements SegmentTranslator {
       }
     }
   }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
 export namespace YoudaoTranslator {

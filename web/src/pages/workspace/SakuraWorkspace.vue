@@ -12,6 +12,7 @@ import { TranslateJob } from '@/model/Translator';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 
 import { doAction } from '@/pages/util';
+import { VueUtil } from '@/util';
 
 const message = useMessage();
 
@@ -118,7 +119,10 @@ const clearCache = async () =>
 
       <n-p>允许上传的模型如下，禁止一切试图突破上传检查的操作。</n-p>
       <n-ul>
-        <n-li v-for="({ repo }, model) in SakuraTranslator.allowModels">
+        <n-li
+          v-for="({ repo }, model, idx) in SakuraTranslator.allowModels"
+          :key="VueUtil.buildKey(idx, model + repo)"
+        >
           [
           <n-a
             target="_blank"
@@ -166,7 +170,7 @@ const clearCache = async () =>
         :animation="150"
         handle=".drag-trigger"
       >
-        <n-list-item v-for="worker of workspaceRef.workers">
+        <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
           <job-worker
             :worker="{ translatorId: 'sakura', ...worker }"
             :get-next-job="getNextJob"

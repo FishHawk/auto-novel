@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import avaterUrl from '@/image/avater.jpg';
+import { VueUtil } from '@/util';
 
 const guides = [
   `
@@ -51,7 +52,7 @@ const guides = [
         </tr>
       </thead>
       <tbody>
-        <tr v-for="guide in guides">
+        <tr v-for="(guide, idx) in guides" :key="VueUtil.buildKey(idx, guide)">
           <td style="white-space: pre-wrap">
             {{ guide.trimStart() }}
           </td>

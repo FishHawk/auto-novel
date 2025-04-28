@@ -3,6 +3,7 @@ import { Locator } from '@/data';
 import { Translator, TranslatorConfig } from '@/domain/translate';
 import { Glossary } from '@/model/Glossary';
 import { GptWorker, SakuraWorker, TranslatorId } from '@/model/Translator';
+import { VueUtil } from '@/util';
 
 const message = useMessage();
 
@@ -216,7 +217,7 @@ const clearSavedTranslation = () => {
 
     <n-empty v-if="savedTranslation.length === 0" description="没有翻译历史" />
     <n-list>
-      <n-list-item v-for="t of savedTranslation">
+      <n-list-item v-for="t of savedTranslation" :key="t.id">
         <n-thing content-indented>
           <template #avatar>
             <n-icon-wrapper
@@ -237,13 +238,19 @@ const clearSavedTranslation = () => {
           <template #description>
             <n-collapse style="margin-top: 16px">
               <n-collapse-item title="日文">
-                <template v-for="line of t.jp.split('\n')">
+                <template
+                  v-for="(line, idx) of t.jp.split('\n')"
+                  :key="VueUtil.buildKey(idx, line)"
+                >
                   {{ line }}
                   <br />
                 </template>
               </n-collapse-item>
               <n-collapse-item title="中文">
-                <template v-for="line of t.zh.split('\n')">
+                <template
+                  v-for="(line, idx) of t.zh.split('\n')"
+                  :key="VueUtil.buildKey(idx, line)"
+                >
                   {{ line }}
                   <br />
                 </template>

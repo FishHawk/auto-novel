@@ -66,6 +66,11 @@ export type TranslateTaskParams = {
   startIndex: number;
   endIndex: number;
 };
+function isTranslateTaskParamsLevel(
+  level: string,
+): level is TranslateTaskParams['level'] {
+  return ['normal', 'expire', 'all', 'sync'].includes(level);
+}
 
 export type TranslateTaskCallback = {
   onStart: (total: number) => void;
@@ -135,7 +140,7 @@ export namespace TranslateTaskDescriptor {
       throw 'quit';
     }
 
-    const query = Object.fromEntries(new URLSearchParams(queryString) as any);
+    const query = Object.fromEntries(new URLSearchParams(queryString));
 
     const queryBoolean = (name: string) => {
       return query[name] === 'true';
@@ -145,6 +150,10 @@ export namespace TranslateTaskDescriptor {
       const num = parseInt(query[name], 10);
       return isNaN(num) ? defaultValue : num;
     };
+
+    if (!isTranslateTaskParamsLevel(query['level'])) {
+      throw `Invalid level type ${query['level']}`;
+    }
 
     const params: TranslateTaskParams = {
       level: query['level'],

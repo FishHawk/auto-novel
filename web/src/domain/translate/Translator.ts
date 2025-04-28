@@ -68,10 +68,10 @@ export class Translator {
       signal?: AbortSignal;
     },
   ): Promise<string[]> {
-    const oldTextZh = context?.oldTextZh;
+    let oldTextZh = context?.oldTextZh;
     if (oldTextZh !== undefined && textJp.length !== oldTextZh.length) {
       // hacky: 旧的文库小说行数存在不匹配，暂时停用行数不一致报错
-      oldTextZh === undefined;
+      oldTextZh = undefined;
       // throw new Error('旧翻译行数不匹配。不应当出现，请反馈给站长。');
     }
 
@@ -139,6 +139,7 @@ export class Translator {
     let cacheKey: string | undefined;
     if (this.segCache) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const extra: any = { glossary };
         if (this.segTranslator instanceof SakuraTranslator) {
           extra.version = this.segTranslator.version;

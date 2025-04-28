@@ -4,6 +4,7 @@ import { createReusableTemplate } from '@vueuse/core';
 
 import { WebNovelOutlineDto } from '@/model/WebNovel';
 import { WebUtil } from '@/util/web';
+import { VueUtil } from '@/util';
 
 const [DefineTag, ReuseTag] = createReusableTemplate<{
   tag: string;
@@ -74,7 +75,7 @@ defineExpose({
   </DefineTag>
 
   <n-list>
-    <n-list-item v-for="item of items">
+    <n-list-item v-for="item of items" :key="item.novelId">
       <n-flex vertical :size="0">
         <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
           <n-text type="warning" v-if="item.favored">
@@ -104,14 +105,16 @@ defineExpose({
 
         <n-text v-if="!simple" depth="3">
           <ReuseTag
-            v-for="attention in item.attentions.sort()"
+            v-for="(attention, idx) in item.attentions.sort()"
+            :key="VueUtil.buildKey(idx, attention)"
             :tag="attention"
-            :isAttention="true"
+            :is-attention="true"
           />
           <ReuseTag
-            v-for="keyword in item.keywords"
+            v-for="(keyword, idx) in item.keywords"
+            :key="VueUtil.buildKey(idx, keyword)"
             :tag="keyword"
-            :isAttention="false"
+            :is-attention="false"
           />
         </n-text>
 
@@ -123,10 +126,13 @@ defineExpose({
 
         <n-text depth="3">
           <template v-if="item.updateAt">
-            本站更新于<n-time :time="item.updateAt * 1000" type="relative" /> /
+            本站更新于
+            <n-time :time="item.updateAt * 1000" type="relative" />
+            /
           </template>
           <template v-if="item.lastReadAt">
-            <n-time :time="item.lastReadAt * 1000" type="relative" />看过 /
+            <n-time :time="item.lastReadAt * 1000" type="relative" />
+            看过 /
           </template>
         </n-text>
       </n-flex>

@@ -9,6 +9,7 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 
 import { useWenkuNovelStore } from './WenkuNovelStore';
 import TranslateOptions from './components/TranslateOptions.vue';
+import { VueUtil } from '@/util';
 
 const { novelId } = defineProps<{ novelId: string }>();
 
@@ -50,7 +51,11 @@ const showWebNovelsModal = ref(false);
         {{ label }}
       </n-tag>
       <n-flex :size="[4, 4]">
-        <router-link v-for="tag of tags" :to="buildSearchLink(tag)">
+        <router-link
+          v-for="(tag, idx) of tags"
+          :key="VueUtil.buildKey(idx, tag)"
+          :to="buildSearchLink(tag)"
+        >
           <novel-tag :tag="tag" />
         </router-link>
       </n-flex>
@@ -150,7 +155,7 @@ const showWebNovelsModal = ref(false);
           :extra-height="100"
         >
           <n-ul>
-            <n-li v-for="webId of metadata.webIds">
+            <n-li v-for="webId of metadata.webIds" :key="webId">
               <c-a :to="`/novel/${webId}`">
                 {{ webId }}
               </c-a>
@@ -164,11 +169,13 @@ const showWebNovelsModal = ref(false);
         最新出版于
         <n-time :time="metadata.latestPublishAt * 1000" type="date" />
       </n-p>
+      <!-- eslint-disable-next-line vue/no-v-html -->
       <n-p v-html="metadata.introduction.replace(/\n/g, '<br />')" />
 
       <n-flex :size="[4, 4]">
         <router-link
-          v-for="keyword of metadata.keywords"
+          v-for="(keyword, idx) of metadata.keywords"
+          :key="VueUtil.buildKey(idx, keyword)"
           :to="`/wenku?query=${keyword}\$`"
         >
           <novel-tag :tag="keyword" />
@@ -180,7 +187,8 @@ const showWebNovelsModal = ref(false);
           <n-image-group show-toolbar-tooltip>
             <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
               <n-image
-                v-for="volume of metadata.volumes"
+                v-for="(volume, idx) of metadata.volumes"
+                :key="VueUtil.buildKey(idx, volume.title)"
                 width="104"
                 :src="volume.cover"
                 :preview-src="volume.coverHires ?? volume.cover"
