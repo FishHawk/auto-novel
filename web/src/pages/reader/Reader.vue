@@ -173,6 +173,9 @@ const showSettingModal = ref(false);
 const showCatalogModal = ref(false);
 
 onKeyDown(['Enter'], (e) => {
+  if (showSettingModal.value) {
+    return;
+  }
   showCatalogModal.value = !showCatalogModal.value;
   e.preventDefault();
 });
