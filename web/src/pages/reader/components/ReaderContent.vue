@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ErrorOutlineOutlined } from '@vicons/material';
 import { useOsTheme } from 'naive-ui';
 import { useScroll } from '@vueuse/core';
 
@@ -42,6 +41,23 @@ onMounted(async () => {
 });
 
 const { setting } = Locator.readerSettingRepository();
+
+const hexToRgba = (hex: string, alpha: number): string => {
+  // const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  // hex = hex.replace(shorthandRegex, (m, r, g, b) => {
+  //   return r + r + g + g + b + b;
+  // });
+
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) {
+    return `rgba(0, 0, 0, ${alpha})`;
+  }
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const fontColor = computed(() => {
   const theme = setting.value.theme;
   if (theme.mode === 'custom') {
@@ -61,6 +77,20 @@ const textUnderlineOffset = computed(() => {
   const fontSize = setting.value.fontSize;
   const offset = Math.round(fontSize / 4);
   return `${offset}px`;
+});
+
+const firstUnderlineColor = computed(() => {
+  return hexToRgba(
+    setting.value.theme.fontColor,
+    setting.value.mixZhOpacity * 0.5,
+  );
+});
+
+const secondUnderlineColor = computed(() => {
+  return hexToRgba(
+    setting.value.theme.fontColor,
+    setting.value.mixJpOpacity * 0.5,
+  );
 });
 </script>
 
@@ -123,9 +153,13 @@ const textUnderlineOffset = computed(() => {
     "setting.textUnderline === 'none' ? 'none' : 'underline'"
   );
   text-decoration-style: v-bind('setting.textUnderline');
-  text-decoration-thickness: v-bind(
-    "setting.textUnderline === 'dotted' ? '2px' : '1px'"
-  );
+  text-decoration-thickness: 1px;
   text-underline-offset: v-bind('textUnderlineOffset');
+}
+#chapter-content p .first {
+  text-decoration-color: v-bind('firstUnderlineColor');
+}
+#chapter-content p .second {
+  text-decoration-color: v-bind('secondUnderlineColor');
 }
 </style>
