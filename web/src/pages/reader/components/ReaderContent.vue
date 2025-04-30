@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ErrorOutlineOutlined } from '@vicons/material';
 import { useOsTheme } from 'naive-ui';
 import { useScroll } from '@vueuse/core';
 
@@ -15,7 +14,6 @@ const props = defineProps<{
   chapter: WebNovelChapterDto;
 }>();
 
-const message = useMessage();
 const osThemeRef = useOsTheme();
 
 const paragraphs = computed(() => buildParagraphs(props.gnid, props.chapter));
@@ -42,6 +40,7 @@ onMounted(async () => {
 });
 
 const { setting } = Locator.readerSettingRepository();
+
 const fontColor = computed(() => {
   const theme = setting.value.theme;
   if (theme.mode === 'custom') {
@@ -53,9 +52,11 @@ const fontColor = computed(() => {
     } else if (osThemeRef.value) {
       specificTheme = osThemeRef.value;
     }
-    return specificTheme === 'light' ? 'black' : 'white';
+    return specificTheme === 'light' ? '#000000' : '#FFFFFF';
   }
 });
+
+const underlineColor = computed(() => `${fontColor.value}80`);
 
 const textUnderlineOffset = computed(() => {
   const fontSize = setting.value.fontSize;
@@ -123,9 +124,8 @@ const textUnderlineOffset = computed(() => {
     "setting.textUnderline === 'none' ? 'none' : 'underline'"
   );
   text-decoration-style: v-bind('setting.textUnderline');
-  text-decoration-thickness: v-bind(
-    "setting.textUnderline === 'dotted' ? '2px' : '1px'"
-  );
+  text-decoration-color: v-bind('underlineColor');
+  text-decoration-thickness: 1px;
   text-underline-offset: v-bind('textUnderlineOffset');
 }
 </style>
