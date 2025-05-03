@@ -37,11 +37,18 @@ type EpubItemDoc = EpubItemBase & { doc: Document };
 type EpubItemBlob = EpubItemBase & { blob: Blob };
 type EpubItem = EpubItemDoc | EpubItemBlob;
 
+interface EpubItemref {
+  idref: string;
+  linear: string | null;
+  properties: string | null;
+}
+
 export class Epub extends BaseFile {
   type = 'epub' as const;
   private packagePath: string = '';
   packageDoc!: Document;
   private items = new Map<string, EpubItem>();
+  private itemrefs: EpubItemref[] = [];
 
   private resolve(path: string) {
     const dir = this.packagePath.substring(
@@ -77,6 +84,7 @@ export class Epub extends BaseFile {
 
     this.packageDoc = doc;
     this.parseManifest(manifest);
+    this.parseSpine(spine);
   }
 
   private parseManifest(el: Element) {
@@ -97,6 +105,24 @@ export class Epub extends BaseFile {
         fallback: itemEl.getAttribute('fallback'),
       };
       this.items.set(id, itemBase as any);
+    }
+  }
+
+  private parseSpine(el: Element) {
+    for (const itemEl of Array.from(el.getElementsByTagName('itemref'))) {
+      const idref = itemEl.getAttribute('idref');
+      if (!idref) throw new Error('Spine itemref does not have idref');
+      if (!this.items.has(idref))
+        throw new Error('Spine itemref idref not in manifest');
+      const linear = itemEl.getAttribute('linear');
+      const properties = itemEl.getAttribute('properties');
+
+      const itemref: EpubItemref = {
+        idref,
+        linear,
+        properties,
+      };
+      this.itemrefs.push(itemref);
     }
   }
 
@@ -252,6 +278,11 @@ export class Epub extends BaseFile {
   // API
   // ==============================
 
+  iterDocInSpine() {
+    return this.itemrefs
+      .map((itemref) => this.items.get(itemref.idref)!!)
+      .filter((item) => 'doc' in item);
+  }
   iterDoc() {
     return [...this.items.values()].filter((item) => 'doc' in item);
   }
@@ -283,7 +314,7 @@ export class Epub extends BaseFile {
 
   getText() {
     const contents: string[] = [];
-    for (const item of this.iterDoc()) {
+    for (const item of this.iterDocInSpine()) {
       Array.from(item.doc.getElementsByClassName('rt')).forEach((node) =>
         node.parentNode!!.removeChild(node),
       );
