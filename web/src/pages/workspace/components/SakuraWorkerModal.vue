@@ -53,6 +53,18 @@ const formRules: FormRules = {
       message: '链接不能为空',
       trigger: 'input',
     },
+    {
+      validator: (rule: FormItemRule, value: string) => {
+        try {
+          let url = new URL(value);
+          return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (_) {
+          return false;
+        }
+      },
+      message: '链接不合法',
+      trigger: 'input',
+    },
   ],
 };
 

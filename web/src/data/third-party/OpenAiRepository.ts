@@ -4,8 +4,13 @@ import ky, { HTTPError, Options } from 'ky';
 import { parseEventStream, safeJson } from '@/util';
 
 export const createOpenAiRepository = (endpoint: string, key: string) => {
+  const endpointUrl = new URL(endpoint);
+  if (endpointUrl.pathname === '/') {
+    endpointUrl.pathname = 'v1';
+  }
+
   const client = ky.create({
-    prefixUrl: endpoint,
+    prefixUrl: endpointUrl.href,
     headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${key}`,
@@ -16,14 +21,14 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
   });
 
   const listModels = (options?: Options): Promise<ModelsPage> =>
-    client.get('v1/models', options).json<ModelsPage>();
+    client.get('models', options).json<ModelsPage>();
 
   const createChatCompletionsStream = (
     json: ChatCompletion.Params & { stream: true },
     options?: Options,
   ): Promise<Generator<ChatCompletionChunk>> =>
     client
-      .post('v1/chat/completions', { json, ...options })
+      .post('chat/completions', { json, ...options })
       .text()
       .then(parseEventStream<ChatCompletionChunk>);
 
@@ -32,7 +37,7 @@ export const createOpenAiRepository = (endpoint: string, key: string) => {
     options?: Options,
   ): Promise<ChatCompletion> =>
     client
-      .post('v1/chat/completions', { json, ...options })
+      .post('chat/completions', { json, ...options })
       .json<ChatCompletion>();
 
   return {

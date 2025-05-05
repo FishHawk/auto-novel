@@ -61,7 +61,21 @@ const formRules: FormRules = {
     },
   ],
   model: [emptyCheck('模型')],
-  endpoint: [emptyCheck('链接')],
+  endpoint: [
+    emptyCheck('链接'),
+    {
+      validator: (rule: FormItemRule, value: string) => {
+        try {
+          let url = new URL(value);
+          return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (_) {
+          return false;
+        }
+      },
+      message: '链接不合法',
+      trigger: 'input',
+    },
+  ],
   key: [
     emptyCheck('Key'),
     {
@@ -93,12 +107,6 @@ const submit = async () => {
     endpoint: endpoint.trim(),
     key: key.trim(),
   };
-  try {
-    const obj = JSON.parse(worker.key);
-    if (typeof obj.accessToken === 'string') {
-      worker.key = obj.accessToken;
-    }
-  } catch {}
 
   if (props.worker === undefined) {
     workspace.addWorker(worker);
@@ -159,7 +167,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       </n-form-item-row>
 
       <n-text depth="3" style="font-size: 12px">
-        # 链接例子：https://api.deepseek.com，后面不要加‘/v1’
+        # 链接例子：https://api.deepseek.com
       </n-text>
     </n-form>
 
