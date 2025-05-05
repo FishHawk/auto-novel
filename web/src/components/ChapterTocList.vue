@@ -100,6 +100,7 @@ const noSeparatorClass = computed(() => {
     :default-scroll-key="defaultScrollKey"
     style="overflow: auto"
     :class="noSeparatorClass"
+    :scrollbar-props="{ trigger: 'none' }"
   >
     <template #default="{ item: chapter }">
       <div :key="chapter.chapterId">
