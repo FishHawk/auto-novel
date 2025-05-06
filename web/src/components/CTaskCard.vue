@@ -89,10 +89,7 @@ defineExpose({
       >
         <div v-for="log of logs">
           {{ log.message }}
-          <span
-            v-if="log.detail"
-            @click="showDetail(log.message, log.detail!!)"
-          >
+          <span v-if="log.detail" @click="showDetail(log.message, log.detail!)">
             [详细]
           </span>
         </div>

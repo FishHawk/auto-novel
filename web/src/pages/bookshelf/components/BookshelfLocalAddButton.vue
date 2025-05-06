@@ -16,7 +16,7 @@ const message = useMessage();
 const store = useBookshelfLocalStore();
 
 const onFinish = ({ file }: { file: UploadFileInfo }) => {
-  emit('done', file.file!!);
+  emit('done', file.file!);
 };
 
 const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
@@ -42,7 +42,7 @@ const customRequest = ({
   onError,
 }: UploadCustomRequestOptions) => {
   store
-    .addVolume(file.file!!, props.favoredId ?? 'default')
+    .addVolume(file.file!, props.favoredId ?? 'default')
     .then(onFinish)
     .catch((error) => {
       message.error(`上传失败:${error}\n文件名: ${file.name}`);

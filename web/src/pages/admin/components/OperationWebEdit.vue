@@ -10,14 +10,14 @@ defineProps<{ op: OperationWebEdit }>();
   </c-a>
   <TextDiff
     v-if="op.new.titleZh"
-    :zhOld="op.old.titleZh"
-    :zhNew="op.new.titleZh"
+    :zh-old="op.old.titleZh"
+    :zh-new="op.new.titleZh"
   />
   <TextDiff
     v-if="op.new.introductionZh"
-    :zhOld="op.old.introductionZh"
-    :zhNew="op.new.introductionZh"
+    :zh-old="op.old.introductionZh"
+    :zh-new="op.new.introductionZh"
   />
 
-  <TextDiff v-for="toc of op.toc" :zhOld="toc.old" :zhNew="toc.new" />
+  <TextDiff v-for="(toc, idx) of op.toc" :zh-old="toc.old" :zh-new="toc.new" />
 </template>
