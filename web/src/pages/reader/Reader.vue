@@ -191,7 +191,7 @@ onKeyDown(['Enter'], (e) => {
       :type="id ? 'primary' : 'default'"
       @action="
         () => {
-          navToChapter(id!!);
+          navToChapter(id!);
         }
       "
     />

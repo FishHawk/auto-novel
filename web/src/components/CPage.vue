@@ -211,7 +211,7 @@ const loadMore = async () => {
       <slot :items="page.items" />
     </c-result>
     <div class="loading-box" v-if="pageContent?.ok !== false">
-      <template v v-if="loading">
+      <template v-if="loading">
         <n-spin />
       </template>
       <template v-else-if="innerPage >= pageNumber && pageNumber > 1">

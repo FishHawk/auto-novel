@@ -64,8 +64,8 @@ const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
 const shouldTopJob = useKeyModifier('Control');
 const queueVolume = (volumeId: string, total: number = 65536) => {
   const { startIndex, endIndex, level, forceMetadata } =
-    translateOptions.value!!.getTranslateTaskParams();
-  const taskNumber = translateOptions.value!!.getTaskNumber();
+    translateOptions.value!.getTranslateTaskParams();
+  const taskNumber = translateOptions.value!.getTaskNumber();
   const success = store.queueJobToWorkspace(volumeId, {
     level: level,
     type: props.type,

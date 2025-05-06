@@ -266,7 +266,7 @@ export class SakuraTranslator implements SegmentTranslator {
     );
 
     return {
-      text: completion.choices[0].message.content!!,
+      text: completion.choices[0].message.content!,
       hasDegradation: completion.usage.completion_tokens >= maxNewToken,
     };
   }

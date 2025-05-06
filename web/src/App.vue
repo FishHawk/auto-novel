@@ -48,7 +48,7 @@ const buildTheme = (
     case 'system':
       return { isDark: osThemeRef.value === 'dark' };
     case 'custom':
-      return { isDark: isDarkColor(bodyColor!!), bodyColor };
+      return { isDark: isDarkColor(bodyColor!), bodyColor };
   }
 };
 const theme = computed(() => {

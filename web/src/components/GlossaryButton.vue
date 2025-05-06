@@ -91,7 +91,7 @@ const clearTerm = () => {
 
 const undoDeleteTerm = () => {
   if (deletedTerms.value.length === 0) return;
-  const [jp, zh] = deletedTerms.value.pop()!!;
+  const [jp, zh] = deletedTerms.value.pop()!;
   glossary.value[jp] = zh;
 };
 

@@ -32,7 +32,7 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
   }
   if (
     ['jp', 'zh', 'zh-jp', 'jp-zh'].some((prefix) =>
-      file.file!!.name.startsWith(prefix),
+      file.file!.name.startsWith(prefix),
     )
   ) {
     message.error('不要上传本网站上生成的机翻文件');

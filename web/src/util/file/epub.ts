@@ -361,7 +361,7 @@ export class Epub extends BaseFile {
 
   iterDocInSpine() {
     return this.itemrefs
-      .map((itemref) => this.items.get(itemref.idref)!!)
+      .map((itemref) => this.items.get(itemref.idref)!)
       .filter((item) => 'doc' in item);
   }
   iterDoc() {
@@ -397,7 +397,7 @@ export class Epub extends BaseFile {
     const contents: string[] = [];
     for (const item of this.iterDocInSpine()) {
       Array.from(item.doc.getElementsByClassName('rt')).forEach((node) =>
-        node.parentNode!!.removeChild(node),
+        node.parentNode!.removeChild(node),
       );
       contents.push(item.doc.body.textContent ?? '');
     }

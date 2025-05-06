@@ -65,15 +65,15 @@ const onProgressUpdated = (
     | { state: 'processed'; finished: number; error: number; total: number },
 ) => {
   if (state.state === 'finish') {
-    const job = processedJobs.value.get(task)!!;
+    const job = processedJobs.value.get(task)!;
     processedJobs.value.delete(task);
     if (!state.abort) {
       job.finishAt = Date.now();
-      workspace.addJobRecord(job as any);
+      workspace.addJobRecord(job as TranslateJob);
       workspace.deleteJob(task);
     }
   } else {
-    const job = processedJobs.value.get(task)!!;
+    const job = processedJobs.value.get(task)!;
     job.progress = {
       finished: state.finished,
       error: state.error,

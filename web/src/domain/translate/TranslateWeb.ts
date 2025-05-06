@@ -108,7 +108,7 @@ export const translateWeb = async (
           obj.introduction = translated.shift();
         }
         for (const wordJp of tocWordsNeedTranslate) {
-          tocWordsDict[wordJp] = translated.shift()!!;
+          tocWordsDict[wordJp] = translated.shift()!;
         }
 
         new Set(toc).forEach((it) => {

@@ -43,7 +43,7 @@ const translateTask = ref<InstanceType<typeof TranslateTask>>();
 const startTranslateTask = (translatorId: 'baidu' | 'youdao') =>
   translateTask?.value?.startTask(
     { type: 'web', providerId, novelId },
-    translateOptions.value!!.getTranslateTaskParams(),
+    translateOptions.value!.getTranslateTaskParams(),
     { id: translatorId },
   );
 
@@ -91,8 +91,8 @@ const importToWorkspace = async () => {
 const pressControl = useKeyModifier('Control');
 const submitJob = (id: 'gpt' | 'sakura') => {
   const { startIndex, endIndex, level, forceMetadata } =
-    translateOptions.value!!.getTranslateTaskParams();
-  const taskNumber = translateOptions.value!!.getTaskNumber();
+    translateOptions.value!.getTranslateTaskParams();
+  const taskNumber = translateOptions.value!.getTaskNumber();
 
   if (endIndex <= startIndex || startIndex >= total) {
     message.error('排队失败：没有选中章节');

@@ -75,10 +75,10 @@ const novelListRef = ref<InstanceType<typeof NovelListWeb>>();
 
     <n-collapse-transition :show="showControlPanel" style="margin-bottom: 16px">
       <bookshelf-web-control
-        :selected-novels="novelListRef!!.selectedNovels"
-        :favoredId="favoredId"
-        @select-all="novelListRef!!.selectAll()"
-        @invert-selection="novelListRef!!.invertSelection()"
+        :selected-novels="novelListRef!.selectedNovels"
+        :favored-id="favoredId"
+        @select-all="novelListRef!.selectAll()"
+        @invert-selection="novelListRef!.invertSelection()"
       />
     </n-collapse-transition>
 
