@@ -121,6 +121,7 @@ export class Epub extends BaseFile {
         properties: this.parseProperties(properties),
         fallback,
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.items.set(id, itemBase as any);
     }
 

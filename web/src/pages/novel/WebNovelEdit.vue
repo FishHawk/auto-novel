@@ -3,6 +3,7 @@ import { UploadOutlined } from '@vicons/material';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
 import { useWebNovelStore } from './WebNovelStore';
+import { VueUtil } from '@/util';
 
 const { providerId, novelId } = defineProps<{
   providerId: string;
@@ -130,7 +131,10 @@ const submit = async () => {
       </n-text>
     </n-p>
     <n-table :bordered="false" :bottom-bordered="false" style="width: 100%">
-      <tr v-for="token in formValue.toc">
+      <tr
+        v-for="(token, idx) in formValue.toc"
+        :key="VueUtil.buildKey(idx, token.jp)"
+      >
         <td style="width: 50%; padding: 4px">
           {{ token.jp }}
           <br />

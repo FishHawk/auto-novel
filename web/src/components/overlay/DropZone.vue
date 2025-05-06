@@ -3,7 +3,7 @@ import { DriveFolderUploadOutlined } from '@vicons/material';
 import { useEventListener } from '@vueuse/core';
 
 const showDropZone = ref(false);
-let dragFlag = { isDragStart: false };
+const dragFlag = { isDragStart: false };
 
 // 将文件从操作系统拖拽到浏览器内，不会触发 dragstart 和 dragend 事件
 useEventListener(document, ['dragenter', 'dragstart', 'dragend'], (e) => {

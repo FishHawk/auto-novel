@@ -4,6 +4,7 @@ import { CommentRepository } from '@/data/api';
 import { Comment1 } from '@/model/Comment';
 import { runCatching } from '@/util/result';
 import { doAction, copyToClipBoard } from '@/pages//util';
+import { VueUtil } from '@/util';
 
 const { site, comment } = defineProps<{
   site: string;
@@ -137,8 +138,9 @@ const showInput = ref(false);
   />
 
   <div
-    v-for="replyComment in comment.replies"
     style="margin-left: 30px; margin-top: 20px"
+    v-for="replyComment in comment.replies"
+    :key="replyComment.id"
   >
     <CommentItem
       :comment="replyComment"

@@ -40,7 +40,7 @@ export const translateLocal = async (
     } else {
       metadata = metadataOrUndefined;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     callback.log(`发生错误，结束翻译任务：${e}`);
     return;
   }
@@ -105,11 +105,11 @@ export const translateLocal = async (
         paragraphs: textsZh,
       });
       callback.onChapterSuccess({ zh: state });
-    } catch (e: any) {
-      if (e === 'quit') {
+    } catch (e: unknown) {
+      if (e instanceof String && e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
         return;
-      } else if (e.name === 'AbortError') {
+      } else if (e instanceof Error && e.name === 'AbortError') {
         callback.log(`中止翻译任务`);
         return 'abort';
       } else {

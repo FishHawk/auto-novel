@@ -8,6 +8,13 @@ import Components from 'unplugin-vue-components/vite';
 import { PluginOption, ServerOptions, defineConfig, loadEnv } from 'vite';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import Sonda from 'sonda/vite';
+
+const enableSonda = process.env.ENABLE_SONDA === '1';
+const enableSourcemap = enableSonda;
+
+console.log(`sonda: ${enableSonda}`);
+console.log(`sourcemap: ${enableSourcemap}`);
 
 const defineServerOptions = (localServer: boolean): ServerOptions => {
   return {
@@ -82,8 +89,10 @@ export default defineConfig(({ command, mode }) => {
     server: serverOptions,
     build: {
       target: ['es2015', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+      sourcemap: enableSourcemap,
       cssCodeSplit: false,
       rollupOptions: {
+        treeshake: true,
         output: {
           manualChunks(id) {
             if (id.includes('web/src')) {
@@ -104,14 +113,13 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       ...pluginOptions,
       vue(),
-      imagemin(),
+      imagemin({}),
       createHtmlPlugin({
-        minify: {
-          minifyJS: true,
-        },
+        minify: { minifyJS: true },
       }),
       tsconfigPaths({ loose: true }),
       AutoImport({
+        dts: true,
         imports: [
           'vue',
           'vue-router',
@@ -131,6 +139,7 @@ export default defineConfig(({ command, mode }) => {
         resolvers: [NaiveUiResolver()],
         dirs: ['./**/components/**'],
       }),
+      enableSonda ? Sonda() : {},
     ],
   };
 });

@@ -4,6 +4,7 @@ import { UploadCustomRequestOptions } from 'naive-ui';
 
 import { Locator } from '@/data';
 import { ParsedFile, parseFile } from '@/util/file';
+import { VueUtil } from '@/util';
 
 const message = useMessage();
 
@@ -90,7 +91,10 @@ const showListModal = ref(false);
     </n-flex>
 
     <n-flex vertical style="margin-top: 16px">
-      <n-text v-for="file of files">
+      <n-text
+        v-for="(file, idx) of files"
+        :key="VueUtil.buildKey(idx, file.name)"
+      >
         <toolbox-file-card :file="file" @delete="removeFile(file.name)" />
       </n-text>
     </n-flex>

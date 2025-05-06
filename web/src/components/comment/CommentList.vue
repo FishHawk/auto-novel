@@ -6,6 +6,7 @@ import { CommentRepository } from '@/data/api';
 import { Ok, Result, runCatching } from '@/util/result';
 import { Comment1 } from '@/model/Comment';
 import { Page } from '@/model/Page';
+import SectionHeader from '@/components/SectionHeader.vue';
 
 const props = defineProps<{
   site: string;
@@ -15,7 +16,7 @@ const props = defineProps<{
 const commentPage = ref<Result<Page<Comment1>>>();
 const currentPage = ref(1);
 const loading = ref(false);
-const commentSectionRef = ref<any>(null);
+const commentSectionRef = ref<InstanceType<typeof SectionHeader> | null>(null);
 
 const draftRepo = Locator.draftRepository();
 const draftId = `comment-${props.site}`;
@@ -99,7 +100,7 @@ const showInput = ref(false);
     :show-empty="(it: Page<Comment1>) => it.items.length === 0 && !locked"
     v-slot="{ value }"
   >
-    <template v-for="comment in value.items">
+    <template v-for="comment in value.items" :key="comment.id">
       <CommentThread
         :site="site"
         :comment="comment"

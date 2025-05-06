@@ -26,7 +26,7 @@ export namespace Toolbox {
 
   type ModifyFn<T extends ParsedFile> = (file: T) => Promise<void>;
   type ConvertFn<T extends ParsedFile> = (file: T) => Promise<ParsedFile>;
-  type ErrorFn = (e: any) => void;
+  type ErrorFn = (e: unknown) => void;
 
   export const modifyFiles = async <T extends ParsedFile>(
     files: T[],

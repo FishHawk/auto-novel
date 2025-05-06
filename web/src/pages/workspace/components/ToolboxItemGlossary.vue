@@ -125,7 +125,7 @@ const translateKatakanas = async (id: 'baidu' | 'youdao' | 'sakura') => {
       jpToZh[jpWord] = zhWords[index];
     });
     katakanaTranslations.value = jpToZh;
-  } catch (e: any) {
+  } catch (e: unknown) {
     message.error(`翻译器错误：${e}`);
   }
 };

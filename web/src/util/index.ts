@@ -46,9 +46,9 @@ export const safeJson = <T extends object>(text: string) => {
 
 export const delay = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
-    let timeout: number;
+    let timeout: number | null = null;
     const abortHandler = () => {
-      clearTimeout(timeout);
+      clearTimeout(timeout!);
       reject(new DOMException('Aborted', 'AbortError'));
     };
     timeout = window.setTimeout(() => {
@@ -189,4 +189,10 @@ export namespace Humanize {
 
   export const bytes = (rawNum: number) =>
     unit(rawNum, ['B', 'KB', 'MB', 'GB', 'TB', 'PB'], 1024);
+}
+
+export namespace VueUtil {
+  export function buildKey(idx: number, key: string): string {
+    return `${idx}-${key}`;
+  }
 }

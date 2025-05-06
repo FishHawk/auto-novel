@@ -5,7 +5,7 @@ const props = defineProps<{
   label?: string;
   icon?: Component;
   requireLogin?: boolean;
-  onAction?: (e: MouseEvent) => any;
+  onAction?: (e: MouseEvent) => unknown;
 }>();
 
 const message = useMessage();

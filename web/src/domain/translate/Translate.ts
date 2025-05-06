@@ -23,7 +23,7 @@ export const translate = async (
       true,
       (message, detail) => taskCallback.log('　' + message, detail),
     );
-  } catch (e: any) {
+  } catch (e: unknown) {
     taskCallback.log(`发生错误，无法创建翻译器：${e}`);
     return;
   }

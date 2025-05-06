@@ -70,28 +70,31 @@ export namespace Setting {
   };
 
   export const migrate = (setting: Setting) => {
-    if ((setting as any).isDark !== undefined) {
-      if ((setting as any).isDark === true) {
+    if ('isDark' in setting && typeof setting.isDark !== undefined) {
+      if (setting.isDark === true) {
         setting.theme = 'dark';
       }
-      (setting as any).isDark = undefined;
+      setting.isDark = undefined;
     }
     if (setting.enabledTranslator === undefined) {
       setting.enabledTranslator = ['baidu', 'youdao', 'gpt', 'sakura'];
     }
-    if ((setting.downloadFormat.mode as any) === 'mix') {
-      setting.downloadFormat.mode = 'zh-jp';
-    } else if ((setting.downloadFormat.mode as any) === 'mix-reverse') {
-      setting.downloadFormat.mode = 'jp-zh';
-    } else if ((setting.downloadFormat.mode as any) === 'jp') {
-      setting.downloadFormat.mode = 'zh';
+    const modeMap: Record<string, 'zh-jp' | 'jp-zh' | 'zh'> = {
+      mix: 'zh-jp',
+      'mix-reverse': 'jp-zh',
+      jp: 'zh',
+    };
+
+    if (modeMap[setting.downloadFormat.mode]) {
+      setting.downloadFormat.mode = modeMap[setting.downloadFormat.mode];
     }
+
     // 2024-03-05
     if (setting.workspaceSound === undefined) {
       setting.workspaceSound = false;
     }
     // 2024-05-28
-    if ((setting.paginationMode as any) === 'auto') {
+    if ((setting.paginationMode as unknown) === 'auto') {
       setting.paginationMode = 'pagination';
     }
   };
@@ -182,14 +185,15 @@ export namespace ReaderSetting {
   export const migrate = (setting: ReaderSetting) => {
     if (typeof setting.fontSize === 'string') {
       setting.fontSize = Number(
-        (setting.fontSize as any).replace(/[^0-9]/g, ''),
+        (setting.fontSize as string).replace(/[^0-9]/g, ''),
       );
     }
-    if ((setting.mode as any) === 'mix') {
+    if ((setting.mode as string) === 'mix') {
       setting.mode = 'zh-jp';
-    } else if ((setting.mode as any) === 'mix-reverse') {
+    } else if ((setting.mode as string) === 'mix-reverse') {
       setting.mode = 'jp-zh';
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const theme = setting.theme as any;
     if (theme.isDark !== undefined) {
       if (theme.bodyColor === '#272727' && theme.fontColor === undefined) {

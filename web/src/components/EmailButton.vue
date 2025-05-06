@@ -6,7 +6,7 @@ const message = useMessage();
 const props = defineProps<{
   label: string;
   allowSendEmail: () => boolean;
-  sendEmail: () => Promise<any>;
+  sendEmail: () => Promise<unknown>;
 }>();
 
 type VerifyState =

@@ -4,17 +4,17 @@ import { extractAsin } from './Common';
 const parseProduct = (doc: Document) => {
   if (doc.getElementsByClassName('series-childAsin-widget').item(0) !== null) {
     return {
-      type: 'serial' as 'serial',
+      type: 'serial' as const,
       serial: parseProductSerial(doc),
     };
   } else if (doc.getElementsByClassName('bundle-components').item(0) !== null) {
     return {
-      type: 'set' as 'set',
+      type: 'set' as const,
       set: parseProductSet(doc),
     };
   } else {
     return {
-      type: 'volume' as 'volume',
+      type: 'volume' as const,
       volume: parseProductVolume(doc),
     };
   }

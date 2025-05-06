@@ -36,13 +36,13 @@ export const translateWeb = async (
     // 临时手段解决timeout，等数据库大修完成后删去
     try {
       task = await getTranslateTask();
-    } catch (e: any) {
+    } catch (e: unknown) {
       callback.log('获取翻译任务-延迟10s重试');
       await delay(10_000, signal);
       task = await getTranslateTask();
     }
-  } catch (e: any) {
-    if (e.name === 'AbortError') {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.name === 'AbortError') {
       callback.log(`中止翻译任务`);
       return 'abort';
     } else {
@@ -155,11 +155,11 @@ export const translateWeb = async (
         await updateMetadataTranslation(coder.recover(textsDst));
       }
     }
-  } catch (e: any) {
-    if (e === 'quit') {
+  } catch (e: unknown) {
+    if (e instanceof String && e === 'quit') {
       callback.log(`发生错误，结束翻译任务`);
       return;
-    } else if (e.name === 'AbortError') {
+    } else if (e instanceof Error && e.name === 'AbortError') {
       callback.log(`中止翻译任务`);
       return 'abort';
     } else {
@@ -215,11 +215,11 @@ export const translateWeb = async (
         });
         callback.onChapterSuccess({ jp, zh });
       }
-    } catch (e: any) {
-      if (e === 'quit') {
+    } catch (e: unknown) {
+      if (e instanceof String && e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
         return;
-      } else if (e.name === 'AbortError') {
+      } else if (e instanceof Error && e.name === 'AbortError') {
         callback.log(`中止翻译任务`);
         return 'abort';
       } else {

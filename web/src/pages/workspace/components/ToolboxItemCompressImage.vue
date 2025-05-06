@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ImgComparisonSlider } from '@img-comparison-slider/vue';
 
-import { Humanize } from '@/util';
+import { Humanize, VueUtil } from '@/util';
 import { Epub, ParsedFile } from '@/util/file';
 
 import { Toolbox } from './Toolbox';
@@ -173,7 +173,10 @@ const showPreview = (image: EpubImage) => {
     <template v-if="showDetail">
       <n-text>点击图片预览压缩效果</n-text>
       <n-empty v-if="detailList.length === 0" description="未载入文件" />
-      <template v-for="detail of detailList">
+      <template
+        v-for="(detail, idx) of detailList"
+        :key="VueUtil.buildKey(idx, detail.name)"
+      >
         <n-text>
           [{{ Humanize.bytes(detail.size) }}
           =>
@@ -185,6 +188,7 @@ const showPreview = (image: EpubImage) => {
             <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
               <n-image
                 v-for="image of detail.images"
+                :key="image.id"
                 height="150"
                 :src="image.uri"
                 preview-disabled
@@ -200,8 +204,12 @@ const showPreview = (image: EpubImage) => {
 
     <c-modal v-model:show="showCompare" style="width: auto; max-width: 95%">
       <img-comparison-slider>
-        <img style="width: 100%" slot="first" :src="compareImages.old" />
-        <img style="width: 100%" slot="second" :src="compareImages.new" />
+        <template #first>
+          <img style="width: 100%" :src="compareImages.old" />
+        </template>
+        <template #second>
+          <img style="width: 100%" :src="compareImages.new" />
+        </template>
       </img-comparison-slider>
     </c-modal>
   </n-flex>
