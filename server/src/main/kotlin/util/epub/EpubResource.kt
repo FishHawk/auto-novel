@@ -5,6 +5,7 @@ import org.jsoup.nodes.Attributes
 import org.jsoup.nodes.Element
 import org.jsoup.parser.Parser
 import org.jsoup.parser.Tag
+import util.Signature as Sig
 
 data class EpubResource(
     val path: String,
@@ -20,6 +21,7 @@ private const val TEMPLATE_XHTML = """<?xml version="1.0" encoding="utf-8"?>
   <head>
     <title/>
     <meta charset="utf-8"/>
+    <meta name="translation" content="本内容为机器翻译" />
   </head>
   <body />
 </html>"""
@@ -86,6 +88,10 @@ fun createEpubNav(
     val nav = body.appendElement("nav")
         .attr("epub:type", "toc")
     nav.appendElement("h2").appendText(navigation.title)
+
+    // 添加机翻标识, Issue #134
+    nav.appendChild(Sig.epubNav)
+
     val ol = nav.appendElement("ol")
     navigation.items.forEach {
         val li = ol.appendElement("li")
@@ -126,6 +132,10 @@ fun createEpubNcx(
         .appendText(navigation.title)
 
     val navMap = ncx.appendElement("navMap")
+
+    // 添加机翻标识, Issue #134
+    navMap.appendChild(Sig.epubNcx("nav.xhtml"))
+
     navigation.items.forEachIndexed { index, it ->
         if (it.href != null) {
             val navPoint = navMap.appendElement("navPoint")
