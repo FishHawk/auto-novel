@@ -20,6 +20,7 @@ web/node_modules/
 web/auto-imports.d.ts
 web/components.d.ts
 web/vite.config.ts.timestamp*
+web/sonda-report.html
 
 # Web extension
 web-extension/src/_metadata/

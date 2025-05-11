@@ -1,19 +1,23 @@
 import vue from '@vitejs/plugin-vue';
 import fs from 'fs';
 import path from 'path';
+import Sonda from 'sonda/vite';
 import AutoImport from 'unplugin-auto-import/vite';
 import imagemin from 'unplugin-imagemin/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import Components from 'unplugin-vue-components/vite';
-import { PluginOption, ServerOptions, defineConfig, loadEnv } from 'vite';
+import { defineConfig, PluginOption, ServerOptions, UserConfig } from 'vite';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-const defineServerOptions = (localServer: boolean): ServerOptions => {
+const enableSonda = process.env.ENABLE_SONDA === '1';
+const enableLocalServer = process.env.LOCAL != undefined;
+
+const defineServerOptions = (): ServerOptions => {
   return {
     proxy: {
       '/api': {
-        target: localServer
+        target: enableLocalServer
           ? 'http://localhost:8081'
           : 'https://books.fishhawk.top',
         changeOrigin: true,
@@ -26,7 +30,7 @@ const defineServerOptions = (localServer: boolean): ServerOptions => {
           }
         },
         rewrite: (path) => {
-          if (localServer) {
+          if (enableLocalServer) {
             path = path.replace(/^\/api/, '');
           }
           return path;
@@ -67,23 +71,12 @@ const filesProxyPlugin = (): PluginOption => ({
 });
 
 export default defineConfig(({ command, mode }) => {
-  let serverOptions: ServerOptions = {};
-  let pluginOptions: PluginOption[] = [];
-
-  if (command === 'serve') {
-    const env = loadEnv(mode, process.cwd(), 'LOCAL');
-    const localServer = 'LOCAL' in env;
-    serverOptions = defineServerOptions(localServer);
-    if (localServer) {
-      pluginOptions.push(filesProxyPlugin());
-    }
-  }
-  return {
-    server: serverOptions,
+  let userConfig: UserConfig = {
     build: {
       target: ['es2015', 'edge88', 'firefox78', 'chrome87', 'safari14'],
       cssCodeSplit: false,
       rollupOptions: {
+        treeshake: true,
         output: {
           manualChunks(id) {
             if (id.includes('web/src')) {
@@ -102,16 +95,14 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     plugins: [
-      ...pluginOptions,
       vue(),
-      imagemin(),
+      imagemin({}),
       createHtmlPlugin({
-        minify: {
-          minifyJS: true,
-        },
+        minify: { minifyJS: true },
       }),
       tsconfigPaths({ loose: true }),
       AutoImport({
+        dts: true,
         imports: [
           'vue',
           'vue-router',
@@ -133,4 +124,23 @@ export default defineConfig(({ command, mode }) => {
       }),
     ],
   };
+
+  if (command === 'serve') {
+    userConfig.server = defineServerOptions();
+    if (enableLocalServer) {
+      userConfig.plugins.push(filesProxyPlugin());
+    }
+  }
+
+  if (enableSonda) {
+    userConfig.build.sourcemap = true;
+    userConfig.plugins.push(
+      Sonda({
+        gzip: true,
+        brotli: true,
+      }),
+    );
+  }
+
+  return userConfig;
 });

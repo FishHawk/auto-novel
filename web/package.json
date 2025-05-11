@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:local": "LOCAL=1 vite",
     "build": "vite build && vue-tsc --noEmit",
-    "check": "vue-tsc --noEmit",
+    "build:analyze": "ENABLE_SONDA=1 vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "prepare": "cd .. && husky web/.husky"
@@ -17,7 +17,6 @@
     "husky": "^9.1.7",
     "prettier": "3.3.2",
     "pretty-quick": "^4.1.1",
-    "vite-bundle-visualizer": "^1.2.1",
     "vitest": "^3.1.1"
   },
   "dependencies": {
@@ -45,6 +44,7 @@
     "nanoid": "^5.1.5",
     "opencc-js": "^1.0.5",
     "pinia": "^2.3.1",
+    "sonda": "^0.7.1",
     "typescript": "^5.8.3",
     "unplugin-auto-import": "^0.17.8",
     "unplugin-imagemin": "^0.5.20",
