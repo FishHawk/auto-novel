@@ -89,7 +89,7 @@ const translate = async () => {
       glossary: glossary.value,
     });
     textZh.value = linesZh.join('\n');
-  } catch (e: any) {
+  } catch (e: unknown) {
     message.error(`翻译器错误：${e}`);
   }
 

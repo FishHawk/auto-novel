@@ -79,11 +79,11 @@ export namespace Setting {
     if (setting.enabledTranslator === undefined) {
       setting.enabledTranslator = ['baidu', 'youdao', 'gpt', 'sakura'];
     }
-    if ((setting.downloadFormat.mode as any) === 'mix') {
+    if ((setting.downloadFormat.mode as unknown) === 'mix') {
       setting.downloadFormat.mode = 'zh-jp';
-    } else if ((setting.downloadFormat.mode as any) === 'mix-reverse') {
+    } else if ((setting.downloadFormat.mode as unknown) === 'mix-reverse') {
       setting.downloadFormat.mode = 'jp-zh';
-    } else if ((setting.downloadFormat.mode as any) === 'jp') {
+    } else if ((setting.downloadFormat.mode as unknown) === 'jp') {
       setting.downloadFormat.mode = 'zh';
     }
     // 2024-03-05

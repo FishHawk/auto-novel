@@ -6,7 +6,7 @@ import { Page } from '@/model/Page';
 import { Result } from '@/util/result';
 import { RegexUtil } from '@/util';
 
-export type Loader<T extends any> = (
+export type Loader<T> = (
   page: number,
   query: string,
   selected: number[],

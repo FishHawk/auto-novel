@@ -200,8 +200,12 @@ const showPreview = (image: EpubImage) => {
 
     <c-modal v-model:show="showCompare" style="width: auto; max-width: 95%">
       <img-comparison-slider>
-        <img style="width: 100%" slot="first" :src="compareImages.old" />
-        <img style="width: 100%" slot="second" :src="compareImages.new" />
+        <template #first>
+          <img style="width: 100%" :src="compareImages.old" />
+        </template>
+        <template #second>
+          <img style="width: 100%" :src="compareImages.new" />
+        </template>
       </img-comparison-slider>
     </c-modal>
   </n-flex>

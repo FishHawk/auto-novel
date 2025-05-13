@@ -3,7 +3,7 @@ defineProps<{
   hint: string;
   label?: string;
   icon?: Component;
-  onAction?: (e: MouseEvent) => any;
+  onAction?: (e: MouseEvent) => unknown;
 }>();
 </script>
 

@@ -34,7 +34,7 @@ export const checkIsMobile = () => {
 };
 
 export const doAction = (
-  promise: Promise<any>,
+  promise: Promise<unknown>,
   label: string,
   message: MessageApi,
 ) =>

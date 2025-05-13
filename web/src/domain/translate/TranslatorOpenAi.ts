@@ -214,7 +214,7 @@ export class OpenAiTranslator implements SegmentTranslator {
           answer: parseAnswer(it.answer),
           fromHistory: false,
         }))
-        .catch((e: any) => {
+        .catch((e: unknown) => {
           if (e instanceof OpenAiError) {
             const errors: [string, string, number][] = [
               ['rate_limit_exceeded', '触发GPT限速', 21],

@@ -8,7 +8,7 @@ import { Result } from '@/util/result';
 import { onKeyDown } from '@/pages/util';
 import { Locator } from '@/data';
 
-export type Loader<T extends any> = (page: number) => Promise<Result<Page<T>>>;
+export type Loader<T> = (page: number) => Promise<Result<Page<T>>>;
 
 const route = useRoute();
 const router = useRouter();
@@ -186,9 +186,9 @@ const loadMore = async () => {
       v-else
       :result="pageContent"
       :show-empty="(it: Page<T>) => it.items.length === 0"
-      v-slot="{ value: page }"
+      v-slot="{ value: pageValue }"
     >
-      <slot :items="page.items" />
+      <slot :items="pageValue.items" />
     </c-result>
 
     <n-divider />
@@ -206,9 +206,9 @@ const loadMore = async () => {
     <c-result
       :result="pageContent"
       :show-empty="(it: Page<T>) => it.items.length === 0"
-      v-slot="{ value: page }"
+      v-slot="{ value: pageValue }"
     >
-      <slot :items="page.items" />
+      <slot :items="pageValue.items" />
     </c-result>
     <div class="loading-box" v-if="pageContent?.ok !== false">
       <template v-if="loading">

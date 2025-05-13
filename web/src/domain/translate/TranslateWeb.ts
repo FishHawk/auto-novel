@@ -36,7 +36,7 @@ export const translateWeb = async (
     // 临时手段解决timeout，等数据库大修完成后删去
     try {
       task = await getTranslateTask();
-    } catch (e: any) {
+    } catch (e: unknown) {
       callback.log('获取翻译任务-延迟10s重试');
       await delay(10_000, signal);
       task = await getTranslateTask();

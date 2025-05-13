@@ -93,7 +93,7 @@ export const getTranslationFile = async (
     const { zhLinesList } = await getZhLinesList('0');
     const newSubtitles: typeof myFile.subtitles = [];
     for (const s of myFile.subtitles) {
-      let texts: string[][] = [];
+      const texts: string[][] = [];
       for (const zhLines of zhLinesList) {
         texts.push(zhLines.slice(0, s.text.length));
         zhLines.splice(0, s.text.length);

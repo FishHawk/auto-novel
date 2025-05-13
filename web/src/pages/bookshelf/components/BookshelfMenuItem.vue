@@ -134,7 +134,7 @@ const deleteFavored = () =>
   </c-modal>
 
   <c-modal v-model:show="showDeleteModal" title="删除收藏夹">
-    确定删除收藏夹<{{ title }}>吗？
+    确定删除收藏夹[{{ title }}]吗？
     <n-text v-if="type === 'local'">
       <br />
       注意，删除本地收藏夹的同时也会清空收藏夹内所有小说。

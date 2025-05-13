@@ -121,7 +121,7 @@ export class Epub extends BaseFile {
         properties: this.parseProperties(properties),
         fallback,
       };
-      this.items.set(id, itemBase as any);
+      this.items.set(id, itemBase as EpubItem);
     }
 
     this.navigationPath = this.items

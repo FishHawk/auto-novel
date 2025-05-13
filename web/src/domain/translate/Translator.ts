@@ -139,7 +139,7 @@ export class Translator {
     let cacheKey: string | undefined;
     if (this.segCache) {
       try {
-        let extra: any = { glossary };
+        const extra: any = { glossary };
         if (this.segTranslator instanceof SakuraTranslator) {
           extra.version = this.segTranslator.version;
           extra.model = this.segTranslator.model;

@@ -40,7 +40,7 @@ export const translateLocal = async (
     } else {
       metadata = metadataOrUndefined;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     callback.log(`发生错误，结束翻译任务：${e}`);
     return;
   }

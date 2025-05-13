@@ -153,7 +153,7 @@ const onTocItemClick = (item: ReadableTocItem) => {
       </div>
     </template>
 
-    <c-result :result="tocResult" v-slot="{ value: _ }">
+    <c-result :result="tocResult">
       <chapter-toc-list
         v-if="gnid.type === 'web' && tocSections"
         :toc-sections="tocSections"

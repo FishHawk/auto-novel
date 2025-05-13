@@ -46,9 +46,9 @@ export const safeJson = <T extends object>(text: string) => {
 
 export const delay = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
-    let timeout: number;
+    let timeout: number | null = null;
     const abortHandler = () => {
-      clearTimeout(timeout);
+      clearTimeout(timeout!);
       reject(new DOMException('Aborted', 'AbortError'));
     };
     timeout = window.setTimeout(() => {
