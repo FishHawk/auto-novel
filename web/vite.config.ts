@@ -102,7 +102,7 @@ export default defineConfig(({ command, mode }) => {
       }),
       tsconfigPaths({ loose: true }),
       AutoImport({
-        dts: true,
+        dts: './src/auto-imports.d.ts',
         imports: [
           'vue',
           'vue-router',
@@ -119,6 +119,7 @@ export default defineConfig(({ command, mode }) => {
         ],
       }),
       Components({
+        dts: './src/components.d.ts',
         resolvers: [NaiveUiResolver()],
         dirs: ['./**/components/**'],
       }),

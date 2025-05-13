@@ -17,8 +17,8 @@ server/data/
 # Web
 web/dist/
 web/node_modules/
-web/auto-imports.d.ts
-web/components.d.ts
+web/src/auto-imports.d.ts
+web/src/components.d.ts
 web/vite.config.ts.timestamp*
 web/sonda-report.html
 
