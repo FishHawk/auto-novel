@@ -78,7 +78,7 @@ const showListModal = ref(false);
       </div>
 
       <c-button
-        label="加载本地小说"
+        label="本地书架"
         :icon="PlusOutlined"
         @action="showListModal = true"
       />
