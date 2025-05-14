@@ -177,7 +177,6 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
   border-collapse: collapse;
 }
 .markdown th {
-  white-space: nowrap;
   background-color: var(--action-color);
 }
 .markdown th,
