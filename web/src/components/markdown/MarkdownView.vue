@@ -173,6 +173,8 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
   max-width: 100%;
 }
 .markdown table {
+  display: block;
+  overflow-x: auto;
   border-spacing: 0;
   border-collapse: collapse;
 }
