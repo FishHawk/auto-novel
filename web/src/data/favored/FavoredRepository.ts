@@ -25,8 +25,8 @@ export const createFavoredRepository = () => {
     title: string,
   ) => {
     const specificFavoreds = favoreds.value[type];
-    if (specificFavoreds.length >= 10) {
-      throw new Error('收藏夹最多只能创建10个');
+    if (specificFavoreds.length >= 20) {
+      throw new Error('收藏夹最多只能创建20个');
     }
     let id: string;
     if (type === 'web') {

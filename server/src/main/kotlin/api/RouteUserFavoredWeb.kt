@@ -135,7 +135,7 @@ class UserFavoredWebApi(
         if (title.length > 20) throwBadRequest("收藏夹标题至多为20个字符")
 
         val (favoredWeb) = userFavoredRepo.getFavoredList(user.id)!!
-        if (favoredWeb.size >= 10) throwBadRequest("收藏夹最多只能创建10个")
+        if (favoredWeb.size >= 20) throwBadRequest("收藏夹最多只能创建20个")
 
         val newFavoredWeb = favoredWeb.toMutableList()
         val id = UUID.randomUUID().toString()
