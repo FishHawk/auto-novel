@@ -7,6 +7,7 @@ import { doAction } from '@/pages/util';
 
 import OperationWenkuEdit from './components/OperationWenkuEdit.vue';
 import OperationWenkuUpload from './components/OperationWenkuUpload.vue';
+import { VueUtil } from '@/util';
 
 const type = ref<OperationType>('web-edit');
 const typeOptions = [
@@ -79,7 +80,7 @@ watch(type, () => {
     v-slot="{ value }"
   >
     <n-list>
-      <n-list-item v-for="item in value.items">
+      <n-list-item v-for="item in value.items" :key="item.id">
         <operation-web-edit
           v-if="item.operation.type === 'web-edit'"
           :op="item.operation"
@@ -102,9 +103,9 @@ watch(type, () => {
         />
         <n-flex>
           <n-text>
-            于<n-time :time="item.createAt * 1000" type="relative" /> 由{{
-              item.operator.username
-            }}执行
+            于
+            <n-time :time="item.createAt * 1000" type="relative" />
+            由{{ item.operator.username }}执行
           </n-text>
           <n-button type="error" text @click="deleteHistory(item.id)">
             删除

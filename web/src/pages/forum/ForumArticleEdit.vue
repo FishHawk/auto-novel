@@ -7,6 +7,7 @@ import { ArticleCategory } from '@/model/Article';
 
 import { doAction, useIsWideScreen } from '@/pages/util';
 import { useArticleStore } from './ForumArticleStore';
+import { ArticleBody } from '@/data/api/ArticleRepository';
 
 const { articleId, category } = defineProps<{
   articleId?: string;
@@ -107,7 +108,7 @@ const submit = async () => {
   if (store === undefined) {
     await doAction(
       Locator.articleRepository
-        .createArticle(formValue.value as any)
+        .createArticle(formValue.value as ArticleBody)
         .then((id) => {
           draftRepo.removeDraft(draftId);
           router.push({ path: `/forum/${id}` });
@@ -117,7 +118,7 @@ const submit = async () => {
     );
   } else {
     await doAction(
-      store.updateArticle(formValue.value as any).then(() => {
+      store.updateArticle(formValue.value as ArticleBody).then(() => {
         draftRepo.removeDraft(draftId);
         router.push({ path: `/forum/${articleId}` });
       }),

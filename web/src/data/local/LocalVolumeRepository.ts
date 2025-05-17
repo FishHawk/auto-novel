@@ -73,7 +73,7 @@ export const createLocalVolumeRepository = async () => {
     return metadata.toc.filter((it) => it[translatorId] !== undefined).length;
   };
 
-  const bind = <Args extends Array<any>, Return>(
+  const bind = <Args extends Array<unknown>, Return>(
     fn: (dao: LocalVolumeDao, ...args: Args) => Promise<Return>,
   ) => {
     return async (...args: Args): Promise<Return> => {

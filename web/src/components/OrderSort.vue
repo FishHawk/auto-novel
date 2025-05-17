@@ -40,7 +40,7 @@ const handelClick = (option: Option) => {
 </script>
 <template>
   <n-button-group size="small">
-    <template v-for="option in options">
+    <template v-for="(option, idx) in options" :key="idx + '_' + option">
       <n-button
         :type="option.value === modelValue.value ? 'success' : 'default'"
         @click="handelClick(option)"
