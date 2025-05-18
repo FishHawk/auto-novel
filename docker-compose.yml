@@ -1,6 +1,6 @@
 services:
-  proxy:
-    image: ghcr.io/fishhawk/wneg-proxy
+  web:
+    image: ghcr.io/fishhawk/auto-novel-web
     ports:
       - 80:80
     volumes:
@@ -10,7 +10,7 @@ services:
     restart: always
 
   server:
-    image: ghcr.io/fishhawk/wneg-server
+    image: ghcr.io/fishhawk/auto-novel-server
     depends_on:
       - mongo
     environment:

@@ -1,3 +1,3 @@
 
-rootProject.name = "wneg"
+rootProject.name = "auto-novel-server"
 
