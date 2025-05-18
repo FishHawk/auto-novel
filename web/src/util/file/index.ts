@@ -1,10 +1,9 @@
 import { Epub } from './epub';
 import { Srt } from './srt';
 import { Txt } from './txt';
+import { StandardNovel } from './standard';
 
-export { Epub };
-export { Srt };
-export { Txt };
+export { Epub, Srt, Txt, StandardNovel };
 export type ParsedFile = Epub | Srt | Txt;
 
 export const getFullContent = async (file: File) => {

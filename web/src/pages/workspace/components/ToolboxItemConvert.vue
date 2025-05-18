@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Epub, ParsedFile, Txt } from '@/util/file';
+import { Epub, ParsedFile, StandardNovel } from '@/util/file';
 import { Toolbox } from './Toolbox';
 
 const props = defineProps<{
@@ -9,9 +9,8 @@ const props = defineProps<{
 const message = useMessage();
 
 const convertEpubToTxt = async (epub: Epub) => {
-  const name = epub.name.replace(/\.epub$/i, '.txt');
-  const text = await epub.getText();
-  return Txt.fromText(name, text);
+  const novel = StandardNovel.fromEpub(epub);
+  return await StandardNovel.toTxt(novel);
 };
 
 const convertAll = () =>
