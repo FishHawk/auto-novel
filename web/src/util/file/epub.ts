@@ -1,4 +1,5 @@
 import { BaseFile } from './base';
+import { StandardNovel } from './standard';
 
 const MIMETYPE_PATH = 'mimetype';
 const MIMETYPE_TEMPLATE = 'application/epub+zip';
@@ -258,6 +259,7 @@ export class Epub extends BaseFile {
   static async fromFile(file: File) {
     const epub = new Epub(file.name, file);
     await epub.parseFile(file);
+    StandardNovel.fromEpub(epub);
     return epub;
   }
 
