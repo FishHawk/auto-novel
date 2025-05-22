@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { VueUtil } from '@/util';
 import { diffChars } from 'diff';
 
 defineProps<{ zhOld?: string; zhNew: string }>();
@@ -7,7 +8,10 @@ defineProps<{ zhOld?: string; zhNew: string }>();
 <template>
   <div>
     <n-p>
-      <template v-for="c in diffChars(zhOld ?? '', zhNew)">
+      <template
+        v-for="(c, idx) in diffChars(zhOld ?? '', zhNew)"
+        :key="VueUtil.buildKey(idx, c.value)"
+      >
         <ins v-if="c.added">{{ c.value }}</ins>
         <del v-else-if="c.removed">{{ c.value }}</del>
         <template v-else>{{ c.value }}</template>

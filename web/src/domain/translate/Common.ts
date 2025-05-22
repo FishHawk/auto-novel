@@ -162,7 +162,7 @@ export const createLengthSegmentor = (
 };
 
 export interface SegmentCache {
-  cacheKey(seg: string[], extra?: any): string;
+  cacheKey(seg: string[], extra?: unknown): string;
   get(cacheKey: string): Promise<string[] | undefined>;
   save(cacheKey: string, output: string[]): Promise<void>;
 }
@@ -171,7 +171,7 @@ export const createSegIndexedDbCache = async (
   storeName: 'gpt-seg-cache' | 'sakura-seg-cache',
 ) => {
   return <SegmentCache>{
-    cacheKey: (seg: string[], extra?: any): string =>
+    cacheKey: (seg: string[], extra?: unknown): string =>
       MD5(JSON.stringify({ seg, extra })).toString(),
 
     get: (hash: string): Promise<string[] | undefined> =>
