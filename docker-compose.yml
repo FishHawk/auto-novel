@@ -13,6 +13,8 @@ services:
     image: ghcr.io/fishhawk/auto-novel-server
     depends_on:
       - mongo
+      - elasticsearch
+      - redis
     environment:
       - HTTPS_PROXY
       - MAILGUN_API_KEY
@@ -41,7 +43,7 @@ services:
     restart: always
 
   elasticsearch:
-    image: elasticsearch:8.6.1
+    image: elasticsearch:8.18.1
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
