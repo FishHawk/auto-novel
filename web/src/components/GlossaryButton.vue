@@ -6,6 +6,7 @@ import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
 
 import { doAction, copyToClipBoard } from '@/pages/util';
+import { downloadFile } from '@/util';
 
 const props = defineProps<{
   gnid?: GenericNovelId;
@@ -134,6 +135,15 @@ const importGlossary = () => {
     }
   }
 };
+
+const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
+  downloadFile(
+    `${gnidHint.value ?? 'glossary'}.json`,
+    new Blob([Glossary.toJson(glossary.value)], {
+      type: 'text/plain',
+    }),
+  );
+};
 </script>
 
 <template>
@@ -202,6 +212,12 @@ const importGlossary = () => {
             :round="false"
             size="small"
             @action="importGlossary"
+          />
+          <c-button
+            label="下载json文件"
+            :round="false"
+            size="small"
+            @action="downloadGlossaryAsJsonFile"
           />
           <c-button
             v-if="whoami.isMaintainer"

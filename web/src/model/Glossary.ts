@@ -1,7 +1,7 @@
 export type Glossary = { [key: string]: string };
 
 export namespace Glossary {
-  const toJson = (glossary: Glossary) => {
+  export const toJson = (glossary: Glossary) => {
     return JSON.stringify(glossary, null, 2);
   };
   const fromJson = (text: string): Glossary | undefined => {
