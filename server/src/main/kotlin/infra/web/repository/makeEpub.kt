@@ -2,6 +2,7 @@ package infra.web.repository
 
 import infra.web.WebNovel
 import infra.web.WebNovelTocItem
+import util.Signature as Sig
 import util.epub.EpubBook
 import util.epub.Navigation
 import util.epub.createEpubXhtml
@@ -36,6 +37,8 @@ suspend fun makeEpubFile(
     epub.addTitle(title)
     epub.addLanguage(language)
     epub.addDescription(introduction)
+    // 添加机翻标识, Issue #134
+    epub.addDescription(Sig.text())
     epub.addNavigation(
         identifier,
         Navigation(
