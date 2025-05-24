@@ -157,6 +157,7 @@ private val disgustingFascistNovelList = mapOf(
         "n4583he",
     ),
     Kakuyomu.id to listOf(
+        "16816927860373250234",
         "16817330660019717771",
         "1177354054901629921",
         "16818093082836701336",
