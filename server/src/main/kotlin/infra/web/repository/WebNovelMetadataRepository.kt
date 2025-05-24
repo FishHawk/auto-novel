@@ -235,6 +235,7 @@ class WebNovelMetadataRepository(
         val now = Clock.System.now()
         val list = mutableListOf(
             set(WebNovel::titleJp.field(), remote.titleJp),
+            set(WebNovel::authors.field(), remote.authors),
             set(WebNovel::type.field(), remote.type),
             set(WebNovel::attentions.field(), remote.attentions),
             set(WebNovel::keywords.field(), remote.keywords),
