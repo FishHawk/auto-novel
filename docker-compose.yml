@@ -1,3 +1,8 @@
+networks:
+  default:
+    name: auto-novel
+    driver: bridge
+
 services:
   web:
     image: ghcr.io/fishhawk/auto-novel-web
