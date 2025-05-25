@@ -228,6 +228,8 @@ const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
             size="small"
             @action="clearTerm"
           />
+        </n-flex>
+        <n-flex align="center" :wrap="false">
           <c-button
             :disabled="deletedTerms.length === 0"
             label="撤销删除"
