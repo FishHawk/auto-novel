@@ -214,7 +214,8 @@ class Pixiv(
         val id = imagePattern2.find(line)?.groupValues?.get(1) ?: return null
         val fetchUrl = "https://www.pixiv.net/ajax/novel/${chapterId}/insert_illusts?id%5B%5D=${id}"
         val body = client.get(fetchUrl).json().obj("body")
-        val url = body.obj(id).obj("illust").obj("images").string("original")
+        val illust = body.obj(id).objOrNull("illust") ?: return null
+        val url = illust.obj("images").string("original")
         return url
     }
 
