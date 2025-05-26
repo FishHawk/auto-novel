@@ -5,9 +5,12 @@ import api.plugins.shouldBeAtLeast
 import api.plugins.user
 import infra.common.Page
 import infra.user.*
+import infra.user.UserRole.Companion.toUserRole
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.resources.*
+import io.ktor.server.resources.post
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
@@ -21,6 +24,9 @@ private class UserRes {
         val pageSize: Int,
         val role: UserRole,
     )
+
+    @Resource("/update-role")
+    class UpdateRole(val parent: UserRes)
 
     @Resource("/favored")
     class Favored(val parent: UserRes)
@@ -46,6 +52,21 @@ fun Route.routeUser() {
             call.tryRespond {
                 service.listFavored(
                     user = user,
+                )
+            }
+
+        }
+
+        post<UserRes.UpdateRole>{
+            @Serializable
+            class Body(val userId: String, val role: UserRole)
+            val body = call.receive<Body>()
+            val user = call.user()
+            call.tryRespond{
+                service.updateRole(
+                    user=user,
+                    userId = body.userId,
+                    role = body.role
                 )
             }
         }
@@ -90,5 +111,17 @@ class UserApi(
     suspend fun listFavored(user: User): UserFavoredList {
         return userFavoredRepo.getFavoredList(user.id)
             ?: throwNotFound("用户不存在")
+    }
+
+    suspend fun updateRole(
+        user: User,
+        userId: String,
+        role: UserRole
+    ){
+        user.shouldBeAtLeast(UserRole.Admin)
+        userRepo.updateRole(
+            userId=userId,
+            role = role
+        )
     }
 }

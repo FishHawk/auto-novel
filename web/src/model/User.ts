@@ -8,7 +8,7 @@ export interface UserReference {
 export interface UserOutline {
   id: string;
   email: string;
-  username: boolean;
+  username: string;
   role: UserRole;
   createdAt: number;
 }
