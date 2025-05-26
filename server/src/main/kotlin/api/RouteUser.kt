@@ -23,8 +23,11 @@ private class UserRes {
         val role: UserRole,
     )
 
-    @Resource("/role")
-    class Role(val parent: UserRes)
+    @Resource("/{id}")
+    class Id(val parent: UserRes, val id: String) {
+        @Resource("/role")
+        class Role(val parent: Id)
+    }
 
     @Resource("/favored")
     class Favored(val parent: UserRes)
@@ -55,14 +58,14 @@ fun Route.routeUser() {
 
         }
 
-        put<UserRes.Role> {
+        put<UserRes.Id.Role> { loc ->
             @Serializable
             class Body(val userId: String, val role: UserRole)
             val body = call.receive<Body>()
             val user = call.user()
             call.tryRespond {
                 service.updateRole(
-                    user = user, userId = body.userId, role = body.role
+                    user = user, userId = loc.parent.id, role = body.role
                 )
             }
         }

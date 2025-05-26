@@ -27,10 +27,7 @@ const userRoleOptions = [
 
 const submitRole = () => {
   doAction(
-    UserRepository.updateRole({
-      userId: props.id,
-      role: userRole.value,
-    }),
+    UserRepository.updateRole(props.id, { role: userRole.value }),
     `更新 ${props.username} 权限`,
     message,
   );
