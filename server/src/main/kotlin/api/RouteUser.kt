@@ -8,7 +8,7 @@ import infra.user.*
 import io.ktor.resources.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
-import io.ktor.server.resources.post
+import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
@@ -23,7 +23,7 @@ private class UserRes {
         val role: UserRole,
     )
 
-    @Resource("/update-role")
+    @Resource("/role")
     class UpdateRole(val parent: UserRes)
 
     @Resource("/favored")
@@ -55,7 +55,7 @@ fun Route.routeUser() {
 
         }
 
-        post<UserRes.UpdateRole> {
+        put<UserRes.UpdateRole> {
             @Serializable
             class Body(val userId: String, val role: UserRole)
             val body = call.receive<Body>()

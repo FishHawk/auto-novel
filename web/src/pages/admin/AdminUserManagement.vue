@@ -88,6 +88,7 @@ const roleToReadableText = (role: UserRole) => {
               :id="user.id"
               :username="user.username"
               :role="user.role"
+              @update="loadPage(currentPage)"
             />
           </td>
         </tr>

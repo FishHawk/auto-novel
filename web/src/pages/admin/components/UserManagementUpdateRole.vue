@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Locator } from '@/data';
 import { UserRepository } from '@/data/api';
 import { UserRole } from '@/model/User';
 import { doAction } from '@/pages/util';
@@ -8,6 +7,10 @@ const props = defineProps<{
   id: string;
   username: string;
   role: UserRole;
+}>();
+
+const emit = defineEmits<{
+  update: [];
 }>();
 
 const userRole = ref<UserRole>(props.role);
@@ -31,6 +34,8 @@ const submitRole = () => {
     `更新 ${props.username} 权限`,
     message,
   );
+  showActionModal.value = false;
+  emit('update');
 };
 
 const toggleActionModal = () => {
