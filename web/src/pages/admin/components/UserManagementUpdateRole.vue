@@ -53,7 +53,7 @@ const toggleActionModal = () => {
         v-model:value="userRole"
         :options="userRoleOptions"
         size="large"
-      ></c-radio-group>
+      />
     </n-flex>
     <template #action>
       <c-button label="提交" type="primary" @action="submitRole()" />

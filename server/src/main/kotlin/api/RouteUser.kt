@@ -48,15 +48,6 @@ fun Route.routeUser() {
                 )
             }
         }
-        get<UserRes.Favored> {
-            val user = call.user()
-            call.tryRespond {
-                service.listFavored(
-                    user = user,
-                )
-            }
-
-        }
 
         put<UserRes.Id.Role> { loc ->
             @Serializable
@@ -68,6 +59,16 @@ fun Route.routeUser() {
                     user = user, userId = loc.parent.id, role = body.role
                 )
             }
+        }
+
+        get<UserRes.Favored> {
+            val user = call.user()
+            call.tryRespond {
+                service.listFavored(
+                    user = user,
+                )
+            }
+
         }
     }
 }
@@ -107,18 +108,20 @@ class UserApi(
         }
     }
 
-    suspend fun listFavored(user: User): UserFavoredList {
-        return userFavoredRepo.getFavoredList(user.id)
-            ?: throwNotFound("用户不存在")
-    }
-
     suspend fun updateRole(
-        user: User, userId: String, role: UserRole
+        user: User,
+        userId: String,
+        role: UserRole,
     ) {
         user.shouldBeAtLeast(UserRole.Admin)
         userRepo.updateRole(
             userId = userId,
             role = role
         )
+    }
+
+    suspend fun listFavored(user: User): UserFavoredList {
+        return userFavoredRepo.getFavoredList(user.id)
+            ?: throwNotFound("用户不存在")
     }
 }
