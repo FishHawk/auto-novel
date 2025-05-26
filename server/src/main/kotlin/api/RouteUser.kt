@@ -24,7 +24,7 @@ private class UserRes {
     )
 
     @Resource("/role")
-    class UpdateRole(val parent: UserRes)
+    class Role(val parent: UserRes)
 
     @Resource("/favored")
     class Favored(val parent: UserRes)
@@ -55,7 +55,7 @@ fun Route.routeUser() {
 
         }
 
-        put<UserRes.UpdateRole> {
+        put<UserRes.Role> {
             @Serializable
             class Body(val userId: String, val role: UserRole)
             val body = call.receive<Body>()
