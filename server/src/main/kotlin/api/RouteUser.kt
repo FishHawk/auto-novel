@@ -60,7 +60,7 @@ fun Route.routeUser() {
 
         put<UserRes.Id.Role> { loc ->
             @Serializable
-            class Body(val userId: String, val role: UserRole)
+            class Body(val role: UserRole)
             val body = call.receive<Body>()
             val user = call.user()
             call.tryRespond {
