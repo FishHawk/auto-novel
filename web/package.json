@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "dev:local": "LOCAL=1 vite",
+    "dev:local": "cross-env LOCAL=1 vite",
     "build": "vite build && vue-tsc --noEmit",
     "build:analyze": "ENABLE_SONDA=1 vite build",
     "lint": "eslint src",
@@ -24,6 +24,7 @@
     "@eslint/js": "^9.25.1",
     "@types/node": "^20.17.30",
     "@vue/eslint-config-typescript": "^14.5.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-compat": "^6.0.2",
