@@ -96,19 +96,9 @@ private val PostAuthenticationInterceptors = createRouteScopedPlugin(name = "Use
     on(AuthenticationChecked) { call ->
         call.principal<JWTPrincipal>()?.let { principal ->
             val id = principal["id"]!!
-            val user = try {
-                User(
-                    id = id,
-                    email = principal["email"]!!,
-                    username = principal["username"]!!,
-                    role = principal["role"]!!.toUserRole(),
-                    createdAt = Instant.fromEpochSeconds(
-                        principal.getClaim("createAt", Long::class)!!
-                    ),
-                )
-            } catch (e: Throwable) {
+            val user =
                 userRepo.getUser(id)!!
-            }
+
             if (user.role === UserRole.Banned) {
                 call.respond(HttpStatusCode.Unauthorized, "用户已被封禁")
             } else {
