@@ -5,9 +5,7 @@ import api.plugins.shouldBeAtLeast
 import api.plugins.user
 import infra.common.Page
 import infra.user.*
-import infra.user.UserRole.Companion.toUserRole
 import io.ktor.resources.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -57,16 +55,14 @@ fun Route.routeUser() {
 
         }
 
-        post<UserRes.UpdateRole>{
+        post<UserRes.UpdateRole> {
             @Serializable
             class Body(val userId: String, val role: UserRole)
             val body = call.receive<Body>()
             val user = call.user()
-            call.tryRespond{
+            call.tryRespond {
                 service.updateRole(
-                    user=user,
-                    userId = body.userId,
-                    role = body.role
+                    user = user, userId = body.userId, role = body.role
                 )
             }
         }
@@ -114,13 +110,11 @@ class UserApi(
     }
 
     suspend fun updateRole(
-        user: User,
-        userId: String,
-        role: UserRole
-    ){
+        user: User, userId: String, role: UserRole
+    ) {
         user.shouldBeAtLeast(UserRole.Admin)
         userRepo.updateRole(
-            userId=userId,
+            userId = userId,
             role = role
         )
     }
