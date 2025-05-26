@@ -83,7 +83,14 @@ const roleToReadableText = (role: UserRole) => {
           <td>{{ roleToReadableText(user.role) }}</td>
           <td>{{ user.email }}</td>
           <td><n-time :time="user.createdAt * 1000" /></td>
-          <td></td>
+          <td>
+            <user-management-update-role
+              :id="user.id"
+              :username="user.username"
+              :role="user.role"
+              @update="loadPage(currentPage)"
+            />
+          </td>
         </tr>
       </tbody>
     </n-table>

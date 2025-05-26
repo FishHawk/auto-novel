@@ -6,8 +6,9 @@ import api.plugins.user
 import infra.common.Page
 import infra.user.*
 import io.ktor.resources.*
-import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.resources.*
+import io.ktor.server.resources.put
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
@@ -21,6 +22,12 @@ private class UserRes {
         val pageSize: Int,
         val role: UserRole,
     )
+
+    @Resource("/{id}")
+    class Id(val parent: UserRes, val id: String) {
+        @Resource("/role")
+        class Role(val parent: Id)
+    }
 
     @Resource("/favored")
     class Favored(val parent: UserRes)
@@ -41,6 +48,19 @@ fun Route.routeUser() {
                 )
             }
         }
+
+        put<UserRes.Id.Role> { loc ->
+            @Serializable
+            class Body(val role: UserRole)
+            val body = call.receive<Body>()
+            val user = call.user()
+            call.tryRespond {
+                service.updateRole(
+                    user = user, userId = loc.parent.id, role = body.role
+                )
+            }
+        }
+
         get<UserRes.Favored> {
             val user = call.user()
             call.tryRespond {
@@ -48,6 +68,7 @@ fun Route.routeUser() {
                     user = user,
                 )
             }
+
         }
     }
 }
@@ -85,6 +106,18 @@ class UserApi(
                 createdAt = it.createdAt.epochSeconds,
             )
         }
+    }
+
+    suspend fun updateRole(
+        user: User,
+        userId: String,
+        role: UserRole,
+    ) {
+        user.shouldBeAtLeast(UserRole.Admin)
+        userRepo.updateRole(
+            userId = userId,
+            role = role
+        )
     }
 
     suspend fun listFavored(user: User): UserFavoredList {

@@ -8,7 +8,7 @@ const route = useRoute();
 
 const { whoami } = Locator.authRepository();
 
-const path = route.path;
+const path = computed(() => route.path);
 const handleUpdateValue = (path: string) => router.push({ path });
 </script>
 
