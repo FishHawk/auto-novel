@@ -32,6 +32,11 @@
 		header @filename Content-Disposition "attachment; filename=\"{http.request.uri.query.filename}\""
 	}
 
+	handle_path /files-wenku* {
+		root * /data/files-wenku
+		file_server
+	}
+
 	handle_path /files-extra* {
 		root * /data/files-extra
 		file_server
