@@ -7,6 +7,7 @@ import { WebNovelDto } from '@/model/WebNovel';
 import { WebUtil } from '@/util/web';
 
 import { useIsWideScreen } from '@/pages/util';
+import { VueUtil } from '@/util';
 
 const props = defineProps<{
   providerId: string;
@@ -91,7 +92,7 @@ const latestChapterCreateAt = computed(() => {
 
   <n-p v-if="novel.authors.length > 0">
     作者：
-    <template v-for="author in novel.authors">
+    <template v-for="author in novel.authors" :key="JSON.stringify(author)">
       <n-a :href="author.link">{{ author.name }}</n-a>
     </template>
   </n-p>
@@ -157,14 +158,16 @@ const latestChapterCreateAt = computed(() => {
 
   <n-flex :size="[4, 4]">
     <router-link
-      v-for="attention of novel.attentions.sort()"
+      v-for="(attention, idx) of novel.attentions.sort()"
+      :key="VueUtil.buildKey(idx, attention)"
       :to="`/novel?query=${attention}\$`"
     >
       <novel-tag :tag="attention" strong />
     </router-link>
 
     <router-link
-      v-for="keyword of novel.keywords"
+      v-for="(keyword, idx) of novel.keywords"
+      :key="VueUtil.buildKey(idx, keyword)"
       :to="`/novel?query=${keyword}\$`"
     >
       <novel-tag :tag="WebUtil.tryTranslateKeyword(keyword)" />

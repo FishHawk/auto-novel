@@ -393,6 +393,7 @@ const askApiWeb = async (
       });
       try {
         const mapping = Object.values(conversation.mapping);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj: any = mapping[mapping.length - 1];
         if (obj.message.author.role === 'assistant') {
           answer = obj.message.content.parts[0];

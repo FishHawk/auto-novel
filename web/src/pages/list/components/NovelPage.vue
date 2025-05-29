@@ -4,7 +4,7 @@ import { SyncAltOutlined } from '@vicons/material';
 import { Locator } from '@/data';
 import { Page } from '@/model/Page';
 import { Result } from '@/util/result';
-import { RegexUtil } from '@/util';
+import { RegexUtil, VueUtil } from '@/util';
 
 export type Loader<T> = (
   page: number,
@@ -165,6 +165,7 @@ const invertSelection = (optionIndex: number) => {
     </c-action-wrapper>
     <c-action-wrapper
       v-for="(option, optionIndex) in options"
+      :key="VueUtil.buildKey(optionIndex, option.label)"
       :title="option.label"
       align="baseline"
       size="large"
@@ -172,6 +173,7 @@ const invertSelection = (optionIndex: number) => {
       <n-flex :size="[16, 4]">
         <n-text
           v-for="(tag, index) in option.tags"
+          :key="VueUtil.buildKey(index, tag)"
           text
           :type="
             isSelected(optionIndex, index, option.multiple)

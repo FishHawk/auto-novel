@@ -31,8 +31,8 @@ export const translateWenku = async (
   try {
     callback.log(`获取未翻译章节 ${volumeId}`);
     task = await getTranslateTask();
-  } catch (e: any) {
-    if (e.name === 'AbortError') {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.name === 'AbortError') {
       callback.log(`中止翻译任务`);
       return 'abort';
     } else {
@@ -87,11 +87,11 @@ export const translateWenku = async (
         });
         callback.onChapterSuccess({ zh: state });
       }
-    } catch (e: any) {
-      if (e === 'quit') {
+    } catch (e: unknown) {
+      if (e instanceof String && e === 'quit') {
         callback.log(`发生错误，结束翻译任务`);
         return;
-      } else if (e.name === 'AbortError') {
+      } else if (e instanceof Error && e.name === 'AbortError') {
         callback.log(`中止翻译任务`);
         return 'abort';
       } else {
