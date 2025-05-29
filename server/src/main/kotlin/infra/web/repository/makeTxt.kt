@@ -49,6 +49,19 @@ private class TxtWriter(
         }
     }
 
+    private fun BufferedWriter.writeKeywords(novel: WebNovel){
+        novel.keywords.forEach {
+            write(it)
+            write(" / ")
+        }
+    }
+
+    private fun BufferedWriter.writeTranslateStatus(novel: WebNovel){
+        with(novel) {
+            write("总计: $jp / 百度: $baidu / 有道: $youdao / GPT: $gpt / Sakura: $sakura")
+        }
+    }
+
     private fun BufferedWriter.writeIntroduction(novel: WebNovel) {
         if (jp && novel.introductionJp.isNotBlank()) {
             write(novel.introductionJp)
@@ -81,6 +94,10 @@ private class TxtWriter(
         write("\n")
         writeAuthor(novel)
         write("\n")
+        writeKeywords(novel)
+        write("\n")
+        writeTranslateStatus(novel)
+        write("\n\n")
         write("#".repeat(12) + "\n")
         writeIntroduction(novel)
         write("\n\n\n")
