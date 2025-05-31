@@ -140,6 +140,9 @@ class WebNovelChapterRepository(
             if (local.gptParagraphs != null) {
                 updateChapterTranslateState(providerId, novelId, TranslatorId.Gpt)
             }
+            if (local.sakuraParagraphs != null){
+                updateChapterTranslateState(providerId, novelId, TranslatorId.Sakura)
+            }
             return Result.success(remote)
         } else {
             // 本地存在，且已是最新
