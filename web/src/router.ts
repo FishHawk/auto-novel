@@ -76,7 +76,7 @@ const router = createRouter({
               props: (route) => ({
                 page: Number(route.query.page) || 1,
                 selected: parseSelected(route.query),
-                favoredId: route.params.favoredId || 'default',
+                favoredId: route.params.favoredId || 'all',
               }),
             },
             {
