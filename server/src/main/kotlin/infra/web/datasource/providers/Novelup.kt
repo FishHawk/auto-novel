@@ -26,16 +26,16 @@ class Novelup(
         val url = "https://novelup.plus/story/$novelId"
         val doc = client.get(url).document()
 
-        val infoEl = doc.selectFirst("div#section_episode_info_table > div.content_wrapper > table")!!
+        val infoEl = doc.selectFirst("table.storyMeta")!!
 
         fun row(label: String) = infoEl
             .selectFirst("th:containsOwn(${label})")!!
             .nextElementSibling()!!
 
-        val title = row("作品名")
+        val title = doc.selectFirst("h1.storyTitle")!!
             .text()
 
-        val author = row("作者名")
+        val author = doc.selectFirst("a.storyAuthor")!!
             .selectFirst("a")!!
             .let {
                 WebNovelAuthor(
@@ -45,7 +45,7 @@ class Novelup(
             }
 
         val type = doc
-            .selectFirst("div.state_lamp_set")!!
+            .selectFirst("p.state_lamp")!!
             .select("span")
             .last()!!
             .text()
@@ -100,14 +100,14 @@ class Novelup(
                 if (page == 1) doc
                 else client.get("https://novelup.plus/story/$novelId?p=$page").document()
             }.map { subdoc ->
-                subdoc.selectFirst("div.episode_list")!!.select("li").map { li ->
+                subdoc.selectFirst("div.episodeList")!!.select("div.episodeListItem").map { li ->
                     li.selectFirst("a")?.let {
                         RemoteNovelMetadata.TocItem(
-                            title = it.text(),
+                            title = "${it.attr("data-number")}　${it.text()}",
                             chapterId = it.attr("href").substringAfterLast("/"),
                             createAt = parseJapanDateString(
                                 "yyyy/M/dd HH:mm",
-                                li.selectFirst("p.episodeMeta_columnItem")!!.child(1).text()
+                                li.selectFirst("p.publishDate")!!.text()
                             ),
                         )
                     } ?: RemoteNovelMetadata.TocItem(
