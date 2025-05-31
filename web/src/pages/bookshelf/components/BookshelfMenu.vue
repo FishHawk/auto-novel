@@ -44,9 +44,12 @@ const menuOptions = computed(() => {
       {
         type: 'group',
         label: '网络小说',
-        children: favoreds.value.web.map(({ id, title }) =>
-          menuOption('web', id, title),
-        ),
+        children: [
+          menuOption('web', 'all', '全部'),
+          ...favoreds.value.web.map(({ id, title }) =>
+            menuOption('web', id, title),
+          ),
+        ],
       },
       {
         type: 'divider',

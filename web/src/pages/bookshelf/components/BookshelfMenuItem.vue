@@ -19,12 +19,15 @@ const store = useBookshelfLocalStore();
 const message = useMessage();
 
 const options =
-  id === 'default'
-    ? [{ label: '编辑信息', key: 'edit' }]
-    : [
-        { label: '编辑信息', key: 'edit' },
-        { label: '删除', key: 'delete' },
-      ];
+  id === 'all'
+    ? []
+    : id === 'default'
+      ? [{ label: '编辑信息', key: 'edit' }]
+      : [
+          { label: '编辑信息', key: 'edit' },
+          { label: '删除', key: 'delete' },
+        ];
+
 const onSelect = (key: string) => {
   if (key === 'edit') {
     showEditModal.value = true;
@@ -94,6 +97,7 @@ const deleteFavored = () =>
     <n-flex align="center" justify="space-between">
       {{ title }}
       <n-dropdown
+        v-if="options.length > 0"
         trigger="hover"
         :options="options"
         :keyboard="false"

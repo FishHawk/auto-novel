@@ -105,6 +105,66 @@ class WebNovelFavoredRepository(
         }
     }
 
+    suspend fun listAllFavoredNovels(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        sort: FavoredNovelListSort,
+    ): Page<WebNovelListItem> {
+        @Serializable
+        data class PageModel(
+            val total: Int = 0,
+            val items: List<WebNovel>,
+        )
+
+        val sortProperty = when (sort) {
+            FavoredNovelListSort.CreateAt -> WebNovelFavoriteDbModel::createAt
+            FavoredNovelListSort.UpdateAt -> WebNovelFavoriteDbModel::updateAt
+        }
+
+        val doc = userFavoredWebCollection
+            .aggregate<PageModel>(
+                match(
+                    eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                ),
+                sort(
+                    descending(sortProperty.field()),
+                ),
+                facet(
+                    Facet("count", count()),
+                    Facet(
+                        "items",
+                        skip(page * pageSize),
+                        limit(pageSize),
+                        lookup(
+                            /* from = */ MongoCollectionNames.WEB_NOVEL,
+                            /* localField = */ WebNovelFavoriteDbModel::novelId.field(),
+                            /* foreignField = */ WebNovel::id.field(),
+                            /* as = */ "novel"
+                        ),
+                        unwind("\$novel"),
+                        replaceRoot("\$novel"),
+                    )
+                ),
+                project(
+                    fields(
+                        computed(PageModel::total.field(), arrayElemAt("count.count", 0)),
+                        include(PageModel::items.field())
+                    )
+                ),
+            )
+            .firstOrNull()
+        return if (doc == null) {
+            emptyPage()
+        } else {
+            Page(
+                items = doc.items.map { it.toOutline() },
+                total = doc.total.toLong(),
+                pageSize = pageSize,
+            )
+        }
+    }
+
     suspend fun countFavoredNovelByUserId(
         userId: String,
         favoredId: String,

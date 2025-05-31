@@ -188,6 +188,16 @@ class UserFavoredWebApi(
     ): Page<WebNovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
+        if (favoredId == "all") {
+            return favoredRepo
+                .listAllFavoredNovels(
+                    userId = user.id,
+                    page = page,
+                    pageSize = pageSize,
+                    sort = sort,
+                )
+                .map { it.asDto() }
+        }
         return favoredRepo
             .listFavoredNovel(
                 userId = user.id,
