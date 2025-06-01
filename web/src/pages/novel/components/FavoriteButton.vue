@@ -66,7 +66,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
 <template>
   <template v-if="favoreds.length <= 1">
     <c-button
-      v-if="favored"
+      v-if="favored && favoredTitle"
       label="已收藏"
       :icon="FavoriteOutlined"
       require-login
@@ -83,7 +83,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
 
   <template v-else>
     <c-button
-      :label="favored ? '已收藏:' + favoredTitle : '收藏'"
+      :label="favored && favoredTitle ? '已收藏:' + favoredTitle : '收藏'"
       :icon="favored ? FavoriteOutlined : FavoriteBorderOutlined"
       require-login
       @action="showFavoredModal = true"
