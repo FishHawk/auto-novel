@@ -19,7 +19,7 @@ const store = useBookshelfLocalStore();
 const message = useMessage();
 
 const getOptions = () => {
-  if (id === '') {
+  if (id === 'all') {
     return [];
   } else if (id === 'default') {
     return [{ label: '编辑信息', key: 'edit' }];
