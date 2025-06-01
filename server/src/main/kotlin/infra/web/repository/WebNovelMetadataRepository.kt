@@ -22,6 +22,8 @@ import kotlinx.datetime.Instant
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import java.util.*
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 class WebNovelMetadataRepository(
@@ -167,7 +169,7 @@ class WebNovelMetadataRepository(
     suspend fun getNovelAndSave(
         providerId: String,
         novelId: String,
-        expiredMinutes: Int = 20 * 60,
+        expiredMinutes: Int? = null,
     ): Result<WebNovel> {
         val local = get(providerId, novelId)
 
@@ -188,7 +190,14 @@ class WebNovelMetadataRepository(
 
         // 在数据库中，没有过期
         val sinceLastSync = Clock.System.now() - local.syncAt
-        if (sinceLastSync <= expiredMinutes.minutes) {
+        val expiredDuration = expiredMinutes?.minutes
+            ?: if (providerId == Pixiv.id) {
+                7.days
+            } else {
+                20.hours
+            }
+
+        if (sinceLastSync <= expiredDuration) {
             return Result.success(local)
         }
 
