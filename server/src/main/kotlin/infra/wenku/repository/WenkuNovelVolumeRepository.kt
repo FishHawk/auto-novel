@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
+import org.jsoup.nodes.Element
+import util.Signature as Sig
 import util.epub.Epub
 import util.serialName
 import java.security.MessageDigest
@@ -114,6 +116,10 @@ class WenkuNovelVolumeRepository(
                     if (zhLinesList.isEmpty()) {
                         bf.appendLine("// 该分段翻译缺失。")
                     } else {
+                        // 添加机翻标识, Issue #134
+                        bf.appendLine("※ ${Sig.text()}")
+                        bf.appendLine("")
+
                         val jpLines = volume.getChapter(chapterId)!!
                         val linesList = when (mode) {
                             NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
@@ -134,7 +140,25 @@ class WenkuNovelVolumeRepository(
             val jpPath = volume.volumesDir / volumeId
 
             val chapters = volume.listChapter()
+
+            val contentOpfDoc = Epub.readContentOpf(jpPath)
+            // 通过 content.opf 查找第一个文件
+            val firstFile = contentOpfDoc
+                ?.selectFirst("manifest")
+                ?.selectFirst("item[href\$=html], item[href\$=xhtml]")
+                ?.attr("href")
+                ?: ""
+            val navFile = contentOpfDoc
+                ?.selectFirst("item[properties=nav]")
+                ?.attr("href")
+                ?: "nav file not found"
+            // TODO(kuriko): 对于 EPUB v3 标准，nav 是必须的 (v2 使用 nav.ncx)
+            //  因此这里可以添加一个检测，是否存在 nav 缺失。
+            //  不过目前似乎没有遇到过有 epub 存在这种问题。
+
             Epub.modify(srcPath = jpPath, dstPath = zhPath) { name, bytesIn ->
+                var bytesOut = bytesIn
+
                 // 为了兼容ChapterId以斜杠开头的旧格式
                 val chapterId = if ("/${name}".escapePath() in chapters) {
                     "/${name}".escapePath()
@@ -144,57 +168,36 @@ class WenkuNovelVolumeRepository(
                     null
                 }
 
+                // FIXME(kuriko): 这个可能会给服务器带来更大的负载（每次都需要重新跑正则），
+                //  可能需要在上传的时候进行这个 fix，之后将结果 cache 起来
+                if (name.endsWith("html") || name.endsWith("xhtml")) {
+                    val fixedDoc = Epub.fixInvalidEpub(bytesOut.decodeToString())
+                    bytesOut =  fixedDoc.toByteArray()
+                }
+
                 if (chapterId != null) {
                     // XHtml文件，尝试生成翻译版
                     val zhLinesList = getZhLinesList(chapterId)
                     if (zhLinesList.isEmpty()) {
-                        bytesIn
+                        bytesOut
                     } else {
-                        val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
-                        doc.select("p")
-                            .filter { el -> el.text().isNotBlank() }
-                            .forEachIndexed { index, el ->
-                                when (mode) {
-                                    NovelFileMode.Jp -> throw RuntimeException("文库小说不允许日语下载")
-                                    NovelFileMode.Zh -> {
-                                        zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}</p>")
-                                        }
-                                        el.remove()
-                                    }
-
-                                    NovelFileMode.JpZh -> {
-                                        zhLinesList.asReversed().forEach { lines ->
-                                            el.after("<p>${lines[index]}</p>")
-                                        }
-                                        el.attr("style", "opacity:0.4;")
-                                    }
-
-                                    NovelFileMode.ZhJp -> {
-                                        zhLinesList.forEach { lines ->
-                                            el.before("<p>${lines[index]}</p>")
-                                        }
-                                        el.attr("style", "opacity:0.4;")
-                                    }
-                                }
-                            }
+                        val doc = Jsoup.parse(bytesOut.decodeToString(), Parser.xmlParser())
+                        Epub.replaceWithTranslation(doc, zhLinesList, mode);
                         doc.outputSettings().prettyPrint(true)
                         doc.html().toByteArray()
                     }
+                } else if (name.contains(navFile)) {
+                    bytesOut = Epub.addSigToNav(bytesOut)
+                    bytesOut
                 } else if (name.endsWith("opf")) {
-                    val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
-
-                    // 防止部分阅读器使用竖排
-                    doc
-                        .selectFirst("spine")
-                        ?.removeAttr("page-progression-direction")
-
-                    doc.outputSettings().prettyPrint(true)
-                    doc.html().toByteArray()
+                    bytesOut = Epub.fixInvalidOpf(bytesOut)
+                    bytesOut
+                } else if (name.endsWith("ncx")) { // toc.ncx file
+                    Epub.addSigToNcx(bytesOut, firstFile)
                 } else if (name.endsWith("css")) {
                     "".toByteArray()
                 } else {
-                    bytesIn
+                    bytesOut
                 }
             }
             return@withContext zhFilename
