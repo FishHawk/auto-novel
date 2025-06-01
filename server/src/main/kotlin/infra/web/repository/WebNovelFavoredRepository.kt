@@ -15,6 +15,7 @@ import infra.web.WebNovelFavoriteDbModel
 import infra.web.WebNovel
 import infra.web.WebNovelListItem
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -105,6 +106,18 @@ class WebNovelFavoredRepository(
                 pageSize = pageSize,
             )
         }
+    }
+
+    suspend fun listFavoredNovelWithoutPagination(
+        userId: String,
+        favoredId: String
+    ): List<WebNovelFavoriteDbModel> {
+        return userFavoredWebCollection.find(
+            and(
+                eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                eq(WebNovelFavoriteDbModel::favoredId.field(), favoredId),
+            )
+        ).toList()
     }
 
     suspend fun countFavoredNovelByUserId(

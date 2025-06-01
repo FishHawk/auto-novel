@@ -15,6 +15,7 @@ import infra.wenku.WenkuNovelFavoriteDbModel
 import infra.wenku.WenkuNovel
 import infra.wenku.WenkuNovelListItem
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -117,6 +118,18 @@ class WenkuNovelFavoredRepository(
                 pageSize = pageSize,
             )
         }
+    }
+
+    suspend fun listFavoredNovelWithoutPagination(
+        userId: String,
+        favoredId: String
+    ): List<WenkuNovelFavoriteDbModel> {
+        return userFavoredWenkuCollection.find(
+            and(
+                eq(WenkuNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                eq(WenkuNovelFavoriteDbModel::favoredId.field(), favoredId),
+            )
+        ).toList()
     }
 
     suspend fun countFavoredNovelByUserId(

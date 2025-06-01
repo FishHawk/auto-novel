@@ -169,6 +169,16 @@ class UserFavoredWenkuApi(
 
         val (_, favoredWenku) = userFavoredRepo.getFavoredList(user.id)!!
 
+        favoredRepo.listFavoredNovelWithoutPagination(
+            userId = user.id,
+            favoredId = favoredId
+        ).forEach {
+            favoredRepo.deleteFavoredNovel(
+                userId = ObjectId(user.id),
+                novelId = it.novelId
+            )
+        }
+
         userFavoredRepo.updateFavoredWenku(
             userId = user.id,
             favored = favoredWenku.filter { it.id != favoredId },

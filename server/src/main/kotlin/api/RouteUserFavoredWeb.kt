@@ -172,6 +172,16 @@ class UserFavoredWebApi(
 
         val (favoredWeb) = userFavoredRepo.getFavoredList(user.id)!!
 
+        favoredRepo.listFavoredNovelWithoutPagination(
+            userId = user.id,
+            favoredId = favoredId
+        ).forEach {
+            favoredRepo.deleteFavoredNovel(
+                userId = ObjectId(user.id),
+                novelId = it.novelId
+            )
+        }
+
         userFavoredRepo.updateFavoredWeb(
             userId = user.id,
             favored = favoredWeb.filter { it.id != favoredId },
