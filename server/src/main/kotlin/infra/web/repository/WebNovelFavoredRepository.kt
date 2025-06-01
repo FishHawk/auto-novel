@@ -43,7 +43,7 @@ class WebNovelFavoredRepository(
 
     suspend fun listFavoredNovel(
         userId: String,
-        favoredId: String,
+        favoredId: String?,
         page: Int,
         pageSize: Int,
         sort: FavoredNovelListSort,
@@ -54,82 +54,24 @@ class WebNovelFavoredRepository(
             val items: List<WebNovel>,
         )
 
-        val sortProperty = when (sort) {
-            FavoredNovelListSort.CreateAt -> WebNovelFavoriteDbModel::createAt
-            FavoredNovelListSort.UpdateAt -> WebNovelFavoriteDbModel::updateAt
-        }
-
-        val doc = userFavoredWebCollection
-            .aggregate<PageModel>(
-                match(
-                    and(
-                        eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
-                        eq(WebNovelFavoriteDbModel::favoredId.field(), favoredId),
-                    )
-                ),
-                sort(
-                    descending(sortProperty.field()),
-                ),
-                facet(
-                    Facet("count", count()),
-                    Facet(
-                        "items",
-                        skip(page * pageSize),
-                        limit(pageSize),
-                        lookup(
-                            /* from = */ MongoCollectionNames.WEB_NOVEL,
-                            /* localField = */ WebNovelFavoriteDbModel::novelId.field(),
-                            /* foreignField = */ WebNovel::id.field(),
-                            /* as = */ "novel"
-                        ),
-                        unwind("\$novel"),
-                        replaceRoot("\$novel"),
-                    )
-                ),
-                project(
-                    fields(
-                        computed(PageModel::total.field(), arrayElemAt("count.count", 0)),
-                        include(PageModel::items.field())
-                    )
-                ),
-            )
-            .firstOrNull()
-        return if (doc == null) {
-            emptyPage()
+        val filterBson = if (favoredId == null) {
+            eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId))
         } else {
-            Page(
-                items = doc.items.map { it.toOutline() },
-                total = doc.total.toLong(),
-                pageSize = pageSize,
+            and(
+                eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                eq(WebNovelFavoriteDbModel::favoredId.field(), favoredId),
             )
         }
-    }
 
-    suspend fun listAllFavoredNovels(
-        userId: String,
-        page: Int,
-        pageSize: Int,
-        sort: FavoredNovelListSort,
-    ): Page<WebNovelListItem> {
-        @Serializable
-        data class PageModel(
-            val total: Int = 0,
-            val items: List<WebNovel>,
-        )
-
-        val sortProperty = when (sort) {
-            FavoredNovelListSort.CreateAt -> WebNovelFavoriteDbModel::createAt
-            FavoredNovelListSort.UpdateAt -> WebNovelFavoriteDbModel::updateAt
+        val sortBson = when (sort) {
+            FavoredNovelListSort.CreateAt -> descending(WebNovelFavoriteDbModel::createAt.field())
+            FavoredNovelListSort.UpdateAt -> descending(WebNovelFavoriteDbModel::updateAt.field())
         }
 
         val doc = userFavoredWebCollection
             .aggregate<PageModel>(
-                match(
-                    eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
-                ),
-                sort(
-                    descending(sortProperty.field()),
-                ),
+                match(filterBson),
+                sort(sortBson),
                 facet(
                     Facet("count", count()),
                     Facet(

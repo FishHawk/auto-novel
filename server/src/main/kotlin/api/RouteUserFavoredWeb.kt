@@ -12,7 +12,6 @@ import infra.user.UserFavoredRepository
 import infra.web.repository.WebNovelFavoredRepository
 import infra.web.repository.WebNovelMetadataRepository
 import io.ktor.resources.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -188,20 +187,10 @@ class UserFavoredWebApi(
     ): Page<WebNovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
-        if (favoredId == "all") {
-            return favoredRepo
-                .listAllFavoredNovels(
-                    userId = user.id,
-                    page = page,
-                    pageSize = pageSize,
-                    sort = sort,
-                )
-                .map { it.asDto() }
-        }
         return favoredRepo
             .listFavoredNovel(
                 userId = user.id,
-                favoredId = favoredId,
+                favoredId = favoredId.takeIf { it != "all" },
                 page = page,
                 pageSize = pageSize,
                 sort = sort,

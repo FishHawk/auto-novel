@@ -40,36 +40,34 @@ const menuOptions = computed(() => {
     ),
   };
   if (whoami.value.isSignedIn) {
-    return [
-      {
-        type: 'group',
-        label: '网络小说',
-        children: [
-          menuOption('web', 'all', '全部'),
-          ...favoreds.value.web.map(({ id, title }) =>
-            menuOption('web', id, title),
-          ),
-        ],
-      },
-      {
-        type: 'divider',
-        key: 'divider',
-        props: { style: { marginLeft: '32px' } },
-      },
-      {
-        type: 'group',
-        label: '文库小说',
-        children: favoreds.value.wenku.map(({ id, title }) =>
-          menuOption('wenku', id, title),
-        ),
-      },
-      {
-        type: 'divider',
-        key: 'divider',
-        props: { style: { marginLeft: '32px' } },
-      },
-      localGroup,
-    ];
+    const webGroup = {
+      type: 'group',
+      label: '网络小说',
+      children: favoreds.value.web.map(({ id, title }) =>
+        menuOption('web', id, title),
+      ),
+    };
+    const wenkuGroup = {
+      type: 'group',
+      label: '文库小说',
+      children: favoreds.value.wenku.map(({ id, title }) =>
+        menuOption('wenku', id, title),
+      ),
+    };
+    const divider = {
+      type: 'divider',
+      key: 'divider',
+      props: { style: { marginLeft: '32px' } },
+    };
+
+    if (webGroup.children.length > 1) {
+      webGroup.children.unshift(menuOption('web', 'all', '全部'));
+    }
+    if (wenkuGroup.children.length > 1) {
+      wenkuGroup.children.unshift(menuOption('wenku', 'all', '全部'));
+    }
+
+    return [webGroup, divider, wenkuGroup, divider, localGroup];
   } else {
     return [localGroup];
   }

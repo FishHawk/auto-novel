@@ -11,6 +11,7 @@ import infra.*
 import infra.common.FavoredNovelListSort
 import infra.common.Page
 import infra.common.emptyPage
+import infra.web.WebNovelFavoriteDbModel
 import infra.wenku.WenkuNovelFavoriteDbModel
 import infra.wenku.WenkuNovel
 import infra.wenku.WenkuNovelListItem
@@ -46,7 +47,7 @@ class WenkuNovelFavoredRepository(
 
     suspend fun listFavoriteWenkuNovel(
         userId: String,
-        favoredId: String,
+        favoredId: String?,
         page: Int,
         pageSize: Int,
         sort: FavoredNovelListSort,
@@ -57,22 +58,24 @@ class WenkuNovelFavoredRepository(
             val items: List<WenkuNovel>,
         )
 
-        val sortProperty = when (sort) {
-            FavoredNovelListSort.CreateAt -> WenkuNovelFavoriteDbModel::createAt
-            FavoredNovelListSort.UpdateAt -> WenkuNovelFavoriteDbModel::updateAt
+        val filterBson = if (favoredId == null) {
+            eq(WenkuNovelFavoriteDbModel::userId.field(), ObjectId(userId))
+        } else {
+            and(
+                eq(WenkuNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                eq(WenkuNovelFavoriteDbModel::favoredId.field(), favoredId),
+            )
+        }
+
+        val sortBson = when (sort) {
+            FavoredNovelListSort.CreateAt -> descending(WenkuNovelFavoriteDbModel::createAt.field())
+            FavoredNovelListSort.UpdateAt -> descending(WenkuNovelFavoriteDbModel::updateAt.field())
         }
 
         val doc = userFavoredWenkuCollection
             .aggregate<PageModel>(
-                match(
-                    and(
-                        eq(WenkuNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
-                        eq(WenkuNovelFavoriteDbModel::favoredId.field(), favoredId),
-                    )
-                ),
-                sort(
-                    descending(sortProperty.field())
-                ),
+                match(filterBson),
+                sort(sortBson),
                 facet(
                     Facet("count", count()),
                     Facet(

@@ -18,15 +18,20 @@ const store = useBookshelfLocalStore();
 
 const message = useMessage();
 
-const options =
-  id === 'all'
-    ? []
-    : id === 'default'
-      ? [{ label: '编辑信息', key: 'edit' }]
-      : [
-          { label: '编辑信息', key: 'edit' },
-          { label: '删除', key: 'delete' },
-        ];
+const getOptions = () => {
+  if (id === '') {
+    return [];
+  } else if (id === 'default') {
+    return [{ label: '编辑信息', key: 'edit' }];
+  } else {
+    return [
+      { label: '编辑信息', key: 'edit' },
+      { label: '删除', key: 'delete' },
+    ];
+  }
+};
+
+const options = getOptions();
 
 const onSelect = (key: string) => {
   if (key === 'edit') {
