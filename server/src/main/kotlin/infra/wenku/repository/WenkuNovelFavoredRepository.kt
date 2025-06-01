@@ -11,7 +11,6 @@ import infra.*
 import infra.common.FavoredNovelListSort
 import infra.common.Page
 import infra.common.emptyPage
-import infra.web.WebNovelFavoriteDbModel
 import infra.wenku.WenkuNovelFavoriteDbModel
 import infra.wenku.WenkuNovel
 import infra.wenku.WenkuNovelListItem
