@@ -12,7 +12,6 @@ import infra.user.UserFavoredRepository
 import infra.web.repository.WebNovelFavoredRepository
 import infra.web.repository.WebNovelMetadataRepository
 import io.ktor.resources.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
@@ -191,7 +190,7 @@ class UserFavoredWebApi(
         return favoredRepo
             .listFavoredNovel(
                 userId = user.id,
-                favoredId = favoredId,
+                favoredId = favoredId.takeIf { it != "all" },
                 page = page,
                 pageSize = pageSize,
                 sort = sort,

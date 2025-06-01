@@ -43,7 +43,7 @@ class WebNovelFavoredRepository(
 
     suspend fun listFavoredNovel(
         userId: String,
-        favoredId: String,
+        favoredId: String?,
         page: Int,
         pageSize: Int,
         sort: FavoredNovelListSort,
@@ -54,22 +54,24 @@ class WebNovelFavoredRepository(
             val items: List<WebNovel>,
         )
 
-        val sortProperty = when (sort) {
-            FavoredNovelListSort.CreateAt -> WebNovelFavoriteDbModel::createAt
-            FavoredNovelListSort.UpdateAt -> WebNovelFavoriteDbModel::updateAt
+        val filterBson = if (favoredId == null) {
+            eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId))
+        } else {
+            and(
+                eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                eq(WebNovelFavoriteDbModel::favoredId.field(), favoredId),
+            )
+        }
+
+        val sortBson = when (sort) {
+            FavoredNovelListSort.CreateAt -> descending(WebNovelFavoriteDbModel::createAt.field())
+            FavoredNovelListSort.UpdateAt -> descending(WebNovelFavoriteDbModel::updateAt.field())
         }
 
         val doc = userFavoredWebCollection
             .aggregate<PageModel>(
-                match(
-                    and(
-                        eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
-                        eq(WebNovelFavoriteDbModel::favoredId.field(), favoredId),
-                    )
-                ),
-                sort(
-                    descending(sortProperty.field()),
-                ),
+                match(filterBson),
+                sort(sortBson),
                 facet(
                     Facet("count", count()),
                     Facet(

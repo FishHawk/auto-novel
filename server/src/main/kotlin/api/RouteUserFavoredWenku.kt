@@ -187,7 +187,7 @@ class UserFavoredWenkuApi(
         return favoredRepo
             .listFavoriteWenkuNovel(
                 userId = user.id,
-                favoredId = favoredId,
+                favoredId = favoredId.takeIf { it != "all" },
                 page = page,
                 pageSize = pageSize,
                 sort = sort,
