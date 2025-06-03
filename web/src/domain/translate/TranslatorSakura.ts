@@ -37,7 +37,7 @@ export class SakuraTranslator implements SegmentTranslator {
   }
 
   async init() {
-    this.model = await this.detectModel();
+    this.model = (await this.detectModel()) as typeof this.model;
     const id = this.model?.id;
     if (id !== undefined) {
       if (id.includes('0.8')) this.version = '0.8';

@@ -57,7 +57,7 @@ interface Model {
   object: 'model';
   created: number;
   owned_by: string;
-  meta: any;
+  meta: unknown;
 }
 
 interface ChatCompletionChunk {
@@ -274,12 +274,13 @@ export class OpenAiError extends Error {
     this.code = code;
   }
 
-  static async handle(e: any): Promise<never> {
+  static async handle(e: unknown): Promise<never> {
     if (e instanceof HTTPError) {
       const errText = await e.response.text().catch((err) => {
         if (err instanceof Error) return err.message;
         return `${err}`;
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const errJson = safeJson<any>(errText);
       throw new OpenAiError(
         e.response.status,
