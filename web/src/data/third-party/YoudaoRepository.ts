@@ -67,6 +67,7 @@ export const createYoudaoRepository = () => {
         },
       })
       .json()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then((json: any) => (key = json['data']['secretKey']));
 
   const webtranslate = (query: string, from: string, options?: Options) =>

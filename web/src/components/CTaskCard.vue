@@ -98,8 +98,8 @@ defineExpose({
     </n-flex>
 
     <c-modal
-      :title="`日志详情 - ${selectedLogMessage}`"
       v-model:show="showLogDetailModal"
+      :title="`日志详情 - ${selectedLogMessage}`"
     >
       <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
         {{ line }}

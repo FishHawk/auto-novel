@@ -30,7 +30,7 @@ const createWorkspaceRepository = <W extends GptWorker | SakuraWorker>(
   }
 
   const addWorker = (worker: W) => {
-    ref.value.workers.push(worker as any);
+    ref.value.workers.push(worker);
   };
   const deleteWorker = (id: string) => {
     ref.value.workers = ref.value.workers.filter((w) => w.id !== id);
@@ -120,7 +120,7 @@ const createWorkspaceRepository = <W extends GptWorker | SakuraWorker>(
 export const createGptWorkspaceRepository = () =>
   createWorkspaceRepository<GptWorker>('gpt-workspace', [], (workspace) => {
     // 2024-3-8
-    workspace.value.workers.forEach((it) => {
+    workspace.value.workers.forEach((it: GptWorker) => {
       if (it.endpoint.length === 0) {
         if (it.type === 'web') {
           it.endpoint = 'https://chat.openai.com/backend-api';
@@ -148,9 +148,11 @@ export const createSakuraWorkspaceRepository = () =>
     ],
     (workspace) => {
       // 2024-5-14
-      workspace.value.workers.forEach((it: any) => {
-        it.testContext = undefined;
-        if (typeof it.testSegLength === 'number') {
+      workspace.value.workers.forEach((it: SakuraWorker) => {
+        if ('testContext' in it) {
+          it.testContext = undefined;
+        }
+        if ('testSegLength' in it && typeof it.testSegLength === 'number') {
           it.segLength = it.testSegLength;
           it.testSegLength = undefined;
         }

@@ -210,7 +210,7 @@ const loadMore = async () => {
     >
       <slot :items="pageValue.items" />
     </c-result>
-    <div class="loading-box" v-if="pageContent?.ok !== false">
+    <div v-if="pageContent?.ok !== false" class="loading-box">
       <template v-if="loading">
         <n-spin />
       </template>

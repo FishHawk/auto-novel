@@ -70,20 +70,20 @@ export namespace Setting {
   };
 
   export const migrate = (setting: Setting) => {
-    if ((setting as any).isDark !== undefined) {
-      if ((setting as any).isDark === true) {
+    if ('isDark' in setting && typeof setting.isDark !== undefined) {
+      if (setting.isDark === true) {
         setting.theme = 'dark';
       }
-      (setting as any).isDark = undefined;
+      delete setting.isDark;
     }
     if (setting.enabledTranslator === undefined) {
       setting.enabledTranslator = ['baidu', 'youdao', 'gpt', 'sakura'];
     }
-    if ((setting.downloadFormat.mode as unknown) === 'mix') {
+    if ((setting.downloadFormat.mode as string) === 'mix') {
       setting.downloadFormat.mode = 'zh-jp';
-    } else if ((setting.downloadFormat.mode as unknown) === 'mix-reverse') {
+    } else if ((setting.downloadFormat.mode as string) === 'mix-reverse') {
       setting.downloadFormat.mode = 'jp-zh';
-    } else if ((setting.downloadFormat.mode as unknown) === 'jp') {
+    } else if ((setting.downloadFormat.mode as string) === 'jp') {
       setting.downloadFormat.mode = 'zh';
     }
     // 2024-03-05
@@ -91,7 +91,7 @@ export namespace Setting {
       setting.workspaceSound = false;
     }
     // 2024-05-28
-    if ((setting.paginationMode as any) === 'auto') {
+    if ((setting.paginationMode as unknown) === 'auto') {
       setting.paginationMode = 'pagination';
     }
   };
@@ -182,14 +182,15 @@ export namespace ReaderSetting {
   export const migrate = (setting: ReaderSetting) => {
     if (typeof setting.fontSize === 'string') {
       setting.fontSize = Number(
-        (setting.fontSize as any).replace(/[^0-9]/g, ''),
+        (setting.fontSize as string).replace(/[^0-9]/g, ''),
       );
     }
-    if ((setting.mode as any) === 'mix') {
+    if ((setting.mode as unknown) === 'mix') {
       setting.mode = 'zh-jp';
-    } else if ((setting.mode as any) === 'mix-reverse') {
+    } else if ((setting.mode as unknown) === 'mix-reverse') {
       setting.mode = 'jp-zh';
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const theme = setting.theme as any;
     if (theme.isDark !== undefined) {
       if (theme.bodyColor === '#272727' && theme.fontColor === undefined) {

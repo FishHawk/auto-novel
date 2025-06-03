@@ -82,7 +82,7 @@ interface Conversation {
       children: string[];
     };
   };
-  moderation_results: any[];
+  moderation_results: unknown[];
   current_node: string;
 }
 
