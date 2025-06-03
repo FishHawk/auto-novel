@@ -11,6 +11,7 @@ import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import org.jsoup.parser.Parser
 import util.epub.Epub
 import util.serialName
@@ -184,10 +185,25 @@ class WenkuNovelVolumeRepository(
                 } else if (name.endsWith("opf")) {
                     val doc = Jsoup.parse(bytesIn.decodeToString(), Parser.xmlParser())
 
-                    // 防止部分阅读器使用竖排
-                    doc
-                        .selectFirst("spine")
-                        ?.removeAttr("page-progression-direction")
+                    val metadataEl = doc.selectFirst("metadata")!!
+                    val spineEl = doc.selectFirst("spine")!!
+
+                    // 修改 EPUB 语言为简体中文，让 iOS iBook 阅读器可以使用中文字体
+                    metadataEl.selectFirst("dc|language")
+                        ?.text("zh-CN")
+                        ?: metadataEl.appendChild(
+                            Element("dc:language").text("zh-CN")
+                        )
+
+                    // 防止阅读器使用竖排
+                    val metaNode = Element("meta")
+                        .attr("name", "primary-writing-mode")
+                        .attr("content", "horizontal-lr")
+                    metadataEl.selectFirst("meta[name=primary-writing-mode]")
+                        ?.replaceWith(metaNode)
+                        ?: metadataEl.appendChild(metaNode)
+
+                    spineEl.removeAttr("page-progression-direction")
 
                     doc.outputSettings().prettyPrint(true)
                     doc.html().toByteArray()
