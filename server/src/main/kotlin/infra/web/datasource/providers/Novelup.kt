@@ -107,7 +107,7 @@ class Novelup(
                             chapterId = it.attr("href").substringAfterLast("/"),
                             createAt = parseJapanDateString(
                                 "yyyy/M/dd HH:mm",
-                                li.selectFirst("p.publishDate")!!.text()
+                                "20" + li.selectFirst("p.publishDate")!!.text()
                             ),
                         )
                     } ?: RemoteNovelMetadata.TocItem(
