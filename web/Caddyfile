@@ -2,10 +2,6 @@
 	encode gzip
 
 	handle {
-		reverse_proxy /monitor* grafana:3000
-	}
-
-	handle {
 		root * /dist
 		file_server
 		route {
