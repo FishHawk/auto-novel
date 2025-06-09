@@ -210,11 +210,14 @@ class WebNovelChapterRepository(
             TranslatorId.Gpt -> WebNovelChapter::gptParagraphs
             TranslatorId.Sakura -> WebNovelChapter::sakuraParagraphs
         }
+        val novel = webNovelMetadataCollection.find(WebNovel.byId(providerId, novelId)).firstOrNull()!!
+        val chapterIdList = novel.toc.map { it.chapterId }
         val zh = webNovelChapterCollection
             .countDocuments(
                 and(
                     eq(WebNovelChapter::providerId.field(), providerId),
                     eq(WebNovelChapter::novelId.field(), novelId),
+                    `in`(WebNovelChapter::chapterId.field(), chapterIdList),
                     ne(zhProperty1.field(), null),
                 )
             )
