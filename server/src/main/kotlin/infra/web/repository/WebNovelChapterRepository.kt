@@ -211,7 +211,7 @@ class WebNovelChapterRepository(
             TranslatorId.Sakura -> WebNovelChapter::sakuraParagraphs
         }
         val novel = webNovelMetadataCollection.find(WebNovel.byId(providerId, novelId)).firstOrNull()!!
-        val chapterIdList = novel.toc.map { it.chapterId }
+        val chapterIdList = novel.toc.mapNotNull { it.chapterId }
         val zh = webNovelChapterCollection
             .countDocuments(
                 and(
