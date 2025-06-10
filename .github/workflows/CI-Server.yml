@@ -40,7 +40,7 @@ jobs:
         with:
           context: server
           push: true
-          tags: ghcr.io/fishhawk/auto-novel-server:latest
+          tags: ghcr.io/auto-novel/auto-novel-server:latest
 
       - name: Delete all containers from repository without tags
         uses: Chizkiyahu/delete-untagged-ghcr-action@v2

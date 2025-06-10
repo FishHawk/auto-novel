@@ -5,7 +5,7 @@ networks:
 
 services:
   web:
-    image: ghcr.io/fishhawk/auto-novel-web
+    image: ghcr.io/auto-novel/auto-novel-web:latest
     ports:
       - 80:80
     volumes:
@@ -15,7 +15,7 @@ services:
     restart: always
 
   server:
-    image: ghcr.io/fishhawk/auto-novel-server
+    image: ghcr.io/auto-novel/auto-novel-server:latest
     depends_on:
       - mongo
       - elasticsearch

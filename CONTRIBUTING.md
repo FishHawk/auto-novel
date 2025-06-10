@@ -14,7 +14,7 @@
 首先准备开发环境：
 
 ```bash
-git clone git@github.com:FishHawk/auto-novel.git
+git clone git@github.com:auto-novel/auto-novel.git
 cd web
 pnpm install --frozen-lockfile # 安装依赖
 pnpm prepare                   # 设置Git钩子
@@ -34,7 +34,7 @@ pnpm dev --host # 启动开发服务器，连接到机翻站 生产环境 后端
 
 后端基于 JVM17 + Kotlin + Ktor 开发，推荐使用 IntelliJ IDEA 打开项目。
 
-如果你的修改涉及数据库，你需要自己[部署数据库](https://github.com/FishHawk/auto-novel/blob/main/README.md#部署)并设置环境变量：
+如果你的修改涉及数据库，你需要自己[部署数据库](https://github.com/auto-novel/auto-novel/blob/main/README.md#部署)并设置环境变量：
 
 ```bash
 DB_HOST_TEST=127.0.0.1 # 数据库 IP 地址

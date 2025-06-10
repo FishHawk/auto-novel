@@ -1,8 +1,8 @@
 # 轻小说机翻机器人
 
-[![GPL-3.0](https://img.shields.io/github/license/FishHawk/auto-novel)](https://github.com/FishHawk/auto-novel#license)
-[![CI-Server](https://github.com/FishHawk/auto-novel/workflows/CI-Server/badge.svg)](https://github.com/FishHawk/auto-novel/actions/workflows/CI-Server.yml)
-[![CI-Web](https://github.com/FishHawk/auto-novel/workflows/CI-Web/badge.svg)](https://github.com/FishHawk/auto-novel/actions/workflows/CI-Web.yml)
+[![GPL-3.0](https://img.shields.io/github/license/auto-novel/auto-novel)](https://github.com/auto-novel/auto-novel#license)
+[![CI-Server](https://github.com/auto-novel/auto-novel/workflows/CI-Server/badge.svg)](https://github.com/auto-novel/auto-novel/actions/workflows/CI-Server.yml)
+[![CI-Web](https://github.com/auto-novel/auto-novel/workflows/CI-Web/badge.svg)](https://github.com/auto-novel/auto-novel/actions/workflows/CI-Web.yml)
 
 > 重建巴别塔！！
 
@@ -20,7 +20,7 @@
 
 ## 贡献
 
-请参考 [CONTRIBUTING.md](https://github.com/FishHawk/auto-novel/blob/main/CONTRIBUTING.md)
+请参考 [CONTRIBUTING.md](https://github.com/auto-novel/auto-novel/blob/main/CONTRIBUTING.md)
 
 <a href="https://next.ossinsight.io/widgets/official/compose-recent-top-contributors?repo_id=559577341" target="_blank" style="display: block" align="left">
   <picture>
@@ -37,7 +37,7 @@
 下载项目：
 
 ```bash
-> git clone https://github.com/FishHawk/auto-novel.git
+> git clone https://github.com/auto-novel/auto-novel.git
 > cd auto-novel
 ```
 

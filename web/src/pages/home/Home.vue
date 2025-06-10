@@ -97,7 +97,7 @@ const qqLink =
   'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Qa0SOMBYZoJZ4vuykz3MbPS0zbpeN0pW&authKey=q75E7fr5CIBSDhqX%2F4kuC%2B0mcPiDvj%2FSDfP%2FGZ8Rl8kDn6Z3M6XPSZ91yt4ZWonq&noverify=0&group_code=819513328';
 
 const telegramLink = 'https://t.me/+Mphy0wV4LYZkNTI1';
-const githubLink = 'https://github.com/FishHawk/auto-novel';
+const githubLink = 'https://github.com/auto-novel/auto-novel';
 </script>
 
 <template>
@@ -202,7 +202,6 @@ const githubLink = 'https://github.com/FishHawk/auto-novel';
         FishHawk长期996,网站开发速度大幅下降已成常态，论坛反馈目前没有精力维护，有问题加群@吧
       </n-p>
       <n-p>文件解析正在大改，如果出现小说文件相关问题，加群@FishHawk。</n-p>
-      <n-p>支持删除一天内发布的评论</n-p>
     </bulletin>
 
     <template v-if="whoami.isSignedIn">
