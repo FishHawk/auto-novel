@@ -131,14 +131,16 @@ export const createLengthSegmentor = (
       const lineJpSize = lineJp.length;
 
       if (segSize + lineJpSize > maxLength || segJp.length >= maxLine) {
-        if (textZh === undefined) {
-          segs.push([segJp]);
-        } else {
-          segs.push([segJp, segZh]);
-          segZh = [];
+        if (segJp.length > 0) {
+          if (textZh === undefined) {
+            segs.push([segJp]);
+          } else {
+            segs.push([segJp, segZh]);
+            segZh = [];
+          }
+          segJp = [];
+          segSize = 0;
         }
-        segJp = [];
-        segSize = 0;
       }
 
       if (textZh !== undefined) {
