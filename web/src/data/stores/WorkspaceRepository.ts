@@ -19,11 +19,15 @@ const createWorkspaceRepository = <W extends GptWorker | SakuraWorker>(
   workers: W[],
   migrate?: (ref: Ref<Workspace<W>>) => void,
 ) => {
-  const ref = useLocalStorage<Workspace<W>>(id, {
-    workers,
-    jobs: [],
-    uncompletedJobs: [],
-  });
+  const ref = useLocalStorage<Workspace<W>>(
+    id,
+    {
+      workers,
+      jobs: [],
+      uncompletedJobs: [],
+    },
+    { flush: 'sync' },
+  );
 
   if (migrate) {
     migrate(ref);

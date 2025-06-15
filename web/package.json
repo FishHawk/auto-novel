@@ -48,7 +48,7 @@
     "@types/uuid": "^10.0.0",
     "@vicons/material": "^0.12.0",
     "@vitejs/plugin-vue": "^5.2.3",
-    "@vueuse/core": "^10.11.1",
+    "@vueuse/core": "^13.3.0",
     "@zip.js/zip.js": "^2.7.60",
     "crypto-es": "^2.1.0",
     "diff": "^5.2.0",

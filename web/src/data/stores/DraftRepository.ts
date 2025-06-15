@@ -10,7 +10,11 @@ interface DraftRegistry {
 }
 
 export const createDraftRepository = () => {
-  const registry = useLocalStorage<DraftRegistry>('draft', {});
+  const registry = useLocalStorage<DraftRegistry>(
+    'draft',
+    {},
+    { flush: 'sync' },
+  );
 
   const getDraft = (draftId: string) => {
     if (!(draftId in registry.value)) return [];
