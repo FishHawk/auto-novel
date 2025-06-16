@@ -6,11 +6,13 @@ import api.plugins.authenticateDb
 import api.plugins.user
 import infra.common.FavoredNovelListSort
 import infra.common.Page
+import infra.common.emptyPage
 import infra.user.User
 import infra.user.UserFavored
 import infra.user.UserFavoredRepository
 import infra.web.repository.WebNovelFavoredRepository
 import infra.web.repository.WebNovelMetadataRepository
+import infra.web.WebNovelFilter
 import io.ktor.resources.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
@@ -34,7 +36,12 @@ private class UserFavoredWebRes {
             val parent: Id,
             val page: Int,
             val pageSize: Int,
+            val provider: String = "",
+            val type: Int = 0,
+            val level: Int = 0,
+            val translate: Int = 0,
             val sort: FavoredNovelListSort,
+            val query: String? = null,
         )
 
         @Resource("/{providerId}/{novelId}")
@@ -92,9 +99,27 @@ fun Route.routeUserFavoredWeb() {
                 service.listFavoredNovel(
                     user = user,
                     favoredId = loc.parent.favoredId,
+                    queryString = loc.query?.ifBlank { null },
+                    filterProvider = loc.provider,
+                    filterType = when (loc.type) {
+                        1 -> WebNovelFilter.Type.连载中
+                        2 -> WebNovelFilter.Type.已完结
+                        3 -> WebNovelFilter.Type.短篇
+                        else -> WebNovelFilter.Type.全部
+                    },
+                    filterLevel = when (loc.level) {
+                        1 -> WebNovelFilter.Level.一般向
+                        2 -> WebNovelFilter.Level.R18
+                        else -> WebNovelFilter.Level.全部
+                    },
+                    filterTranslate = when (loc.translate) {
+                        1 -> WebNovelFilter.Translate.GPT3
+                        2 -> WebNovelFilter.Translate.Sakura
+                        else -> WebNovelFilter.Translate.全部
+                    },
+                    filterSort = loc.sort,
                     page = loc.page,
-                    pageSize = loc.pageSize,
-                    sort = loc.sort,
+                    pageSize = loc.pageSize
                 )
             }
         }
@@ -181,19 +206,36 @@ class UserFavoredWebApi(
     suspend fun listFavoredNovel(
         user: User,
         favoredId: String,
+        queryString: String?,
+        filterProvider: String,
+        filterType: WebNovelFilter.Type,
+        filterLevel: WebNovelFilter.Level,
+        filterTranslate: WebNovelFilter.Translate,
+        filterSort: FavoredNovelListSort,
         page: Int,
         pageSize: Int,
-        sort: FavoredNovelListSort,
     ): Page<WebNovelOutlineDto> {
         validatePageNumber(page)
         validatePageSize(pageSize)
+        
+        val filterProviderParsed = if (filterProvider.isEmpty()) {
+            return emptyPage()
+        } else {
+            filterProvider.split(",")
+        }
+
         return favoredRepo
             .listFavoredNovel(
                 userId = user.id,
                 favoredId = favoredId.takeIf { it != "all" },
+                queryString = queryString,
+                filterProvider = filterProviderParsed,
+                filterType = filterType,
+                filterLevel = filterLevel,
+                filterTranslate = filterTranslate,
+                filterSort = filterSort,
                 page = page,
                 pageSize = pageSize,
-                sort = sort,
             )
             .map { it.asDto() }
     }
