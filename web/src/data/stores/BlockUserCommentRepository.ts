@@ -5,11 +5,9 @@ interface BlockUserComment {
 }
 
 export const createBlockUserCommentRepository = () => {
-  const ref = useLocalStorage<BlockUserComment>(
-    'blockComment',
-    { usernames: [] },
-    { flush: 'sync' },
-  );
+  const ref = useLocalStorage<BlockUserComment>('blockComment', {
+    usernames: [],
+  });
 
   const add = (username: string) => {
     if (!ref.value.usernames.includes(username)) {

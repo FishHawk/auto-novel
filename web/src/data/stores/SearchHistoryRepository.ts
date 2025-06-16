@@ -6,14 +6,10 @@ interface SearchHistory {
 }
 
 const createSearchHistoryRepository = (key: string) => {
-  const ref = useLocalStorage<SearchHistory>(
-    key,
-    {
-      queries: [],
-      tags: [],
-    },
-    { flush: 'sync' },
-  );
+  const ref = useLocalStorage<SearchHistory>(key, {
+    queries: [],
+    tags: [],
+  });
 
   const addHistory = (query: string) => {
     query = query.trim();

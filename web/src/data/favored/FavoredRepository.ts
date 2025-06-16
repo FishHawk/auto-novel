@@ -5,15 +5,11 @@ import { FavoredList } from './Favored';
 import { FavoredApi } from './FavoredApi';
 
 export const createFavoredRepository = () => {
-  const favoreds = useLocalStorage<FavoredList>(
-    'favored',
-    {
-      web: [{ id: 'default', title: '默认收藏夹' }],
-      wenku: [{ id: 'default', title: '默认收藏夹' }],
-      local: [{ id: 'default', title: '默认收藏夹' }],
-    },
-    { flush: 'sync' },
-  );
+  const favoreds = useLocalStorage<FavoredList>('favored', {
+    web: [{ id: 'default', title: '默认收藏夹' }],
+    wenku: [{ id: 'default', title: '默认收藏夹' }],
+    local: [{ id: 'default', title: '默认收藏夹' }],
+  });
 
   let remoteFetched = false;
   const loadRemoteFavoreds = async () => {

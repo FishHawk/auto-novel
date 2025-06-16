@@ -24,15 +24,11 @@ interface AuthData {
 }
 
 export const createAuthRepository = () => {
-  const authData = useLocalStorage<AuthData>(
-    'authInfo',
-    {
-      profile: undefined,
-      renewedAt: undefined,
-      adminMode: false,
-    },
-    { flush: 'sync' },
-  );
+  const authData = useLocalStorage<AuthData>('authInfo', {
+    profile: undefined,
+    renewedAt: undefined,
+    adminMode: false,
+  });
 
   const whoami = computed(() => {
     const { profile, adminMode: manageMode } = authData.value;

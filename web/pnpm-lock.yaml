@@ -38,8 +38,8 @@ importers:
         specifier: ^5.2.3
         version: 5.2.3(vite@6.2.5(@types/node@20.17.30)(jiti@2.4.2)(terser@5.39.0))(vue@3.5.13(typescript@5.8.3))
       '@vueuse/core':
-        specifier: ^13.3.0
-        version: 13.3.0(vue@3.5.13(typescript@5.8.3))
+        specifier: ^10.11.1
+        version: 10.11.1(vue@3.5.13(typescript@5.8.3))
       '@zip.js/zip.js':
         specifier: ^2.7.60
         version: 2.7.60
@@ -87,7 +87,7 @@ importers:
         version: 5.8.3
       unplugin-auto-import:
         specifier: ^0.17.8
-        version: 0.17.8(@nuxt/kit@3.16.2)(@vueuse/core@13.3.0(vue@3.5.13(typescript@5.8.3)))(rollup@4.39.0)
+        version: 0.17.8(@nuxt/kit@3.16.2)(@vueuse/core@10.11.1(vue@3.5.13(typescript@5.8.3)))(rollup@4.39.0)
       unplugin-imagemin:
         specifier: ^0.5.20
         version: 0.5.20(rollup@4.39.0)
@@ -1220,10 +1220,10 @@ packages:
         integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==,
       }
 
-  '@types/web-bluetooth@0.0.21':
+  '@types/web-bluetooth@0.0.20':
     resolution:
       {
-        integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==,
+        integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==,
       }
 
   '@typescript-eslint/eslint-plugin@8.32.1':
@@ -1474,27 +1474,23 @@ packages:
         integrity: sha512-/hnE/qP5ZoGpol0a5mDi45bOd7t3tjYJBjsgCsivow7D48cJeV5l05RD82lPqi7gRiphZM37rnhW1l6ZoCNNnQ==,
       }
 
-  '@vueuse/core@13.3.0':
+  '@vueuse/core@10.11.1':
     resolution:
       {
-        integrity: sha512-uYRz5oEfebHCoRhK4moXFM3NSCd5vu2XMLOq/Riz5FdqZMy2RvBtazdtL3gEcmDyqkztDe9ZP/zymObMIbiYSg==,
-      }
-    peerDependencies:
-      vue: ^3.5.0
-
-  '@vueuse/metadata@13.3.0':
-    resolution:
-      {
-        integrity: sha512-42IzJIOYCKIb0Yjv1JfaKpx8JlCiTmtCWrPxt7Ja6Wzoq0h79+YVXmBV03N966KEmDEESTbp5R/qO3AB5BDnGw==,
+        integrity: sha512-guoy26JQktXPcz+0n3GukWIy/JDNKti9v6VEMu6kV2sYBsWuGiTU8OWdg+ADfUbHg3/3DlqySDe7JmdHrktiww==,
       }
 
-  '@vueuse/shared@13.3.0':
+  '@vueuse/metadata@10.11.1':
     resolution:
       {
-        integrity: sha512-L1QKsF0Eg9tiZSFXTgodYnu0Rsa2P0En2LuLrIs/jgrkyiDuJSsPZK+tx+wU0mMsYHUYEjNsuE41uqqkuR8VhA==,
+        integrity: sha512-IGa5FXd003Ug1qAZmyE8wF3sJ81xGLSqTqtQ6jaVfkeZ4i5kS2mwQF61yhVqojRnenVew5PldLyRgvdl4YYuSw==,
       }
-    peerDependencies:
-      vue: ^3.5.0
+
+  '@vueuse/shared@10.11.1':
+    resolution:
+      {
+        integrity: sha512-LHpC8711VFZlDaYUXEBbFBCQ7GS3dVU9mjOhhMhXP6txTV4EhYQg/KGnQuvt/sPAtoUKq7VVUnL6mVtFoL42sA==,
+      }
 
   '@zip.js/zip.js@2.7.60':
     resolution:
@@ -4955,7 +4951,7 @@ snapshots:
 
   '@types/uuid@10.0.0': {}
 
-  '@types/web-bluetooth@0.0.21': {}
+  '@types/web-bluetooth@0.0.20': {}
 
   '@typescript-eslint/eslint-plugin@8.32.1(@typescript-eslint/parser@8.32.1(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3)':
     dependencies:
@@ -5180,18 +5176,24 @@ snapshots:
 
   '@vue/shared@3.5.13': {}
 
-  '@vueuse/core@13.3.0(vue@3.5.13(typescript@5.8.3))':
+  '@vueuse/core@10.11.1(vue@3.5.13(typescript@5.8.3))':
     dependencies:
-      '@types/web-bluetooth': 0.0.21
-      '@vueuse/metadata': 13.3.0
-      '@vueuse/shared': 13.3.0(vue@3.5.13(typescript@5.8.3))
-      vue: 3.5.13(typescript@5.8.3)
+      '@types/web-bluetooth': 0.0.20
+      '@vueuse/metadata': 10.11.1
+      '@vueuse/shared': 10.11.1(vue@3.5.13(typescript@5.8.3))
+      vue-demi: 0.14.10(vue@3.5.13(typescript@5.8.3))
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
 
-  '@vueuse/metadata@13.3.0': {}
+  '@vueuse/metadata@10.11.1': {}
 
-  '@vueuse/shared@13.3.0(vue@3.5.13(typescript@5.8.3))':
+  '@vueuse/shared@10.11.1(vue@3.5.13(typescript@5.8.3))':
     dependencies:
-      vue: 3.5.13(typescript@5.8.3)
+      vue-demi: 0.14.10(vue@3.5.13(typescript@5.8.3))
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
 
   '@zip.js/zip.js@2.7.60': {}
 
@@ -6767,7 +6769,7 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin-auto-import@0.17.8(@nuxt/kit@3.16.2)(@vueuse/core@13.3.0(vue@3.5.13(typescript@5.8.3)))(rollup@4.39.0):
+  unplugin-auto-import@0.17.8(@nuxt/kit@3.16.2)(@vueuse/core@10.11.1(vue@3.5.13(typescript@5.8.3)))(rollup@4.39.0):
     dependencies:
       '@antfu/utils': 0.7.10
       '@rollup/pluginutils': 5.1.4(rollup@4.39.0)
@@ -6779,7 +6781,7 @@ snapshots:
       unplugin: 1.16.1
     optionalDependencies:
       '@nuxt/kit': 3.16.2
-      '@vueuse/core': 13.3.0(vue@3.5.13(typescript@5.8.3))
+      '@vueuse/core': 10.11.1(vue@3.5.13(typescript@5.8.3))
     transitivePeerDependencies:
       - rollup
 

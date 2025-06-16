@@ -1,5 +1,3 @@
-import { createGlobalState } from '@vueuse/core';
-
 import { createCachedSegRepository } from './CachedSegRepository';
 import {
   ArticleRepository,
@@ -42,7 +40,7 @@ const lazy = <T>(factory: () => T) => {
   let value: T;
   const get = () => {
     if (value === undefined) {
-      value = createGlobalState(factory)();
+      value = factory();
     }
     return value;
   };
@@ -53,7 +51,7 @@ const lazyAsync = <T>(factory: () => Promise<T>) => {
   let value: Promise<T>;
   const get = async () => {
     if (value === undefined) {
-      value = createGlobalState(factory)();
+      value = factory();
     }
     return await value;
   };

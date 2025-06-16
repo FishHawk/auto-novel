@@ -5,11 +5,9 @@ interface RuleViewed {
 }
 
 export const createRuleViewedRepository = () => {
-  const ref = useLocalStorage<RuleViewed>(
-    'readState',
-    { wenkuUploadRule: 0 },
-    { flush: 'sync' },
-  );
+  const ref = useLocalStorage<RuleViewed>('readState', {
+    wenkuUploadRule: 0,
+  });
   return {
     ref,
   };

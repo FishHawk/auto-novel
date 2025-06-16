@@ -6,7 +6,6 @@ import { CCUtil } from '@/util/cc';
 export const createSettingRepository = () => {
   const setting = useLocalStorage<Setting>('setting', Setting.defaultValue, {
     mergeDefaults: true,
-    flush: 'sync',
   });
   Setting.migrate(setting.value);
 
@@ -29,7 +28,7 @@ export const createReaderSettingRepository = () => {
   const setting = useLocalStorage<ReaderSetting>(
     'readerSetting',
     ReaderSetting.defaultValue,
-    { mergeDefaults: true, flush: 'sync' },
+    { mergeDefaults: true },
   );
   ReaderSetting.migrate(setting.value);
   return { setting };
