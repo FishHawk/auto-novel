@@ -43,6 +43,11 @@ const loadFavorite = async () => {
       .listFavoredWebNovel('default', {
         page: 0,
         pageSize: 8,
+        query: '',
+        provider: 'kakuyomu,syosetu,novelup,hameln,pixiv,alphapolis',
+        type: 0,
+        level: 0,
+        translate: 0,
         sort: 'update',
       })
       .then((it) => it.items),
