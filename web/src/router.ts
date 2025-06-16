@@ -75,6 +75,7 @@ const router = createRouter({
               component: () => import('./pages/bookshelf/BookshelfWeb.vue'),
               props: (route) => ({
                 page: Number(route.query.page) || 1,
+                query: route.query.query || '',
                 selected: parseSelected(route.query),
                 favoredId: route.params.favoredId || 'default',
               }),

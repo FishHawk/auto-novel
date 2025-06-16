@@ -18,6 +18,11 @@ const listFavoredWebNovel = (
   searchParams: {
     page: number;
     pageSize: number;
+    query?: string;
+    provider?: string;
+    type?: number;
+    level?: number;
+    translate?: number;
     sort: 'create' | 'update';
   },
 ) =>
