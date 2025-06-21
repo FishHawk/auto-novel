@@ -63,9 +63,14 @@ class WebNovelFavoredRepository(
         pageSize: Int,
     ): Page<WebNovelListItem> {
         @Serializable
+        data class NovelWithContext(
+            val novel: WebNovel,
+            val favoredId: String, // 小说所属的收藏夹ID
+        )
+        @Serializable
         data class PageModel(
             val total: Int = 0,
-            val items: List<WebNovel>,
+            val items: List<NovelWithContext>,
         )
 
         val initialFilter = if (favoredId == null) {
@@ -100,7 +105,7 @@ class WebNovelFavoredRepository(
                                 operator,
                                 BsonArray(
                                     listOf(
-                                        BsonDocument("\$size", BsonString("\$toc")), // 获取 toc 数组的长度
+                                        BsonDocument("\$size", BsonString("\$novel.toc")), // 获取 toc 数组的长度
                                         BsonInt32(number)
                                     )
                                 )
@@ -114,9 +119,9 @@ class WebNovelFavoredRepository(
                     val isExclusion = token.startsWith('-')
                     val rawToken = token.removePrefix("-").removeSuffix("$")
                     val field = if (allAttentions.contains(rawToken)) {
-                        WebNovel::attentions.field()
+                        "novel.${WebNovel::attentions.field()}"
                     } else {
-                        WebNovel::keywords.field()
+                        "novel.${WebNovel::keywords.field()}"
                     }
 
                     val tagFilter = if (isExclusion) {
@@ -134,9 +139,9 @@ class WebNovelFavoredRepository(
         if (queryKeywords.isNotEmpty()) {
             val keywordFilters = queryKeywords.map { keyword ->
                 Filters.or(
-                    Filters.regex(WebNovel::titleJp.field(), keyword, "i"),
-                    Filters.regex(WebNovel::titleZh.field(), keyword, "i"),
-                    Filters.regex(WebNovel::keywords.field(), keyword, "i")
+                    Filters.regex("novel.${WebNovel::titleJp.field()}", keyword, "i"),
+                    Filters.regex("novel.${WebNovel::titleZh.field()}", keyword, "i"),
+                    Filters.regex("novel.${WebNovel::keywords.field()}", keyword, "i")
                 )
             }
             novelFilters.add(Filters.and(keywordFilters))
@@ -144,25 +149,25 @@ class WebNovelFavoredRepository(
 
         // 平台来源的筛选条件
         if (filterProvider.isNotEmpty()) {
-            novelFilters.add(Filters.`in`(WebNovel::providerId.field(), filterProvider))
+            novelFilters.add(Filters.`in`("novel.${WebNovel::providerId.field()}", filterProvider))
         }
 
         // 连载状态类型的筛选条件
         if (filterType != WebNovelFilter.Type.全部) {
-            novelFilters.add(eq(WebNovel::type.field(), WebNovelType.valueOf(filterType.name)))
+            novelFilters.add(eq("novel.${WebNovel::type.field()}", WebNovelType.valueOf(filterType.name)))
         }
 
         // 限制等级的筛选条件
         when (filterLevel) {
-            WebNovelFilter.Level.一般向 -> novelFilters.add(Filters.ne(WebNovel::attentions.field(), WebNovelAttention.R18))
-            WebNovelFilter.Level.R18 -> novelFilters.add(Filters.eq(WebNovel::attentions.field(), WebNovelAttention.R18))
+            WebNovelFilter.Level.一般向 -> novelFilters.add(Filters.ne("novel.${WebNovel::attentions.field()}", WebNovelAttention.R18))
+            WebNovelFilter.Level.R18 -> novelFilters.add(Filters.eq("novel.${WebNovel::attentions.field()}", WebNovelAttention.R18))
             else -> {}
         }
 
         // 翻译状态的筛选条件
         when (filterTranslate) {
-            WebNovelFilter.Translate.GPT3 -> novelFilters.add(Filters.gt(WebNovel::gpt.field(), 0L))
-            WebNovelFilter.Translate.Sakura -> novelFilters.add(Filters.gt(WebNovel::sakura.field(), 0L))
+            WebNovelFilter.Translate.GPT3 -> novelFilters.add(Filters.gt("novel.${WebNovel::gpt.field()}", 0L))
+            WebNovelFilter.Translate.Sakura -> novelFilters.add(Filters.gt("novel.${WebNovel::sakura.field()}", 0L))
             else -> {}
         }
 
@@ -179,7 +184,12 @@ class WebNovelFavoredRepository(
                     /* as = */ "novel"
                 ),
                 unwind("\$novel"),
-                replaceRoot("\$novel"),
+                project(
+                    fields(
+                        computed("novel", "\$novel"),
+                        computed("favoredId", "\$${WebNovelFavoriteDbModel::favoredId.field()}")
+                    )
+                ),
                 *(if (novelMatchBson != null) arrayOf(novelMatchBson) else emptyArray()),
 
                 facet(
@@ -202,7 +212,17 @@ class WebNovelFavoredRepository(
             emptyPage()
         } else {
             Page(
-                items = doc.items.map { it.toOutline() },
+                items = doc.items.map { novelWithContext ->
+                    val favored = if (favoredId == null) {
+                        // favoredId为null时的模式为查询所有收藏夹，这时把查询小说的收藏夹发送回去
+                        novelWithContext.favoredId
+                    } else {
+                        null
+                    }
+                    novelWithContext.novel.toOutline(
+                        favored = favored
+                    )
+                },
                 total = doc.total.toLong(),
                 pageSize = pageSize,
             )
