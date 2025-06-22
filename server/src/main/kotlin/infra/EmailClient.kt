@@ -22,10 +22,10 @@ class EmailClient(private val apiKey: String?) {
     private suspend fun send(to: String, subject: String, text: String) {
         if (apiKey == null) return
 
-        client.post("https://api.eu.mailgun.net/v3/verify.fishhawk.top/messages") {
+        client.post("https://api.mailgun.net/v3/books.kotoban.top/messages") {
             basicAuth("api", apiKey)
             url {
-                parameters.append("from", "轻小说机翻机器人 <postmaster@verify.fishhawk.top>")
+                parameters.append("from", "轻小说机翻机器人 <postmaster@verify.kotoban.top>>")
                 parameters.append("to", to)
                 parameters.append("subject", subject)
                 parameters.append("text", text)
