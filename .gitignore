@@ -24,3 +24,10 @@ web/sonda-report.html
 
 # Web extension
 web-extension/src/_metadata/
+
+# Environment files
+.env
+*.local.yml
+
+# data
+data/
