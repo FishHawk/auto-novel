@@ -125,9 +125,9 @@ export class Epub extends BaseFile {
       this.items.set(id, itemBase as EpubItem);
     }
 
-    this.navigationPath = this.items
-      .values()
-      .find(({ properties }) => properties?.includes('nav'))?.href;
+    this.navigationPath = Array.from(this.items.values()).find(
+      ({ properties }) => properties?.includes('nav'),
+    )?.href;
   }
 
   private parseSpine(el: Element) {
