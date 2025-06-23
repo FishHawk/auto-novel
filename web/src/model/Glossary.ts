@@ -12,7 +12,7 @@ export namespace Glossary {
       for (const jp in obj) {
         const zh = obj[jp];
         if (typeof zh !== 'string') return;
-        glossary[jp] = zh;
+        glossary[jp.trim()] = zh.trim();
       }
       return glossary;
     } catch {

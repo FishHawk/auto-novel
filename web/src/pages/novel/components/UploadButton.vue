@@ -43,7 +43,14 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     return false;
   }
 
-  const content = await getFullContent(file.file);
+  let content: string;
+  try {
+    content = await getFullContent(file.file);
+  } catch (e) {
+    console.error(e);
+    message.error(`文件解析错误:${e}`);
+    return false;
+  }
   const charsCount = RegexUtil.countLanguageCharacters(content);
   if (charsCount.total < 500) {
     message.error('字数过少，请检查内容是不是图片');

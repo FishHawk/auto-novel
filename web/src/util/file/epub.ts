@@ -125,9 +125,9 @@ export class Epub extends BaseFile {
       this.items.set(id, itemBase as EpubItem);
     }
 
-    this.navigationPath = this.items
-      .values()
-      .find(({ properties }) => properties?.includes('nav'))?.href;
+    this.navigationPath = Array.from(this.items.values()).find(
+      ({ properties }) => properties?.includes('nav'),
+    )?.href;
   }
 
   private parseSpine(el: Element) {
@@ -173,9 +173,10 @@ export class Epub extends BaseFile {
       return items;
     };
     const navEls = Array.from(doc.getElementsByTagName('nav'));
-    const tocOlEl = navEls
-      .find((navEl) => navEl.getAttribute('epub:type') === 'toc')
-      ?.querySelector(':scope > ol');
+    const tocNavEl =
+      navEls.find((navEl) => navEl.getAttribute('epub:type') === 'toc') ??
+      navEls.find((navEl) => navEl.id === 'toc'); // 为了兼容不标准的epub
+    const tocOlEl = tocNavEl?.querySelector(':scope > ol');
     if (!tocOlEl) throw new Error('Nav toc not exist');
     this.navItems = parseTocList(tocOlEl);
   }

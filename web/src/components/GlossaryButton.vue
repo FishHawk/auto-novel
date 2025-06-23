@@ -106,7 +106,7 @@ const deleteTerm = (jp: string) => {
 const addTerm = () => {
   const [jp, zh] = termsToAdd.value;
   if (jp && zh) {
-    glossary.value[jp] = zh;
+    glossary.value[jp.trim()] = zh.trim();
     termsToAdd.value = ['', ''];
   }
 };
