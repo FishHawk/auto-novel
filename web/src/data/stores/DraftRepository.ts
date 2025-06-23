@@ -1,6 +1,8 @@
 import { useLocalStorage } from '@vueuse/core';
 import { throttle } from 'lodash-es';
 
+import { LSKey } from '../LocalStorage';
+
 export interface Draft {
   text: string;
   createdAt: Date;
@@ -10,7 +12,7 @@ interface DraftRegistry {
 }
 
 export const createDraftRepository = () => {
-  const registry = useLocalStorage<DraftRegistry>('draft', {});
+  const registry = useLocalStorage<DraftRegistry>(LSKey.Draft, {});
 
   const getDraft = (draftId: string) => {
     if (!(draftId in registry.value)) return [];

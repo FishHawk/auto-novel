@@ -7,6 +7,8 @@ import {
   TranslateJobRecord,
 } from '@/model/Translator';
 
+import { LSKey } from '../LocalStorage';
+
 interface Workspace<T> {
   workers: T[];
   jobs: TranslateJob[];
@@ -118,7 +120,7 @@ const createWorkspaceRepository = <W extends GptWorker | SakuraWorker>(
 };
 
 export const createGptWorkspaceRepository = () =>
-  createWorkspaceRepository<GptWorker>('gpt-workspace', [], (workspace) => {
+  createWorkspaceRepository<GptWorker>(LSKey.WorkspaceGpt, [], (workspace) => {
     // 2024-3-8
     workspace.value.workers.forEach((it: GptWorker) => {
       if (it.endpoint.length === 0) {
@@ -140,7 +142,7 @@ export const createGptWorkspaceRepository = () =>
 
 export const createSakuraWorkspaceRepository = () =>
   createWorkspaceRepository<SakuraWorker>(
-    'sakura-workspace',
+    LSKey.WorkspaceSakura,
     [
       { id: '共享', endpoint: 'https://sakura-share.one' },
       { id: '本机', endpoint: 'http://127.0.0.1:8080' },

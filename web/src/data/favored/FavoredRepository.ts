@@ -3,9 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { FavoredList } from './Favored';
 import { FavoredApi } from './FavoredApi';
+import { LSKey } from '../LocalStorage';
 
 export const createFavoredRepository = () => {
-  const favoreds = useLocalStorage<FavoredList>('favored', {
+  const favoreds = useLocalStorage<FavoredList>(LSKey.Favored, {
     web: [{ id: 'default', title: '默认收藏夹' }],
     wenku: [{ id: 'default', title: '默认收藏夹' }],
     local: [{ id: 'default', title: '默认收藏夹' }],

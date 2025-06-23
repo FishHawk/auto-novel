@@ -1,5 +1,7 @@
 import { useLocalStorage } from '@vueuse/core';
 
+import { LSKey } from '../LocalStorage';
+
 interface SearchHistory {
   queries: string[];
   tags: { tag: string; used: number }[];
@@ -47,7 +49,7 @@ const createSearchHistoryRepository = (key: string) => {
 };
 
 export const createWebSearchHistoryRepository = () =>
-  createSearchHistoryRepository('webSearchHistory');
+  createSearchHistoryRepository(LSKey.SearchHistoryWeb);
 
 export const createWenkuSearchHistoryRepository = () =>
-  createSearchHistoryRepository('wenkuSearchHistory');
+  createSearchHistoryRepository(LSKey.SearchHistoryWenku);

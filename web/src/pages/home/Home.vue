@@ -187,6 +187,7 @@ const githubLink = 'https://github.com/auto-novel/auto-novel';
     <div v-else style="height: 16px" />
 
     <bulletin>
+      <Migrate />
       <n-flex>
         <n-button text type="primary" @click="showHowToUseModal = true">
           使用说明

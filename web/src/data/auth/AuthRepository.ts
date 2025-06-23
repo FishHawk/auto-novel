@@ -6,6 +6,7 @@ import { updateToken } from '@/data/api/client';
 import { UserRole } from '@/model/User';
 
 import { AuthApi, SignInBody, SignUpBody } from './AuthApi';
+import { LSKey } from '../LocalStorage';
 
 interface AuthProfile {
   id: string;
@@ -24,7 +25,7 @@ interface AuthData {
 }
 
 export const createAuthRepository = () => {
-  const authData = useLocalStorage<AuthData>('authInfo', {
+  const authData = useLocalStorage<AuthData>(LSKey.Auth, {
     profile: undefined,
     renewedAt: undefined,
     adminMode: false,

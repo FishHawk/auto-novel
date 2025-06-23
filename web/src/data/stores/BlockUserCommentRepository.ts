@@ -1,11 +1,13 @@
 import { useLocalStorage } from '@vueuse/core';
 
+import { LSKey } from '../LocalStorage';
+
 interface BlockUserComment {
   usernames: string[];
 }
 
 export const createBlockUserCommentRepository = () => {
-  const ref = useLocalStorage<BlockUserComment>('blockComment', {
+  const ref = useLocalStorage<BlockUserComment>(LSKey.Blacklist, {
     usernames: [],
   });
 
