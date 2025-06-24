@@ -19,7 +19,7 @@ const defineServerOptions = (): ServerOptions => {
       '/api': {
         target: enableLocalServer
           ? 'http://localhost:8081'
-          : 'https://books.fishhawk.top',
+          : 'https://n.novelia.cc',
         changeOrigin: true,
         bypass: (req, _res, _options) => {
           if (
@@ -41,7 +41,7 @@ const defineServerOptions = (): ServerOptions => {
         },
       },
       '/files-temp': {
-        target: 'https://books.fishhawk.top',
+        target: 'https://n.novelia.cc',
         changeOrigin: true,
       },
     },

@@ -41,7 +41,7 @@ const showGirl = ref(false);
 
   <img
     v-if="showGirl"
-    src="https://books.fishhawk.top/files-extra/girl.6e4fe22c238737fd028247f8f0cfd4ee.webp"
+    src="https://n.novelia.cc/files-extra/girl.6e4fe22c238737fd028247f8f0cfd4ee.webp"
     style="
       width: 200px;
       position: fixed;

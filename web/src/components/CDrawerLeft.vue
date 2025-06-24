@@ -16,7 +16,7 @@
           "
         />
         <img
-          src="https://books.fishhawk.top/files-extra/girl.6e4fe22c238737fd028247f8f0cfd4ee.webp"
+          src="https://n.novelia.cc/files-extra/girl.6e4fe22c238737fd028247f8f0cfd4ee.webp"
           style="position: absolute; top: 0; height: 120px; margin: 8px 0 0 8px"
         />
       </template>

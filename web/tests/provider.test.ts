@@ -60,7 +60,7 @@ describe('provider', () => {
   });
 
   it('unmatch', () => {
-    const benches = ['https://www.google.com/', 'https://books.fishhawk.top/'];
+    const benches = ['https://www.google.com/'];
     for (const url of benches) {
       const parseResult = parseUrl(url);
       expect(parseResult).toBeUndefined();
