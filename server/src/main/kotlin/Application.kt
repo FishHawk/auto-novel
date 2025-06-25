@@ -101,7 +101,7 @@ val appModule = module {
         EmailClient(
             mailgunApiKey = env("MAILGUN_API_KEY"),
             mailgunApiUrl = env("MAILGUN_API_URL"),
-            mailgunFromEmail = env("MAILGUN_EMAIL"),
+            mailgunFromEmail = env("MAILGUN_FROM_EMAIL"),
         )
     }
     single {
