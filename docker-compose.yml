@@ -23,6 +23,8 @@ services:
     environment:
       - HTTPS_PROXY
       - MAILGUN_API_KEY
+      - MAILGUN_API_URL
+      - MAILGUN_FROM_EMAIL
       - JWT_SECRET
       - HAMELN_TOKEN
       - PIXIV_COOKIE_PHPSESSID
