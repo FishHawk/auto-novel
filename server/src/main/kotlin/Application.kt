@@ -99,9 +99,9 @@ val appModule = module {
     // Data layer: Client
     single {
         EmailClient(
-            apiKey = env("MAILGUN_API_KEY")
-            apiEndpoint = env("MAILGUN_API_ENDPOINT")
-            postfrom = env("MAILGUN_FROM")
+            mailgunApiKey = env("MAILGUN_API_KEY"),
+            mailgunApiUrl = env("MAILGUN_API_ENDPOINT"),
+            mailgunFromEmail = env("MAILGUN_EMAIL"),
         )
     }
     single {
