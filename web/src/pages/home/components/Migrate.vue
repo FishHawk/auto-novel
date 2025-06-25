@@ -45,25 +45,40 @@ if (inOldDomain && window.opener) {
 <template>
   <n-p v-if="inOldDomain" style="margin: 0px 0px 4px">
     <b>
-      机翻站已切换到新的域名 [
+      机翻站已切换到新的域名,七月底将会默认跳转
       <n-a href="https://n.novelia.cc/">{{ newDomain }}</n-a>
-      ]
     </b>
   </n-p>
   <n-flex v-else style="margin: 0px 0px 8px">
     <c-button
+      text
       size="small"
       type="warning"
       secondary
       label="从books导入设置"
       @click="open('https://books.fishhawk.top')"
+      style="font-weight: 700"
     />
+    /
     <c-button
+      text
       size="small"
       type="warning"
       secondary
       label="从books1导入设置"
       @click="open('https://books1.fishhawk.top')"
+      style="font-weight: 700"
+    />
+    /
+    <c-button
+      text
+      size="small"
+      type="warning"
+      secondary
+      tag="a"
+      href="https://n.novelia.cc/files-extra/extension.v1.0.12.zip"
+      label="下载浏览器扩展（适配新域名）"
+      style="font-weight: 700"
     />
   </n-flex>
 </template>
