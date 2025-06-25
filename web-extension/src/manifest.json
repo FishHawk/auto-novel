@@ -1,10 +1,11 @@
 {
   "manifest_version": 2,
-  "version": "1.0.11",
+  "version": "1.0.12",
   "name": "轻小说机翻机器人",
   "description": "解除浏览器跨域限制，以启用网页端的机翻功能",
   "permissions": [
     "<all_urls>",
+    "*://*.novelia.cc/*",
     "*://*.fishhawk.top/*",
     "*://*.baidu.com/*",
     "*://*.youdao.com/*",
@@ -63,11 +64,9 @@
     "256": "icons/256.png",
     "512": "icons/512.png"
   },
-  "homepage_url": "https://books.fishhawk.top/",
+  "homepage_url": "https://n.novelia.cc/",
   "browser_action": {},
   "background": {
-    "scripts": [
-      "worker.js"
-    ]
+    "scripts": ["worker.js"]
   }
 }

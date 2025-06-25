@@ -1,7 +1,11 @@
 const notify = (e) => alert(e.message || e);
 
 function isUrlFromMySite(url) {
-  return url.includes('fishhawk.top') || url.includes('localhost');
+  return (
+    url.includes("fishhawk.top") ||
+    url.includes("novelia.cc") ||
+    url.includes("localhost")
+  );
 }
 
 function shouldHandleRequest(d) {
@@ -9,7 +13,7 @@ function shouldHandleRequest(d) {
   const urlDst = d.url;
   if (!urlSrc || !urlDst) return false;
   const fromMySite = isUrlFromMySite(urlSrc);
-  const requestMySite = isUrlFromMySite(urlDst) || urlDst.includes('google');
+  const requestMySite = isUrlFromMySite(urlDst) || urlDst.includes("google");
   return fromMySite && !requestMySite;
 }
 
@@ -44,9 +48,9 @@ v2.beforeSendHeaders.methods = [];
   const cache = {};
 
   v2.beforeSendHeaders.methods.push((d) => {
-    if (d.method === 'OPTIONS') {
+    if (d.method === "OPTIONS") {
       const r = d.requestHeaders.find(
-        ({ name }) => name.toLowerCase() === 'access-control-request-headers'
+        ({ name }) => name.toLowerCase() === "access-control-request-headers",
       );
 
       if (r) {
@@ -55,9 +59,9 @@ v2.beforeSendHeaders.methods = [];
     }
   });
   v2.headersReceived.methods.push((d) => {
-    if (d.method === 'OPTIONS' && cache[d.requestId]) {
+    if (d.method === "OPTIONS" && cache[d.requestId]) {
       d.responseHeaders.push({
-        name: 'Access-Control-Allow-Headers',
+        name: "Access-Control-Allow-Headers",
         value: cache[d.requestId],
       });
       delete cache[d.requestId];
@@ -71,9 +75,9 @@ v2.beforeSendHeaders.methods = [];
   chrome.tabs.onRemoved.addListener((tabId) => delete redirects[tabId]);
 
   v2.headersReceived.methods.push((d) => {
-    if (d.type !== 'main_frame') {
+    if (d.type !== "main_frame") {
       const { initiator, originUrl, responseHeaders } = d;
-      let origin = '*';
+      let origin = "*";
 
       if (!redirects[d.tabId] || !redirects[d.tabId][d.requestId]) {
         try {
@@ -88,16 +92,16 @@ v2.beforeSendHeaders.methods = [];
       }
 
       const r = responseHeaders.find(
-        ({ name }) => name.toLowerCase() === 'access-control-allow-origin'
+        ({ name }) => name.toLowerCase() === "access-control-allow-origin",
       );
 
       if (r) {
-        if (r.value !== '*') {
+        if (r.value !== "*") {
           r.value = origin;
         }
       } else {
         responseHeaders.push({
-          name: 'Access-Control-Allow-Origin',
+          name: "Access-Control-Allow-Origin",
           value: origin,
         });
       }
@@ -112,13 +116,13 @@ v2.beforeSendHeaders.methods = [];
       const o = new URL(d.url);
       d.requestHeaders.push(
         {
-          name: 'referer',
+          name: "referer",
           value: d.url,
         },
         {
-          name: 'origin',
+          name: "origin",
           value: o.origin,
-        }
+        },
       );
     } catch (e) {}
   });
@@ -126,16 +130,16 @@ v2.beforeSendHeaders.methods = [];
 
 {
   const publicCookies = {
-    '.amazon.co.jp': ['session-id', 'ubid-acbjp'],
-    '.baidu.com': ['BAIDUID'],
-    '.youdao.com': ['OUTFOX_SEARCH_USER_ID'],
+    ".amazon.co.jp": ["session-id", "ubid-acbjp"],
+    ".baidu.com": ["BAIDUID"],
+    ".youdao.com": ["OUTFOX_SEARCH_USER_ID"],
   };
 
   function makeCookiePublic(cookie) {
     const domainToUrl = {
-      '.amazon.co.jp': 'https://www.amazon.co.jp',
-      '.baidu.com': 'https://fanyi.baidu.com',
-      '.youdao.com': 'https://fanyi.youdao.com',
+      ".amazon.co.jp": "https://www.amazon.co.jp",
+      ".baidu.com": "https://fanyi.baidu.com",
+      ".youdao.com": "https://fanyi.youdao.com",
     };
     const {
       domain,
@@ -148,14 +152,14 @@ v2.beforeSendHeaders.methods = [];
       storeId,
       value,
     } = cookie;
-    if (sameSite !== 'no_restriction' || !secure) {
+    if (sameSite !== "no_restriction" || !secure) {
       chrome.cookies.set({
         domain,
         expirationDate,
         httpOnly,
         name,
         path,
-        sameSite: 'no_restriction',
+        sameSite: "no_restriction",
         secure: true,
         storeId,
         url: domainToUrl[domain],
@@ -177,7 +181,7 @@ v2.beforeSendHeaders.methods = [];
   chrome.cookies.onChanged.addListener(({ cause, cookie }) => {
     const { domain, name } = cookie;
     if (
-      cause === 'explicit' &&
+      cause === "explicit" &&
       domain in publicCookies &&
       publicCookies[domain].includes(name)
     ) {
@@ -187,21 +191,21 @@ v2.beforeSendHeaders.methods = [];
 }
 
 function start() {
-  const isChrome = chrome.runtime.getURL('').startsWith('chrome-extension://');
-  const extraOptions = isChrome ? ['extraHeaders'] : [];
+  const isChrome = chrome.runtime.getURL("").startsWith("chrome-extension://");
+  const extraOptions = isChrome ? ["extraHeaders"] : [];
 
   chrome.webRequest.onHeadersReceived.removeListener(v2.headersReceived);
   chrome.webRequest.onHeadersReceived.addListener(
     v2.headersReceived,
-    { urls: ['<all_urls>'] },
-    ['blocking', 'responseHeaders'].concat(extraOptions)
+    { urls: ["<all_urls>"] },
+    ["blocking", "responseHeaders"].concat(extraOptions),
   );
 
   chrome.webRequest.onBeforeSendHeaders.removeListener(v2.beforeSendHeaders);
   chrome.webRequest.onBeforeSendHeaders.addListener(
     v2.beforeSendHeaders,
-    { urls: ['<all_urls>'] },
-    ['blocking', 'requestHeaders'].concat(extraOptions)
+    { urls: ["<all_urls>"] },
+    ["blocking", "requestHeaders"].concat(extraOptions),
   );
 
   const rules = {
@@ -211,12 +215,12 @@ function start() {
         id: 1,
         priority: 1,
         action: {
-          type: 'modifyHeaders',
+          type: "modifyHeaders",
           responseHeaders: [
             {
-              operation: 'set',
-              header: 'Access-Control-Allow-Methods',
-              value: '*',
+              operation: "set",
+              header: "Access-Control-Allow-Methods",
+              value: "*",
             },
           ],
         },
@@ -226,17 +230,17 @@ function start() {
         id: 2,
         priority: 1,
         action: {
-          type: 'modifyHeaders',
+          type: "modifyHeaders",
           responseHeaders: [
             {
-              operation: 'set',
-              header: 'Allow',
-              value: '*',
+              operation: "set",
+              header: "Allow",
+              value: "*",
             },
           ],
         },
         condition: {
-          requestMethods: ['options'],
+          requestMethods: ["options"],
         },
       },
     ],
@@ -244,9 +248,9 @@ function start() {
   chrome.declarativeNetRequest.updateDynamicRules(rules);
 
   chrome.contextMenus.create({
-    title: '在当前标签页启动调试器',
-    contexts: ['browser_action'],
-    id: 'status-code-enable',
+    title: "在当前标签页启动调试器",
+    contexts: ["browser_action"],
+    id: "status-code-enable",
   });
 }
 
@@ -254,7 +258,7 @@ chrome.runtime.onStartup.addListener(start);
 chrome.runtime.onInstalled.addListener(start);
 
 const debug = async (source, method, params) => {
-  if (method === 'Fetch.requestPaused') {
+  if (method === "Fetch.requestPaused") {
     const opts = {
       requestId: params.requestId,
     };
@@ -269,30 +273,30 @@ const debug = async (source, method, params) => {
         {
           tabId: source.tabId,
         },
-        'Fetch.continueResponse',
-        opts
+        "Fetch.continueResponse",
+        opts,
       );
     }
   }
 };
 
 chrome.contextMenus.onClicked.addListener(({ menuItemId }, tab) => {
-  if (menuItemId === 'status-code-enable') {
+  if (menuItemId === "status-code-enable") {
     chrome.debugger.onEvent.removeListener(debug);
     chrome.debugger.onEvent.addListener(debug);
 
     const target = { tabId: tab.id };
 
-    chrome.debugger.attach(target, '1.2', () => {
+    chrome.debugger.attach(target, "1.2", () => {
       const { lastError } = chrome.runtime;
       if (lastError) {
         console.warn(lastError);
         notify(lastError.message);
       } else {
-        chrome.debugger.sendCommand(target, 'Fetch.enable', {
+        chrome.debugger.sendCommand(target, "Fetch.enable", {
           patterns: [
             {
-              requestStage: 'Response',
+              requestStage: "Response",
             },
           ],
         });
@@ -316,7 +320,7 @@ chrome.browserAction.onClicked.addListener(() => {
         if (novelId === undefined) {
           novelId = /pixiv\.net\/novel\/show.php\?id=([0-9]+)/.exec(url)?.[1];
           if (novelId !== undefined) {
-            novelId = 's' + novelId;
+            novelId = "s" + novelId;
           }
         }
         return novelId;
@@ -337,7 +341,7 @@ chrome.browserAction.onClicked.addListener(() => {
       const novelId = provider(url);
       if (novelId !== undefined) {
         chrome.tabs.create({
-          url: `https://books.fishhawk.top/novel/${providerId}/${novelId}`,
+          url: `https://n.novelia.cc/novel/${providerId}/${novelId}`,
         });
       }
     }
