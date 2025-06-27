@@ -42,6 +42,7 @@ private class UserFavoredWebRes {
             val translate: Int = 0,
             val sort: FavoredNovelListSort,
             val query: String? = null,
+            val favored: String = ""
         )
 
         @Resource("/{providerId}/{novelId}")
@@ -118,6 +119,7 @@ fun Route.routeUserFavoredWeb() {
                         else -> WebNovelFilter.Translate.全部
                     },
                     filterSort = loc.sort,
+                    filterFavored = loc.favored,
                     page = loc.page,
                     pageSize = loc.pageSize
                 )
@@ -212,6 +214,7 @@ class UserFavoredWebApi(
         filterLevel: WebNovelFilter.Level,
         filterTranslate: WebNovelFilter.Translate,
         filterSort: FavoredNovelListSort,
+        filterFavored: String,
         page: Int,
         pageSize: Int,
     ): Page<WebNovelOutlineDto> {
@@ -224,6 +227,7 @@ class UserFavoredWebApi(
             filterProvider.split(",")
         }
 
+        val filterFavoredParsed = filterFavored.split(",")
         return favoredRepo
             .listFavoredNovel(
                 userId = user.id,
@@ -234,6 +238,7 @@ class UserFavoredWebApi(
                 filterLevel = filterLevel,
                 filterTranslate = filterTranslate,
                 filterSort = filterSort,
+                filterFavored = filterFavoredParsed,
                 page = page,
                 pageSize = pageSize,
             )

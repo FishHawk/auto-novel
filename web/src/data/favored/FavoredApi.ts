@@ -24,6 +24,7 @@ const listFavoredWebNovel = (
     level?: number;
     translate?: number;
     sort: 'create' | 'update';
+    favored?: string;
   },
 ) =>
   client
