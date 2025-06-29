@@ -26,6 +26,7 @@ const imageFormatOptions = [
 const compressImage = async (blob: Blob) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
+  // eslint-disable-next-line compat/compat
   const img = await createImageBitmap(blob);
 
   const scaleRatioValue = Math.min(1, scaleRatio.value);
@@ -173,7 +174,7 @@ const showPreview = (image: EpubImage) => {
     <template v-if="showDetail">
       <n-text>点击图片预览压缩效果</n-text>
       <n-empty v-if="detailList.length === 0" description="未载入文件" />
-      <template v-for="detail of detailList">
+      <template v-for="detail of detailList" :key="detail.name">
         <n-text>
           [{{ Humanize.bytes(detail.size) }}
           =>
@@ -185,6 +186,7 @@ const showPreview = (image: EpubImage) => {
             <n-flex :size="4" :wrap="false" style="margin-bottom: 16px">
               <n-image
                 v-for="image of detail.images"
+                :key="image.id"
                 height="150"
                 :src="image.uri"
                 preview-disabled

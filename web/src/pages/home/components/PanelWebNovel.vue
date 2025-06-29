@@ -12,7 +12,11 @@ defineProps<{ listResult?: Result<WebNovelOutlineDto[]> }>();
     v-slot="{ value: list }"
   >
     <n-grid :x-gap="12" :y-gap="12" cols="1 850:4">
-      <n-grid-item v-for="item in list" style="padding: 8px">
+      <n-grid-item
+        v-for="item in list"
+        :key="`${item.providerId}/${item.novelId}`"
+        style="padding: 8px"
+      >
         <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
           <span class="text-2line">
             {{ item.titleJp }}

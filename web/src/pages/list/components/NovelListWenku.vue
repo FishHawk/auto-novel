@@ -49,7 +49,7 @@ defineExpose({
 
 <template>
   <n-grid :x-gap="12" :y-gap="12" cols="2 500:3 800:4">
-    <n-grid-item v-for="item in items">
+    <n-grid-item v-for="item in items" :key="item.id">
       <div style="position: relative">
         <router-link :to="`/wenku/${item.id}`">
           <ImageCard

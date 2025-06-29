@@ -142,6 +142,7 @@ const setCustomFontColor = (color: string) =>
                 <n-flex>
                   <n-radio
                     v-for="theme of ReaderSetting.themeOptions"
+                    :key="theme.bodyColor"
                     :checked="theme.bodyColor == setting.theme.bodyColor"
                     @update:checked="
                       setting.theme = { mode: 'custom', ...theme }

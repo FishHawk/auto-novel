@@ -135,7 +135,7 @@ export namespace TranslateTaskDescriptor {
       throw 'quit';
     }
 
-    const query = Object.fromEntries(new URLSearchParams(queryString) as any);
+    const query = Object.fromEntries(new URLSearchParams(queryString));
 
     const queryBoolean = (name: string) => {
       return query[name] === 'true';
@@ -147,7 +147,7 @@ export namespace TranslateTaskDescriptor {
     };
 
     const params: TranslateTaskParams = {
-      level: query['level'],
+      level: query['level'] as 'normal' | 'expire' | 'all' | 'sync',
       forceMetadata: queryBoolean('forceMetadata'),
       startIndex: queryInt('startIndex', 0),
       endIndex: queryInt('endIndex', 65535),

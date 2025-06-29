@@ -118,7 +118,10 @@ const clearCache = async () =>
 
       <n-p>允许上传的模型如下，禁止一切试图突破上传检查的操作。</n-p>
       <n-ul>
-        <n-li v-for="({ repo }, model) in SakuraTranslator.allowModels">
+        <n-li
+          v-for="({ repo }, model) in SakuraTranslator.allowModels"
+          :key="model"
+        >
           [
           <n-a
             target="_blank"
@@ -137,9 +140,6 @@ const clearCache = async () =>
           {{ model }}
         </n-li>
       </n-ul>
-      <n-p>
-        感谢@H接手，共享Sakura现在可以开放使用了，目前在测试中，欢迎使用。
-      </n-p>
     </bulletin>
 
     <section-header title="翻译器">
@@ -166,7 +166,7 @@ const clearCache = async () =>
         :animation="150"
         handle=".drag-trigger"
       >
-        <n-list-item v-for="worker of workspaceRef.workers">
+        <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
           <job-worker
             :worker="{ translatorId: 'sakura', ...worker }"
             :get-next-job="getNextJob"

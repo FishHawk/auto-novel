@@ -9,8 +9,8 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 import { useArticleStore } from './ForumArticleStore';
 
 const { articleId, category } = defineProps<{
-  articleId?: string;
-  category?: ArticleCategory;
+  articleId: string | undefined;
+  category: ArticleCategory | undefined;
 }>();
 
 const router = useRouter();
@@ -39,7 +39,7 @@ const formRef = ref<FormInst>();
 const formValue = ref({
   title: '',
   content: '',
-  category,
+  category: category ?? 'General',
 });
 const formRules: FormRules = {
   title: [
@@ -106,18 +106,16 @@ const submit = async () => {
 
   if (store === undefined) {
     await doAction(
-      Locator.articleRepository
-        .createArticle(formValue.value as any)
-        .then((id) => {
-          draftRepo.removeDraft(draftId);
-          router.push({ path: `/forum/${id}` });
-        }),
+      Locator.articleRepository.createArticle(formValue.value).then((id) => {
+        draftRepo.removeDraft(draftId);
+        router.push({ path: `/forum/${id}` });
+      }),
       '发布',
       message,
     );
   } else {
     await doAction(
-      store.updateArticle(formValue.value as any).then(() => {
+      store.updateArticle(formValue.value).then(() => {
         draftRepo.removeDraft(draftId);
         router.push({ path: `/forum/${articleId}` });
       }),

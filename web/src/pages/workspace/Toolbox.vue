@@ -90,7 +90,7 @@ const showListModal = ref(false);
     </n-flex>
 
     <n-flex vertical style="margin-top: 16px">
-      <n-text v-for="file of files">
+      <n-text v-for="file of files" :key="file.name">
         <toolbox-file-card :file="file" @delete="removeFile(file.name)" />
       </n-text>
     </n-flex>

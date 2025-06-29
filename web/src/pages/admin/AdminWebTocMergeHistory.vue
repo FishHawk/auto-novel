@@ -77,7 +77,7 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
   />
   <n-divider />
   <div v-if="novelPage?.ok">
-    <div v-for="item in novelPage.value.items">
+    <div v-for="item in novelPage.value.items" :key="item.id">
       <n-p>
         <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
           {{ `${item.providerId}/${item.novelId}` }}
@@ -90,7 +90,10 @@ watch(currentPage, (page) => loadPage(page), { immediate: true });
           <th>旧目录</th>
           <th>新目录</th>
         </tr>
-        <tr v-for="t of diffToc(item)">
+        <tr
+          v-for="t of diffToc(item)"
+          :key="'' + t.oldV?.chapterId + t.newV?.chapterId"
+        >
           <td :style="{ color: t.same ? 'grey' : 'red' }">
             {{ t.oldV?.titleJp }}
             <br />

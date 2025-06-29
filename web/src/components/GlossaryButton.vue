@@ -254,7 +254,7 @@ const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
       size="small"
       style="font-size: 12px; max-width: 400px"
     >
-      <tr v-for="wordJp in Object.keys(glossary).reverse()">
+      <tr v-for="wordJp in Object.keys(glossary).reverse()" :key="wordJp">
         <td>
           <c-button
             :icon="DeleteOutlineOutlined"

@@ -126,7 +126,7 @@ const clearCache = async () =>
         :animation="150"
         handle=".drag-trigger"
       >
-        <n-list-item v-for="worker of workspaceRef.workers">
+        <n-list-item v-for="worker of workspaceRef.workers" :key="worker.id">
           <job-worker
             :worker="{ translatorId: 'gpt', ...worker }"
             :get-next-job="getNextJob"

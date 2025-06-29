@@ -24,7 +24,7 @@ import { doAction, useIsWideScreen } from '@/pages/util';
 import { useWenkuNovelStore } from './WenkuNovelStore';
 
 const { novelId } = defineProps<{
-  novelId?: string;
+  novelId: string | undefined;
 }>();
 
 const store = novelId !== undefined ? useWenkuNovelStore(novelId) : undefined;
@@ -492,6 +492,7 @@ const levelOptions = [
               </n-tag>
               <n-tag
                 v-for="keyword of group.presetKeywords"
+                :key="keyword"
                 size="small"
                 checkable
                 :checked="formValue.keywords.includes(keyword)"
@@ -637,7 +638,7 @@ const levelOptions = [
         <p v-if="similarNovels !== null">
           <template v-if="similarNovels.length === 0">没有相似的小说</template>
           <n-grid v-else :x-gap="12" :y-gap="12" cols="3 600:6">
-            <n-grid-item v-for="item in similarNovels">
+            <n-grid-item v-for="item in similarNovels" :key="item.id">
               <router-link :to="`/wenku/${item.id}`">
                 <ImageCard
                   :src="item.cover"
@@ -696,7 +697,7 @@ const levelOptions = [
       下面是一些标签的具体解释。注意，同一个标签在一般向和R18下可能存在区别。
     </n-p>
     <n-divider />
-    <n-p v-for="row of presetKeywords.explanations">
+    <n-p v-for="row of presetKeywords.explanations" :key="row.word">
       <b>{{ row.word }}</b>
       <br />
       {{ row.explanation }}

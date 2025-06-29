@@ -7,7 +7,7 @@ defineProps<{ zhOld?: string; zhNew: string }>();
 <template>
   <div>
     <n-p>
-      <template v-for="c in diffChars(zhOld ?? '', zhNew)">
+      <template v-for="c in diffChars(zhOld ?? '', zhNew)" :key="c.value">
         <ins v-if="c.added">{{ c.value }}</ins>
         <del v-else-if="c.removed">{{ c.value }}</del>
         <template v-else>{{ c.value }}</template>
