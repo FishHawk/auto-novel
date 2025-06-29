@@ -135,19 +135,19 @@ export namespace TranslateTaskDescriptor {
       throw 'quit';
     }
 
-    const query = Object.fromEntries(new URLSearchParams(queryString));
+    const query = new URLSearchParams(queryString);
 
     const queryBoolean = (name: string) => {
-      return query[name] === 'true';
+      return query.get(name) === 'true';
     };
 
     const queryInt = (name: string, defaultValue: number) => {
-      const num = parseInt(query[name], 10);
+      const num = parseInt(query.get(name)!, 10);
       return isNaN(num) ? defaultValue : num;
     };
 
     const params: TranslateTaskParams = {
-      level: query['level'] as 'normal' | 'expire' | 'all' | 'sync',
+      level: query.get('level') as 'normal' | 'expire' | 'all' | 'sync',
       forceMetadata: queryBoolean('forceMetadata'),
       startIndex: queryInt('startIndex', 0),
       endIndex: queryInt('endIndex', 65535),
