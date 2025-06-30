@@ -281,13 +281,7 @@ export namespace SakuraTranslator {
   export const create = (log: Logger, config: Config) =>
     new SakuraTranslator(log, config).init();
 
-  const model = (repo: string, model: string, fingerprint: number[][]) => ({
-    repo,
-    model,
-    fingerprint,
-  });
-
-  export type ModelMeta = Record<string, any>;
+  export type ModelMeta = Record<string, number>;
   export const allowModels: {
     [key: string]: { repo: string; meta: ModelMeta };
   } = {

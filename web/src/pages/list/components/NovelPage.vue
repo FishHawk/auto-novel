@@ -165,6 +165,7 @@ const invertSelection = (optionIndex: number) => {
     </c-action-wrapper>
     <c-action-wrapper
       v-for="(option, optionIndex) in options"
+      :key="option.label"
       :title="option.label"
       align="baseline"
       size="large"
@@ -172,6 +173,7 @@ const invertSelection = (optionIndex: number) => {
       <n-flex :size="[16, 4]">
         <n-text
           v-for="(tag, index) in option.tags"
+          :key="tag"
           text
           :type="
             isSelected(optionIndex, index, option.multiple)

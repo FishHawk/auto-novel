@@ -87,7 +87,10 @@ defineExpose({
   </DefineTag>
 
   <n-list>
-    <n-list-item v-for="item of items">
+    <n-list-item
+      v-for="item of items"
+      :key="`${item.providerId}/${item.novelId}`"
+    >
       <n-flex vertical :size="0">
         <c-a :to="`/novel/${item.providerId}/${item.novelId}`">
           {{ item.titleJp }}
@@ -111,13 +114,15 @@ defineExpose({
         <n-text v-if="!simple" depth="3">
           <ReuseTag
             v-for="attention in item.attentions.sort()"
+            :key="attention"
             :tag="attention"
-            :isAttention="true"
+            :is-attention="true"
           />
           <ReuseTag
             v-for="keyword in item.keywords"
+            :key="keyword"
             :tag="keyword"
-            :isAttention="false"
+            :is-attention="false"
           />
         </n-text>
 

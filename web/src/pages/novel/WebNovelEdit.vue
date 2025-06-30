@@ -130,7 +130,7 @@ const submit = async () => {
       </n-text>
     </n-p>
     <n-table :bordered="false" :bottom-bordered="false" style="width: 100%">
-      <tr v-for="token in formValue.toc">
+      <tr v-for="token in formValue.toc" :key="token.jp">
         <td style="width: 50%; padding: 4px">
           {{ token.jp }}
           <br />

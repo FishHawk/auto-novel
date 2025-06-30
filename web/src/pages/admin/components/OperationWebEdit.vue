@@ -19,5 +19,10 @@ defineProps<{ op: OperationWebEdit }>();
     :zh-new="op.new.introductionZh"
   />
 
-  <TextDiff v-for="(toc, idx) of op.toc" :zh-old="toc.old" :zh-new="toc.new" />
+  <TextDiff
+    v-for="toc of op.toc"
+    :key="toc.jp + toc.old + toc.new"
+    :zh-old="toc.old"
+    :zh-new="toc.new"
+  />
 </template>

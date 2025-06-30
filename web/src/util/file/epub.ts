@@ -303,8 +303,9 @@ export class Epub extends BaseFile {
   }
 
   private updatePackage() {
+    const packageDocNs = this.packageDoc.documentElement.namespaceURI;
     const items = [...this.items.values()].map((item) => {
-      const itemEl = document.createElement('item');
+      const itemEl = this.packageDoc.createElementNS(packageDocNs, 'item');
       itemEl.setAttribute('id', item.id);
       itemEl.setAttribute('href', item.href);
       itemEl.setAttribute('media-type', item.mediaType);

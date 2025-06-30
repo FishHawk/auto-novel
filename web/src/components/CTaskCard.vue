@@ -87,7 +87,7 @@ defineExpose({
         style="flex: auto; white-space: pre-wrap"
         :style="{ height: expandLog ? '540px' : '180px' }"
       >
-        <div v-for="log of logs">
+        <div v-for="log of logs" :key="log.message">
           {{ log.message }}
           <span v-if="log.detail" @click="showDetail(log.message, log.detail!)">
             [详细]
@@ -101,7 +101,11 @@ defineExpose({
       v-model:show="showLogDetailModal"
       :title="`日志详情 - ${selectedLogMessage}`"
     >
-      <n-p v-for="line of selectedLogDetail" style="white-space: pre-wrap">
+      <n-p
+        v-for="line of selectedLogDetail"
+        :key="line"
+        style="white-space: pre-wrap"
+      >
         {{ line }}
       </n-p>
     </c-modal>

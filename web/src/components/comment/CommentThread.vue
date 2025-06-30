@@ -138,6 +138,7 @@ const showInput = ref(false);
 
   <div
     v-for="replyComment in comment.replies"
+    :key="replyComment.id"
     style="margin-left: 30px; margin-top: 20px"
   >
     <CommentItem

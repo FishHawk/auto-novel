@@ -51,7 +51,7 @@ const guides = [
         </tr>
       </thead>
       <tbody>
-        <tr v-for="guide in guides">
+        <tr v-for="guide in guides" :key="guide">
           <td style="white-space: pre-wrap">
             {{ guide.trimStart() }}
           </td>
