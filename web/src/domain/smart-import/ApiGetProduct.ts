@@ -1,6 +1,30 @@
 import { Locator } from '@/data';
 import { extractAsin } from './Common';
 
+const parseAuthor = (elements: HTMLCollectionOf<Element>) => {
+  const authors: string[] = [];
+  const artists: string[] = [];
+  Array.from(elements).forEach((element) => {
+    const contribution =
+      element
+        .getElementsByClassName('contribution')
+        .item(0)
+        ?.textContent?.trim()
+        ?.replace(/,$/, '') ?? '';
+    const name =
+      element.getElementsByTagName('a').item(0)?.textContent?.trim() ?? '';
+    if (contribution.endsWith('(著)') || contribution.endsWith('(作者)')) {
+      authors.push(name);
+    } else if (
+      contribution.endsWith('(イラスト)') ||
+      contribution.endsWith('(插图作者)')
+    ) {
+      artists.push(name);
+    }
+  });
+  return { authors, artists };
+};
+
 const parseProduct = (doc: Document) => {
   if (doc.getElementsByClassName('series-childAsin-widget').item(0) !== null) {
     return {
@@ -31,24 +55,9 @@ const parseProductSerial = (doc: Document) => {
 
 const parseProductSet = (doc: Document) => {
   const title = doc.getElementById('productTitle')!.textContent!;
-
-  const authors: string[] = [];
-  const artists: string[] = [];
-  Array.from(doc.getElementsByClassName('author')).forEach((element) => {
-    const contribution = element
-      .getElementsByClassName('contribution')[0]
-      .textContent?.trim()
-      ?.replace(/,$/, '');
-    const name = element.getElementsByTagName('a')![0].textContent!.trim();
-    if (contribution !== undefined) {
-      if (contribution.endsWith('(著)')) {
-        authors.push(name);
-      } else if (contribution.endsWith('(イラスト)')) {
-        artists.push(name);
-      }
-    }
-  });
-
+  const { authors, artists } = parseAuthor(
+    doc.getElementsByClassName('author'),
+  );
   const volumes = Array.from(
     doc.getElementsByClassName('bundle-components')[0].children,
   ).map((el) => {
@@ -73,22 +82,9 @@ const parseProductVolume = (doc: Document) => {
   const subtitle = doc.getElementById('productSubtitle')?.textContent ?? '';
   const r18 = subtitle.includes('成人') || subtitle.includes('アダルト');
 
-  const authors: string[] = [];
-  const artists: string[] = [];
-  Array.from(doc.getElementsByClassName('author')).forEach((element) => {
-    const contribution = element
-      .getElementsByClassName('contribution')[0]
-      .textContent?.trim()
-      ?.replace(/,$/, '');
-    const name = element.getElementsByTagName('a')![0].textContent!.trim();
-    if (contribution !== undefined) {
-      if (contribution.endsWith('(著)')) {
-        authors.push(name);
-      } else if (contribution.endsWith('(イラスト)')) {
-        artists.push(name);
-      }
-    }
-  });
+  const { authors, artists } = parseAuthor(
+    doc.getElementsByClassName('author'),
+  );
 
   const introduction = Array.from(
     doc
