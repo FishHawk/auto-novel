@@ -1,5 +1,4 @@
 import { useEventListener } from '@vueuse/core';
-import { UnwrapRef } from 'vue';
 
 export function useLocalStorage<T extends object>(key: string, defaults: T) {
   return useStorage<T>(key, defaults, window.localStorage);

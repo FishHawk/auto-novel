@@ -1,6 +1,5 @@
 import { ReaderSetting, Setting } from '@/data/setting/Setting';
-import { useLocalStorage } from '@/util';
-import { CCUtil } from '@/util/cc';
+import { defaultConverter, useLocalStorage, useOpenCC } from '@/util';
 
 import { LSKey } from '../LocalStorage';
 
@@ -8,13 +7,13 @@ export const createSettingRepository = () => {
   const setting = useLocalStorage<Setting>(LSKey.Setting, Setting.defaultValue);
   Setting.migrate(setting.value);
 
-  const cc = ref(CCUtil.defaultConverter);
+  const cc = ref(defaultConverter);
 
   const activateCC = () => {
     watch(
       () => setting.value.locale,
       async (locale) => {
-        cc.value = await CCUtil.createConverter(locale);
+        cc.value = await useOpenCC(locale);
       },
       { immediate: true },
     );
