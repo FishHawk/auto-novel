@@ -139,39 +139,11 @@ class WebNovelHttpDataSource(
 
     suspend fun getMetadata(providerId: String, novelId: String): Result<RemoteNovelMetadata> =
         doActionWithLimiter(providerId) {
-            rejectFascistNovel(providerId, novelId)
             it.getMetadata(novelId)
         }
 
     suspend fun getChapter(providerId: String, novelId: String, chapterId: String): Result<RemoteChapter> =
         doAction(providerId) {
-            rejectFascistNovel(providerId, novelId)
             it.getChapter(novelId, chapterId)
         }
-}
-
-private val disgustingFascistNovelList = mapOf(
-    Syosetu.id to listOf(
-        "n0646ie",
-        "n8926ic",
-        "n4583he",
-    ),
-    Kakuyomu.id to listOf(
-        "16816927860373250234",
-        "16817330660019717771",
-        "1177354054901629921",
-        "16818093082836701336",
-    ),
-    Hameln.id to listOf(
-        "291561",
-        "1472",
-    ),
-)
-
-private fun rejectFascistNovel(providerId: String, novelId: String) {
-    disgustingFascistNovelList.get(providerId)?.let {
-        if (novelId in it) {
-            throw Exception("该小说包含法西斯内容，不予显示")
-        }
-    }
 }
