@@ -1,5 +1,6 @@
-import { useLocalStorage } from '@vueuse/core';
 import { v4 as uuidv4 } from 'uuid';
+
+import { useLocalStorage } from '@/util';
 
 import { FavoredList } from './Favored';
 import { FavoredApi } from './FavoredApi';

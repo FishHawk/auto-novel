@@ -1,5 +1,6 @@
-import { useLocalStorage } from '@vueuse/core';
 import { throttle } from 'lodash-es';
+
+import { useLocalStorage } from '@/util';
 
 import { LSKey } from '../LocalStorage';
 

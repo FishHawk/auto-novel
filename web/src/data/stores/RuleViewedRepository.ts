@@ -1,4 +1,4 @@
-import { useLocalStorage } from '@vueuse/core';
+import { useLocalStorage } from '@/util';
 import { LSKey } from '../LocalStorage';
 
 interface RuleViewed {

@@ -1,9 +1,9 @@
-import { useLocalStorage } from '@vueuse/core';
 import { jwtDecode } from 'jwt-decode';
 
 import { formatError } from '@/data/api';
 import { updateToken } from '@/data/api/client';
 import { UserRole } from '@/model/User';
+import { useLocalStorage } from '@/util';
 
 import { AuthApi, SignInBody, SignUpBody } from './AuthApi';
 import { LSKey } from '../LocalStorage';

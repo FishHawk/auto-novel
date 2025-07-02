@@ -1,18 +1,11 @@
-import { useLocalStorage } from '@vueuse/core';
-
 import { ReaderSetting, Setting } from '@/data/setting/Setting';
+import { useLocalStorage } from '@/util';
 import { CCUtil } from '@/util/cc';
 
 import { LSKey } from '../LocalStorage';
 
 export const createSettingRepository = () => {
-  const setting = useLocalStorage<Setting>(
-    LSKey.Setting,
-    Setting.defaultValue,
-    {
-      mergeDefaults: true,
-    },
-  );
+  const setting = useLocalStorage<Setting>(LSKey.Setting, Setting.defaultValue);
   Setting.migrate(setting.value);
 
   const cc = ref(CCUtil.defaultConverter);
@@ -34,7 +27,6 @@ export const createReaderSettingRepository = () => {
   const setting = useLocalStorage<ReaderSetting>(
     LSKey.SettingReader,
     ReaderSetting.defaultValue,
-    { mergeDefaults: true },
   );
   ReaderSetting.migrate(setting.value);
   return { setting };

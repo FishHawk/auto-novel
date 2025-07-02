@@ -1,11 +1,10 @@
-import { useLocalStorage } from '@vueuse/core';
-
 import {
   GptWorker,
   SakuraWorker,
   TranslateJob,
   TranslateJobRecord,
 } from '@/model/Translator';
+import { useLocalStorage } from '@/util';
 
 import { LSKey } from '../LocalStorage';
 
