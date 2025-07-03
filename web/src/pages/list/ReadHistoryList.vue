@@ -48,7 +48,8 @@ const deleteHistory = (providerId: string, novelId: string) =>
     <n-h1>阅读历史</n-h1>
 
     <n-flex style="margin-bottom: 24px">
-      <c-button
+      <c-button-confirm
+        hint="真的要清空记录吗？"
         label="清空记录"
         :icon="DeleteOutlineOutlined"
         @action="clearHistory()"
