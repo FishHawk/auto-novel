@@ -8,6 +8,10 @@ import { runCatching } from '@/util/result';
 import { useIsWideScreen } from '@/pages/util';
 import NovelListWeb from '../list/components/NovelListWeb.vue';
 import { Loader } from '../list/components/NovelPage.vue';
+import { OptionTag } from '../list/components/NovelPage.vue';
+
+const favoredRepository = Locator.favoredRepository();
+const { favoreds } = favoredRepository;
 
 const props = defineProps<{
   page: number;
@@ -26,12 +30,12 @@ const options = computed(() => [
   {
     label: '来源',
     tags: [
-      'Kakuyomu',
-      '成为小说家吧',
-      'Novelup',
-      'Hameln',
-      'Pixiv',
-      'Alphapolis',
+      { label: 'Kakuyomu', value: 'kakuyomu' },
+      { label: '成为小说家吧', value: 'syosetu' },
+      { label: 'Novelup', value: 'novelup' },
+      { label: 'Hameln', value: 'hameln' },
+      { label: 'Pixiv', value: 'pixiv' },
+      { label: 'Alphapolis', value: 'alphapolis' },
     ],
     multiple: true,
   },
@@ -49,8 +53,24 @@ const options = computed(() => [
   },
   {
     label: '排序',
-    tags: ['更新时间', '收藏时间'],
+    tags: [
+      { label: '更新时间', value: 'update' },
+      { label: '收藏时间', value: 'create' },
+    ],
   },
+  ...(props.favoredId === 'all'
+    ? [
+        {
+          label: '收藏夹',
+          tags:
+            favoreds.value?.web?.map((favored) => ({
+              label: favored.title,
+              value: favored.id,
+            })) ?? [],
+          multiple: true,
+        },
+      ]
+    : []),
 ]);
 
 const loader = computed<Loader<WebNovelOutlineDto>>(() => {
@@ -59,31 +79,18 @@ const loader = computed<Loader<WebNovelOutlineDto>>(() => {
     if (query !== '') {
       document.title = '我的收藏 搜索：' + query;
     }
-    const parseProviderBitFlags = (n: number): string => {
-      const providerMap: { [key: string]: string } = {
-        Kakuyomu: 'kakuyomu',
-        成为小说家吧: 'syosetu',
-        Novelup: 'novelup',
-        Hameln: 'hameln',
-        Pixiv: 'pixiv',
-        Alphapolis: 'alphapolis',
-      };
-      return options.value[n].tags
+    const parseBitFlags = (n: number): string => {
+      return (options.value[n].tags as OptionTag[])
         .filter((_, index) => (selected[n] & (1 << index)) !== 0)
-        .map((tag) => providerMap[tag])
+        .map((tag) => tag.value)
         .join();
     };
 
-    const parseSort = (sortIndex: number): 'create' | 'update' => {
+    const parseSort = (sortIndex: number) => {
       const sortOption = (options.value.find((opt) => opt.label === '排序')
         ?.tags ?? [])[sortIndex];
-      switch (sortOption) {
-        case '收藏时间':
-          return 'create';
-        case '更新时间':
-        default:
-          return 'update';
-      }
+      return (sortOption as { label: string; value: 'create' | 'update' })
+        .value;
     };
     return runCatching(
       Locator.favoredRepository()
@@ -91,11 +98,12 @@ const loader = computed<Loader<WebNovelOutlineDto>>(() => {
           page,
           pageSize: 30,
           query,
-          provider: parseProviderBitFlags(0),
+          provider: parseBitFlags(0),
           type: selected[1],
           level: selected[2],
           translate: selected[3],
           sort: parseSort(selected[4]),
+          favored: props.favoredId === 'all' ? parseBitFlags(5) : undefined,
         })
         .then((it) => ({ type: 'web', ...it })),
     );

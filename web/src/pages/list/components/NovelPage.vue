@@ -12,14 +12,26 @@ export type Loader<T> = (
   selected: number[],
 ) => Promise<Result<Page<T>>>;
 
+export type OptionTag = { label: string; value: string };
 const props = defineProps<{
   page: number;
   query?: string;
   selected?: number[];
   loader: Loader<T>;
   search?: { suggestions: string[]; tags: string[] };
-  options: { label: string; tags: string[]; multiple?: boolean }[];
+  options: {
+    label: string;
+    tags: (string | OptionTag)[];
+    multiple?: boolean;
+  }[];
 }>();
+
+const getTagLabel = (tag: string | OptionTag): string => {
+  if (typeof tag === 'string') {
+    return tag;
+  }
+  return tag.label;
+};
 
 const route = useRoute();
 const router = useRouter();
@@ -183,7 +195,7 @@ const invertSelection = (optionIndex: number) => {
           @click="onUpdateSelect(optionIndex, index, option.multiple)"
           style="cursor: pointer"
         >
-          {{ tag }}
+          {{ getTagLabel(tag) }}
         </n-text>
 
         <c-button

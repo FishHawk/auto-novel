@@ -59,6 +59,7 @@ class WebNovelFavoredRepository(
         filterLevel: WebNovelFilter.Level,
         filterTranslate: WebNovelFilter.Translate,
         filterSort: FavoredNovelListSort,
+        filterFavored: List<String>,
         page: Int,
         pageSize: Int,
     ): Page<WebNovelListItem> {
@@ -73,8 +74,14 @@ class WebNovelFavoredRepository(
             val items: List<NovelWithContext>,
         )
 
+        if (favoredId == null && filterFavored.isEmpty()) {
+            return emptyPage()
+        }
         val initialFilter = if (favoredId == null) {
-            eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId))
+            and(
+                eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
+                Filters.`in`(WebNovelFavoriteDbModel::favoredId.field(), filterFavored)
+            )
         } else {
             and(
                 eq(WebNovelFavoriteDbModel::userId.field(), ObjectId(userId)),
