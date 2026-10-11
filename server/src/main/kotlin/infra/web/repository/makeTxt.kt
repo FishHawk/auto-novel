@@ -74,6 +74,7 @@ private class TxtWriter(
     }
 
     private fun BufferedWriter.writeTocItemTitle(item: WebNovelTocItem) {
+        write("\n\n")
         if (jp) write("# ${item.titleJp}\n")
         if (zh) write("# ${item.titleZh ?: item.titleJp}\n")
     }
