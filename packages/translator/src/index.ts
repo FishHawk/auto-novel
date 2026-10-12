@@ -35,3 +35,11 @@ export type {
   ProfileValues,
   TranslatorProfile,
 } from './translator/profiles/types';
+
+export { createPiAiCompletion, PiAiRequestError } from './translator/pi-ai-api';
+export type {
+  PiAiCompletionRequest,
+  PiAiCompletionResult,
+  PiAiMessage,
+  PiAiProtocol,
+} from './translator/pi-ai-api';

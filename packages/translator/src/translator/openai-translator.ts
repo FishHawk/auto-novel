@@ -6,7 +6,11 @@ import type {
 } from '@/types';
 import { detectChinese } from '@/utils';
 
-import { createOpenAiApi } from './openai-api';
+import {
+  createPiAiCompletion,
+  PiAiRequestError,
+  type PiAiProtocol,
+} from './pi-ai-api';
 import { createOpenAiPromptBuilder } from './openai-prompt';
 
 import {
@@ -14,7 +18,7 @@ import {
   openAiProfiles,
   type openAiProfileId,
 } from './profiles/openai';
-import type { ProfileValues, TranslatorProfile } from './profiles/types';
+import { DEFAULT_FIELD_VALUE, type ProfileValues } from './profiles/types';
 
 export type OpenAiTranslatorConfig = {
   endpoint: string;
@@ -29,26 +33,32 @@ export type OpenAiTranslatorConfig = {
 };
 
 export class OpenAiTranslator implements Translator {
-  private api: ReturnType<typeof createOpenAiApi>;
+  private endpoint: string;
+  private key: string;
+  private protocol: PiAiProtocol;
   private model: string;
   private profileParams: Record<string, unknown>;
+  private reasoningEffort: string;
   private promptBuilder: PromptBuilder;
   private log: Logger;
-  private extractReasoning?: TranslatorProfile['extractReasoning'];
 
   constructor(config: OpenAiTranslatorConfig) {
-    this.api = createOpenAiApi(config.endpoint, config.key);
+    this.endpoint = config.endpoint;
+    this.key = config.key;
+    const apiFormat =
+      openAiProfiles.find((p) => p.id === config.profile?.id)?.apiFormat ??
+      'openai';
+    this.protocol = apiFormat === 'openai' ? 'openai-completions' : apiFormat;
     this.model = config.model;
     this.profileParams = buildOpenAiProfileParams(
       config.profile?.id,
       config.profile?.values,
     );
+    const effort = config.profile?.values?.reasoning_effort;
+    this.reasoningEffort =
+      !effort || effort === DEFAULT_FIELD_VALUE ? '默认' : String(effort);
     this.promptBuilder = config.promptBuilder ?? createOpenAiPromptBuilder();
     this.log = config.log ?? (() => {});
-    this.extractReasoning = config.profile?.id
-      ? openAiProfiles.find((p) => p.id === config.profile!.id)
-          ?.extractReasoning
-      : undefined;
   }
 
   async translate(
@@ -60,6 +70,7 @@ export class OpenAiTranslator implements Translator {
     if (lines.every((l) => l.trim().length === 0)) {
       return lines;
     }
+    this.log(`请求思考强度：${this.reasoningEffort}`);
     const logSegInfo = (retry: number, lineNumber: [number, number]) => {
       const parts: string[] = [];
       const [input, output] = lineNumber;
@@ -78,6 +89,7 @@ export class OpenAiTranslator implements Translator {
       } catch (err: any) {
         if (err.name === 'AbortError') throw err;
         this.log(`翻译错误：${err}`);
+        if (err instanceof PiAiRequestError) throw err;
         retry++;
         continue;
       }
@@ -117,25 +129,20 @@ export class OpenAiTranslator implements Translator {
     }
 
     const messages = this.promptBuilder.build(lines, context);
-    const completion = await this.api.createChatCompletions(
-      {
-        ...this.profileParams,
-        model: this.model,
-        messages,
-      },
-      { signal },
-    );
-
-    const rawMessage = completion.choices[0]?.message;
-    const content = rawMessage?.content ?? '';
-    const reasoning = this.extractReasoning?.(
-      rawMessage as Record<string, any>,
-    );
-    if (reasoning) {
-      this.log(`思考：${reasoning}`);
+    const completion = await createPiAiCompletion({
+      protocol: this.protocol,
+      endpoint: this.endpoint,
+      key: this.key,
+      model: this.model,
+      messages,
+      requestParams: this.profileParams,
+      signal,
+    });
+    if (completion.reasoning) {
+      this.log(`思考：${completion.reasoning}`);
     }
 
-    return this.promptBuilder.parseAnswer(content, lines);
+    return this.promptBuilder.parseAnswer(completion.text, lines);
   }
 
   private async binaryTranslate(
