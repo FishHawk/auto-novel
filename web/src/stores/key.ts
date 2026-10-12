@@ -2,7 +2,6 @@ export const LSKey = {
   Auth: 'auth',
   Draft: 'draft',
   Favored: 'favored',
-  ReadPosition: 'read-position',
   Notified: 'notified',
   SearchHistoryWeb: 'search-history-web',
   SearchHistoryWenku: 'search-history-wenku',

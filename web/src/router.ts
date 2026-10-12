@@ -42,13 +42,6 @@ const router = createRouter({
       component: () => import('./pages/MainLayout.vue'),
       children: [
         {
-          path: '/auth',
-          name: 'auth',
-          meta: { title: '统一身份认证' },
-          component: () => import('./pages/Auth.vue'),
-          props: (route) => ({ from: route.query.from }),
-        },
-        {
           path: '/strikes',
           name: 'strikes',
           meta: { title: '处罚记录' },

@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import type { Comment1 } from '@/model/Comment';
+import type { Comment } from '@novelia/forum-api';
 import { CommentRepo } from '@/repos';
 
 const props = defineProps<{
   site: string;
-  comment: Comment1;
+  comment: Comment;
   canReply: boolean;
 }>();
 
 const emit = defineEmits<{
-  reply: [Comment1];
+  reply: [Comment];
 }>();
 
 const page = ref(1);

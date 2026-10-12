@@ -2,7 +2,7 @@
 import { CommentOutlined } from '@vicons/material';
 
 import { CommentRepo } from '@/repos';
-import type { Comment1 } from '@/model/Comment';
+import type { Comment } from '@novelia/forum-api';
 import { useDraftStore, useWhoamiStore } from '@/stores';
 
 const props = defineProps<{
@@ -29,7 +29,7 @@ watch(page, () => {
 });
 
 const showInput = ref(false);
-const replyTo = ref<Comment1>();
+const replyTo = ref<Comment>();
 
 function onReplied() {
   showInput.value = false;

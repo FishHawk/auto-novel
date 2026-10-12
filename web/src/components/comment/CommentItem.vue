@@ -5,19 +5,19 @@ import {
   MoreVertOutlined,
 } from '@vicons/material';
 
-import type { Comment1 } from '@/model/Comment';
+import type { Comment } from '@novelia/forum-api';
 import { useWhoamiStore } from '@/stores';
 import { CommentRepo } from '@/repos';
 import { copyToClipBoard, doAction } from '@/pages/util';
 
 const props = defineProps<{
   site: string;
-  comment: Comment1;
+  comment: Comment;
   canReply: boolean;
 }>();
 
 const emit = defineEmits<{
-  reply: [Comment1];
+  reply: [Comment];
 }>();
 
 const message = useMessage();
@@ -66,19 +66,19 @@ function deleteComment() {
   );
 }
 
-function copyComment(comment: Comment1) {
+function copyComment(comment: Comment) {
   doAction(copyToClipBoard(comment.content), '复制', message);
 }
 
-function hideComment(comment: Comment1) {
+function hideComment(comment: Comment) {
   doAction(CommentRepo.hideComment(comment.id), '隐藏', message);
 }
 
-function unhideComment(comment: Comment1) {
+function unhideComment(comment: Comment) {
   doAction(CommentRepo.unhideComment(comment.id), '解除隐藏', message);
 }
 
-function blockUser(comment: Comment1) {
+function blockUser(comment: Comment) {
   doAction(
     CommentRepo.setUserBlocked(comment.authorId, true),
     '屏蔽用户',
@@ -86,7 +86,7 @@ function blockUser(comment: Comment1) {
   );
 }
 
-function unblockUser(comment: Comment1) {
+function unblockUser(comment: Comment) {
   doAction(
     CommentRepo.setUserBlocked(comment.authorId, false),
     '解除屏蔽用户',

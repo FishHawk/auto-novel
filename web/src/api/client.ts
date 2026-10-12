@@ -1,4 +1,4 @@
-import { webKit } from '@/webKit';
+import { webKit } from '@/main';
 
 export const client = webKit.createClient('/api/', { timeout: 60_000 });
 

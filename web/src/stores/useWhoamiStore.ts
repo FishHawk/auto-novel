@@ -1,4 +1,4 @@
-import { webKit } from '@/webKit';
+import { webKit } from '@/main';
 import { LSKey } from './key';
 
 export const useWhoamiStore = defineStore(LSKey.Auth, () => {
@@ -9,11 +9,9 @@ export const useWhoamiStore = defineStore(LSKey.Auth, () => {
     return {
       ...session,
       hasNsfwAccess: session.hasRoleAtLeast('restricted') && oldEnough,
-      hasForumAccess: atLeastMember,
       hasNovelAccess: atLeastMember && oldEnough,
-      isMe: (username: string) => session.user?.username === username,
     };
   });
 
-  return { whoami, logout: webKit.logout };
+  return { whoami };
 });
