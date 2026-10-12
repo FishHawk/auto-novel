@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useWebKit } from '@novelia/web-kit';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 import {
   Setting,
@@ -26,6 +27,7 @@ const clearWenkuSearchHistory = () => {
 const playSound = (source: string) => {
   return new Audio(source).play();
 };
+const { theme } = useWebKit();
 </script>
 
 <template>
@@ -37,7 +39,8 @@ const playSound = (source: string) => {
         <n-flex vertical>
           <b>主题</b>
           <c-radio-group
-            v-model:value="setting.theme"
+            :value="theme.preference.value"
+            @update:value="theme.setPreference($event)"
             :options="Setting.themeOptions"
             size="small"
           />

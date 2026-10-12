@@ -1,443 +1,138 @@
 <script lang="ts" setup>
-import { roleLabels } from '@novelia/auth-api';
+import { WebKitLayout, XButton, type WebKitMenuOption } from '@novelia/web-kit';
 import {
-  AccessTimeOutlined,
   BookOutlined,
-  CommitOutlined,
-  DarkModeOutlined,
   ForumOutlined,
   HistoryOutlined,
   HomeOutlined,
   LanguageOutlined,
   LocalFireDepartmentOutlined,
-  LogOutOutlined,
-  MenuOutlined,
   SettingsOutlined,
   StarBorderOutlined,
-  WbSunnyOutlined,
   WorkspacesOutlined,
 } from '@vicons/material';
-import type { MenuOption } from 'naive-ui';
-import { NButton, NIcon, NText, NTime, useOsTheme } from 'naive-ui';
-import { h } from 'vue';
-import { RouterLink } from 'vue-router';
-
-import { useBreakPoints } from '@/pages/util';
-import { useSettingStore, useWhoamiStore } from '@/stores';
 import { forumCommunityUrl } from '@/config';
-
-const bp = useBreakPoints();
-const hasSider = bp.greater('tablet');
-const menuShowTrigger = bp.greater('desktop');
-const showMenuModal = ref(false);
-
-watch(hasSider, () => (showMenuModal.value = false));
+import { useWhoamiStore } from '@/stores';
 
 const route = useRoute();
-
-const whoamiStore = useWhoamiStore();
-const { whoami } = storeToRefs(whoamiStore);
-const userRoleLabel = computed(() => {
-  const user = whoami.value.user;
-  return user
-    ? (roleLabels[user.role] ?? '未知用户') + (user.adminMode ? '+' : '')
-    : '';
-});
-
-const settingStore = useSettingStore();
-const { setting } = storeToRefs(settingStore);
-
-const commitUrl = computed(() =>
-  __BUILD_INFO__.gitCommit === 'unknown'
-    ? undefined
-    : `https://github.com/auto-novel/auto-novel/commit/${__BUILD_INFO__.gitCommit}`,
+const { whoami } = storeToRefs(useWhoamiStore());
+const favoriteTo = computed(() =>
+  whoami.value.isSignedIn ? '/favorite/web' : '/favorite/local',
 );
-const shortCommit =
-  __BUILD_INFO__.gitCommit === 'unknown'
-    ? '未知'
-    : __BUILD_INFO__.gitCommit.slice(0, 12);
-const buildTime = new Date(__BUILD_INFO__.buildTime);
-const osTheme = useOsTheme();
-
-const menuCollapsed = computed(() => {
-  if (menuShowTrigger.value) {
-    return setting.value.menuCollapsed;
-  } else {
-    return true;
-  }
-});
-
-const renderLabel = (text: string, href: string) => () =>
-  h(RouterLink, { to: href }, { default: () => text });
-const renderExternalLabel = (text: string, href: string) => () =>
-  h('a', { href }, text);
-const renderIcon = (icon: Component) => () =>
-  h(NIcon, null, { default: () => h(icon) });
-
-const menuOptions = computed<MenuOption[]>(() => {
-  const resolveTheme = () => {
-    if (setting.value.theme === 'system') {
-      return osTheme.value ?? 'light';
-    } else {
-      return setting.value.theme;
-    }
-  };
-  const theme = resolveTheme();
-
-  return [
-    {
-      label: renderLabel('首页', '/'),
-      icon: renderIcon(HomeOutlined),
-      key: '/',
-    },
-    {
-      label: renderLabel(
-        '我的收藏',
-        whoami.value.isSignedIn ? '/favorite/web' : '/favorite/local',
-      ),
-      icon: renderIcon(StarBorderOutlined),
-      key: '/favorite',
-    },
-    {
-      label: renderLabel('阅读历史', '/read-history'),
-      icon: renderIcon(HistoryOutlined),
-      key: '/read-history',
-      show: whoami.value.isSignedIn,
-    },
-    {
-      label: renderLabel('网络小说', '/novel'),
-      icon: renderIcon(LanguageOutlined),
-      key: '/novel',
-    },
-    {
-      label: renderLabel('文库小说', '/wenku'),
-      icon: renderIcon(BookOutlined),
-      key: '/wenku',
-    },
-    {
-      label: '小说排行',
-      icon: renderIcon(LocalFireDepartmentOutlined),
-      key: '/rank',
-      children: [
+const navigationOptions = computed<WebKitMenuOption[]>(() => [
+  { key: '/', label: '首页', icon: HomeOutlined, to: '/' },
+  {
+    key: '/favorite',
+    label: '我的收藏',
+    icon: StarBorderOutlined,
+    to: favoriteTo.value,
+  },
+  ...(whoami.value.isSignedIn
+    ? [
         {
-          label: renderLabel('成为小说家：流派', '/rank/web/syosetu/1'),
-          key: '/rank/web/syosetu/1',
+          key: '/read-history',
+          label: '阅读历史',
+          icon: HistoryOutlined,
+          to: '/read-history',
         },
-        {
-          label: renderLabel('成为小说家：综合', '/rank/web/syosetu/2'),
-          key: '/rank/web/syosetu/2',
-        },
-        {
-          label: renderLabel(
-            '成为小说家：异世界转移/转生',
-            '/rank/web/syosetu/3',
-          ),
-          key: '/rank/web/syosetu/3',
-        },
-        {
-          label: renderLabel('Kakuyomu：流派', '/rank/web/kakuyomu/1'),
-          key: '/rank/web/kakuyomu/1',
-        },
-      ],
-    },
-    {
-      type: 'divider',
-      key: 'divider',
-      props: { style: { marginTop: '16px', marginBottom: '16px' } },
-    },
-    {
-      label: '工作区',
-      icon: renderIcon(WorkspacesOutlined),
-      key: '/workspace',
-      children: [
-        {
-          label: renderLabel('小说工具箱', '/workspace/toolbox'),
-          key: '/workspace/toolbox',
-        },
-        {
-          label: renderLabel('GPT工作区', '/workspace/gpt'),
-          key: '/workspace/gpt',
-        },
-        {
-          label: renderLabel('Sakura工作区', '/workspace/sakura'),
-          key: '/workspace/sakura',
-        },
-        {
-          label: renderLabel('GPT工作区BETA', '/workspace/gpt-pipeline'),
-          key: '/workspace/gpt-pipeline',
-        },
-        {
-          label: renderLabel('Sakura工作区BETA', '/workspace/sakura-pipeline'),
-          key: '/workspace/sakura-pipeline',
-        },
-        {
-          label: renderLabel('交互翻译', '/workspace/interactive'),
-          key: '/workspace/interactive',
-        },
-      ],
-    },
-    {
-      label: renderExternalLabel('论坛', forumCommunityUrl),
-      icon: renderIcon(ForumOutlined),
-      key: forumCommunityUrl,
-    },
-    {
-      label: renderLabel('设置', '/setting'),
-      icon: renderIcon(SettingsOutlined),
-      key: '/setting',
-    },
-    {
-      label: () =>
-        h(
-          'a',
-          {
-            onClick: () => {
-              if (theme === 'light') {
-                setting.value.theme = 'dark';
-              } else {
-                setting.value.theme = 'light';
-              }
-            },
-          },
-          { default: () => '切换主题' },
-        ),
-      icon: renderIcon(theme === 'light' ? WbSunnyOutlined : DarkModeOutlined),
-      key: 'theme',
-    },
-  ];
-});
-
-const menuKey = computed(() => {
-  const path = route.path;
-  for (const key of ['/novel', '/wenku', '/favorite']) {
-    if (path.startsWith(key)) {
-      return key;
-    }
-  }
-  return path;
-});
-
-const userDropdownOptions = computed<MenuOption[]>(() => {
-  const renderHeader = () =>
-    h(
-      'div',
+      ]
+    : []),
+  { key: '/novel', label: '网络小说', icon: LanguageOutlined, to: '/novel' },
+  { key: '/wenku', label: '文库小说', icon: BookOutlined, to: '/wenku' },
+  {
+    type: 'group',
+    key: '/rank',
+    label: '小说排行',
+    icon: LocalFireDepartmentOutlined,
+    children: [
       {
-        onClick: () => {
-          if (whoami.value.isAdmin) {
-            whoamiStore.toggleManageMode();
-          }
-        },
-        style: {
-          'margin-left': '36px',
-          'margin-right': '8px',
-        },
+        key: '/rank/web/syosetu/1',
+        label: '成为小说家：流派',
+        to: '/rank/web/syosetu/1',
       },
-      [
-        h('div', null, [
-          h(
-            NText,
-            { depth: 2 },
-            {
-              default: () => userRoleLabel.value,
-            },
-          ),
-        ]),
-        h('div', null, [
-          h(
-            NText,
-            { depth: 3, style: 'font-size: 12px;' },
-            {
-              default: () =>
-                h(NTime, {
-                  time: (whoami.value.user?.createdAt ?? 0) * 1000,
-                  type: 'date',
-                }),
-            },
-          ),
-        ]),
-      ],
-    );
-  return [
-    {
-      key: 'header',
-      type: 'render',
-      render: renderHeader,
-    },
-    {
-      key: 'header-divider',
-      type: 'divider',
-    },
-    {
-      label: '退出账号',
-      key: 'logout',
-      icon: renderIcon(LogOutOutlined),
-    },
-  ];
-});
-const handleUserDropdownSelect = (key: string | number) => {
-  if (key === 'logout') {
-    whoamiStore.logout();
+      {
+        key: '/rank/web/syosetu/2',
+        label: '成为小说家：综合',
+        to: '/rank/web/syosetu/2',
+      },
+      {
+        key: '/rank/web/syosetu/3',
+        label: '成为小说家：异世界转移/转生',
+        to: '/rank/web/syosetu/3',
+      },
+      {
+        key: '/rank/web/kakuyomu/1',
+        label: 'Kakuyomu：流派',
+        to: '/rank/web/kakuyomu/1',
+      },
+    ],
+  },
+  { type: 'divider', key: 'divider' },
+  {
+    type: 'group',
+    key: '/workspace',
+    label: '工作区',
+    icon: WorkspacesOutlined,
+    children: [
+      {
+        key: '/workspace/toolbox',
+        label: '小说工具箱',
+        to: '/workspace/toolbox',
+      },
+      { key: '/workspace/gpt', label: 'GPT工作区', to: '/workspace/gpt' },
+      {
+        key: '/workspace/sakura',
+        label: 'Sakura工作区',
+        to: '/workspace/sakura',
+      },
+      {
+        key: '/workspace/gpt-pipeline',
+        label: 'GPT工作区BETA',
+        to: '/workspace/gpt-pipeline',
+      },
+      {
+        key: '/workspace/sakura-pipeline',
+        label: 'Sakura工作区BETA',
+        to: '/workspace/sakura-pipeline',
+      },
+      {
+        key: '/workspace/interactive',
+        label: '交互翻译',
+        to: '/workspace/interactive',
+      },
+    ],
+  },
+  {
+    type: 'external',
+    key: 'forum',
+    label: '论坛',
+    icon: ForumOutlined,
+    href: forumCommunityUrl,
+  },
+  { key: '/setting', label: '设置', icon: SettingsOutlined, to: '/setting' },
+]);
+const menuKey = computed(() => {
+  for (const key of ['/novel', '/wenku', '/favorite']) {
+    if (route.path.startsWith(key)) return key;
   }
-};
-
-watch(
-  () => route.path,
-  () => (showMenuModal.value = false),
-);
+  return route.path;
+});
 </script>
 
 <template>
-  <n-layout :has-sider="hasSider" style="width: 100%; min-height: 100vh">
-    <n-layout-header bordered style="position: fixed; z-index: 2">
-      <n-flex align="center" style="height: 50px" :size="0">
-        <n-button
-          v-if="!hasSider"
-          size="large"
-          quaternary
-          circle
-          :focusable="false"
-          style="margin: 0 8px"
-          @click="showMenuModal = true"
-        >
-          <n-icon size="24" :component="MenuOutlined" />
-        </n-button>
-        <div v-else style="padding: 0 16px">
-          <robot-icon size="32" />
-        </div>
-
-        <div style="flex: 1" />
-
-        <router-link
-          v-if="!hasSider"
-          :to="whoami.isSignedIn ? '/favorite/web' : '/favorite/local'"
-        >
-          <n-button size="large" quaternary circle :focusable="false">
-            <n-icon size="20" :component="StarBorderOutlined" />
-          </n-button>
-        </router-link>
-
-        <div style="margin-right: 8px">
-          <n-dropdown
-            v-if="whoami.user"
-            trigger="hover"
-            placement="bottom-end"
-            :keyboard="false"
-            :options="userDropdownOptions"
-            @select="handleUserDropdownSelect"
-          >
-            <n-button :focusable="false" quaternary>
-              @{{ whoami.user.username }}
-            </n-button>
-          </n-dropdown>
-
-          <router-link
-            v-else
-            :to="{ name: 'auth', query: { from: route.fullPath } }"
-          >
-            <n-button quaternary>登录/注册</n-button>
-          </router-link>
-        </div>
-      </n-flex>
-    </n-layout-header>
-
-    <n-layout-sider
-      v-if="hasSider"
-      :show-trigger="menuShowTrigger"
-      :trigger-style="{ position: 'fixed', top: '80%', left: '214px' }"
-      :collapsed-trigger-style="{ position: 'fixed', top: '80%', left: '36px' }"
-      bordered
-      :width="240"
-      :collapsed="menuCollapsed"
-      :collapsed-width="64"
-      collapse-mode="width"
-      :native-scrollbar="false"
-      style="z-index: 1"
-      @collapse="setting.menuCollapsed = true"
-      @expand="setting.menuCollapsed = false"
-    >
-      <n-scrollbar
-        content-style="display: flex; flex-direction: column; min-height: 100%"
-        style="
-          height: calc(100vh - 50px);
-          margin-top: 50px;
-          position: fixed;
-          top: 0;
-        "
-        :style="{ width: menuCollapsed ? '64px' : '240px' }"
-      >
-        <n-menu
-          :value="menuKey"
-          :options="menuOptions"
-          :width="240"
-          :collapsed="menuCollapsed"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          style="flex-shrink: 0"
-        />
-        <div style="flex: 1" />
-        <div
-          class="sidebar-build-info"
-          :class="{ 'sidebar-build-info--collapsed': menuCollapsed }"
-        >
-          <template v-if="!menuCollapsed">
-            <div class="sidebar-build-info-item">
-              <n-icon :component="AccessTimeOutlined" size="15" />
-              <n-text depth="3">构建于</n-text>
-              <n-time :time="buildTime" type="datetime" />
-            </div>
-            <div class="sidebar-build-info-item">
-              <n-icon :component="CommitOutlined" size="16" />
-              <n-text depth="3">Commit</n-text>
-              <n-a
-                v-if="commitUrl"
-                class="commit-link"
-                :href="commitUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <code>{{ shortCommit }}</code>
-              </n-a>
-              <n-text v-else depth="3">
-                <code>{{ shortCommit }}</code>
-              </n-text>
-            </div>
-          </template>
-
-          <n-tooltip v-else placement="right">
-            <template #trigger>
-              <n-a
-                v-if="commitUrl"
-                class="sidebar-build-info-trigger"
-                :href="commitUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="查看构建信息"
-              >
-                <n-icon :component="CommitOutlined" size="20" />
-              </n-a>
-              <n-icon v-else :component="CommitOutlined" size="20" />
-            </template>
-            <div>
-              构建于
-              <n-time :time="buildTime" type="datetime" />
-            </div>
-            <div>
-              Commit
-              <code>{{ shortCommit }}</code>
-            </div>
-          </n-tooltip>
-        </div>
-      </n-scrollbar>
-    </n-layout-sider>
-
-    <n-layout-content
-      style="
-        margin-top: 50px;
-        margin-bottom: 64px;
-        z-index: 0;
-        min-height: calc(100vh - 50px);
-      "
-    >
+  <WebKitLayout
+    :navigation-options="navigationOptions"
+    :account-options="[]"
+    :selected-navigation-key="menuKey"
+  >
+    <template #header-actions>
+      <RouterLink :to="favoriteTo" aria-label="我的收藏">
+        <XButton size="icon" variant="toolbar" aria-label="我的收藏">
+          <StarBorderOutlined class="size-5" aria-hidden="true" />
+        </XButton>
+      </RouterLink>
+    </template>
+    <div class="novel-page-content">
       <router-view v-slot="{ Component }">
         <keep-alive
           :include="[
@@ -454,94 +149,13 @@ watch(
           <component :is="Component" />
         </keep-alive>
       </router-view>
-    </n-layout-content>
-  </n-layout>
-
-  <c-drawer-left v-if="!hasSider" v-model:show="showMenuModal">
-    <n-menu :value="menuKey" :options="menuOptions" style="flex-shrink: 0" />
-    <div style="flex: 1" />
-    <div class="sidebar-build-info sidebar-build-info--mobile">
-      <div class="sidebar-build-info-item">
-        <n-icon :component="AccessTimeOutlined" size="15" />
-        <n-text depth="3">构建于</n-text>
-        <n-time :time="buildTime" type="datetime" />
-      </div>
-      <div class="sidebar-build-info-item">
-        <n-icon :component="CommitOutlined" size="16" />
-        <n-text depth="3">Commit</n-text>
-        <n-a
-          v-if="commitUrl"
-          class="commit-link"
-          :href="commitUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <code>{{ shortCommit }}</code>
-        </n-a>
-        <n-text v-else depth="3">
-          <code>{{ shortCommit }}</code>
-        </n-text>
-      </div>
     </div>
-  </c-drawer-left>
+  </WebKitLayout>
 </template>
 
-<style>
-.sidebar-build-info {
-  box-sizing: border-box;
-  width: 240px;
-  padding: 12px 16px 14px;
-  border-top: 1px solid rgba(128, 128, 128, 0.16);
-  background: var(--n-color);
-  font-size: 12px;
-  transition: width 0.3s var(--n-bezier);
-}
-.sidebar-build-info-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 24px;
-  white-space: nowrap;
-}
-.sidebar-build-info-item > .n-icon {
-  flex-shrink: 0;
-  opacity: 0.55;
-}
-.sidebar-build-info--collapsed {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 56px;
-  padding: 0;
-}
-.sidebar-build-info--mobile {
-  position: static;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  padding: 10px 16px 12px;
-  border-top: 0;
-}
-.sidebar-build-info-trigger {
-  display: flex;
-  padding: 8px;
-}
-.commit-link code {
-  font-size: 11px;
-  letter-spacing: 0.03em;
-}
-.layout-content {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding-left: 30px;
-  padding-right: 30px;
-}
-@media only screen and (max-width: 600px) {
-  .layout-content {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
+<style scoped>
+.novel-page-content {
+  min-height: calc(100vh - 50px);
+  padding-bottom: 64px;
 }
 </style>

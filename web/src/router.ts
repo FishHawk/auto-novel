@@ -1,3 +1,4 @@
+import { MyStrikeListView } from '@novelia/web-kit';
 import type { LocationQuery } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -16,19 +17,6 @@ const parseSelected = (q: LocationQuery) => {
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
-      path: '/*',
-      children: [
-        {
-          path: '/auth',
-          name: 'auth',
-          meta: { title: '统一身份认证' },
-          component: () => import('./pages/Auth.vue'),
-          props: (route) => ({ from: route.query.from }),
-        },
-      ],
-    },
-
     {
       path: '/*',
       meta: { isReader: true },
@@ -53,6 +41,19 @@ const router = createRouter({
       path: '/*',
       component: () => import('./pages/MainLayout.vue'),
       children: [
+        {
+          path: '/auth',
+          name: 'auth',
+          meta: { title: '统一身份认证' },
+          component: () => import('./pages/Auth.vue'),
+          props: (route) => ({ from: route.query.from }),
+        },
+        {
+          path: '/strikes',
+          name: 'strikes',
+          meta: { title: '处罚记录' },
+          component: MyStrikeListView,
+        },
         {
           path: '/',
           meta: { title: '首页' },

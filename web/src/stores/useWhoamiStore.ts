@@ -1,37 +1,19 @@
-import { AuthUser } from '@novelia/auth-api';
-
-import { authApi } from '@/api/auth/session';
+import { webKit } from '@/webKit';
 import { LSKey } from './key';
 
 export const useWhoamiStore = defineStore(LSKey.Auth, () => {
-  const user = shallowRef<AuthUser>();
-  const unsubscribe = authApi.watchUser((value) => {
-    user.value = value;
-  });
-  onScopeDispose(unsubscribe);
-
   const whoami = computed(() => {
-    const profile = user.value;
-    const atLeastMember = AuthUser.hasRoleAtLeast(profile, 'member');
-    const oldEnough = AuthUser.isAtLeastDaysOld(profile, 30);
+    const session = webKit.whoami.value;
+    const atLeastMember = session.hasRoleAtLeast('member');
+    const oldEnough = session.isAtLeastDaysOld(30);
     return {
-      user: profile,
-      isSignedIn: profile !== undefined,
-      isAdmin: AuthUser.isAdmin(profile),
-      asAdmin: AuthUser.asAdmin(profile),
-      hasNsfwAccess:
-        AuthUser.hasRoleAtLeast(profile, 'restricted') && oldEnough,
+      ...session,
+      hasNsfwAccess: session.hasRoleAtLeast('restricted') && oldEnough,
       hasForumAccess: atLeastMember,
       hasNovelAccess: atLeastMember && oldEnough,
-      isMe: (username: string) => profile?.username === username,
+      isMe: (username: string) => session.user?.username === username,
     };
   });
 
-  const toggleManageMode = () => authApi.toggleAdminMode();
-
-  return {
-    whoami,
-    toggleManageMode,
-    logout: () => authApi.logout(),
-  };
+  return { whoami, logout: webKit.logout };
 });

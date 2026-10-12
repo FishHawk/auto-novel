@@ -1,3 +1,5 @@
+import tailwindcss from '@tailwindcss/vite';
+import { themeBootstrapPlugin } from '@novelia/web-kit/vite';
 import vue from '@vitejs/plugin-vue';
 import { execFileSync } from 'node:child_process';
 import path from 'path';
@@ -123,6 +125,10 @@ export default defineConfig(({ command, mode }) => {
         '@': path.resolve(__dirname, 'src'),
       },
     },
+    optimizeDeps: {
+      // web-kit 发布 Vue 源码，避免预构建与 SFC 分别创建注入标识和单例。
+      exclude: ['@novelia/web-kit'],
+    },
     build: {
       target: ['es2015'],
       cssCodeSplit: false,
@@ -178,6 +184,8 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       vue(),
+      tailwindcss(),
+      themeBootstrapPlugin(),
       createHtmlPlugin({
         minify: { minifyJS: true },
       }),

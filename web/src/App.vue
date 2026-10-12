@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui';
+import { darkTheme, dateZhCN, zhCN } from 'naive-ui';
+import { WebKitApp, useWebKit } from '@novelia/web-kit';
 
 import {
   useReaderSettingStore,
@@ -19,7 +20,15 @@ const { readerSetting } = storeToRefs(readerSettingStore);
 
 // 主题
 const route = useRoute();
-const osThemeRef = useOsTheme();
+const { theme: webTheme } = useWebKit();
+
+try {
+  if (localStorage.getItem('web-kit:theme:v1') === null) {
+    webTheme.setPreference(setting.value.theme);
+  }
+} catch {
+  // 存储不可用时沿用 web-kit 的内存偏好。
+}
 
 const isDarkColor = (color: string) => {
   const r = parseInt(color.substring(1, 3), 16);
@@ -29,32 +38,34 @@ const isDarkColor = (color: string) => {
   return brightness < 120;
 };
 
-const buildTheme = (
-  theme: 'light' | 'dark' | 'system' | 'custom',
-  bodyColor?: string,
-): {
-  isDark: boolean;
-  bodyColor?: string;
-} => {
-  switch (theme) {
-    case 'light':
-      return { isDark: false };
-    case 'dark':
-      return { isDark: true };
-    case 'system':
-      return { isDark: osThemeRef.value === 'dark' };
-    case 'custom':
-      return { isDark: isDarkColor(bodyColor!), bodyColor };
-  }
-};
-const theme = computed(() => {
-  if (route.meta.isReader) {
-    const theme = readerSetting.value.theme;
-    return buildTheme(theme.mode, theme.bodyColor);
-  } else {
-    return buildTheme(setting.value.theme, undefined);
-  }
-});
+watch(
+  () => [route.meta.isReader, readerSetting.value.theme] as const,
+  ([isReader, readerTheme]) => {
+    if (!isReader) {
+      webTheme.clearOverride();
+    } else if (readerTheme.mode === 'custom') {
+      webTheme.setOverride({
+        preference: isDarkColor(readerTheme.bodyColor) ? 'dark' : 'light',
+        tokens: {
+          '--color-body': readerTheme.bodyColor,
+          '--color-surface': readerTheme.bodyColor,
+        },
+        themeColor: readerTheme.bodyColor,
+      });
+    } else {
+      webTheme.setOverride({ preference: readerTheme.mode });
+    }
+  },
+  { immediate: true, deep: true },
+);
+const theme = computed(() => ({
+  isDark: webTheme.isDark.value,
+  bodyColor:
+    route.meta.isReader && readerSetting.value.theme.mode === 'custom'
+      ? readerSetting.value.theme.bodyColor
+      : undefined,
+}));
+onUnmounted(() => webTheme.clearOverride());
 
 // 处理Safari的奇妙问题
 if (RegexUtil.isSafari(navigator.userAgent)) {
@@ -70,32 +81,34 @@ if (RegexUtil.isSafari(navigator.userAgent)) {
 </script>
 
 <template>
-  <n-config-provider
-    :theme="theme.isDark ? darkTheme : null"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
-    inline-theme-disabled
-    :theme-overrides="{
-      Drawer: { bodyPadding: '0px' },
-      List: { color: '#0000' },
-      common: {
-        ...(theme.bodyColor === undefined
-          ? undefined
-          : { bodyColor: theme.bodyColor }),
-      },
-    }"
-  >
-    <n-global-style />
-    <n-message-provider container-style="white-space: pre-wrap">
-      <n-loading-bar-provider>
-        <router-view v-slot="{ Component }">
-          <keep-alive :include="['MainLayout']">
-            <component :is="Component" />
-          </keep-alive>
-        </router-view>
-      </n-loading-bar-provider>
-    </n-message-provider>
-  </n-config-provider>
+  <WebKitApp>
+    <n-config-provider
+      :theme="theme.isDark ? darkTheme : null"
+      :locale="zhCN"
+      :date-locale="dateZhCN"
+      inline-theme-disabled
+      :theme-overrides="{
+        Drawer: { bodyPadding: '0px' },
+        List: { color: '#0000' },
+        common: {
+          ...(theme.bodyColor === undefined
+            ? undefined
+            : { bodyColor: theme.bodyColor }),
+        },
+      }"
+    >
+      <n-global-style />
+      <n-message-provider container-style="white-space: pre-wrap">
+        <n-loading-bar-provider>
+          <router-view v-slot="{ Component }">
+            <keep-alive :include="['MainLayout']">
+              <component :is="Component" />
+            </keep-alive>
+          </router-view>
+        </n-loading-bar-provider>
+      </n-message-provider>
+    </n-config-provider>
+  </WebKitApp>
 </template>
 
 <style>
