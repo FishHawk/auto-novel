@@ -11,7 +11,7 @@ import { WenkuNovelRepo } from '@/repos';
 import { useNoticeStore, useWhoamiStore } from '@/stores';
 import { RegexUtil } from '@/util';
 import { getFullContent, getRawContent } from '@/util/file';
-import type { UploadTask } from '@/api/novel/client';
+import type { UploadTask } from '@/api/client';
 
 const props = defineProps<{
   novelId: string;

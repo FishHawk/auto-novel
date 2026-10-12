@@ -1,8 +1,8 @@
 import ky from 'ky';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../src/api/auth/session', () => ({
-  authApi: {
+vi.mock('@/webKit', () => ({
+  webKit: {
     createClient: (prefix: string) =>
       ky.create({ prefix: `http://localhost${prefix}` }),
   },
@@ -43,7 +43,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('uploadFile', () => {
   it('accepts the JSON response returned by the server', async () => {
     vi.stubGlobal('XMLHttpRequest', FakeXHR);
-    const { uploadFile } = await import('../src/api/novel/client');
+    const { uploadFile } = await import('../src/api/client');
 
     const task = uploadFile('upload', 'jp', new File(['a'], 'a.txt'), () => {});
 

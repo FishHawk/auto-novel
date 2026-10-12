@@ -1,6 +1,6 @@
-import { authApi } from '../auth/session';
+import { webKit } from '@/webKit';
 
-export const client = authApi.createClient('/api/', { timeout: 60_000 });
+export const client = webKit.createClient('/api/', { timeout: 60_000 });
 
 export type UploadTask<T> = {
   promise: Promise<T>;

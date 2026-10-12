@@ -1,9 +1,9 @@
 import { createForumApi } from '@novelia/forum-api';
 
 import { forumApiUrl } from '@/config';
-import { authApi } from '../auth/session';
+import { webKit } from '@/webKit';
 
-const client = authApi.createClient(forumApiUrl, { timeout: 60_000 });
+const client = webKit.createClient(forumApiUrl, { timeout: 60_000 });
 
 export const CommentApi = createForumApi({
   client,
