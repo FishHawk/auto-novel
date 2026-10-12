@@ -1,6 +1,5 @@
 export const LSKey = {
   Auth: 'auth',
-  Blacklist: 'blacklist',
   Draft: 'draft',
   Favored: 'favored',
   ReadPosition: 'read-position',

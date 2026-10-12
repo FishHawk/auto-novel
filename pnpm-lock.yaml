@@ -181,8 +181,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       '@novelia/forum-api':
-        specifier: github:auto-novel/forum#afeac411d0243d1167e19193ad84f98192b777b9&path:packages/forum-api
-        version: https://codeload.github.com/auto-novel/forum/tar.gz/afeac411d0243d1167e19193ad84f98192b777b9#path:packages/forum-api(ky@2.1.0)
+        specifier: github:auto-novel/forum#972ed936a57b9cbe00dbb3ee7861dce17f96de79&path:packages/forum-api
+        version: https://codeload.github.com/auto-novel/forum/tar.gz/972ed936a57b9cbe00dbb3ee7861dce17f96de79#path:packages/forum-api(@types/markdown-it@14.2.0)(ky@2.1.0)
       '@novelia/web-kit':
         specifier: github:auto-novel/auth#c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a&path:packages/web-kit
         version: https://codeload.github.com/auto-novel/auth/tar.gz/c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a#path:packages/web-kit(@vicons/material@0.13.0)(tailwindcss@4.3.3)(vue-router@5.4.0(@pinia/colada@1.2.0(pinia@3.0.4(typescript@5.9.3)(vue@3.5.43(typescript@5.9.3)))(vue@3.5.43(typescript@5.9.3)))(@rsbuild/core@1.7.3)(@rspack/core@1.7.8(@swc/helpers@0.5.19))(@vue/compiler-sfc@3.5.43)(esbuild@0.27.3)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.43(typescript@5.9.3)))(rollup@4.59.0)(vite@8.0.8(@types/node@20.19.37)(esbuild@0.27.3)(jiti@2.7.0)(terser@5.46.0)(yaml@2.8.3))(vue@3.5.43(typescript@5.9.3)))(vue@3.5.43(typescript@5.9.3))
@@ -1160,13 +1160,12 @@ packages:
       }
     engines: { node: '>= 8' }
 
-  '@novelia/forum-api@https://codeload.github.com/auto-novel/forum/tar.gz/afeac411d0243d1167e19193ad84f98192b777b9#path:packages/forum-api':
+  '@novelia/forum-api@https://codeload.github.com/auto-novel/forum/tar.gz/972ed936a57b9cbe00dbb3ee7861dce17f96de79#path:packages/forum-api':
     resolution:
       {
         gitHosted: true,
-        integrity: sha512-muuraUG3I/lKc6KHroas2Q2QlGMBmIorZsvDi/e+SsXh4dJuogmZco0fbTw24y/+AYZOUOV8SnPz+YDZBhzDfg==,
-        path: packages/forum-api,
-        tarball: https://codeload.github.com/auto-novel/forum/tar.gz/afeac411d0243d1167e19193ad84f98192b777b9,
+        integrity: sha512-HFM5CBon3QFyeurdzCiypBRoU41zSqNQmLZpe0Wualc2wXmVbfQb1Kt0TJ0zej/cmzGW6+J76ZjCvlRZBR2wSg==,
+        tarball: https://codeload.github.com/auto-novel/forum/tar.gz/972ed936a57b9cbe00dbb3ee7861dce17f96de79,
       }
     version: 0.1.0
     peerDependencies:
@@ -1177,7 +1176,6 @@ packages:
       {
         gitHosted: true,
         integrity: sha512-OYMcys8zQw14GF6Sdx3TaB5ZANHnwX5DMsRxIPNS96j/3ER9twYuH88VZ6WOpUDeGaW+kUhufJsKxailNdetGg==,
-        path: packages/web-kit,
         tarball: https://codeload.github.com/auto-novel/auth/tar.gz/c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a,
       }
     version: 0.1.0
@@ -2013,6 +2011,12 @@ packages:
         integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==,
       }
 
+  '@types/linkify-it@5.0.0':
+    resolution:
+      {
+        integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==,
+      }
+
   '@types/lodash-es@4.17.12':
     resolution:
       {
@@ -2023,6 +2027,18 @@ packages:
     resolution:
       {
         integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==,
+      }
+
+  '@types/markdown-it@14.2.0':
+    resolution:
+      {
+        integrity: sha512-NoQ2yGlLWj4wpxMs+TYmRKk3thDrQ97agr7sFqfLsAlvoS8SNQuTrlObhFqG9iugdTtgOE9jpJ6FNM4ZGsa5xQ==,
+      }
+
+  '@types/mdurl@2.0.0':
+    resolution:
+      {
+        integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==,
       }
 
   '@types/node@20.19.37':
@@ -4654,6 +4670,15 @@ packages:
         integrity: sha512-z12OxmaPGE0F4xlpGdjuAUckipLpQlTAuAmyGhNoD7ODpYUzvDfvtxUbjM/jwznyP178oju/KDdyi220wNJ0RQ==,
       }
 
+  markdown-it-anchor@10.0.0:
+    resolution:
+      {
+        integrity: sha512-Q8g7Z6OBdH3eXF0lujFqukIxUvgCDZcjzCrJxmD6QiEzU1HWR9fVN+Bf6gxmM+0yrPFs+jUw8gNjLmUQqt6Eew==,
+      }
+    peerDependencies:
+      '@types/markdown-it': '*'
+      markdown-it: '*'
+
   markdown-it@15.0.2:
     resolution:
       {
@@ -6878,13 +6903,16 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@novelia/forum-api@https://codeload.github.com/auto-novel/forum/tar.gz/afeac411d0243d1167e19193ad84f98192b777b9#path:packages/forum-api(ky@2.1.0)':
+  '@novelia/forum-api@https://codeload.github.com/auto-novel/forum/tar.gz/972ed936a57b9cbe00dbb3ee7861dce17f96de79#path:packages/forum-api(@types/markdown-it@14.2.0)(ky@2.1.0)':
     dependencies:
       '@mdit/plugin-container': 2.0.2(markdown-it@15.0.2)
       '@mdit/plugin-spoiler': 2.1.2(markdown-it@15.0.2)
       dompurify: 3.4.16
       ky: 2.1.0
       markdown-it: 15.0.2
+      markdown-it-anchor: 10.0.0(@types/markdown-it@14.2.0)(markdown-it@15.0.2)
+    transitivePeerDependencies:
+      - '@types/markdown-it'
 
   '@novelia/web-kit@https://codeload.github.com/auto-novel/auth/tar.gz/c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a#path:packages/web-kit(@vicons/material@0.13.0)(tailwindcss@4.3.3)(vue-router@5.4.0(@pinia/colada@1.2.0(pinia@3.0.4(typescript@5.9.3)(vue@3.5.43(typescript@5.9.3)))(vue@3.5.43(typescript@5.9.3)))(@rsbuild/core@1.7.3)(@rspack/core@1.7.8(@swc/helpers@0.5.19))(@vue/compiler-sfc@3.5.43)(esbuild@0.27.3)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.43(typescript@5.9.3)))(rollup@4.59.0)(vite@8.0.8(@types/node@20.19.37)(esbuild@0.27.3)(jiti@2.7.0)(terser@5.46.0)(yaml@2.8.3))(vue@3.5.43(typescript@5.9.3)))(vue@3.5.43(typescript@5.9.3))':
     dependencies:
@@ -6915,7 +6943,7 @@ snapshots:
       rc9: 3.0.1
       scule: 1.3.0
       semver: 7.8.0
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       ufo: 1.6.4
       unctx: 2.5.0
       untyped: 2.0.0
@@ -7316,11 +7344,20 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/linkify-it@5.0.0': {}
+
   '@types/lodash-es@4.17.12':
     dependencies:
       '@types/lodash': 4.17.24
 
   '@types/lodash@4.17.24': {}
+
+  '@types/markdown-it@14.2.0':
+    dependencies:
+      '@types/linkify-it': 5.0.0
+      '@types/mdurl': 2.0.0
+
+  '@types/mdurl@2.0.0': {}
 
   '@types/node@20.19.37':
     dependencies:
@@ -9001,6 +9038,11 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
+  markdown-it-anchor@10.0.0(@types/markdown-it@14.2.0)(markdown-it@15.0.2):
+    dependencies:
+      '@types/markdown-it': 14.2.0
+      markdown-it: 15.0.2
+
   markdown-it@15.0.2:
     dependencies:
       argparse: 3.0.2
@@ -9826,7 +9868,7 @@ snapshots:
     dependencies:
       '@jridgewell/remapping': 2.3.5
       acorn: 8.16.0
-      picomatch: 4.0.4
+      picomatch: 4.0.7
       webpack-virtual-modules: 0.6.2
     optional: true
 

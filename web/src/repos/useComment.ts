@@ -1,3 +1,4 @@
+import { computed, watch } from 'vue';
 import { useQuery } from '@pinia/colada';
 import type {
   CommentPage,
@@ -6,19 +7,33 @@ import type {
 } from '@novelia/forum-api';
 
 import { CommentApi } from '@/api';
+import { webKit } from '@/webKit';
 import { cache } from './cache';
 
 const ListKey = 'comment-list';
 const ReplyPageSize = 20;
+const viewerKey = computed(() => webKit.whoami.value.user?.id ?? 'guest');
+const commentsKey = () => [ListKey, viewerKey.value];
+
+// Blacklist filtering is viewer-specific; never reuse another account's pages.
+watch(
+  viewerKey,
+  (_, previous) => {
+    const filter = { key: [ListKey, previous] };
+    cache.cancelQueries(filter);
+    for (const entry of cache.getEntries(filter)) cache.remove(entry);
+  },
+  { flush: 'sync' },
+);
 
 const commentListKey = (site: string, page: number) => [
-  ListKey,
+  ...commentsKey(),
   site,
   'roots',
   page,
 ];
 const replyListKey = (site: string, rootId: number, page: number) => [
-  ListKey,
+  ...commentsKey(),
   site,
   'replies',
   rootId,
@@ -33,6 +48,7 @@ const useCommentList = (
     key: () => commentListKey(toValue(site), toValue(page)),
     query: async ({ signal }) => {
       const requestedSite = toValue(site);
+      const viewer = viewerKey.value;
       const result = await CommentApi.getComments(
         requestedSite,
         {
@@ -42,7 +58,7 @@ const useCommentList = (
         signal,
       );
       const items = result.items.map(({ replies, ...comment }) => {
-        if (replies && !signal.aborted) {
+        if (replies && !signal.aborted && viewer === viewerKey.value) {
           cache.setQueryData<CommentPage>(
             replyListKey(requestedSite, comment.id, 1),
             replies,
@@ -78,7 +94,7 @@ const useReplyList = (
   });
 
 const invalidateComments = (site: string) =>
-  cache.invalidateQueries({ key: [ListKey, site] });
+  cache.invalidateQueries({ key: [...commentsKey(), site] });
 
 const updateCommentStatus = (id: number, status: CommentStatus) => {
   for (const entry of cache.getEntries({ key: [ListKey] })) {
@@ -97,6 +113,31 @@ export const CommentRepo = {
   useCommentList,
   useReplyList,
   replyPageSize: ReplyPageSize,
+
+  async setUserBlocked(userId: number, blocked: boolean) {
+    const viewer = viewerKey.value;
+    await CommentApi.setUserBlocked(userId, blocked);
+    if (viewer !== viewerKey.value) return;
+    const filter = { key: commentsKey() };
+    // Cancel stale responses before removing blocked authors from cached pages.
+    cache.cancelQueries(filter);
+    if (blocked) {
+      for (const entry of cache.getEntries(filter)) {
+        const page = entry.state.value.data as CommentPage | undefined;
+        if (!page) continue;
+        const items = page.items.filter(
+          (comment) => comment.authorId !== userId,
+        );
+        cache.setQueryData<CommentPage>(entry.key, {
+          ...page,
+          total: Math.max(0, page.total - (page.items.length - items.length)),
+          items,
+        });
+      }
+    }
+    // Server filtering also updates totals, reply counts and pagination.
+    await cache.invalidateQueries(filter);
+  },
 
   createComment: (site: string, request: CreateCommentRequest) =>
     CommentApi.createComment(site, request).then((comment) => {
