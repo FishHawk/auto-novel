@@ -184,8 +184,8 @@ importers:
         specifier: github:auto-novel/forum#972ed936a57b9cbe00dbb3ee7861dce17f96de79&path:packages/forum-api
         version: https://codeload.github.com/auto-novel/forum/tar.gz/972ed936a57b9cbe00dbb3ee7861dce17f96de79#path:packages/forum-api(@types/markdown-it@14.2.0)(ky@2.2.0)
       '@novelia/web-kit':
-        specifier: github:auto-novel/auth#c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a&path:packages/web-kit
-        version: https://codeload.github.com/auto-novel/auth/tar.gz/c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a#path:packages/web-kit(@vicons/material@0.13.0)(tailwindcss@4.3.3)(vue-router@5.4.0(@pinia/colada@1.4.8(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3)))(@rsbuild/core@1.7.6)(@rspack/core@1.7.12(@swc/helpers@0.5.23))(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(rolldown@1.2.13)(rollup@4.64.6)(vite@8.3.4(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3))
+        specifier: github:auto-novel/auth#0caf81ab33e601f9509f585dde44b1e41658707c&path:packages/web-kit
+        version: https://codeload.github.com/auto-novel/auth/tar.gz/0caf81ab33e601f9509f585dde44b1e41658707c#path:packages/web-kit(@vicons/material@0.13.0)(tailwindcss@4.3.3)(vue-router@5.4.0(@pinia/colada@1.4.8(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3)))(@rsbuild/core@1.7.6)(@rspack/core@1.7.12(@swc/helpers@0.5.23))(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(rolldown@1.2.13)(rollup@4.64.6)(vite@8.3.4(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3))
       '@pinia/colada':
         specifier: ^1.2.0
         version: 1.4.8(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3))
@@ -1100,19 +1100,19 @@ packages:
     resolution:
       {
         gitHosted: true,
-        path: packages/forum-api,
+        integrity: sha512-HFM5CBon3QFyeurdzCiypBRoU41zSqNQmLZpe0Wualc2wXmVbfQb1Kt0TJ0zej/cmzGW6+J76ZjCvlRZBR2wSg==,
         tarball: https://codeload.github.com/auto-novel/forum/tar.gz/972ed936a57b9cbe00dbb3ee7861dce17f96de79,
       }
     version: 0.1.0
     peerDependencies:
       ky: ^2.1.0
 
-  '@novelia/web-kit@https://codeload.github.com/auto-novel/auth/tar.gz/c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a#path:packages/web-kit':
+  '@novelia/web-kit@https://codeload.github.com/auto-novel/auth/tar.gz/0caf81ab33e601f9509f585dde44b1e41658707c#path:packages/web-kit':
     resolution:
       {
         gitHosted: true,
-        path: packages/web-kit,
-        tarball: https://codeload.github.com/auto-novel/auth/tar.gz/c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a,
+        integrity: sha512-0y15cA2XsBEA70vSudP9k+BflxDcmxh6bB7zJTLAysc0PJfMgdR/nfRUv8JodvNdG6kvX36XAA/v5ls6vFSb1A==,
+        tarball: https://codeload.github.com/auto-novel/auth/tar.gz/0caf81ab33e601f9509f585dde44b1e41658707c,
       }
     version: 0.1.0
     peerDependencies:
@@ -6383,9 +6383,10 @@ snapshots:
     transitivePeerDependencies:
       - '@types/markdown-it'
 
-  '@novelia/web-kit@https://codeload.github.com/auto-novel/auth/tar.gz/c26edb02b6c64cfac5a0f7b780bfa2c61f9be26a#path:packages/web-kit(@vicons/material@0.13.0)(tailwindcss@4.3.3)(vue-router@5.4.0(@pinia/colada@1.4.8(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3)))(@rsbuild/core@1.7.6)(@rspack/core@1.7.12(@swc/helpers@0.5.23))(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(rolldown@1.2.13)(rollup@4.64.6)(vite@8.3.4(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3))':
+  '@novelia/web-kit@https://codeload.github.com/auto-novel/auth/tar.gz/0caf81ab33e601f9509f585dde44b1e41658707c#path:packages/web-kit(@vicons/material@0.13.0)(tailwindcss@4.3.3)(vue-router@5.4.0(@pinia/colada@1.4.8(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3)))(@rsbuild/core@1.7.6)(@rspack/core@1.7.12(@swc/helpers@0.5.23))(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(rolldown@1.2.13)(rollup@4.64.6)(vite@8.3.4(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3))':
     dependencies:
       '@vicons/material': 0.13.0
+      '@vueuse/core': 14.4.0(vue@3.5.44(typescript@5.9.3))
       date-fns: 4.4.0
       ky: 2.2.0
       reka-ui: 2.11.0(vue@3.5.44(typescript@5.9.3))
