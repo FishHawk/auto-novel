@@ -9,7 +9,7 @@ import { client } from './utils';
 const createMetadataClient = (title: string) =>
   ky.create({
     fetch: async (input) => {
-      const url = input instanceof Request ? input.url : input.toString();
+      const url = input.url;
       const html = url.includes('mode=ss_detail')
         ? `
           <table>
@@ -30,7 +30,7 @@ const createMetadataClient = (title: string) =>
 const createReaderMetadataClient = () =>
   ky.create({
     fetch: async (input) => {
-      const url = input instanceof Request ? input.url : input.toString();
+      const url = input.url;
       const html = url.includes('mode=ss_detail')
         ? `
           <table>

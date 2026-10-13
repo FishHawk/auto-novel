@@ -76,10 +76,15 @@ const ITEM_MIN_HEIGHT = 56;
 
 // NVirtualList 只在滚动/容器尺寸变化时同步滚动条，行被测量后内容变高
 // 不会触发同步，导致初次加载时滑块比例偏大。这里监听内容高度并手动同步。
+// naive-ui 2.45 起把 scrollbarInstRef 的类型放宽为 unknown，
+// 但运行时仍是内部 Scrollbar 实例（暴露 sync()），故显式声明所需方法。
+type ScrollbarSyncInst = { sync: () => void };
+
 const listRef = ref<InstanceType<typeof NVirtualList>>();
 useResizeObserver(
   computed(() => listRef.value?.getScrollContent()),
-  () => listRef.value?.scrollbarInstRef?.sync(),
+  () =>
+    (listRef.value?.scrollbarInstRef as ScrollbarSyncInst | undefined)?.sync(),
 );
 
 const virtualListClass = computed(() => {
