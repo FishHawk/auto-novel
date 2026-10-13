@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   BookOutlined,
   DeleteOutlineOutlined,
@@ -14,7 +15,6 @@ import {
 } from '@auto-novel/translator';
 import type { TranslatorTracker } from '@auto-novel/translator';
 
-import { doAction } from '@/pages/util';
 import { useWorkspaceStore } from '@/stores';
 import { TaskExecutor } from '@/domain/translator/TaskExecutor';
 import { IndexedDbSegmentCache } from '@/domain/translator/IndexedDbSegmentCache';
@@ -344,11 +344,10 @@ function retryTaskCards() {
 }
 
 const clearCache = () =>
-  doAction(
-    new IndexedDbSegmentCache(segCacheName).clear(),
-    '缓存清除',
-    message,
-  );
+  Toast.promise(new IndexedDbSegmentCache(segCacheName).clear(), {
+    success: '缓存清除成功',
+    error: '缓存清除失败',
+  });
 
 watch(
   () => [...jobs.value],

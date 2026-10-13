@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { MoreVertOutlined } from '@vicons/material';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
+import { Toast } from '@novelia/web-kit';
 
-import { doAction } from '@/pages/util';
 import { FavoredRepo } from '@/stores';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
 
@@ -13,8 +13,6 @@ const { id, type, title } = defineProps<{
 }>();
 
 const store = useBookshelfLocalStore();
-
-const message = useMessage();
 
 const getOptions = () => {
   if (id === 'all') {
@@ -64,12 +62,11 @@ const updateFavored = async () => {
 
   const title = formValue.value.title;
 
-  await doAction(
+  await Toast.promise(
     FavoredRepo.updateFavored(type, id, title).then(() => {
       showEditModal.value = false;
     }),
-    '收藏夹更新',
-    message,
+    { success: '收藏夹更新成功', error: '收藏夹更新失败' },
   );
 };
 
@@ -86,12 +83,11 @@ const deleteFavoredNovels = async () => {
 
 const showDeleteModal = ref(false);
 const deleteFavored = () =>
-  doAction(
+  Toast.promise(
     deleteFavoredNovels()
       .then(() => FavoredRepo.deleteFavored(type, id))
       .then(() => (showDeleteModal.value = false)),
-    '收藏夹删除',
-    message,
+    { success: '收藏夹删除成功', error: '收藏夹删除失败' },
   );
 </script>
 

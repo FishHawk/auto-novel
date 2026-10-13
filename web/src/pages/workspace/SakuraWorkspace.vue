@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   BookOutlined,
   DeleteOutlineOutlined,
@@ -11,7 +12,6 @@ import { VueDraggable } from 'vue-draggable-plus';
 import { SakuraTranslator } from '@/domain/translate';
 import { TranslationCacheRepo } from '@/repos';
 import type { TranslateJob } from '@/model/Translator';
-import { doAction } from '@/pages/util';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 import { useSakuraWorkspaceStore, useSettingStore } from '@/stores';
 
@@ -86,7 +86,10 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () =>
-  doAction(TranslationCacheRepo.clear('sakura-seg-cache'), '缓存清除', message);
+  Toast.promise(TranslationCacheRepo.clear('sakura-seg-cache'), {
+    success: '缓存清除成功',
+    error: '缓存清除失败',
+  });
 </script>
 
 <template>

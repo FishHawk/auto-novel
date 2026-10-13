@@ -1,10 +1,10 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import { GenericNovelId } from '@/model/Common';
 import type { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';
-import { doAction } from '@/pages/util';
 import { Setting, useLocalVolumeStore, useSettingStore } from '@/stores';
 import { downloadFile, useShouldTopJob } from '@/util';
 
@@ -22,7 +22,10 @@ const { setting } = storeToRefs(settingStore);
 const store = useBookshelfLocalStore();
 
 const deleteVolume = (volumeId: string) =>
-  doAction(store.deleteVolume(volumeId), '删除', message);
+  Toast.promise(store.deleteVolume(volumeId), {
+    success: '删除成功',
+    error: '删除失败',
+  });
 
 const calculateFinished = (volume: LocalVolumeMetadata) =>
   volume.toc.filter((it) => {

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import { ReadHistoryApi } from '@/api';
 import { WebNovelRepo } from '@/repos';
 import router from '@/router';
 import { useReadHistoryStore } from '@/stores';
-import { doAction } from '../util';
 
 const route = useRoute();
 
@@ -17,8 +17,6 @@ const onUpdatePage = (page: number) => {
 const props = defineProps<{
   page: number;
 }>();
-
-const message = useMessage();
 
 const readHistoryStore = useReadHistoryStore();
 const { readHistoryPaused } = storeToRefs(readHistoryStore);
@@ -32,21 +30,19 @@ const { data: novelPage, error } = WebNovelRepo.useWebNovelHistoryList(
 );
 
 const clearHistory = () =>
-  doAction(
+  Toast.promise(
     ReadHistoryApi.clearReadHistoryWeb().then(() => {
       window.location.reload();
     }),
-    '清空',
-    message,
+    { success: '清空成功', error: '清空失败' },
   );
 
 const deleteHistory = (providerId: string, novelId: string) =>
-  doAction(
+  Toast.promise(
     ReadHistoryApi.deleteReadHistoryWeb(providerId, novelId).then(() => {
       window.location.reload();
     }),
-    '删除',
-    message,
+    { success: '删除成功', error: '删除失败' },
   );
 </script>
 

@@ -1,21 +1,22 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import { GenericNovelId } from '@/model/Common';
 
 import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';
-import { doAction } from '@/pages/util';
 
 defineEmits<{
   volumeLoaded: [string];
 }>();
 
-const message = useMessage();
-
 const store = useBookshelfLocalStore();
 
 const deleteVolume = (volumeId: string) =>
-  doAction(store.deleteVolume(volumeId), '删除', message);
+  Toast.promise(store.deleteVolume(volumeId), {
+    success: '删除成功',
+    error: '删除失败',
+  });
 </script>
 
 <template>
@@ -25,7 +26,8 @@ const deleteVolume = (volumeId: string) =>
         <n-text>{{ volume.id }}</n-text>
 
         <n-text depth="3">
-          <n-time :time="volume.createAt" type="relative" /> / 总计
+          <n-time :time="volume.createAt" type="relative" />
+          / 总计
           {{ volume.toc.length }}
         </n-text>
 

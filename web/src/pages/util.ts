@@ -2,9 +2,6 @@ import {
   useBreakpoints as useBreakpointsInner,
   useWindowSize,
 } from '@vueuse/core';
-import type { MessageApi } from 'naive-ui';
-
-import { formatError } from '@/api';
 
 export const useIsWideScreen = (limit: number = 840) => {
   const { width } = useWindowSize();
@@ -17,19 +14,6 @@ export const useBreakPoints = () =>
     tablet: 540,
     desktop: 1200,
   });
-
-export const doAction = (
-  promise: Promise<unknown>,
-  label: string,
-  message: MessageApi,
-) =>
-  promise
-    .then(() => {
-      message.info(label + '成功');
-    })
-    .catch(async (e) => {
-      message.error(label + '失败:' + (await formatError(e)));
-    });
 
 type KeyPredicate = (event: KeyboardEvent) => boolean;
 type KeyFilter = string | string[] | KeyPredicate;

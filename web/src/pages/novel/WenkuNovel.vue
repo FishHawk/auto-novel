@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
 import { subjectKeys } from '@novelia/forum-api';
 import { createReusableTemplate } from '@vueuse/core';
@@ -7,7 +8,7 @@ import coverPlaceholder from '@/image/cover_placeholder.png';
 import { GenericNovelId } from '@/model/Common';
 import type { VolumeJpDto } from '@/model/WenkuNovel';
 import NovelBottomTabs from '@/pages/novel/components/NovelBottomTabs.vue';
-import { doAction, useIsWideScreen } from '@/pages/util';
+import { useIsWideScreen } from '@/pages/util';
 import { WenkuNovelRepo } from '@/repos';
 import { useSettingStore, useWhoamiStore } from '@/stores';
 
@@ -19,7 +20,6 @@ const [DefineTagGroup, ReuseTagGroup] = createReusableTemplate<{
 }>();
 
 const isWideScreen = useIsWideScreen(600);
-const message = useMessage();
 const vars = useThemeVars();
 
 const settingStore = useSettingStore();
@@ -39,7 +39,10 @@ watch(novel, (novel) => {
 const translateOptions = useTemplateRef('translateOptions');
 
 const deleteVolume = (volumeId: string) =>
-  doAction(WenkuNovelRepo.deleteVolume(novelId, volumeId), '删除', message);
+  Toast.promise(WenkuNovelRepo.deleteVolume(novelId, volumeId), {
+    success: '删除成功',
+    error: '删除失败',
+  });
 
 const buildSearchLink = (tag: string) => `/wenku?query="${tag}"`;
 

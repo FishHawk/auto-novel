@@ -6,9 +6,11 @@ import {
 } from '@vicons/material';
 
 import type { Comment } from '@novelia/forum-api';
+import { Toast } from '@novelia/web-kit';
+
 import { useWhoamiStore } from '@/stores';
 import { CommentRepo } from '@/repos';
-import { copyToClipBoard, doAction } from '@/pages/util';
+import { copyToClipBoard } from '@/pages/util';
 
 const props = defineProps<{
   site: string;
@@ -19,8 +21,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   reply: [Comment];
 }>();
-
-const message = useMessage();
 
 const whoamiStore = useWhoamiStore();
 const { whoami } = storeToRefs(whoamiStore);
@@ -59,39 +59,45 @@ const handleSelect = (key: string) => {
 };
 
 function deleteComment() {
-  doAction(
-    CommentRepo.deleteComment(props.comment.id, props.site),
-    '删除',
-    message,
-  );
+  Toast.promise(CommentRepo.deleteComment(props.comment.id, props.site), {
+    success: '删除成功',
+    error: '删除失败',
+  });
 }
 
 function copyComment(comment: Comment) {
-  doAction(copyToClipBoard(comment.content), '复制', message);
+  Toast.promise(copyToClipBoard(comment.content), {
+    success: '复制成功',
+    error: '复制失败',
+  });
 }
 
 function hideComment(comment: Comment) {
-  doAction(CommentRepo.hideComment(comment.id), '隐藏', message);
+  Toast.promise(CommentRepo.hideComment(comment.id), {
+    success: '隐藏成功',
+    error: '隐藏失败',
+  });
 }
 
 function unhideComment(comment: Comment) {
-  doAction(CommentRepo.unhideComment(comment.id), '解除隐藏', message);
+  Toast.promise(CommentRepo.unhideComment(comment.id), {
+    success: '解除隐藏成功',
+    error: '解除隐藏失败',
+  });
 }
 
 function blockUser(comment: Comment) {
-  doAction(
-    CommentRepo.setUserBlocked(comment.authorId, true),
-    '屏蔽用户',
-    message,
-  );
+  Toast.promise(CommentRepo.setUserBlocked(comment.authorId, true), {
+    success: '屏蔽用户成功',
+    error: '屏蔽用户失败',
+  });
 }
 
 function unblockUser(comment: Comment) {
-  doAction(
-    CommentRepo.setUserBlocked(comment.authorId, false),
-    '解除屏蔽用户',
-    message,
-  );
+  Toast.promise(CommentRepo.setUserBlocked(comment.authorId, false), {
+    success: '解除屏蔽用户成功',
+    error: '解除屏蔽用户失败',
+  });
 }
 
 const isDeletable = computed(() => {

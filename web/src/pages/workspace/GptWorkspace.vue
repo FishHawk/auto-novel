@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   BookOutlined,
   DeleteOutlineOutlined,
@@ -10,7 +11,6 @@ import { VueDraggable } from 'vue-draggable-plus';
 
 import { TranslationCacheRepo } from '@/repos';
 import type { TranslateJob } from '@/model/Translator';
-import { doAction } from '@/pages/util';
 import { useGptWorkspaceStore } from '@/stores';
 
 const message = useMessage();
@@ -77,7 +77,10 @@ const onProgressUpdated = (
 };
 
 const clearCache = async () =>
-  doAction(TranslationCacheRepo.clear('gpt-seg-cache'), '缓存清除', message);
+  Toast.promise(TranslationCacheRepo.clear('gpt-seg-cache'), {
+    success: '缓存清除成功',
+    error: '缓存清除失败',
+  });
 </script>
 
 <template>

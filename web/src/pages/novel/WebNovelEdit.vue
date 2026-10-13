@@ -1,8 +1,9 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { UploadOutlined } from '@vicons/material';
 
 import { WebNovelRepo } from '@/repos';
-import { doAction, useIsWideScreen } from '@/pages/util';
+import { useIsWideScreen } from '@/pages/util';
 
 const { providerId, novelId } = defineProps<{
   providerId: string;
@@ -65,7 +66,7 @@ const submit = async () => {
     ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh })),
   );
 
-  await doAction(
+  await Toast.promise(
     Promise.all([
       WebNovelRepo.updateNovelTranslation(providerId, novelId, {
         title,
@@ -78,8 +79,7 @@ const submit = async () => {
     ]).then(() => {
       router.push({ path: `/novel/${providerId}/${novelId}` });
     }),
-    '编辑',
-    message,
+    { success: '编辑成功', error: '编辑失败' },
   );
 };
 </script>

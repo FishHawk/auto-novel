@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   DeleteOutlineOutlined,
   KeyboardDoubleArrowDownOutlined,
@@ -14,7 +15,7 @@ import { WenkuNovelRepo } from '@/repos';
 import coverPlaceholder from '@/image/cover_placeholder.png';
 import type { WenkuNovelOutlineDto, WenkuVolumeDto } from '@/model/WenkuNovel';
 import { presetKeywordsNonR18, presetKeywordsR18 } from '@/model/WenkuNovel';
-import { doAction, useIsWideScreen } from '@/pages/util';
+import { useIsWideScreen } from '@/pages/util';
 import { useWhoamiStore } from '@/stores';
 import { RegexUtil, delay } from '@/util';
 import { runCatching } from '@/util/result';
@@ -170,20 +171,18 @@ const submit = async () => {
   };
 
   if (novelId === undefined) {
-    await doAction(
+    await Toast.promise(
       WenkuNovelRepo.createNovel(body).then((id) => {
         router.push({ path: `/wenku/${id}` });
       }),
-      '新建文库',
-      message,
+      { success: '新建文库成功', error: '新建文库失败' },
     );
   } else {
-    await doAction(
+    await Toast.promise(
       WenkuNovelRepo.updateNovel(novelId, body).then(() => {
         router.push({ path: `/wenku/${novelId}` });
       }),
-      '编辑文库',
-      message,
+      { success: '编辑文库成功', error: '编辑文库失败' },
     );
   }
 };

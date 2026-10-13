@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { FavoriteBorderOutlined, FavoriteOutlined } from '@vicons/material';
+import { Toast } from '@novelia/web-kit';
 
-import { doAction } from '@/pages/util';
 import { FavoredRepo } from '@/stores';
 
 const props = defineProps<{
@@ -10,8 +10,6 @@ const props = defineProps<{
     | { type: 'web'; providerId: string; novelId: string }
     | { type: 'wenku'; novelId: string };
 }>();
-
-const message = useMessage();
 
 const favoredStore = FavoredRepo.useFavoredStore();
 const { favoreds: favoredFull } = storeToRefs(favoredStore);
@@ -22,22 +20,20 @@ const favoredTitle = computed(
 );
 
 const favoriteNovel = (favoredId: string) =>
-  doAction(
+  Toast.promise(
     FavoredRepo.favoriteNovel(favoredId, props.novel).then(() => {
       showFavoredModal.value = false;
     }),
-    '收藏',
-    message,
+    { success: '收藏成功', error: '收藏失败' },
   );
 
 const unfavoriteNovel = async () => {
   if (props.favored === undefined) return;
-  await doAction(
+  await Toast.promise(
     FavoredRepo.unfavoriteNovel(props.favored, props.novel).then(() => {
       showFavoredModal.value = false;
     }),
-    '取消收藏',
-    message,
+    { success: '取消收藏成功', error: '取消收藏失败' },
   );
 };
 

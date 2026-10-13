@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
+import { Toast } from '@novelia/web-kit';
 
 import { WebNovelApi, WenkuNovelApi } from '@/api';
 import { forumPostUrls } from '@/config';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
-import { copyToClipBoard, doAction } from '@/pages/util';
+import { copyToClipBoard } from '@/pages/util';
 import { useLocalVolumeStore, useWhoamiStore } from '@/stores';
 import { downloadFile } from '@/util';
 
@@ -71,7 +72,7 @@ const updateGlossary = async (glossaryValue: Glossary) => {
 
 const submitGlossary = () => {
   const submittedGlossary = { ...toRaw(glossary.value) };
-  return doAction(
+  return Toast.promise(
     updateGlossary(submittedGlossary).then(() => {
       // 触发组件外的术语表本体更新。有点傻，但够用。
       for (const key in props.value) {
@@ -82,8 +83,7 @@ const submitGlossary = () => {
       }
       originalGlossary.value = { ...submittedGlossary };
     }),
-    '术语表提交',
-    message,
+    { success: '术语表提交成功', error: '术语表提交失败' },
   );
 };
 
