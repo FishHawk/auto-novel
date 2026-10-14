@@ -90,14 +90,13 @@ const workerErrors = computed(() => {
 const executingTasks = reactive(new Set<string>());
 
 let processLoopAbortController: AbortController | null = null;
-let processLoopPromise: Promise<void> | null = null;
+let activeProcessors = 0;
 
 onUnmounted(() => {
   pipeline.clearLoops();
   pipeline.queue.clear();
   processLoopAbortController?.abort();
   processLoopAbortController = null;
-  processLoopPromise = null;
   executingTasks.clear();
   workerStates.value.clear();
 });
@@ -177,13 +176,10 @@ function clearTaskRuntimeState(task: string): void {
 
 // ========== 全局处理循环 ==========
 
-function runProcessLoop(): Promise<void> | null {
-  if (processLoopPromise) return processLoopPromise;
-  if (!hasRunningWorker()) {
-    return null;
-  }
+function runProcessLoop(): void {
+  if (!hasRunningWorker()) return;
 
-  processLoopAbortController = new AbortController();
+  processLoopAbortController ??= new AbortController();
   const signal = processLoopAbortController.signal;
 
   const processOne = async () => {
@@ -233,22 +229,23 @@ function runProcessLoop(): Promise<void> | null {
     }
   };
 
+  // 运行中新增的待翻章节（新任务、重试、任务延迟初始化）也要补满窗口，
+  // 否则章节并发会一直被卡在循环启动时的待翻章节数。
   const pendingCount = countPendingChapters(jobs.value, taskStates.value);
-  const windowSize = Math.min(GLOBAL_WINDOW, pendingCount || 1);
-  const workers = Array.from({ length: windowSize }, () => processOne());
-
-  processLoopPromise = Promise.all(workers).then(() => {
-    for (const t of [...executingTasks]) {
-      executingTasks.delete(t);
-    }
-    processLoopPromise = null;
-    processLoopAbortController = null;
-    if (countPendingChapters(jobs.value, taskStates.value) > 0) {
-      runProcessLoop();
-    }
-  });
-
-  return processLoopPromise;
+  const spawnCount = Math.min(GLOBAL_WINDOW - activeProcessors, pendingCount);
+  for (let i = 0; i < spawnCount; i++) {
+    activeProcessors++;
+    processOne().finally(() => {
+      activeProcessors--;
+      if (activeProcessors === 0) {
+        executingTasks.clear();
+        processLoopAbortController = null;
+      }
+      if (countPendingChapters(jobs.value, taskStates.value) > 0) {
+        runProcessLoop();
+      }
+    });
+  }
 }
 
 // ========== Worker 生命周期管理 ==========
@@ -269,9 +266,10 @@ const startWorker = async (workerId: string) => {
   workerStates.value.set(workerId, state);
 
   try {
+    const log = (msg: string) => console.log(`[${w.id}] ${msg}`);
     const t = isSakura.value
-      ? await SakuraTranslator.create(w as SakuraWorker)
-      : new OpenAiTranslator(w as GptPipelineWorker);
+      ? await SakuraTranslator.create({ ...(w as SakuraWorker), log })
+      : new OpenAiTranslator({ ...(w as GptPipelineWorker), log });
 
     if (workerStates.value.get(workerId) !== state) return;
 
