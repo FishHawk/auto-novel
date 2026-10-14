@@ -241,6 +241,12 @@ export class SakuraTranslator implements Translator {
     for (const line of lines) {
       signal?.throwIfAborted();
 
+      // 空行直接保留，否则模型会凭空生成内容（如「……」）
+      if (line.trim().length === 0) {
+        resultPerLine.push(line);
+        continue;
+      }
+
       const lineContext: SegmentContext = {
         ...context,
         prevSegs: [...prevSegs, resultPerLine],
@@ -261,7 +267,10 @@ export class SakuraTranslator implements Translator {
         }
         resultPerLine.push(line);
       } else {
-        resultPerLine.push(text.replaceAll('<|im_end|>', ''));
+        // 单行译文不能含换行，否则上传时按行切分会与原文行数不匹配
+        resultPerLine.push(
+          text.replaceAll('<|im_end|>', '').replaceAll(/\r?\n/g, ''),
+        );
       }
     }
 
