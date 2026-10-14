@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { XDrawer } from '@novelia/web-kit';
 import {
   ArrowBackIosOutlined,
   ArrowForwardIosOutlined,
@@ -66,11 +67,12 @@ const onGlobalClick = (event: MouseEvent) => {
     <slot />
   </div>
 
-  <n-drawer
-    v-model:show="showMenu"
-    :height="'auto'"
-    placement="bottom"
-    :auto-focus="false"
+  <XDrawer
+    v-model:open="showMenu"
+    title="阅读菜单"
+    height="auto"
+    side="bottom"
+    @open-auto-focus.prevent
   >
     <n-flex
       :size="0"
@@ -128,5 +130,5 @@ const onGlobalClick = (event: MouseEvent) => {
         />
       </div>
     </n-flex>
-  </n-drawer>
+  </XDrawer>
 </template>

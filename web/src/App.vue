@@ -88,7 +88,6 @@ if (RegexUtil.isSafari(navigator.userAgent)) {
       :date-locale="dateZhCN"
       inline-theme-disabled
       :theme-overrides="{
-        Drawer: { bodyPadding: '0px' },
         List: { color: '#0000' },
         common: {
           ...(theme.bodyColor === undefined
@@ -132,9 +131,6 @@ li {
   right: 40px;
   bottom: 20px;
   box-shadow: rgb(0 0 0 / 40%) 2px 2px 8px 0px;
-}
-.n-drawer-header__main {
-  flex: 1;
 }
 .sortable-ghost {
   opacity: 0.7;

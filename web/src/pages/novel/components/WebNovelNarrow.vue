@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { XDrawer } from '@novelia/web-kit';
 import {
   KeyboardArrowDownRound,
   KeyboardArrowUpRound,
@@ -152,11 +153,14 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
     </n-scrollbar>
   </template>
 
-  <c-drawer-right
+  <XDrawer
     v-if="setting.tocCollapseInNarrowScreen && novel.toc.length > 1"
+    v-model:open="showCatalogDrawer"
     :width="320"
-    v-model:show="showCatalogDrawer"
     title="目录"
+    show-header
+    side="right"
+    @open-auto-focus.prevent
   >
     <template #action>
       <c-button
@@ -196,7 +200,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
         style="height: 100%"
       />
     </div>
-  </c-drawer-right>
+  </XDrawer>
 
   <NovelBottomTabs
     :gnid="GenericNovelId.web(providerId, novelId)"
