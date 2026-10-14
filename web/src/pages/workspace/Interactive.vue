@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { copyToClipboard, Toast } from '@novelia/web-kit';
 
 import type { TranslatorConfig } from '@/domain/translate';
 import { Translator } from '@/domain/translate';
@@ -104,8 +104,8 @@ const clearTranslation = () => {
   textJp.value = '';
   textZh.value = '';
 };
-const copyToClipboard = () =>
-  Toast.promise(navigator.clipboard.writeText(textZh.value), {
+const copyTranslation = () =>
+  Toast.promise(copyToClipboard(textZh.value), {
     success: '已经将翻译结果复制到剪切板',
     error: '复制失败',
   });
@@ -180,7 +180,7 @@ const clearSavedTranslation = () => {
             label="复制到剪贴板"
             :round="false"
             size="small"
-            @action="copyToClipboard"
+            @action="copyTranslation"
           />
         </n-flex>
       </c-action-wrapper>
