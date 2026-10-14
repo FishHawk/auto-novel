@@ -33,20 +33,25 @@
     </script>
   </head>
   <body>
-    <div id="fallback-error" style="position: fixed; height: 100vh"></div>
+    <div id="app">
+      <div id="fallback-error"></div>
+    </div>
     <script>
       window.onerror = function (msg, url, line, col) {
         if (String(msg).includes('ResizeObserver loop')) {
           return true;
         }
 
-        var div = document.createElement('div');
-        div.innerText = `Error: ${line}:${col} ${msg} ${url}`;
-        document.getElementById('fallback-error').appendChild(div);
+        // Vue 挂载后会替换 #app 的内容，只在挂载前显示错误。
+        var fallback = document.getElementById('fallback-error');
+        if (fallback) {
+          var div = document.createElement('div');
+          div.innerText = `Error: ${line}:${col} ${msg} ${url}`;
+          fallback.appendChild(div);
+        }
         return false;
       };
     </script>
-    <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
     <noscript>本页面需要浏览器启用JavaScript</noscript>
   </body>
