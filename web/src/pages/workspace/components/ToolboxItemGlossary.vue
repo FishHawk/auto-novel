@@ -89,8 +89,10 @@ const copyTranslationJson = async () => {
     ]),
   );
   const jsonString = Glossary.toText(obj);
-  navigator.clipboard.writeText(jsonString);
-  Toast.info('已经将翻译结果复制到剪切板');
+  await Toast.promise(navigator.clipboard.writeText(jsonString), {
+    success: '已经将翻译结果复制到剪切板',
+    error: '复制失败',
+  });
 };
 
 const showSakuraSelectModal = ref(false);
@@ -117,18 +119,17 @@ const translateKatakanas = async (id: 'youdao' | 'sakura') => {
   } else {
     config = { id };
   }
-  try {
-    const translator = await Translator.create(config, false);
-    const zhWords = await translator.translate(jpWords, {});
-
-    const jpToZh: { [key: string]: string } = {};
-    jpWords.forEach((jpWord, index) => {
-      jpToZh[jpWord] = zhWords[index];
-    });
-    katakanaTranslations.value = jpToZh;
-  } catch (e: unknown) {
-    Toast.error(`翻译器错误：${e}`);
-  }
+  await Toast.promise(
+    Translator.create(config, false).then(async (translator) => {
+      const zhWords = await translator.translate(jpWords, {});
+      const jpToZh: { [key: string]: string } = {};
+      jpWords.forEach((jpWord, index) => {
+        jpToZh[jpWord] = zhWords[index];
+      });
+      katakanaTranslations.value = jpToZh;
+    }),
+    { error: '翻译器错误' },
+  );
 };
 </script>
 

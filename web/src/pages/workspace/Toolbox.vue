@@ -35,13 +35,15 @@ const clearFile = () => {
 };
 
 const loadLocalFile = (volumeId: string) =>
-  useLocalVolumeStore()
-    .then((repo) => repo.getFile(volumeId))
-    .then((file) => {
-      if (file === undefined) throw '小说不存在';
-      return loadFile(file.file);
-    })
-    .catch((error) => Toast.error(`文件载入失败：${error}`));
+  Toast.promise(
+    useLocalVolumeStore()
+      .then((repo) => repo.getFile(volumeId))
+      .then((file) => {
+        if (file === undefined) throw '小说不存在';
+        return loadFile(file.file);
+      }),
+    { error: '文件载入失败' },
+  );
 
 const customRequest = ({
   file,

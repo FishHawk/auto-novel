@@ -21,5 +21,5 @@ RUN VITE_GIT_COMMIT="${VITE_GIT_COMMIT}" \
     pnpm --filter @auto-novel/web... build
 
 FROM caddy:2.7.4
-COPY web/Caddyfile /etc/caddy/Caddyfile
+COPY deploy/web/Caddyfile /etc/caddy/Caddyfile
 COPY --from=builder /app/web/dist /dist

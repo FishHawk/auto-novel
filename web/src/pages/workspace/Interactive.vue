@@ -81,16 +81,16 @@ const translate = async () => {
     };
   }
 
-  try {
-    const translator = await Translator.create(config, false);
-    const linesJp = textJp.value.split('\n');
-    const linesZh = await translator.translate(linesJp, {
-      glossary: glossary.value,
-    });
-    textZh.value = linesZh.join('\n');
-  } catch (e: unknown) {
-    Toast.error(`翻译器错误：${e}`);
-  }
+  await Toast.promise(
+    Translator.create(config, false).then(async (translator) => {
+      const linesJp = textJp.value.split('\n');
+      const linesZh = await translator.translate(linesJp, {
+        glossary: glossary.value,
+      });
+      textZh.value = linesZh.join('\n');
+    }),
+    { error: '翻译器错误' },
+  );
 
   savedTranslation.value.push({
     id,
@@ -104,10 +104,11 @@ const clearTranslation = () => {
   textJp.value = '';
   textZh.value = '';
 };
-const copyToClipboard = () => {
-  navigator.clipboard.writeText(textZh.value);
-  Toast.info('已经将翻译结果复制到剪切板');
-};
+const copyToClipboard = () =>
+  Toast.promise(navigator.clipboard.writeText(textZh.value), {
+    success: '已经将翻译结果复制到剪切板',
+    error: '复制失败',
+  });
 const clearSavedTranslation = () => {
   savedTranslation.value = [];
 };

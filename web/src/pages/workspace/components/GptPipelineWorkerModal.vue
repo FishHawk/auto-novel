@@ -22,6 +22,24 @@ const workspace = useGptPipelineWorkspaceStore();
 const workspaceRef = workspace.ref;
 // ── 编辑模式表单（单翻译器）─────────────────────────────────
 
+const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com';
+const DEEPSEEK_ANTHROPIC_ENDPOINT = 'https://api.deepseek.com/anthropic';
+const GEMINI_ENDPOINT =
+  'https://generativelanguage.googleapis.com/v1beta/openai';
+
+/** 新建翻译器时默认使用的接口格式 */
+const DEFAULT_PROFILE_ID: openAiProfileId = 'deepseek';
+
+/**
+ * 按接口格式自动填入默认端点：
+ * Gemini 用谷歌兼容端点，Anthropic 用 DeepSeek 的 /anthropic，，默认 DeepSeek。
+ */
+const defaultEndpoint = (profileId: openAiProfileId) => {
+  if (profileId === 'gemini') return GEMINI_ENDPOINT;
+  if (profileId === 'anthropic') return DEEPSEEK_ANTHROPIC_ENDPOINT;
+  return DEEPSEEK_ENDPOINT;
+};
+
 const initFormValue = (
   worker: GptPipelineWorker | undefined,
 ): {
@@ -33,17 +51,17 @@ const initFormValue = (
   profileId: openAiProfileId;
   profileValues: ProfileValues;
 } => {
-  const profileId = worker?.profile?.id ?? 'openai';
+  const profileId = worker?.profile?.id ?? DEFAULT_PROFILE_ID;
   const defaultValues = defaultProfileValues(profileId);
 
   if (worker === undefined) {
     return {
       id: '',
       model: 'deepseek-v4-pro',
-      endpoint: 'https://api.deepseek.com',
+      endpoint: defaultEndpoint(profileId),
       key: '',
       concurrency: 1,
-      profileId: 'openai',
+      profileId,
       profileValues: defaultValues,
     };
   } else {
@@ -53,7 +71,7 @@ const initFormValue = (
       endpoint: worker.endpoint,
       key: worker.key,
       concurrency: worker.concurrency,
-      profileId: worker.profile?.id ?? 'openai',
+      profileId,
       profileValues: {
         ...defaultValues,
         ...(worker.profile?.values ?? {}),
@@ -64,6 +82,14 @@ const initFormValue = (
 
 const formRef = useTemplateRef<FormInst>('form');
 const formValue = ref(initFormValue(props.worker));
+
+/** 用户是否手动改过链接；改过则切换接口格式时不再自动覆盖 */
+const endpointTouched = ref(false);
+
+const onEndpointInput = (value: string) => {
+  formValue.value.endpoint = value;
+  endpointTouched.value = true;
+};
 
 const currentProfile = computed(() =>
   openAiProfiles.find((p) => p.id === formValue.value.profileId),
@@ -83,12 +109,16 @@ function defaultProfileValues(profileId: openAiProfileId): ProfileValues {
 const onProfileChange = (id: openAiProfileId) => {
   formValue.value.profileId = id;
   formValue.value.profileValues = defaultProfileValues(id);
+  if (!endpointTouched.value) {
+    formValue.value.endpoint = defaultEndpoint(id);
+  }
 };
 
 watch(
   () => props.worker,
   (newWorker) => {
     formValue.value = initFormValue(newWorker);
+    endpointTouched.value = false;
   },
   { immediate: false },
 );
@@ -239,6 +269,7 @@ watch(
       keyText.value = '';
       defaultConcurrency.value = 1;
       formValue.value = initFormValue(undefined);
+      endpointTouched.value = false;
     }
   },
 );
@@ -428,8 +459,9 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       <template v-if="props.worker === undefined">
         <n-form-item-row path="endpoint" label="链接">
           <n-input
-            v-model:value="formValue.endpoint"
-            placeholder="https://api.deepseek.com"
+            :value="formValue.endpoint"
+            :placeholder="defaultEndpoint(formValue.profileId)"
+            @update:value="onEndpointInput"
           />
         </n-form-item-row>
 
@@ -512,8 +544,9 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
         </n-form-item-row>
         <n-form-item-row path="endpoint" label="链接">
           <n-input
-            v-model:value="formValue.endpoint"
-            placeholder="https://api.deepseek.com"
+            :value="formValue.endpoint"
+            :placeholder="defaultEndpoint(formValue.profileId)"
+            @update:value="onEndpointInput"
           />
         </n-form-item-row>
         <n-form-item-row path="key" label="Key">
