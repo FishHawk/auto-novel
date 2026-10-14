@@ -1,5 +1,13 @@
-.vscode
+.vscode/
 .idea/
+
+# AI
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.claude/
+.codex/
+.cursor/
 
 # TS
 node_modules/
