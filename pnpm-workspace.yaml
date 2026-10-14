@@ -4,8 +4,10 @@ packages:
   - 'packages/*'
 
 allowBuilds:
+  '@google/genai': true
   core-js: true
   esbuild: true
+  protobufjs: true
   vue-demi: true
 
 blockExoticSubdeps: false

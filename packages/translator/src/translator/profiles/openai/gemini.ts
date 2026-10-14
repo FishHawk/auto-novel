@@ -11,8 +11,6 @@ export const profile = defineProfile({
       type: 'select',
       options: [
         { label: '默认', value: DEFAULT_FIELD_VALUE },
-        { label: 'none', value: 'none' },
-        { label: 'minimal', value: 'minimal' },
         { label: 'low', value: 'low' },
         { label: 'medium', value: 'medium' },
         { label: 'high', value: 'high' },

@@ -6,8 +6,16 @@ import {
 import { profile as deepSeek } from './deepseek';
 import { profile as gemini } from './gemini';
 import { profile as openAi } from './openai';
+import { profile as responses } from './responses';
+import { profile as anthropic } from './anthropic';
 
-export const openAiProfiles = [openAi, deepSeek, gemini] as const;
+export const openAiProfiles = [
+  deepSeek,
+  openAi,
+  responses,
+  anthropic,
+  gemini,
+] as const;
 
 export type openAiProfileId = (typeof openAiProfiles)[number]['id'];
 

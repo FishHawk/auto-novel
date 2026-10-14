@@ -38,7 +38,7 @@ export interface TranslatorProfile<
   Id extends string = string,
 > {
   id: Id;
-  apiFormat: 'openai';
+  apiFormat: 'openai' | 'openai-responses' | 'anthropic-messages';
   label: string;
   fields: Fields;
 
