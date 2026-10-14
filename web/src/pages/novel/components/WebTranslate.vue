@@ -50,17 +50,17 @@ const startTranslateTask = (translatorId: 'youdao') =>
     { id: translatorId },
   );
 
-const importToWorkspace = async () => {
-  const blob = await ky.get(files.value.jp.url).blob();
-  const file = new File([blob], files.value.jp.filename);
-
-  const repo = await useLocalVolumeStore();
-  await repo
-    .createVolume(file, 'default')
-    .then(() => repo.updateGlossary(file.name, toRaw(props.glossary)))
-    .then(() => Toast.success('导入成功'))
-    .catch((error) => Toast.error(`导入失败:${error}`));
-};
+const importToWorkspace = () =>
+  Toast.promise(
+    (async () => {
+      const blob = await ky.get(files.value.jp.url).blob();
+      const file = new File([blob], files.value.jp.filename);
+      const repo = await useLocalVolumeStore();
+      await repo.createVolume(file, 'default');
+      await repo.updateGlossary(file.name, toRaw(props.glossary));
+    })(),
+    { success: '导入成功', error: '导入失败' },
+  );
 
 const files = computed(() => {
   const title =

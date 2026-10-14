@@ -84,17 +84,19 @@ const downloadVolume = async (volumeId: string) => {
   const { mode } = setting.value.downloadFormat;
   const repo = await useLocalVolumeStore();
 
-  try {
-    const { filename, blob } = await repo.getTranslationFile({
-      id: volumeId,
-      mode,
-      translationsMode: 'priority',
-      translations: [props.type],
-    });
-    downloadFile(filename, blob);
-  } catch (error) {
-    Toast.error(`文件生成错误：${error}`);
-  }
+  await Toast.promise(
+    repo
+      .getTranslationFile({
+        id: volumeId,
+        mode,
+        translationsMode: 'priority',
+        translations: [props.type],
+      })
+      .then(({ filename, blob }) => {
+        downloadFile(filename, blob);
+      }),
+    { error: '文件生成错误' },
+  );
 };
 
 const progressFilter = ref<'all' | 'finished' | 'unfinished'>('all');
