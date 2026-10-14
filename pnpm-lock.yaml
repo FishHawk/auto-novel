@@ -1102,6 +1102,7 @@ packages:
         gitHosted: true,
         integrity: sha512-HFM5CBon3QFyeurdzCiypBRoU41zSqNQmLZpe0Wualc2wXmVbfQb1Kt0TJ0zej/cmzGW6+J76ZjCvlRZBR2wSg==,
         tarball: https://codeload.github.com/auto-novel/forum/tar.gz/972ed936a57b9cbe00dbb3ee7861dce17f96de79,
+        path: packages/forum-api,
       }
     version: 0.1.0
     peerDependencies:
@@ -1113,6 +1114,7 @@ packages:
         gitHosted: true,
         integrity: sha512-s3gGhuHkPFzY6GOm9LONKH2HF8NeJyAI3/VQ7waDcQOBDKM56MOGf4UUVqAHrR5VOgXfwGeUHai3hZ20sl9PMQ==,
         tarball: https://codeload.github.com/auto-novel/auth/tar.gz/8a7152d1965fa14921941948b918a7a9e7431cd4,
+        path: packages/web-kit,
       }
     version: 0.1.0
     peerDependencies:
