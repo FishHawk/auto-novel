@@ -14,8 +14,6 @@ const props = defineProps<{
   type: 'gpt' | 'sakura';
 }>();
 
-const message = useMessage();
-
 const settingStore = useSettingStore();
 const { setting } = storeToRefs(settingStore);
 
@@ -58,7 +56,7 @@ const queueAllVolumes = (volumes: LocalVolumeMetadata[]) => {
     type: props.type,
     shouldTop: shouldTopJob.value ?? false,
   });
-  message.info(`${success}本小说已排队，${failed}本失败`);
+  Toast.info(`${success}本小说已排队，${failed}本失败`);
 };
 
 const shouldTopJob = useShouldTopJob();
@@ -76,9 +74,9 @@ const queueVolume = (volumeId: string, total: number = 65536) => {
     total: total,
   });
   if (success) {
-    message.success('排队成功');
+    Toast.success('排队成功');
   } else {
-    message.error('排队失败：翻译任务已经存在');
+    Toast.error('排队失败：翻译任务已经存在');
   }
 };
 
@@ -95,7 +93,7 @@ const downloadVolume = async (volumeId: string) => {
     });
     downloadFile(filename, blob);
   } catch (error) {
-    message.error(`文件生成错误：${error}`);
+    Toast.error(`文件生成错误：${error}`);
   }
 };
 

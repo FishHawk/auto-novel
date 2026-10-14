@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import ky from 'ky';
 
 import { WebNovelApi } from '@/api';
@@ -33,8 +35,6 @@ const emit = defineEmits<{
   'update:gpt': [number];
 }>();
 
-const message = useMessage();
-
 const whoamiStore = useWhoamiStore();
 const { whoami } = storeToRefs(whoamiStore);
 
@@ -58,8 +58,8 @@ const importToWorkspace = async () => {
   await repo
     .createVolume(file, 'default')
     .then(() => repo.updateGlossary(file.name, toRaw(props.glossary)))
-    .then(() => message.success('导入成功'))
-    .catch((error) => message.error(`导入失败:${error}`));
+    .then(() => Toast.success('导入成功'))
+    .catch((error) => Toast.error(`导入失败:${error}`));
 };
 
 const files = computed(() => {
@@ -98,7 +98,7 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   const taskNumber = translateOptions.value!.getTaskNumber();
 
   if (endIndex <= startIndex || startIndex >= total) {
-    message.error('排队失败：没有选中章节');
+    Toast.error('排队失败：没有选中章节');
     return;
   }
 
@@ -147,9 +147,9 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     return success;
   });
   if (results.length === 1 && !results[0]) {
-    message.error('排队失败：翻译任务已经存在');
+    Toast.error('排队失败：翻译任务已经存在');
   } else {
-    message.success('排队成功');
+    Toast.success('排队成功');
   }
 };
 </script>

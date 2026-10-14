@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import { PlusOutlined } from '@vicons/material';
 import type {
   UploadCustomRequestOptions,
@@ -18,14 +20,12 @@ const props = defineProps<{
   allowZh: boolean;
 }>();
 
-const message = useMessage();
-
 const whoamiStore = useWhoamiStore();
 const { whoami } = storeToRefs(whoamiStore);
 
 async function beforeUpload({ file }: { file: UploadFileInfo }) {
   if (!whoami.value.isSignedIn) {
-    message.info('请先登录');
+    Toast.info('请先登录');
     return false;
   }
   if (!file.file) {
@@ -36,11 +36,11 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
       file.file!.name.startsWith(prefix),
     )
   ) {
-    message.error('不要上传本网站上生成的机翻文件');
+    Toast.error('不要上传本网站上生成的机翻文件');
     return false;
   }
   if (file.file.size > 1024 * 1024 * 40) {
-    message.error('文件大小不能超过40MB');
+    Toast.error('文件大小不能超过40MB');
     return false;
   }
 
@@ -49,19 +49,19 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     content = await getFullContent(file.file);
   } catch (e) {
     console.error(e);
-    message.error(`文件解析错误:${e}`);
+    Toast.error(`文件解析错误:${e}`);
     return false;
   }
   const charsCount = RegexUtil.countLanguageCharacters(content);
   if (charsCount.total < 500) {
-    message.error('字数过少，请检查内容是不是图片');
+    Toast.error('字数过少，请检查内容是不是图片');
     return false;
   }
 
   const p = (charsCount.jp + charsCount.ko) / charsCount.total;
   if (p < 0.33) {
     if (!props.allowZh) {
-      message.error('疑似中文小说，文库不允许上传');
+      Toast.error('疑似中文小说，文库不允许上传');
       return false;
     } else {
       file.url = 'zh';
@@ -102,11 +102,11 @@ async function beforeUpload({ file }: { file: UploadFileInfo }) {
     const hitByMiniSet = totalFiles === 1 && filesWithOpacity >= 1;
 
     if (hitByLargeSet || hitBySmallSet || hitByMiniSet) {
-      message.error('疑似机翻站小说，禁止上传');
+      Toast.error('疑似机翻站小说，禁止上传');
       return false;
     }
   } catch {
-    message.error('epub 解析失败');
+    Toast.error('epub 解析失败');
     return false;
   }
 }
@@ -152,11 +152,11 @@ const customRequest = async ({
       delete uploadTasks[file.id];
       // 用户手动取消上传，不报错
       if (e instanceof Error && e.message === '上传已取消') {
-        message.error(`上传已取消`);
+        Toast.error(`上传已取消`);
         return;
       }
       onError();
-      message.error(`上传失败:${await formatError(e)}`);
+      Toast.error(`上传失败:${await formatError(e)}`);
     });
   return {
     abort: () => task.abort(),

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   ChevronRightOutlined,
   KeyboardDoubleArrowUpOutlined,
@@ -93,8 +94,6 @@ function hasFailedChapters(): boolean {
 
 defineExpose({ retryAllFailed, hasFailedChapters });
 
-const message = useMessage();
-
 function createTask(taskDesc: string): TranslationTask {
   const { desc, params } = TranslateTaskDescriptor.parse(taskDesc);
   return createTranslationTask(desc, props.translatorId, params);
@@ -144,7 +143,7 @@ const openPreview = async (chapterId: string) => {
     showPreview.value = true;
   } catch (e) {
     console.error('加载预览失败', e);
-    message.error('加载预览失败');
+    Toast.error('加载预览失败');
   }
 };
 

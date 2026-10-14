@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import { useWhoamiStore } from '@/stores';
 
 const props = defineProps<{
@@ -7,8 +9,6 @@ const props = defineProps<{
   requireLogin?: boolean;
   onAction?: (e: MouseEvent) => unknown;
 }>();
-
-const message = useMessage();
 
 const whoamiStore = useWhoamiStore();
 const { whoami } = storeToRefs(whoamiStore);
@@ -19,11 +19,11 @@ const onClick = async (e: MouseEvent) => {
   if (!props.onAction) return;
 
   if (props.requireLogin === true && !whoami.value.isSignedIn) {
-    message.info('请先登录');
+    Toast.info('请先登录');
     return;
   }
   if (running.value) {
-    message.warning('处理中...');
+    Toast.warning('处理中...');
     return;
   }
   const ret = props.onAction(e);

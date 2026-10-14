@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { FileDownloadOutlined, MoreVertOutlined } from '@vicons/material';
 
 import type { LocalVolumeMetadata } from '@/model/LocalVolume';
@@ -16,8 +17,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   volumeAdd: [File];
 }>();
-
-const message = useMessage();
 
 const settingStore = useSettingStore();
 const { setting } = storeToRefs(settingStore);
@@ -46,19 +45,19 @@ const handleSelect = (key: string) => {
 
 const downloadVolumes = async () => {
   if (sortedVolumes.value.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
   const ids = sortedVolumes.value.map((it) => it.id);
   const { success, failed } = await store.downloadVolumes(ids);
-  message.info(`${success}本小说被打包，${failed}本失败`);
+  Toast.info(`${success}本小说被打包，${failed}本失败`);
 };
 
 const showDeleteModal = ref(false);
 
 const openDeleteModal = () => {
   if (sortedVolumes.value.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
   showDeleteModal.value = true;
@@ -68,7 +67,7 @@ const deleteAllVolumes = async () => {
   const ids = sortedVolumes.value.map((it) => it.id);
   const { success, failed } = await store.deleteVolumes(ids);
   showDeleteModal.value = false;
-  message.info(`${success}本小说被删除，${failed}本失败`);
+  Toast.info(`${success}本小说被删除，${failed}本失败`);
 };
 
 const search = reactive({

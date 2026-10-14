@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   DeleteOutlineOutlined,
   DragIndicatorOutlined,
@@ -26,8 +27,6 @@ const emit = defineEmits<{
 }>();
 
 const themeVars = useThemeVars();
-const message = useMessage();
-
 const showEditModal = ref(false);
 
 function isWorkerActive(): boolean {
@@ -57,9 +56,9 @@ const testWorker = async () => {
     );
     const parts = [`原文：${textJp[0]}`, `译文：${textZh.join('')}`];
     if (reasoningLogs.length) parts.push(reasoningLogs.join('\n'));
-    message.success(parts.join('\n'));
+    Toast.success(parts.join('\n'));
   } catch (e: unknown) {
-    message.error(`翻译器错误：${e}`);
+    Toast.error(`翻译器错误：${e}`);
   }
 };
 </script>

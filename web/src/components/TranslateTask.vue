@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import type { TranslatorConfig } from '@/domain/translate';
 import { translate } from '@/domain/translate';
 import type {
@@ -15,8 +17,6 @@ const emit = defineEmits<{
   'update:gpt': [number];
   'update:sakura': [number];
 }>();
-
-const message = useMessage();
 
 const title = ref('');
 const chapterTotal = ref<number>();
@@ -46,7 +46,7 @@ const startTask = async (
   signal?: AbortSignal,
 ) => {
   if (running.value) {
-    message.info('已有任务在运行。');
+    Toast.info('已有任务在运行。');
     return 'fail';
   }
 

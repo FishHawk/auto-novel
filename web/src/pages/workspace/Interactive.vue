@@ -1,11 +1,11 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import type { TranslatorConfig } from '@/domain/translate';
 import { Translator } from '@/domain/translate';
 import type { Glossary } from '@/model/Glossary';
 import type { GptWorker, SakuraWorker, TranslatorId } from '@/model/Translator';
 import { useGptWorkspaceStore, useSakuraWorkspaceStore } from '@/stores';
-
-const message = useMessage();
 
 const textJp = ref('');
 const textZh = ref('');
@@ -50,7 +50,7 @@ const translate = async () => {
       (it) => it.id === selectedGptWorkerId.value,
     );
     if (worker === undefined) {
-      message.error('未选择GPT翻译器');
+      Toast.error('未选择GPT翻译器');
       return;
     }
     selectedWorker = worker;
@@ -65,7 +65,7 @@ const translate = async () => {
       (it) => it.id === selectedSakuraWorkerId.value,
     );
     if (worker === undefined) {
-      message.error('未选择Sakura翻译器');
+      Toast.error('未选择Sakura翻译器');
       return;
     }
     selectedWorker = worker;
@@ -89,7 +89,7 @@ const translate = async () => {
     });
     textZh.value = linesZh.join('\n');
   } catch (e: unknown) {
-    message.error(`翻译器错误：${e}`);
+    Toast.error(`翻译器错误：${e}`);
   }
 
   savedTranslation.value.push({
@@ -106,7 +106,7 @@ const clearTranslation = () => {
 };
 const copyToClipboard = () => {
   navigator.clipboard.writeText(textZh.value);
-  message.info('已经将翻译结果复制到剪切板');
+  Toast.info('已经将翻译结果复制到剪切板');
 };
 const clearSavedTranslation = () => {
   savedTranslation.value = [];

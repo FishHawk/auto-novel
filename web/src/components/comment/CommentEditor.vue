@@ -15,13 +15,11 @@ const emit = defineEmits<{
   replied: [];
 }>();
 
-const message = useMessage();
-
 const content = ref('');
 
 const reply = async () => {
   if (content.value.length === 0) {
-    message.info('回复内容不能为空');
+    Toast.info('回复内容不能为空');
     return;
   }
 

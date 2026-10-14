@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import type { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
 import { FavoredRepo } from '@/stores';
 
@@ -11,8 +13,6 @@ defineEmits<{
   invertSelection: [];
 }>();
 
-const message = useMessage();
-
 const favoredStore = FavoredRepo.useFavoredStore();
 const { favoreds } = storeToRefs(favoredStore);
 
@@ -22,7 +22,7 @@ const showDeleteModal = ref(false);
 const openDeleteModal = () => {
   const novels = props.selectedNovels;
   if (novels.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
   showDeleteModal.value = true;
@@ -43,7 +43,7 @@ const deleteSelected = async () => {
   }
   const success = novels.length - failed;
 
-  message.info(`${success}本小说被删除，${failed}本失败`);
+  Toast.info(`${success}本小说被删除，${failed}本失败`);
 };
 
 // 移动小说
@@ -52,12 +52,12 @@ const targetFavoredId = ref(props.favoredId);
 const moveToFavored = async () => {
   const novels = props.selectedNovels;
   if (novels.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
 
   if (targetFavoredId.value === props.favoredId) {
-    message.info('无需移动');
+    Toast.info('无需移动');
     return;
   }
 
@@ -74,7 +74,7 @@ const moveToFavored = async () => {
   }
   const success = novels.length - failed;
 
-  message.info(`${success}本小说已移动，${failed}本失败`);
+  Toast.info(`${success}本小说已移动，${failed}本失败`);
   window.location.reload();
 };
 </script>

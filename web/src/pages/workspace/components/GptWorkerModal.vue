@@ -1,6 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { useMessage } from 'naive-ui';
 
 import type { GptWorker } from '@/model/Translator';
 import { useGptWorkspaceStore } from '@/stores';
@@ -15,8 +15,6 @@ const emit = defineEmits<{
 
 const workspace = useGptWorkspaceStore();
 const workspaceRef = workspace.ref;
-const message = useMessage();
-
 const initFormValue = (): {
   id: string;
   model: string;
@@ -118,14 +116,14 @@ const submit = async () => {
 
   if (props.worker === undefined) {
     workspace.addWorker(worker);
-    message.success(`已添加翻译器「${worker.id}」`);
+    Toast.success(`已添加翻译器「${worker.id}」`);
     emit('update:show', false);
   } else {
     const index = workspaceRef.value.workers.findIndex(
       ({ id }) => id === props.worker?.id,
     );
     workspaceRef.value.workers[index] = worker;
-    message.success(`已更新翻译器「${worker.id}」`);
+    Toast.success(`已更新翻译器「${worker.id}」`);
     emit('update:show', false);
   }
 };
@@ -134,7 +132,7 @@ const submitAndContinue = async () => {
   if (!(await doValidate())) return;
   const worker = buildWorker();
   workspace.addWorker(worker);
-  message.success(`已添加翻译器「${worker.id}」`);
+  Toast.success(`已添加翻译器「${worker.id}」`);
 };
 
 const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));

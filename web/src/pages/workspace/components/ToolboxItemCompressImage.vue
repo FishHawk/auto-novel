@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { ImgComparisonSlider } from '@img-comparison-slider/vue';
 
 import { Humanize } from '@/util';
@@ -9,8 +10,6 @@ import { Toolbox } from './Toolbox';
 const props = defineProps<{
   files: ParsedFile[];
 }>();
-
-const message = useMessage();
 
 const quality = ref(0.8);
 const scaleRatio = ref(1.0);
@@ -61,7 +60,7 @@ const compressImages = () =>
   Toolbox.modifyFiles(
     props.files.filter((file) => file.type === 'epub'),
     compressImagesForEpub,
-    (e) => message.error(`发生错误：${e}`),
+    (e) => Toast.error(`发生错误：${e}`),
   );
 
 interface EpubImage {

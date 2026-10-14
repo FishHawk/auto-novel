@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import { PlusOutlined } from '@vicons/material';
 import type { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 
@@ -10,8 +11,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   done: [File];
 }>();
-
-const message = useMessage();
 
 const store = useBookshelfLocalStore();
 
@@ -27,11 +26,11 @@ const beforeUpload = ({ file }: { file: UploadFileInfo }) => {
       file.name.endsWith('.epub')
     )
   ) {
-    message.error(`上传失败:文件类型不允许\n文件名： ${file.name}`);
+    Toast.error(`上传失败:文件类型不允许\n文件名： ${file.name}`);
     return false;
   }
   if (file.file?.size && file.file.size > 1024 * 1024 * 100) {
-    message.error(`上传失败:文件大小不能超过100MB\n文件名: ${file.name}`);
+    Toast.error(`上传失败:文件大小不能超过100MB\n文件名: ${file.name}`);
     return false;
   }
 };
@@ -45,7 +44,7 @@ const customRequest = ({
     .addVolume(file.file!, props.favoredId ?? 'default')
     .then(onFinish)
     .catch((error) => {
-      message.error(`上传失败:${error}\n文件名: ${file.name}`);
+      Toast.error(`上传失败:${error}\n文件名: ${file.name}`);
       onError();
     });
 };

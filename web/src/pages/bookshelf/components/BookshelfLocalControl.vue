@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import { FavoredRepo, useLocalVolumeStore, useSettingStore } from '@/stores';
 import { useShouldTopJob } from '@/util';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
@@ -12,8 +14,6 @@ defineEmits<{
   invertSelection: [];
 }>();
 
-const message = useMessage();
-
 const settingStore = useSettingStore();
 const { setting } = storeToRefs(settingStore);
 
@@ -25,7 +25,7 @@ const showDeleteModal = ref(false);
 const openDeleteModal = () => {
   const ids = props.selectedIds;
   if (ids.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
   showDeleteModal.value = true;
@@ -34,27 +34,27 @@ const openDeleteModal = () => {
 const deleteSelected = async () => {
   const ids = props.selectedIds;
   const { success, failed } = await store.deleteVolumes(ids);
-  message.info(`${success}本小说被删除，${failed}本失败`);
+  Toast.info(`${success}本小说被删除，${failed}本失败`);
 };
 
 const downloadSelected = async () => {
   const ids = props.selectedIds;
   if (ids.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
   const { success, failed } = await store.downloadVolumes(ids);
-  message.info(`${success}本小说机翻被打包，${failed}本失败`);
+  Toast.info(`${success}本小说机翻被打包，${failed}本失败`);
 };
 
 const downloadRawSelected = async () => {
   const ids = props.selectedIds;
   if (ids.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
   const { success, failed } = await store.downloadRawVolumes(ids);
-  message.info(`${success}本小说原文被打包，${failed}本失败`);
+  Toast.info(`${success}本小说原文被打包，${failed}本失败`);
 };
 
 // 移动小说
@@ -66,12 +66,12 @@ const targetFavoredId = ref(props.favoredId);
 const moveToFavored = async () => {
   const novels = props.selectedIds;
   if (novels.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
 
   if (targetFavoredId.value === props.favoredId) {
-    message.info('无需移动');
+    Toast.info('无需移动');
     return;
   }
 
@@ -90,7 +90,7 @@ const moveToFavored = async () => {
   }
   const success = novels.length - failed;
 
-  message.info(`${success}本小说已移动，${failed}本失败`);
+  Toast.info(`${success}本小说已移动，${failed}本失败`);
   await store.loadVolumes();
 };
 
@@ -102,7 +102,7 @@ const shouldTopJob = useShouldTopJob();
 const queueJobs = (type: 'gpt' | 'sakura') => {
   let ids = props.selectedIds;
   if (ids.length === 0) {
-    message.info('没有选中小说');
+    Toast.info('没有选中小说');
     return;
   }
 
@@ -115,7 +115,7 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
     type,
     shouldTop: shouldTopJob.value ?? false,
   });
-  message.info(`${success}本小说已排队，${failed}本失败`);
+  Toast.info(`${success}本小说已排队，${failed}本失败`);
 };
 </script>
 

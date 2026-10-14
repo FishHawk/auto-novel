@@ -35,8 +35,6 @@ import { TranslateTaskDescriptor } from '@/model/Translator';
 import PipelineTaskCard from './components/PipelineTaskCard.vue';
 
 const props = defineProps<{ translatorId: TranslatorId }>();
-const message = useMessage();
-
 const isSakura = computed(() => props.translatorId === 'sakura');
 const segCacheName = isSakura.value ? 'sakura-seg-cache' : 'gpt-seg-cache';
 
@@ -260,7 +258,7 @@ const startWorker = async (workerId: string) => {
 
   const w = workerStore.ref.value.workers.find((w) => w.id === workerId);
   if (!w) {
-    message.error(`翻译器 ${workerId} 不存在`);
+    Toast.error(`翻译器 ${workerId} 不存在`);
     return;
   }
 
@@ -290,7 +288,7 @@ const startWorker = async (workerId: string) => {
   } catch (e) {
     if (workerStates.value.get(workerId) !== state) return;
     stopWorker(workerId);
-    message.error(`翻译器启动失败：${e}`);
+    Toast.error(`翻译器启动失败：${e}`);
   }
 };
 
@@ -319,7 +317,7 @@ const stopAllWorkers = () => {
 
 const deleteJob = (task: string) => {
   if (executingTasks.has(task)) {
-    message.error('任务正在翻译中');
+    Toast.error('任务正在翻译中');
     return;
   }
   jobStore.deleteJob(task);
@@ -339,7 +337,7 @@ function retryTaskCards() {
     }
   }
   if (!hasFailed) {
-    message.info('没有需要重试的失败任务');
+    Toast.info('没有需要重试的失败任务');
   }
 }
 

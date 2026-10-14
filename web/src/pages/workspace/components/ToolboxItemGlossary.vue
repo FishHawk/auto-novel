@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import type { ParsedFile } from '@/util/file';
+import { Toast } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
+import type { ParsedFile } from '@/util/file';
 import type { TranslatorConfig } from '@/domain/translate';
 import { Translator } from '@/domain/translate';
 import { Glossary } from '@/model/Glossary';
@@ -11,7 +12,6 @@ const props = defineProps<{
   files: ParsedFile[];
 }>();
 
-const message = useMessage();
 const sakuraWorkspace = useSakuraWorkspaceStore().ref;
 
 const countKatakana = (content: string) => {
@@ -90,7 +90,7 @@ const copyTranslationJson = async () => {
   );
   const jsonString = Glossary.toText(obj);
   navigator.clipboard.writeText(jsonString);
-  message.info('已经将翻译结果复制到剪切板');
+  Toast.info('已经将翻译结果复制到剪切板');
 };
 
 const showSakuraSelectModal = ref(false);
@@ -105,7 +105,7 @@ const translateKatakanas = async (id: 'youdao' | 'sakura') => {
       (it) => it.id === selectedSakuraWorkerId.value,
     );
     if (worker === undefined) {
-      message.error('未选择Sakura翻译器');
+      Toast.error('未选择Sakura翻译器');
       return;
     }
     config = {
@@ -127,7 +127,7 @@ const translateKatakanas = async (id: 'youdao' | 'sakura') => {
     });
     katakanaTranslations.value = jpToZh;
   } catch (e: unknown) {
-    message.error(`翻译器错误：${e}`);
+    Toast.error(`翻译器错误：${e}`);
   }
 };
 </script>

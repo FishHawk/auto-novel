@@ -98,15 +98,13 @@ if (RegexUtil.isSafari(navigator.userAgent)) {
       }"
     >
       <n-global-style />
-      <n-message-provider container-style="white-space: pre-wrap">
-        <n-loading-bar-provider>
-          <router-view v-slot="{ Component }">
-            <keep-alive :include="['MainLayout']">
-              <component :is="Component" />
-            </keep-alive>
-          </router-view>
-        </n-loading-bar-provider>
-      </n-message-provider>
+      <n-loading-bar-provider>
+        <router-view v-slot="{ Component }">
+          <keep-alive :include="['MainLayout']">
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
+      </n-loading-bar-provider>
     </n-config-provider>
   </WebKitApp>
 </template>

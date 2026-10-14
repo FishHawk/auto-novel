@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import type { Epub, ParsedFile } from '@/util/file';
 import { StandardNovel } from '@/util/file';
 import { Toolbox } from './Toolbox';
@@ -6,8 +8,6 @@ import { Toolbox } from './Toolbox';
 const props = defineProps<{
   files: ParsedFile[];
 }>();
-
-const message = useMessage();
 
 const convertEpubToTxt = async (epub: Epub) => {
   const novel = StandardNovel.fromEpub(epub);
@@ -18,7 +18,7 @@ const convertAll = () =>
   Toolbox.convertFiles(
     props.files.filter((file) => file.type === 'epub'),
     convertEpubToTxt,
-    (e) => message.error(`发生错误：${e}`),
+    (e) => Toast.error(`发生错误：${e}`),
   );
 </script>
 

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   DeleteOutlineOutlined,
   FileDownloadOutlined,
@@ -13,8 +14,6 @@ import { useShouldTopJob } from '@/util';
 const props = defineProps<{
   id: 'gpt' | 'sakura';
 }>();
-
-const message = useMessage();
 
 const workspace = useWorkspaceStore(props.id);
 const workspaceRef = workspace.ref;
@@ -47,12 +46,12 @@ const downloadVolumes = async () => {
     .map((it) => it.volumeId);
 
   if (volumeIds.length === 0) {
-    message.info('列表为空，没有文件需要下载');
+    Toast.info('列表为空，没有文件需要下载');
     return;
   }
 
   const { success, failed } = await store.downloadVolumes(volumeIds);
-  message.info(`${success}本小说被打包，${failed}本失败`);
+  Toast.info(`${success}本小说被打包，${failed}本失败`);
 };
 </script>
 

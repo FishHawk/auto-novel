@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
+
 import { FileDownloadOutlined } from '@vicons/material';
 
 import { WenkuNovelApi } from '@/api';
@@ -17,8 +19,6 @@ const { novelId, volume, getParams } = defineProps<{
 const emit = defineEmits<{
   delete: [];
 }>();
-
-const message = useMessage();
 
 const settingStore = useSettingStore();
 const { setting } = storeToRefs(settingStore);
@@ -68,12 +68,12 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   };
   const success = workspace.addJob(job);
   if (success) {
-    message.success('排队成功');
+    Toast.success('排队成功');
     if (shouldTopJob.value) {
       workspace.topJob(job);
     }
   } else {
-    message.error('排队失败：翻译任务已经存在');
+    Toast.error('排队失败：翻译任务已经存在');
   }
 };
 </script>

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import {
   DeleteOutlineOutlined,
   DragIndicatorOutlined,
@@ -34,8 +35,6 @@ const emit = defineEmits<{
     ),
   ];
 }>();
-
-const message = useMessage();
 
 const translatorConfig = computed(() => {
   const worker = props.worker;
@@ -143,9 +142,9 @@ const testWorker = async () => {
     const lineZh = textZh[0];
 
     if (worker.translatorId === 'gpt') {
-      message.success(`原文：${lineJp}\n译文：${lineZh}`);
+      Toast.success(`原文：${lineJp}\n译文：${lineZh}`);
     } else {
-      message.success(
+      Toast.success(
         [
           `原文：${lineJp}`,
           `译文：${lineZh}`,
@@ -156,7 +155,7 @@ const testWorker = async () => {
       );
     }
   } catch (e: unknown) {
-    message.error(`翻译器错误：${e}`);
+    Toast.error(`翻译器错误：${e}`);
   }
 };
 

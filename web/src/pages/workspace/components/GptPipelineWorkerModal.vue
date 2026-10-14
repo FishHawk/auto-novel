@@ -1,6 +1,6 @@
 <script lang="ts" setup>
+import { Toast } from '@novelia/web-kit';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { useMessage } from 'naive-ui';
 
 import type { GptPipelineWorker } from '@/model/Translator';
 import { useGptPipelineWorkspaceStore } from '@/stores';
@@ -20,8 +20,6 @@ const emit = defineEmits<{
 
 const workspace = useGptPipelineWorkspaceStore();
 const workspaceRef = workspace.ref;
-const message = useMessage();
-
 // ── 编辑模式表单（单翻译器）─────────────────────────────────
 
 const initFormValue = (
@@ -340,11 +338,11 @@ const submit = async () => {
     if (!(await doValidate())) return;
     const idError = validateIds();
     if (idError) {
-      message.warning(idError);
+      Toast.warning(idError);
       return;
     }
     addWorkers();
-    message.success(`已添加 ${generatedWorkers.value.length} 个翻译器`);
+    Toast.success(`已添加 ${generatedWorkers.value.length} 个翻译器`);
     emit('update:show', false);
   } else {
     if (!(await doValidate())) return;
@@ -365,7 +363,7 @@ const submit = async () => {
       (w) => w.id === props.worker?.id,
     );
     workspaceRef.value.workers[index] = worker;
-    message.success(`已更新翻译器「${worker.id}」`);
+    Toast.success(`已更新翻译器「${worker.id}」`);
     emit('update:show', false);
   }
 };
@@ -374,11 +372,11 @@ const submitAndContinue = async () => {
   if (!(await doValidate())) return;
   const idError = validateIds();
   if (idError) {
-    message.warning(idError);
+    Toast.warning(idError);
     return;
   }
   addWorkers();
-  message.success(`已添加 ${generatedWorkers.value.length} 个翻译器`);
+  Toast.success(`已添加 ${generatedWorkers.value.length} 个翻译器`);
 };
 
 const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));

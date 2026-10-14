@@ -199,7 +199,6 @@ export default defineConfig(({ command, mode }) => {
           {
             'naive-ui': [
               'useDialog',
-              'useMessage',
               'useNotification',
               'useLoadingBar',
               'useThemeVars',

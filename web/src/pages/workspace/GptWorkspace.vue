@@ -13,8 +13,6 @@ import { TranslationCacheRepo } from '@/repos';
 import type { TranslateJob } from '@/model/Translator';
 import { useGptWorkspaceStore } from '@/stores';
 
-const message = useMessage();
-
 const workspace = useGptWorkspaceStore();
 const workspaceRef = workspace.ref;
 
@@ -39,7 +37,7 @@ const getNextJob = () => {
 
 const deleteJob = (task: string) => {
   if (processedJobs.value.has(task)) {
-    message.error('任务被翻译器占用');
+    Toast.error('任务被翻译器占用');
     return;
   }
   workspace.deleteJob(task);

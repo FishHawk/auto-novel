@@ -15,8 +15,6 @@ const props = defineProps<{
   value: Glossary;
 }>();
 
-const message = useMessage();
-
 const whoamiStore = useWhoamiStore();
 const { whoami } = storeToRefs(whoamiStore);
 
@@ -148,18 +146,18 @@ const exportGlossary = async (ev: MouseEvent) => {
     ev.target as HTMLElement,
   );
   if (isSuccess) {
-    message.success('导出成功：已复制到剪贴板');
+    Toast.success('导出成功：已复制到剪贴板');
   } else {
-    message.success('导出失败');
+    Toast.success('导出失败');
   }
 };
 
 const importGlossary = () => {
   const importedGlossary = Glossary.fromText(importGlossaryRaw.value);
   if (importedGlossary === undefined) {
-    message.error('导入失败：术语表格式不正确');
+    Toast.error('导入失败：术语表格式不正确');
   } else {
-    message.success('导入成功');
+    Toast.success('导入成功');
     for (const jp in importedGlossary) {
       const zh = importedGlossary[jp];
       glossary.value[jp] = zh;

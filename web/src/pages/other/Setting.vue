@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useWebKit } from '@novelia/web-kit';
+import { Toast, useWebKit } from '@novelia/web-kit';
 import SoundAllTaskCompleted from '@/sound/all_task_completed.mp3';
 import {
   Setting,
@@ -9,19 +9,17 @@ import {
 } from '@/stores';
 import { InfoOutlined } from '@vicons/material';
 
-const message = useMessage();
-
 const settingStore = useSettingStore();
 const { setting } = storeToRefs(settingStore);
 
 const clearWebSearchHistory = () => {
   useWebSearchHistoryStore().clear();
-  message.success('清空成功');
+  Toast.success('清空成功');
 };
 
 const clearWenkuSearchHistory = () => {
   useWenkuSearchHistoryStore().clear();
-  message.success('清空成功');
+  Toast.success('清空成功');
 };
 
 const playSound = (source: string) => {

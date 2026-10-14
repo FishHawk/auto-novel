@@ -12,8 +12,6 @@ const { providerId, novelId } = defineProps<{
 
 const router = useRouter();
 const isWideScreen = useIsWideScreen();
-const message = useMessage();
-
 const allowSubmit = ref(false);
 const formValue = ref({
   titleJp: '',
@@ -48,13 +46,13 @@ WebNovelRepo.useWebNovel(providerId, novelId, false)
       };
       allowSubmit.value = true;
     } else {
-      message.error(`载入失败: ${error?.message}`);
+      Toast.error(`载入失败: ${error?.message}`);
     }
   });
 
 const submit = async () => {
   if (!allowSubmit.value) {
-    message.warning('小说未载入，无法提交');
+    Toast.warning('小说未载入，无法提交');
     return;
   }
 
