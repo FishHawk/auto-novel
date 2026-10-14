@@ -7,7 +7,7 @@ import type {
 } from '@novelia/forum-api';
 
 import { CommentApi } from '@/api';
-import { webKit } from '@/main';
+import { webKit } from '@/webKit';
 import { cache } from './cache';
 
 const ListKey = 'comment-list';
