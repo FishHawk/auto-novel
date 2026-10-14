@@ -88,6 +88,8 @@ const workerErrors = computed(() => {
   return errors;
 });
 const executingTasks = reactive(new Set<string>());
+/** 已开始翻译元数据的任务，每个任务只翻译一次 */
+const metadataStartedTasks = new Set<string>();
 
 let processLoopAbortController: AbortController | null = null;
 let activeProcessors = 0;
@@ -169,12 +171,52 @@ function hasRunningWorker(): boolean {
 }
 
 function clearTaskRuntimeState(task: string): void {
+  metadataStartedTasks.delete(task);
   taskStates.value.delete(task);
   taskCache.delete(task);
   taskVersions.value.delete(task);
 }
 
 // ========== 全局处理循环 ==========
+
+/**
+ * 翻译标题、简介和目录。与旧版工作区一致，GPT 不翻译元数据。
+ * 不阻塞章节翻译，失败只记录日志。
+ */
+function translateMetadataOnce(
+  jobTask: string,
+  task: TranslationTask,
+  signal: AbortSignal,
+): void {
+  if (!isSakura.value || !task.translateMetadata) return;
+  if (metadataStartedTasks.has(jobTask)) return;
+  metadataStartedTasks.add(jobTask);
+
+  // 简介可能含换行，按行翻译后再按原行数拼回
+  const translateTexts = async (texts: string[]) => {
+    const lineCounts = texts.map((text) => text.split('\n').length);
+    // 分段失败时 pipeline 会回退为原文，不能把原文当译文上传
+    let failed = false;
+    const lines = (
+      await pipeline.translate(
+        texts.join('\n'),
+        task.glossary,
+        undefined,
+        signal,
+        { onSegError: () => (failed = true) },
+      )
+    ).split('\n');
+    if (failed) throw new Error('分段翻译失败');
+    return lineCounts.map((count) => lines.splice(0, count).join('\n'));
+  };
+  task
+    .translateMetadata(translateTexts)
+    .then(() => console.log(`[${jobTask}] 元数据翻译完成`))
+    .catch((e) => {
+      metadataStartedTasks.delete(jobTask);
+      console.warn(`[${jobTask}] 元数据翻译失败`, e);
+    });
+}
 
 function runProcessLoop(): void {
   if (!hasRunningWorker()) return;
@@ -191,6 +233,7 @@ function runProcessLoop(): void {
       executingTasks.add(job.task);
 
       const task = await getOrCreateTask(job.task);
+      translateMetadataOnce(job.task, task, signal);
       const executor = new TaskExecutor(task, pipeline, fetchSemaphore, () =>
         [...workerStates.value.values()].every(
           (s) => !s.running || s.allowUpload !== false,

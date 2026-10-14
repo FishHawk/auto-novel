@@ -3,6 +3,7 @@ import type { ChapterMeta } from '../TaskState';
 import type { TranslateTaskParams, WebTranslateTask } from '@/model/Translator';
 import type { ChapterDetail, TranslationTask, TranslatorId } from './types';
 import { WebNovelApi } from '@/api';
+import { createWebMetadataCoder } from '@/domain/translate/TranslateWeb';
 import { buildChapterMetaList } from './utils';
 
 export class WebTranslationTask implements TranslationTask {
@@ -16,6 +17,7 @@ export class WebTranslationTask implements TranslationTask {
 
   private api!: ReturnType<typeof WebNovelApi.createTranslationApi>;
   private params: TranslateTaskParams;
+  private task?: WebTranslateTask;
 
   constructor(
     private providerId: string,
@@ -38,6 +40,7 @@ export class WebTranslationTask implements TranslationTask {
     );
 
     const task = await this.api.getTranslateTask();
+    this.task = task;
     this.glossary = task.glossary;
     this.glossaryId = task.glossaryUuid;
 
@@ -66,6 +69,17 @@ export class WebTranslationTask implements TranslationTask {
       toMeta,
     );
     this.initialized = true;
+  }
+
+  /** 翻译标题、简介和目录，与旧版工作区一致 */
+  async translateMetadata(
+    translate: (texts: string[]) => Promise<string[]>,
+  ): Promise<void> {
+    if (!this.task) return;
+    const coder = createWebMetadataCoder(this.task, this.params.forceMetadata);
+    if (!coder.needUpload) return;
+    const translated = await translate(coder.encoded);
+    await this.api.updateMetadataTranslation(coder.recover(translated));
   }
 
   async fetchChapter(chapterId: string): Promise<ChapterDetail> {
