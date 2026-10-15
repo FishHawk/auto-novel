@@ -1,4 +1,4 @@
-import { webKit } from '@/main';
+import { webKit } from '@/webKit';
 import { LSKey } from './key';
 
 export const useWhoamiStore = defineStore(LSKey.Auth, () => {

@@ -21,11 +21,15 @@ defineProps<{
       loading="lazy"
     />
 
-    <n-text tag="div" style="height: 2.5em; padding: 8px" class="text-2line">
-      <slot name="prefix" />
-      <n-text>
+    <div style="padding: 8px">
+      <n-text
+        tag="div"
+        style="height: 2.5em; line-height: 1.25; overflow-wrap: anywhere"
+        class="text-2line"
+      >
+        <slot name="prefix" />
         {{ title }}
       </n-text>
-    </n-text>
+    </div>
   </n-flex>
 </template>
