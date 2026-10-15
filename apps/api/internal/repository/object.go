@@ -25,11 +25,12 @@ type PresignedUpload struct {
 	Headers map[string]string
 }
 
-// ObjectRepository provides object metadata, create-only uploads and public URLs.
+// ObjectRepository provides object metadata, create-only uploads, deletion and public URLs.
 // Its contract does not expose S3 SDK types to usecases.
 type ObjectRepository interface {
 	PresignPut(ctx context.Context, key, contentType string, size int64, expires time.Duration) (*PresignedUpload, error)
 	Stat(ctx context.Context, key string) (ObjectInfo, error)
+	Delete(ctx context.Context, key string) error
 	PublicURL(key string) string
 }
 
@@ -108,6 +109,20 @@ func (r *s3ObjectRepository) Stat(ctx context.Context, key string) (ObjectInfo, 
 		Size:        aws.ToInt64(result.ContentLength),
 		ContentType: aws.ToString(result.ContentType),
 	}, nil
+}
+
+// Delete makes a single best-effort attempt; missing objects are already deleted.
+func (r *s3ObjectRepository) Delete(ctx context.Context, key string) error {
+	_, err := r.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(r.bucket),
+		Key:    aws.String(key),
+	}, func(options *s3.Options) {
+		options.RetryMaxAttempts = 1
+	})
+	if err != nil {
+		return fmt.Errorf("object.delete: %w", err)
+	}
+	return nil
 }
 
 func (r *s3ObjectRepository) PublicURL(key string) string {

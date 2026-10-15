@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"strings"
@@ -27,8 +28,9 @@ const (
 )
 
 const (
-	BannerMaxImageSize = 5 * 1024 * 1024
-	bannerUploadTTL    = 10 * time.Minute
+	BannerMaxImageSize       = 5 * 1024 * 1024
+	bannerUploadTTL          = 10 * time.Minute
+	bannerImageDeleteTimeout = 30 * time.Second
 )
 
 var bannerObjectKey = regexp.MustCompile(`^banners/[A-Za-z0-9_-]+\.(jpg|png|webp|gif|avif)$`)
@@ -68,6 +70,8 @@ type BannerUploadResult struct {
 
 type ListBannersQuery struct{ Type domain.BannerType }
 
+// Image keys are exclusive to one banner and must not be reused after replacement
+// or deletion. Reusing an image requires uploading it under a new key.
 // A nil or blank LinkURL clears the existing link.
 type BannerInput struct {
 	Type      domain.BannerType
@@ -144,6 +148,18 @@ func (u *BannerUsecase) checkImage(ctx context.Context, key string) error {
 		return Invalid(CodeBannerImageInvalid, "已上传图片的格式或大小无效")
 	}
 	return nil
+}
+
+// deleteImageAsync does not delay the response or depend on request cancellation.
+// Cleanup is deliberately best-effort: failures are logged, not retried.
+func (u *BannerUsecase) deleteImageAsync(ctx context.Context, key string) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), bannerImageDeleteTimeout)
+		defer cancel()
+		if err := u.objectRepo.Delete(ctx, key); err != nil {
+			slog.WarnContext(ctx, "Delete unused banner image failed", "key", key, "error", err)
+		}
+	}()
 }
 
 func (u *BannerUsecase) result(banner domain.Banner) BannerResult {
@@ -333,9 +349,16 @@ func (u *BannerUsecase) Update(
 	if err := u.checkImage(ctx, content.Key); err != nil {
 		return nil, err
 	}
+	previous, err := u.bannerRepo.Get(ctx, id)
+	if err != nil {
+		return nil, bannerError(err, "update")
+	}
 	banner, err := u.bannerRepo.Update(ctx, id, content)
 	if err != nil {
 		return nil, bannerError(err, "update")
+	}
+	if previous.Key != banner.Key {
+		u.deleteImageAsync(ctx, previous.Key)
 	}
 	result := u.result(*banner)
 	return &result, nil
@@ -356,7 +379,7 @@ func (u *BannerUsecase) SetActive(
 	return bannerError(err, "set_active")
 }
 
-// Delete removes the database record only, not the R2 object.
+// Delete removes the database record, then asynchronously tries to delete its image.
 func (u *BannerUsecase) Delete(ctx context.Context, actor Actor, id int64) error {
 	if err := checkBannerAdmin(actor); err != nil {
 		return err
@@ -364,5 +387,13 @@ func (u *BannerUsecase) Delete(ctx context.Context, actor Actor, id int64) error
 	if err := checkBannerID(id); err != nil {
 		return err
 	}
-	return bannerError(u.bannerRepo.Delete(ctx, id), "delete")
+	banner, err := u.bannerRepo.Get(ctx, id)
+	if err != nil {
+		return bannerError(err, "delete")
+	}
+	if err := u.bannerRepo.Delete(ctx, id); err != nil {
+		return bannerError(err, "delete")
+	}
+	u.deleteImageAsync(ctx, banner.Key)
+	return nil
 }
