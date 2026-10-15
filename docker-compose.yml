@@ -15,6 +15,19 @@ services:
     restart: always
 
   api:
+    image: ghcr.io/auto-novel/auto-novel-api:latest
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --spider --tries=1 --no-verbose http://localhost:8080/health || exit 1',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
     image: ghcr.io/auto-novel/auto-novel-server:latest
     depends_on:
       - mongo
@@ -51,7 +64,7 @@ services:
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - 'ES_JAVA_OPTS=-Xms2g -Xmx2g'
     ulimits:
       memlock:
         soft: -1

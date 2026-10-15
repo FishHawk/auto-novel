@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      [.github/workflows/cd-api.yml, server/**, deploy/api/**, .dockerignore]
+      [.github/workflows/cd-api.yml, apps/api/**, deploy/api/**, .dockerignore]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-api
@@ -13,7 +13,7 @@ concurrency:
 
 env:
   IMAGE_OWNER: auto-novel
-  IMAGE_NAME: auto-novel-server
+  IMAGE_NAME: auto-novel-api
 
 jobs:
   build-and-push:

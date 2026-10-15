@@ -1,15 +1,16 @@
-FROM gradle:8-jdk17 AS deps
-USER root
-WORKDIR /server
-COPY server/build.gradle.kts server/settings.gradle.kts server/gradle.properties ./
-RUN gradle --no-daemon dependencies
+FROM golang:1.24.5-alpine3.22 AS deps
+WORKDIR /app
+COPY apps/api/go.mod apps/api/go.sum ./
+RUN --mount=type=cache,id=go-mod,target=/go/pkg/mod \
+    go mod download
 
 FROM deps AS builder
-COPY server/ ./
-RUN gradle --no-daemon installDist
+WORKDIR /app
+COPY apps/api/. .
+RUN go build -o api
 
-FROM eclipse-temurin:17-jre
-COPY --from=builder /server/build/install/auto-novel-server /server
-ENV LANG=C.UTF-8
-EXPOSE 8081
-CMD ["/server/bin/auto-novel-server"]
+FROM alpine:3.22.1
+WORKDIR /app
+COPY --from=builder /app/api /app/api
+EXPOSE 8080
+CMD ["./api"]

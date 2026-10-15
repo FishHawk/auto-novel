@@ -4,6 +4,10 @@ services:
     ports:
       - 5000:80
 
+  api:
+    ports:
+      - 5004:8080
+
   mongo:
     ports:
       - 5001:27017
