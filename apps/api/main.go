@@ -55,13 +55,24 @@ func main() {
 	}
 	defer db.Close()
 
-	storage, err := infra.NewR2Storage(infra.R2ConfigFromEnv())
+	s3Client, err := infra.NewR2Client(infra.R2Config{
+		AccountID:       os.Getenv("R2_ACCOUNT_ID"),
+		AccessKeyID:     os.Getenv("R2_ACCESS_KEY_ID"),
+		SecretAccessKey: os.Getenv("R2_SECRET_ACCESS_KEY"),
+	})
 	if err != nil {
 		slog.Error("Configure R2 failed", "error", err)
 		os.Exit(1)
 	}
+	objectRepo, err := repository.NewObjectRepository(
+		s3Client, os.Getenv("R2_BUCKET"), os.Getenv("R2_PUBLIC_BASE_URL"),
+	)
+	if err != nil {
+		slog.Error("Configure object repository failed", "error", err)
+		os.Exit(1)
+	}
 	bannerRepo := repository.NewBannerRepository(db)
-	bannerUsecase := usecase.NewBannerUsecase(bannerRepo, storage)
+	bannerUsecase := usecase.NewBannerUsecase(bannerRepo, objectRepo)
 	bannerHandler := handler.NewBannerHandler(bannerUsecase)
 
 	router := chi.NewRouter()

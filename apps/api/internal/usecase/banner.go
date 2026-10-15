@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"auto-novel/internal/domain"
-	"auto-novel/internal/infra"
 	"auto-novel/internal/repository"
 )
 
@@ -36,17 +35,17 @@ var bannerObjectKey = regexp.MustCompile(`^banners/[A-Za-z0-9_-]+\.(jpg|png|webp
 
 type BannerUsecase struct {
 	bannerRepo repository.BannerRepository
-	storage    *infra.R2Storage
+	objectRepo repository.ObjectRepository
 }
 
 func NewBannerUsecase(
 	bannerRepo repository.BannerRepository,
-	storage *infra.R2Storage,
+	objectRepo repository.ObjectRepository,
 ) *BannerUsecase {
-	if storage == nil {
-		panic("banner usecase requires object storage")
+	if objectRepo == nil {
+		panic("banner usecase requires object repository")
 	}
-	return &BannerUsecase{bannerRepo: bannerRepo, storage: storage}
+	return &BannerUsecase{bannerRepo: bannerRepo, objectRepo: objectRepo}
 }
 
 type BannerResult struct {
@@ -99,7 +98,7 @@ func (u *BannerUsecase) PresignUpload(
 	}
 	key := "banners/" + rand.Text() + extension
 	expiresAt := time.Now().Add(bannerUploadTTL)
-	upload, err := u.storage.PresignPut(
+	upload, err := u.objectRepo.PresignPut(
 		ctx, key, input.ContentType, input.Size, bannerUploadTTL,
 	)
 	if err != nil {
@@ -108,7 +107,7 @@ func (u *BannerUsecase) PresignUpload(
 	return &BannerUploadResult{
 		Key:       key,
 		UploadURL: upload.URL,
-		ImageURL:  u.storage.PublicURL(key),
+		ImageURL:  u.objectRepo.PublicURL(key),
 		Headers:   upload.Headers,
 		ExpiresAt: expiresAt,
 	}, nil
@@ -132,8 +131,8 @@ func bannerImageExtension(contentType string) string {
 }
 
 func (u *BannerUsecase) checkImage(ctx context.Context, key string) error {
-	info, err := u.storage.Stat(ctx, key)
-	if errors.Is(err, infra.ErrObjectNotFound) {
+	info, err := u.objectRepo.Stat(ctx, key)
+	if errors.Is(err, repository.ErrObjectNotFound) {
 		return NotFound(CodeBannerImageNotFound, "图片尚未上传或已被删除")
 	}
 	if err != nil {
@@ -148,7 +147,7 @@ func (u *BannerUsecase) checkImage(ctx context.Context, key string) error {
 }
 
 func (u *BannerUsecase) result(banner domain.Banner) BannerResult {
-	return BannerResult{Banner: banner, ImageURL: u.storage.PublicURL(banner.Key)}
+	return BannerResult{Banner: banner, ImageURL: u.objectRepo.PublicURL(banner.Key)}
 }
 
 func (u *BannerUsecase) results(banners []domain.Banner) []BannerResult {
