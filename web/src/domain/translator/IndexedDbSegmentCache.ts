@@ -8,10 +8,18 @@ export class IndexedDbSegmentCache implements SegmentCache {
   async get(segment: Segment): Promise<string[] | undefined> {
     const key = this.computeKey(segment);
     const cached = await TranslationCacheRepo.get(this.storeName, key);
-    // 旧版逐行翻译可能缓存了含换行的译文，会导致上传行数不匹配，视为未命中
+    // 旧版逐行翻译可能缓存了行内换行或空行生成的内容，视为未命中
     if (
       cached?.length !== segment.lines.length ||
-      cached.some((line) => line.includes('\n'))
+      cached.some(
+        (line, index) =>
+          line.includes('\n') ||
+          (segment.lines[index].trim().length === 0 &&
+            line.trim().length !== 0) ||
+          (this.storeName === 'sakura-seg-cache' &&
+            segment.lines[index].startsWith('<图片>') &&
+            line !== segment.lines[index]),
+      )
     ) {
       return undefined;
     }

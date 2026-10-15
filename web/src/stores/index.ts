@@ -10,3 +10,4 @@ export * from './useWhoamiStore';
 // legacy
 export * from './local';
 export * from './useWorkspaceStore';
+export { summarizeQueueResults } from './workspaceJob';

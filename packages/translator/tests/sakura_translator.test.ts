@@ -19,7 +19,12 @@ describe('SakuraTranslator line-by-line fallback', () => {
         if (url.endsWith('/models')) return json({ data: [] });
         chatCalls++;
         // 前 3 次整段翻译行数不匹配，触发逐行翻译；逐行时模型输出带换行
-        const content = chatCalls <= 3 ? '只有一行' : '甲\n乙';
+        const content =
+          chatCalls <= 3
+            ? '只有一行'
+            : chatCalls === 4
+              ? '甲\n乙<|im_end|>'
+              : '丙\r\n丁<|im_end|>';
         return json({
           choices: [{ message: { content } }],
           usage: { completion_tokens: 1 },
@@ -30,9 +35,9 @@ describe('SakuraTranslator line-by-line fallback', () => {
     const translator = await SakuraTranslator.create({
       endpoint: 'https://sakura.test',
     });
-    const result = await translator.translate(['あ', '', 'い']);
+    const result = await translator.translate(['あ', '', ' \t\r', 'い']);
 
-    expect(result).toEqual(['甲乙', '', '甲乙']);
+    expect(result).toEqual(['甲乙', '', ' \t\r', '丙丁']);
     expect(chatCalls).toBe(3 + 2); // 空行不请求模型
   });
 });
@@ -64,5 +69,21 @@ describe('SakuraTranslator blank lines', () => {
     expect(result).toEqual(['甲', '', '<图片>x', '', '乙']);
     expect(prompts).toHaveLength(1);
     expect(prompts[0]).toContain('あ\nい');
+    expect(prompts[0]).not.toContain('<图片>');
+  });
+
+  it('keeps an all-blank/image segment without requesting a model completion', async () => {
+    const fetch = vi.fn(async (input: Request | string) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (!url.endsWith('/models')) throw new Error('Unexpected completion');
+      return json({ data: [] });
+    });
+    vi.stubGlobal('fetch', fetch);
+    const translator = await SakuraTranslator.create({
+      endpoint: 'https://sakura.test',
+    });
+    const lines = ['', ' \t\r', '<图片>image-url'];
+    expect(await translator.translate(lines)).toEqual(lines);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

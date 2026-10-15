@@ -37,3 +37,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm --stream --filter '@auto-novel/web...' run build
+
+      - name: Test workspace queues and metadata
+        run: pnpm --filter @auto-novel/web test --maxWorkers=2
+
+      - name: Test Sakura line alignment
+        run: pnpm --filter @auto-novel/translator test tests/sakura_translator.test.ts

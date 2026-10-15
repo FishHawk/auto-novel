@@ -3,7 +3,7 @@ import type { ChapterMeta } from '../TaskState';
 import type { TranslateTaskParams, WebTranslateTask } from '@/model/Translator';
 import type { ChapterDetail, TranslationTask, TranslatorId } from './types';
 import { WebNovelApi } from '@/api';
-import { createWebMetadataCoder } from '@/domain/translate/TranslateWeb';
+import { createWebMetadataCoder } from '@/domain/translate/WebMetadataCoder';
 import { buildChapterMetaList } from './utils';
 
 export class WebTranslationTask implements TranslationTask {
@@ -71,15 +71,45 @@ export class WebTranslationTask implements TranslationTask {
     this.initialized = true;
   }
 
+  get needsMetadata(): boolean {
+    return (
+      this.initialized &&
+      this.translatorId === 'sakura' &&
+      this.task !== undefined &&
+      createWebMetadataCoder(this.task, this.params.forceMetadata).needUpload
+    );
+  }
+
   /** 翻译标题、简介和目录，与旧版工作区一致 */
   async translateMetadata(
     translate: (texts: string[]) => Promise<string[]>,
+    signal?: AbortSignal,
+    canUpload?: () => boolean,
   ): Promise<void> {
-    if (!this.task) return;
+    if (!this.needsMetadata || !this.task) return;
     const coder = createWebMetadataCoder(this.task, this.params.forceMetadata);
-    if (!coder.needUpload) return;
-    const translated = await translate(coder.encoded);
-    await this.api.updateMetadataTranslation(coder.recover(translated));
+    const checkUpload = () => {
+      signal?.throwIfAborted();
+      if (canUpload?.() === false) {
+        throw new Error('存在未通过上传检查的翻译器，无法启动网络／文库任务');
+      }
+    };
+    checkUpload();
+    const translated =
+      coder.encoded.length === 0 ? [] : await translate(coder.encoded);
+    checkUpload();
+    if (translated.length !== coder.encoded.length) {
+      throw new Error('元数据翻译结果数量不匹配');
+    }
+    // initMeta 的请求可能早于本轮运行，上传必须绑定本轮的取消信号。
+    const api = WebNovelApi.createTranslationApi(
+      this.providerId,
+      this.novelId,
+      this.translatorId,
+      this.params.level === 'sync',
+      signal,
+    );
+    await api.updateMetadataTranslation(coder.recover(translated));
   }
 
   async fetchChapter(chapterId: string): Promise<ChapterDetail> {

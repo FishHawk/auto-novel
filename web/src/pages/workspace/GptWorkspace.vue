@@ -27,7 +27,7 @@ const processedJobs = ref<Map<string, ProcessedJob>>(new Map());
 
 const getNextJob = () => {
   const job = workspace.ref.value.jobs.find(
-    (it) => !processedJobs.value.has(it.task),
+    (it) => it.finishAt === undefined && !processedJobs.value.has(it.task),
   );
   if (job !== undefined) {
     processedJobs.value.set(job.task, job);

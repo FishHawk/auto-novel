@@ -20,9 +20,13 @@ export interface TranslationTask {
   initialized: boolean;
   /** 调用以初始化内部参数。防止多个Task初始化时发出大量请求 */
   initMeta(signal?: AbortSignal): Promise<void>;
+  /** 即使没有待翻章节，也可能需要翻译网络小说元数据 */
+  readonly needsMetadata?: boolean;
   /** 翻译元数据（标题、简介、目录），仅网络小说支持 */
   translateMetadata?(
     translate: (texts: string[]) => Promise<string[]>,
+    signal?: AbortSignal,
+    canUpload?: () => boolean,
   ): Promise<void>;
   fetchChapter(chapterId: string): Promise<ChapterDetail>;
   uploadChapter(

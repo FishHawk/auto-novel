@@ -5,7 +5,12 @@ import { DeleteOutlineOutlined } from '@vicons/material';
 import { GenericNovelId } from '@/model/Common';
 import type { LocalVolumeMetadata } from '@/model/LocalVolume';
 import { useBookshelfLocalStore } from '@/pages/bookshelf/BookshelfLocalStore';
-import { Setting, useLocalVolumeStore, useSettingStore } from '@/stores';
+import {
+  Setting,
+  summarizeQueueResults,
+  useLocalVolumeStore,
+  useSettingStore,
+} from '@/stores';
 import { downloadFile, useShouldTopJob } from '@/util';
 
 const translateOptions = useTemplateRef('translateOptions');
@@ -64,7 +69,7 @@ const queueVolume = (volumeId: string, total: number = 65536) => {
   const { startIndex, endIndex, level, forceMetadata } =
     translateOptions.value!.getTranslateTaskParams();
   const taskNumber = translateOptions.value!.getTaskNumber();
-  const success = store.queueJobToWorkspace(volumeId, {
+  const results = store.queueJobToWorkspace(volumeId, {
     level: level,
     type: props.type,
     shouldTop: shouldTopJob.value ?? false,
@@ -73,11 +78,8 @@ const queueVolume = (volumeId: string, total: number = 65536) => {
     taskNumber: taskNumber,
     total: total,
   });
-  if (success) {
-    Toast.success('排队成功');
-  } else {
-    Toast.error('排队失败：翻译任务已经存在');
-  }
+  const { type, text } = summarizeQueueResults(results);
+  Toast[type](text);
 };
 
 const downloadVolume = async (volumeId: string) => {
