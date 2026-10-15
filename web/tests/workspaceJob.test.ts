@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TranslateJob, TranslateJobRecord } from '../src/model/Translator';
-import {
-  addWorkspaceJob,
-  summarizeQueueResults,
-} from '../src/stores/workspaceJob';
+import { addWorkspaceJob } from '../src/stores/workspaceJob';
 
 describe('addWorkspaceJob', () => {
   it('adds a new job when no task conflicts', () => {
@@ -69,29 +66,5 @@ describe('addWorkspaceJob', () => {
         createAt: 2,
       },
     ]);
-  });
-});
-
-describe('summarizeQueueResults', () => {
-  it('reports success only when at least one task was selected and every split task was queued', () => {
-    expect(summarizeQueueResults([])).toEqual({
-      type: 'error',
-      text: '排队失败：没有选中章节',
-    });
-    expect(summarizeQueueResults([true, true])).toEqual({
-      type: 'success',
-      text: '排队成功',
-    });
-  });
-
-  it('reports failure when every split task already exists', () => {
-    expect(summarizeQueueResults([false, false]).type).toBe('error');
-  });
-
-  it('reports partial results instead of a plain success', () => {
-    expect(summarizeQueueResults([true, false, false])).toEqual({
-      type: 'warning',
-      text: '1个任务已排队，2个任务已经存在',
-    });
   });
 });

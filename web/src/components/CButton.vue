@@ -40,10 +40,12 @@ const onClick = async (e: MouseEvent) => {
 
 <template>
   <n-button round :loading="running" @click="onClick">
-    <!-- 图标统一放在 icon 插槽，loading 时由加载动画替换，不会与图标并排撑出按钮 -->
-    <template v-if="icon" #icon>
+    <template v-if="icon && label" #icon>
       <n-icon :component="icon" />
     </template>
-    <template v-if="label">{{ label }}</template>
+    {{ label }}
+    <template v-if="icon && !label">
+      <n-icon :component="icon" />
+    </template>
   </n-button>
 </template>

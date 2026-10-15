@@ -91,14 +91,6 @@ const testWorker = async () => {
         </n-text>
         <span class="viz-status-dot" :class="{ active: isWorkerActive() }" />
         <n-tag
-          v-if="running && !isWorkerActive()"
-          size="tiny"
-          :bordered="false"
-          class="viz-error-tag"
-        >
-          待机
-        </n-tag>
-        <n-tag
           v-if="errorCount"
           size="tiny"
           type="error"
