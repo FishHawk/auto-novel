@@ -2,13 +2,12 @@
 import { useEventListener } from '@vueuse/core';
 import { onBeforeRouteLeave } from 'vue-router';
 import { DeleteOutlineOutlined } from '@vicons/material';
-import { Toast } from '@novelia/web-kit';
+import { copyToClipboard, Toast } from '@novelia/web-kit';
 
 import { WebNovelApi, WenkuNovelApi } from '@/api';
 import { forumPostUrls } from '@/config';
 import { GenericNovelId } from '@/model/Common';
 import { Glossary } from '@/model/Glossary';
-import { copyToClipBoard } from '@/pages/util';
 import { useLocalVolumeStore, useWhoamiStore } from '@/stores';
 import { downloadFile } from '@/util';
 
@@ -180,17 +179,11 @@ const addTerm = () => {
   }
 };
 
-const exportGlossary = async (ev: MouseEvent) => {
-  const isSuccess = await copyToClipBoard(
-    Glossary.toText(glossary.value),
-    ev.target as HTMLElement,
-  );
-  if (isSuccess) {
-    Toast.success('导出成功：已复制到剪贴板');
-  } else {
-    Toast.success('导出失败');
-  }
-};
+const exportGlossary = () =>
+  Toast.promise(copyToClipboard(Glossary.toText(glossary.value)), {
+    success: '导出成功：已复制到剪贴板',
+    error: '导出失败',
+  });
 
 const importGlossary = () => {
   const importedGlossary = Glossary.fromText(importGlossaryRaw.value);

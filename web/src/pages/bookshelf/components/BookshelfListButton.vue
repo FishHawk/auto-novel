@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { XDrawer } from '@novelia/web-kit';
 import { FormatListBulletedOutlined } from '@vicons/material';
 
 defineProps<{ menuKey: string }>();
@@ -12,10 +13,19 @@ const showListModal = ref(false);
     @action="showListModal = true"
   />
 
-  <c-drawer-right v-model:show="showListModal" title="收藏夹">
+  <XDrawer
+    v-model:open="showListModal"
+    title="收藏夹"
+    show-header
+    side="right"
+    width="clamp(280px, 80vw, 800px)"
+    @open-auto-focus.prevent
+  >
     <template #action>
       <bookshelf-add-button />
     </template>
-    <bookshelf-menu :value="menuKey" />
-  </c-drawer-right>
+    <n-scrollbar trigger="none" class="min-h-0 flex-1">
+      <bookshelf-menu :value="menuKey" />
+    </n-scrollbar>
+  </XDrawer>
 </template>

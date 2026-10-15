@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { copyToClipboard, Toast } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import type { ParsedFile } from '@/util/file';
@@ -89,7 +89,7 @@ const copyTranslationJson = async () => {
     ]),
   );
   const jsonString = Glossary.toText(obj);
-  await Toast.promise(navigator.clipboard.writeText(jsonString), {
+  await Toast.promise(copyToClipboard(jsonString), {
     success: '已经将翻译结果复制到剪切板',
     error: '复制失败',
   });

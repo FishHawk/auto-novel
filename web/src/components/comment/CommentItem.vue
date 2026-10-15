@@ -6,11 +6,10 @@ import {
 } from '@vicons/material';
 
 import type { Comment } from '@novelia/forum-api';
-import { Toast } from '@novelia/web-kit';
+import { copyToClipboard, Toast } from '@novelia/web-kit';
 
 import { useWhoamiStore } from '@/stores';
 import { CommentRepo } from '@/repos';
-import { copyToClipBoard } from '@/pages/util';
 
 const props = defineProps<{
   site: string;
@@ -66,7 +65,7 @@ function deleteComment() {
 }
 
 function copyComment(comment: Comment) {
-  Toast.promise(copyToClipBoard(comment.content), {
+  Toast.promise(copyToClipboard(comment.content), {
     success: '复制成功',
     error: '复制失败',
   });
