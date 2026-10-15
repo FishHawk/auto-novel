@@ -1,24 +1,5 @@
-/* 不引入 Preflight，保留 Naive UI 和现有业务页面的原生元素样式。 */
-@layer theme, base, components, utilities;
-@import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'tailwindcss';
 @import '@novelia/web-kit/styles.css';
-
-/* web-kit 的工具类以 border-box 和无默认按钮边框为基础。 */
-@layer base {
-  *,
-  ::before,
-  ::after {
-    box-sizing: border-box;
-    border-width: 0;
-    border-style: solid;
-  }
-  button {
-    font: inherit;
-    color: inherit;
-    background-color: transparent;
-  }
-}
 
 .layout-content {
   max-width: 1000px;
