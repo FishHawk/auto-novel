@@ -21,6 +21,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     environment:
+      - ACCESS_TOKEN_SECRET
       - DB_HOST=postgresql
       - DB_PORT=5432
       - DB_USER=auto-novel

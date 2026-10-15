@@ -4,14 +4,65 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
+
+	"auto-novel/internal/handler"
+	"auto-novel/internal/httpx"
+	"auto-novel/internal/infra"
+	"auto-novel/internal/repository"
+	"auto-novel/internal/usecase"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog/v3"
 )
+
+func env(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+func envInt(key string, fallback int) int {
+	value, err := strconv.Atoi(env(key, ""))
+	if err != nil {
+		return fallback
+	}
+	return value
+}
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+
+	httpx.AccessTokenSecret = os.Getenv("ACCESS_TOKEN_SECRET")
+	if httpx.AccessTokenSecret == "" {
+		slog.Error("ACCESS_TOKEN_SECRET is required")
+		os.Exit(1)
+	}
+
+	db, err := infra.NewSQLDB(
+		env("DB_HOST", "localhost"),
+		envInt("DB_PORT", 5432),
+		env("DB_USER", "auto-novel"),
+		env("DB_PASSWORD", ""),
+		env("DB_NAME", "auto-novel"),
+	)
+	if err != nil {
+		slog.Error("Configure database failed", "error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	storage, err := infra.NewR2Storage(infra.R2ConfigFromEnv())
+	if err != nil {
+		slog.Error("Configure R2 failed", "error", err)
+		os.Exit(1)
+	}
+	bannerRepo := repository.NewBannerRepository(db)
+	bannerUsecase := usecase.NewBannerUsecase(bannerRepo, storage)
+	bannerHandler := handler.NewBannerHandler(bannerUsecase)
 
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer)
@@ -21,8 +72,20 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK\n"))
 	})
+	router.Route("/v1", func(router chi.Router) {
+		router.Use(httplog.RequestLogger(slog.Default(), &httplog.Options{
+			Level:         slog.LevelInfo,
+			Schema:        httplog.SchemaECS,
+			RecoverPanics: true,
+		}))
+		router.Use(httpx.OptionalAccessToken)
+		router.Route("/banner", bannerHandler.RegisterRoutes)
+		router.Route("/admin", func(router chi.Router) {
+			router.Use(httpx.RequireAdmin)
+			router.Route("/banner", bannerHandler.RegisterAdminRoutes)
+		})
+	})
 
-	// 业务接口将在后续从 server 迁移。
 	slog.Info("Listening on localhost:8080...")
 	if err := http.ListenAndServe(":8080", router); err != nil {
 		slog.Error("HTTP server failed", "error", err)
