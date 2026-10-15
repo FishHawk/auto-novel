@@ -2,12 +2,16 @@ package usecase
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
+	"time"
 
 	"auto-novel/internal/domain"
+	"auto-novel/internal/infra"
 	"auto-novel/internal/repository"
 )
 
@@ -19,12 +23,48 @@ const (
 	CodeBannerNotFound       = "banner.not_found"
 	CodeBannerConflict       = "banner.conflict"
 	CodeBannerAdminRequired  = "banner.admin_required"
+	CodeBannerImageInvalid   = "banner.image_invalid"
+	CodeBannerImageNotFound  = "banner.image_not_found"
 )
 
-type BannerUsecase struct{ bannerRepo repository.BannerRepository }
+const (
+	BannerMaxImageSize = 5 * 1024 * 1024
+	bannerUploadTTL    = 10 * time.Minute
+)
 
-func NewBannerUsecase(bannerRepo repository.BannerRepository) *BannerUsecase {
-	return &BannerUsecase{bannerRepo: bannerRepo}
+var bannerObjectKey = regexp.MustCompile(`^banners/[A-Za-z0-9_-]+\.(jpg|png|webp|gif|avif)$`)
+
+type BannerUsecase struct {
+	bannerRepo repository.BannerRepository
+	storage    *infra.R2Storage
+}
+
+func NewBannerUsecase(
+	bannerRepo repository.BannerRepository,
+	storage *infra.R2Storage,
+) *BannerUsecase {
+	if storage == nil {
+		panic("banner usecase requires object storage")
+	}
+	return &BannerUsecase{bannerRepo: bannerRepo, storage: storage}
+}
+
+type BannerResult struct {
+	domain.Banner
+	ImageURL string
+}
+
+type BannerUploadInput struct {
+	ContentType string
+	Size        int64
+}
+
+type BannerUploadResult struct {
+	Key       string
+	UploadURL string
+	ImageURL  string
+	Headers   map[string]string
+	ExpiresAt time.Time
 }
 
 type ListBannersQuery struct{ Type domain.BannerType }
@@ -40,6 +80,83 @@ type BannerInput struct {
 type SetBannerActiveCommand struct {
 	ID     int64
 	Active bool
+}
+
+func (u *BannerUsecase) PresignUpload(
+	ctx context.Context,
+	actor Actor,
+	input BannerUploadInput,
+) (*BannerUploadResult, error) {
+	if err := checkBannerAdmin(actor); err != nil {
+		return nil, err
+	}
+	extension := bannerImageExtension(input.ContentType)
+	if extension == "" || input.Size <= 0 || input.Size > BannerMaxImageSize {
+		return nil, Invalid(
+			CodeBannerImageInvalid,
+			"图片必须为 JPEG、PNG、WebP、GIF 或 AVIF，且不超过 5 MiB",
+		)
+	}
+	key := "banners/" + rand.Text() + extension
+	expiresAt := time.Now().Add(bannerUploadTTL)
+	upload, err := u.storage.PresignPut(
+		ctx, key, input.ContentType, input.Size, bannerUploadTTL,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("banner.presign_upload: %w", err)
+	}
+	return &BannerUploadResult{
+		Key:       key,
+		UploadURL: upload.URL,
+		ImageURL:  u.storage.PublicURL(key),
+		Headers:   upload.Headers,
+		ExpiresAt: expiresAt,
+	}, nil
+}
+
+func bannerImageExtension(contentType string) string {
+	switch contentType {
+	case "image/jpeg":
+		return ".jpg"
+	case "image/png":
+		return ".png"
+	case "image/webp":
+		return ".webp"
+	case "image/gif":
+		return ".gif"
+	case "image/avif":
+		return ".avif"
+	default:
+		return ""
+	}
+}
+
+func (u *BannerUsecase) checkImage(ctx context.Context, key string) error {
+	info, err := u.storage.Stat(ctx, key)
+	if errors.Is(err, infra.ErrObjectNotFound) {
+		return NotFound(CodeBannerImageNotFound, "图片尚未上传或已被删除")
+	}
+	if err != nil {
+		return fmt.Errorf("banner.check_image: %w", err)
+	}
+	extension := bannerImageExtension(info.ContentType)
+	if info.Size <= 0 || info.Size > BannerMaxImageSize ||
+		extension == "" || !strings.HasSuffix(key, extension) {
+		return Invalid(CodeBannerImageInvalid, "已上传图片的格式或大小无效")
+	}
+	return nil
+}
+
+func (u *BannerUsecase) result(banner domain.Banner) BannerResult {
+	return BannerResult{Banner: banner, ImageURL: u.storage.PublicURL(banner.Key)}
+}
+
+func (u *BannerUsecase) results(banners []domain.Banner) []BannerResult {
+	results := make([]BannerResult, len(banners))
+	for i, banner := range banners {
+		results[i] = u.result(banner)
+	}
+	return results
 }
 
 func checkBannerAdmin(actor Actor) error {
@@ -68,7 +185,7 @@ func normalizeBannerInput(input BannerInput) (repository.BannerContent, error) {
 		return repository.BannerContent{}, err
 	}
 	input.Key = strings.TrimSpace(input.Key)
-	if input.Key == "" || strings.ContainsAny(input.Key, "\r\n\x00") {
+	if !bannerObjectKey.MatchString(input.Key) {
 		return repository.BannerContent{}, Invalid(CodeBannerKeyInvalid, "图片对象 Key 无效")
 	}
 	var linkURL *string
@@ -127,7 +244,7 @@ func bannerError(err error, operation string) error {
 func (u *BannerUsecase) ListActive(
 	ctx context.Context,
 	query ListBannersQuery,
-) ([]domain.Banner, error) {
+) ([]BannerResult, error) {
 	if err := checkBannerType(query.Type); err != nil {
 		return nil, err
 	}
@@ -135,14 +252,14 @@ func (u *BannerUsecase) ListActive(
 	if err != nil {
 		return nil, fmt.Errorf("banner.list_active: %w", err)
 	}
-	return banners, nil
+	return u.results(banners), nil
 }
 
 func (u *BannerUsecase) ListAdmin(
 	ctx context.Context,
 	actor Actor,
 	query ListBannersQuery,
-) ([]domain.Banner, error) {
+) ([]BannerResult, error) {
 	if err := checkBannerAdmin(actor); err != nil {
 		return nil, err
 	}
@@ -153,14 +270,14 @@ func (u *BannerUsecase) ListAdmin(
 	if err != nil {
 		return nil, fmt.Errorf("banner.list: %w", err)
 	}
-	return banners, nil
+	return u.results(banners), nil
 }
 
 func (u *BannerUsecase) GetAdmin(
 	ctx context.Context,
 	actor Actor,
 	id int64,
-) (*domain.Banner, error) {
+) (*BannerResult, error) {
 	if err := checkBannerAdmin(actor); err != nil {
 		return nil, err
 	}
@@ -171,14 +288,15 @@ func (u *BannerUsecase) GetAdmin(
 	if err != nil {
 		return nil, bannerError(err, "get")
 	}
-	return banner, nil
+	result := u.result(*banner)
+	return &result, nil
 }
 
 func (u *BannerUsecase) Create(
 	ctx context.Context,
 	actor Actor,
 	input BannerInput,
-) (*domain.Banner, error) {
+) (*BannerResult, error) {
 	if err := checkBannerAdmin(actor); err != nil {
 		return nil, err
 	}
@@ -186,11 +304,15 @@ func (u *BannerUsecase) Create(
 	if err != nil {
 		return nil, err
 	}
+	if err := u.checkImage(ctx, content.Key); err != nil {
+		return nil, err
+	}
 	banner, err := u.bannerRepo.Create(ctx, content)
 	if err != nil {
 		return nil, bannerError(err, "create")
 	}
-	return banner, nil
+	result := u.result(*banner)
+	return &result, nil
 }
 
 func (u *BannerUsecase) Update(
@@ -198,7 +320,7 @@ func (u *BannerUsecase) Update(
 	actor Actor,
 	id int64,
 	input BannerInput,
-) (*domain.Banner, error) {
+) (*BannerResult, error) {
 	if err := checkBannerAdmin(actor); err != nil {
 		return nil, err
 	}
@@ -209,11 +331,15 @@ func (u *BannerUsecase) Update(
 	if err != nil {
 		return nil, err
 	}
+	if err := u.checkImage(ctx, content.Key); err != nil {
+		return nil, err
+	}
 	banner, err := u.bannerRepo.Update(ctx, id, content)
 	if err != nil {
 		return nil, bannerError(err, "update")
 	}
-	return banner, nil
+	result := u.result(*banner)
+	return &result, nil
 }
 
 func (u *BannerUsecase) SetActive(
