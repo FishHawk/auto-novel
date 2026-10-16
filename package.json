@@ -1,9 +1,20 @@
 {
   "name": "auto-novel",
+  "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@11.28.5",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
+    "dev": "pnpm dev:web",
+    "dev:web": "pnpm --stream --filter \"@auto-novel/web^...\" run build && pnpm --stream --parallel --filter \"@auto-novel/web...\" run dev",
+    "dev:admin": "pnpm --filter @auto-novel/admin dev",
     "build": "pnpm --stream -r run build",
-    "dev:web": "pnpm --stream --filter \"@auto-novel/web^...\" run build && pnpm --stream --parallel --filter \"@auto-novel/web...\" run dev"
+    "test": "pnpm --stream -r --if-present run test"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6"
   }
 }

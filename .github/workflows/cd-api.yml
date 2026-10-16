@@ -1,14 +1,20 @@
-name: Publish Api
+name: CD API
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      [.github/workflows/cd-api.yml, apps/api/**, deploy/api/**, .dockerignore]
+      - .github/workflows/cd-api.yml
+      - .dockerignore
+      - deploy/api/**
+      - apps/api/**
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-api
+  group: cd-api-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -16,8 +22,14 @@ env:
   IMAGE_NAME: auto-novel-api
 
 jobs:
+  check:
+    uses: ./.github/workflows/ci-api.yml
+
   build-and-push:
+    needs: check
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     permissions:
       contents: read
@@ -38,8 +50,8 @@ jobs:
           push: true
           provenance: false
           tags: ghcr.io/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_NAME }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.IMAGE_NAME }}
 
       - uses: actions/delete-package-versions@v5
         with:

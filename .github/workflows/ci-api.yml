@@ -1,21 +1,26 @@
-name: ci-api
+name: CI API
 
 on:
+  workflow_call:
   pull_request:
     paths:
       - .github/workflows/ci-api.yml
+      - .dockerignore
+      - deploy/api/**
       - apps/api/**
 
+permissions:
+  contents: read
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-api-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    name: CI API
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
+    timeout-minutes: 30
 
     defaults:
       run:
@@ -29,6 +34,11 @@ jobs:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
 
-      - run: go build ./...
+      - name: Build
+        run: go build ./...
 
-      - run: go vet ./...
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1 -v -p 4

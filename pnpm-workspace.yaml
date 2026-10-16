@@ -1,5 +1,6 @@
 packages:
   - 'web'
+  - 'apps/admin'
   - 'daemon'
   - 'packages/*'
 

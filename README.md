@@ -10,7 +10,7 @@
 
 ## 贡献
 
-请务必在编写代码前阅读[贡献指南](https://github.com/auto-novel/auto-novel/blob/main/CONTRIBUTING.md)，感谢所有为本项目做出贡献的人们！
+请务必在编写代码前阅读 [贡献指南](CONTRIBUTING.md)，感谢所有为本项目做出贡献的人们！
 
 ## 部署
 
@@ -24,14 +24,11 @@ cd auto-novel
 
 # 2. 生成环境变量配置
 cat > .env << EOF
-HTTPS_PROXY=              # web 小说代理，可以为空
-PIXIV_COOKIE_PHPSESSID=   # Pixiv Cookie，用于爬取P站小说，可以为空
+HTTPS_PROXY=              # Web 小说代理，可以为空
+PIXIV_COOKIE_PHPSESSID=   # Pixiv Cookie，用于爬取 Pixiv 小说，可以为空
 
 # 以下字段个人部署不需要填写
 ACCESS_TOKEN_SECRET=
-MAILGUN_API_KEY=
-MAILGUN_API_URL=https://api.eu.mailgun.net/v3/verify.fishhawk.top/messages
-MAILGUN_FROM_EMAIL=postmaster@verify.fishhawk.top
 EOF
 
 # 3. 启动服务
@@ -39,4 +36,6 @@ mkdir -p -m 777 ./data/es/data ./data/es/plugins
 docker compose up -d
 ```
 
-启动后，访问 http://localhost 即可。
+启动后，可通过以下地址访问：
+
+- 用户端：http://localhost/
