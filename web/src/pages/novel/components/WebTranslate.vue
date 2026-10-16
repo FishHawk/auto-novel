@@ -7,6 +7,7 @@ import { WebNovelApi } from '@/api';
 import { GenericNovelId } from '@/model/Common';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 import {
+  summarizeQueueResults,
   useLocalVolumeStore,
   useSettingStore,
   useWhoamiStore,
@@ -146,11 +147,8 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     }
     return success;
   });
-  if (results.length === 1 && !results[0]) {
-    Toast.error('排队失败：翻译任务已经存在');
-  } else {
-    Toast.success('排队成功');
-  }
+  const { type, text } = summarizeQueueResults(results);
+  Toast[type](text);
 };
 </script>
 
