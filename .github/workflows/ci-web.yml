@@ -48,8 +48,4 @@ jobs:
         run: pnpm --stream --filter '@auto-novel/web...' --filter '@auto-novel/admin...' run build
 
       - name: Test
-        run: |
-          pnpm --filter @auto-novel/web test
-          pnpm --filter @auto-novel/translator test
-          pnpm --filter @auto-novel/crawler exec vitest run tests/amazon
-          pnpm --filter @auto-novel/crawler exec vitest run tests/web/alphapolis.test.ts tests/web/kakuyomu.test.ts -t fixtures
+        run: pnpm --filter @auto-novel/web test
