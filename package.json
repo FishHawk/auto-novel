@@ -2,6 +2,10 @@
   "name": "auto-novel",
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@11.28.5",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "build": "pnpm --stream -r run build",
     "dev:admin": "pnpm --filter @auto-novel/admin dev",

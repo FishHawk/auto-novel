@@ -2,6 +2,7 @@ FROM node:25-bookworm AS deps
 RUN npm install -g corepack@latest --force && corepack enable
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN corepack install
 COPY packages/crawler/package.json ./packages/crawler/
 COPY daemon/package.json ./daemon/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --filter @auto-novel/daemon...
