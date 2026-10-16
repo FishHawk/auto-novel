@@ -24,6 +24,17 @@ const emit = defineEmits<{
 
 const showMenu = ref(false);
 
+// 先关闭抽屉，避免其模态交互和滚动锁影响外部弹窗。
+const openCatalogModal = () => {
+  showMenu.value = false;
+  emit('requireCatalogModal');
+};
+
+const openSettingModal = () => {
+  showMenu.value = false;
+  emit('requireSettingModal');
+};
+
 const readerSettingStore = useReaderSettingStore();
 const { readerSetting } = storeToRefs(readerSettingStore);
 
@@ -106,7 +117,7 @@ const onGlobalClick = (event: MouseEvent) => {
           quaternary
           text="目录"
           :icon="FormatListBulletedOutlined"
-          @click="emit('requireCatalogModal')"
+          @click="openCatalogModal"
           style="width: 100%"
         />
       </div>
@@ -115,7 +126,7 @@ const onGlobalClick = (event: MouseEvent) => {
           quaternary
           text="设置"
           :icon="TuneOutlined"
-          @click="emit('requireSettingModal')"
+          @click="openSettingModal"
           style="width: 100%"
         />
       </div>

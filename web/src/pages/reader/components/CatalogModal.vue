@@ -175,7 +175,6 @@ const onTocItemClick = (item: ReadableTocItem) => {
           collapse: false,
         }"
         @item-click="onTocItemClick"
-        style="height: 100%"
       />
       <ChapterTocList
         v-else-if="gnid.type === 'local' && tocSections"
@@ -192,7 +191,6 @@ const onTocItemClick = (item: ReadableTocItem) => {
           collapse: false,
         }"
         @item-click="onTocItemClick"
-        style="height: 100%"
       />
     </c-result>
   </c-modal>

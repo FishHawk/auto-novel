@@ -1,0 +1,117 @@
+import type { WebKitContext } from '@novelia/web-kit';
+import { inject, type InjectionKey } from 'vue';
+
+export interface Banner {
+  id: number;
+  type: 0;
+  key: string;
+  imageUrl: string;
+  linkUrl: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BannerInput {
+  type: 0;
+  key: string;
+  linkUrl: string | null;
+  sortOrder: number;
+}
+
+interface BannerUpload {
+  key: string;
+  uploadUrl: string;
+  imageUrl: string;
+  headers: Record<string, string>;
+  expiresAt: string;
+}
+
+const imageTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+];
+export const imageAccept = imageTypes.join(',');
+
+export function validateImage(file: Pick<File, 'size' | 'type'>) {
+  if (
+    !imageTypes.includes(file.type) ||
+    file.size <= 0 ||
+    file.size > 5 * 1024 * 1024
+  ) {
+    throw new Error('图片必须为 JPEG、PNG、WebP、GIF 或 AVIF，且不超过 5 MiB');
+  }
+}
+
+export function validLink(value: string) {
+  const link = value.trim();
+  if (!link) return true;
+  if (/[\r\n\x00\\]/.test(link)) return false;
+  if (link.startsWith('/')) return !link.startsWith('//');
+  try {
+    const url = new URL(link);
+    return (
+      /^https?:$/.test(url.protocol) &&
+      !!url.hostname &&
+      !url.username &&
+      !url.password
+    );
+  } catch {
+    return false;
+  }
+}
+
+// 图片直传不使用带身份认证的 API client，避免向对象存储发送 access token。
+export function createBannerApi(
+  client: ReturnType<WebKitContext['createClient']>,
+) {
+  return {
+    list() {
+      return client
+        .get('admin/banner/', { searchParams: { type: 0 } })
+        .json<Banner[]>();
+    },
+    save(id: number | undefined, input: BannerInput) {
+      return id === undefined
+        ? client.post('admin/banner/', { json: input }).json<Banner>()
+        : client.put(`admin/banner/${id}`, { json: input }).json<Banner>();
+    },
+    async setActive(id: number, active: boolean) {
+      const path = `admin/banner/${id}/active`;
+      if (active) await client.put(path);
+      else await client.delete(path);
+    },
+    async remove(id: number) {
+      await client.delete(`admin/banner/${id}`);
+    },
+    async upload(file: File) {
+      validateImage(file);
+      const upload = await client
+        .post('admin/banner/upload', {
+          json: { contentType: file.type, size: file.size },
+        })
+        .json<BannerUpload>();
+      const response = await fetch(upload.uploadUrl, {
+        method: 'PUT',
+        headers: upload.headers,
+        body: file,
+        credentials: 'omit',
+      });
+      if (!response.ok)
+        throw new Error(`图片上传失败（${response.status}），请重试`);
+      return { key: upload.key, imageUrl: upload.imageUrl };
+    },
+  };
+}
+
+export type BannerApi = ReturnType<typeof createBannerApi>;
+export const bannerApiKey: InjectionKey<BannerApi> = Symbol('banner-api');
+export function useBannerApi() {
+  const api = inject(bannerApiKey);
+  if (!api) throw new Error('Banner API 尚未注册');
+  return api;
+}

@@ -207,7 +207,7 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
                 :preview-src="volume.coverHires ?? volume.cover"
                 :alt="volume.asin"
                 lazy
-                style="border-radius: 2px"
+                style="border-radius: 2px; flex: 0 0 104px; width: 104px"
               />
             </n-flex>
           </n-image-group>
