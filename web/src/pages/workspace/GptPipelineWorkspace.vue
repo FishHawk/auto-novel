@@ -329,7 +329,7 @@ function runProcessLoop(): void {
   const signal = processLoopAbortController.signal;
 
   const processOne = async () => {
-    while (!signal.aborted) {
+    while (!signal.aborted && hasRunningWorker()) {
       const item = getNextJob(jobs.value, taskStates.value);
       if (!item) break;
 
