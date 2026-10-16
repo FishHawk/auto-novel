@@ -9,6 +9,7 @@ import { delay } from '@/util';
 
 import { CrawlerService } from '../crawler';
 import type { Translator } from './Translator';
+import { createWebMetadataCoder } from './WebMetadataCoder';
 
 export const translateWeb = async (
   { providerId, novelId }: WebTranslateTaskDesc,
@@ -78,90 +79,7 @@ export const translateWeb = async (
   }
 
   try {
-    const createMetadataCoder = () => {
-      const encoded: string[] = [];
-      if (!task.titleZh) {
-        encoded.push(task.titleJp);
-      }
-      if (!task.introductionZh) {
-        encoded.push(task.introductionJp);
-      }
-      const toc = task.toc
-        .filter((it) => forceMetadata || !it.titleZh)
-        .map((it) => it.titleJp);
-
-      const tocWordsDict: { [key: string]: string } = {};
-      const tocWords = Array.from(
-        new Set(
-          toc
-            .map((it) => it.split(/[\s　]+/))
-            .filter((it) => it.length > 0)
-            .flat(),
-        ),
-      );
-
-      const preTranslateTocWord = (wordJp: string) => {
-        if (/^第?[０-９0-9]+話?$/.test(wordJp)) {
-          return wordJp.replace('話', '话');
-        } else if (wordJp === '閑話') {
-          return '闲话';
-        } else if (wordJp === '幕間') {
-          return '幕间';
-        }
-      };
-      const tocWordsNeedTranslate = tocWords.filter((wordJp) => {
-        const wordZh = preTranslateTocWord(wordJp);
-        if (wordZh !== undefined) {
-          tocWordsDict[wordJp] = wordZh;
-          return false;
-        } else {
-          return true;
-        }
-      });
-      encoded.push(...tocWordsNeedTranslate);
-
-      const recover = (translated: string[]) => {
-        const obj: {
-          title?: string;
-          introduction?: string;
-          toc: { [key: string]: string };
-        } = { toc: {} };
-
-        if (!task.titleZh) {
-          obj.title = translated.shift();
-        }
-        if (!task.introductionZh) {
-          obj.introduction = translated.shift();
-        }
-        for (const wordJp of tocWordsNeedTranslate) {
-          tocWordsDict[wordJp] = translated.shift()!;
-        }
-
-        new Set(toc).forEach((it) => {
-          const spaces = it.split(/[^\s　]+/).filter((it) => it.length > 0);
-          obj.toc[it] = it
-            .split(/[\s　]+/)
-            .map((it) => {
-              if (it.length === 0) {
-                return [spaces.shift() ?? ''];
-              } else {
-                return [tocWordsDict[it], spaces.shift() ?? ''];
-              }
-            })
-            .flat()
-            .join('');
-        });
-        return obj;
-      };
-
-      return {
-        encoded,
-        needUpload: encoded.length > 0 || toc.length > 0,
-        recover,
-      };
-    };
-
-    const coder = createMetadataCoder();
+    const coder = createWebMetadataCoder(task, forceMetadata);
 
     if (forceMetadata) {
       callback.log('重新翻译目录');

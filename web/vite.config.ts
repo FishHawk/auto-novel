@@ -14,8 +14,8 @@ import { createHtmlPlugin } from 'vite-plugin-html';
 
 function resolveGitCommit(env: Record<string, string>) {
   const injectedCommit =
-    env.VITE_GIT_COMMIT ||
-    process.env.VITE_GIT_COMMIT ||
+    env.VITE_COMMIT_SHA ||
+    process.env.VITE_COMMIT_SHA ||
     process.env.GIT_COMMIT ||
     process.env.GITHUB_SHA;
   if (injectedCommit) return injectedCommit;

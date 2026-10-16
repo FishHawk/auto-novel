@@ -164,7 +164,7 @@ const virtualListClass = computed(() => {
 }
 @supports (height: 100dvh) {
   .modal-virtual-list {
-    max-height: calc(80dvh - 200px);
+    height: max(56px, calc(80dvh - 200px));
   }
   .wide-virtual-list {
     max-height: calc(100dvh - 150px);
@@ -175,7 +175,7 @@ const virtualListClass = computed(() => {
 }
 @supports not (height: 100dvh) {
   .modal-virtual-list {
-    max-height: calc(80vh - 200px);
+    height: max(56px, calc(80vh - 200px));
   }
   .wide-virtual-list {
     max-height: calc(100vh - 150px);

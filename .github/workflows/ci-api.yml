@@ -1,31 +1,45 @@
-name: ci-api
+name: CI API
 
 on:
+  workflow_call:
   pull_request:
     paths:
       - .github/workflows/ci-api.yml
-      - server/**
+      - .github/workflows/cd-api.yml
+      - .dockerignore
+      - deploy/api/**
+      - apps/api/**
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-api-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    name: CI API
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
-    permissions:
-      contents: read
+    defaults:
+      run:
+        working-directory: apps/api
 
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-go@v6
         with:
-          distribution: temurin
-          java-version: 17
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: go build ./...
 
-      - run: ./gradlew --no-daemon installDist -x test
-        working-directory: server
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1 -v -p 4
