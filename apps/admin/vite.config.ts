@@ -72,7 +72,6 @@ export default defineConfig(({ command, mode }) => {
         : 'http://localhost:8080');
   const commitSha =
     env.VITE_COMMIT_SHA ||
-    env.VITE_GIT_COMMIT ||
     process.env.GITHUB_SHA ||
     readGitValue(['rev-parse', 'HEAD']);
   const buildTime =

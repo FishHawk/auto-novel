@@ -13,13 +13,13 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM deps AS builder
 WORKDIR /app
-ARG VITE_GIT_COMMIT=unknown
+ARG VITE_COMMIT_SHA=unknown
 ARG VITE_BUILD_TIME
 COPY packages/crawler/ ./packages/crawler/
 COPY packages/translator/ ./packages/translator/
 COPY web/ ./web/
 COPY apps/admin/ ./apps/admin/
-RUN VITE_GIT_COMMIT="${VITE_GIT_COMMIT}" \
+RUN VITE_COMMIT_SHA="${VITE_COMMIT_SHA}" \
     VITE_BUILD_TIME="${VITE_BUILD_TIME}" \
     pnpm --filter @auto-novel/web... --filter @auto-novel/admin run build
 
