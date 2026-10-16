@@ -1,0 +1,34 @@
+{
+  "name": "@auto-novel/admin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:remote": "cross-env VITE_API_MODE=remote vite",
+    "dev:local": "cross-env VITE_API_MODE=local vite",
+    "dev:native": "cross-env VITE_API_MODE=native vite",
+    "build": "vite build && vue-tsc -b --noEmit",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@novelia/web-kit": "github:auto-novel/auth#c3cbb0ee1f662f1acce2d87c6b34b1a0b63cfa23&path:packages/web-kit",
+    "@vicons/material": "^0.13.0",
+    "vue": "^3.5.41",
+    "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^20.19.13",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/tsconfig": "^0.8.1",
+    "cross-env": "^10.1.0",
+    "proxy-agent": "^8.0.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.2",
+    "vite": "^8.0.8",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^2.2.12"
+  }
+}

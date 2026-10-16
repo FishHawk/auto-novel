@@ -8,6 +8,7 @@ on:
       - .github/workflows/cd-web.yml
       - deploy/web/**
       - web/**
+      - apps/admin/**
       - packages/crawler/**
       - packages/translator/**
       - package.json

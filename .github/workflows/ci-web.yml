@@ -8,6 +8,7 @@ on:
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
       - web/**
+      - apps/admin/**
       - packages/crawler/**
       - packages/translator/**
 
@@ -34,4 +35,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --stream --filter '@auto-novel/web...' run build
+      - run: pnpm --stream --filter '@auto-novel/web...' --filter '@auto-novel/admin' run build
+
+      - run: pnpm --filter @auto-novel/admin test
