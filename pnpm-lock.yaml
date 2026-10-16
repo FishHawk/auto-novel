@@ -5,7 +5,11 @@ settings:
   excludeLinksFromLockfile: false
 
 importers:
-  .: {}
+  .:
+    devDependencies:
+      prettier:
+        specifier: ^3.9.6
+        version: 3.9.10
 
   apps/admin:
     dependencies:
