@@ -101,10 +101,25 @@ export class SakuraTranslator implements Translator {
     context?: SegmentContext,
     signal?: AbortSignal,
   ): Promise<string[]> {
-    if (lines.length === 0) return [];
-    if (lines.every((l) => l.trim().length === 0)) {
-      return lines;
+    // Sakura 会吞掉空行，导致行数不匹配；只翻译有内容的行，再放回原位置
+    const isPassthrough = (l: string) =>
+      l.trim().length === 0 || l.startsWith('<图片>');
+    if (lines.some(isPassthrough)) {
+      const contentIndexes = lines.flatMap((l, i) =>
+        isPassthrough(l) ? [] : [i],
+      );
+      const translated = await this.translate(
+        contentIndexes.map((i) => lines[i]),
+        context,
+        signal,
+      );
+      const result = [...lines];
+      contentIndexes.forEach((lineIndex, i) => {
+        result[lineIndex] = translated[i];
+      });
+      return result;
     }
+    if (lines.length === 0) return [];
     const prevSegs = context?.prevSegs ?? [];
     const truncatedPrevSegs = this.truncatePrevSegs(prevSegs);
     const translateContext: SegmentContext = {
@@ -261,7 +276,10 @@ export class SakuraTranslator implements Translator {
         }
         resultPerLine.push(line);
       } else {
-        resultPerLine.push(text.replaceAll('<|im_end|>', ''));
+        // 单行译文不能含换行，否则上传时按行切分会与原文行数不匹配
+        resultPerLine.push(
+          text.replaceAll('<|im_end|>', '').replaceAll(/\r?\n/g, ''),
+        );
       }
     }
 
