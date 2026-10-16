@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/cd-web.yml
+      - .github/workflows/ci-web.yml
       - .dockerignore
       - deploy/web/**
       - package.json

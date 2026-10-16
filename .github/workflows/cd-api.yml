@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/cd-api.yml
+      - .github/workflows/ci-api.yml
       - .dockerignore
       - deploy/api/**
       - apps/api/**

@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/ci-api.yml
+      - .github/workflows/cd-api.yml
       - .dockerignore
       - deploy/api/**
       - apps/api/**

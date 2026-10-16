@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/ci-web.yml
+      - .github/workflows/cd-web.yml
       - .dockerignore
       - deploy/web/**
       - package.json
