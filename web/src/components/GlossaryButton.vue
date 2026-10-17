@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined } from '@vicons/material';
-import { copyToClipboard, Toast } from '@novelia/web-kit';
+import { copyToClipboard, Toast, XDialog } from '@novelia/web-kit';
 
 import { WebNovelApi, WenkuNovelApi } from '@/api';
 import { forumPostUrls } from '@/config';
@@ -175,13 +175,15 @@ const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
     @action="toggleGlossaryModal()"
   />
 
-  <c-modal
+  <XDialog
     title="编辑术语表"
-    :show="showGlossaryModal"
-    @update:show="handleUpdateShow"
-    :extra-height="120"
+    :open="showGlossaryModal"
+    @update:open="handleUpdateShow"
+    @open-auto-focus.prevent
+    style="max-width: 600px"
   >
-    <template #header-extra>
+    <n-h3 style="margin: 0 40px 16px 0">编辑术语表</n-h3>
+    <n-scrollbar style="max-height: calc(80dvh - 140px)">
       <n-flex
         vertical
         size="large"
@@ -275,63 +277,52 @@ const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
           </n-text>
         </n-flex>
       </n-flex>
-    </template>
 
-    <n-table
-      v-if="Object.keys(glossary).length !== 0"
-      striped
-      size="small"
-      style="font-size: 12px; max-width: 400px"
-    >
-      <tr v-for="wordJp in Object.keys(glossary).reverse()" :key="wordJp">
-        <td>
-          <c-button
-            :icon="DeleteOutlineOutlined"
-            text
-            type="error"
-            size="small"
-            @action="deleteTerm(wordJp)"
-          />
-        </td>
-        <td>{{ wordJp }}</td>
-        <td nowrap="nowrap">=></td>
-        <td style="padding-right: 16px">
-          <n-input
-            v-model:value="glossary[wordJp]"
-            size="tiny"
-            placeholder="请输入中文翻译"
-            :theme-overrides="{
-              border: '0',
-              color: 'transprent',
-            }"
-          />
-        </td>
-      </tr>
-    </n-table>
+      <n-table
+        v-if="Object.keys(glossary).length !== 0"
+        striped
+        size="small"
+        style="font-size: 12px; max-width: 400px"
+      >
+        <tr v-for="wordJp in Object.keys(glossary).reverse()" :key="wordJp">
+          <td>
+            <c-button
+              :icon="DeleteOutlineOutlined"
+              text
+              type="error"
+              size="small"
+              @action="deleteTerm(wordJp)"
+            />
+          </td>
+          <td>{{ wordJp }}</td>
+          <td nowrap="nowrap">=></td>
+          <td style="padding-right: 16px">
+            <n-input
+              v-model:value="glossary[wordJp]"
+              size="tiny"
+              placeholder="请输入中文翻译"
+              :theme-overrides="{
+                border: '0',
+                color: 'transprent',
+              }"
+            />
+          </td>
+        </tr>
+      </n-table>
+    </n-scrollbar>
 
-    <template #action>
+    <n-flex justify="end" style="margin-top: 16px">
       <c-button label="提交" type="primary" @action="submitGlossary()" />
-    </template>
-  </c-modal>
+    </n-flex>
 
-  <n-modal
-    v-model:show="showConfirmModal"
-    preset="card"
-    title="提示"
-    :bordered="false"
-    size="small"
-    transform-origin="center"
-    style="
-      position: fixed;
-      top: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(420px, calc(100% - 32px));
-    "
-  >
-    <n-text>检测到未保存的修改，确认关闭吗？</n-text>
-    <template #action>
-      <n-flex justify="end">
+    <XDialog
+      v-model:open="showConfirmModal"
+      title="提示"
+      style="max-width: 420px"
+    >
+      <n-h3 style="margin: 0 40px 16px 0">提示</n-h3>
+      <n-text>检测到未保存的修改，确认关闭吗？</n-text>
+      <n-flex justify="end" style="margin-top: 16px">
         <c-button
           label="确认"
           type="warning"
@@ -345,6 +336,6 @@ const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
           @action="handleConfirmCancel"
         />
       </n-flex>
-    </template>
-  </n-modal>
+    </XDialog>
+  </XDialog>
 </template>
