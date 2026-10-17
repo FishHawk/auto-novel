@@ -24,7 +24,8 @@ cd auto-novel
 
 # 2. 生成环境变量配置
 cat > .env << EOF
-HTTPS_PROXY=              # Web 小说代理，可以为空
+SHIELD_PROXY_URL=         # API 出口代理：http://<shield 的 Tailscale 地址>:8888，可以为空
+HTTPS_PROXY=              # server 的 Web 小说代理，可以为空
 PIXIV_COOKIE_PHPSESSID=   # Pixiv Cookie，用于爬取 Pixiv 小说，可以为空
 
 # 以下字段个人部署不需要填写
