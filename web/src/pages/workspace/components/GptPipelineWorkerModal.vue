@@ -259,7 +259,7 @@ const addFormRules: FormRules = {
 const modelText = ref('');
 const keyText = ref('');
 const defaultConcurrency = ref(1);
-// 使用模型和完整 Key 标识预览行，避免改名重置并发或 Key 尾号相同导致配置串用。
+const keyIds = new Map<string, number>();
 const workerNames = reactive<Record<string, string>>({});
 const workerConcurrencies = reactive<Record<string, number>>({});
 
@@ -267,6 +267,7 @@ watch(
   () => props.show,
   (show) => {
     if (show && props.worker === undefined) {
+      keyIds.clear();
       modelText.value = '';
       keyText.value = '';
       for (const uid of Object.keys(workerNames)) delete workerNames[uid];
@@ -307,12 +308,23 @@ const generatedWorkers = computed<GeneratedWorker[]>(() => {
   const ks = keys.value;
   if (ms.length === 0 || ks.length === 0) return [];
 
+  const usedIds = new Set(workspaceRef.value.workers.map((w) => w.id));
   const result: GeneratedWorker[] = [];
   for (const model of ms) {
-    for (let ki = 0; ki < ks.length; ki++) {
-      const id = ks.length === 1 ? model : `${model}[${ks[ki].slice(-4)}]`;
-      const uid = JSON.stringify([model, ks[ki]]);
-      result.push({ uid, id, model, key: ks[ki] });
+    let suffix = 2;
+    for (const key of ks) {
+      let id = model;
+      while (usedIds.has(id)) {
+        id = `${model} (${suffix++})`;
+      }
+      usedIds.add(id);
+      let keyId = keyIds.get(key);
+      if (keyId === undefined) {
+        keyId = keyIds.size;
+        keyIds.set(key, keyId);
+      }
+      const uid = JSON.stringify([model, keyId]);
+      result.push({ uid, id, model, key });
     }
   }
   return result;
@@ -333,10 +345,8 @@ watch(generatedWorkers, (ws) => {
   }
 });
 
-const maskKey = (key: string) => {
-  if (key.length <= 12) return key;
-  return key.slice(0, 8) + '…' + key.slice(-4);
-};
+const maskKey = (key: string) =>
+  key.length > 8 ? `••••${key.slice(-4)}` : '••••';
 
 watch(defaultConcurrency, (val) => {
   for (const w of generatedWorkers.value) {
@@ -513,7 +523,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           <n-table :single-line="false" size="small">
             <thead>
               <tr>
-                <th>名字</th>
+                <th>显示名称</th>
                 <th>模型</th>
                 <th>Key</th>
                 <th style="width: 80px">并发</th>
@@ -526,7 +536,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
                     :value="workerNames[w.uid] ?? w.id"
                     :placeholder="w.id"
                     size="small"
-                    aria-label="翻译器名字"
+                    aria-label="翻译器显示名称"
                     @update:value="workerNames[w.uid] = $event"
                   />
                 </td>
