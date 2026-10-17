@@ -8,6 +8,7 @@ import type {
   Message,
   Model,
 } from '@earendil-works/pi-ai';
+import { createPiAiFetch } from './pi-ai-fetch';
 
 export type PiAiProtocol =
   | 'openai-completions'
@@ -99,11 +100,12 @@ export async function createPiAiCompletion(
     } satisfies Message;
   });
   const context = normalizeContext({ messages });
+  const fetch = createPiAiFetch(request);
   let status: number | undefined;
   const stream = streams[request.protocol].stream(model, context, {
     apiKey: request.key,
     fetch: async (input, init) => {
-      const response = await (request.fetch ?? globalThis.fetch)(input, init);
+      const response = await fetch(input, init);
       status = response.status;
       return response;
     },
