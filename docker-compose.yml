@@ -6,13 +6,18 @@ networks:
 services:
   web:
     image: ghcr.io/auto-novel/auto-novel-web:latest
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1/']
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - 80:80
     volumes:
       - ./data/files-temp:/data/files-temp
       - ./data/files-wenku:/data/files-wenku
       - ./data/files-extra:/data/files-extra
-    restart: always
+    restart: unless-stopped
 
   api:
     image: ghcr.io/auto-novel/auto-novel-api:latest
@@ -22,12 +27,12 @@ services:
     restart: unless-stopped
     environment:
       - HTTPS_PROXY=${SHIELD_PROXY_URL:-}
-      - ACCESS_TOKEN_SECRET
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET:?ACCESS_TOKEN_SECRET must be set}
       - DB_HOST=postgresql
       - DB_PORT=5432
       - DB_USER=auto-novel
       - DB_NAME=auto-novel
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       - R2_ACCOUNT_ID
       - R2_ACCESS_KEY_ID
       - R2_SECRET_ACCESS_KEY
@@ -35,10 +40,8 @@ services:
       - R2_PUBLIC_BASE_URL
     healthcheck:
       test:
-        [
-          'CMD-SHELL',
-          'wget --spider --tries=1 --no-verbose http://localhost:8080/health || exit 1',
-        ]
+        ['CMD-SHELL', 'wget -q --spider http://127.0.0.1:8080/health || exit 1']
+      start_period: 30s
       interval: 5s
       timeout: 5s
       retries: 5
@@ -46,12 +49,22 @@ services:
   server:
     image: ghcr.io/auto-novel/auto-novel-server:latest
     depends_on:
-      - mongo
-      - elasticsearch
-      - redis
+      mongo:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # The JVM image provides bash; this probes HTTP port liveness, not database readiness.
+    healthcheck:
+      test: ['CMD', 'bash', '-ec', 'exec 3<>/dev/tcp/127.0.0.1/8081']
+      start_period: 60s
+      interval: 5s
+      timeout: 5s
+      retries: 5
     environment:
       - HTTPS_PROXY
-      - ACCESS_TOKEN_SECRET
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET:?ACCESS_TOKEN_SECRET must be set}
       - HAMELN_TOKEN
       - PIXIV_COOKIE_PHPSESSID
       - DB_HOST_MONGO=mongo
@@ -61,34 +74,65 @@ services:
       - ./data/files-temp:/data/files-temp
       - ./data/files-wenku:/data/files-wenku
       - ./data/files-extra:/data/files-extra
-    restart: always
+    restart: unless-stopped
 
   postgresql:
     image: postgres:17.7-alpine3.23
     restart: unless-stopped
     environment:
-      - POSTGRES_PASSWORD
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       - POSTGRES_USER=auto-novel
       - POSTGRES_DB=auto-novel
     volumes:
       - ./data/postgresql:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}']
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -h 127.0.0.1 -d $${POSTGRES_DB} -U $${POSTGRES_USER}',
+        ]
+      start_period: 60s
       interval: 5s
       timeout: 5s
       retries: 5
 
   mongo:
     image: mongo:6.0.3
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'mongosh',
+          '--quiet',
+          '--host',
+          '127.0.0.1',
+          '--eval',
+          'quit(db.adminCommand({ ping: 1 }).ok === 1 ? 0 : 1)',
+        ]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 10
     environment:
       - MONGO_INITDB_DATABASE=main
     volumes:
       - ./db/mongo-init:/docker-entrypoint-initdb.d:ro
       - ./data/db:/data/db
-    restart: always
+    restart: unless-stopped
 
   elasticsearch:
     image: elasticsearch:8.18.1
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'curl -fsS "http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s" > /dev/null',
+        ]
+      start_period: 120s
+      interval: 10s
+      timeout: 10s
+      retries: 12
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
@@ -106,14 +150,20 @@ services:
       - ./data/es/data:/usr/share/elasticsearch/data
       - ./data/es/plugins:/usr/share/elasticsearch/plugins
     entrypoint: |
-      bash -c "
+      bash -ec "
       if ! elasticsearch-plugin list | grep -q analysis-icu; then
         elasticsearch-plugin install analysis-icu
       fi
-      /usr/local/bin/docker-entrypoint.sh eswrapper
+      exec /usr/local/bin/docker-entrypoint.sh eswrapper
       "
-    restart: always
+    restart: unless-stopped
 
   redis:
     image: redis:7.2.1
-    restart: always
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -h 127.0.0.1 ping | grep -qx PONG']
+      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
