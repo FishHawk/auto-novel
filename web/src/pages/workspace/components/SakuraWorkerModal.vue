@@ -45,7 +45,7 @@ const formRules: FormRules = {
   endpoint: [
     {
       validator: (rule: FormItemRule, value: string) => value.trim().length > 0,
-      message: '链接不能为空',
+      message: 'API端点不能为空',
       trigger: 'input',
     },
     {
@@ -57,7 +57,7 @@ const formRules: FormRules = {
           return false;
         }
       },
-      message: '链接不合法',
+      message: 'API端点不合法',
       trigger: 'input',
     },
   ],
@@ -128,10 +128,10 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
-      <n-form-item-row path="endpoint" label="链接">
+      <n-form-item-row path="endpoint" label="API端点">
         <n-input
           v-model:value="formValue.endpoint"
-          placeholder="翻译器的链接"
+          placeholder="翻译器的API端点"
           :input-props="{ spellcheck: false }"
         />
       </n-form-item-row>
@@ -169,7 +169,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       <n-text depth="3" style="font-size: 12px">
         # 分段长度还在测试中，非默认500无法上传
         <br />
-        # 链接例子：http://127.0.0.1:8080
+        # API端点例子：http://127.0.0.1:8080
       </n-text>
       <br />
       <n-text depth="3" style="font-size: 12px">

@@ -83,12 +83,12 @@ const initFormValue = (
 const formRef = useTemplateRef<FormInst>('form');
 const formValue = ref(initFormValue(props.worker));
 
-/** 用户是否手动改过链接；改过则切换接口格式时不再自动覆盖 */
-const endpointTouched = ref(false);
+/** 已保存或手动输入的 API 端点不随接口格式切换而覆盖。 */
+const preserveEndpoint = ref(Boolean(props.worker?.endpoint.trim()));
 
 const onEndpointInput = (value: string) => {
   formValue.value.endpoint = value;
-  endpointTouched.value = true;
+  preserveEndpoint.value = true;
 };
 
 const currentProfile = computed(() =>
@@ -109,7 +109,7 @@ function defaultProfileValues(profileId: openAiProfileId): ProfileValues {
 const onProfileChange = (id: openAiProfileId) => {
   formValue.value.profileId = id;
   formValue.value.profileValues = defaultProfileValues(id);
-  if (!endpointTouched.value) {
+  if (!preserveEndpoint.value) {
     formValue.value.endpoint = defaultEndpoint(id);
   }
 };
@@ -118,7 +118,7 @@ watch(
   () => props.worker,
   (newWorker) => {
     formValue.value = initFormValue(newWorker);
-    endpointTouched.value = false;
+    preserveEndpoint.value = Boolean(newWorker?.endpoint.trim());
   },
   { immediate: false },
 );
@@ -143,7 +143,7 @@ const editFormRules: FormRules = {
   ],
   model: [emptyCheck('模型')],
   endpoint: [
-    emptyCheck('链接'),
+    emptyCheck('API端点'),
     {
       validator: (rule: FormItemRule, value: string) => {
         try {
@@ -153,7 +153,7 @@ const editFormRules: FormRules = {
           return false;
         }
       },
-      message: '链接不合法',
+      message: 'API端点不合法',
       trigger: 'input',
     },
   ],
@@ -194,7 +194,7 @@ const addFormRules: FormRules = {
   endpoint: [
     {
       validator: (_r: FormItemRule, value: string) => value.trim().length > 0,
-      message: '链接不能为空',
+      message: 'API端点不能为空',
       trigger: 'input',
     },
     {
@@ -206,7 +206,7 @@ const addFormRules: FormRules = {
           return false;
         }
       },
-      message: '链接不合法',
+      message: 'API端点不合法',
       trigger: 'input',
     },
   ],
@@ -259,7 +259,7 @@ const addFormRules: FormRules = {
 const modelText = ref('');
 const keyText = ref('');
 const defaultConcurrency = ref(1);
-// 使用模型和完整 Key 标识预览行，避免改名重置并发或 Key 尾号相同导致配置串用。
+const keyIds = new Map<string, number>();
 const workerNames = reactive<Record<string, string>>({});
 const workerConcurrencies = reactive<Record<string, number>>({});
 
@@ -267,6 +267,7 @@ watch(
   () => props.show,
   (show) => {
     if (show && props.worker === undefined) {
+      keyIds.clear();
       modelText.value = '';
       keyText.value = '';
       for (const uid of Object.keys(workerNames)) delete workerNames[uid];
@@ -274,7 +275,7 @@ watch(
         delete workerConcurrencies[uid];
       defaultConcurrency.value = 1;
       formValue.value = initFormValue(undefined);
-      endpointTouched.value = false;
+      preserveEndpoint.value = false;
     }
   },
 );
@@ -307,12 +308,23 @@ const generatedWorkers = computed<GeneratedWorker[]>(() => {
   const ks = keys.value;
   if (ms.length === 0 || ks.length === 0) return [];
 
+  const usedIds = new Set(workspaceRef.value.workers.map((w) => w.id));
   const result: GeneratedWorker[] = [];
   for (const model of ms) {
-    for (let ki = 0; ki < ks.length; ki++) {
-      const id = ks.length === 1 ? model : `${model}[${ks[ki].slice(-4)}]`;
-      const uid = JSON.stringify([model, ks[ki]]);
-      result.push({ uid, id, model, key: ks[ki] });
+    let suffix = 2;
+    for (const key of ks) {
+      let id = model;
+      while (usedIds.has(id)) {
+        id = `${model} (${suffix++})`;
+      }
+      usedIds.add(id);
+      let keyId = keyIds.get(key);
+      if (keyId === undefined) {
+        keyId = keyIds.size;
+        keyIds.set(key, keyId);
+      }
+      const uid = JSON.stringify([model, keyId]);
+      result.push({ uid, id, model, key });
     }
   }
   return result;
@@ -333,10 +345,8 @@ watch(generatedWorkers, (ws) => {
   }
 });
 
-const maskKey = (key: string) => {
-  if (key.length <= 12) return key;
-  return key.slice(0, 8) + '…' + key.slice(-4);
-};
+const maskKey = (key: string) =>
+  key.length > 8 ? `••••${key.slice(-4)}` : '••••';
 
 watch(defaultConcurrency, (val) => {
   for (const w of generatedWorkers.value) {
@@ -475,7 +485,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       </template>
       <!-- 添加模式：批量 -->
       <template v-if="props.worker === undefined">
-        <n-form-item-row path="endpoint" label="链接">
+        <n-form-item-row path="endpoint" label="API端点">
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
@@ -513,7 +523,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           <n-table :single-line="false" size="small">
             <thead>
               <tr>
-                <th>名字</th>
+                <th>显示名称</th>
                 <th>模型</th>
                 <th>Key</th>
                 <th style="width: 80px">并发</th>
@@ -526,7 +536,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
                     :value="workerNames[w.uid] ?? w.id"
                     :placeholder="w.id"
                     size="small"
-                    aria-label="翻译器名字"
+                    aria-label="翻译器显示名称"
                     @update:value="workerNames[w.uid] = $event"
                   />
                 </td>
@@ -568,7 +578,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
             placeholder="deepseek-v4-pro"
           />
         </n-form-item-row>
-        <n-form-item-row path="endpoint" label="链接">
+        <n-form-item-row path="endpoint" label="API端点">
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
