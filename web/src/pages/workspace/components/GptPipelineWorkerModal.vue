@@ -83,12 +83,12 @@ const initFormValue = (
 const formRef = useTemplateRef<FormInst>('form');
 const formValue = ref(initFormValue(props.worker));
 
-/** 用户是否手动改过链接；改过则切换接口格式时不再自动覆盖 */
-const endpointTouched = ref(false);
+/** 已保存或手动输入的 API 端点不随接口格式切换而覆盖。 */
+const preserveEndpoint = ref(Boolean(props.worker?.endpoint.trim()));
 
 const onEndpointInput = (value: string) => {
   formValue.value.endpoint = value;
-  endpointTouched.value = true;
+  preserveEndpoint.value = true;
 };
 
 const currentProfile = computed(() =>
@@ -109,7 +109,7 @@ function defaultProfileValues(profileId: openAiProfileId): ProfileValues {
 const onProfileChange = (id: openAiProfileId) => {
   formValue.value.profileId = id;
   formValue.value.profileValues = defaultProfileValues(id);
-  if (!endpointTouched.value) {
+  if (!preserveEndpoint.value) {
     formValue.value.endpoint = defaultEndpoint(id);
   }
 };
@@ -118,7 +118,7 @@ watch(
   () => props.worker,
   (newWorker) => {
     formValue.value = initFormValue(newWorker);
-    endpointTouched.value = false;
+    preserveEndpoint.value = Boolean(newWorker?.endpoint.trim());
   },
   { immediate: false },
 );
@@ -143,7 +143,7 @@ const editFormRules: FormRules = {
   ],
   model: [emptyCheck('模型')],
   endpoint: [
-    emptyCheck('链接'),
+    emptyCheck('API端点'),
     {
       validator: (rule: FormItemRule, value: string) => {
         try {
@@ -153,7 +153,7 @@ const editFormRules: FormRules = {
           return false;
         }
       },
-      message: '链接不合法',
+      message: 'API端点不合法',
       trigger: 'input',
     },
   ],
@@ -194,7 +194,7 @@ const addFormRules: FormRules = {
   endpoint: [
     {
       validator: (_r: FormItemRule, value: string) => value.trim().length > 0,
-      message: '链接不能为空',
+      message: 'API端点不能为空',
       trigger: 'input',
     },
     {
@@ -206,7 +206,7 @@ const addFormRules: FormRules = {
           return false;
         }
       },
-      message: '链接不合法',
+      message: 'API端点不合法',
       trigger: 'input',
     },
   ],
@@ -274,7 +274,7 @@ watch(
         delete workerConcurrencies[uid];
       defaultConcurrency.value = 1;
       formValue.value = initFormValue(undefined);
-      endpointTouched.value = false;
+      preserveEndpoint.value = false;
     }
   },
 );
@@ -475,7 +475,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       </template>
       <!-- 添加模式：批量 -->
       <template v-if="props.worker === undefined">
-        <n-form-item-row path="endpoint" label="链接">
+        <n-form-item-row path="endpoint" label="API端点">
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
@@ -568,7 +568,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
             placeholder="deepseek-v4-pro"
           />
         </n-form-item-row>
-        <n-form-item-row path="endpoint" label="链接">
+        <n-form-item-row path="endpoint" label="API端点">
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
