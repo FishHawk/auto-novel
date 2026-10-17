@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { XDialog, getApiErrorMessage } from '@novelia/web-kit';
-import { useBannerApi, type Banner } from '../api';
+import { useBannerApi, type Banner } from '../../api';
 import BannerForm from './BannerForm.vue';
+import BannerUploader from './BannerUploader.vue';
+
+const uploader = ref<InstanceType<typeof BannerUploader>>();
+const uploading = ref(false);
 
 const api = useBannerApi();
 const items = ref<Banner[]>([]);
@@ -25,8 +29,12 @@ const visible = computed(() =>
   ),
 );
 
+let reloadRequested = false;
 async function load() {
-  if (loading.value) return;
+  if (loading.value) {
+    reloadRequested = true;
+    return;
+  }
   loading.value = true;
   error.value = '';
   try {
@@ -36,6 +44,10 @@ async function load() {
     error.value = getApiErrorMessage(cause, '操作失败');
   } finally {
     loading.value = false;
+    if (reloadRequested) {
+      reloadRequested = false;
+      void load();
+    }
   }
 }
 
@@ -93,12 +105,19 @@ onMounted(load);
     </div>
     <button
       class="btn btn-primary"
-      :disabled="loading || busy !== null"
-      @click="editor = {}"
+      :disabled="loading || busy !== null || uploading"
+      @click="uploader?.open()"
     >
-      ＋ 新增 Banner
+      加载图片
     </button>
   </header>
+
+  <BannerUploader
+    ref="uploader"
+    :disabled="!!editor || !!deleting || busy !== null"
+    @busy="uploading = $event"
+    @saved="load"
+  />
 
   <section class="metrics" aria-label="Banner 统计">
     <div>
@@ -142,7 +161,7 @@ onMounted(load);
       </div>
       <button
         class="btn btn-small"
-        :disabled="loading || busy !== null"
+        :disabled="loading || busy !== null || uploading"
         @click="load"
       >
         {{ loading ? '加载中…' : '刷新' }}
@@ -158,7 +177,7 @@ onMounted(load);
             : '上传第一张图片，开始配置首页轮播。'
         }}
       </p>
-      <button v-if="!items.length" class="btn" @click="editor = {}">
+      <button v-if="!items.length" class="btn" @click="uploader?.open()">
         新增 Banner
       </button>
     </div>
@@ -202,14 +221,14 @@ onMounted(load);
               <div class="row-actions">
                 <button
                   class="text-button"
-                  :disabled="busy !== null"
+                  :disabled="busy !== null || uploading"
                   @click="editor = { banner }"
                 >
                   编辑
                 </button>
                 <button
                   class="text-button"
-                  :disabled="busy !== null"
+                  :disabled="busy !== null || uploading"
                   @click="toggle(banner)"
                 >
                   {{
@@ -222,7 +241,7 @@ onMounted(load);
                 </button>
                 <button
                   class="text-button danger"
-                  :disabled="busy !== null"
+                  :disabled="busy !== null || uploading"
                   @click="
                     deleting = banner;
                     deleteError = '';
@@ -263,10 +282,18 @@ onMounted(load);
       {{ deleteError }}
     </p>
     <div class="form-actions">
-      <button class="btn" :disabled="busy !== null" @click="deleting = null">
+      <button
+        class="btn"
+        :disabled="busy !== null || uploading"
+        @click="deleting = null"
+      >
         取消
       </button>
-      <button class="btn btn-danger" :disabled="busy !== null" @click="remove">
+      <button
+        class="btn btn-danger"
+        :disabled="busy !== null || uploading"
+        @click="remove"
+      >
         {{ busy !== null ? '正在删除…' : '确认删除' }}
       </button>
     </div>

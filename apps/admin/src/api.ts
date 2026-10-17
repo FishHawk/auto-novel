@@ -1,4 +1,8 @@
-import type { WebKitContext } from '@novelia/web-kit';
+import {
+  uploadFile,
+  type UploadFileOptions,
+  type WebKitContext,
+} from '@novelia/web-kit';
 import { inject, type InjectionKey } from 'vue';
 
 export interface Banner {
@@ -88,21 +92,26 @@ export function createBannerApi(
     async remove(id: number) {
       await client.delete(`admin/banner/${id}`);
     },
-    async upload(file: File) {
+    async upload(
+      file: File,
+      options: Pick<UploadFileOptions, 'onProgress' | 'signal'> = {},
+    ) {
       validateImage(file);
       const upload = await client
         .post('admin/banner/upload', {
           json: { contentType: file.type, size: file.size },
+          signal: options.signal,
         })
         .json<BannerUpload>();
-      const response = await fetch(upload.uploadUrl, {
+      await uploadFile(file, {
+        url: upload.uploadUrl,
         method: 'PUT',
+        bodyType: 'file',
         headers: upload.headers,
-        body: file,
-        credentials: 'omit',
+        withCredentials: false,
+        onProgress: options.onProgress,
+        signal: options.signal,
       });
-      if (!response.ok)
-        throw new Error(`图片上传失败（${response.status}），请重试`);
       return { key: upload.key, imageUrl: upload.imageUrl };
     },
   };

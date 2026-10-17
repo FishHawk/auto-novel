@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { XDialog, getApiErrorMessage } from '@novelia/web-kit';
+import { onBeforeUnmount, ref } from 'vue';
+import { XDialog, XDropZone, getApiErrorMessage } from '@novelia/web-kit';
 import {
-  imageAccept,
-  useBannerApi,
-  validLink,
-  validateImage,
-  type Banner,
-} from '../api';
+  loadBannerImage,
+  prepareBannerImage,
+  validateDimensions,
+  type BannerImage,
+} from './bannerImage';
+import BannerImageFields from './BannerImageFields.vue';
+import { imageAccept, useBannerApi, validLink, type Banner } from '../../api';
 
 const props = defineProps<{ banner?: Banner }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
@@ -19,33 +20,50 @@ const sortOrder = ref(props.banner?.sortOrder ?? 0);
 const uploading = ref(false);
 const saving = ref(false);
 const error = ref('');
-const filename = ref('');
+const image = ref<BannerImage>();
+const uploaded = ref<{ key: string; imageUrl: string }>();
+const controller = new AbortController();
+let disposed = false;
 
-async function selectImage(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
+async function selectFiles(files: File[]) {
+  if (saving.value || uploading.value || !files.length) return;
+  if (files.length !== 1) {
+    error.value = '编辑时请只加载一张替换图片';
+    return;
+  }
   error.value = '';
+  uploading.value = true;
   try {
-    validateImage(file);
-    uploading.value = true;
-    const uploaded = await api.upload(file);
-    key.value = uploaded.key;
-    preview.value = uploaded.imageUrl;
-    filename.value = file.name;
+    const next = await loadBannerImage(files[0]!);
+    if (disposed) {
+      URL.revokeObjectURL(next.url);
+      return;
+    }
+    if (image.value) URL.revokeObjectURL(image.value.url);
+    image.value = next;
+    uploaded.value = undefined;
   } catch (cause) {
-    error.value = getApiErrorMessage(cause, '操作失败');
+    error.value = getApiErrorMessage(cause, '读取图片失败');
   } finally {
     uploading.value = false;
-    input.value = '';
   }
 }
+function selectImage(event: Event) {
+  const input = event.target as HTMLInputElement;
+  void selectFiles(Array.from(input.files ?? []));
+  input.value = '';
+}
+onBeforeUnmount(() => {
+  disposed = true;
+  controller.abort();
+  if (image.value) URL.revokeObjectURL(image.value.url);
+});
 
 async function save() {
   if (saving.value || uploading.value) return;
   error.value = '';
-  if (!key.value) {
-    error.value = '请先上传一张 Banner 图片';
+  if (!key.value && !image.value) {
+    error.value = '请先加载一张 Banner 图片';
     return;
   }
   if (!validLink(link.value)) {
@@ -62,6 +80,15 @@ async function save() {
   }
   saving.value = true;
   try {
+    if (image.value) {
+      validateDimensions(image.value);
+      if (!uploaded.value) {
+        const file = await prepareBannerImage(image.value);
+        uploaded.value = await api.upload(file, { signal: controller.signal });
+      }
+      key.value = uploaded.value.key;
+    }
+    if (disposed) return;
     await api.save(props.banner?.id, {
       type: 0,
       key: key.value,
@@ -78,6 +105,9 @@ async function save() {
 </script>
 
 <template>
+  <XDropZone :disabled="uploading || saving" @drop="selectFiles">
+    松开以加载替换图片（不会立即上传）
+  </XDropZone>
   <XDialog
     :open="true"
     :title="banner ? `编辑 Banner #${banner.id}` : '新增 Banner'"
@@ -94,12 +124,14 @@ async function save() {
           </span>
           <span class="upload-area">
             <img
-              v-if="preview"
+              v-if="!image && preview"
               :src="preview"
               alt="Banner 图片预览"
               class="form-preview"
             />
-            <span v-else class="upload-placeholder">选择一张首页轮播图片</span>
+            <span v-else class="upload-placeholder">
+              加载一张首页轮播图片，确认后再上传
+            </span>
             <input
               type="file"
               :accept="imageAccept"
@@ -110,11 +142,17 @@ async function save() {
           <small>
             {{
               uploading
-                ? '正在上传图片，请稍候…'
-                : filename || '支持 JPEG、PNG、WebP、GIF、AVIF，最大 5 MiB。'
+                ? '正在读取图片，请稍候…'
+                : '支持 JPEG、PNG、WebP、GIF、AVIF，最大 5 MiB。'
             }}
           </small>
         </label>
+        <fieldset v-if="image" :disabled="!!uploaded">
+          <BannerImageFields :image="image" />
+        </fieldset>
+        <p v-if="uploaded" class="hint">
+          图片已上传，重试仅保存配置。如需修改尺寸，请重新加载图片。
+        </p>
         <label class="field">
           <span>
             跳转地址
@@ -159,7 +197,15 @@ async function save() {
           class="btn btn-primary"
           :disabled="uploading || saving"
         >
-          {{ uploading ? '图片上传中…' : saving ? '正在保存…' : '保存 Banner' }}
+          {{
+            uploading
+              ? '读取图片中…'
+              : saving
+                ? '正在提交…'
+                : image
+                  ? '上传并保存'
+                  : '保存 Banner'
+          }}
         </button>
       </div>
     </form>

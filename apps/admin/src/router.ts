@@ -8,7 +8,7 @@ const router = createRouter({
       path: '/banners',
       name: 'banners',
       meta: { title: 'Banner 管理' },
-      component: () => import('./views/BannersView.vue'),
+      component: () => import('./views/banners/BannersView.vue'),
     },
     { path: '/:pathMatch(.*)*', redirect: '/banners' },
   ],
