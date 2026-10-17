@@ -259,6 +259,8 @@ const addFormRules: FormRules = {
 const modelText = ref('');
 const keyText = ref('');
 const defaultConcurrency = ref(1);
+// 使用模型和完整 Key 标识预览行，避免改名重置并发或 Key 尾号相同导致配置串用。
+const workerNames = reactive<Record<string, string>>({});
 const workerConcurrencies = reactive<Record<string, number>>({});
 
 watch(
@@ -267,6 +269,9 @@ watch(
     if (show && props.worker === undefined) {
       modelText.value = '';
       keyText.value = '';
+      for (const uid of Object.keys(workerNames)) delete workerNames[uid];
+      for (const uid of Object.keys(workerConcurrencies))
+        delete workerConcurrencies[uid];
       defaultConcurrency.value = 1;
       formValue.value = initFormValue(undefined);
       endpointTouched.value = false;
@@ -291,6 +296,7 @@ const keys = computed(() =>
 );
 
 interface GeneratedWorker {
+  uid: string;
   id: string;
   model: string;
   key: string;
@@ -305,20 +311,24 @@ const generatedWorkers = computed<GeneratedWorker[]>(() => {
   for (const model of ms) {
     for (let ki = 0; ki < ks.length; ki++) {
       const id = ks.length === 1 ? model : `${model}[${ks[ki].slice(-4)}]`;
-      result.push({ id, model, key: ks[ki] });
+      const uid = JSON.stringify([model, ks[ki]]);
+      result.push({ uid, id, model, key: ks[ki] });
     }
   }
   return result;
 });
 
 watch(generatedWorkers, (ws) => {
-  const newIds = new Set(ws.map((w) => w.id));
+  const newIds = new Set(ws.map((w) => w.uid));
+  for (const key of Object.keys(workerNames)) {
+    if (!newIds.has(key)) delete workerNames[key];
+  }
   for (const key of Object.keys(workerConcurrencies)) {
     if (!newIds.has(key)) delete workerConcurrencies[key];
   }
   for (const w of ws) {
-    if (!(w.id in workerConcurrencies)) {
-      workerConcurrencies[w.id] = defaultConcurrency.value;
+    if (!(w.uid in workerConcurrencies)) {
+      workerConcurrencies[w.uid] = defaultConcurrency.value;
     }
   }
 });
@@ -330,7 +340,7 @@ const maskKey = (key: string) => {
 
 watch(defaultConcurrency, (val) => {
   for (const w of generatedWorkers.value) {
-    workerConcurrencies[w.id] = val;
+    workerConcurrencies[w.uid] = val;
   }
 });
 
@@ -338,10 +348,18 @@ watch([modelText, keyText], () => {
   nextTick(() => formRef.value?.validate());
 });
 
+const workerName = (worker: GeneratedWorker) =>
+  (workerNames[worker.uid] ?? worker.id).trim();
+
 const validateIds = (): string | null => {
   const existingIds = new Set(workspaceRef.value.workers.map((w) => w.id));
+  const generatedIds = new Set<string>();
   for (const w of generatedWorkers.value) {
-    if (existingIds.has(w.id)) return `翻译器「${w.id}」已存在`;
+    const id = workerName(w);
+    if (!id) return '翻译器名字不能为空';
+    if (existingIds.has(id)) return `翻译器「${id}」已存在`;
+    if (generatedIds.has(id)) return `翻译器名字「${id}」重复`;
+    generatedIds.add(id);
   }
   return null;
 };
@@ -354,11 +372,11 @@ const addWorkers = () => {
   };
   for (const w of generatedWorkers.value) {
     workspace.addWorker({
-      id: w.id,
+      id: workerName(w),
       model: w.model,
       endpoint,
       key: w.key,
-      concurrency: workerConcurrencies[w.id] ?? defaultConcurrency.value,
+      concurrency: workerConcurrencies[w.uid] ?? defaultConcurrency.value,
       profile,
     });
   }
@@ -502,8 +520,16 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
               </tr>
             </thead>
             <tbody>
-              <tr v-for="w in generatedWorkers" :key="w.id">
-                <td>{{ w.id }}</td>
+              <tr v-for="w in generatedWorkers" :key="w.uid">
+                <td>
+                  <n-input
+                    :value="workerNames[w.uid] ?? w.id"
+                    :placeholder="w.id"
+                    size="small"
+                    aria-label="翻译器名字"
+                    @update:value="workerNames[w.uid] = $event"
+                  />
+                </td>
                 <td>{{ w.model }}</td>
                 <td style="font-family: monospace; font-size: 12px">
                   {{ maskKey(w.key) }}
@@ -512,11 +538,11 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
                   <input
                     type="number"
                     class="concurrency-input"
-                    :value="workerConcurrencies[w.id]"
+                    :value="workerConcurrencies[w.uid]"
                     min="1"
                     max="100"
                     @input="
-                      workerConcurrencies[w.id] = Number(
+                      workerConcurrencies[w.uid] = Number(
                         ($event.target as HTMLInputElement).value,
                       )
                     "
