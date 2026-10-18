@@ -135,6 +135,7 @@ const navToChapter = async (chapterId: string) => {
 
   chapterResult.value = result;
   chapterList.value = [{ chapterId, result }];
+
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
 
   if (currentChapterId.value !== chapterId) {
