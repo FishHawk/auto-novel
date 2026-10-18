@@ -182,7 +182,6 @@ const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
     @open-auto-focus.prevent
     style="max-width: 600px"
   >
-    <n-h3 style="margin: 0 40px 16px 0">编辑术语表</n-h3>
     <n-scrollbar style="max-height: calc(80dvh - 140px)">
       <n-flex
         vertical
@@ -320,7 +319,6 @@ const downloadGlossaryAsJsonFile = async (ev: MouseEvent) => {
       title="提示"
       style="max-width: 420px"
     >
-      <n-h3 style="margin: 0 40px 16px 0">提示</n-h3>
       <n-text>检测到未保存的修改，确认关闭吗？</n-text>
       <n-flex justify="end" style="margin-top: 16px">
         <c-button

@@ -18,7 +18,7 @@ const showListModal = ref(false);
     title="收藏夹"
     show-header
     side="right"
-    width="clamp(280px, 80vw, 800px)"
+    size="clamp(280px, 80vw, 800px)"
     @open-auto-focus.prevent
   >
     <template #action>

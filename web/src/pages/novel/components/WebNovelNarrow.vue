@@ -156,7 +156,7 @@ const { expandedNames, hasSeparators, isAnyExpanded, toggleAll, tocSections } =
   <XDrawer
     v-if="setting.tocCollapseInNarrowScreen && novel.toc.length > 1"
     v-model:open="showCatalogDrawer"
-    :width="320"
+    :size="320"
     title="目录"
     show-header
     side="right"

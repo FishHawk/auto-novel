@@ -23,9 +23,8 @@ const openConfirmation = (event: MouseEvent) => {
   open.value = true;
 };
 const updateOpen = (value: boolean) => {
-  // XConfirmDialog requests closing immediately after emitting confirm.
-  // Keep it open until the action settles; its loading state disables both
-  // buttons, and this guard also covers Escape while the action is pending.
+  // XConfirmDialog 只通知确认，由调用方在操作成功后关闭；loading 期间它自身
+  // 也会阻止关闭，这里再兜底 Escape／遮罩等交互。
   if (!running.value) open.value = value;
 };
 const confirm = async () => {

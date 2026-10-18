@@ -5,7 +5,7 @@ import { useId, type StyleValue } from 'vue';
 // XDialog owns interaction and focus; this component only supplies app layout.
 defineOptions({ inheritAttrs: false });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title?: string;
     contentStyle?: StyleValue;
@@ -22,20 +22,26 @@ const attrs = useAttrs();
 const slots = useSlots();
 const headerId = useId();
 
-// Custom visible headers label the dialog unless the caller supplies a label.
-const dialogAttrs = () => ({
-  ...attrs,
-  ...(!attrs['aria-labelledby'] && (attrs['aria-label'] || slots.header)
-    ? { 'aria-labelledby': attrs['aria-label'] ? undefined : headerId }
-    : {}),
-});
+// XDialog 的新版标题栏默认可见；这里沿用自定义布局，标题在下方单独渲染。
+// 标题栏内容负责对话框的可访问命名，没有标题时退回 aria-label。
+const dialogAttrs = () => {
+  const label = props.title || attrs['aria-label'] || '对话框';
+  return {
+    ...attrs,
+    'aria-label': label,
+    ...(!attrs['aria-labelledby'] && (props.title !== undefined || slots.header)
+      ? { 'aria-labelledby': headerId }
+      : {}),
+  };
+};
 </script>
 
 <template>
   <XDialog
     v-bind="dialogAttrs()"
     v-model:open="open"
-    :title="title || '对话框'"
+    :scrollable="false"
+    body-class="p-0"
     :style="[
       {
         display: 'flex',

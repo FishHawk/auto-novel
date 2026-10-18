@@ -81,7 +81,7 @@ const onGlobalClick = (event: MouseEvent) => {
   <XDrawer
     v-model:open="showMenu"
     title="阅读菜单"
-    height="auto"
+    size="auto"
     side="bottom"
     @open-auto-focus.prevent
   >

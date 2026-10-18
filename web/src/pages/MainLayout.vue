@@ -127,7 +127,12 @@ const menuKey = computed(() => {
   >
     <template #header-actions>
       <RouterLink :to="favoriteTo" aria-label="我的收藏">
-        <XButton size="icon" variant="toolbar" aria-label="我的收藏">
+        <XButton
+          size="icon"
+          variant="ghost"
+          class="text-ink hover:bg-divider/40 hover:text-ink"
+          aria-label="我的收藏"
+        >
           <StarBorderOutlined class="size-5" aria-hidden="true" />
         </XButton>
       </RouterLink>
