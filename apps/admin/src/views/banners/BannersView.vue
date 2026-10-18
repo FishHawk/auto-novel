@@ -35,26 +35,14 @@ const loading = ref(false);
 const loaded = ref(false);
 const error = ref('');
 const notice = ref('');
-const filter = ref('all');
 const busy = ref<number | null>(null);
 const editor = ref<Banner | null>(null);
 const deleting = ref<Banner | null>(null);
 const deleteError = ref('');
-const activeCount = computed(
-  () => items.value.filter((item) => item.isActive).length,
-);
-const visible = computed(() =>
-  items.value.filter(
-    (item) =>
-      filter.value === 'all' || item.isActive === (filter.value === 'active'),
-  ),
-);
-
 const selectedId = ref<number>();
 const selected = computed(
   () =>
-    visible.value.find((item) => item.id === selectedId.value) ??
-    visible.value[0],
+    items.value.find((item) => item.id === selectedId.value) ?? items.value[0],
 );
 
 let reloadRequested = false;
@@ -176,41 +164,11 @@ onMounted(load);
     aria-labelledby="banner-tab-manage"
     tabindex="0"
   >
-    <section class="metrics" aria-label="Banner 统计">
-      <div>
-        <span>全部 Banner</span>
-        <strong>{{ loaded ? items.length : '—' }}</strong>
-      </div>
-      <div>
-        <span>展示中</span>
-        <strong class="text-success">{{ loaded ? activeCount : '—' }}</strong>
-      </div>
-      <div>
-        <span>已停用</span>
-        <strong>{{ loaded ? items.length - activeCount : '—' }}</strong>
-      </div>
-    </section>
-
     <p v-if="notice" class="success-notice" role="status">{{ notice }}</p>
     <p v-if="error" class="error-notice" role="alert">{{ error }}</p>
 
     <section class="banner-panel" :aria-busy="loading">
-      <div class="panel-toolbar">
-        <div class="filter-tabs" aria-label="按状态筛选">
-          <button
-            v-for="option in [
-              { value: 'all', label: '全部' },
-              { value: 'active', label: '展示中' },
-              { value: 'inactive', label: '已停用' },
-            ]"
-            :key="option.value"
-            :class="{ selected: filter === option.value }"
-            :aria-pressed="filter === option.value"
-            @click="filter = option.value"
-          >
-            {{ option.label }}
-          </button>
-        </div>
+      <div v-if="loading || !loaded || !selected" class="panel-toolbar">
         <button
           class="btn btn-small"
           :disabled="loading || busy !== null || uploading"
@@ -222,9 +180,9 @@ onMounted(load);
       <div v-if="loading" class="empty-state" role="status">
         正在加载 Banner…
       </div>
-      <div v-else-if="loaded && !visible.length" class="empty-state">
-        <h2>{{ items.length ? '此状态下暂无 Banner' : '还没有 Banner' }}</h2>
-        <p v-if="!items.length">切换到上传页，添加第一张首页轮播图片。</p>
+      <div v-else-if="loaded && !items.length" class="empty-state">
+        <h2>还没有 Banner</h2>
+        <p>切换到上传页，添加第一张首页轮播图片。</p>
       </div>
       <template v-else-if="loaded && selected">
         <BannerPreview
@@ -232,10 +190,21 @@ onMounted(load);
           :alt="`Banner #${selected.id}`"
           :focal-x="selected.focalX"
           :focal-y="selected.focalY"
-        />
+        >
+          <template #actions>
+            <button
+              type="button"
+              class="btn"
+              :disabled="loading || busy !== null || uploading"
+              @click="load"
+            >
+              刷新
+            </button>
+          </template>
+        </BannerPreview>
         <div class="banner-thumbnails" aria-label="Banner 原图列表">
           <button
-            v-for="banner in visible"
+            v-for="banner in items"
             :key="banner.id"
             type="button"
             class="banner-thumbnail"
@@ -359,30 +328,6 @@ onMounted(load);
   color: var(--color-muted);
   font-size: 14px;
 }
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
-}
-.metrics > div {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 18px 22px;
-  background: var(--color-surface);
-}
-.metrics span {
-  display: block;
-  color: var(--color-muted);
-  font-size: 13px;
-}
-.metrics strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 28px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
 .banner-tabs {
   display: inline-flex;
   gap: 4px;
@@ -458,15 +403,6 @@ onMounted(load);
   .page-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-  .metrics {
-    gap: 8px;
-  }
-  .metrics > div {
-    padding: 14px 12px;
-  }
-  .metrics strong {
-    font-size: 24px;
   }
 }
 </style>
