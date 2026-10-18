@@ -1,5 +1,7 @@
+import { defineStore } from 'pinia';
+
 import { WebNovelApi } from '@/api';
-import { requiresAddonChapterUpdate } from '@/domain/crawler';
+import { requiresAddonChapterUpdate } from '@/domain/crawler/providerConfig';
 import { GenericNovelId } from '@/model/Common';
 import { useLocalVolumeStore } from '@/stores';
 import type { Result } from '@/util/result';
@@ -42,7 +44,20 @@ export const useReaderStore = (gnid: GenericNovelId) => {
         | { type: 'sync'; promiseOrValue: Result<ReaderChapter> } {
         const state = this.chapters.get(chapterId);
         if (state === undefined) {
-          const promise = runCatching(getChapter(gnid, chapterId));
+          const promise = runCatching(getChapter(gnid, chapterId)).then(
+            (result) => {
+              if (
+                !result.ok &&
+                gnid.type === 'web' &&
+                requiresAddonChapterUpdate(gnid.providerId) &&
+                result.error.message.includes('从源站获取失败')
+              ) {
+                result.error.message +=
+                  '\n可尝试使用最新版爬虫插件更新原文后重试（https://github.com/auto-novel/Addon）';
+              }
+              return result;
+            },
+          );
           const stateNew: ReaderChapterState = { promise };
           this.chapters.set(chapterId, stateNew);
           return {
