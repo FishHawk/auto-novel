@@ -104,7 +104,7 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
     >
       <div class="layout-content">
         <n-flex :wrap="false" style="padding-top: 20px; padding-bottom: 21px">
-          <div>
+          <div style="flex: 0 0 160px">
             <n-image
               width="160"
               :src="novel.cover ? novel.cover : coverPlaceholder"
@@ -113,7 +113,7 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
               style="border-radius: 2px"
             />
           </div>
-          <n-flex vertical style="min-width: 0">
+          <n-flex vertical style="flex: 1; min-width: 0">
             <n-h2
               prefix="bar"
               style="margin: 8px 0"
