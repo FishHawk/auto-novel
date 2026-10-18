@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
+import BannerPreview from './BannerPreview.vue';
 import { XDropZone, getApiErrorMessage } from '@novelia/web-kit';
-import { imageAccept, useBannerApi, validLink } from '../../api';
-import {
-  loadBannerImage,
-  prepareBannerImage,
-  validateDimensions,
-  type BannerImage,
-} from './bannerImage';
-import BannerImageFields from './BannerImageFields.vue';
+import { imageAccept, useBannerApi } from '../../api';
+import { loadBannerImage, type BannerImage } from './bannerImage';
+import { validateBannerConfig } from './bannerConfig';
+import BannerImageInfo from './BannerImageInfo.vue';
 
 const props = defineProps<{ disabled?: boolean }>();
 const emit = defineEmits<{ saved: []; busy: [value: boolean] }>();
@@ -23,17 +20,16 @@ interface PendingBanner {
   status: string;
 }
 const files = ref<PendingBanner[]>([]);
+const selectedId = ref<number>();
+const selected = computed(
+  () =>
+    files.value.find((item) => item.id === selectedId.value) ?? files.value[0],
+);
 const input = ref<HTMLInputElement>();
 const loading = ref(false);
 const uploading = ref(false);
 const error = ref('');
 const notice = ref('');
-defineExpose({
-  open: () => {
-    if (!props.disabled && !loading.value && !uploading.value)
-      input.value?.click();
-  },
-});
 let nextId = 0;
 let disposed = false;
 const controller = new AbortController();
@@ -90,25 +86,13 @@ async function upload() {
   error.value = '';
   notice.value = '';
   // 先检查整批配置，避免输入错误导致部分上传。
-  try {
-    for (const item of files.value) {
-      validateDimensions(item.image);
-      if (!validLink(item.link))
-        throw new Error(
-          `${item.image.file.name}：跳转地址必须为站内路径或 HTTP(S) 地址`,
-        );
-      if (
-        !Number.isInteger(item.sortOrder) ||
-        item.sortOrder < -2147483648 ||
-        item.sortOrder > 2147483647
-      )
-        throw new Error(
-          `${item.image.file.name}：排序值必须为有效的 32 位整数`,
-        );
+  for (const item of files.value) {
+    const message = validateBannerConfig(item.link, item.sortOrder);
+    if (message) {
+      selectedId.value = item.id;
+      error.value = `${item.image.file.name}：${message}`;
+      return;
     }
-  } catch (cause) {
-    error.value = getApiErrorMessage(cause, '配置无效');
-    return;
   }
   uploading.value = true;
   emit('busy', true);
@@ -119,10 +103,8 @@ async function upload() {
       item.error = '';
       try {
         if (!item.uploaded) {
-          item.status = '处理图片…';
-          const file = await prepareBannerImage(item.image);
           item.status = '正在上传…';
-          item.uploaded = await api.upload(file, {
+          item.uploaded = await api.upload(item.image.file, {
             signal: controller.signal,
             onProgress: ({ loaded, total }) => {
               item.status = total
@@ -171,11 +153,16 @@ onBeforeUnmount(() => {
     aria-label="加载和上传 Banner"
     :aria-busy="uploading"
   >
-    <div class="panel-toolbar">
-      <div>
-        <h2>加载 Banner 图片</h2>
-        <p class="hint">拖动图片到页面，或点击加载。确认尺寸和配置后再上传。</p>
-      </div>
+    <input
+      ref="input"
+      type="file"
+      :accept="imageAccept"
+      :disabled="disabled || loading || uploading"
+      multiple
+      hidden
+      @change="select"
+    />
+    <div v-if="!files.length" class="upload-empty">
       <button
         type="button"
         class="btn"
@@ -184,52 +171,75 @@ onBeforeUnmount(() => {
       >
         {{ loading ? '读取中…' : '加载图片' }}
       </button>
-      <input
-        ref="input"
-        type="file"
-        :accept="imageAccept"
-        multiple
-        hidden
-        @change="select"
-      />
+      <p class="hint">或拖入图片，支持多张；加载仅在本地进行，不会立即上传。</p>
+      <p class="hint">JPEG / PNG / WebP / GIF / AVIF，单张 ≤ 5 MiB。</p>
     </div>
-    <p v-if="!files.length" class="upload-placeholder">
-      支持 JPEG、PNG、WebP、GIF、AVIF，每张最大 5 MiB。加载仅在本地进行。
-    </p>
+    <BannerPreview
+      v-if="selected"
+      :src="selected.image.url"
+      :alt="selected.image.file.name"
+    >
+      <template #actions>
+        <button
+          type="button"
+          class="btn"
+          :disabled="disabled || loading || uploading"
+          @click="input?.click()"
+        >
+          {{ loading ? '读取中…' : '继续添加' }}
+        </button>
+      </template>
+    </BannerPreview>
+    <div
+      v-if="files.length"
+      class="banner-thumbnails"
+      aria-label="待上传原图列表"
+    >
+      <button
+        v-for="item in files"
+        :key="item.id"
+        type="button"
+        class="banner-thumbnail"
+        :class="{
+          selected: selected?.id === item.id,
+          'has-error': !!item.error,
+        }"
+        :aria-pressed="selected?.id === item.id"
+        :aria-label="`${item.image.file.name}，${item.status}`"
+        :title="`${item.image.file.name} · ${item.status}`"
+        @click="selectedId = item.id"
+      >
+        <img :src="item.image.url" :alt="item.image.file.name" />
+      </button>
+    </div>
     <form class="banner-form upload-form" @submit.prevent="upload">
       <fieldset :disabled="disabled || uploading">
-        <article v-for="item in files" :key="item.id" class="pending-banner">
+        <article v-if="selected" :key="selected.id" class="pending-banner">
           <div class="pending-heading">
-            <strong>{{ item.image.file.name }}</strong>
+            <strong>{{ selected.image.file.name }}</strong>
             <button
               type="button"
               class="text-button danger"
-              @click="remove(item)"
+              @click="remove(selected)"
             >
               移除
             </button>
           </div>
-          <BannerImageFields :image="item.image" v-if="!item.uploaded" />
-          <img
-            v-else
-            :src="item.image.url"
-            :alt="item.image.file.name"
-            class="form-preview"
-          />
-          <p v-if="item.uploaded" class="hint">
-            图片已上传，重试仅保存配置，不会重复上传。需要修改尺寸请移除并重新加载。
+          <BannerImageInfo :image="selected.image" v-if="!selected.uploaded" />
+          <p v-if="selected.uploaded" class="hint">
+            图片已上传，重试仅保存配置，不会重复上传。
           </p>
           <label class="field">
             <span>跳转地址（可选）</span>
             <input
-              v-model="item.link"
+              v-model="selected.link"
               placeholder="/novel 或 https://example.com"
             />
           </label>
           <label class="field">
             <span>排序值</span>
             <input
-              v-model.number="item.sortOrder"
+              v-model.number="selected.sortOrder"
               type="number"
               min="-2147483648"
               max="2147483647"
@@ -237,9 +247,11 @@ onBeforeUnmount(() => {
               required
             />
           </label>
-          <p role="status" class="hint">{{ item.status }}</p>
-          <p v-if="item.error" class="error-notice" role="alert">
-            {{ item.error }}
+          <p v-if="selected.status !== '待上传'" role="status" class="hint">
+            {{ selected.status }}
+          </p>
+          <p v-if="selected.error" class="error-notice" role="alert">
+            {{ selected.error }}
           </p>
         </article>
       </fieldset>
@@ -258,3 +270,41 @@ onBeforeUnmount(() => {
     </form>
   </section>
 </template>
+
+<style scoped src="./banner.shared.css"></style>
+
+<style scoped>
+.upload-panel {
+  margin-bottom: 28px;
+}
+.upload-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 20px;
+  text-align: center;
+}
+.upload-empty .hint {
+  margin: 0;
+}
+.upload-form {
+  padding: 0 20px 20px;
+}
+.pending-banner {
+  padding: 20px 0;
+}
+.pending-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+}
+.pending-heading strong {
+  min-width: 0;
+}
+.pending-heading button {
+  flex-shrink: 0;
+}
+</style>

@@ -4,8 +4,29 @@ import { XDialog, getApiErrorMessage } from '@novelia/web-kit';
 import { useBannerApi, type Banner } from '../../api';
 import BannerForm from './BannerForm.vue';
 import BannerUploader from './BannerUploader.vue';
+import BannerPreview from './BannerPreview.vue';
 
-const uploader = ref<InstanceType<typeof BannerUploader>>();
+const activeTab = ref('manage');
+const tabs = [
+  { value: 'manage', label: '管理' },
+  { value: 'upload', label: '上传' },
+];
+function navigateTabs(event: KeyboardEvent) {
+  const direction =
+    event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+  if (!direction && event.key !== 'Home' && event.key !== 'End') return;
+  event.preventDefault();
+  const index = tabs.findIndex((tab) => tab.value === activeTab.value);
+  const next =
+    event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? tabs.length - 1
+        : (index + direction + tabs.length) % tabs.length;
+  activeTab.value = tabs[next]!.value;
+  const tablist = event.currentTarget as HTMLElement;
+  tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+}
 const uploading = ref(false);
 
 const api = useBannerApi();
@@ -16,7 +37,7 @@ const error = ref('');
 const notice = ref('');
 const filter = ref('all');
 const busy = ref<number | null>(null);
-const editor = ref<{ banner?: Banner } | null>(null);
+const editor = ref<Banner | null>(null);
 const deleting = ref<Banner | null>(null);
 const deleteError = ref('');
 const activeCount = computed(
@@ -27,6 +48,13 @@ const visible = computed(() =>
     (item) =>
       filter.value === 'all' || item.isActive === (filter.value === 'active'),
   ),
+);
+
+const selectedId = ref<number>();
+const selected = computed(
+  () =>
+    visible.value.find((item) => item.id === selectedId.value) ??
+    visible.value[0],
 );
 
 let reloadRequested = false;
@@ -99,170 +127,190 @@ onMounted(load);
 <template>
   <header class="page-heading">
     <div>
-      <p class="eyebrow">CONTENT / HOME</p>
       <h1>Banner 管理</h1>
       <p class="subtitle">管理首页轮播图片，让值得关注的内容被看见。</p>
     </div>
-    <button
-      class="btn btn-primary"
-      :disabled="loading || busy !== null || uploading"
-      @click="uploader?.open()"
-    >
-      加载图片
-    </button>
   </header>
 
-  <BannerUploader
-    ref="uploader"
-    :disabled="!!editor || !!deleting || busy !== null"
-    @busy="uploading = $event"
-    @saved="load"
-  />
-
-  <section class="metrics" aria-label="Banner 统计">
-    <div>
-      <span>全部 Banner</span>
-      <strong>{{ loaded ? items.length : '—' }}</strong>
-    </div>
-    <div>
-      <span>展示中</span>
-      <strong class="text-success">{{ loaded ? activeCount : '—' }}</strong>
-    </div>
-    <div>
-      <span>已停用</span>
-      <strong>{{ loaded ? items.length - activeCount : '—' }}</strong>
-    </div>
-  </section>
-
-  <p v-if="notice" class="success-notice" role="status">{{ notice }}</p>
-  <div v-if="error" class="error-notice" role="alert">
-    {{ error }}
-    <button class="text-button" :disabled="loading" @click="load">
-      重新加载
+  <div
+    class="banner-tabs"
+    role="tablist"
+    aria-label="Banner 操作"
+    @keydown="navigateTabs"
+  >
+    <button
+      v-for="tab in tabs"
+      :id="`banner-tab-${tab.value}`"
+      :key="tab.value"
+      type="button"
+      role="tab"
+      :aria-selected="activeTab === tab.value"
+      :aria-controls="`banner-panel-${tab.value}`"
+      :tabindex="activeTab === tab.value ? 0 : -1"
+      @click="activeTab = tab.value"
+    >
+      {{ tab.label }}
     </button>
   </div>
 
-  <section class="banner-panel" :aria-busy="loading">
-    <div class="panel-toolbar">
-      <div class="filter-tabs" aria-label="按状态筛选">
+  <section
+    id="banner-panel-upload"
+    v-show="activeTab === 'upload'"
+    role="tabpanel"
+    aria-labelledby="banner-tab-upload"
+    tabindex="0"
+  >
+    <BannerUploader
+      :disabled="
+        activeTab !== 'upload' || !!editor || !!deleting || busy !== null
+      "
+      @busy="uploading = $event"
+      @saved="load"
+    />
+  </section>
+
+  <section
+    id="banner-panel-manage"
+    v-show="activeTab === 'manage'"
+    role="tabpanel"
+    aria-labelledby="banner-tab-manage"
+    tabindex="0"
+  >
+    <section class="metrics" aria-label="Banner 统计">
+      <div>
+        <span>全部 Banner</span>
+        <strong>{{ loaded ? items.length : '—' }}</strong>
+      </div>
+      <div>
+        <span>展示中</span>
+        <strong class="text-success">{{ loaded ? activeCount : '—' }}</strong>
+      </div>
+      <div>
+        <span>已停用</span>
+        <strong>{{ loaded ? items.length - activeCount : '—' }}</strong>
+      </div>
+    </section>
+
+    <p v-if="notice" class="success-notice" role="status">{{ notice }}</p>
+    <p v-if="error" class="error-notice" role="alert">{{ error }}</p>
+
+    <section class="banner-panel" :aria-busy="loading">
+      <div class="panel-toolbar">
+        <div class="filter-tabs" aria-label="按状态筛选">
+          <button
+            v-for="option in [
+              { value: 'all', label: '全部' },
+              { value: 'active', label: '展示中' },
+              { value: 'inactive', label: '已停用' },
+            ]"
+            :key="option.value"
+            :class="{ selected: filter === option.value }"
+            :aria-pressed="filter === option.value"
+            @click="filter = option.value"
+          >
+            {{ option.label }}
+          </button>
+        </div>
         <button
-          v-for="option in [
-            { value: 'all', label: '全部' },
-            { value: 'active', label: '展示中' },
-            { value: 'inactive', label: '已停用' },
-          ]"
-          :key="option.value"
-          :class="{ selected: filter === option.value }"
-          :aria-pressed="filter === option.value"
-          @click="filter = option.value"
+          class="btn btn-small"
+          :disabled="loading || busy !== null || uploading"
+          @click="load"
         >
-          {{ option.label }}
+          {{ loading ? '加载中…' : '刷新' }}
         </button>
       </div>
-      <button
-        class="btn btn-small"
-        :disabled="loading || busy !== null || uploading"
-        @click="load"
-      >
-        {{ loading ? '加载中…' : '刷新' }}
-      </button>
-    </div>
-    <div v-if="loading" class="empty-state" role="status">正在加载 Banner…</div>
-    <div v-else-if="loaded && !visible.length" class="empty-state">
-      <h2>{{ items.length ? '此状态下暂无 Banner' : '还没有 Banner' }}</h2>
-      <p>
-        {{
-          items.length
-            ? '可以切换筛选查看其他内容。'
-            : '上传第一张图片，开始配置首页轮播。'
-        }}
-      </p>
-      <button v-if="!items.length" class="btn" @click="uploader?.open()">
-        新增 Banner
-      </button>
-    </div>
-    <div v-else-if="loaded" class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">图片 / 编号</th>
-            <th scope="col">跳转地址</th>
-            <th scope="col">排序</th>
-            <th scope="col">状态</th>
-            <th scope="col">更新时间</th>
-            <th scope="col" class="actions-heading">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="banner in visible" :key="banner.id">
-            <td>
-              <div class="banner-identity">
-                <img
-                  :src="banner.imageUrl"
-                  :alt="`Banner #${banner.id}`"
-                  loading="lazy"
-                />
-                <span>#{{ banner.id }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="link-cell" :title="banner.linkUrl ?? ''">
-                {{ banner.linkUrl || '不跳转' }}
-              </span>
-            </td>
-            <td class="numeric">{{ banner.sortOrder }}</td>
-            <td>
-              <span class="status-badge" :class="{ active: banner.isActive }">
-                {{ banner.isActive ? '展示中' : '已停用' }}
-              </span>
-            </td>
-            <td class="date-cell">{{ formatDate(banner.updatedAt) }}</td>
-            <td>
-              <div class="row-actions">
-                <button
-                  class="text-button"
-                  :disabled="busy !== null || uploading"
-                  @click="editor = { banner }"
-                >
-                  编辑
-                </button>
-                <button
-                  class="text-button"
-                  :disabled="busy !== null || uploading"
-                  @click="toggle(banner)"
-                >
-                  {{
-                    busy === banner.id
-                      ? '处理中…'
-                      : banner.isActive
-                        ? '停用'
-                        : '启用'
-                  }}
-                </button>
-                <button
-                  class="text-button danger"
-                  :disabled="busy !== null || uploading"
-                  @click="
-                    deleting = banner;
-                    deleteError = '';
-                  "
-                >
-                  删除
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <footer class="panel-footer">
-      首页轮播 · 按排序值从小到大展示，排序相同时按 ID 排序。
-    </footer>
+      <div v-if="loading" class="empty-state" role="status">
+        正在加载 Banner…
+      </div>
+      <div v-else-if="loaded && !visible.length" class="empty-state">
+        <h2>{{ items.length ? '此状态下暂无 Banner' : '还没有 Banner' }}</h2>
+        <p>
+          {{
+            items.length
+              ? '可以切换筛选查看其他内容。'
+              : '切换到上传页，添加第一张首页轮播图片。'
+          }}
+        </p>
+      </div>
+      <template v-else-if="loaded && selected">
+        <BannerPreview
+          :src="selected.imageUrl"
+          :alt="`Banner #${selected.id}`"
+        />
+        <div class="banner-thumbnails" aria-label="Banner 原图列表">
+          <button
+            v-for="banner in visible"
+            :key="banner.id"
+            type="button"
+            class="banner-thumbnail"
+            :class="{ selected: selected.id === banner.id }"
+            :aria-pressed="selected.id === banner.id"
+            :aria-label="`选择 Banner #${banner.id}`"
+            :title="`Banner #${banner.id} · ${banner.isActive ? '展示中' : '已停用'}`"
+            @click="selectedId = banner.id"
+          >
+            <img
+              :src="banner.imageUrl"
+              :alt="`Banner #${banner.id}`"
+              loading="lazy"
+            />
+          </button>
+        </div>
+        <div class="selected-banner-details">
+          <div class="selected-banner-heading">
+            <strong>Banner #{{ selected.id }}</strong>
+            <span class="status-badge" :class="{ active: selected.isActive }">
+              {{ selected.isActive ? '展示中' : '已停用' }}
+            </span>
+          </div>
+          <p class="hint">跳转地址：{{ selected.linkUrl || '不跳转' }}</p>
+          <p class="hint">
+            排序：{{ selected.sortOrder }} · 更新于
+            {{ formatDate(selected.updatedAt) }}
+          </p>
+          <div class="row-actions">
+            <button
+              class="btn btn-small"
+              :disabled="busy !== null || uploading"
+              @click="editor = selected"
+            >
+              编辑
+            </button>
+            <button
+              class="btn btn-small"
+              :disabled="busy !== null || uploading"
+              @click="toggle(selected)"
+            >
+              {{
+                busy === selected.id
+                  ? '处理中…'
+                  : selected.isActive
+                    ? '停用'
+                    : '启用'
+              }}
+            </button>
+            <button
+              class="btn btn-small danger"
+              :disabled="busy !== null || uploading"
+              @click="
+                deleting = selected;
+                deleteError = '';
+              "
+            >
+              删除
+            </button>
+          </div>
+        </div>
+      </template>
+      <footer class="panel-footer">
+        首页轮播 · 按排序值从小到大展示，排序相同时按 ID 排序。
+      </footer>
+    </section>
   </section>
 
   <BannerForm
     v-if="editor"
-    :banner="editor.banner"
+    :banner="editor"
     @close="editor = null"
     @saved="saved"
   />
@@ -299,3 +347,130 @@ onMounted(load);
     </div>
   </XDialog>
 </template>
+
+<style scoped src="./banner.shared.css"></style>
+
+<style scoped>
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.metrics > div {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 18px 22px;
+  background: var(--color-surface);
+}
+.metrics span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.metrics strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.banner-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--color-embedded);
+}
+.banner-tabs button {
+  min-width: 88px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 7px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.banner-tabs button[aria-selected='true'] {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.selected-banner-details {
+  padding: 20px;
+  overflow-wrap: anywhere;
+}
+.selected-banner-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.selected-banner-details .hint {
+  margin: 12px 0;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  border-radius: 20px;
+  background: var(--color-hover);
+  color: var(--color-muted);
+  padding: 4px 9px;
+}
+.status-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-badge.active {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+}
+.panel-footer {
+  padding: 14px 20px;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.delete-description {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 12px 0 20px;
+}
+@media (max-width: 767px) {
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .metrics {
+    gap: 8px;
+  }
+  .metrics > div {
+    padding: 14px 12px;
+  }
+  .metrics strong {
+    font-size: 24px;
+  }
+}
+</style>

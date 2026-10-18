@@ -55,7 +55,6 @@ onMounted(checkSession);
         </div>
         <RouterView v-else-if="whoami.isAdmin" />
         <div v-else class="empty-state">
-          <p class="eyebrow">ADMINISTRATION</p>
           <h1>
             {{ whoami.isSignedIn ? '需要管理员权限' : '欢迎使用小说管理后台' }}
           </h1>

@@ -1,0 +1,97 @@
+.banner-panel {
+  padding: 8px 0;
+  background: var(--color-surface);
+}
+.panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+}
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+}
+.filter-tabs button {
+  padding: 6px 12px;
+  border-radius: 5px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.filter-tabs button.selected {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.banner-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 140px));
+  gap: 12px;
+  padding: 16px 20px 8px;
+}
+.banner-thumbnail {
+  position: relative;
+  min-width: 0;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-embedded);
+  transition: background 150ms ease;
+}
+.banner-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 80px;
+  object-fit: contain;
+}
+.banner-thumbnail:hover {
+  background: var(--color-hover);
+}
+.banner-thumbnail.selected {
+  background: var(--color-primary-soft);
+}
+.banner-thumbnail.selected::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: calc(50% - 12px);
+  width: 24px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--color-primary);
+}
+.banner-thumbnail.has-error::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-error);
+}
+.banner-form {
+  padding-top: 18px;
+}
+.banner-form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.upload-placeholder {
+  display: block;
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+@media (max-width: 767px) {
+  .panel-toolbar {
+    padding: 12px;
+  }
+  .filter-tabs button {
+    padding: 6px 9px;
+  }
+}
