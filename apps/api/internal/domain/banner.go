@@ -12,6 +12,8 @@ type Banner struct {
 	ID        int64
 	Type      BannerType
 	Key       string
+	FocalX    float64
+	FocalY    float64
 	LinkURL   *string
 	SortOrder int32
 	IsActive  bool

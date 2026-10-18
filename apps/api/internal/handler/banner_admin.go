@@ -24,6 +24,8 @@ func (h *bannerHandler) RegisterAdminRoutes(router chi.Router) {
 }
 
 type bannerInput struct {
+	FocalX    *float64          `json:"focalX" validate:"required,gte=0,lte=1" label:"焦点横坐标"`
+	FocalY    *float64          `json:"focalY" validate:"required,gte=0,lte=1" label:"焦点纵坐标"`
 	Type      domain.BannerType `json:"type"`
 	Key       string            `json:"key" validate:"required" label:"图片对象 Key"`
 	LinkURL   *string           `json:"linkUrl"`
@@ -36,6 +38,8 @@ func (input bannerInput) toUsecaseInput() usecase.BannerInput {
 		Key:       input.Key,
 		LinkURL:   input.LinkURL,
 		SortOrder: input.SortOrder,
+		FocalX:    *input.FocalX,
+		FocalY:    *input.FocalY,
 	}
 }
 

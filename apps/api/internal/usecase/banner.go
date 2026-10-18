@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/url"
 	"regexp"
 	"strings"
@@ -16,15 +17,16 @@ import (
 )
 
 const (
-	CodeBannerIDInvalid      = "banner.id_invalid"
-	CodeBannerTypeInvalid    = "banner.type_invalid"
-	CodeBannerKeyInvalid     = "banner.key_invalid"
-	CodeBannerLinkURLInvalid = "banner.link_url_invalid"
-	CodeBannerNotFound       = "banner.not_found"
-	CodeBannerConflict       = "banner.conflict"
-	CodeBannerAdminRequired  = "banner.admin_required"
-	CodeBannerImageInvalid   = "banner.image_invalid"
-	CodeBannerImageNotFound  = "banner.image_not_found"
+	CodeBannerFocalPointInvalid = "banner.focal_point_invalid"
+	CodeBannerIDInvalid         = "banner.id_invalid"
+	CodeBannerTypeInvalid       = "banner.type_invalid"
+	CodeBannerKeyInvalid        = "banner.key_invalid"
+	CodeBannerLinkURLInvalid    = "banner.link_url_invalid"
+	CodeBannerNotFound          = "banner.not_found"
+	CodeBannerConflict          = "banner.conflict"
+	CodeBannerAdminRequired     = "banner.admin_required"
+	CodeBannerImageInvalid      = "banner.image_invalid"
+	CodeBannerImageNotFound     = "banner.image_not_found"
 )
 
 const (
@@ -78,6 +80,8 @@ type BannerInput struct {
 	Key       string
 	LinkURL   *string
 	SortOrder int32
+	FocalX    float64
+	FocalY    float64
 }
 
 type SetBannerActiveCommand struct {
@@ -199,6 +203,12 @@ func normalizeBannerInput(input BannerInput) (repository.BannerContent, error) {
 	if err := checkBannerType(input.Type); err != nil {
 		return repository.BannerContent{}, err
 	}
+	if math.IsNaN(input.FocalX) || math.IsNaN(input.FocalY) ||
+		input.FocalX < 0 || input.FocalX > 1 || input.FocalY < 0 || input.FocalY > 1 {
+		return repository.BannerContent{}, Invalid(
+			CodeBannerFocalPointInvalid, "焦点坐标必须为 0–1 之间的有限数值",
+		)
+	}
 	input.Key = strings.TrimSpace(input.Key)
 	if !bannerObjectKey.MatchString(input.Key) {
 		return repository.BannerContent{}, Invalid(CodeBannerKeyInvalid, "图片对象 Key 无效")
@@ -221,6 +231,8 @@ func normalizeBannerInput(input BannerInput) (repository.BannerContent, error) {
 		Key:       input.Key,
 		LinkURL:   linkURL,
 		SortOrder: input.SortOrder,
+		FocalX:    input.FocalX,
+		FocalY:    input.FocalY,
 	}, nil
 }
 

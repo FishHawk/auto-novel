@@ -19,6 +19,8 @@ type BannerContent struct {
 	Key       string
 	LinkURL   *string
 	SortOrder int32
+	FocalX    float64
+	FocalY    float64
 }
 
 type BannerRepository interface {
@@ -86,12 +88,16 @@ func (r *bannerRepository) Create(
 		Type:      int16(content.Type),
 		Key:       content.Key,
 		LinkURL:   content.LinkURL,
+		FocalX:    content.FocalX,
+		FocalY:    content.FocalY,
 		SortOrder: content.SortOrder,
 	}
 	stmt := table.Banner.INSERT(
 		table.Banner.Type,
 		table.Banner.Key,
 		table.Banner.LinkURL,
+		table.Banner.FocalX,
+		table.Banner.FocalY,
 		table.Banner.SortOrder,
 	).
 		MODEL(dest).
@@ -113,6 +119,8 @@ func (r *bannerRepository) Update(
 		Type:      int16(content.Type),
 		Key:       content.Key,
 		LinkURL:   content.LinkURL,
+		FocalX:    content.FocalX,
+		FocalY:    content.FocalY,
 		SortOrder: content.SortOrder,
 		UpdatedAt: time.Now(),
 	}
@@ -120,6 +128,8 @@ func (r *bannerRepository) Update(
 		table.Banner.Type,
 		table.Banner.Key,
 		table.Banner.LinkURL,
+		table.Banner.FocalX,
+		table.Banner.FocalY,
 		table.Banner.SortOrder,
 		table.Banner.UpdatedAt,
 	).
@@ -154,6 +164,8 @@ func bannerFromModel(banner model.Banner) domain.Banner {
 		Type:      domain.BannerType(banner.Type),
 		Key:       banner.Key,
 		LinkURL:   banner.LinkURL,
+		FocalX:    banner.FocalX,
+		FocalY:    banner.FocalY,
 		SortOrder: banner.SortOrder,
 		IsActive:  banner.IsActive,
 		CreatedAt: banner.CreatedAt,

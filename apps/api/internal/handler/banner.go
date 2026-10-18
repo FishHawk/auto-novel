@@ -26,6 +26,8 @@ func (h *bannerHandler) RegisterRoutes(router chi.Router) {
 }
 
 type bannerResponse struct {
+	FocalX    float64           `json:"focalX"`
+	FocalY    float64           `json:"focalY"`
 	ID        int64             `json:"id"`
 	Type      domain.BannerType `json:"type"`
 	Key       string            `json:"key"`
@@ -45,6 +47,8 @@ func newBannerResponse(banner usecase.BannerResult) bannerResponse {
 		ImageURL:  banner.ImageURL,
 		LinkURL:   banner.LinkURL,
 		SortOrder: banner.SortOrder,
+		FocalX:    banner.FocalX,
+		FocalY:    banner.FocalY,
 		IsActive:  banner.IsActive,
 		CreatedAt: banner.CreatedAt,
 		UpdatedAt: banner.UpdatedAt,

@@ -17,6 +17,8 @@ type Banner struct {
 	Type      int16     // Banner 的位置: 0=首页
 	Key       string    // R2 对象 Key
 	LinkURL   *string   // 点击跳转地址，NULL=不跳转
+	FocalX    float64   // 原图焦点横坐标，0=左，1=右
+	FocalY    float64   // 原图焦点纵坐标，0=上，1=下
 	SortOrder int32     // 轮播顺序，数值越小越靠前，同值按 ID 升序排列
 	IsActive  bool      // 是否参与轮换
 	CreatedAt time.Time // 创建时间

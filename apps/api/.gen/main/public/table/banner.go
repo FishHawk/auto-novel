@@ -22,6 +22,8 @@ type bannerTable struct {
 	Type      postgres.ColumnInteger    // Banner 的位置: 0=首页
 	Key       postgres.ColumnString     // R2 对象 Key
 	LinkURL   postgres.ColumnString     // 点击跳转地址，NULL=不跳转
+	FocalX    postgres.ColumnFloat      // 原图焦点横坐标，0=左，1=右
+	FocalY    postgres.ColumnFloat      // 原图焦点纵坐标，0=上，1=下
 	SortOrder postgres.ColumnInteger    // 轮播顺序，数值越小越靠前，同值按 ID 升序排列
 	IsActive  postgres.ColumnBool       // 是否参与轮换
 	CreatedAt postgres.ColumnTimestampz // 创建时间
@@ -71,13 +73,15 @@ func newBannerTableImpl(schemaName, tableName, alias string) bannerTable {
 		TypeColumn      = postgres.IntegerColumn("type")
 		KeyColumn       = postgres.StringColumn("key")
 		LinkURLColumn   = postgres.StringColumn("link_url")
+		FocalXColumn    = postgres.FloatColumn("focal_x")
+		FocalYColumn    = postgres.FloatColumn("focal_y")
 		SortOrderColumn = postgres.IntegerColumn("sort_order")
 		IsActiveColumn  = postgres.BoolColumn("is_active")
 		CreatedAtColumn = postgres.TimestampzColumn("created_at")
 		UpdatedAtColumn = postgres.TimestampzColumn("updated_at")
-		allColumns      = postgres.ColumnList{IDColumn, TypeColumn, KeyColumn, LinkURLColumn, SortOrderColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
-		mutableColumns  = postgres.ColumnList{TypeColumn, KeyColumn, LinkURLColumn, SortOrderColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
-		defaultColumns  = postgres.ColumnList{TypeColumn, SortOrderColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
+		allColumns      = postgres.ColumnList{IDColumn, TypeColumn, KeyColumn, LinkURLColumn, FocalXColumn, FocalYColumn, SortOrderColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
+		mutableColumns  = postgres.ColumnList{TypeColumn, KeyColumn, LinkURLColumn, FocalXColumn, FocalYColumn, SortOrderColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
+		defaultColumns  = postgres.ColumnList{TypeColumn, FocalXColumn, FocalYColumn, SortOrderColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
 	)
 
 	return bannerTable{
@@ -88,6 +92,8 @@ func newBannerTableImpl(schemaName, tableName, alias string) bannerTable {
 		Type:      TypeColumn,
 		Key:       KeyColumn,
 		LinkURL:   LinkURLColumn,
+		FocalX:    FocalXColumn,
+		FocalY:    FocalYColumn,
 		SortOrder: SortOrderColumn,
 		IsActive:  IsActiveColumn,
 		CreatedAt: CreatedAtColumn,
