@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast, XSelect } from '@novelia/web-kit';
+import { Toast, XSelect, XDialog } from '@novelia/web-kit';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import type { GptPipelineWorker } from '@/model/Translator';
@@ -445,7 +445,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
 </script>
 
 <template>
-  <c-modal
+  <XDialog
     :open="show"
     @update:open="$emit('update:show', $event)"
     :title="verb + '翻译器'"
@@ -617,14 +617,14 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       </template>
     </n-form>
 
-    <template #action>
+    <template #footer>
       <n-flex v-if="props.worker === undefined" :size="12">
         <c-button label="添加并继续" @action="submitAndContinue" />
         <c-button label="添加" type="primary" @action="submit" />
       </n-flex>
       <c-button v-else label="更新" type="primary" @action="submit" />
     </template>
-  </c-modal>
+  </XDialog>
 </template>
 
 <style scoped>

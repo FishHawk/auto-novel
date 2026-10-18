@@ -1,6 +1,9 @@
 <script lang="ts" setup>
+import { XDialog } from '@novelia/web-kit';
+
 import avaterUrl from '@/image/avater.jpg';
 
+const open = defineModel<boolean>('open', { default: false });
 const guides = [
   `
 # 一级标题
@@ -41,7 +44,7 @@ const guides = [
 </script>
 
 <template>
-  <c-modal title="格式教程">
+  <XDialog v-model:open="open" title="格式教程" class="w-[600px]">
     <n-p>评论不支持标题、表格、图片等高级功能。</n-p>
     <n-table :bordered="false" style="table-layout: fixed; width: 100%">
       <thead>
@@ -61,5 +64,5 @@ const guides = [
         </tr>
       </tbody>
     </n-table>
-  </c-modal>
+  </XDialog>
 </template>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 import { ImgComparisonSlider } from '@img-comparison-slider/vue';
 
 import { Humanize } from '@/util';
@@ -199,10 +199,10 @@ const showPreview = (image: EpubImage) => {
       </template>
     </template>
 
-    <c-modal
+    <XDialog
       v-model:open="showCompare"
+      aria-label="图片压缩对比"
       style="width: auto; max-width: 95%"
-      content-max-height="100dvh"
     >
       <img-comparison-slider style="outline: none">
         <!-- eslint-disable -->
@@ -218,6 +218,6 @@ const showPreview = (image: EpubImage) => {
         />
         <!-- eslint-enable -->
       </img-comparison-slider>
-    </c-modal>
+    </XDialog>
   </n-flex>
 </template>

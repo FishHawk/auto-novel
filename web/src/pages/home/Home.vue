@@ -6,6 +6,7 @@ import {
   ReadMoreOutlined,
   StarBorderOutlined,
 } from '@vicons/material';
+import { XDialog } from '@novelia/web-kit';
 
 import { FavoredApi } from '@/api';
 import { forumPostUrls, forumUrl } from '@/config';
@@ -249,7 +250,7 @@ const githubLink = 'https://github.com/auto-novel/auto-novel';
     <n-divider />
   </div>
 
-  <c-modal title="使用说明" v-model:open="showHowToUseModal">
+  <XDialog title="使用说明" v-model:open="showHowToUseModal" class="w-[600px]">
     <n-p>
       将小说链接复制到网站首页的输入框里，点击搜索，如果链接正确，将会跳转到小说页面。更高级的用法，例如生成机翻、高级搜索等，参见
       <n-a
@@ -270,9 +271,9 @@ const githubLink = 'https://github.com/auto-novel/auto-novel';
       <!-- eslint-disable-next-line vue/no-v-html -->
       <span v-html="link" />
     </n-p>
-  </c-modal>
+  </XDialog>
 
-  <c-modal title="QQ群" v-model:open="showQQModal">
+  <XDialog title="QQ群" v-model:open="showQQModal" class="w-[600px]">
     <n-p>
       交流群：
       <n-a :href="qqLink" target="_blank">819513328</n-a>
@@ -280,7 +281,7 @@ const githubLink = 'https://github.com/auto-novel/auto-novel';
       <br />
       <n-qr-code :size="150" :value="qqLink" />
     </n-p>
-  </c-modal>
+  </XDialog>
 </template>
 
 <style scoped>

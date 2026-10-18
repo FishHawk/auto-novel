@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 
 import { TranslateTaskDescriptor } from '@/model/Translator';
 import type { WebNovelOutlineDto } from '@/model/WebNovel';
@@ -158,18 +158,19 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
             type="error"
             @click="openDeleteModal"
           />
-          <c-modal
+          <XDialog
             :title="`确定删除 ${
               selectedNovels.length === 1
                 ? selectedNovels[0].titleZh ?? selectedNovels[0].titleJp
                 : `${selectedNovels.length}本小说`
             }？`"
             v-model:open="showDeleteModal"
+            class="w-[600px]"
           >
-            <template #action>
+            <template #footer>
               <c-button label="确定" type="primary" @action="deleteSelected" />
             </template>
-          </c-modal>
+          </XDialog>
         </n-flex>
 
         <n-text depth="3">已选择{{ selectedNovels.length }}本小说</n-text>

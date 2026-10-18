@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { FavoriteBorderOutlined, FavoriteOutlined } from '@vicons/material';
-import { Toast } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 
 import { FavoredRepo } from '@/stores';
 
@@ -71,7 +71,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
     />
   </template>
 
-  <c-modal v-model:open="showFavoredModal" title="收藏到...">
+  <XDialog v-model:open="showFavoredModal" title="收藏到..." class="w-[600px]">
     <n-radio-group v-model:value="selectedFavoredId">
       <n-flex vertical size="large">
         <n-radio
@@ -84,7 +84,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
         <n-radio key="deleted" value="deleted">取消收藏</n-radio>
       </n-flex>
     </n-radio-group>
-    <template #action>
+    <template #footer>
       <c-button
         label="确定"
         require-login
@@ -96,5 +96,5 @@ const selectedFavoredId = ref(props.favored ?? 'default');
         "
       />
     </template>
-  </c-modal>
+  </XDialog>
 </template>

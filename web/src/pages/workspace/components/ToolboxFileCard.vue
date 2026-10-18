@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { DeleteOutlineOutlined, RemoveRedEyeOutlined } from '@vicons/material';
+import { XDialog } from '@novelia/web-kit';
 
 import type { ParsedFile } from '@/util/file';
 
@@ -35,7 +36,11 @@ const showPreviewModal = ref(false);
     <n-text>{{ file.name }}</n-text>
   </n-flex>
 
-  <c-modal title="预览（前100行）" v-model:open="showPreviewModal">
+  <XDialog
+    title="预览（前100行）"
+    v-model:open="showPreviewModal"
+    class="w-[600px]"
+  >
     <n-text>暂未实现</n-text>
-  </c-modal>
+  </XDialog>
 </template>

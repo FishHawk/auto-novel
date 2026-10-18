@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { PlusOutlined } from '@vicons/material';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { Toast } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 
 import { FavoredRepo } from '@/stores';
 
@@ -50,7 +50,7 @@ const addFavorite = async () => {
 <template>
   <c-button label="新建" :icon="PlusOutlined" @action="showAddModal = true" />
 
-  <c-modal title="新建收藏夹" v-model:open="showAddModal">
+  <XDialog title="新建收藏夹" v-model:open="showAddModal" class="w-[600px]">
     <n-form
       ref="form"
       :model="formValue"
@@ -78,7 +78,7 @@ const addFavorite = async () => {
       </n-form-item-row>
     </n-form>
 
-    <template #action>
+    <template #footer>
       <c-button
         label="确定"
         require-login
@@ -86,5 +86,5 @@ const addFavorite = async () => {
         @action="addFavorite"
       />
     </template>
-  </c-modal>
+  </XDialog>
 </template>

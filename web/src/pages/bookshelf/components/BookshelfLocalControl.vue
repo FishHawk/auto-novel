@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 
 import { FavoredRepo, useLocalVolumeStore, useSettingStore } from '@/stores';
 import { useShouldTopJob } from '@/util';
@@ -159,18 +159,19 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
             type="error"
             @click="openDeleteModal"
           />
-          <c-modal
+          <XDialog
             :title="`确定删除 ${
               selectedIds.length === 1
                 ? selectedIds[0]
                 : `${selectedIds.length}本小说`
             }？`"
             v-model:open="showDeleteModal"
+            class="w-[600px]"
           >
-            <template #action>
+            <template #footer>
               <c-button label="确定" type="primary" @action="deleteSelected" />
             </template>
-          </c-modal>
+          </XDialog>
         </n-flex>
 
         <n-text depth="3">已选择{{ selectedIds.length }}本小说</n-text>

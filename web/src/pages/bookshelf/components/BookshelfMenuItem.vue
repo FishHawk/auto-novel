@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { Toast, XActionMenu, XActionMenuItem } from '@novelia/web-kit';
+import { Toast, XActionMenu, XActionMenuItem, XDialog } from '@novelia/web-kit';
 
 import { FavoredRepo } from '@/stores';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
@@ -109,7 +109,7 @@ const deleteFavored = () =>
     </span>
   </n-flex>
 
-  <c-modal v-model:open="showEditModal" title="编辑收藏夹">
+  <XDialog v-model:open="showEditModal" title="编辑收藏夹" class="w-[600px]">
     <n-form
       ref="form"
       :model="formValue"
@@ -126,7 +126,7 @@ const deleteFavored = () =>
       </n-form-item-row>
     </n-form>
 
-    <template #action>
+    <template #footer>
       <c-button
         label="确定"
         require-login
@@ -134,16 +134,16 @@ const deleteFavored = () =>
         @action="updateFavored"
       />
     </template>
-  </c-modal>
+  </XDialog>
 
-  <c-modal v-model:open="showDeleteModal" title="删除收藏夹">
+  <XDialog v-model:open="showDeleteModal" title="删除收藏夹" class="w-[600px]">
     确定删除收藏夹[{{ title }}]吗？
     <n-text v-if="type === 'local'">
       <br />
       注意，删除本地收藏夹的同时也会清空收藏夹内所有小说。
     </n-text>
 
-    <template #action>
+    <template #footer>
       <c-button
         label="确定"
         require-login
@@ -151,5 +151,5 @@ const deleteFavored = () =>
         @action="deleteFavored"
       />
     </template>
-  </c-modal>
+  </XDialog>
 </template>

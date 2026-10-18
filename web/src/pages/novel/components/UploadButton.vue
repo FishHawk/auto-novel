@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 
 import { PlusOutlined } from '@vicons/material';
 import type {
@@ -201,10 +201,11 @@ const onRuleModalCloseAutoFocus = async () => {
     <c-button label="上传" :icon="PlusOutlined" />
   </n-upload>
 
-  <c-modal
+  <XDialog
     title="上传须知"
     v-model:open="showRuleModal"
     @close-auto-focus="onRuleModalCloseAutoFocus"
+    class="w-[600px]"
   >
     <n-p>在上传小说之前，请务必遵守以下规则。</n-p>
     <n-ul>
@@ -217,8 +218,8 @@ const onRuleModalCloseAutoFocus = async () => {
     </n-ul>
     <n-p>由于文库小说还在开发中，规则也会变化，务必留意。</n-p>
 
-    <template #action>
+    <template #footer>
       <c-button label="确定" type="primary" @action="showRuleModal = false" />
     </template>
-  </c-modal>
+  </XDialog>
 </template>

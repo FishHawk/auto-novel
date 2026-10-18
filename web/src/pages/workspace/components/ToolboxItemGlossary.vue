@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { copyToClipboard, Toast } from '@novelia/web-kit';
+import { copyToClipboard, Toast, XDialog } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import type { ParsedFile } from '@/util/file';
@@ -242,7 +242,11 @@ const translateKatakanas = async (id: 'youdao' | 'sakura') => {
     </n-scrollbar>
   </n-flex>
 
-  <c-modal title="选择Sakura翻译器" v-model:open="showSakuraSelectModal">
+  <XDialog
+    title="选择Sakura翻译器"
+    v-model:open="showSakuraSelectModal"
+    class="w-[600px]"
+  >
     <n-radio-group v-model:value="selectedSakuraWorkerId">
       <n-flex vertical>
         <n-radio
@@ -257,5 +261,5 @@ const translateKatakanas = async (id: 'youdao' | 'sakura') => {
         </n-radio>
       </n-flex>
     </n-radio-group>
-  </c-modal>
+  </XDialog>
 </template>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
 import { subjectKeys } from '@novelia/forum-api';
 import { createReusableTemplate } from '@vueuse/core';
@@ -162,10 +162,10 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
           @action="showWebNovelsModal = true"
         />
 
-        <c-modal
+        <XDialog
           title="相关网络小说"
           v-model:open="showWebNovelsModal"
-          content-max-height="calc(60dvh - 100px)"
+          class="w-[600px]"
         >
           <n-ul>
             <n-li v-for="webId of novel.webIds" :key="webId">
@@ -174,7 +174,7 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
               </c-a>
             </n-li>
           </n-ul>
-        </c-modal>
+        </XDialog>
       </n-flex>
 
       <n-p>原名：{{ novel.title }}</n-p>

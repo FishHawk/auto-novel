@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { XDialog } from '@novelia/web-kit';
+
 import { useIsWideScreen } from '@/pages/util';
 import { Setting, useSettingStore } from '@/stores';
 
@@ -33,7 +35,7 @@ const showDownloadModal = ref(false);
     @action="showDownloadModal = true"
   />
 
-  <c-modal title="下载设置" v-model:open="showDownloadModal">
+  <XDialog title="下载设置" v-model:open="showDownloadModal" class="w-[600px]">
     <n-flex vertical size="large">
       <c-action-wrapper title="语言">
         <c-radio-group
@@ -81,5 +83,5 @@ const showDownloadModal = ref(false);
         # 某些EPUB阅读器无法正确显示日文段落的浅色字体
       </n-text>
     </n-flex>
-  </c-modal>
+  </XDialog>
 </template>

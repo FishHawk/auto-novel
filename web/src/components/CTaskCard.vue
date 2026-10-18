@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { ScrollbarInst } from 'naive-ui';
+import { XDialog } from '@novelia/web-kit';
 
 const props = defineProps<{
   title: string;
@@ -97,9 +98,10 @@ defineExpose({
       <slot />
     </n-flex>
 
-    <c-modal
+    <XDialog
       v-model:open="showLogDetailModal"
       :title="`日志详情 - ${selectedLogMessage}`"
+      class="w-[600px]"
     >
       <n-p
         v-for="line of selectedLogDetail"
@@ -108,6 +110,6 @@ defineExpose({
       >
         {{ line }}
       </n-p>
-    </c-modal>
+    </XDialog>
   </n-card>
 </template>

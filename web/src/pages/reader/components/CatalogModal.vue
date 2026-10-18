@@ -4,6 +4,7 @@ import {
   KeyboardArrowUpRound,
   SortOutlined,
 } from '@vicons/material';
+import { XDialog } from '@novelia/web-kit';
 
 import type { GenericNovelId } from '@/model/Common';
 import type { ReadableTocItem } from '@/pages/novel/components/common';
@@ -120,14 +121,14 @@ const onTocItemClick = (item: ReadableTocItem) => {
 </script>
 
 <template>
-  <c-modal
+  <XDialog
     :open="show"
     @update:open="$emit('update:show', $event)"
+    class="w-[600px]"
     style="min-height: 30vh; max-height: 80vh"
-    content-max-height="none"
   >
-    <template #header>
-      <div style="display: flex; align-items: baseline">
+    <template #title>
+      <div class="pr-2" style="display: flex; align-items: baseline">
         <span>目录</span>
         <n-text
           v-if="tocNumber !== undefined"
@@ -192,5 +193,5 @@ const onTocItemClick = (item: ReadableTocItem) => {
         @item-click="onTocItemClick"
       />
     </c-result>
-  </c-modal>
+  </XDialog>
 </template>

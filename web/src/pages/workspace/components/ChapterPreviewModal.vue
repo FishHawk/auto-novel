@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { XDialog } from '@novelia/web-kit';
+
 import type { ChapterSegmentState } from '@/domain/translator/TaskState';
 
 const themeVars = useThemeVars();
@@ -86,31 +88,29 @@ const onUpdateShow = (val: boolean) => {
 </script>
 
 <template>
-  <c-modal
+  <XDialog
     :open="show"
     @update:open="onUpdateShow"
     :title="title"
     style="width: min(900px, 95vw)"
   >
-    <template #header-extra>
-      <div class="preview-header-extra">
-        <div v-if="previewState.previewProgressStatus" class="preview-stats">
-          <n-tag size="small" :bordered="false">
-            共 {{ previewState.previewProgressStatus.total }}
-          </n-tag>
-          <n-tag size="small" :bordered="false" type="success">
-            ✓ {{ previewState.previewProgressStatus.success }}
-          </n-tag>
-          <n-tag size="small" :bordered="false" type="info">
-            ● {{ previewState.previewProgressStatus.processing }}
-          </n-tag>
-          <n-tag size="small" :bordered="false" type="error">
-            ✕ {{ previewState.previewProgressStatus.failed }}
-          </n-tag>
-        </div>
-        <n-divider style="margin: 4px 0 4px" />
+    <div class="preview-header-extra">
+      <div v-if="previewState.previewProgressStatus" class="preview-stats">
+        <n-tag size="small" :bordered="false">
+          共 {{ previewState.previewProgressStatus.total }}
+        </n-tag>
+        <n-tag size="small" :bordered="false" type="success">
+          ✓ {{ previewState.previewProgressStatus.success }}
+        </n-tag>
+        <n-tag size="small" :bordered="false" type="info">
+          ● {{ previewState.previewProgressStatus.processing }}
+        </n-tag>
+        <n-tag size="small" :bordered="false" type="error">
+          ✕ {{ previewState.previewProgressStatus.failed }}
+        </n-tag>
       </div>
-    </template>
+      <n-divider style="margin: 4px 0 4px" />
+    </div>
 
     <div v-if="previewState.ranges.length > 1" class="segment-tabs">
       <n-button
@@ -165,13 +165,10 @@ const onUpdateShow = (val: boolean) => {
         </tr>
       </tbody>
     </n-table>
-  </c-modal>
+  </XDialog>
 </template>
 
 <style scoped>
-.preview-header-extra {
-  margin-top: -20px;
-}
 .preview-stats {
   display: flex;
   gap: 8px;
