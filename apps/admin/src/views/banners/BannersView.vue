@@ -236,6 +236,8 @@ onMounted(load);
         <BannerPreview
           :src="selected.imageUrl"
           :alt="`Banner #${selected.id}`"
+          :focal-x="selected.focalX"
+          :focal-y="selected.focalY"
         />
         <div class="banner-thumbnails" aria-label="Banner 原图列表">
           <button

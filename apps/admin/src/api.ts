@@ -12,6 +12,8 @@ export interface Banner {
   imageUrl: string;
   linkUrl: string | null;
   sortOrder: number;
+  focalX: number;
+  focalY: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,6 +24,8 @@ export interface BannerInput {
   key: string;
   linkUrl: string | null;
   sortOrder: number;
+  focalX: number;
+  focalY: number;
 }
 
 interface BannerUpload {

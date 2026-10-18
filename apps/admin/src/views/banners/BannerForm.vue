@@ -8,6 +8,7 @@ import {
   loadBannerImage,
   type BannerImage,
 } from './bannerImage';
+import { defaultBannerFocal, validateBannerFocal } from './bannerFocal';
 import { validateBannerConfig } from './bannerConfig';
 import BannerImageInfo from './BannerImageInfo.vue';
 import BannerPreview from './BannerPreview.vue';
@@ -24,6 +25,8 @@ const emit = defineEmits<{ close: []; saved: [] }>();
 const api = useBannerApi();
 const link = ref(props.banner.linkUrl ?? '');
 const sortOrder = ref(props.banner.sortOrder);
+const focalX = ref(props.banner.focalX);
+const focalY = ref(props.banner.focalY);
 const uploading = ref(false);
 const saving = ref(false);
 const compressing = ref(false);
@@ -60,6 +63,8 @@ async function selectFiles(files: File[]) {
     if (image.value) URL.revokeObjectURL(image.value.url);
     if (compressedUrl.value) URL.revokeObjectURL(compressedUrl.value);
     image.value = next;
+    focalX.value = defaultBannerFocal;
+    focalY.value = defaultBannerFocal;
     compressed.value = undefined;
     compressedUrl.value = undefined;
     uploaded.value = undefined;
@@ -121,7 +126,9 @@ function useOriginal() {
 
 async function save() {
   if (saving.value || uploading.value || compressing.value) return;
-  error.value = validateBannerConfig(link.value, sortOrder.value);
+  error.value =
+    validateBannerConfig(link.value, sortOrder.value) ||
+    validateBannerFocal(focalX.value, focalY.value);
   if (error.value) return;
   saving.value = true;
   try {
@@ -138,6 +145,8 @@ async function save() {
       key: uploaded.value?.key ?? props.banner.key,
       linkUrl: link.value.trim() || null,
       sortOrder: sortOrder.value,
+      focalX: focalX.value,
+      focalY: focalY.value,
     });
     emit('saved');
   } catch (cause) {
@@ -163,6 +172,10 @@ async function save() {
       <fieldset :disabled="uploading || saving || compressing">
         <BannerPreview
           :src="compressedUrl || image?.url || banner.imageUrl"
+          v-model:focal-x="focalX"
+          v-model:focal-y="focalY"
+          editable
+          :disabled="uploading || saving || compressing"
           :alt="image?.file.name || 'Banner 图片预览'"
           :compare-before="image?.url"
           :compare-after="compressedUrl"

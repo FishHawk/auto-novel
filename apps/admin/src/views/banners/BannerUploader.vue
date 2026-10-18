@@ -10,6 +10,7 @@ import {
   loadBannerImage,
   type BannerImage,
 } from './bannerImage';
+import { defaultBannerFocal, validateBannerFocal } from './bannerFocal';
 import { validateBannerConfig } from './bannerConfig';
 import BannerImageInfo from './BannerImageInfo.vue';
 import WebpCompressionPanel from './WebpCompressionPanel.vue';
@@ -22,6 +23,8 @@ interface PendingBanner {
   image: BannerImage;
   link: string;
   sortOrder: number;
+  focalX: number;
+  focalY: number;
   uploaded?: { key: string; imageUrl: string };
   compressed?: File;
   compressedUrl?: string;
@@ -75,6 +78,8 @@ async function add(selected: File[]) {
           image,
           link: '',
           sortOrder: 0,
+          focalX: defaultBannerFocal,
+          focalY: defaultBannerFocal,
           error: '',
           status: '待上传',
         });
@@ -156,7 +161,9 @@ async function upload() {
   notice.value = '';
   // 先检查整批配置，避免输入错误导致部分上传。
   for (const item of files.value) {
-    const message = validateBannerConfig(item.link, item.sortOrder);
+    const message =
+      validateBannerConfig(item.link, item.sortOrder) ||
+      validateBannerFocal(item.focalX, item.focalY);
     if (message) {
       selectedId.value = item.id;
       error.value = `${item.image.file.name}：${message}`;
@@ -210,6 +217,8 @@ async function upload() {
           key: item.uploaded.key,
           linkUrl: item.link.trim() || null,
           sortOrder: item.sortOrder,
+          focalX: item.focalX,
+          focalY: item.focalY,
         });
         remove(item);
         saved++;
@@ -274,6 +283,10 @@ onBeforeUnmount(() => {
       v-if="selected"
       :src="selected.compressedUrl ?? selected.image.url"
       :alt="selected.image.file.name"
+      v-model:focal-x="selected.focalX"
+      v-model:focal-y="selected.focalY"
+      editable
+      :disabled="disabled || loading || uploading || compressing"
       :compare-before="selected.image.url"
       :compare-after="selected.compressedUrl"
       :compare-aspect="selected.image.width / selected.image.height"

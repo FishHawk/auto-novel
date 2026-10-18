@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { XSlider } from '@novelia/web-kit';
+import { bannerFocalPosition } from './bannerFocal';
 import ImageCompare from './ImageCompare.vue';
 
 const props = defineProps<{
   src: string;
   alt: string;
+  editable?: boolean;
+  disabled?: boolean;
   compareBefore?: string;
   compareAfter?: string;
   compareAspect?: number;
 }>();
+
+const focalX = defineModel<number>('focalX', { required: true });
+const focalY = defineModel<number>('focalY', { required: true });
 
 type PreviewMode = 'original' | 'compare' | 'desktop' | 'mobile';
 
@@ -43,9 +50,33 @@ const modes = computed<PreviewOption[]>(() => {
   return list;
 });
 const mode = ref<PreviewMode>('original');
+const isSimulation = computed(
+  () => mode.value === 'desktop' || mode.value === 'mobile',
+);
+const imageSize = ref({ width: 0, height: 0 });
+watch(
+  () => props.src,
+  () => {
+    imageSize.value = { width: 0, height: 0 };
+  },
+);
+function imageLoaded(event: Event) {
+  const image = event.target as HTMLImageElement;
+  imageSize.value = { width: image.naturalWidth, height: image.naturalHeight };
+}
 const currentMode = computed(
   () =>
     modes.value.find((item) => item.value === mode.value) ?? modes.value[0]!,
+);
+const focalPosition = computed(() =>
+  bannerFocalPosition(
+    imageSize.value.width,
+    imageSize.value.height,
+    currentMode.value.width,
+    currentMode.value.height,
+    focalX.value,
+    focalY.value,
+  ),
 );
 const canCompare = computed(
   () => !!props.compareBefore && !!props.compareAfter,
@@ -80,94 +111,135 @@ watch(canCompare, (available) => {
         <slot name="actions" />
       </div>
     </div>
-    <div class="preview-stage" :class="{ 'mobile-stage': mode === 'mobile' }">
-      <img
-        v-if="mode === 'original'"
-        class="original-image"
-        :src="src"
-        :alt="alt"
-      />
-      <ImageCompare
-        v-else-if="mode === 'compare' && compareBefore && compareAfter"
-        :before="compareBefore"
-        :after="compareAfter"
-        :alt="alt"
-        :aspect="compareAspect"
-      />
+    <div class="preview-layout">
       <div
-        v-else
-        class="device-preview"
-        :class="mode"
-        :style="{
-          '--banner-ratio': `${currentMode.width} / ${currentMode.height}`,
-          '--device-width': `${currentMode.width}px`,
-          '--book-columns': currentMode.books,
-        }"
+        v-if="editable && isSimulation"
+        class="focal-sliders"
+        role="group"
+        aria-label="焦点微调"
       >
+        <div class="focal-slider-row">
+          <span class="focal-axis" aria-hidden="true">X</span>
+          <XSlider
+            class="focal-slider"
+            v-model="focalX"
+            aria-label="X"
+            :min="0"
+            :max="1"
+            :step="0.001"
+            :disabled="disabled"
+          />
+          <output class="focal-value" aria-label="X 焦点数值">
+            {{ (focalX * 100).toFixed(1) }}%
+          </output>
+        </div>
+        <div class="focal-slider-row">
+          <span class="focal-axis" aria-hidden="true">Y</span>
+          <XSlider
+            class="focal-slider"
+            v-model="focalY"
+            aria-label="Y"
+            :min="0"
+            :max="1"
+            :step="0.001"
+            :disabled="disabled"
+          />
+          <output class="focal-value" aria-label="Y 焦点数值">
+            {{ (focalY * 100).toFixed(1) }}%
+          </output>
+        </div>
+      </div>
+      <div class="preview-stage" :class="{ 'mobile-stage': mode === 'mobile' }">
+        <img
+          v-if="mode === 'original'"
+          class="original-image"
+          :src="src"
+          :alt="alt"
+        />
+        <ImageCompare
+          v-else-if="mode === 'compare' && compareBefore && compareAfter"
+          :before="compareBefore"
+          :after="compareAfter"
+          :alt="alt"
+          :aspect="compareAspect"
+        />
         <div
-          v-if="mode === 'desktop'"
-          class="browser-chrome"
-          aria-hidden="true"
+          v-else
+          class="device-preview"
+          :class="mode"
+          :style="{
+            '--banner-ratio': `${currentMode.width} / ${currentMode.height}`,
+            '--device-width': `${currentMode.width}px`,
+            '--book-columns': currentMode.books,
+          }"
         >
-          <div class="window-dots">
-            <i v-for="index in 3" :key="index"></i>
+          <div
+            v-if="mode === 'desktop'"
+            class="browser-chrome"
+            aria-hidden="true"
+          >
+            <div class="window-dots">
+              <i v-for="index in 3" :key="index"></i>
+            </div>
+            <span class="browser-address">novelia · 首页</span>
+            <span class="browser-menu">···</span>
           </div>
-          <span class="browser-address">novelia · 首页</span>
-          <span class="browser-menu">···</span>
-        </div>
-        <div v-else class="phone-status" aria-hidden="true">
-          <span>9:41</span>
-          <span class="phone-island"></span>
-          <span>▮▮▮ ▰</span>
-        </div>
-        <div class="mock-page">
-          <div class="mock-nav" aria-hidden="true">
-            <strong>轻小说机翻机器人</strong>
-            <div v-if="mode === 'desktop'" class="mock-nav-links">
-              <span v-for="label in ['首页', '小说', '论坛']" :key="label">
-                {{ label }}
+          <div v-else class="phone-status" aria-hidden="true">
+            <span>9:41</span>
+            <span class="phone-island"></span>
+            <span>▮▮▮ ▰</span>
+          </div>
+          <div class="mock-page">
+            <div class="mock-nav" aria-hidden="true">
+              <strong>轻小说机翻机器人</strong>
+              <div v-if="mode === 'desktop'" class="mock-nav-links">
+                <span v-for="label in ['首页', '小说', '论坛']" :key="label">
+                  {{ label }}
+                </span>
+              </div>
+              <span class="mock-account">
+                {{ mode === 'desktop' ? '登录 / 注册' : '☰' }}
               </span>
             </div>
-            <span class="mock-account">
-              {{ mode === 'desktop' ? '登录 / 注册' : '☰' }}
-            </span>
-          </div>
-          <div class="mock-banner">
-            <img :src="src" :alt="alt" />
-            <div class="mock-banner-content" aria-hidden="true">
-              <strong>轻小说机翻机器人</strong>
-              <div class="mock-search">
-                <span>搜索小说或输入链接…</span>
-                <span>搜索</span>
+            <div class="mock-banner">
+              <img
+                :src="src"
+                :alt="alt"
+                :style="{ objectPosition: focalPosition }"
+                @load="imageLoaded"
+              />
+              <div class="mock-banner-content" aria-hidden="true">
+                <strong>轻小说机翻机器人</strong>
+                <div class="mock-search">
+                  <span>搜索小说或输入链接…</span>
+                  <span>搜索</span>
+                </div>
+              </div>
+            </div>
+            <div class="mock-content" aria-hidden="true">
+              <div class="mock-content-heading">
+                <strong>最近更新</strong>
+                <span>查看全部 →</span>
+              </div>
+              <div class="mock-books">
+                <div
+                  v-for="index in currentMode.books"
+                  :key="index"
+                  class="mock-book"
+                >
+                  <div class="mock-cover"></div>
+                  <div class="mock-line"></div>
+                  <div class="mock-line short"></div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="mock-content" aria-hidden="true">
-            <div class="mock-content-heading">
-              <strong>最近更新</strong>
-              <span>查看全部 →</span>
-            </div>
-            <div class="mock-books">
-              <div
-                v-for="index in currentMode.books"
-                :key="index"
-                class="mock-book"
-              >
-                <div class="mock-cover"></div>
-                <div class="mock-line"></div>
-                <div class="mock-line short"></div>
-              </div>
-            </div>
+          <div v-if="mode === 'mobile'" class="phone-bottom" aria-hidden="true">
+            <span></span>
           </div>
-        </div>
-        <div v-if="mode === 'mobile'" class="phone-bottom" aria-hidden="true">
-          <span></span>
         </div>
       </div>
     </div>
-    <p v-if="mode === 'desktop' || mode === 'mobile'" class="preview-note">
-      设备与页面仅作效果示意，实际裁剪随首页视口宽度变化；上传文件不会被裁剪。
-    </p>
   </div>
 </template>
 
@@ -199,14 +271,58 @@ watch(canCompare, (available) => {
 .preview-toolbar .filter-tabs button.selected {
   background: var(--color-surface);
 }
+.preview-layout {
+  position: relative;
+  display: flex;
+  margin: 0 20px;
+}
+.focal-sliders {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  width: min(260px, calc(100% - 24px));
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 8%);
+}
+.focal-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-ink);
+  font-size: 12px;
+}
+.focal-axis {
+  flex-shrink: 0;
+}
+.focal-value {
+  flex: 0 0 6ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.focal-slider {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+}
 .preview-stage {
   display: flex;
+  flex: 1;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   height: 560px;
   overflow: hidden;
-  margin: 0 20px;
   padding: 20px;
   border-radius: 10px;
   background: var(--color-embedded);
@@ -300,7 +416,6 @@ watch(canCompare, (available) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
 }
 .mock-banner-content {
   position: absolute;
@@ -426,22 +541,15 @@ watch(canCompare, (available) => {
   font-size: 12px;
   line-height: 1.7;
 }
-.preview-note {
-  margin: 12px 20px 0;
-  color: var(--color-muted);
-  font-size: 12px;
-  line-height: 1.7;
-}
 @media (max-width: 767px) {
   .preview-toolbar {
     padding: 12px;
   }
-  .preview-stage {
+  .preview-layout {
     margin: 0 12px;
-    padding: 12px;
   }
-  .preview-note {
-    margin-inline: 12px;
+  .preview-stage {
+    padding: 12px;
   }
 }
 </style>
