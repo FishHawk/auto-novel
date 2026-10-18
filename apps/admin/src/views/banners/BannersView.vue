@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { XDialog, getApiErrorMessage } from '@novelia/web-kit';
+import { Toast, XDialog, getApiErrorMessage } from '@novelia/web-kit';
 import { useBannerApi, type Banner } from '../../api';
 import BannerForm from './BannerForm.vue';
 import BannerUploader from './BannerUploader.vue';
@@ -34,11 +34,9 @@ const items = ref<Banner[]>([]);
 const loading = ref(false);
 const loaded = ref(false);
 const error = ref('');
-const notice = ref('');
 const busy = ref<number | null>(null);
 const editor = ref<Banner | null>(null);
 const deleting = ref<Banner | null>(null);
-const deleteError = ref('');
 const selectedId = ref<number>();
 const selected = computed(
   () =>
@@ -70,39 +68,41 @@ async function load() {
 async function toggle(banner: Banner) {
   if (busy.value !== null || loading.value) return;
   busy.value = banner.id;
-  error.value = '';
-  notice.value = '';
-  try {
-    await api.setActive(banner.id, !banner.isActive);
-    banner.isActive = !banner.isActive;
-    notice.value = `Banner #${banner.id} 已${banner.isActive ? '启用' : '停用'}`;
-  } catch (cause) {
-    error.value = getApiErrorMessage(cause, '操作失败');
-  } finally {
-    busy.value = null;
-  }
+  const isActive = !banner.isActive;
+  const action = isActive ? '启用' : '停用';
+  await Toast.promise(
+    api.setActive(banner.id, isActive).then(() => {
+      banner.isActive = isActive;
+    }),
+    {
+      loading: { message: `正在${action} Banner…`, duration: 0 },
+      success: `Banner #${banner.id} 已${action}`,
+      error: `${action}失败`,
+    },
+  );
+  busy.value = null;
 }
 
 async function remove() {
   const banner = deleting.value;
   if (!banner || busy.value !== null) return;
   busy.value = banner.id;
-  deleteError.value = '';
-  try {
-    await api.remove(banner.id);
-    items.value = items.value.filter((item) => item.id !== banner.id);
-    deleting.value = null;
-    notice.value = `Banner #${banner.id} 已删除`;
-  } catch (cause) {
-    deleteError.value = getApiErrorMessage(cause, '操作失败');
-  } finally {
-    busy.value = null;
-  }
+  await Toast.promise(
+    api.remove(banner.id).then(() => {
+      items.value = items.value.filter((item) => item.id !== banner.id);
+      deleting.value = null;
+    }),
+    {
+      loading: { message: '正在删除 Banner…', duration: 0 },
+      success: `Banner #${banner.id} 已删除`,
+      error: '删除失败',
+    },
+  );
+  busy.value = null;
 }
 
 async function saved() {
   editor.value = null;
-  notice.value = 'Banner 已保存';
   await load();
 }
 
@@ -164,7 +164,6 @@ onMounted(load);
     aria-labelledby="banner-tab-manage"
     tabindex="0"
   >
-    <p v-if="notice" class="success-notice" role="status">{{ notice }}</p>
     <p v-if="error" class="error-notice" role="alert">{{ error }}</p>
 
     <section class="banner-panel" :aria-busy="loading">
@@ -257,10 +256,7 @@ onMounted(load);
             <button
               class="btn btn-small danger"
               :disabled="busy !== null || uploading"
-              @click="
-                deleting = selected;
-                deleteError = '';
-              "
+              @click="deleting = selected"
             >
               删除
             </button>
@@ -290,9 +286,6 @@ onMounted(load);
       确定删除 Banner #{{ deleting?.id }} 吗？{{
         deleting?.isActive ? '此图片目前正在首页展示。' : ''
       }}
-    </p>
-    <p v-if="deleteError" class="error-notice" role="alert">
-      {{ deleteError }}
     </p>
     <div class="form-actions">
       <button

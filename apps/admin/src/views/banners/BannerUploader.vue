@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue';
 import BannerPreview from './BannerPreview.vue';
-import { XDropZone, getApiErrorMessage } from '@novelia/web-kit';
+import { Toast, XDropZone, getApiErrorMessage } from '@novelia/web-kit';
 import { imageAccept, useBannerApi, validateImage } from '../../api';
 import {
   canCompressBannerImage,
@@ -47,7 +47,6 @@ const uploading = ref(false);
 const compressing = ref(false);
 const webpQuality = ref(defaultWebpQuality);
 const error = ref('');
-const notice = ref('');
 let nextId = 0;
 let disposed = false;
 const controller = new AbortController();
@@ -63,7 +62,6 @@ async function add(selected: File[]) {
     return;
   loading.value = true;
   error.value = '';
-  notice.value = '';
   const errors: string[] = [];
   try {
     for (const file of selected) {
@@ -87,7 +85,7 @@ async function add(selected: File[]) {
         errors.push(`${file.name}：${getApiErrorMessage(cause, '读取失败')}`);
       }
     }
-    error.value = errors.join('；');
+    if (!disposed && errors.length) Toast.error(errors.join('；'));
   } finally {
     loading.value = false;
   }
@@ -123,7 +121,6 @@ async function compressSelected() {
   )
     return;
   error.value = '';
-  notice.value = '';
   item.error = '';
   compressing.value = true;
   const quality = webpQuality.value;
@@ -141,6 +138,7 @@ async function compressSelected() {
     item.status = '待上传';
   } catch (cause) {
     item.error = getApiErrorMessage(cause, '压缩失败');
+    if (!disposed) Toast.error(item.error);
   } finally {
     compressing.value = false;
   }
@@ -156,7 +154,6 @@ async function upload() {
   )
     return;
   error.value = '';
-  notice.value = '';
   // 先检查整批配置，避免输入错误导致部分上传。
   for (const item of files.value) {
     const message =
@@ -171,6 +168,7 @@ async function upload() {
   uploading.value = true;
   emit('busy', true);
   let saved = 0;
+  let failed = 0;
   try {
     // 校验整批文件，任何一张不通过都不上传。
     const invalid: PendingBanner[] = [];
@@ -208,7 +206,7 @@ async function upload() {
         }
         if (disposed) break;
         item.status = '保存 Banner…';
-        await api.save(undefined, {
+        await api.create({
           type: 0,
           key: item.uploaded.key,
           linkUrl: item.link.trim() || null,
@@ -219,6 +217,8 @@ async function upload() {
         remove(item);
         saved++;
       } catch (cause) {
+        if (disposed) break;
+        failed++;
         item.status = '失败，可重试';
         item.error = getApiErrorMessage(cause, '上传失败');
       }
@@ -226,10 +226,16 @@ async function upload() {
   } finally {
     uploading.value = false;
     emit('busy', false);
-    if (saved) {
-      notice.value = `已上传 ${saved} 张 Banner`;
-      emit('saved');
+    if (!disposed) {
+      if (failed) {
+        Toast.error(
+          `上传完成：${saved} 张成功，${failed} 张失败，请查看图片错误后重试`,
+        );
+      } else if (saved) {
+        Toast.success(`已上传 ${saved} 张 Banner`);
+      }
     }
+    if (saved) emit('saved');
   }
 }
 onBeforeUnmount(() => {
@@ -380,7 +386,6 @@ onBeforeUnmount(() => {
         </article>
       </fieldset>
       <p v-if="error" class="error-notice" role="alert">{{ error }}</p>
-      <p v-if="notice" class="success-notice" role="status">{{ notice }}</p>
       <div v-if="files.length" class="form-actions">
         <span class="hint">{{ files.length }} 张待上传 · 新建后默认启用</span>
         <button

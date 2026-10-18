@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { XDialog, getApiErrorMessage } from '@novelia/web-kit';
+import { Toast, XDialog } from '@novelia/web-kit';
 import { validateBannerFocal } from './bannerFocal';
 import { validateBannerConfig } from './bannerConfig';
 import BannerPreview from './BannerPreview.vue';
@@ -23,21 +23,22 @@ async function save() {
     validateBannerFocal(focalX.value, focalY.value);
   if (error.value) return;
   saving.value = true;
-  try {
-    await api.save(props.banner.id, {
-      type: props.banner.type,
-      key: props.banner.key,
-      linkUrl: link.value.trim() || null,
-      sortOrder: sortOrder.value,
-      focalX: focalX.value,
-      focalY: focalY.value,
-    });
-    emit('saved');
-  } catch (cause) {
-    error.value = getApiErrorMessage(cause, '操作失败');
-  } finally {
-    saving.value = false;
-  }
+  await Toast.promise(
+    api
+      .update(props.banner.id, {
+        linkUrl: link.value.trim() || null,
+        sortOrder: sortOrder.value,
+        focalX: focalX.value,
+        focalY: focalY.value,
+      })
+      .then(() => emit('saved')),
+    {
+      loading: { message: '正在保存 Banner…', duration: 0 },
+      success: 'Banner 已保存',
+      error: '保存失败',
+    },
+  );
+  saving.value = false;
 }
 </script>
 
