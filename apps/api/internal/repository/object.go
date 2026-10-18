@@ -28,7 +28,7 @@ type PresignedUpload struct {
 // ObjectRepository provides object metadata, create-only uploads, deletion and public URLs.
 // Its contract does not expose S3 SDK types to usecases.
 type ObjectRepository interface {
-	PresignPut(ctx context.Context, key, contentType string, size int64, expires time.Duration) (*PresignedUpload, error)
+	PresignPut(ctx context.Context, key, contentType, cacheControl string, size int64, expires time.Duration) (*PresignedUpload, error)
 	Stat(ctx context.Context, key string) (ObjectInfo, error)
 	Delete(ctx context.Context, key string) error
 	PublicURL(key string) string
@@ -60,7 +60,7 @@ func NewObjectRepository(client *s3.Client, bucket, publicBaseURL string) (Objec
 
 func (r *s3ObjectRepository) PresignPut(
 	ctx context.Context,
-	key, contentType string,
+	key, contentType, cacheControl string,
 	size int64,
 	expires time.Duration,
 ) (*PresignedUpload, error) {
@@ -72,6 +72,7 @@ func (r *s3ObjectRepository) PresignPut(
 		Bucket:        aws.String(r.bucket),
 		Key:           aws.String(key),
 		ContentType:   aws.String(contentType),
+		CacheControl:  aws.String(cacheControl),
 		ContentLength: aws.Int64(size),
 		IfNoneMatch:   aws.String("*"),
 	}, func(options *s3.PresignOptions) {

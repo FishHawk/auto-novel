@@ -33,6 +33,8 @@ const (
 	BannerMaxImageSize       = 5 * 1024 * 1024
 	bannerUploadTTL          = 10 * time.Minute
 	bannerImageDeleteTimeout = 30 * time.Second
+	// Banner image keys are never reused, so browsers and CDNs can cache them for a year.
+	bannerImageCacheControl = "public, max-age=31536000, immutable"
 )
 
 var bannerObjectKey = regexp.MustCompile(`^banners/[A-Za-z0-9_-]+\.(jpg|png|webp|gif|avif)$`)
@@ -107,7 +109,7 @@ func (u *BannerUsecase) PresignUpload(
 	key := "banners/" + rand.Text() + extension
 	expiresAt := time.Now().Add(bannerUploadTTL)
 	upload, err := u.objectRepo.PresignPut(
-		ctx, key, input.ContentType, input.Size, bannerUploadTTL,
+		ctx, key, input.ContentType, bannerImageCacheControl, input.Size, bannerUploadTTL,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("banner.presign_upload: %w", err)
