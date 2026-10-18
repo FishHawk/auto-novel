@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { Toast, XDrawer } from '@novelia/web-kit';
-import { FileDownloadOutlined, MoreVertOutlined } from '@vicons/material';
+import { Toast, XActionMenu, XActionMenuItem, XDrawer } from '@novelia/web-kit';
+import { FileDownloadOutlined } from '@vicons/material';
 
 import type { LocalVolumeMetadata } from '@/model/LocalVolume';
 import {
@@ -120,16 +120,15 @@ const sortedVolumes = computed(() => {
         :icon="FileDownloadOutlined"
         @click="downloadVolumes"
       />
-      <n-dropdown
-        trigger="click"
-        :options="options"
-        :keyboard="false"
-        @select="handleSelect"
-      >
-        <n-button circle>
-          <n-icon :component="MoreVertOutlined" />
-        </n-button>
-      </n-dropdown>
+      <XActionMenu>
+        <XActionMenuItem
+          v-for="option in options"
+          :key="option.key"
+          @activate="handleSelect(option.key)"
+        >
+          {{ option.label }}
+        </XActionMenuItem>
+      </XActionMenu>
     </template>
 
     <n-scrollbar trigger="none" class="min-h-0 flex-1">
