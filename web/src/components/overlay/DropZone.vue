@@ -1,91 +1,51 @@
 <script setup lang="ts">
-import { DriveFolderUploadOutlined } from '@vicons/material';
+import { XDropZone } from '@novelia/web-kit';
 import { useEventListener } from '@vueuse/core';
 
-const showDropZone = ref(false);
-const dragFlag = { isDragStart: false };
+import { readDroppedEntry } from './readDroppedEntry';
 
-// 将文件从操作系统拖拽到浏览器内，不会触发 dragstart 和 dragend 事件
-useEventListener(document, ['dragenter', 'dragstart', 'dragend'], (e) => {
-  if (e.type === 'dragstart') {
-    dragFlag.isDragStart = true;
-  } else if (e.type === 'dragenter' && !dragFlag.isDragStart) {
-    e.preventDefault();
-    showDropZone.value = true;
-  } else if (e.type === 'dragend') {
-    dragFlag.isDragStart = false;
-  }
-});
-const handleDragLeave = (e: DragEvent) => {
-  e.preventDefault();
-  showDropZone.value = false;
-};
-const handleDrop = (e: DragEvent) => {
-  e.preventDefault();
-  showDropZone.value = false;
+// 仅负责拖放和目录展开；校验、上传由调用方统一处理。
+defineOptions({ inheritAttrs: false });
+const emit = defineEmits<{
+  drop: [File[]];
+  error: [unknown];
+}>();
+
+const directoryDrops = new WeakSet<DragEvent>();
+
+// useFileDrop 只读取 DataTransfer.files，且文件列表为空时不会发出 drop。
+// 捕获阶段同步保留目录项，也支持仅拖入目录的情况，避免静默遗漏目录内容。
+useEventListener(
+  document,
+  'drop',
+  (event: DragEvent) => {
+    const items = Array.from(event.dataTransfer?.items ?? [])
+      .filter((item) => item.kind === 'file')
+      .map((item) => ({
+        entry: item.webkitGetAsEntry?.(),
+        file: item.getAsFile(),
+      }));
+    if (!items.some(({ entry }) => entry?.isDirectory)) return;
+    event.preventDefault();
+    directoryDrops.add(event);
+    void Promise.all(
+      items.map(({ entry, file }) =>
+        entry ? readDroppedEntry(entry) : Promise.resolve(file ? [file] : []),
+      ),
+    )
+      .then((files) => emit('drop', files.flat()))
+      .catch((error: unknown) => emit('error', error));
+  },
+  { capture: true },
+);
+
+const handleDrop = (files: File[], event: DragEvent) => {
+  if (!directoryDrops.has(event)) emit('drop', files);
 };
 </script>
 
 <template>
-  <teleport to="body">
-    <div class="drop-zone-wrap" v-show="showDropZone">
-      <n-upload
-        v-bind="$attrs"
-        :show-file-list="false"
-        trigger-style="height:100%"
-        class="drop-zone"
-        @dragleave="handleDragLeave"
-        @drop="handleDrop"
-      >
-        <n-upload-dragger class="drop-zone-placeholder">
-          <n-icon class="drop-icon" :component="DriveFolderUploadOutlined" />
-          <div><slot></slot></div>
-        </n-upload-dragger>
-      </n-upload>
-    </div>
-  </teleport>
+  <XDropZone class="pointer-events-auto" @drop="handleDrop">
+    <slot>拖拽文件到这里上传</slot>
+  </XDropZone>
 </template>
-
-<style scoped>
-.drop-zone-wrap {
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 2000;
-  box-sizing: border-box;
-}
-
-.drop-zone {
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  box-sizing: border-box;
-}
-
-.drop-zone-placeholder {
-  pointer-events: none;
-  position: fixed;
-  left: 42px;
-  top: 42px;
-  right: 42px;
-  bottom: 42px;
-  width: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: #fff;
-  background-color: transparent;
-  font-size: 24px;
-  border-radius: 12px;
-  border-width: 2px !important;
-}
-
-.drop-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-</style>

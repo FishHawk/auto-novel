@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { XTooltip } from '@novelia/web-kit';
+
 defineProps<{
   tooltip?: string;
   icon: Component;
@@ -7,12 +9,12 @@ defineProps<{
 
 <template>
   <template v-if="tooltip">
-    <n-tooltip trigger="hover">
+    <XTooltip>
       <template #trigger>
         <c-button size="tiny" :icon="icon" secondary circle v-bind="$attrs" />
       </template>
       {{ tooltip }}
-    </n-tooltip>
+    </XTooltip>
   </template>
 
   <c-button v-else size="tiny" :icon="icon" secondary circle v-bind="$attrs" />

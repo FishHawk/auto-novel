@@ -1,9 +1,12 @@
 <script lang="ts" setup>
+import { useId } from 'vue';
+
 import { useIsWideScreen } from '@/pages/util';
 import { ReaderSetting, useReaderSettingStore } from '@/stores';
 import { checkIsMobile } from '@/util';
 import { AddOutlined, MinusOutlined } from '@vicons/material';
 
+const popupTargetId = useId();
 const isMobile = checkIsMobile();
 const isWideScreen = useIsWideScreen(600);
 
@@ -19,7 +22,14 @@ const setIndentSize = (diff: number) => {
 </script>
 
 <template>
-  <c-modal content-style="padding: 0;" :max-height-percentage="80">
+  <c-modal
+    aria-label="阅读设置"
+    content-style="padding: 0;"
+    style="overflow: visible"
+    :max-height-percentage="80"
+  >
+    <!-- 表单内置浮层放在弹窗内、滚动区外，避免跨库模态隔离和滚动裁剪。 -->
+    <template #header-extra><div :id="popupTargetId" /></template>
     <n-tabs
       type="line"
       size="large"
@@ -144,6 +154,7 @@ const setIndentSize = (diff: number) => {
 
           <c-action-wrapper title="字号" align="center">
             <n-slider
+              :to="`#${popupTargetId}`"
               v-model:value="readerSetting.fontSize"
               :min="14"
               :max="40"
@@ -155,6 +166,7 @@ const setIndentSize = (diff: number) => {
 
           <c-action-wrapper title="行距" align="center">
             <n-slider
+              :to="`#${popupTargetId}`"
               v-model:value="readerSetting.lineSpace"
               :step="0.1"
               :min="0"
@@ -169,6 +181,7 @@ const setIndentSize = (diff: number) => {
 
           <c-action-wrapper title="页宽" align="center">
             <n-slider
+              :to="`#${popupTargetId}`"
               v-model:value="readerSetting.pageWidth"
               :step="50"
               :min="600"
@@ -218,6 +231,7 @@ const setIndentSize = (diff: number) => {
                 <n-divider style="margin: 0px" />
                 <n-flex>
                   <n-color-picker
+                    :to="`#${popupTargetId}`"
                     :modes="['hex']"
                     :show-alpha="false"
                     v-model:value="readerSetting.theme.bodyColor"
@@ -226,6 +240,7 @@ const setIndentSize = (diff: number) => {
                     <template #label="color">背景：{{ color }}</template>
                   </n-color-picker>
                   <n-color-picker
+                    :to="`#${popupTargetId}`"
                     :modes="['hex']"
                     :show-alpha="false"
                     v-model:value="readerSetting.theme.fontColor"
@@ -240,6 +255,7 @@ const setIndentSize = (diff: number) => {
 
           <c-action-wrapper title="主透明度" align="center">
             <n-slider
+              :to="`#${popupTargetId}`"
               v-model:value="readerSetting.mixZhOpacity"
               :max="1"
               :min="0"
@@ -256,6 +272,7 @@ const setIndentSize = (diff: number) => {
 
           <c-action-wrapper title="辅透明度" align="center">
             <n-slider
+              :to="`#${popupTargetId}`"
               v-model:value="readerSetting.mixJpOpacity"
               :max="1"
               :min="0"

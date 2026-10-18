@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { MoreVertOutlined } from '@vicons/material';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { Toast } from '@novelia/web-kit';
+import { Toast, XActionMenu, XActionMenuItem } from '@novelia/web-kit';
 
 import { FavoredRepo } from '@/stores';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
@@ -92,22 +91,23 @@ const deleteFavored = () =>
 </script>
 
 <template>
-  <RouterLink :to="`/favorite/${type}/${id}`">
-    <n-flex align="center" justify="space-between">
+  <n-flex align="center" justify="space-between" :wrap="false">
+    <RouterLink :to="`/favorite/${type}/${id}`" class="min-w-0 flex-1 truncate">
       {{ title }}
-      <n-dropdown
-        v-if="options.length > 0"
-        trigger="hover"
-        :options="options"
-        :keyboard="false"
-        @select="onSelect"
-      >
-        <n-button quaternary circle>
-          <n-icon :component="MoreVertOutlined" />
-        </n-button>
-      </n-dropdown>
-    </n-flex>
-  </RouterLink>
+    </RouterLink>
+    <span v-if="options.length > 0" @click.stop>
+      <XActionMenu>
+        <XActionMenuItem
+          v-for="option in options"
+          :key="option.key"
+          :danger="option.key === 'delete'"
+          @activate="onSelect(option.key)"
+        >
+          {{ option.label }}
+        </XActionMenuItem>
+      </XActionMenu>
+    </span>
+  </n-flex>
 
   <c-modal v-model:show="showEditModal" title="编辑收藏夹">
     <n-form

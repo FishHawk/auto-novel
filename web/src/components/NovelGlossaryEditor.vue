@@ -2,7 +2,7 @@
 import { useEventListener } from '@vueuse/core';
 import { onBeforeRouteLeave } from 'vue-router';
 import { DeleteOutlineOutlined } from '@vicons/material';
-import { copyToClipboard, Toast } from '@novelia/web-kit';
+import { copyToClipboard, Toast, XConfirmDialog } from '@novelia/web-kit';
 
 import { WebNovelApi, WenkuNovelApi } from '@/api';
 import { forumPostUrls } from '@/config';
@@ -34,10 +34,6 @@ const handleConfirmClose = () => {
     pendingConfirmResolve.value(true);
     pendingConfirmResolve.value = null;
   }
-};
-
-const handleConfirmCancel = () => {
-  cancelPendingNavigation();
 };
 
 const handleModalUpdateShow = (show: boolean) => {
@@ -339,39 +335,12 @@ defineExpose({
       <c-button label="提交" type="primary" @action="submitGlossary()" />
     </n-flex>
 
-    <n-modal
-      :show="showConfirmModal"
-      @update:show="handleModalUpdateShow"
-      preset="card"
+    <XConfirmDialog
+      :open="showConfirmModal"
       title="提示"
-      :bordered="false"
-      size="small"
-      transform-origin="center"
-      style="
-        position: fixed;
-        top: 50px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: min(420px, calc(100% - 32px));
-      "
-    >
-      <n-text>检测到未保存的修改，确认关闭吗？</n-text>
-      <template #action>
-        <n-flex justify="end">
-          <c-button
-            label="确认"
-            type="warning"
-            size="small"
-            @action="handleConfirmClose"
-          />
-          <c-button
-            label="取消"
-            secondary
-            size="small"
-            @action="handleConfirmCancel"
-          />
-        </n-flex>
-      </template>
-    </n-modal>
+      description="检测到未保存的修改，确认关闭吗？"
+      @update:open="handleModalUpdateShow"
+      @confirm="handleConfirmClose"
+    />
   </div>
 </template>

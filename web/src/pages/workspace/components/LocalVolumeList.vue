@@ -1,5 +1,11 @@
 <script lang="ts" setup>
-import { Toast, XActionMenu, XActionMenuItem, XDrawer } from '@novelia/web-kit';
+import {
+  Toast,
+  XActionMenu,
+  XActionMenuItem,
+  XDrawer,
+  XSelect,
+} from '@novelia/web-kit';
 import { FileDownloadOutlined } from '@vicons/material';
 
 import type { LocalVolumeMetadata } from '@/model/LocalVolume';
@@ -80,7 +86,7 @@ const search = reactive({
 const favoredStore = FavoredRepo.useFavoredStore();
 const { favoreds } = storeToRefs(favoredStore);
 
-const selectedFavored = ref<string | undefined>(favoreds.value.local[0]?.id);
+const selectedFavored = ref(favoreds.value.local[0]?.id ?? 'default');
 const favoredsOptions = computed(() => {
   return favoreds.value.local.map(({ id, title }) => ({
     label: title,
@@ -143,10 +149,11 @@ const sortedVolumes = computed(() => {
           </c-action-wrapper>
 
           <c-action-wrapper v-if="favoreds.local.length > 1" title="收藏">
-            <n-select
-              v-model:value="selectedFavored"
+            <XSelect
+              v-model="selectedFavored"
               :options="favoredsOptions"
-              style="max-width: 400px"
+              aria-label="收藏夹"
+              style="width: 100%; max-width: 400px"
             />
           </c-action-wrapper>
 

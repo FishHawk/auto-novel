@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { XTooltip } from '@novelia/web-kit';
 import { InfoOutlined } from '@vicons/material';
 
 import type { GenericNovelId } from '@/model/Common';
@@ -37,7 +38,7 @@ defineExpose({
   <n-flex vertical>
     <c-action-wrapper title="选项">
       <n-flex size="small">
-        <n-tooltip trigger="hover" style="max-width: 200px">
+        <XTooltip style="max-width: 200px">
           <template #trigger>
             <n-flex :size="0" :wrap="false">
               <tag-button
@@ -74,7 +75,7 @@ defineExpose({
           <template v-if="gnid.type === 'web'">
             源站同步：用于原作者修改了原文的情况导致不一致的情况，可能清空现有翻译，慎用！!
           </template>
-        </n-tooltip>
+        </XTooltip>
 
         <tag-button
           v-if="gnid.type === 'web'"
@@ -147,14 +148,14 @@ defineExpose({
           </n-input-group>
         </div>
 
-        <n-tooltip trigger="hover" placement="top" style="max-width: 200px">
+        <XTooltip style="max-width: 200px">
           <template #trigger>
             <n-button text>
               <n-icon depth="4" :component="InfoOutlined" />
             </n-button>
           </template>
           章节序号看下面目录方括号里的数字。“从0到10”表示从第0章到第9章，不包含第10章。均分任务只对排队生效，最大为10。
-        </n-tooltip>
+        </XTooltip>
       </n-flex>
     </c-action-wrapper>
   </n-flex>

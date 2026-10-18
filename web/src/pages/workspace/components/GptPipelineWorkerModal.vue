@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { Toast, XSelect } from '@novelia/web-kit';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
 import type { GptPipelineWorker } from '@/model/Translator';
@@ -106,7 +106,10 @@ function defaultProfileValues(profileId: openAiProfileId): ProfileValues {
   return values;
 }
 
-const onProfileChange = (id: openAiProfileId) => {
+const onProfileChange = (value: string) => {
+  const profile = openAiProfiles.find((profile) => profile.id === value);
+  if (!profile) return;
+  const id = profile.id;
   formValue.value.profileId = id;
   formValue.value.profileValues = defaultProfileValues(id);
   if (!preserveEndpoint.value) {
@@ -456,12 +459,14 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       label-width="auto"
     >
       <n-form-item-row label="接口格式">
-        <n-select
-          :value="formValue.profileId"
+        <XSelect
+          :model-value="formValue.profileId"
           :options="
             openAiProfiles.map((p) => ({ label: p.label, value: p.id }))
           "
-          @update:value="onProfileChange"
+          aria-label="接口格式"
+          class="w-full"
+          @update:model-value="onProfileChange"
         />
       </n-form-item-row>
 
@@ -471,14 +476,28 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           :key="`${formValue.profileId}-${field.key}`"
           :label="field.label"
         >
-          <n-select
+          <XSelect
             v-if="field.type === 'select'"
-            :value="formValue.profileValues[field.key]"
-            :options="
-              field.options.map((o) => ({ label: o.label, value: o.value }))
+            :model-value="
+              String(
+                field.options.findIndex(
+                  (option) =>
+                    option.value === formValue.profileValues[field.key],
+                ),
+              )
             "
-            @update:value="
-              (v) => (formValue.profileValues[field.key] = v ?? undefined)
+            :options="
+              field.options.map((option, index) => ({
+                label: option.label,
+                value: String(index),
+              }))
+            "
+            :aria-label="field.label"
+            class="w-full"
+            @update:model-value="
+              (value) =>
+                (formValue.profileValues[field.key] =
+                  field.options[Number(value)]?.value)
             "
           />
         </n-form-item-row>
