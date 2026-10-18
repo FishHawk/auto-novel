@@ -164,6 +164,9 @@ async function save() {
         <BannerPreview
           :src="compressedUrl || image?.url || banner.imageUrl"
           :alt="image?.file.name || 'Banner 图片预览'"
+          :compare-before="image?.url"
+          :compare-after="compressedUrl"
+          :compare-aspect="image ? image.width / image.height : undefined"
         />
         <div class="field image-field">
           <span>
@@ -195,7 +198,7 @@ async function save() {
             {{
               uploading
                 ? '正在读取图片，请稍候…'
-                : '支持 JPEG、PNG、WebP、GIF、AVIF；上传时校验最终文件 ≤ 5 MiB，JPEG / PNG 可先压缩为 WebP（需浏览器支持）。'
+                : '支持 JPEG、PNG、WebP、GIF、AVIF；上传时校验 ≤ 500 KB，JPEG / PNG 可先压缩为 WebP。'
             }}
           </small>
         </div>

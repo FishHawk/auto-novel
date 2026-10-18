@@ -45,10 +45,10 @@ it('使用预签名参数直传原文件，不携带身份凭据', async () => {
 });
 
 it('图片超过限制时不申请上传', async () => {
-  const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.png', {
+  const file = new File([new Uint8Array(500 * 1024 + 1)], 'large.png', {
     type: 'image/png',
   });
-  await expect(api.upload(file)).rejects.toThrow('不能超过 5 MiB');
+  await expect(api.upload(file)).rejects.toThrow('不能超过 500 KB');
   expect(post).not.toHaveBeenCalled();
   expect(uploadFile).not.toHaveBeenCalled();
 });

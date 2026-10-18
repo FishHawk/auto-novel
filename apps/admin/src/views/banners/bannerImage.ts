@@ -49,7 +49,7 @@ export function formatFileSize(bytes: number) {
     : `${(bytes / 1024).toFixed(1)} KiB`;
 }
 
-export const defaultWebpQuality = 0.85;
+export const defaultWebpQuality = 0.65;
 const webpSourceTypes = new Set(['image/jpeg', 'image/png']);
 let webpEncodingSupported: boolean | undefined;
 

@@ -40,7 +40,7 @@ const imageTypes = [
   'image/avif',
 ];
 export const imageAccept = imageTypes.join(',');
-export const maxImageBytes = 5 * 1024 * 1024;
+export const maxImageBytes = 500 * 1024;
 
 /** 添加图片时只校验格式，大小留到上传前（压缩后）再校验。 */
 export function validateImageType(file: Pick<File, 'type'>) {
@@ -53,7 +53,7 @@ export function validateImage(file: Pick<File, 'size' | 'type'>) {
   validateImageType(file);
   if (file.size <= 0) throw new Error('图片内容为空');
   if (file.size > maxImageBytes) {
-    throw new Error(`图片大小不能超过 ${maxImageBytes / 1024 / 1024} MiB`);
+    throw new Error(`图片大小不能超过 ${maxImageBytes / 1024} KB`);
   }
 }
 

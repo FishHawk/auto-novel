@@ -1,17 +1,58 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import ImageCompare from './ImageCompare.vue';
 
-defineProps<{ src: string; alt: string }>();
+const props = defineProps<{
+  src: string;
+  alt: string;
+  compareBefore?: string;
+  compareAfter?: string;
+  compareAspect?: number;
+}>();
+
+type PreviewMode = 'original' | 'compare' | 'desktop' | 'mobile';
+
+interface PreviewOption {
+  value: PreviewMode;
+  label: string;
+  width: number;
+  height: number;
+  books: number;
+}
 
 // 尺寸对齐首页 banner 的实际裁剪区域（见 web/src/pages/home/Home.vue）：
 // 桌面 1440 视口、侧栏展开 240px，内容区 1200px，高度 42×1.6 + 20 + 40 + 20 + 50 ≈ 197px；
 // 移动 390 视口，高度 42×1.6 + 20 + 40 + 10 + 35 ≈ 172px。
-const modes = [
-  { value: 'original', label: '原图', width: 0, height: 0, books: 0 },
-  { value: 'desktop', label: '桌面模拟', width: 1200, height: 197, books: 6 },
-  { value: 'mobile', label: '移动模拟', width: 390, height: 172, books: 3 },
-] as const;
-const mode = ref<(typeof modes)[number]>(modes[0]);
+const modes = computed<PreviewOption[]>(() => {
+  const list: PreviewOption[] = [
+    { value: 'original', label: '原图', width: 0, height: 0, books: 0 },
+  ];
+  if (props.compareBefore && props.compareAfter) {
+    list.push({
+      value: 'compare',
+      label: '压缩对比',
+      width: 0,
+      height: 0,
+      books: 0,
+    });
+  }
+  list.push(
+    { value: 'desktop', label: '桌面模拟', width: 1200, height: 197, books: 6 },
+    { value: 'mobile', label: '移动模拟', width: 390, height: 172, books: 3 },
+  );
+  return list;
+});
+const mode = ref<PreviewMode>('original');
+const currentMode = computed(
+  () =>
+    modes.value.find((item) => item.value === mode.value) ?? modes.value[0]!,
+);
+const canCompare = computed(
+  () => !!props.compareBefore && !!props.compareAfter,
+);
+watch(canCompare, (available) => {
+  if (!available && mode.value === 'compare') mode.value = 'original';
+});
 </script>
 
 <template>
@@ -22,42 +63,49 @@ const mode = ref<(typeof modes)[number]>(modes[0]);
           v-for="option in modes"
           :key="option.value"
           type="button"
-          :class="{ selected: mode.value === option.value }"
-          :aria-pressed="mode.value === option.value"
-          @click="mode = option"
+          :class="{ selected: mode === option.value }"
+          :aria-pressed="mode === option.value"
+          @click="mode = option.value"
         >
           {{ option.label }}
         </button>
       </div>
-      <span v-if="mode.value !== 'original'" class="preview-caption">
-        模拟裁剪 · {{ mode.width }} × {{ mode.height }} px
+      <span
+        v-if="mode === 'desktop' || mode === 'mobile'"
+        class="preview-caption"
+      >
+        模拟裁剪 · {{ currentMode.width }} × {{ currentMode.height }} px
       </span>
       <div v-if="$slots.actions" class="preview-actions">
         <slot name="actions" />
       </div>
     </div>
-    <div
-      class="preview-stage"
-      :class="{ 'mobile-stage': mode.value === 'mobile' }"
-    >
+    <div class="preview-stage" :class="{ 'mobile-stage': mode === 'mobile' }">
       <img
-        v-if="mode.value === 'original'"
+        v-if="mode === 'original'"
         class="original-image"
         :src="src"
         :alt="alt"
       />
+      <ImageCompare
+        v-else-if="mode === 'compare' && compareBefore && compareAfter"
+        :before="compareBefore"
+        :after="compareAfter"
+        :alt="alt"
+        :aspect="compareAspect"
+      />
       <div
         v-else
         class="device-preview"
-        :class="mode.value"
+        :class="mode"
         :style="{
-          '--banner-ratio': `${mode.width} / ${mode.height}`,
-          '--device-width': `${mode.width}px`,
-          '--book-columns': mode.books,
+          '--banner-ratio': `${currentMode.width} / ${currentMode.height}`,
+          '--device-width': `${currentMode.width}px`,
+          '--book-columns': currentMode.books,
         }"
       >
         <div
-          v-if="mode.value === 'desktop'"
+          v-if="mode === 'desktop'"
           class="browser-chrome"
           aria-hidden="true"
         >
@@ -75,13 +123,13 @@ const mode = ref<(typeof modes)[number]>(modes[0]);
         <div class="mock-page">
           <div class="mock-nav" aria-hidden="true">
             <strong>轻小说机翻机器人</strong>
-            <div v-if="mode.value === 'desktop'" class="mock-nav-links">
+            <div v-if="mode === 'desktop'" class="mock-nav-links">
               <span v-for="label in ['首页', '小说', '论坛']" :key="label">
                 {{ label }}
               </span>
             </div>
             <span class="mock-account">
-              {{ mode.value === 'desktop' ? '登录 / 注册' : '☰' }}
+              {{ mode === 'desktop' ? '登录 / 注册' : '☰' }}
             </span>
           </div>
           <div class="mock-banner">
@@ -100,7 +148,11 @@ const mode = ref<(typeof modes)[number]>(modes[0]);
               <span>查看全部 →</span>
             </div>
             <div class="mock-books">
-              <div v-for="index in mode.books" :key="index" class="mock-book">
+              <div
+                v-for="index in currentMode.books"
+                :key="index"
+                class="mock-book"
+              >
                 <div class="mock-cover"></div>
                 <div class="mock-line"></div>
                 <div class="mock-line short"></div>
@@ -108,16 +160,12 @@ const mode = ref<(typeof modes)[number]>(modes[0]);
             </div>
           </div>
         </div>
-        <div
-          v-if="mode.value === 'mobile'"
-          class="phone-bottom"
-          aria-hidden="true"
-        >
+        <div v-if="mode === 'mobile'" class="phone-bottom" aria-hidden="true">
           <span></span>
         </div>
       </div>
     </div>
-    <p v-if="mode.value !== 'original'" class="preview-note">
+    <p v-if="mode === 'desktop' || mode === 'mobile'" class="preview-note">
       设备与页面仅作效果示意，实际裁剪随首页视口宽度变化；上传文件不会被裁剪。
     </p>
   </div>

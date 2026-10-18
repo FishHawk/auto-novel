@@ -13,9 +13,9 @@ const emit = defineEmits<{ compress: []; revert: [] }>();
 
 const options = [
   { value: 0.95, label: '高质量' },
-  { value: 0.85, label: '默认' },
+  { value: 0.85, label: '标准' },
   { value: 0.75, label: '更小' },
-  { value: 0.65, label: '最小' },
+  { value: 0.65, label: '默认' },
 ] as const;
 
 const savedPercent = computed(() => {
@@ -69,7 +69,7 @@ const savedPercent = computed(() => {
 
     <div class="webp-summary">
       <template v-if="compressed">
-        <span>{{ formatFileSize(originalSize) }}</span>
+        <span>原图 {{ formatFileSize(originalSize) }}</span>
         <span class="webp-arrow" aria-hidden="true">→</span>
         <strong>{{ formatFileSize(compressed.size) }}</strong>
         <span class="webp-saving">-{{ savedPercent }}%</span>

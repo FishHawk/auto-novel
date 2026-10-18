@@ -267,17 +267,16 @@ onBeforeUnmount(() => {
       >
         {{ loading ? '读取中…' : '加载图片' }}
       </button>
-      <p class="hint">或拖入图片，支持多张；加载仅在本地进行，不会立即上传。</p>
-      <p class="hint">JPEG / PNG / WebP / GIF / AVIF；加载不限大小。</p>
-      <p class="hint">
-        上传时校验最终文件 ≤ 5 MiB；JPEG / PNG 选中后可先压缩为
-        WebP（需浏览器支持）。
-      </p>
+      <p class="hint">支持 JPEG / PNG / WebP / GIF / AVIF，可拖入多张</p>
+      <p class="hint">上传时校验 ≤ 500 KB，JPEG / PNG 可先压缩为 WebP</p>
     </div>
     <BannerPreview
       v-if="selected"
       :src="selected.compressedUrl ?? selected.image.url"
       :alt="selected.image.file.name"
+      :compare-before="selected.image.url"
+      :compare-after="selected.compressedUrl"
+      :compare-aspect="selected.image.width / selected.image.height"
     >
       <template #actions>
         <button
