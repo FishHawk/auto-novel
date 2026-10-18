@@ -48,7 +48,7 @@ it('图片超过限制时不申请上传', async () => {
   const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.png', {
     type: 'image/png',
   });
-  await expect(api.upload(file)).rejects.toThrow('不超过 5 MiB');
+  await expect(api.upload(file)).rejects.toThrow('不能超过 5 MiB');
   expect(post).not.toHaveBeenCalled();
   expect(uploadFile).not.toHaveBeenCalled();
 });

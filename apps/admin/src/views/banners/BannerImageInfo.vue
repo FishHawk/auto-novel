@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import type { BannerImage } from './bannerImage';
+import { formatFileSize, type BannerImage } from './bannerImage';
 defineProps<{ image: BannerImage }>();
 </script>
 
 <template>
-  <p class="hint">
-    {{ image.file.name }} · {{ (image.file.size / 1024).toFixed(1) }} KiB · 原始
-    {{ image.width }} × {{ image.height }} px
+  <p class="image-meta">
+    {{ formatFileSize(image.file.size) }} · 原始 {{ image.width }} ×
+    {{ image.height }} px
   </p>
 </template>
+
+<style scoped>
+.image-meta {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+</style>

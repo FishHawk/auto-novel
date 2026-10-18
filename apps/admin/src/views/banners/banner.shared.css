@@ -80,12 +80,37 @@
   margin: 0;
   min-width: 0;
 }
-.upload-placeholder {
-  display: block;
-  padding: 32px 16px;
-  text-align: center;
+.banner-form .form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 160px);
+  gap: 16px;
+  margin: 16px 0 20px;
+}
+.banner-form .form-grid .field {
+  margin-bottom: 0;
+}
+.banner-form .field > span:first-child {
+  color: var(--color-ink);
   font-size: 13px;
-  color: var(--color-muted);
+  font-weight: 600;
+}
+.banner-form .field > span:first-child small {
+  font-weight: 400;
+}
+.banner-form .field input:not([type='file']) {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.banner-form .field input:not([type='file']):focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+@media (max-width: 560px) {
+  .banner-form .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 @media (max-width: 767px) {
   .panel-toolbar {

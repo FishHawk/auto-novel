@@ -40,14 +40,20 @@ const imageTypes = [
   'image/avif',
 ];
 export const imageAccept = imageTypes.join(',');
+export const maxImageBytes = 5 * 1024 * 1024;
+
+/** 添加图片时只校验格式，大小留到上传前（压缩后）再校验。 */
+export function validateImageType(file: Pick<File, 'type'>) {
+  if (!imageTypes.includes(file.type)) {
+    throw new Error('图片必须为 JPEG、PNG、WebP、GIF 或 AVIF');
+  }
+}
 
 export function validateImage(file: Pick<File, 'size' | 'type'>) {
-  if (
-    !imageTypes.includes(file.type) ||
-    file.size <= 0 ||
-    file.size > 5 * 1024 * 1024
-  ) {
-    throw new Error('图片必须为 JPEG、PNG、WebP、GIF 或 AVIF，且不超过 5 MiB');
+  validateImageType(file);
+  if (file.size <= 0) throw new Error('图片内容为空');
+  if (file.size > maxImageBytes) {
+    throw new Error(`图片大小不能超过 ${maxImageBytes / 1024 / 1024} MiB`);
   }
 }
 
