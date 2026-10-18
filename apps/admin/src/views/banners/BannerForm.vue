@@ -26,6 +26,8 @@ async function save() {
   await Toast.promise(
     api
       .update(props.banner.id, {
+        type: props.banner.type,
+        key: props.banner.key,
         linkUrl: link.value.trim() || null,
         sortOrder: sortOrder.value,
         focalX: focalX.value,

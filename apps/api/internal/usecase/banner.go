@@ -30,7 +30,7 @@ const (
 )
 
 const (
-	BannerMaxImageSize       = 5 * 1024 * 1024
+	BannerMaxImageSize       = 500 * 1024
 	bannerUploadTTL          = 10 * time.Minute
 	bannerImageDeleteTimeout = 30 * time.Second
 	// Banner image keys are never reused, so browsers and CDNs can cache them for a year.
@@ -74,8 +74,7 @@ type BannerUploadResult struct {
 
 type ListBannersQuery struct{ Type domain.BannerType }
 
-// Image keys are exclusive to one banner and must not be reused after replacement
-// or deletion. Reusing an image requires uploading it under a new key.
+// Image keys are exclusive to one banner and cannot be changed or reused after deletion.
 // A nil or blank LinkURL clears the existing link.
 type BannerInput struct {
 	Type      domain.BannerType
@@ -103,7 +102,7 @@ func (u *BannerUsecase) PresignUpload(
 	if extension == "" || input.Size <= 0 || input.Size > BannerMaxImageSize {
 		return nil, Invalid(
 			CodeBannerImageInvalid,
-			"图片必须为 JPEG、PNG、WebP、GIF 或 AVIF，且不超过 5 MiB",
+			"图片必须为 JPEG、PNG、WebP、GIF 或 AVIF，且不超过 500 KiB",
 		)
 	}
 	key := "banners/" + rand.Text() + extension
@@ -360,19 +359,16 @@ func (u *BannerUsecase) Update(
 	if err != nil {
 		return nil, err
 	}
-	if err := u.checkImage(ctx, content.Key); err != nil {
-		return nil, err
-	}
 	previous, err := u.bannerRepo.Get(ctx, id)
 	if err != nil {
 		return nil, bannerError(err, "update")
 	}
+	if content.Key != previous.Key {
+		return nil, Invalid(CodeBannerKeyInvalid, "编辑不能更换图片，请删除后重新上传")
+	}
 	banner, err := u.bannerRepo.Update(ctx, id, content)
 	if err != nil {
 		return nil, bannerError(err, "update")
-	}
-	if previous.Key != banner.Key {
-		u.deleteImageAsync(ctx, previous.Key)
 	}
 	result := u.result(*banner)
 	return &result, nil

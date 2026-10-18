@@ -19,12 +19,9 @@ export interface Banner {
   updatedAt: string;
 }
 
-export interface BannerInput extends BannerUpdateInput {
+export interface BannerInput {
   type: 0;
   key: string;
-}
-
-export interface BannerUpdateInput {
   linkUrl: string | null;
   sortOrder: number;
   focalX: number;
@@ -95,7 +92,7 @@ export function createBannerApi(
     create(input: BannerInput) {
       return client.post('admin/banner/', { json: input }).json<Banner>();
     },
-    update(id: number, input: BannerUpdateInput) {
+    update(id: number, input: BannerInput) {
       return client.put(`admin/banner/${id}`, { json: input }).json<Banner>();
     },
     async setActive(id: number, active: boolean) {

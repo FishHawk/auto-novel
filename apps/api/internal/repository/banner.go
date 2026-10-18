@@ -116,8 +116,6 @@ func (r *bannerRepository) Update(
 	content BannerContent,
 ) (*domain.Banner, error) {
 	dest := model.Banner{
-		Type:      int16(content.Type),
-		Key:       content.Key,
 		LinkURL:   content.LinkURL,
 		FocalX:    content.FocalX,
 		FocalY:    content.FocalY,
@@ -125,8 +123,6 @@ func (r *bannerRepository) Update(
 		UpdatedAt: time.Now(),
 	}
 	stmt := table.Banner.UPDATE(
-		table.Banner.Type,
-		table.Banner.Key,
 		table.Banner.LinkURL,
 		table.Banner.FocalX,
 		table.Banner.FocalY,
