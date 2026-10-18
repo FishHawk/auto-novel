@@ -3,7 +3,6 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, URL } from 'node:url';
-import { ProxyAgent } from 'proxy-agent';
 import { defineConfig, loadEnv, type UserConfig } from 'vite';
 
 const envDirectory = fileURLToPath(new URL('.', import.meta.url));
@@ -62,14 +61,14 @@ function setupAuthProxy(config: UserConfig) {
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, envDirectory, 'VITE_');
   const isServe = command === 'serve';
-  const apiMode = env.VITE_API_MODE || 'native';
+  const apiMode = env.VITE_API_MODE;
   const apiUrl =
     env.VITE_API_URL ||
-    (apiMode === 'remote'
-      ? 'https://n.novelia.cc'
+    (apiMode === 'native'
+      ? 'http://localhost:8080'
       : apiMode === 'local'
-        ? 'http://localhost:80'
-        : 'http://localhost:8080');
+        ? 'http://localhost:5000'
+        : 'https://n.novelia.cc');
   const commitSha =
     env.VITE_COMMIT_SHA ||
     process.env.GITHUB_SHA ||
@@ -113,13 +112,7 @@ export default defineConfig(({ command, mode }) => {
     },
   };
 
-  if (isServe) {
-    setupAuthProxy(config);
-    const upstreamAgent = new ProxyAgent();
-    for (const proxy of Object.values(config.server!.proxy!)) {
-      if (typeof proxy === 'object') proxy.agent = upstreamAgent;
-    }
-  }
+  if (isServe) setupAuthProxy(config);
 
   return config;
 });
