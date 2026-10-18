@@ -325,7 +325,7 @@ onKeyDown(['Enter'], (e) => {
       </component>
     </c-result>
 
-    <reader-setting-modal v-model:show="showSettingModal" />
+    <reader-setting-modal v-model:open="showSettingModal" />
 
     <catalog-modal
       v-model:show="showCatalogModal"

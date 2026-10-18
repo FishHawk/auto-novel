@@ -33,7 +33,7 @@ const showDownloadModal = ref(false);
     @action="showDownloadModal = true"
   />
 
-  <c-modal title="下载设置" v-model:show="showDownloadModal">
+  <c-modal title="下载设置" v-model:open="showDownloadModal">
     <n-flex vertical size="large">
       <c-action-wrapper title="语言">
         <c-radio-group

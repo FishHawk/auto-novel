@@ -176,6 +176,10 @@ const uploadVolumes = () => {
   showRuleModal.value = true;
   noticed.value.wenkuUploadRule = Date.now();
 };
+const onRuleModalCloseAutoFocus = async () => {
+  await nextTick();
+  uploadRef.value?.openOpenFileDialog();
+};
 </script>
 
 <template>
@@ -199,8 +203,8 @@ const uploadVolumes = () => {
 
   <c-modal
     title="上传须知"
-    v-model:show="showRuleModal"
-    @after-leave="uploadRef?.openOpenFileDialog()"
+    v-model:open="showRuleModal"
+    @close-auto-focus="onRuleModalCloseAutoFocus"
   >
     <n-p>在上传小说之前，请务必遵守以下规则。</n-p>
     <n-ul>

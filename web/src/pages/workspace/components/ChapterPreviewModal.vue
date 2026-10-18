@@ -87,8 +87,8 @@ const onUpdateShow = (val: boolean) => {
 
 <template>
   <c-modal
-    :show="show"
-    @update:show="onUpdateShow"
+    :open="show"
+    @update:open="onUpdateShow"
     :title="title"
     style="width: min(900px, 95vw)"
   >

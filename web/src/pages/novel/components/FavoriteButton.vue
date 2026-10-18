@@ -71,7 +71,7 @@ const selectedFavoredId = ref(props.favored ?? 'default');
     />
   </template>
 
-  <c-modal v-model:show="showFavoredModal" title="收藏到...">
+  <c-modal v-model:open="showFavoredModal" title="收藏到...">
     <n-radio-group v-model:value="selectedFavoredId">
       <n-flex vertical size="large">
         <n-radio

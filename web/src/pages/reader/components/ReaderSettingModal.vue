@@ -26,7 +26,7 @@ const setIndentSize = (diff: number) => {
     aria-label="阅读设置"
     content-style="padding: 0;"
     style="overflow: visible"
-    :max-height-percentage="80"
+    content-max-height="80dvh"
   >
     <!-- 表单内置浮层放在弹窗内、滚动区外，避免跨库模态隔离和滚动裁剪。 -->
     <template #header-extra><div :id="popupTargetId" /></template>

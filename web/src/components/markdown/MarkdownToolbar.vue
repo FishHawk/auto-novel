@@ -225,6 +225,6 @@ const formatCollapsibleBlock = () =>
     />
     <div style="width: 8px" />
 
-    <MarkdownGuideModal v-model:show="showGuideModal" />
+    <MarkdownGuideModal v-model:open="showGuideModal" />
   </n-flex>
 </template>

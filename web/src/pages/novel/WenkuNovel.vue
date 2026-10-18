@@ -164,8 +164,8 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
 
         <c-modal
           title="相关网络小说"
-          v-model:show="showWebNovelsModal"
-          :extra-height="100"
+          v-model:open="showWebNovelsModal"
+          content-max-height="calc(60dvh - 100px)"
         >
           <n-ul>
             <n-li v-for="webId of novel.webIds" :key="webId">

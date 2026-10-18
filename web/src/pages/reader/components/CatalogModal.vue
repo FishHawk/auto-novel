@@ -121,11 +121,10 @@ const onTocItemClick = (item: ReadableTocItem) => {
 
 <template>
   <c-modal
-    :show="show"
-    @update:show="$emit('update:show', $event)"
-    content-scrollable
+    :open="show"
+    @update:open="$emit('update:show', $event)"
     style="min-height: 30vh; max-height: 80vh"
-    content-style="overflow: auto;"
+    content-max-height="none"
   >
     <template #header>
       <div style="display: flex; align-items: baseline">

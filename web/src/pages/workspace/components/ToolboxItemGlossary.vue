@@ -242,7 +242,7 @@ const translateKatakanas = async (id: 'youdao' | 'sakura') => {
     </n-scrollbar>
   </n-flex>
 
-  <c-modal title="选择Sakura翻译器" v-model:show="showSakuraSelectModal">
+  <c-modal title="选择Sakura翻译器" v-model:open="showSakuraSelectModal">
     <n-radio-group v-model:value="selectedSakuraWorkerId">
       <n-flex vertical>
         <n-radio

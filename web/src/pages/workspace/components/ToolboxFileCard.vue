@@ -35,7 +35,7 @@ const showPreviewModal = ref(false);
     <n-text>{{ file.name }}</n-text>
   </n-flex>
 
-  <c-modal title="预览（前100行）" v-model:show="showPreviewModal">
+  <c-modal title="预览（前100行）" v-model:open="showPreviewModal">
     <n-text>暂未实现</n-text>
   </c-modal>
 </template>

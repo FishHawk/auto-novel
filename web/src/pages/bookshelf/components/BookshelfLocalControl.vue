@@ -165,7 +165,7 @@ const queueJobs = (type: 'gpt' | 'sakura') => {
                 ? selectedIds[0]
                 : `${selectedIds.length}本小说`
             }？`"
-            v-model:show="showDeleteModal"
+            v-model:open="showDeleteModal"
           >
             <template #action>
               <c-button label="确定" type="primary" @action="deleteSelected" />

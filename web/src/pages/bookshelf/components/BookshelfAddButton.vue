@@ -50,7 +50,7 @@ const addFavorite = async () => {
 <template>
   <c-button label="新建" :icon="PlusOutlined" @action="showAddModal = true" />
 
-  <c-modal title="新建收藏夹" v-model:show="showAddModal">
+  <c-modal title="新建收藏夹" v-model:open="showAddModal">
     <n-form
       ref="form"
       :model="formValue"

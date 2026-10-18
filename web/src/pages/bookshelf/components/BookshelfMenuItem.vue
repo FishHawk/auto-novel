@@ -109,7 +109,7 @@ const deleteFavored = () =>
     </span>
   </n-flex>
 
-  <c-modal v-model:show="showEditModal" title="编辑收藏夹">
+  <c-modal v-model:open="showEditModal" title="编辑收藏夹">
     <n-form
       ref="form"
       :model="formValue"
@@ -136,7 +136,7 @@ const deleteFavored = () =>
     </template>
   </c-modal>
 
-  <c-modal v-model:show="showDeleteModal" title="删除收藏夹">
+  <c-modal v-model:open="showDeleteModal" title="删除收藏夹">
     确定删除收藏夹[{{ title }}]吗？
     <n-text v-if="type === 'local'">
       <br />

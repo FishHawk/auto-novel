@@ -200,9 +200,9 @@ const showPreview = (image: EpubImage) => {
     </template>
 
     <c-modal
-      v-model:show="showCompare"
+      v-model:open="showCompare"
       style="width: auto; max-width: 95%"
-      :max-height-percentage="100"
+      content-max-height="100dvh"
     >
       <img-comparison-slider style="outline: none">
         <!-- eslint-disable -->

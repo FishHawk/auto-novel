@@ -708,7 +708,7 @@ const levelOptions = [
     </n-steps>
   </div>
 
-  <c-modal title="使用说明" v-model:show="showKeywordsModal">
+  <c-modal title="使用说明" v-model:open="showKeywordsModal">
     <n-p>
       标签的意义在于辅助搜索。一个标签是否合适，要看标签相关情节的比例。仅仅是存在相关情节，不足以作为添加标签的依据。在实际操作中，可以思考搜索该标签的用户想不想看到这本书。
     </n-p>

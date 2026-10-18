@@ -446,8 +446,8 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
 
 <template>
   <c-modal
-    :show="show"
-    @update:show="$emit('update:show', $event)"
+    :open="show"
+    @update:open="$emit('update:show', $event)"
     :title="verb + '翻译器'"
     style="width: min(750px, calc(100% - 16px))"
   >

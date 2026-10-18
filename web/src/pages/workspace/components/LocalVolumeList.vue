@@ -184,7 +184,7 @@ const sortedVolumes = computed(() => {
           </n-list>
         </n-scrollbar>
 
-        <c-modal title="清空所有文件" v-model:show="showDeleteModal">
+        <c-modal title="清空所有文件" v-model:open="showDeleteModal">
           <n-p>
             这将清空你的浏览器里面保存的所有EPUB/TXT文件，包括已经翻译的章节和术语表，无法恢复。
             你确定吗？

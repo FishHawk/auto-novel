@@ -111,7 +111,7 @@ const moveToFavored = async () => {
                 ? selectedNovels[0].titleZh ?? selectedNovels[0].title
                 : `${selectedNovels.length}本小说`
             }？`"
-            v-model:show="showDeleteModal"
+            v-model:open="showDeleteModal"
           >
             <template #action>
               <c-button label="确定" type="primary" @action="deleteSelected" />
