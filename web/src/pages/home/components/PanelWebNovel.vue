@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { XAsyncContent } from '@novelia/web-kit';
+
 import type { WebNovelOutlineDto } from '@/model/WebNovel';
 
 defineProps<{
@@ -31,5 +33,10 @@ defineProps<{
     <n-empty v-if="novels.length === 0" description="空列表" />
   </template>
 
-  <CResultX v-else :error="error" title="加载错误" />
+  <XAsyncContent
+    v-else
+    :loading="!error"
+    :error="error?.message ?? ''"
+    error-title="加载错误"
+  />
 </template>

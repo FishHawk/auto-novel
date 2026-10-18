@@ -4,7 +4,7 @@ import {
   KeyboardArrowUpRound,
   SortOutlined,
 } from '@vicons/material';
-import { XDialog } from '@novelia/web-kit';
+import { XAsyncContent, XDialog } from '@novelia/web-kit';
 
 import type { GenericNovelId } from '@/model/Common';
 import type { ReadableTocItem } from '@/pages/novel/components/common';
@@ -159,39 +159,45 @@ const onTocItemClick = (item: ReadableTocItem) => {
       </div>
     </template>
 
-    <c-result :result="tocResult">
-      <ChapterTocList
-        v-if="gnid.type === 'web' && tocSections"
-        :toc-sections="tocSections"
-        v-model:expanded-names="expandedNames"
-        :last-read-chapter-id="chapterId"
-        :default-scroll-key="currentKey"
-        :provider-id="gnid.providerId"
-        :novel-id="gnid.novelId"
-        :sort-reverse="sortReverse"
-        :mode="{
-          narrow: !isWideScreen,
-          modal: true,
-          collapse: false,
-        }"
-        @item-click="onTocItemClick"
-      />
-      <ChapterTocList
-        v-else-if="gnid.type === 'local' && tocSections"
-        :toc-sections="tocSections"
-        v-model:expanded-names="expandedNames"
-        :last-read-chapter-id="chapterId"
-        :default-scroll-key="currentKey"
-        :provider-id="gnid.volumeId"
-        :novel-id="gnid.volumeId"
-        :sort-reverse="sortReverse"
-        :mode="{
-          narrow: !isWideScreen,
-          modal: true,
-          collapse: false,
-        }"
-        @item-click="onTocItemClick"
-      />
-    </c-result>
+    <XAsyncContent
+      :loading="!tocResult"
+      :error="tocResult && !tocResult.ok ? tocResult.error.message : ''"
+      error-title="加载错误"
+    >
+      <template v-if="tocResult?.ok">
+        <ChapterTocList
+          v-if="gnid.type === 'web' && tocSections"
+          :toc-sections="tocSections"
+          v-model:expanded-names="expandedNames"
+          :last-read-chapter-id="chapterId"
+          :default-scroll-key="currentKey"
+          :provider-id="gnid.providerId"
+          :novel-id="gnid.novelId"
+          :sort-reverse="sortReverse"
+          :mode="{
+            narrow: !isWideScreen,
+            modal: true,
+            collapse: false,
+          }"
+          @item-click="onTocItemClick"
+        />
+        <ChapterTocList
+          v-else-if="gnid.type === 'local' && tocSections"
+          :toc-sections="tocSections"
+          v-model:expanded-names="expandedNames"
+          :last-read-chapter-id="chapterId"
+          :default-scroll-key="currentKey"
+          :provider-id="gnid.volumeId"
+          :novel-id="gnid.volumeId"
+          :sort-reverse="sortReverse"
+          :mode="{
+            narrow: !isWideScreen,
+            modal: true,
+            collapse: false,
+          }"
+          @item-click="onTocItemClick"
+        />
+      </template>
+    </XAsyncContent>
   </XDialog>
 </template>

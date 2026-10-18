@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast, XDialog } from '@novelia/web-kit';
+import { Toast, XDialog, XAsyncContent } from '@novelia/web-kit';
 import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
 import { subjectKeys } from '@novelia/forum-api';
 import { createReusableTemplate } from '@vueuse/core';
@@ -295,6 +295,11 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
       </NovelBottomTabs>
     </template>
 
-    <CResultX v-else :error="error" title="加载错误" />
+    <XAsyncContent
+      v-else
+      :loading="!error"
+      :error="error?.message ?? ''"
+      error-title="加载错误"
+    />
   </div>
 </template>

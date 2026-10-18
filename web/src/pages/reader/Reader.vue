@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { createReusableTemplate, onKeyDown } from '@vueuse/core';
+import { XAsyncContent } from '@novelia/web-kit';
 
 import { ReadHistoryApi } from '@/api';
 import { GenericNovelId } from '@/model/Common';
@@ -54,6 +55,16 @@ const chapterResult = shallowRef<Result<ReaderChapter>>();
 const chapterList = ref<
   { chapterId: string; result?: Result<ReaderChapter> }[]
 >([]);
+const currentChapter = computed(() =>
+  chapterResult.value?.ok ? chapterResult.value.value : undefined,
+);
+const loadedChapters = computed(() =>
+  chapterList.value.map((item) => ({
+    chapterId: item.chapterId,
+    result: item.result,
+    chapter: item.result?.ok ? item.result.value : undefined,
+  })),
+);
 const loadingBar = useLoadingBar();
 
 const novelUrl = (() => {
@@ -283,11 +294,18 @@ onKeyDown(['Enter'], (e) => {
   </DefineChapterLink>
 
   <div class="content">
-    <c-result :result="chapterResult" v-slot="{ value: chapter }">
+    <XAsyncContent
+      :loading="!chapterResult"
+      :error="
+        chapterResult && !chapterResult.ok ? chapterResult.error.message : ''
+      "
+      error-title="加载错误"
+    >
       <component
+        v-if="currentChapter"
         :is="isMobile ? ReaderLayoutMobile : ReaderLayoutDesktop"
         :novel-url="novelUrl"
-        :chapter="chapter"
+        :chapter="currentChapter"
         @nav="navToChapter"
         @require-catalog-modal="showCatalogModal = true"
         @require-setting-modal="showSettingModal = true"
@@ -295,35 +313,45 @@ onKeyDown(['Enter'], (e) => {
         <template v-if="readerSetting.pageTurnMode === 'page'">
           <reader-content
             :gnid="gnid"
-            :chapter-id="chapter.chapterId"
-            :chapter="chapter"
+            :chapter-id="currentChapter.chapterId"
+            :chapter="currentChapter"
           />
           <n-divider />
           <n-flex align="center" justify="space-between" style="width: 100%">
-            <ReuseChapterLink :id="chapter.prevId" label="上一章" />
-            <ReuseChapterLink :id="chapter.nextId" label="下一章" />
+            <ReuseChapterLink :id="currentChapter.prevId" label="上一章" />
+            <ReuseChapterLink :id="currentChapter.nextId" label="下一章" />
           </n-flex>
         </template>
         <template
           v-else
-          v-for="(item, idx) in chapterList"
+          v-for="(item, idx) in loadedChapters"
           :key="item.chapterId"
         >
-          <c-result :result="item.result" v-slot="{ value: chapterItem }">
-            <n-divider v-if="idx > 0 && chapterList.length > 0" />
-            <reader-content
-              :gnid="gnid"
-              :chapter-id="chapterItem.chapterId"
-              :chapter="chapterItem"
-            />
+          <XAsyncContent
+            :loading="!item.result"
+            :error="
+              item.result && !item.result.ok ? item.result.error.message : ''
+            "
+            error-title="加载错误"
+          >
+            <template v-if="item.chapter">
+              <n-divider v-if="idx > 0 && loadedChapters.length > 0" />
+              <reader-content
+                :gnid="gnid"
+                :chapter-id="item.chapter.chapterId"
+                :chapter="item.chapter"
+              />
 
-            <template v-if="!chapterItem.nextId">
-              <div style="text-align: center; margin: 48px 0">暂无更多章节</div>
+              <template v-if="!item.chapter.nextId">
+                <div style="text-align: center; margin: 48px 0">
+                  暂无更多章节
+                </div>
+              </template>
             </template>
-          </c-result>
+          </XAsyncContent>
         </template>
       </component>
-    </c-result>
+    </XAsyncContent>
 
     <reader-setting-modal v-model:open="showSettingModal" />
 

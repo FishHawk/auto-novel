@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { XAsyncContent } from '@novelia/web-kit';
+
 import type { ListOptions, ListValue } from '@/components/list/types';
 import { WebNovelRepo } from '@/repos';
 import {
@@ -66,7 +68,12 @@ const { data: novelPage, error } = WebNovelRepo.useWebNovelRankList(
         <n-divider />
       </template>
 
-      <CResultX v-else :error="error" title="加载错误" />
+      <XAsyncContent
+        v-else
+        :loading="!error"
+        :error="error?.message ?? ''"
+        error-title="加载错误"
+      />
     </CPage>
   </div>
 </template>

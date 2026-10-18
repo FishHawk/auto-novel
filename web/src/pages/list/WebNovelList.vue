@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { XAsyncContent } from '@novelia/web-kit';
+
 import { WebNovelRepo } from '@/repos';
 import { FavoredRepo, useWhoamiStore } from '@/stores';
 import type { WebListValue } from './option';
@@ -81,7 +83,12 @@ watch(novelPage, (novelPage) => {
         <n-divider />
       </template>
 
-      <CResultX v-else :error="error" title="加载错误" />
+      <XAsyncContent
+        v-else
+        :loading="!error"
+        :error="error?.message ?? ''"
+        error-title="加载错误"
+      />
     </CPage>
   </div>
 </template>

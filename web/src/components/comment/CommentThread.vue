@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { XAsyncContent } from '@novelia/web-kit';
+
 import type { Comment } from '@novelia/forum-api';
 import { CommentRepo } from '@/repos';
 
@@ -57,6 +59,11 @@ const pageCount = computed(() =>
         style="margin-top: 12px; margin-left: 32px"
       />
     </template>
-    <CResultX v-else :error="error" title="回复加载错误" />
+    <XAsyncContent
+      v-else
+      :loading="!error"
+      :error="error?.message ?? ''"
+      error-title="回复加载错误"
+    />
   </div>
 </template>

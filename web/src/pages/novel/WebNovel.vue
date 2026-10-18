@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { XAsyncContent } from '@novelia/web-kit';
 import { computedAsync } from '@vueuse/core';
 
 import { formatError } from '@/api';
@@ -73,6 +74,11 @@ watch(formatedError, async (errorMessage) => {
       />
     </template>
 
-    <CResultX v-else :error="formatedError" title="加载错误" />
+    <XAsyncContent
+      v-else
+      :loading="!formatedError"
+      :error="formatedError"
+      error-title="加载错误"
+    />
   </div>
 </template>

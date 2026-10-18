@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import { Toast, XAsyncContent } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import { ReadHistoryApi } from '@/api';
@@ -94,7 +94,12 @@ const deleteHistory = (providerId: string, novelId: string) =>
         <n-divider />
       </template>
 
-      <CResultX v-else :error="error" title="加载错误" />
+      <XAsyncContent
+        v-else
+        :loading="!error"
+        :error="error?.message ?? ''"
+        error-title="加载错误"
+      />
     </CPage>
   </div>
 </template>

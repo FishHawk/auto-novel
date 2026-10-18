@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ChecklistOutlined } from '@vicons/material';
+import { XAsyncContent } from '@novelia/web-kit';
 
 import { useIsWideScreen } from '@/pages/util';
 import { WenkuNovelRepo } from '@/repos';
@@ -92,7 +93,12 @@ const novelListRef = useTemplateRef('novelList');
         <n-divider />
       </template>
 
-      <CResultX v-else :error="error" title="加载错误" />
+      <XAsyncContent
+        v-else
+        :loading="!error"
+        :error="error?.message ?? ''"
+        error-title="加载错误"
+      />
     </CPage>
   </bookshelf-layout>
 </template>

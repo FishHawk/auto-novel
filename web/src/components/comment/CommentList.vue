@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { CommentOutlined } from '@vicons/material';
+import { XAsyncContent } from '@novelia/web-kit';
 
 import { CommentRepo } from '@/repos';
 import type { Comment } from '@novelia/forum-api';
@@ -98,6 +99,11 @@ const canReply = computed(() => {
       />
     </template>
 
-    <CResultX v-else :error="error" title="加载错误" />
+    <XAsyncContent
+      v-else
+      :loading="!error"
+      :error="error?.message ?? ''"
+      error-title="加载错误"
+    />
   </CPage>
 </template>
