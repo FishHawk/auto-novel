@@ -202,17 +202,14 @@ async function save() {
             >
               {{ uploading ? '读取中…' : image ? '更换图片' : '选择图片' }}
             </button>
-            <span class="image-picker-hint">
-              {{ image ? image.file.name : 'JPEG / PNG / WebP / GIF / AVIF' }}
+            <span v-if="image" class="image-picker-hint">
+              {{ image.file.name }}
             </span>
           </div>
           <BannerImageInfo v-if="image" :image="image" />
           <small>
-            {{
-              uploading
-                ? '正在读取图片，请稍候…'
-                : '支持 JPEG、PNG、WebP、GIF、AVIF；上传时校验 ≤ 500 KB，JPEG / PNG 可先压缩为 WebP。'
-            }}
+            支持 JPEG、PNG、WebP、GIF、AVIF；上传时校验 ≤ 500 KB，JPEG / PNG
+            可先压缩为 WebP。
           </small>
         </div>
         <WebpCompressionPanel
@@ -272,15 +269,7 @@ async function save() {
           class="btn btn-primary"
           :disabled="uploading || saving || compressing"
         >
-          {{
-            uploading
-              ? '读取图片中…'
-              : saving
-                ? '正在提交…'
-                : image
-                  ? '上传并保存'
-                  : '保存 Banner'
-          }}
+          {{ saving ? '正在提交…' : image ? '上传并保存' : '保存 Banner' }}
         </button>
       </div>
     </form>

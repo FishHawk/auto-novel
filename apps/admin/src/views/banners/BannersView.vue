@@ -216,7 +216,7 @@ onMounted(load);
           :disabled="loading || busy !== null || uploading"
           @click="load"
         >
-          {{ loading ? '加载中…' : '刷新' }}
+          刷新
         </button>
       </div>
       <div v-if="loading" class="empty-state" role="status">
@@ -224,13 +224,7 @@ onMounted(load);
       </div>
       <div v-else-if="loaded && !visible.length" class="empty-state">
         <h2>{{ items.length ? '此状态下暂无 Banner' : '还没有 Banner' }}</h2>
-        <p>
-          {{
-            items.length
-              ? '可以切换筛选查看其他内容。'
-              : '切换到上传页，添加第一张首页轮播图片。'
-          }}
-        </p>
+        <p v-if="!items.length">切换到上传页，添加第一张首页轮播图片。</p>
       </div>
       <template v-else-if="loaded && selected">
         <BannerPreview

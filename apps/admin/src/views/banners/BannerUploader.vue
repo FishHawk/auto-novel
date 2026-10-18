@@ -125,7 +125,6 @@ async function compressSelected() {
   error.value = '';
   notice.value = '';
   item.error = '';
-  item.status = '正在压缩…';
   compressing.value = true;
   const quality = webpQuality.value;
   try {
@@ -141,7 +140,6 @@ async function compressSelected() {
     item.compressedUrl = URL.createObjectURL(file);
     item.status = '待上传';
   } catch (cause) {
-    item.status = '压缩失败';
     item.error = getApiErrorMessage(cause, '压缩失败');
   } finally {
     compressing.value = false;
@@ -183,7 +181,6 @@ async function upload() {
       try {
         validateImage(item.compressed ?? item.image.file);
       } catch (cause) {
-        item.status = '未通过校验';
         item.error = getApiErrorMessage(cause, '校验失败');
         invalid.push(item);
       }
@@ -200,13 +197,12 @@ async function upload() {
       item.error = '';
       try {
         if (!item.uploaded) {
-          item.status = '正在上传…';
           item.uploaded = await api.upload(item.compressed ?? item.image.file, {
             signal: controller.signal,
             onProgress: ({ loaded, total }) => {
-              item.status = total
-                ? `上传 ${Math.floor((loaded / total) * 100)}%`
-                : '正在上传…';
+              if (total) {
+                item.status = `上传 ${Math.floor((loaded / total) * 100)}%`;
+              }
             },
           });
         }

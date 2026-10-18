@@ -129,7 +129,7 @@ watch(canCompare, (available) => {
             :step="0.001"
             :disabled="disabled"
           />
-          <output class="focal-value" aria-label="X 焦点数值">
+          <output class="focal-value" aria-hidden="true">
             {{ (focalX * 100).toFixed(1) }}%
           </output>
         </div>
@@ -144,7 +144,7 @@ watch(canCompare, (available) => {
             :step="0.001"
             :disabled="disabled"
           />
-          <output class="focal-value" aria-label="Y 焦点数值">
+          <output class="focal-value" aria-hidden="true">
             {{ (focalY * 100).toFixed(1) }}%
           </output>
         </div>
