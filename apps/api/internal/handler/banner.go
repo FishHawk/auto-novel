@@ -84,6 +84,7 @@ func (h *bannerHandler) listActive(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return transportError(err)
 	}
+	w.Header().Set("Cache-Control", "public, max-age=60")
 	render.JSON(w, r, newBannerResponses(items))
 	return nil
 }
