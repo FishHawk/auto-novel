@@ -37,6 +37,8 @@ const pageCount = computed(() =>
     @reply="emit('reply', $event)"
   />
 
+  <slot />
+
   <div v-if="comment.replyCount > 0">
     <template v-if="replyPage">
       <div
