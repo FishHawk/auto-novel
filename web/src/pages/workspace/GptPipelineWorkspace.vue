@@ -8,6 +8,7 @@ import {
 } from '@vicons/material';
 import { VueDraggable } from 'vue-draggable-plus';
 import {
+  allowModels,
   Semaphore,
   OpenAiTranslator,
   SakuraTranslator,
@@ -15,6 +16,7 @@ import {
 } from '@auto-novel/translator';
 import type { TranslatorTracker } from '@auto-novel/translator';
 
+import { forumPostUrls } from '@/config';
 import { useWorkspaceStore } from '@/stores';
 import { TaskExecutor } from '@/domain/translator/TaskExecutor';
 import { IndexedDbSegmentCache } from '@/domain/translator/IndexedDbSegmentCache';
@@ -668,6 +670,95 @@ watch(
       <n-p>
         支持并发和查看章节分块状态的新工作区。目前处于测试阶段，有问题请在群内反馈。
       </n-p>
+      <template v-if="isSakura">
+        <n-flex>
+          <n-a
+            :href="forumPostUrls.sakuraDeployGuide"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            本地部署教程
+          </n-a>
+          /
+          <span>
+            <n-a
+              :href="forumPostUrls.sakuraAutoDlGuide"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              AutoDL教程
+            </n-a>
+            :
+            <n-a
+              href="https://www.autodl.com/console/instance/list"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              控制台
+            </n-a>
+          </span>
+          /
+          <n-a
+            href="https://monitor.novelia.cc/public-dashboards/be71c46fcc0e40eeaf06d9e7a2e26f95?refresh=auto&from=now-5m&to=now&timezone=browser"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            共享 Sakura 当前负载
+          </n-a>
+        </n-flex>
+        <n-p>允许上传的模型如下，禁止一切试图突破上传检查的操作。</n-p>
+        <n-ul>
+          <n-li v-for="({ repo }, model) in allowModels" :key="model">
+            [
+            <n-a
+              :href="`https://huggingface.co/${repo}/blob/main/${model}.gguf`"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              HF
+            </n-a>
+            /
+            <n-a
+              :href="`https://hf-mirror.com/${repo}/blob/main/${model}.gguf`"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              国内镜像
+            </n-a>
+            ]
+            {{ model }}
+          </n-li>
+        </n-ul>
+      </template>
+      <template v-else>
+        <n-flex>
+          <n-a
+            :href="forumPostUrls.usageGuide"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            使用教程
+          </n-a>
+          /
+          <n-a
+            href="https://chat.deepseek.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            DeepSeek Chat
+          </n-a>
+          /
+          <n-a
+            href="https://platform.deepseek.com/usage"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            DeepSeek API
+          </n-a>
+        </n-flex>
+        <n-p>不再支持GPT web，推荐使用deepseek API，价格很低。</n-p>
+        <n-p>本地小说支持韩语等其他语种，网络小说/文库小说暂时只允许日语。</n-p>
+      </template>
     </bulletin>
 
     <section-header title="翻译器">
