@@ -33,7 +33,6 @@ const { providerId, novelId, titleJp, titleZh, total } = props;
 const emit = defineEmits<{
   'update:jp': [number];
   'update:youdao': [number];
-  'update:gpt': [number];
 }>();
 
 const whoamiStore = useWhoamiStore();
@@ -228,7 +227,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
     ref="translateTask"
     @update:jp="(zh) => emit('update:jp', zh)"
     @update:youdao="(zh) => emit('update:youdao', zh)"
-    @update:gpt="(zh) => emit('update:gpt', zh)"
     style="margin-top: 20px"
   />
 </template>

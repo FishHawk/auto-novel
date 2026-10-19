@@ -204,11 +204,6 @@ const router = createRouter({
               props: { translatorId: 'sakura', key: 'sakura-pipeline' },
             },
             {
-              path: 'interactive',
-              meta: { title: '交互翻译' },
-              component: () => import('./pages/workspace/Interactive.vue'),
-            },
-            {
               path: 'toolbox',
               meta: { title: '小说工具箱' },
               component: () => import('./pages/workspace/Toolbox.vue'),

@@ -3,7 +3,6 @@ import { isEqual } from 'lodash-es';
 import type { Glossary } from '@/model/Glossary';
 import type { TranslatorId } from '@/model/Translator';
 
-import { OpenAiTranslator } from './TranslatorOpenAi';
 import { SakuraTranslator } from './TranslatorSakura';
 import { YoudaoTranslator } from './TranslatorYoudao';
 import type { Logger, SegmentCache, SegmentTranslator } from './Common';
@@ -12,7 +11,6 @@ import { RegexUtil } from '@/util';
 
 export type TranslatorConfig =
   | { id: 'youdao' }
-  | ({ id: 'gpt' } & OpenAiTranslator.Config)
   | ({ id: 'sakura' } & SakuraTranslator.Config);
 
 export class Translator {
@@ -185,8 +183,6 @@ export namespace Translator {
   ): Promise<SegmentTranslator> => {
     if (config.id === 'youdao') {
       return YoudaoTranslator.create(log);
-    } else if (config.id === 'gpt') {
-      return OpenAiTranslator.create(log, config);
     } else {
       return SakuraTranslator.create(log, config);
     }
@@ -203,12 +199,8 @@ export namespace Translator {
       config,
     );
     let segCache: SegmentCache | undefined = undefined;
-    if (cache) {
-      if (config.id === 'gpt') {
-        segCache = await createSegIndexedDbCache('gpt-seg-cache');
-      } else if (config.id === 'sakura') {
-        segCache = await createSegIndexedDbCache('sakura-seg-cache');
-      }
+    if (cache && config.id === 'sakura') {
+      segCache = await createSegIndexedDbCache('sakura-seg-cache');
     }
     return new Translator(segTranslator, segCache, log);
   };

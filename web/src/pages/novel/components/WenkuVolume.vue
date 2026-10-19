@@ -136,7 +136,6 @@ const submitJob = (id: 'gpt' | 'sakura') => {
   <TranslateTask
     ref="translateTask"
     @update:youdao="(zh) => (volume.youdao = zh)"
-    @update:gpt="(zh) => (volume.gpt = zh)"
     @update:sakura="(zh) => (volume.sakura = zh)"
     style="margin-top: 20px"
   />
