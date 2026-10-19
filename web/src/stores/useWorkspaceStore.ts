@@ -5,7 +5,8 @@ import type {
   TranslateJobRecord,
 } from '@/model/Translator';
 import { TranslateJob } from '@/model/Translator';
-import { lazy, useLocalStorage } from '@/util';
+import { createGlobalState } from '@vueuse/core';
+import { useLocalStorage } from '@/util';
 
 import { LSKey } from './key';
 import { addWorkspaceJob } from './workspaceJob';
@@ -164,11 +165,14 @@ const createSakuraWorkspaceStore = () =>
     },
   );
 
-export const useGptWorkspaceStore = lazy(createGptWorkspaceStore);
-export const useGptPipelineWorkspaceStore = lazy(
+// 保存与跨标签页同步需要在页面卸载后继续运行。
+export const useGptWorkspaceStore = createGlobalState(createGptWorkspaceStore);
+export const useGptPipelineWorkspaceStore = createGlobalState(
   createGptPipelineWorkspaceStore,
 );
-export const useSakuraWorkspaceStore = lazy(createSakuraWorkspaceStore);
+export const useSakuraWorkspaceStore = createGlobalState(
+  createSakuraWorkspaceStore,
+);
 
 export function useWorkspaceStore(type: 'gpt' | 'sakura' | 'gpt-pipeline') {
   if (type === 'gpt') {
