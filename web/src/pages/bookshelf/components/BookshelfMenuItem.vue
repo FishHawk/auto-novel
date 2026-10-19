@@ -9,6 +9,7 @@ const { id, type, title } = defineProps<{
   id: string;
   title: string;
   type: 'web' | 'wenku' | 'local';
+  active: boolean;
 }>();
 
 const store = useBookshelfLocalStore();
@@ -91,12 +92,19 @@ const deleteFavored = () =>
 </script>
 
 <template>
-  <n-flex align="center" justify="space-between" :wrap="false">
-    <RouterLink :to="`/favorite/${type}/${id}`" class="min-w-0 flex-1 truncate">
+  <div
+    class="flex min-w-0 items-center gap-1 rounded-sm pr-2 transition-colors hover:bg-hover"
+    :class="active ? 'bg-primary-soft text-primary' : 'text-ink'"
+  >
+    <RouterLink
+      :to="`/favorite/${type}/${id}`"
+      :aria-current="active ? 'page' : undefined"
+      class="min-w-0 flex-1 truncate rounded-sm px-3 py-2 text-inherit no-underline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+    >
       {{ title }}
     </RouterLink>
-    <span v-if="options.length > 0" @click.stop>
-      <XActionMenu>
+    <div v-if="options.length > 0" class="shrink-0">
+      <XActionMenu compact>
         <XActionMenuItem
           v-for="option in options"
           :key="option.key"
@@ -106,8 +114,8 @@ const deleteFavored = () =>
           {{ option.label }}
         </XActionMenuItem>
       </XActionMenu>
-    </span>
-  </n-flex>
+    </div>
+  </div>
 
   <XDialog v-model:open="showEditModal" title="编辑收藏夹" class="w-[600px]">
     <n-form
