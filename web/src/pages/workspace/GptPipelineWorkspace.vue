@@ -98,6 +98,10 @@ interface MetadataState {
 }
 /** 元数据独立于章节窗口；已结束的尝试保留到任务清除，避免重复上传。 */
 const metadataTasks = new Map<string, MetadataState>();
+const preparationTasks = new Map<
+  string,
+  { controller: AbortController; settled: boolean }
+>();
 
 let processLoopAbortController: AbortController | null = null;
 let activeProcessors = 0;
@@ -105,6 +109,7 @@ let activeProcessors = 0;
 onUnmounted(() => {
   initializingTasks.clear();
   abortMetadataTasks();
+  abortPreparationTasks();
   pipeline.clearLoops();
   pipeline.queue.clear();
   processLoopAbortController?.abort();
@@ -149,6 +154,7 @@ function getNextJob(
 ): { job: TranslateJob; chapterId: string; state: TaskState } | null {
   for (const job of jobs) {
     if (job.finishAt) continue;
+    if (taskCache.get(job.task)?.needsPreparation) continue;
     const state = taskStatesMap.get(job.task);
     if (!state) continue;
     for (const ch of state.chapters) {
@@ -167,6 +173,7 @@ function countPendingChapters(
   let count = 0;
   for (const job of jobs) {
     if (job.finishAt) continue;
+    if (taskCache.get(job.task)?.needsPreparation) continue;
     const state = taskStatesMap.get(job.task);
     if (!state) continue;
     for (const ch of state.chapters) {
@@ -201,6 +208,8 @@ function abortMetadataTasks(): void {
 
 function clearTaskRuntimeState(task: string): void {
   initializingTasks.delete(task);
+  preparationTasks.get(task)?.controller.abort();
+  preparationTasks.delete(task);
   metadataTasks.get(task)?.controller.abort();
   metadataTasks.delete(task);
   taskStates.value.delete(task);
@@ -228,6 +237,7 @@ function updateJobCompletion(
   const currentJob = findCurrentJob(job);
   if (
     !currentJob ||
+    task.needsPreparation ||
     taskCache.get(job.task) !== task ||
     taskStates.value.get(job.task) !== state
   ) {
@@ -240,6 +250,67 @@ function updateJobCompletion(
   ) {
     currentJob.finishAt = Date.now();
   }
+}
+
+function abortPreparationTasks(): void {
+  for (const [key, preparation] of preparationTasks) {
+    preparation.controller.abort();
+    // 等待插件返回后再释放占位
+    if (preparation.settled) preparationTasks.delete(key);
+  }
+}
+
+function prepareTaskOnce(
+  job: TranslateJob,
+  task: TranslationTask,
+  state: TaskState,
+): void {
+  if (
+    !task.prepareExecution ||
+    !canUpload() ||
+    preparationTasks.has(job.task)
+  ) {
+    return;
+  }
+  const preparation = { controller: new AbortController(), settled: false };
+  preparationTasks.set(job.task, preparation);
+  const signal = preparation.controller.signal;
+  const canPrepare = () =>
+    !signal.aborted &&
+    preparationTasks.get(job.task) === preparation &&
+    taskCache.get(job.task) === task &&
+    taskStates.value.get(job.task) === state &&
+    !!findCurrentJob(job) &&
+    canUpload();
+  task
+    .prepareExecution({
+      signal,
+      canUpload: canPrepare,
+      onLog: (message) => console.log(`[${job.task}] ${message}`),
+    })
+    .then(() => {
+      if (!canPrepare()) return;
+      state.initChapters(task.chapters);
+      const currentJob = findCurrentJob(job)!;
+      currentJob.progress = {
+        finished: task.chapters.filter((chapter) => chapter.status === 'done')
+          .length,
+        error: 0,
+        total: task.chapters.length,
+      };
+      updateJobCompletion(job, task, state);
+    })
+    .catch((error) => {
+      if (!signal.aborted) console.warn(`[${job.task}] 任务准备失败`, error);
+    })
+    .finally(() => {
+      if (preparationTasks.get(job.task) !== preparation) return;
+      preparation.settled = true;
+      if (signal.aborted || !task.needsPreparation) {
+        preparationTasks.delete(job.task);
+        runProcessLoop();
+      }
+    });
 }
 
 /**
@@ -319,6 +390,10 @@ function runProcessLoop(): void {
     const task = taskCache.get(job.task);
     const state = taskStates.value.get(job.task);
     if (task?.initialized && state?.initialized) {
+      if (task.needsPreparation) {
+        prepareTaskOnce(job, task, state);
+        continue;
+      }
       translateMetadataOnce(job, task, state);
     }
   }
@@ -326,7 +401,8 @@ function runProcessLoop(): void {
   const pendingCount = countPendingChapters(jobs.value, taskStates.value);
   if (pendingCount === 0) return;
   processLoopAbortController ??= new AbortController();
-  const signal = processLoopAbortController.signal;
+  const controller = processLoopAbortController;
+  const signal = controller.signal;
 
   const processOne = async () => {
     while (!signal.aborted && hasRunningWorker()) {
@@ -341,7 +417,12 @@ function runProcessLoop(): void {
         task,
         pipeline,
         fetchSemaphore,
-        canUpload,
+        () =>
+          !signal.aborted &&
+          taskCache.get(job.task) === task &&
+          taskStates.value.get(job.task) === state &&
+          !!findCurrentJob(job) &&
+          canUpload(),
       );
 
       const segmentTracker = state.getChapterState(chapterId);
@@ -386,7 +467,9 @@ function runProcessLoop(): void {
       activeProcessors--;
       if (activeProcessors === 0) {
         executingTasks.clear();
-        processLoopAbortController = null;
+        if (processLoopAbortController === controller) {
+          processLoopAbortController = null;
+        }
       }
       if (countPendingChapters(jobs.value, taskStates.value) > 0) {
         runProcessLoop();
@@ -447,6 +530,7 @@ const stopWorker = (workerId: string) => {
 
   if ([...workerStates.value.values()].every((s) => !s.running)) {
     abortMetadataTasks();
+    abortPreparationTasks();
     processLoopAbortController?.abort();
     processLoopAbortController = null;
     pipeline.queue.clear();
@@ -507,6 +591,7 @@ watch(
       ...taskVersions.value.keys(),
       ...initializingTasks.keys(),
       ...metadataTasks.keys(),
+      ...preparationTasks.keys(),
     ]);
     for (const task of knownTasks) {
       if (!activeTasks.has(task)) clearTaskRuntimeState(task);

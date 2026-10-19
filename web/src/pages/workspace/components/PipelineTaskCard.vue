@@ -72,7 +72,10 @@ const themeVars = useThemeVars();
 const taskStatus = computed<'done' | 'executing' | 'pending'>(() => {
   if (props.job.finishAt) return 'done';
   if (!chapterMetas.value.length)
-    return props.taskCacheEntry?.needsMetadata ? 'pending' : 'done';
+    return props.taskCacheEntry?.needsPreparation ||
+      props.taskCacheEntry?.needsMetadata
+      ? 'pending'
+      : 'done';
   if (chapterMetas.value.some((c) => c.status === 'translating'))
     return 'executing';
   return 'pending';

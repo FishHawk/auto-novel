@@ -1,4 +1,4 @@
-import { TranslationPipeline, Semaphore } from '@auto-novel/translator';
+import type { TranslationPipeline, Semaphore } from '@auto-novel/translator';
 import type { ChapterStatus, ChapterSegmentState } from './TaskState';
 import type { TranslationTask } from './TranslationTask/types';
 
@@ -36,12 +36,18 @@ export class TaskExecutor {
     tracker.onLog(`[${chapter.title}] 开始获取原文`);
 
     try {
+      const context = {
+        signal: signal ?? new AbortController().signal,
+        canUpload: this.canUpload,
+        onLog: tracker.onLog,
+      };
       if (this.task.type !== 'local' && this.canUpload?.() === false) {
         throw new Error('存在未通过上传检查的翻译器，无法启动网络／文库任务');
       }
       const fetchAndPrepare = async () => {
         await this.pipeline.waitUntilBelowHighWaterMark(signal);
-        const detail = await this.task.fetchChapter(chapterId);
+        context.signal.throwIfAborted();
+        const detail = await this.task.fetchChapter(chapterId, context);
 
         const original = detail.paragraphs.join('\n');
         const history =
@@ -95,6 +101,7 @@ export class TaskExecutor {
         chapterId,
         detail.glossaryId,
         translated.split('\n'),
+        context,
       );
 
       tracker.onChapterStatus(chapterId, 'done');
