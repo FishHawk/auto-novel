@@ -25,13 +25,16 @@
   font-weight: 600;
 }
 .banner-thumbnails {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 140px));
+  display: flex;
   gap: 12px;
-  padding: 16px 20px 8px;
+  padding: 16px 20px 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
 }
 .banner-thumbnail {
   position: relative;
+  flex: 0 0 128px;
   min-width: 0;
   padding: 8px;
   border: none;
