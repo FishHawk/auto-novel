@@ -92,7 +92,7 @@ const clearCache = async () =>
 
 <template>
   <div class="layout-content">
-    <n-h1>Sakura工作区</n-h1>
+    <n-h1>Sakura工作区（待废弃）</n-h1>
 
     <bulletin>
       <n-flex>

@@ -665,7 +665,7 @@ watch(
 
 <template>
   <div class="layout-content">
-    <n-h1>{{ isSakura ? 'Sakura' : 'GPT' }}工作区BETA</n-h1>
+    <n-h1>{{ isSakura ? 'Sakura' : 'GPT' }}工作区</n-h1>
     <bulletin>
       <n-p>
         支持并发和查看章节分块状态的新工作区。目前处于测试阶段，有问题请在群内反馈。

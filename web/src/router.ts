@@ -178,28 +178,27 @@ const router = createRouter({
 
         {
           path: '/workspace',
-          redirect: '/workspace/sakura',
+          redirect: '/workspace/sakura-pipeline',
           children: [
             {
               path: 'gpt',
-              meta: { title: 'GPT工作区' },
-              component: () => import('./pages/workspace/GptWorkspace.vue'),
+              redirect: '/workspace/gpt-pipeline',
             },
             {
               path: 'sakura',
-              meta: { title: 'Sakura工作区' },
+              meta: { title: 'Sakura工作区（待废弃）' },
               component: () => import('./pages/workspace/SakuraWorkspace.vue'),
             },
             {
               path: 'gpt-pipeline',
-              meta: { title: 'GPT工作区BETA' },
+              meta: { title: 'GPT工作区' },
               component: () =>
                 import('./pages/workspace/GptPipelineWorkspace.vue'),
               props: { translatorId: 'gpt', key: 'gpt-pipeline' },
             },
             {
               path: 'sakura-pipeline',
-              meta: { title: 'Sakura工作区BETA' },
+              meta: { title: 'Sakura工作区' },
               component: () =>
                 import('./pages/workspace/GptPipelineWorkspace.vue'),
               props: { translatorId: 'sakura', key: 'sakura-pipeline' },

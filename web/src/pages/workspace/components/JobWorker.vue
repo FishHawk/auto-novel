@@ -13,14 +13,12 @@ import {
 
 import type { TranslatorConfig } from '@/domain/translate';
 import { Translator } from '@/domain/translate';
-import type { GptWorker, SakuraWorker } from '@/model/Translator';
+import type { SakuraWorker } from '@/model/Translator';
 import { TranslateTaskDescriptor } from '@/model/Translator';
 import { useWorkspaceStore } from '@/stores';
 
 const props = defineProps<{
-  worker:
-    | ({ translatorId: 'sakura' } & SakuraWorker)
-    | ({ translatorId: 'gpt' } & GptWorker);
+  worker: { translatorId: 'sakura' } & SakuraWorker;
   getNextJob: () =>
     | { task: string; description: string; createAt: number }
     | undefined;
@@ -36,33 +34,14 @@ const emit = defineEmits<{
   ];
 }>();
 
-const translatorConfig = computed(() => {
-  const worker = props.worker;
-  if (worker.translatorId === 'gpt') {
-    return <TranslatorConfig & { id: 'gpt' }>{
-      id: 'gpt',
-      model: worker.model,
-      endpoint: worker.endpoint,
-      key: worker.key,
-    };
-  } else {
-    return <TranslatorConfig & { id: 'sakura' }>{
-      id: 'sakura',
-      endpoint: worker.endpoint,
-      segLength: worker.segLength,
-      prevSegLength: worker.prevSegLength,
-    };
-  }
-});
+const translatorConfig = computed<TranslatorConfig & { id: 'sakura' }>(() => ({
+  id: 'sakura',
+  endpoint: props.worker.endpoint,
+  segLength: props.worker.segLength,
+  prevSegLength: props.worker.prevSegLength,
+}));
 
-const endpointPrefix = computed(() => {
-  const worker = props.worker;
-  if (worker.translatorId === 'gpt') {
-    return `${worker.model}[${worker.key.slice(-4)}]@`;
-  } else {
-    return `${worker.segLength ?? 500}@`;
-  }
-});
+const endpointPrefix = computed(() => `${props.worker.segLength ?? 500}@`);
 
 const enableAutoMode = ref(true);
 
@@ -130,7 +109,6 @@ const deleteWorker = () => {
 };
 
 const testWorker = async () => {
-  const worker = props.worker;
   const textJp = [
     '国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。',
   ];
@@ -141,19 +119,15 @@ const testWorker = async () => {
     const lineJp = textJp[0];
     const lineZh = textZh[0];
 
-    if (worker.translatorId === 'gpt') {
-      Toast.success(`原文：${lineJp}\n译文：${lineZh}`);
-    } else {
-      Toast.success(
-        [
-          `原文：${lineJp}`,
-          `译文：${lineZh}`,
-          `模型：${translator.sakuraModel()} ${
-            translator.allowUpload() ? '允许上传' : '禁止上传'
-          }`,
-        ].join('\n'),
-      );
-    }
+    Toast.success(
+      [
+        `原文：${lineJp}`,
+        `译文：${lineZh}`,
+        `模型：${translator.sakuraModel()} ${
+          translator.allowUpload() ? '允许上传' : '禁止上传'
+        }`,
+      ].join('\n'),
+    );
   } catch (e: unknown) {
     Toast.error(`翻译器错误：${e}`);
   }
@@ -243,14 +217,5 @@ const showEditWorkerModal = ref(false);
 
   <TranslateTask ref="translateTask" style="margin-top: 20px" />
 
-  <sakura-worker-modal
-    v-if="worker.translatorId === 'sakura'"
-    v-model:show="showEditWorkerModal"
-    :worker="worker"
-  />
-  <gpt-worker-modal
-    v-else
-    v-model:show="showEditWorkerModal"
-    :worker="worker"
-  />
+  <sakura-worker-modal v-model:show="showEditWorkerModal" :worker="worker" />
 </template>
