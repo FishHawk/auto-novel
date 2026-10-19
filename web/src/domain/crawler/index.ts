@@ -9,6 +9,17 @@ import { useWhoamiStore } from '@/stores';
 
 import { classifyTocUpdate } from './TocUpdate';
 
+export interface CrawlerUpdateOptions {
+  signal?: AbortSignal;
+  canUpdate?: () => boolean;
+}
+
+const checkUpdateAllowed = (options?: CrawlerUpdateOptions) => {
+  if (options?.signal?.aborted || options?.canUpdate?.() === false) {
+    throw new DOMException('爬虫任务已停止', 'AbortError');
+  }
+};
+
 const toMutationBody = (metadata: WebNovelMetadata) => ({
   title: metadata.title,
   authors: metadata.authors.map((author) => ({
@@ -54,10 +65,12 @@ const updateWebNovel = async (
   providerId: string,
   novelId: string,
   current?: WebNovelDto,
-  options?: { safeUpdateToc?: boolean },
+  options?: CrawlerUpdateOptions & { safeUpdateToc?: boolean },
 ) => {
+  checkUpdateAllowed(options);
   const safeUpdateToc = options?.safeUpdateToc ?? true;
   const metadata = await WebNovelCrawlerApi.getMetadata(providerId, novelId);
+  checkUpdateAllowed(options);
   const body = toMutationBody(metadata);
   current ??= await WebNovelApi.getNovel(providerId, novelId);
   const currentBody = toCurrentMutationBody(current);
@@ -91,6 +104,7 @@ const updateWebNovel = async (
     }
   }
 
+  checkUpdateAllowed(options);
   await WebNovelRepo.updateNovel(providerId, novelId, body);
 };
 
@@ -99,13 +113,16 @@ const updateWebNovelChapter = async (
   novelId: string,
   chapterId: string,
   force: boolean,
+  options?: CrawlerUpdateOptions,
 ) => {
+  checkUpdateAllowed(options);
   const chapter = await WebNovelCrawlerApi.getChapter(
     providerId,
     novelId,
     chapterId,
   );
   const body = toChapterMutationBody(chapter);
+  checkUpdateAllowed(options);
 
   if (!force) {
     await WebNovelRepo.createChapter(providerId, novelId, chapterId, body);
@@ -118,6 +135,7 @@ const updateWebNovelChapter = async (
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (message.includes('404') || message.includes('章节不存在')) {
+      checkUpdateAllowed(options);
       await WebNovelRepo.createChapter(providerId, novelId, chapterId, body);
       return 'created' as const;
     }

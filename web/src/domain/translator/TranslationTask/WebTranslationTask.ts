@@ -1,8 +1,14 @@
 import type { Glossary } from '@auto-novel/translator';
 import type { ChapterMeta } from '../TaskState';
 import type { TranslateTaskParams, WebTranslateTask } from '@/model/Translator';
-import type { ChapterDetail, TranslationTask, TranslatorId } from './types';
-import { WebNovelApi } from '@/api';
+import type {
+  ChapterDetail,
+  TaskExecutionContext,
+  TranslationTask,
+  TranslatorId,
+} from './types';
+import { WebNovelApi, formatError } from '@/api';
+import { CrawlerService } from '@/domain/crawler';
 import { createWebMetadataCoder } from '@/domain/translate/WebMetadataCoder';
 import { buildChapterMetaList } from './utils';
 
@@ -15,9 +21,10 @@ export class WebTranslationTask implements TranslationTask {
   glossaryId = '';
   initialized = false;
 
-  private api!: ReturnType<typeof WebNovelApi.createTranslationApi>;
   private params: TranslateTaskParams;
   private task?: WebTranslateTask;
+  private initialization?: Promise<void>;
+  private prepared = false;
 
   constructor(
     private providerId: string,
@@ -30,16 +37,17 @@ export class WebTranslationTask implements TranslationTask {
     this.params = params;
   }
 
-  async initMeta(signal?: AbortSignal): Promise<void> {
-    this.api = WebNovelApi.createTranslationApi(
-      this.providerId,
-      this.novelId,
-      this.translatorId,
-      this.params.level === 'sync',
-      signal,
-    );
+  initMeta(signal?: AbortSignal): Promise<void> {
+    this.initialization ??= this.loadMeta(signal).finally(() => {
+      this.initialization = undefined;
+    });
+    return this.initialization;
+  }
 
-    const task = await this.api.getTranslateTask();
+  private async loadMeta(signal?: AbortSignal): Promise<void> {
+    const api = this.createApi(signal);
+    const task = await api.getTranslateTask();
+    signal?.throwIfAborted();
     this.task = task;
     this.glossary = task.glossary;
     this.glossaryId = task.glossaryUuid;
@@ -69,6 +77,53 @@ export class WebTranslationTask implements TranslationTask {
       toMeta,
     );
     this.initialized = true;
+  }
+
+  get needsPreparation(): boolean {
+    return this.params.useBrowserCrawler && !this.prepared;
+  }
+
+  async prepareExecution(context: TaskExecutionContext): Promise<void> {
+    if (!this.needsPreparation) return;
+    // 预览可能正在初始化，先等待读取完成，再刷新目录和任务快照。
+    if (this.initialization) await this.initialization;
+    this.checkExecution(context);
+    try {
+      context.onLog('获取小说信息');
+      const novel = await WebNovelApi.getNovel(this.providerId, this.novelId);
+      this.checkExecution(context);
+      context.onLog('通过浏览器爬虫更新目录');
+      await CrawlerService.updateWebNovel(
+        this.providerId,
+        this.novelId,
+        novel,
+        {
+          safeUpdateToc: this.level !== 'sync',
+          signal: context.signal,
+          canUpdate: context.canUpload,
+        },
+      );
+      context.onLog('目录已更新');
+    } catch (error) {
+      this.checkExecution(context);
+      if (error instanceof DOMException && error.name === 'AbortError')
+        throw error;
+      context.onLog(`目录更新跳过：${await formatError(error)}`);
+    }
+    this.checkExecution(context);
+    // 抓取期间预览可能发起旧快照读取，不应该将其复用为更新后的目录。
+    if (this.initialization) await this.initialization;
+    this.checkExecution(context);
+    await this.initMeta(context.signal);
+    this.checkExecution(context);
+    this.prepared = true;
+  }
+
+  private checkExecution(context?: TaskExecutionContext): void {
+    context?.signal.throwIfAborted();
+    if (context?.canUpload?.() === false) {
+      throw new DOMException('任务已停止或不允许上传', 'AbortError');
+    }
   }
 
   get needsMetadata(): boolean {
@@ -102,18 +157,41 @@ export class WebTranslationTask implements TranslationTask {
       throw new Error('元数据翻译结果数量不匹配');
     }
     // initMeta 的请求可能早于本轮运行，上传必须绑定本轮的取消信号。
-    const api = WebNovelApi.createTranslationApi(
-      this.providerId,
-      this.novelId,
-      this.translatorId,
-      this.params.level === 'sync',
-      signal,
-    );
+    const api = this.createApi(signal);
     await api.updateMetadataTranslation(coder.recover(translated));
   }
 
-  async fetchChapter(chapterId: string): Promise<ChapterDetail> {
-    const chapterTask = await this.api.getChapterTranslateTask(chapterId);
+  async fetchChapter(
+    chapterId: string,
+    context?: TaskExecutionContext,
+  ): Promise<ChapterDetail> {
+    this.checkExecution(context);
+    let syncFromProvider = this.level === 'sync';
+    if (context && this.params.useBrowserCrawler) {
+      try {
+        context.onLog('通过浏览器爬虫更新章节');
+        const action = await CrawlerService.updateWebNovelChapter(
+          this.providerId,
+          this.novelId,
+          chapterId,
+          syncFromProvider,
+          { signal: context.signal, canUpdate: context.canUpload },
+        );
+        context.onLog(action === 'created' ? '章节已创建' : '章节已更新');
+        syncFromProvider = false;
+      } catch (error) {
+        this.checkExecution(context);
+        if (error instanceof DOMException && error.name === 'AbortError')
+          throw error;
+        context.onLog(`章节更新跳过：${await formatError(error)}`);
+      }
+    }
+    this.checkExecution(context);
+    const api = this.createApi(context?.signal);
+    const chapterTask = await api.getChapterTranslateTask(chapterId, {
+      syncFromProvider,
+    });
+    this.checkExecution(context);
     return {
       paragraphs: chapterTask.paragraphJp,
       glossary: chapterTask.glossary,
@@ -127,10 +205,23 @@ export class WebTranslationTask implements TranslationTask {
     chapterId: string,
     glossaryId: string,
     translatedParagraphs: string[],
+    context?: TaskExecutionContext,
   ): Promise<void> {
-    await this.api.updateChapterTranslation(chapterId, {
+    this.checkExecution(context);
+    const api = this.createApi(context?.signal);
+    await api.updateChapterTranslation(chapterId, {
       glossaryId,
       paragraphsZh: translatedParagraphs,
     });
+  }
+
+  private createApi(signal?: AbortSignal) {
+    return WebNovelApi.createTranslationApi(
+      this.providerId,
+      this.novelId,
+      this.translatorId,
+      this.level === 'sync',
+      signal,
+    );
   }
 }
