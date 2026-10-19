@@ -15,6 +15,9 @@ export function useBannerImage() {
   const { width, height } = useElementSize(container);
   const imageSize = ref({ width: 0, height: 0 });
   const loading = ref(true);
+  const switching = ref(false);
+  const canSwitch = ref(false);
+  const switchError = ref('');
 
   const imagePosition = computed(() => {
     // 无横幅数据时沿用旧版 bg-top 的对齐方式。
@@ -50,28 +53,69 @@ export function useBannerImage() {
 
   let rotationTimer: ReturnType<typeof setTimeout> | undefined;
   let disposed = false;
-  const loadBanner = async () => {
+  const loadBanner = async (next = false) => {
+    if (switching.value || disposed) return;
+    switching.value = true;
+    switchError.value = '';
     clearTimeout(rotationTimer);
-    const selected: BannerSelection | undefined =
-      await BannerRepo.current().catch(() => undefined);
-    if (disposed) return;
-    if (!selected?.banner.imageUrl) {
-      showFallback();
-      return;
-    }
+    let selected: BannerSelection | undefined;
+    try {
+      selected = await BannerRepo.current(next);
+      if (disposed) return;
+      canSwitch.value = (await BannerRepo.list()).length > 1;
+      if (!selected?.banner.imageUrl) {
+        if (!next) showFallback();
+        return;
+      }
 
-    banner.value = selected.banner;
-    rotationTimer = setTimeout(
-      loadBanner,
-      Math.max(0, selected.expiresAt - Date.now()),
-    );
-    if (imageUrl.value !== selected.banner.imageUrl) {
-      loading.value = true;
-      imageSize.value = { width: 0, height: 0 };
-      imageUrl.value = selected.banner.imageUrl;
+      // 手动切换先预加载，失败时不清空当前背景。
+      if (next && imageUrl.value !== selected.banner.imageUrl) {
+        const image = new Image();
+        const url = selected.banner.imageUrl;
+        await new Promise<void>((resolve, reject) => {
+          const finish = (error?: Error) => {
+            clearTimeout(timeout);
+            image.onload = null;
+            image.onerror = null;
+            if (error) reject(error);
+            else resolve();
+          };
+          const timeout = setTimeout(
+            () => finish(new Error('图片加载超时')),
+            15000,
+          );
+          image.onload = () => finish();
+          image.onerror = () => finish(new Error('图片加载失败'));
+          image.src = url;
+        });
+        if (disposed) return;
+        imageSize.value = {
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        };
+      }
+      banner.value = selected.banner;
+      if (imageUrl.value !== selected.banner.imageUrl) {
+        loading.value = !next;
+        if (!next) imageSize.value = { width: 0, height: 0 };
+        imageUrl.value = selected.banner.imageUrl;
+      }
+    } catch {
+      if (disposed) return;
+      if (next) switchError.value = '切换失败，点击重试';
+      else showFallback();
+    } finally {
+      switching.value = false;
+      if (!disposed && selected) {
+        rotationTimer = setTimeout(
+          () => void loadBanner(),
+          Math.max(0, selected.expiresAt - Date.now()),
+        );
+      }
     }
   };
-  onMounted(loadBanner);
+  const nextBanner = () => loadBanner(true);
+  onMounted(() => void loadBanner());
   onBeforeUnmount(() => {
     disposed = true;
     clearTimeout(rotationTimer);
@@ -82,6 +126,10 @@ export function useBannerImage() {
     imageUrl,
     imagePosition,
     loading,
+    switching,
+    canSwitch,
+    switchError,
+    nextBanner,
     imageLoaded,
     showFallback,
   };
