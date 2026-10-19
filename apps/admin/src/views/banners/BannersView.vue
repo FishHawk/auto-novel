@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Toast, XDialog, getApiErrorMessage } from '@novelia/web-kit';
 import { useBannerApi, type Banner } from '../../api';
-import BannerForm from './BannerForm.vue';
 import BannerUploader from './BannerUploader.vue';
 import BannerPreview from './BannerPreview.vue';
+import { validateBannerConfig } from './bannerConfig';
+import { defaultBannerFocal, validateBannerFocal } from './bannerFocal';
 
 const activeTab = ref('manage');
 const tabs = [
@@ -35,13 +36,42 @@ const loading = ref(false);
 const loaded = ref(false);
 const error = ref('');
 const busy = ref<number | null>(null);
-const editor = ref<Banner | null>(null);
 const deleting = ref<Banner | null>(null);
 const selectedId = ref<number>();
 const selected = computed(
   () =>
     items.value.find((item) => item.id === selectedId.value) ?? items.value[0],
 );
+
+const editing = ref(false);
+const saving = ref(false);
+const editError = ref('');
+const draftLink = ref('');
+const draftSortOrder = ref(0);
+const draftFocalX = ref(defaultBannerFocal);
+const draftFocalY = ref(defaultBannerFocal);
+const previewFocalX = computed({
+  get: () =>
+    editing.value
+      ? draftFocalX.value
+      : selected.value?.focalX ?? defaultBannerFocal,
+  set: (value: number) => {
+    draftFocalX.value = value;
+  },
+});
+const previewFocalY = computed({
+  get: () =>
+    editing.value
+      ? draftFocalY.value
+      : selected.value?.focalY ?? defaultBannerFocal,
+  set: (value: number) => {
+    draftFocalY.value = value;
+  },
+});
+
+watch(activeTab, (tab) => {
+  if (tab !== 'manage') cancelEdit();
+});
 
 let reloadRequested = false;
 async function load() {
@@ -101,9 +131,49 @@ async function remove() {
   busy.value = null;
 }
 
-async function saved() {
-  editor.value = null;
-  await load();
+function startEdit() {
+  const banner = selected.value;
+  if (!banner) return;
+  draftLink.value = banner.linkUrl ?? '';
+  draftSortOrder.value = banner.sortOrder;
+  draftFocalX.value = banner.focalX;
+  draftFocalY.value = banner.focalY;
+  editError.value = '';
+  editing.value = true;
+}
+
+function cancelEdit() {
+  editing.value = false;
+  editError.value = '';
+}
+
+async function saveEdit() {
+  const banner = selected.value;
+  if (!banner || saving.value) return;
+  editError.value =
+    validateBannerConfig(draftLink.value, draftSortOrder.value) ||
+    validateBannerFocal(draftFocalX.value, draftFocalY.value);
+  if (editError.value) return;
+  saving.value = true;
+  const updated = await Toast.promise(
+    api.update(banner.id, {
+      type: banner.type,
+      key: banner.key,
+      linkUrl: draftLink.value.trim() || null,
+      sortOrder: draftSortOrder.value,
+      focalX: draftFocalX.value,
+      focalY: draftFocalY.value,
+    }),
+    {
+      loading: { message: '正在保存 Banner…', duration: 0 },
+      success: 'Banner 已保存',
+      error: '保存失败',
+    },
+  );
+  saving.value = false;
+  if (!updated) return;
+  Object.assign(banner, updated);
+  editing.value = false;
 }
 
 function formatDate(value: string) {
@@ -149,9 +219,7 @@ onMounted(load);
     tabindex="0"
   >
     <BannerUploader
-      :disabled="
-        activeTab !== 'upload' || !!editor || !!deleting || busy !== null
-      "
+      :disabled="activeTab !== 'upload' || !!deleting || busy !== null"
       @busy="uploading = $event"
       @saved="load"
     />
@@ -167,13 +235,13 @@ onMounted(load);
     <p v-if="error" class="error-notice" role="alert">{{ error }}</p>
 
     <section class="banner-panel" :aria-busy="loading">
-      <div v-if="loading || !loaded || !selected" class="panel-toolbar">
+      <div v-if="error && !loaded && !loading" class="panel-toolbar">
         <button
           class="btn btn-small"
-          :disabled="loading || busy !== null || uploading"
+          :disabled="busy !== null || uploading"
           @click="load"
         >
-          刷新
+          重试
         </button>
       </div>
       <div v-if="loading" class="empty-state" role="status">
@@ -181,17 +249,37 @@ onMounted(load);
       </div>
       <div v-else-if="loaded && !items.length" class="empty-state">
         <h2>还没有 Banner</h2>
-        <p>切换到上传页，添加第一张首页轮播图片。</p>
+        <p>首页轮播目前是空的，上传图片后就能在这里管理和排序。</p>
+        <div class="empty-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="activeTab = 'upload'"
+          >
+            上传 Banner
+          </button>
+          <button
+            type="button"
+            class="btn"
+            :disabled="busy !== null || uploading"
+            @click="load"
+          >
+            刷新
+          </button>
+        </div>
       </div>
       <template v-else-if="loaded && selected">
         <BannerPreview
           :src="selected.imageUrl"
           :alt="`Banner #${selected.id}`"
-          :focal-x="selected.focalX"
-          :focal-y="selected.focalY"
+          :editable="editing"
+          :disabled="saving"
+          v-model:focal-x="previewFocalX"
+          v-model:focal-y="previewFocalY"
         >
           <template #actions>
             <button
+              v-if="!editing"
               type="button"
               class="btn"
               :disabled="loading || busy !== null || uploading"
@@ -211,6 +299,7 @@ onMounted(load);
             :aria-pressed="selected.id === banner.id"
             :aria-label="`选择 Banner #${banner.id}`"
             :title="`Banner #${banner.id} · ${banner.isActive ? '展示中' : '已停用'}`"
+            :disabled="editing || saving"
             @click="selectedId = banner.id"
           >
             <img
@@ -227,40 +316,92 @@ onMounted(load);
               {{ selected.isActive ? '展示中' : '已停用' }}
             </span>
           </div>
-          <p class="hint">跳转地址：{{ selected.linkUrl || '不跳转' }}</p>
-          <p class="hint">
-            排序：{{ selected.sortOrder }} · 更新于
-            {{ formatDate(selected.updatedAt) }}
-          </p>
-          <div class="row-actions">
-            <button
-              class="btn btn-small"
-              :disabled="busy !== null || uploading"
-              @click="editor = selected"
-            >
-              编辑
-            </button>
-            <button
-              class="btn btn-small"
-              :disabled="busy !== null || uploading"
-              @click="toggle(selected)"
-            >
-              {{
-                busy === selected.id
-                  ? '处理中…'
-                  : selected.isActive
-                    ? '停用'
-                    : '启用'
-              }}
-            </button>
-            <button
-              class="btn btn-small danger"
-              :disabled="busy !== null || uploading"
-              @click="deleting = selected"
-            >
-              删除
-            </button>
-          </div>
+          <form v-if="editing" class="banner-form" @submit.prevent="saveEdit">
+            <fieldset :disabled="saving">
+              <div class="form-grid">
+                <label class="field">
+                  <span>
+                    跳转地址
+                    <small>可选</small>
+                  </span>
+                  <input
+                    v-model="draftLink"
+                    type="text"
+                    placeholder="/novel 或 https://example.com"
+                    autocomplete="off"
+                  />
+                  <small>留空则不跳转。支持站内路径或完整 HTTP(S) 地址。</small>
+                </label>
+                <label class="field">
+                  <span>排序值</span>
+                  <input
+                    v-model.number="draftSortOrder"
+                    type="number"
+                    step="1"
+                    min="-2147483648"
+                    max="2147483647"
+                    required
+                  />
+                  <small>数值越小越靠前；相同时按 ID 排序。</small>
+                </label>
+              </div>
+            </fieldset>
+            <p class="hint">
+              更换图片请删除后重新上传；在预览中切换到“桌面模拟”或“移动模拟”可调整图片焦点。
+            </p>
+            <p v-if="editError" class="error-notice" role="alert">
+              {{ editError }}
+            </p>
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn"
+                :disabled="saving"
+                @click="cancelEdit"
+              >
+                取消
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="saving">
+                {{ saving ? '正在保存…' : '保存' }}
+              </button>
+            </div>
+          </form>
+          <template v-else>
+            <p class="hint">跳转地址：{{ selected.linkUrl || '不跳转' }}</p>
+            <p class="hint">
+              排序：{{ selected.sortOrder }} · 更新于
+              {{ formatDate(selected.updatedAt) }}
+            </p>
+            <div class="row-actions">
+              <button
+                class="btn btn-small"
+                :disabled="busy !== null || uploading"
+                @click="startEdit"
+              >
+                编辑
+              </button>
+              <button
+                class="btn btn-small"
+                :disabled="busy !== null || uploading"
+                @click="toggle(selected)"
+              >
+                {{
+                  busy === selected.id
+                    ? '处理中…'
+                    : selected.isActive
+                      ? '停用'
+                      : '启用'
+                }}
+              </button>
+              <button
+                class="btn btn-small danger"
+                :disabled="busy !== null || uploading"
+                @click="deleting = selected"
+              >
+                删除
+              </button>
+            </div>
+          </template>
         </div>
       </template>
       <footer class="panel-footer">
@@ -269,12 +410,6 @@ onMounted(load);
     </section>
   </section>
 
-  <BannerForm
-    v-if="editor"
-    :banner="editor"
-    @close="editor = null"
-    @saved="saved"
-  />
   <XDialog
     :open="!!deleting"
     title="删除 Banner"
@@ -341,6 +476,12 @@ onMounted(load);
   background: var(--color-surface);
   color: var(--color-primary);
   font-weight: 600;
+}
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
 }
 .selected-banner-details {
   padding: 20px;
