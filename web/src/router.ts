@@ -50,7 +50,7 @@ const router = createRouter({
         {
           path: '/',
           meta: { title: '首页' },
-          component: () => import('./pages/home/Home.vue'),
+          component: () => import('./pages/home/HomeView.vue'),
         },
 
         {
