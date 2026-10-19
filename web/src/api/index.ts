@@ -1,5 +1,6 @@
 import { HTTPError, TimeoutError } from 'ky';
 
+export * from './BannerApi';
 export * from './CommentApi';
 export * from './FavoredApi';
 export * from './ReadHistoryApi';

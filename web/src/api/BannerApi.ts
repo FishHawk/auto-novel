@@ -12,5 +12,12 @@ export interface Banner {
 
 export const BannerApi = {
   list: () =>
-    client.get('v1/banner/', { searchParams: { type: 0 } }).json<Banner[]>(),
+    client
+      .get('v1/banner/', {
+        searchParams: { type: 0 },
+        // 横幅属装饰内容：超时短、失败不重试，尽快回落到兜底图。
+        timeout: 5_000,
+        retry: 0,
+      })
+      .json<Banner[]>(),
 };
