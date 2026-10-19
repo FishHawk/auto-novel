@@ -39,6 +39,21 @@ function onReplied() {
   draftStore.removeDraft(draftId);
 }
 
+function toggleInput() {
+  showInput.value = !showInput.value;
+  replyTo.value = undefined;
+}
+
+function toggleReply(comment: Comment) {
+  replyTo.value = replyTo.value?.id === comment.id ? undefined : comment;
+  showInput.value = false;
+}
+
+function cancelInput() {
+  showInput.value = false;
+  replyTo.value = undefined;
+}
+
 const canReply = computed(() => {
   return whoami.value.hasNovelAccess && !props.locked;
 });
@@ -56,23 +71,19 @@ const canReply = computed(() => {
       label="发表评论"
       :icon="CommentOutlined"
       require-login
-      @action="showInput = !showInput"
+      @action="toggleInput()"
     />
   </SectionHeader>
 
   <n-p v-if="locked">评论区已锁定，不能再回复。</n-p>
 
-  <template v-if="showInput || replyTo">
+  <template v-if="showInput">
     <CommentEditor
       :site="site"
       :draft-id="draftId"
-      :parent="replyTo?.id"
-      :placeholder="replyTo ? `回复${replyTo.authorUsername}` : '发表评论'"
+      placeholder="发表评论"
       @replied="onReplied()"
-      @cancel="
-        showInput = false;
-        replyTo = undefined;
-      "
+      @cancel="cancelInput()"
     />
     <n-divider />
   </template>
@@ -89,8 +100,19 @@ const canReply = computed(() => {
           :site="site"
           :comment="comment"
           :can-reply="canReply"
-          @reply="replyTo = comment"
-        />
+          @reply="toggleReply"
+        >
+          <CommentEditor
+            v-if="replyTo?.id === comment.id"
+            :site="site"
+            :draft-id="draftId"
+            :parent="comment.id"
+            :placeholder="`回复${comment.authorUsername}`"
+            style="padding-top: 8px"
+            @replied="onReplied()"
+            @cancel="cancelInput()"
+          />
+        </CommentThread>
         <n-divider />
       </template>
       <n-empty
