@@ -9,9 +9,12 @@ import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 class Pixiv(
     private val client: HttpClient,
@@ -84,6 +87,7 @@ class Pixiv(
                     RemoteNovelMetadata.TocItem(
                         title = "无名",
                         chapterId = chapterId,
+                        createAt = obj["createDate"]?.jsonPrimitive?.contentOrNull?.let(Instant::parse),
                     )
                 ),
             )
@@ -143,6 +147,8 @@ class Pixiv(
                         val tocItem = RemoteNovelMetadata.TocItem(
                             title = it.string("title"),
                             chapterId = it.string("id"),
+                            createAt = it["createDate"]?.jsonPrimitive?.contentOrNull?.let(Instant::parse)
+                                ?: it["uploadTimestamp"]?.jsonPrimitive?.longOrNull?.let(Instant::fromEpochSeconds),
                         )
                         toc.add(tocItem)
                     }
