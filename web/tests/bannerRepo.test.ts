@@ -105,6 +105,72 @@ describe('BannerRepo', () => {
     expect(list).toHaveBeenCalledTimes(1);
   });
 
+  it('manually advances before expiry, persists the choice and wraps', async () => {
+    list.mockResolvedValue(banners);
+    let repo = await loadRepo();
+    await repo.current();
+    vi.advanceTimersByTime(hour);
+    expect(await repo.current(true)).toEqual({
+      banner: banners[1],
+      expiresAt: 3 * hour,
+    });
+    repo = await reloadRepo();
+    expect(repo.peek()?.banner.id).toBe(2);
+    expect((await repo.current())?.banner.id).toBe(2);
+    expect((await repo.current(true))?.banner.id).toBe(1);
+    expect(list).toHaveBeenCalledTimes(2);
+  });
+
+  it('refreshes on manual switching after one minute and shares requests', async () => {
+    const added = { ...banners[1], id: 3, imageUrl: '/banner-3.webp' };
+    list.mockResolvedValueOnce(banners).mockResolvedValue([banners[0], added]);
+    let repo = await loadRepo();
+    await repo.current();
+    vi.advanceTimersByTime(60_000 - 1);
+    expect((await repo.current(true))?.banner.id).toBe(2);
+    expect(list).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(1);
+    const refresh = repo.list(true);
+    expect(repo.list(true)).toBe(refresh);
+    await refresh;
+    expect((await repo.current(true))?.banner.id).toBe(1);
+    expect((await repo.current(true))?.banner.id).toBe(3);
+    expect(list).toHaveBeenCalledTimes(2);
+    repo = await reloadRepo();
+    await repo.current(true);
+    expect(list).toHaveBeenCalledTimes(2);
+    vi.advanceTimersByTime(60_000);
+    await repo.current();
+    expect(list).toHaveBeenCalledTimes(2);
+    await repo.current(true);
+    expect(list).toHaveBeenCalledTimes(3);
+  });
+
+  it('uses the old list when a manual refresh fails and cools down retries', async () => {
+    list.mockResolvedValueOnce(banners).mockRejectedValue(new Error('offline'));
+    const repo = await loadRepo();
+    await repo.current();
+    const cached = stored().list;
+    vi.advanceTimersByTime(60_000);
+    expect((await repo.current(true))?.banner.id).toBe(2);
+    expect(stored().list).toEqual(cached);
+    expect((await repo.current(true))?.banner.id).toBe(1);
+    expect(list).toHaveBeenCalledTimes(2);
+    vi.advanceTimersByTime(60_000);
+    expect((await repo.current(true))?.banner.id).toBe(2);
+    expect(list).toHaveBeenCalledTimes(3);
+  });
+
+  it('handles manual switching with one or no banners', async () => {
+    list.mockResolvedValueOnce([banners[0]]).mockResolvedValueOnce([]);
+    const repo = await loadRepo();
+    expect((await repo.current(true))?.banner.id).toBe(1);
+    expect((await repo.current(true))?.banner.id).toBe(1);
+    vi.advanceTimersByTime(12 * hour);
+    expect(await repo.current(true)).toBeUndefined();
+    expect(repo.peek()).toBeUndefined();
+  });
+
   it('keeps the selection and its expiry when the list refreshes', async () => {
     const updated = { ...banners[0], imageUrl: '/updated.webp' };
     list

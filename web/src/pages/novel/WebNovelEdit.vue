@@ -19,7 +19,7 @@ const formValue = ref({
   introductionJp: '',
   introduction: '',
   wenkuId: '',
-  toc: <{ jp: string; zh: string }[]>[],
+  toc: <{ key: string; jp: string; zh: string }[]>[],
 });
 
 WebNovelRepo.useWebNovel(providerId, novelId, false)
@@ -34,15 +34,16 @@ WebNovelRepo.useWebNovel(providerId, novelId, false)
         introduction: data.introductionZh ?? '',
         wenkuId: data.wenkuId ?? '',
         toc: data.toc
-          .filter((item) => {
-            const inSet = tocSet.has(item.titleJp);
-            if (!inSet) tocSet.add(item.titleJp);
-            return !inSet;
-          })
           .map((item) => ({
+            key: item.chapterId ?? item.titleJp,
             jp: item.titleJp,
             zh: item.titleZh ?? '',
-          })),
+          }))
+          .filter((item) => {
+            const inSet = tocSet.has(item.key);
+            if (!inSet) tocSet.add(item.key);
+            return !inSet;
+          }),
       };
       allowSubmit.value = true;
     } else {
@@ -61,7 +62,7 @@ const submit = async () => {
   const wenkuId = formValue.value.wenkuId.trim();
   const toc = Object.assign(
     {},
-    ...formValue.value.toc.map((item) => ({ [item.jp]: item.zh })),
+    ...formValue.value.toc.map((item) => ({ [item.key]: item.zh })),
   );
 
   await Toast.promise(
@@ -134,7 +135,7 @@ const submit = async () => {
       </n-text>
     </n-p>
     <n-table :bordered="false" :bottom-bordered="false" style="width: 100%">
-      <tr v-for="token in formValue.toc" :key="token.jp">
+      <tr v-for="token in formValue.toc" :key="token.key">
         <td style="width: 50%; padding: 4px">
           {{ token.jp }}
           <br />
