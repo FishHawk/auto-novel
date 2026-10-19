@@ -1,6 +1,13 @@
 <script lang="ts" setup>
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
-import { Toast, XActionMenu, XActionMenuItem, XDialog } from '@novelia/web-kit';
+import {
+  Toast,
+  XButton,
+  XDropdownMenu,
+  XDropdownMenuItem,
+  XDialog,
+} from '@novelia/web-kit';
+import { MoreVertOutlined } from '@vicons/material';
 
 import { FavoredRepo } from '@/stores';
 import { useBookshelfLocalStore } from '../BookshelfLocalStore';
@@ -104,16 +111,26 @@ const deleteFavored = () =>
       {{ title }}
     </RouterLink>
     <div v-if="options.length > 0" class="shrink-0">
-      <XActionMenu compact>
-        <XActionMenuItem
+      <XDropdownMenu class="min-w-32 w-32">
+        <template #trigger>
+          <XButton
+            variant="ghost"
+            size="icon-xs"
+            aria-label="更多操作"
+            title="更多操作"
+          >
+            <MoreVertOutlined class="size-4" aria-hidden="true" />
+          </XButton>
+        </template>
+        <XDropdownMenuItem
           v-for="option in options"
           :key="option.key"
-          :danger="option.key === 'delete'"
-          @activate="onSelect(option.key)"
+          :destructive="option.key === 'delete'"
+          @select="onSelect(option.key)"
         >
           {{ option.label }}
-        </XActionMenuItem>
-      </XActionMenu>
+        </XDropdownMenuItem>
+      </XDropdownMenu>
     </div>
   </div>
 

@@ -13,7 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@novelia/web-kit": "github:auto-novel/auth#d07fb31661e96181ce98e7859dc4f8d56f4825ef&path:packages/web-kit",
+    "@novelia/web-kit": "github:auto-novel/auth#0505df351d28d2165967b319b8d55cb0c43b1315&path:packages/web-kit",
     "@vicons/material": "^0.13.0",
     "vue": "^3.5.41",
     "vue-router": "^5.2.0"

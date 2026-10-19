@@ -29,7 +29,7 @@ const setIndentSize = (diff: number) => {
     aria-label="阅读设置"
     class="w-[600px]"
     :scrollable="false"
-    body-class="p-0"
+    :ui="{ body: 'p-0' }"
     style="overflow: visible"
   >
     <div class="flex min-h-0 flex-1 flex-col">

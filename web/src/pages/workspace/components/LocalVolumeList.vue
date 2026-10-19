@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import {
   Toast,
-  XActionMenu,
-  XActionMenuItem,
+  XButton,
+  XDropdownMenu,
+  XDropdownMenuItem,
   XDrawer,
   XSelect,
   XDialog,
 } from '@novelia/web-kit';
-import { FileDownloadOutlined } from '@vicons/material';
+import { FileDownloadOutlined, MoreVertOutlined } from '@vicons/material';
 
 import type { LocalVolumeMetadata } from '@/model/LocalVolume';
 import {
@@ -127,15 +128,25 @@ const sortedVolumes = computed(() => {
         :icon="FileDownloadOutlined"
         @click="downloadVolumes"
       />
-      <XActionMenu>
-        <XActionMenuItem
+      <XDropdownMenu class="w-40">
+        <template #trigger>
+          <XButton
+            variant="ghost"
+            size="icon"
+            aria-label="更多操作"
+            title="更多操作"
+          >
+            <MoreVertOutlined class="size-5" aria-hidden="true" />
+          </XButton>
+        </template>
+        <XDropdownMenuItem
           v-for="option in options"
           :key="option.key"
-          @activate="handleSelect(option.key)"
+          @select="handleSelect(option.key)"
         >
           {{ option.label }}
-        </XActionMenuItem>
-      </XActionMenu>
+        </XDropdownMenuItem>
+      </XDropdownMenu>
     </template>
 
     <n-scrollbar trigger="none" class="min-h-0 flex-1">
