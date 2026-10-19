@@ -579,14 +579,7 @@ private fun simpleMergeToc(
     remoteToc: List<WebNovelTocItem>,
     localToc: List<WebNovelTocItem>,
 ): List<WebNovelTocItem> {
-    return remoteToc.map { itemNew ->
-        val itemOld = localToc.find { it.titleJp == itemNew.titleJp }
-        if (itemOld?.titleZh == null) {
-            itemNew
-        } else {
-            itemNew.copy(titleZh = itemOld.titleZh)
-        }
-    }
+    return mergeUpdatedToc(remoteToc, localToc).toc
 }
 
 private fun mergeUpdatedToc(
