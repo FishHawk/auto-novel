@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { XMarkdownEditor, XMarkdownEditorToolButton } from '@novelia/web-kit';
 import { useEventListener } from '@vueuse/core';
-import {
-  HelpOutlineOutlined,
-  MenuOpenOutlined,
-  StarOutlineFilled,
-  WarningAmberOutlined,
-} from '@vicons/material';
+import { HelpOutlineOutlined } from '@vicons/material';
 import type { DropdownOption } from 'naive-ui';
 
 import { useDraftStore } from '@/stores';
 
+import { markdownByMode, type MarkdownMode } from './markdown';
+
 defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
-    mode: 'article' | 'comment';
+    mode: MarkdownMode;
     draftId?: string;
     rows?: number;
     maxlength?: number;
@@ -76,13 +73,19 @@ const showGuide = ref(false);
       :rows="rows"
       :maxlength="maxlength"
       :spellcheck="false"
-      :tools="['bold', 'italic', 'strike', 'link']"
+      :markdown="markdownByMode[mode]"
+      :tools="[
+        'bold',
+        'italic',
+        'strike',
+        'link',
+        'spoiler',
+        'star',
+        'details',
+      ]"
       @update:model-value="saveDraft"
     >
-      <template #preview="{ source }">
-        <MarkdownView :mode="mode" :source="source || '没有可预览的内容'" />
-      </template>
-      <template #toolbar="{ wrapSelection, insertBlock, disabled }">
+      <template #toolbar="{ disabled }">
         <n-dropdown
           v-if="drafts.length"
           :options="draftOptions"
@@ -94,27 +97,6 @@ const showGuide = ref(false);
             草稿
           </XMarkdownEditorToolButton>
         </n-dropdown>
-        <XMarkdownEditorToolButton
-          label="剧透"
-          :disabled="disabled"
-          @click="wrapSelection('!!', '!!', '剧透')"
-        >
-          <WarningAmberOutlined class="size-4" aria-hidden="true" />
-        </XMarkdownEditorToolButton>
-        <XMarkdownEditorToolButton
-          label="评分"
-          :disabled="disabled"
-          @click="insertBlock('::: star 5')"
-        >
-          <StarOutlineFilled class="size-4" aria-hidden="true" />
-        </XMarkdownEditorToolButton>
-        <XMarkdownEditorToolButton
-          label="折叠"
-          :disabled="disabled"
-          @click="insertBlock('::: details 点击展开\n', '\n:::', '折叠内容')"
-        >
-          <MenuOpenOutlined class="size-4" aria-hidden="true" />
-        </XMarkdownEditorToolButton>
         <XMarkdownEditorToolButton
           label="格式帮助"
           :disabled="disabled"
