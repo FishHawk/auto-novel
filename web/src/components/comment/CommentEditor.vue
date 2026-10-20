@@ -1,7 +1,9 @@
 <script lang="ts" setup>
-import { Toast } from '@novelia/web-kit';
+import type { Comment } from '@novelia/forum-api';
+import { Toast, XButton } from '@novelia/web-kit';
 
 import { CommentRepo } from '@/repos';
+import { useWhoamiStore } from '@/stores';
 
 import MarkdownHelpDialog from '../markdown/MarkdownHelpDialog.vue';
 import CommentRulesNotice from './CommentRulesNotice.vue';
@@ -11,6 +13,8 @@ const props = defineProps<{
   draftId: string;
   parent?: number;
   placeholder?: string;
+  replyTo?: Comment;
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,24 +22,42 @@ const emit = defineEmits<{
   replied: [];
 }>();
 
-const content = ref('');
+const { whoami } = storeToRefs(useWhoamiStore());
+const content = ref(
+  props.replyTo?.rootId != null &&
+    props.replyTo.authorId !== whoami.value.user?.id
+    ? `@${props.replyTo.authorUsername} `
+    : '',
+);
+const submitting = ref(false);
+const canSubmit = computed(
+  () =>
+    !props.disabled &&
+    !submitting.value &&
+    content.value.trim().length > 0 &&
+    content.value.length <= 1000 &&
+    whoami.value.hasNovelAccess,
+);
 
 const reply = async () => {
-  if (content.value.length === 0) {
-    Toast.info('回复内容不能为空');
-    return;
+  if (!canSubmit.value) return;
+  submitting.value = true;
+  const viewer = whoami.value.user?.id;
+  try {
+    await Toast.promise(
+      CommentRepo.createComment(props.site, {
+        content: content.value.trim(),
+        ...(props.parent === undefined ? {} : { rootId: props.parent }),
+      }).then(() => {
+        if (viewer !== whoami.value.user?.id) return;
+        content.value = '';
+        emit('replied');
+      }),
+      { success: '回复发布成功', error: '回复发布失败' },
+    );
+  } finally {
+    submitting.value = false;
   }
-
-  await Toast.promise(
-    CommentRepo.createComment(props.site, {
-      content: content.value,
-      ...(props.parent === undefined ? {} : { rootId: props.parent }),
-    }).then(() => {
-      content.value = '';
-      emit('replied');
-    }),
-    { success: '回复发布成功', error: '回复发布失败' },
-  );
 };
 </script>
 
@@ -43,6 +65,7 @@ const reply = async () => {
   <div>
     <CommentRulesNotice class="mb-3" />
     <MarkdownEditor
+      :disabled="submitting || disabled"
       mode="comment"
       :draft-id="draftId"
       v-model:value="content"
@@ -54,20 +77,16 @@ const reply = async () => {
     <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
       <MarkdownHelpDialog />
       <div class="flex items-center gap-2">
-        <c-button
-          class="comment-button comment-button--outline"
-          label="取消"
-          :round="false"
-          @action="emit('cancel')"
-        />
-        <c-button
-          class="comment-button comment-button--primary"
-          label="发布"
-          require-login
-          :round="false"
-          type="primary"
-          @action="reply()"
-        />
+        <XButton
+          variant="outline"
+          :disabled="submitting"
+          @click="emit('cancel')"
+        >
+          取消
+        </XButton>
+        <XButton :disabled="!canSubmit" @click="reply()">
+          {{ submitting ? '发表中…' : '发表' }}
+        </XButton>
       </div>
     </div>
   </div>

@@ -1,8 +1,8 @@
 import { computed, watch } from 'vue';
 import { useQuery } from '@pinia/colada';
 import type {
+  Comment,
   CommentPage,
-  CommentStatus,
   CreateCommentRequest,
 } from '@novelia/forum-api';
 
@@ -14,11 +14,13 @@ const ListKey = 'comment-list';
 const ReplyPageSize = 20;
 const viewerKey = computed(() => webKit.whoami.value.user?.id ?? 'guest');
 const commentsKey = () => [ListKey, viewerKey.value];
+let viewerRevision = 0;
 
 // Blacklist filtering is viewer-specific; never reuse another account's pages.
 watch(
   viewerKey,
   (_, previous) => {
+    viewerRevision++;
     const filter = { key: [ListKey, previous] };
     cache.cancelQueries(filter);
     for (const entry of cache.getEntries(filter)) cache.remove(entry);
@@ -48,7 +50,7 @@ const useCommentList = (
     key: () => commentListKey(toValue(site), toValue(page)),
     query: async ({ signal }) => {
       const requestedSite = toValue(site);
-      const viewer = viewerKey.value;
+      const revision = viewerRevision;
       const result = await CommentApi.getComments(
         requestedSite,
         {
@@ -58,7 +60,7 @@ const useCommentList = (
         signal,
       );
       const items = result.items.map(({ replies, ...comment }) => {
-        if (replies && !signal.aborted && viewer === viewerKey.value) {
+        if (replies && !signal.aborted && revision === viewerRevision) {
           cache.setQueryData<CommentPage>(
             replyListKey(requestedSite, comment.id, 1),
             replies,
@@ -93,20 +95,37 @@ const useReplyList = (
       ),
   });
 
-const invalidateComments = (site: string) =>
-  cache.invalidateQueries({ key: [...commentsKey(), site] });
-
-const updateCommentStatus = (id: number, status: CommentStatus) => {
-  for (const entry of cache.getEntries({ key: [ListKey] })) {
-    const page = entry.state.value.data as CommentPage | undefined;
-    if (!page) continue;
-    cache.setQueryData<CommentPage>(entry.key, {
+// Capture the account before awaiting, including switch-away-and-back sessions.
+const mutateComments = async <T>(
+  action: () => Promise<T>,
+  update?: (comment: Comment, result: T) => Comment,
+  site?: string,
+): Promise<T> => {
+  const revision = viewerRevision;
+  const filter = {
+    key: site === undefined ? commentsKey() : [...commentsKey(), site],
+  };
+  const result = await action();
+  if (revision !== viewerRevision) return result;
+  // Stop in-flight pages from restoring pre-mutation content/status.
+  cache.cancelQueries(filter);
+  if (update) {
+    const updatePage = (page: CommentPage): CommentPage => ({
       ...page,
-      items: page.items.map((comment) =>
-        comment.id === id ? { ...comment, status } : comment,
-      ),
+      items: page.items.map((comment) => {
+        const updated = update(comment, result);
+        return updated.replies
+          ? { ...updated, replies: updatePage(updated.replies) }
+          : updated;
+      }),
     });
+    for (const entry of cache.getEntries(filter)) {
+      const page = entry.state.value.data as CommentPage | undefined;
+      if (page) cache.setQueryData<CommentPage>(entry.key, updatePage(page));
+    }
   }
+  await cache.invalidateQueries(filter);
+  return result;
 };
 
 export const CommentRepo = {
@@ -115,9 +134,9 @@ export const CommentRepo = {
   replyPageSize: ReplyPageSize,
 
   async setUserBlocked(userId: number, blocked: boolean) {
-    const viewer = viewerKey.value;
+    const revision = viewerRevision;
     await CommentApi.setUserBlocked(userId, blocked);
-    if (viewer !== viewerKey.value) return;
+    if (revision !== viewerRevision) return;
     const filter = { key: commentsKey() };
     // Cancel stale responses before removing blocked authors from cached pages.
     cache.cancelQueries(filter);
@@ -140,18 +159,41 @@ export const CommentRepo = {
   },
 
   createComment: (site: string, request: CreateCommentRequest) =>
-    CommentApi.createComment(site, request).then((comment) => {
-      invalidateComments(site);
-      return comment;
-    }),
-  deleteComment: (id: number, site: string) =>
-    CommentApi.deleteComment(id).then(() => invalidateComments(site)),
+    mutateComments(
+      () => CommentApi.createComment(site, request),
+      undefined,
+      site,
+    ),
+  updateComment: (id: number, site: string, content: string) =>
+    mutateComments(
+      () => CommentApi.updateComment(id, { content }),
+      (comment, updated) =>
+        comment.id === id
+          ? {
+              ...comment,
+              content: updated.content,
+              updatedAt: updated.updatedAt,
+            }
+          : comment,
+      site,
+    ),
+  deleteComment: (id: number, site: string, asAdmin = false) =>
+    mutateComments(
+      () =>
+        asAdmin
+          ? CommentApi.setCommentStatus(id, 'deleted')
+          : CommentApi.deleteComment(id),
+      (comment) => (comment.id === id ? { ...comment, status: 2 } : comment),
+      site,
+    ),
   hideComment: (id: number) =>
-    CommentApi.setCommentStatus(id, 'hidden').then(() =>
-      updateCommentStatus(id, 1),
+    mutateComments(
+      () => CommentApi.setCommentStatus(id, 'hidden'),
+      (comment) => (comment.id === id ? { ...comment, status: 1 } : comment),
     ),
   unhideComment: (id: number) =>
-    CommentApi.setCommentStatus(id, 'published').then(() =>
-      updateCommentStatus(id, 0),
+    mutateComments(
+      () => CommentApi.setCommentStatus(id, 'published'),
+      (comment) => (comment.id === id ? { ...comment, status: 0 } : comment),
     ),
 };

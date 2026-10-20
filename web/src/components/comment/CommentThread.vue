@@ -8,10 +8,12 @@ const props = defineProps<{
   site: string;
   comment: Comment;
   canReply: boolean;
+  replyToId?: number;
 }>();
 
 const emit = defineEmits<{
   reply: [Comment];
+  cancelReply: [];
 }>();
 
 const page = ref(1);
@@ -35,10 +37,12 @@ const pageCount = computed(() =>
       :site="site"
       :comment="comment"
       :can-reply="canReply"
+      :replying="replyToId === comment.id"
       @reply="emit('reply', $event)"
-    />
-
-    <slot />
+      @cancel-reply="emit('cancelReply')"
+    >
+      <slot v-if="replyToId === comment.id" />
+    </CommentItem>
 
     <div v-if="comment.replyCount > 0" class="border-t border-divider/60">
       <template v-if="replyPage">
@@ -49,8 +53,12 @@ const pageCount = computed(() =>
           :site="site"
           :comment="reply"
           :can-reply="canReply"
+          :replying="replyToId === reply.id"
           @reply="emit('reply', $event)"
-        />
+          @cancel-reply="emit('cancelReply')"
+        >
+          <slot v-if="replyToId === reply.id" />
+        </CommentItem>
         <n-pagination
           v-if="pageCount > 1"
           v-model:page="page"

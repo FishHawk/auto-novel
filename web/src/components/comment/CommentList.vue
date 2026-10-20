@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { CommentOutlined } from '@vicons/material';
-import { XAsyncContent } from '@novelia/web-kit';
+import { XAsyncContent, XButton } from '@novelia/web-kit';
 
 import { CommentRepo } from '@/repos';
 import type { Comment } from '@novelia/forum-api';
@@ -23,14 +23,16 @@ const { whoami } = storeToRefs(whoamiStore);
 const draftStore = useDraftStore();
 const draftId = `comment-${props.site}`;
 
+const showInput = ref(false);
+const replyTo = ref<Comment>();
+
 const anchorEl = useTemplateRef('anchor');
 watch(page, () => {
   anchorEl.value?.scrollIntoView();
   window.scrollBy({ top: -50, behavior: 'auto' });
+  // 翻页会卸载当前页的回复编辑器，避免旧 replyTo 在返回时重新挂载。
+  replyTo.value = undefined;
 });
-
-const showInput = ref(false);
-const replyTo = ref<Comment>();
 
 function onReplied() {
   showInput.value = false;
@@ -67,16 +69,16 @@ const canReply = computed(() => {
       :class="{ 'border-b border-divider': !showInput }"
     >
       <h2 class="text-lg font-semibold text-ink">评论</h2>
-      <c-button
+      <XButton
         v-if="canReply"
-        class="comment-button comment-button--primary comment-button--small"
-        label="发表评论"
-        :icon="CommentOutlined"
-        require-login
-        :round="false"
-        type="primary"
-        @action="toggleInput()"
-      />
+        size="sm"
+        aria-controls="comment-composer"
+        :aria-expanded="showInput"
+        @click="toggleInput()"
+      >
+        <CommentOutlined class="size-4" aria-hidden="true" />
+        {{ showInput ? '取消评论' : '发表评论' }}
+      </XButton>
     </header>
 
     <p v-if="locked" class="py-2 text-sm text-warning">
@@ -85,6 +87,8 @@ const canReply = computed(() => {
 
     <CommentEditor
       v-if="showInput"
+      id="comment-composer"
+      :disabled="!canReply"
       class="border-b border-divider py-4"
       :site="site"
       :draft-id="draftId"
@@ -107,15 +111,20 @@ const canReply = computed(() => {
             :site="site"
             :comment="comment"
             :can-reply="canReply"
+            :reply-to-id="replyTo?.id"
             @reply="toggleReply"
+            @cancel-reply="cancelInput"
           >
             <CommentEditor
-              v-if="replyTo?.id === comment.id"
+              v-if="replyTo && (replyTo.rootId ?? replyTo.id) === comment.id"
+              :key="replyTo.id"
               class="mt-3 pb-4"
               :site="site"
               :draft-id="draftId"
               :parent="comment.id"
-              :placeholder="`回复${comment.authorUsername}`"
+              :reply-to="replyTo"
+              :disabled="!canReply"
+              :placeholder="`回复 @${replyTo.authorUsername}…`"
               @replied="onReplied()"
               @cancel="cancelInput()"
             />
@@ -166,57 +175,6 @@ const canReply = computed(() => {
 
 .comment-list :deep(.comment-body) {
   background-color: var(--comment-background);
-}
-
-/* 保留原按钮的登录、加载和确认逻辑，仅对齐 forum 的按钮外观。 */
-.comment-list :deep(.comment-button) {
-  height: 2.5rem;
-  padding: 0 1rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.comment-list :deep(.comment-button--small) {
-  height: 2.25rem;
-  padding: 0 0.75rem;
-}
-
-.comment-list :deep(.comment-button--compact) {
-  height: 2rem;
-  padding: 0 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.comment-list :deep(.comment-button--icon) {
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-}
-
-.comment-list :deep(.comment-button--ghost),
-.comment-list :deep(.comment-button--outline) {
-  color: var(--color-muted);
-  background-color: transparent;
-}
-
-.comment-list :deep(.comment-button--ghost:hover:not(:disabled)) {
-  color: var(--color-primary);
-  background-color: var(--color-paper);
-}
-
-.comment-list :deep(.comment-button--outline:hover:not(:disabled)) {
-  color: var(--color-primary);
-}
-
-.comment-list :deep(.comment-button--primary) {
-  color: var(--color-on-primary);
-  background-color: var(--color-primary);
-}
-
-.comment-list :deep(.comment-button--primary:hover:not(:disabled)) {
-  background-color: var(--color-primary-hover);
 }
 
 .comment-list :deep(.n-pagination) {

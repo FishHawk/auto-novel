@@ -1,176 +1,171 @@
 <script lang="ts" setup>
-import {
-  CommentOutlined,
-  DeleteOutlined,
-  MoreVertOutlined,
-} from '@vicons/material';
-
 import type { Comment } from '@novelia/forum-api';
-import { copyToClipboard, Toast } from '@novelia/web-kit';
+import { Toast, XButton, XTime } from '@novelia/web-kit';
 
 import { useWhoamiStore } from '@/stores';
 import { CommentRepo } from '@/repos';
+import CommentActions from './CommentActions.vue';
+import { getCommentPermissions } from './commentPermissions';
+import MarkdownHelpDialog from '../markdown/MarkdownHelpDialog.vue';
 
-const props = defineProps<{
-  site: string;
-  comment: Comment;
-  canReply: boolean;
-}>();
-
-const emit = defineEmits<{
-  reply: [Comment];
-}>();
-
-const whoamiStore = useWhoamiStore();
-const { whoami } = storeToRefs(whoamiStore);
-
-const options = computed(() => {
-  const options = [{ label: '复制', key: 'copy' }];
-  if (whoami.value.asAdmin) {
-    if (props.comment.status === 1) {
-      options.push({ label: '解除隐藏', key: 'unhide' });
-    } else if (props.comment.status === 0) {
-      options.push({ label: '隐藏', key: 'hide' });
-    }
+const props = withDefaults(
+  defineProps<{
+    site: string;
+    comment: Comment;
+    canReply: boolean;
+    replying?: boolean;
+  }>(),
+  { replying: false },
+);
+const emit = defineEmits<{ reply: [Comment]; cancelReply: [] }>();
+const { whoami } = storeToRefs(useWhoamiStore());
+const editing = ref(false);
+const content = ref('');
+const submitting = ref(false);
+const showModeratedContent = ref(false);
+const canSave = computed(
+  () =>
+    content.value.trim().length > 0 &&
+    content.value.length <= 1000 &&
+    !submitting.value,
+);
+function canEdit() {
+  return getCommentPermissions(
+    props.comment,
+    {
+      userId: whoami.value.user?.id,
+      asAdmin: whoami.value.asAdmin,
+      canReply: props.canReply,
+    },
+    Date.now(),
+  ).canEdit;
+}
+function startEditing() {
+  if (!canEdit()) return;
+  emit('cancelReply');
+  content.value = props.comment.content;
+  editing.value = true;
+}
+async function saveEdit() {
+  if (!canSave.value) return;
+  if (!canEdit()) {
+    Toast.info('当前评论已无法编辑，请刷新后重试');
+    return;
   }
-  if (whoami.value.user && whoami.value.user.id !== props.comment.authorId) {
-    if (props.comment.authorBlocked) {
-      options.push({ label: '解除屏蔽', key: 'unblock' });
-    } else {
-      options.push({ label: '屏蔽用户', key: 'block' });
-    }
+  submitting.value = true;
+  const viewer = whoami.value.user?.id;
+  try {
+    await Toast.promise(
+      CommentRepo.updateComment(
+        props.comment.id,
+        props.site,
+        content.value.trim(),
+      ).then(() => {
+        if (viewer === whoami.value.user?.id) editing.value = false;
+      }),
+      { success: '评论修改已保存', error: '更新评论失败' },
+    );
+  } finally {
+    submitting.value = false;
   }
-  return options;
-});
-
-const handleSelect = (key: string) => {
-  if (key === 'copy') {
-    copyComment(props.comment);
-  } else if (key === 'hide') {
-    hideComment(props.comment);
-  } else if (key === 'unhide') {
-    unhideComment(props.comment);
-  } else if (key === 'block') {
-    blockUser(props.comment);
-  } else if (key === 'unblock') {
-    unblockUser(props.comment);
-  }
-};
-
-function deleteComment() {
-  Toast.promise(CommentRepo.deleteComment(props.comment.id, props.site), {
-    success: '删除成功',
-    error: '删除失败',
-  });
 }
-
-function copyComment(comment: Comment) {
-  Toast.promise(copyToClipboard(comment.content), {
-    success: '复制成功',
-    error: '复制失败',
-  });
-}
-
-function hideComment(comment: Comment) {
-  Toast.promise(CommentRepo.hideComment(comment.id), {
-    success: '隐藏成功',
-    error: '隐藏失败',
-  });
-}
-
-function unhideComment(comment: Comment) {
-  Toast.promise(CommentRepo.unhideComment(comment.id), {
-    success: '解除隐藏成功',
-    error: '解除隐藏失败',
-  });
-}
-
-function blockUser(comment: Comment) {
-  Toast.promise(CommentRepo.setUserBlocked(comment.authorId, true), {
-    success: '屏蔽用户成功',
-    error: '屏蔽用户失败',
-  });
-}
-
-function unblockUser(comment: Comment) {
-  Toast.promise(CommentRepo.setUserBlocked(comment.authorId, false), {
-    success: '解除屏蔽用户成功',
-    error: '解除屏蔽用户失败',
-  });
-}
-
-const isDeletable = computed(() => {
-  return (
-    whoami.value.asAdmin ||
-    (whoami.value.user?.id === props.comment.authorId &&
-      Date.now() - new Date(props.comment.createdAt).getTime() < 20 * 60_000)
-  );
-});
+watch(
+  () => [
+    props.comment.id,
+    props.comment.status,
+    whoami.value.user?.id,
+    whoami.value.asAdmin,
+  ],
+  () => {
+    editing.value = false;
+    showModeratedContent.value = false;
+  },
+);
 </script>
 
 <template>
-  <article class="min-w-0 py-4">
+  <article :id="`comment-${comment.id}`" class="min-w-0 py-4">
     <header class="flex items-center gap-2 text-xs text-muted">
       <span class="min-w-0 break-words text-sm font-bold text-ink">
         {{ comment.authorUsername }}
       </span>
-      <n-time
-        class="shrink-0"
-        :time="new Date(comment.createdAt).getTime()"
-        type="relative"
+      <XTime class="shrink-0" :time="comment.createdAt" preset="relative" />
+      <CommentActions
+        v-if="!editing"
+        :site="site"
+        :comment="comment"
+        :can-reply="canReply"
+        :replying="replying"
+        @reply="emit('reply', comment)"
+        @edit="startEditing"
       />
-
-      <div class="ml-auto flex shrink-0 items-center gap-1">
-        <c-button
-          v-if="comment.rootId === null && canReply"
-          class="comment-button comment-button--ghost comment-button--compact"
-          label="回复"
-          :icon="CommentOutlined"
-          require-login
-          :round="false"
-          quaternary
-          type="tertiary"
-          size="tiny"
-          @action="emit('reply', comment)"
-        />
-
-        <c-button-confirm
-          v-if="isDeletable"
-          class="comment-button comment-button--ghost comment-button--compact"
-          hint="真的要删除评论吗？"
-          label="删除"
-          :icon="DeleteOutlined"
-          require-login
-          :round="false"
-          quaternary
-          type="tertiary"
-          size="tiny"
-          @action="deleteComment()"
-        />
-
-        <n-dropdown trigger="click" :options="options" @select="handleSelect">
-          <n-button
-            class="comment-button comment-button--ghost comment-button--icon"
-            quaternary
-            type="tertiary"
-            size="tiny"
-            aria-label="更多操作"
-            title="更多操作"
-          >
-            <n-icon :component="MoreVertOutlined" :size="16" />
-          </n-button>
-        </n-dropdown>
-      </div>
     </header>
 
-    <div class="comment-body mt-0.5 rounded-floating px-4 py-3">
-      <p v-if="comment.status !== 0" class="text-sm leading-6 text-muted">
-        {{ comment.status === 1 ? '[隐藏]' : '[删除]' }}
+    <div
+      v-if="comment.status !== 0"
+      class="comment-body mt-0.5 rounded-floating px-4 py-3"
+    >
+      <XButton
+        v-if="whoami.asAdmin"
+        variant="ghost"
+        size="xs"
+        class="min-h-0 p-0 text-sm font-normal leading-6 text-muted hover:bg-transparent hover:text-primary"
+        :aria-expanded="showModeratedContent"
+        :aria-controls="`comment-${comment.id}-moderated-content`"
+        @click="showModeratedContent = !showModeratedContent"
+      >
+        {{ comment.status === 1 ? '该评论已隐藏' : '该评论已删除' }}
+      </XButton>
+      <p v-else class="text-sm leading-6 text-muted">
+        {{ comment.status === 1 ? '该评论已隐藏' : '该评论已删除' }}
       </p>
-      <p v-else-if="comment.authorBlocked" class="text-sm leading-6 text-muted">
-        [屏蔽]
-      </p>
-      <MarkdownView v-else mode="comment" :source="comment.content" />
+      <div
+        v-if="whoami.asAdmin"
+        :id="`comment-${comment.id}-moderated-content`"
+      >
+        <MarkdownView
+          v-if="showModeratedContent"
+          class="mt-2"
+          mode="comment"
+          :source="comment.content"
+        />
+      </div>
     </div>
+    <form v-else-if="editing" class="mt-2" @submit.prevent="saveEdit">
+      <MarkdownEditor
+        v-model:value="content"
+        mode="comment"
+        :rows="5"
+        :maxlength="1000"
+        :disabled="submitting"
+        :ui="{ textarea: 'max-h-[19.5rem] overflow-y-auto' }"
+      />
+      <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <MarkdownHelpDialog />
+        <div class="flex gap-2">
+          <XButton
+            variant="ghost"
+            size="xs"
+            :disabled="submitting"
+            @click="editing = false"
+          >
+            取消
+          </XButton>
+          <XButton type="submit" size="xs" :disabled="!canSave">
+            {{ submitting ? '保存中…' : '保存' }}
+          </XButton>
+        </div>
+      </div>
+    </form>
+    <p
+      v-else-if="comment.authorBlocked"
+      class="comment-body mt-0.5 rounded-floating px-4 py-3 text-sm leading-6 text-muted"
+    >
+      [屏蔽]
+    </p>
+    <div v-else class="comment-body mt-0.5 rounded-floating px-4 py-3">
+      <MarkdownView mode="comment" :source="comment.content" />
+    </div>
+    <slot />
   </article>
 </template>
