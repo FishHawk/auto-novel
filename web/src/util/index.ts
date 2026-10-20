@@ -181,6 +181,15 @@ export namespace RegexUtil {
     }
   }
 
+  const imageExtensions = /\.(jpe?g|png|webp|gif|avif)$/i;
+  export function isImageUrl(str: string) {
+    try {
+      return imageExtensions.test(new URL(str).pathname);
+    } catch (error) {
+      return false;
+    }
+  }
+
   export const getLeadingSpaces = (str: string) => str.match(/^\s*/)?.[0] ?? '';
 
   export const isSafari = (agent: string) =>

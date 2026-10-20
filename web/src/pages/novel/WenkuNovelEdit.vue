@@ -80,6 +80,12 @@ const formRules: FormRules = {
       message: '封面链接必须是有效的URL',
       trigger: 'input',
     },
+    {
+      validator: (_rule: FormItemRule, value: string) =>
+        !RegexUtil.isUrl(value) || RegexUtil.isImageUrl(value),
+      message: '封面链接必须是图片链接（.jpg、.png、.webp 等）',
+      trigger: 'input',
+    },
   ],
   level: [
     {
