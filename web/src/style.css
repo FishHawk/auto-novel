@@ -1,6 +1,22 @@
 @import 'tailwindcss';
 @import '@novelia/web-kit/styles.css';
 
+/*
+ * 剧透遮罩语义色，web-kit 尚未暴露该语义，沿用论坛前端的 @theme +
+ * [data-theme='dark'] 写法补充，避免直接拿正文色当遮罩导致暗色下发白。
+ */
+@theme {
+  --color-spoiler: #1f2225;
+  --color-spoiler-ink: #ffffff;
+}
+
+@layer base {
+  :root[data-theme='dark'] {
+    --color-spoiler: rgb(255 255 255 / 20%);
+    --color-spoiler-ink: #f2f2f5;
+  }
+}
+
 .layout-content {
   max-width: 1000px;
   margin: 0 auto;

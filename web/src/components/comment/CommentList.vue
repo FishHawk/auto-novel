@@ -160,15 +160,8 @@ const canReply = computed(() => {
 .comment-list {
   --markdown-font-size: 0.875rem;
   --markdown-line-height: 1.6;
-  --markdown-star-color: rgb(219, 219, 223);
-  --markdown-star-active-color: #4fb233;
-  --markdown-spoiler-background: #1f2225;
-  --markdown-spoiler-color: #fff;
-}
-
-:root[data-theme='dark'] .comment-list {
-  --markdown-spoiler-background: rgb(255 255 255 / 20%);
-  --markdown-spoiler-color: #f2f2f5;
+  --markdown-spoiler-background: var(--color-spoiler);
+  --markdown-spoiler-color: var(--color-spoiler-ink);
 }
 
 .comment-list :deep(.comment-body) {
