@@ -109,58 +109,68 @@ const isDeletable = computed(() => {
 </script>
 
 <template>
-  <n-flex align="center" :size="0">
-    <n-text>
-      <b>{{ comment.authorUsername }}</b>
-    </n-text>
-    <n-text depth="3" style="font-size: 12px; margin-left: 12px">
-      <n-time :time="new Date(comment.createdAt).getTime()" type="relative" />
-    </n-text>
+  <article class="min-w-0 py-4">
+    <header class="flex items-center gap-2 text-xs text-muted">
+      <span class="min-w-0 break-words text-sm font-bold text-ink">
+        {{ comment.authorUsername }}
+      </span>
+      <n-time
+        class="shrink-0"
+        :time="new Date(comment.createdAt).getTime()"
+        type="relative"
+      />
 
-    <div style="flex: 1" />
+      <div class="ml-auto flex shrink-0 items-center gap-1">
+        <c-button
+          v-if="comment.rootId === null && canReply"
+          class="comment-button comment-button--ghost comment-button--compact"
+          label="回复"
+          :icon="CommentOutlined"
+          require-login
+          :round="false"
+          quaternary
+          type="tertiary"
+          size="tiny"
+          @action="emit('reply', comment)"
+        />
 
-    <c-button
-      v-if="comment.rootId === null && canReply"
-      label="回复"
-      :icon="CommentOutlined"
-      require-login
-      quaternary
-      type="tertiary"
-      size="tiny"
-      style="margin-right: 4px"
-      @action="emit('reply', comment)"
-    />
+        <c-button-confirm
+          v-if="isDeletable"
+          class="comment-button comment-button--ghost comment-button--compact"
+          hint="真的要删除评论吗？"
+          label="删除"
+          :icon="DeleteOutlined"
+          require-login
+          :round="false"
+          quaternary
+          type="tertiary"
+          size="tiny"
+          @action="deleteComment()"
+        />
 
-    <c-button-confirm
-      v-if="isDeletable"
-      hint="真的要删除评论吗？"
-      label="删除"
-      :icon="DeleteOutlined"
-      require-login
-      quaternary
-      type="tertiary"
-      size="tiny"
-      style="margin-right: 4px"
-      @action="deleteComment()"
-    />
+        <n-dropdown trigger="click" :options="options" @select="handleSelect">
+          <n-button
+            class="comment-button comment-button--ghost comment-button--icon"
+            quaternary
+            type="tertiary"
+            size="tiny"
+            aria-label="更多操作"
+            title="更多操作"
+          >
+            <n-icon :component="MoreVertOutlined" :size="16" />
+          </n-button>
+        </n-dropdown>
+      </div>
+    </header>
 
-    <n-dropdown trigger="click" :options="options" @select="handleSelect">
-      <n-button circle quaternary type="tertiary" size="tiny">
-        <n-icon :component="MoreVertOutlined" />
-      </n-button>
-    </n-dropdown>
-  </n-flex>
-
-  <n-card embedded :bordered="false" size="small" style="margin-top: 2px">
-    <n-text v-if="comment.status !== 0" depth="3">
-      {{ comment.status === 1 ? '[隐藏]' : '[删除]' }}
-    </n-text>
-    <n-text v-else-if="comment.authorBlocked" depth="3">[屏蔽]</n-text>
-    <MarkdownView
-      v-else
-      mode="comment"
-      :source="comment.content"
-      style="margin-top: -1em; margin-bottom: -1em"
-    />
-  </n-card>
+    <div class="comment-body mt-0.5 rounded-floating px-4 py-3">
+      <p v-if="comment.status !== 0" class="text-sm leading-6 text-muted">
+        {{ comment.status === 1 ? '[隐藏]' : '[删除]' }}
+      </p>
+      <p v-else-if="comment.authorBlocked" class="text-sm leading-6 text-muted">
+        [屏蔽]
+      </p>
+      <MarkdownView v-else mode="comment" :source="comment.content" />
+    </div>
+  </article>
 </template>

@@ -3,6 +3,9 @@ import { Toast } from '@novelia/web-kit';
 
 import { CommentRepo } from '@/repos';
 
+import MarkdownHelpDialog from '../markdown/MarkdownHelpDialog.vue';
+import CommentRulesNotice from './CommentRulesNotice.vue';
+
 const props = defineProps<{
   site: string;
   draftId: string;
@@ -38,6 +41,7 @@ const reply = async () => {
 
 <template>
   <div>
+    <CommentRulesNotice class="mb-3" />
     <MarkdownEditor
       mode="comment"
       :draft-id="draftId"
@@ -47,15 +51,24 @@ const reply = async () => {
       :maxlength="1000"
       :ui="{ textarea: 'max-h-[19.5rem] overflow-y-auto' }"
     />
-    <n-flex style="margin-top: 10px">
-      <c-button
-        label="发布"
-        require-login
-        :round="false"
-        type="primary"
-        @action="reply()"
-      />
-      <c-button label="取消" :round="false" @action="emit('cancel')" />
-    </n-flex>
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <MarkdownHelpDialog />
+      <div class="flex items-center gap-2">
+        <c-button
+          class="comment-button comment-button--outline"
+          label="取消"
+          :round="false"
+          @action="emit('cancel')"
+        />
+        <c-button
+          class="comment-button comment-button--primary"
+          label="发布"
+          require-login
+          :round="false"
+          type="primary"
+          @action="reply()"
+        />
+      </div>
+    </div>
   </div>
 </template>

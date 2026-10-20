@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { XMarkdownEditor, XMarkdownEditorToolButton } from '@novelia/web-kit';
 import { useEventListener } from '@vueuse/core';
-import { HelpOutlineOutlined } from '@vicons/material';
 import type { DropdownOption } from 'naive-ui';
 
 import { useDraftStore } from '@/stores';
@@ -62,7 +61,6 @@ const selectDraft = (key: string | number, option: DropdownOption) => {
     saveDraft(text);
   }
 };
-const showGuide = ref(false);
 </script>
 
 <template>
@@ -85,9 +83,8 @@ const showGuide = ref(false);
       ]"
       @update:model-value="saveDraft"
     >
-      <template #toolbar="{ disabled }">
+      <template v-if="drafts.length" #toolbar="{ disabled }">
         <n-dropdown
-          v-if="drafts.length"
           :options="draftOptions"
           trigger="click"
           :disabled="disabled"
@@ -97,19 +94,11 @@ const showGuide = ref(false);
             草稿
           </XMarkdownEditorToolButton>
         </n-dropdown>
-        <XMarkdownEditorToolButton
-          label="格式帮助"
-          :disabled="disabled"
-          @click="showGuide = true"
-        >
-          <HelpOutlineOutlined class="size-4" aria-hidden="true" />
-        </XMarkdownEditorToolButton>
       </template>
     </XMarkdownEditor>
     <div class="mt-1 text-right text-xs text-muted">
       {{ value.length }}
       <template v-if="maxlength !== undefined">/ {{ maxlength }}</template>
     </div>
-    <MarkdownGuideModal v-model:open="showGuide" />
   </div>
 </template>
