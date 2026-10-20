@@ -43,8 +43,9 @@ const reply = async () => {
       :draft-id="draftId"
       v-model:value="content"
       :placeholder="placeholder"
-      :autosize="{ minRows: 4, maxRows: 12 }"
-      maxlength="1000"
+      :rows="4"
+      :maxlength="1000"
+      :ui="{ textarea: 'max-h-[19.5rem] overflow-y-auto' }"
     />
     <n-flex style="margin-top: 10px">
       <c-button

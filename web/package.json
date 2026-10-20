@@ -52,7 +52,7 @@
     "@vicons/material": "^0.13.0",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.8.1",
-    "@vueuse/core": "^10.11.1",
+    "@vueuse/core": "^14.4.0",
     "@zip.js/zip.js": "^2.7.73",
     "crypto-es": "^2.1.0",
     "idb": "^8.0.3",
@@ -73,7 +73,7 @@
     "vue-draggable-plus": "^0.5.6",
     "vue-router": "^5.2.0",
     "vue-tsc": "^2.2.12",
-    "@novelia/web-kit": "github:auto-novel/auth#0505df351d28d2165967b319b8d55cb0c43b1315&path:packages/web-kit",
+    "@novelia/web-kit": "github:auto-novel/auth#6a33ad9800e544355fe4965aa28b9181d8952c2b&path:packages/web-kit",
     "@tailwindcss/vite": "^4.3.3",
     "tailwindcss": "^4.3.3"
   }

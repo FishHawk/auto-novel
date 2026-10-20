@@ -45,7 +45,7 @@ const formatedError = computedAsync(async () => {
     message = '该小说不符合国家法律法规相关规定，已被屏蔽';
   }
   return message;
-});
+}, '');
 
 watch(formatedError, async (errorMessage) => {
   if (errorMessage.includes('小说ID不合适，应当使用：')) {
