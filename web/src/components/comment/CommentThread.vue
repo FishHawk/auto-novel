@@ -44,7 +44,7 @@ const pageCount = computed(() =>
       <slot v-if="replyToId === comment.id" />
     </CommentItem>
 
-    <div v-if="comment.replyCount > 0" class="border-t border-divider/60">
+    <div v-if="comment.replyCount > 0">
       <template v-if="replyPage">
         <CommentItem
           v-for="reply in replyPage.items"
