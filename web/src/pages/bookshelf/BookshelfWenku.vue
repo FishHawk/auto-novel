@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import NovelGridSkeleton from '@/components/NovelGridSkeleton.vue';
 import { ChecklistOutlined } from '@vicons/material';
 import { XAsyncContent } from '@novelia/web-kit';
 
@@ -98,7 +99,13 @@ const novelListRef = useTemplateRef('novelList');
         :loading="!error"
         :error="error?.message ?? ''"
         error-title="加载错误"
-      />
+      >
+        <template #loading>
+          <n-divider />
+          <NovelGridSkeleton />
+          <n-divider />
+        </template>
+      </XAsyncContent>
     </CPage>
   </bookshelf-layout>
 </template>

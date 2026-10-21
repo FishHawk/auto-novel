@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import NovelListSkeleton from '@/components/NovelListSkeleton.vue';
 import { Toast, XAsyncContent } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
@@ -99,7 +100,13 @@ const deleteHistory = (providerId: string, novelId: string) =>
         :loading="!error"
         :error="error?.message ?? ''"
         error-title="加载错误"
-      />
+      >
+        <template #loading>
+          <n-divider />
+          <NovelListSkeleton simple />
+          <n-divider />
+        </template>
+      </XAsyncContent>
     </CPage>
   </div>
 </template>

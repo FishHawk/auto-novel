@@ -7,6 +7,7 @@ import { CrawlerService } from '@/domain/crawler';
 import { useIsWideScreen } from '@/pages/util';
 import { WebNovelRepo } from '@/repos';
 import { useWhoamiStore } from '@/stores';
+import NovelDetailSkeleton from './components/NovelDetailSkeleton.vue';
 
 const { providerId, novelId } = defineProps<{
   providerId: string;
@@ -79,6 +80,10 @@ watch(formatedError, async (errorMessage) => {
       :loading="!formatedError"
       :error="formatedError"
       error-title="加载错误"
-    />
+    >
+      <template #loading>
+        <NovelDetailSkeleton :wide="isWideScreen" />
+      </template>
+    </XAsyncContent>
   </div>
 </template>

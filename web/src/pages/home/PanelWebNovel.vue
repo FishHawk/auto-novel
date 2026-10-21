@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import NovelListSkeleton from '@/components/NovelListSkeleton.vue';
 import { XAsyncContent } from '@novelia/web-kit';
 
 import type { WebNovelOutlineDto } from '@/model/WebNovel';
@@ -40,5 +41,9 @@ defineProps<{
     :loading="!error"
     :error="error?.message ?? ''"
     error-title="加载错误"
-  />
+  >
+    <template #loading>
+      <NovelListSkeleton panel />
+    </template>
+  </XAsyncContent>
 </template>

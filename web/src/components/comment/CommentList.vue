@@ -151,7 +151,22 @@ const canReply = computed(() => {
         :loading="!error"
         :error="error?.message ?? ''"
         error-title="加载错误"
-      />
+      >
+        <template #loading>
+          <div role="status">
+            <span class="sr-only">正在加载评论…</span>
+            <div class="divide-y divide-divider" aria-hidden="true">
+              <div v-for="index in 3" :key="index" class="py-4">
+                <div class="h-5 w-28 skeleton bg-border" />
+                <div class="mt-0.5 rounded-floating bg-embedded px-4 py-3">
+                  <div class="h-4 w-full skeleton" />
+                  <div class="mt-2 h-4 w-2/3 skeleton" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </XAsyncContent>
     </CPage>
   </section>
 </template>
