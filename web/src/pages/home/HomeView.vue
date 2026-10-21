@@ -9,7 +9,7 @@ import {
 import { XDialog } from '@novelia/web-kit';
 
 import { FavoredApi } from '@/api';
-import { forumPostUrls, forumUrl } from '@/config';
+import { forumPostUrls, forumUrl, siteUrls } from '@/config';
 import { WebNovelRepo, WenkuNovelRepo } from '@/repos';
 import type { WebNovelOutlineDto } from '@/model/WebNovel';
 import { useWhoamiStore } from '@/stores';
@@ -79,11 +79,6 @@ const linkExample = [
 ];
 
 const showQQModal = ref(false);
-const qqLink =
-  'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Qa0SOMBYZoJZ4vuykz3MbPS0zbpeN0pW&authKey=q75E7fr5CIBSDhqX%2F4kuC%2B0mcPiDvj%2FSDfP%2FGZ8Rl8kDn6Z3M6XPSZ91yt4ZWonq&noverify=0&group_code=819513328';
-
-const telegramLink = 'https://t.me/+hgUSCmuBReQzNmU1';
-const githubLink = 'https://github.com/auto-novel/auto-novel';
 </script>
 
 <template>
@@ -140,9 +135,9 @@ const githubLink = 'https://github.com/auto-novel/auto-novel';
           QQ群
         </n-button>
         /
-        <n-a :href="telegramLink" target="_blank">Telegram</n-a>
+        <n-a :href="siteUrls.telegram" target="_blank">Telegram</n-a>
         /
-        <n-a :href="githubLink" target="_blank">GitHub</n-a>
+        <n-a :href="siteUrls.repository" target="_blank">GitHub</n-a>
       </div>
       <p class="my-4 first:mt-0 last:mb-0">
         禁止使用脚本绕过翻译器提交翻译文本，哪怕你觉得自己提交的是正经翻译。
@@ -218,10 +213,10 @@ const githubLink = 'https://github.com/auto-novel/auto-novel';
   <XDialog title="QQ群" v-model:open="showQQModal" class="w-150">
     <p class="my-4 first:mt-0 last:mb-0">
       交流群：
-      <n-a :href="qqLink" target="_blank">819513328</n-a>
+      <n-a :href="siteUrls.qqGroup" target="_blank">819513328</n-a>
       ，验证答案是“绿色”。
       <br />
-      <n-qr-code :size="150" :value="qqLink" />
+      <n-qr-code :size="150" :value="siteUrls.qqGroup" />
     </p>
   </XDialog>
 </template>

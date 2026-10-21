@@ -4,7 +4,7 @@ import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
 import { subjectKeys } from '@novelia/forum-api';
 import { createReusableTemplate } from '@vueuse/core';
 
-import coverPlaceholder from '@/image/cover_placeholder.png';
+import { externalImageUrls } from '@/config';
 import { GenericNovelId } from '@/model/Common';
 import type { VolumeJpDto } from '@/model/WenkuNovel';
 import NovelBottomTabs from '@/pages/novel/components/NovelBottomTabs.vue';
@@ -107,7 +107,11 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
           <div style="flex: 0 0 160px">
             <n-image
               width="160"
-              :src="novel.cover ? novel.cover : coverPlaceholder"
+              :src="
+                novel.cover
+                  ? novel.cover
+                  : externalImageUrls.wenkuCoverPlaceholder
+              "
               alt="cover"
               show-toolbar-tooltip
               style="border-radius: 2px"

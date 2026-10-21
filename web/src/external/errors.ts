@@ -1,3 +1,5 @@
+import { siteUrls } from '@/config';
+
 const MINIMAL_ADDON_VERSION = '0.0.0';
 
 function normalizeVersion(version: string): [number, number, number] | null {
@@ -28,7 +30,7 @@ export function compareVersion(version: string, target: string): number | null {
 export class AddonNotFoundError extends Error {
   constructor() {
     super(
-      '未检测到机翻站插件（或机翻站插件版本太低），请安装后重试，参见：github.com/auto-novel/addon',
+      `未检测到机翻站插件（或机翻站插件版本太低），请安装后重试，参见：${siteUrls.addonRepository}`,
     );
     this.name = new.target.name;
   }
@@ -51,7 +53,7 @@ export class AddonLoadTimeoutError extends Error {
 export class AddonVersionError extends Error {
   constructor(readonly version: string) {
     super(
-      `机翻站插件版本过低或格式非法（当前：${version}），请升级后重试，参见：github.com/auto-novel/addon`,
+      `机翻站插件版本过低或格式非法（当前：${version}），请升级后重试，参见：${siteUrls.addonRepository}`,
     );
     this.name = new.target.name;
   }

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 
 import { WebNovelApi } from '@/api';
+import { siteUrls } from '@/config';
 import { requiresAddonChapterUpdate } from '@/domain/crawler/providerConfig';
 import { GenericNovelId } from '@/model/Common';
 import { useLocalVolumeStore } from '@/stores';
@@ -52,8 +53,7 @@ export const useReaderStore = (gnid: GenericNovelId) => {
                 requiresAddonChapterUpdate(gnid.providerId) &&
                 result.error.message.includes('从源站获取失败')
               ) {
-                result.error.message +=
-                  '\n可尝试使用最新版爬虫插件更新原文后重试（https://github.com/auto-novel/Addon）';
+                result.error.message += `\n可尝试使用最新版爬虫插件更新原文后重试（${siteUrls.addonRepository}）`;
               }
               return result;
             },

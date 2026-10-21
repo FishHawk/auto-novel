@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import coverPlaceholder from '@/image/cover_placeholder.png';
+import { externalImageUrls } from '@/config';
 
 defineProps<{
   src: string;
@@ -10,7 +10,7 @@ defineProps<{
 <template>
   <n-flex :size="0" vertical>
     <img
-      :src="src ? src : coverPlaceholder"
+      :src="src ? src : externalImageUrls.wenkuCoverPlaceholder"
       alt="cover"
       style="
         width: 100%;

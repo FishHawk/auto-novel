@@ -6,7 +6,7 @@ import {
   PlusOutlined,
 } from '@vicons/material';
 
-import { forumPostUrls } from '@/config';
+import { forumPostUrls, siteUrls } from '@/config';
 import { VueDraggable } from 'vue-draggable-plus';
 
 import { SakuraTranslator } from '@/domain/translate';
@@ -121,10 +121,7 @@ const clearCache = async () =>
           </n-a>
         </span>
         /
-        <n-a
-          href="https://monitor.novelia.cc/public-dashboards/be71c46fcc0e40eeaf06d9e7a2e26f95?refresh=auto&from=now-5m&to=now&timezone=browser"
-          target="_blank"
-        >
+        <n-a :href="siteUrls.sakuraMonitor" target="_blank">
           共享 Sakura 当前负载
         </n-a>
       </n-flex>
