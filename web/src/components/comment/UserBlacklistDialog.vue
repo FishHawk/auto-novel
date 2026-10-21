@@ -30,13 +30,13 @@ async function confirm() {
   try {
     await CommentRepo.setUserBlocked(props.userId, !blocked);
     if (active && viewer === whoami.value.user?.id) {
-      Toast.success(blocked ? '已取消拉黑' : '已拉黑作者');
+      Toast.success(blocked ? '已取消屏蔽' : '已屏蔽用户');
       emit('close');
     }
   } catch (error) {
     const message = await getApiErrorMessage(
       error,
-      blocked ? '取消拉黑失败' : '拉黑失败',
+      blocked ? '取消屏蔽失败' : '屏蔽失败',
     );
     if (active && viewer === whoami.value.user?.id) Toast.error(message);
   } finally {
@@ -48,13 +48,13 @@ async function confirm() {
 <template>
   <XConfirmDialog
     open
-    :title="`${blocked ? '取消拉黑' : '拉黑'} @${username}`"
+    :title="`${blocked ? '取消屏蔽' : '屏蔽'} @${username}`"
     :description="
       blocked
-        ? '取消后，该作者的评论将重新出现在列表中。'
-        : '拉黑后，评论区将过滤该作者的评论及其发起的评论串，仅对你生效。'
+        ? '取消后，该用户的评论将重新出现在列表中。'
+        : '屏蔽后，评论区将过滤该用户的评论及其发起的评论串，仅对你生效。'
     "
-    :confirm-label="blocked ? '取消拉黑' : '拉黑作者'"
+    :confirm-label="blocked ? '取消屏蔽' : '屏蔽用户'"
     :loading="pending"
     :danger="!blocked"
     @update:open="

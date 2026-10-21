@@ -8,6 +8,7 @@ import {
   XConfirmDialog,
   XDropdownMenu,
   XDropdownMenuItem,
+  XDropdownMenuSeparator,
 } from '@novelia/web-kit';
 
 import { CommentRepo } from '@/repos';
@@ -70,7 +71,13 @@ const confirmation = computed(() =>
 const evidence = computed(() => {
   const url = new URL(window.location.href);
   url.hash = `comment-${props.comment.id}`;
-  return `小说评论 #${props.comment.id}（资源 ${props.site}）\n${url}`;
+  return [
+    `小说评论 #${props.comment.id}（资源 ${props.site}）`,
+    url.toString(),
+    '',
+    '评论原文：',
+    props.comment.content,
+  ].join('\n');
 });
 watch(
   () => [
@@ -138,8 +145,8 @@ async function unhideComment() {
   submitting.value = true;
   try {
     await Toast.promise(CommentRepo.unhideComment(props.comment.id), {
-      success: '评论已解除隐藏',
-      error: '解除隐藏失败',
+      success: '评论已取消隐藏',
+      error: '取消隐藏失败',
     });
   } finally {
     submitting.value = false;
@@ -185,6 +192,7 @@ async function unhideComment() {
       <XDropdownMenuItem :disabled="copying" @select="copyComment">
         复制原文
       </XDropdownMenuItem>
+      <XDropdownMenuSeparator v-if="whoami.asAdmin || permissions.canDelete" />
       <XDropdownMenuItem
         v-if="whoami.asAdmin && comment.status === 0"
         :disabled="submitting"
@@ -197,7 +205,7 @@ async function unhideComment() {
         :disabled="submitting"
         @select="unhideComment"
       >
-        解除隐藏
+        取消隐藏
       </XDropdownMenuItem>
       <XDropdownMenuItem
         v-if="permissions.canDelete"
@@ -207,13 +215,16 @@ async function unhideComment() {
       >
         删除评论
       </XDropdownMenuItem>
+      <XDropdownMenuSeparator
+        v-if="permissions.canBlockAuthor || permissions.canModerateAuthor"
+      />
       <XDropdownMenuItem
         v-if="permissions.canBlockAuthor"
         :destructive="!comment.authorBlocked"
         :disabled="submitting"
         @select="blacklistOpen = true"
       >
-        {{ comment.authorBlocked ? '取消拉黑' : '拉黑作者' }}
+        {{ comment.authorBlocked ? '取消屏蔽' : '屏蔽用户' }}
       </XDropdownMenuItem>
       <template v-if="permissions.canModerateAuthor">
         <XDropdownMenuItem
@@ -221,14 +232,14 @@ async function unhideComment() {
           :disabled="submitting"
           @select="userModerationAction = 'strike'"
         >
-          处罚作者
+          处罚用户
         </XDropdownMenuItem>
         <XDropdownMenuItem
           destructive
           :disabled="submitting"
           @select="userModerationAction = 'ban'"
         >
-          封禁作者
+          封禁用户
         </XDropdownMenuItem>
       </template>
     </XDropdownMenu>
@@ -262,6 +273,8 @@ async function unhideComment() {
     :user-id="comment.authorId"
     :username="comment.authorUsername"
     :evidence="evidence"
+    :comment-id="comment.id"
+    :site="site"
     @close="userModerationAction = undefined"
   />
 </template>
