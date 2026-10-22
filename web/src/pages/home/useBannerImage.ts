@@ -53,6 +53,7 @@ export function useBannerImage() {
 
   let rotationTimer: ReturnType<typeof setTimeout> | undefined;
   let disposed = false;
+  let reloadPending = false;
   const loadBanner = async (next = false) => {
     if (switching.value || disposed) return;
     switching.value = true;
@@ -62,9 +63,11 @@ export function useBannerImage() {
     try {
       selected = await BannerRepo.current(next);
       if (disposed) return;
-      canSwitch.value = (await BannerRepo.list()).length > 1;
+      const banners = await BannerRepo.list();
+      if (disposed) return;
+      canSwitch.value = banners.length > 1;
       if (!selected?.banner.imageUrl) {
-        if (!next) showFallback();
+        if (!next && imageUrl.value !== FallbackImage) showFallback();
         return;
       }
 
@@ -102,8 +105,11 @@ export function useBannerImage() {
       }
     } catch {
       if (disposed) return;
-      if (next) switchError.value = '切换失败，点击重试';
-      else showFallback();
+      if (next) {
+        switchError.value = '切换失败，点击重试';
+        // 预加载失败时保留旧背景，不能让本次刷新通知绕过预加载再次应用失败图片。
+        reloadPending = false;
+      } else showFallback();
     } finally {
       switching.value = false;
       if (!disposed && selected) {
@@ -112,12 +118,22 @@ export function useBannerImage() {
           Math.max(0, selected.expiresAt - Date.now()),
         );
       }
+      // 刷新可能与当前加载/手动预加载重叠，结束后再协调最新列表。
+      if (!disposed && reloadPending) {
+        reloadPending = false;
+        void loadBanner();
+      }
     }
   };
+  const stopWatchingList = BannerRepo.watchList(() => {
+    if (switching.value) reloadPending = true;
+    else void loadBanner();
+  });
   const nextBanner = () => loadBanner(true);
   onMounted(() => void loadBanner());
   onBeforeUnmount(() => {
     disposed = true;
+    stopWatchingList();
     clearTimeout(rotationTimer);
   });
 
