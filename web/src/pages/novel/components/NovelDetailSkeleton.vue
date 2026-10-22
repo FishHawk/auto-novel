@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CLayout from '@/components/CLayout.vue';
+
 defineProps<{
   wenku?: boolean;
   wide?: boolean;
@@ -8,15 +10,12 @@ defineProps<{
 <template>
   <div role="status">
     <span class="sr-only">正在加载小说详情…</span>
-    <div
+    <CLayout
       aria-hidden="true"
-      class="grid gap-6"
-      :style="{
-        gridTemplateColumns:
-          wide && !wenku ? 'minmax(0, 1fr) 320px' : undefined,
-      }"
+      :sidebar="!!wide && !wenku"
+      :sidebar-width="320"
     >
-      <div class="min-w-0">
+      <div class="min-w-0" :class="{ 'pt-[18px]': !wenku }">
         <div v-if="wenku" class="flex gap-3 py-5">
           <div class="h-56 w-40 shrink-0 skeleton" />
           <div class="min-w-0 flex-1 space-y-4 pt-2">
@@ -55,10 +54,14 @@ defineProps<{
           />
         </div>
       </div>
-      <div v-if="wide && !wenku" class="space-y-5">
-        <div class="h-6 w-20 skeleton bg-border" />
-        <div v-for="index in 10" :key="index" class="h-5 skeleton" />
-      </div>
-    </div>
+      <template #sidebar>
+        <div aria-hidden="true" class="pr-4">
+          <div class="my-[18px] h-7 w-20 skeleton bg-border" />
+          <div class="space-y-5">
+            <div v-for="index in 10" :key="index" class="h-5 skeleton" />
+          </div>
+        </div>
+      </template>
+    </CLayout>
   </div>
 </template>
