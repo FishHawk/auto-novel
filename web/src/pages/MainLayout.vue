@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { WebKitLayout, XButton, type WebKitMenuOption } from '@novelia/web-kit';
+import {
+  WebKitLayout,
+  XButton,
+  useWebKitViewport,
+  type WebKitMenuOption,
+} from '@novelia/web-kit';
 import {
   BookOutlined,
   ForumOutlined,
@@ -15,6 +20,7 @@ import { forumCommunityUrl } from '@/config';
 import { useWhoamiStore } from '@/stores';
 
 const route = useRoute();
+const { isMobile } = useWebKitViewport();
 const { whoami } = storeToRefs(useWhoamiStore());
 const favoriteTo = computed(() =>
   whoami.value.isSignedIn ? '/favorite/web' : '/favorite/local',
@@ -119,7 +125,7 @@ const menuKey = computed(() => {
     :account-options="[]"
     :selected-navigation-key="menuKey"
   >
-    <template #header-actions>
+    <template v-if="isMobile" #header-actions>
       <RouterLink :to="favoriteTo" aria-label="我的收藏">
         <XButton
           size="icon"
