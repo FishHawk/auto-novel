@@ -37,6 +37,7 @@ const features = [
   >
     <template #trigger>
       <XButton
+        color="neutral"
         variant="ghost"
         size="xs"
         class="hover:bg-divider/40 hover:text-ink"

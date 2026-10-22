@@ -114,6 +114,7 @@ const deleteFavored = () =>
       <XDropdownMenu class="min-w-32 w-32">
         <template #trigger>
           <XButton
+            color="neutral"
             variant="ghost"
             size="icon-xs"
             aria-label="更多操作"

@@ -131,6 +131,7 @@ const sortedVolumes = computed(() => {
       <XDropdownMenu class="w-40">
         <template #trigger>
           <XButton
+            color="neutral"
             variant="ghost"
             size="icon"
             aria-label="更多操作"

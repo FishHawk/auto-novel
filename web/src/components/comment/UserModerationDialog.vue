@@ -159,6 +159,7 @@ async function submit() {
       </div>
       <div class="flex justify-end gap-3 pt-2">
         <XButton
+          color="neutral"
           variant="outline"
           :disabled="submitting"
           @click="emit('close')"
@@ -167,7 +168,7 @@ async function submit() {
         </XButton>
         <XButton
           type="submit"
-          variant="danger"
+          color="danger"
           :disabled="!canSubmit || submitting"
         >
           {{ submitting ? '处理中…' : isStrike ? '确认处罚' : '确认封禁' }}

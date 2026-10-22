@@ -74,7 +74,7 @@
     "vue-draggable-plus": "^0.5.6",
     "vue-router": "^5.2.0",
     "vue-tsc": "^2.2.12",
-    "@novelia/web-kit": "github:auto-novel/auth#7a5cf3a249388776dd6688c0016e3474f094c4d4&path:packages/web-kit",
+    "@novelia/web-kit": "github:auto-novel/auth#5d1e8a2640b68050b97cc0a7b3b9b3859efdd4d4&path:packages/web-kit",
     "@tailwindcss/vite": "^4.3.3",
     "tailwindcss": "^4.3.3"
   }

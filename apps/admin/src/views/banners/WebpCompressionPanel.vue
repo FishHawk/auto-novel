@@ -88,7 +88,7 @@ const savedPercent = computed(() => {
   padding: 14px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--color-embedded);
+  background: var(--color-neutral-soft);
 }
 .webp-title {
   font-size: 13px;

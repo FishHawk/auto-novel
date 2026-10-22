@@ -123,6 +123,7 @@ const menuKey = computed(() => {
       <RouterLink :to="favoriteTo" aria-label="我的收藏">
         <XButton
           size="icon"
+          color="neutral"
           variant="ghost"
           class="text-ink hover:bg-divider/40 hover:text-ink"
           aria-label="我的收藏"
