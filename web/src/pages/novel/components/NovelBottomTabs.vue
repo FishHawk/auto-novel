@@ -104,6 +104,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
         tab="评论区"
         style="min-height: 400px"
       >
+        <slot name="commentNotice" />
         <comment-list :site="site" :locked="locked ?? false" />
       </n-tab-pane>
 

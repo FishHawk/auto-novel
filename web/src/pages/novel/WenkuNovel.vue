@@ -226,6 +226,17 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
         :hide-comment="setting.hideCommmentWenkuNovel"
         :locked="false"
       >
+        <template #commentNotice>
+          <n-alert
+            type="warning"
+            :bordered="false"
+            title="公告"
+            style="margin-bottom: 12px"
+          >
+            近期有人在评论区到处冒充文库本的上传者，请勿相信此类评论（世界很奇妙吧，啥人都有）
+          </n-alert>
+        </template>
+
         <template #wenkuToc>
           <template v-if="whoami.isSignedIn">
             <br />
