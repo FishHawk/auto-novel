@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import NovelGridSkeleton from '@/components/NovelGridSkeleton.vue';
-import { XAsyncContent } from '@novelia/web-kit';
+import { XAsyncContent, XPagination } from '@novelia/web-kit';
 import { PlusOutlined } from '@vicons/material';
 
 import { WenkuNovelRepo } from '@/repos';
@@ -38,6 +38,8 @@ const { data: novelPage, error } = WenkuNovelRepo.useWenkuNovelList(
   }),
 );
 
+const pageCount = computed(() => novelPage.value?.pageNumber ?? 1);
+
 watch(novelPage, (novelPage) => {
   if (novelPage) {
     const favoredIds = favoreds.value.wenku.map((it) => it.id);
@@ -68,31 +70,31 @@ watch(novelPage, (novelPage) => {
       @update:value="onUpdateListValue(listOptions, $event)"
     />
 
-    <CPage
-      :page="page"
-      :page-number="novelPage?.pageNumber"
-      @update:page="onUpdatePage"
-    >
-      <template v-if="novelPage">
-        <n-divider />
-        <NovelListWenku :items="novelPage.items" />
-        <n-empty v-if="novelPage.items.length === 0" description="空列表" />
-        <n-divider />
-      </template>
+    <template v-if="novelPage">
+      <n-divider />
+      <NovelListWenku :items="novelPage.items" />
+      <n-empty v-if="novelPage.items.length === 0" description="空列表" />
+    </template>
 
-      <XAsyncContent
-        v-else
-        :loading="!error"
-        :error="error?.message ?? ''"
-        error-title="加载错误"
-      >
-        <template #loading>
-          <n-divider />
-          <NovelGridSkeleton />
-          <n-divider />
-        </template>
-      </XAsyncContent>
-    </CPage>
+    <XAsyncContent
+      v-else
+      :loading="!error"
+      :error="error?.message ?? ''"
+      error-title="加载错误"
+    >
+      <template #loading>
+        <n-divider />
+        <NovelGridSkeleton />
+      </template>
+    </XAsyncContent>
+
+    <XPagination
+      v-if="pageCount > 1"
+      :page="page"
+      :total-pages="pageCount"
+      keyboard
+      @update:page="onUpdatePage"
+    />
   </div>
 </template>
 

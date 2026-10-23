@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import NovelListSkeleton from '@/components/NovelListSkeleton.vue';
-import { Toast, XAsyncContent } from '@novelia/web-kit';
+import { Toast, XAsyncContent, XPagination } from '@novelia/web-kit';
 import { DeleteOutlineOutlined } from '@vicons/material';
 
 import { ReadHistoryApi } from '@/api';
@@ -29,6 +29,8 @@ onMounted(() => {
 const { data: novelPage, error } = WebNovelRepo.useWebNovelHistoryList(
   () => props.page,
 );
+
+const pageCount = computed(() => novelPage.value?.pageNumber ?? 1);
 
 const clearHistory = () =>
   Toast.promise(
@@ -74,39 +76,39 @@ const deleteHistory = (providerId: string, novelId: string) =>
       注意：历史功能已暂停
     </n-text>
 
-    <CPage
-      :page="page"
-      :page-number="novelPage?.pageNumber"
-      @update:page="onUpdatePage"
-    >
-      <template v-if="novelPage">
-        <n-divider />
-        <NovelListWeb :items="novelPage.items" :option="[]" simple>
-          <template #action="item">
-            <c-button
-              size="tiny"
-              label="删除"
-              style="margin-top: 2px"
-              @action="deleteHistory(item.providerId, item.novelId)"
-            />
-          </template>
-        </NovelListWeb>
-        <n-empty v-if="novelPage.items.length === 0" description="空列表" />
-        <n-divider />
-      </template>
-
-      <XAsyncContent
-        v-else
-        :loading="!error"
-        :error="error?.message ?? ''"
-        error-title="加载错误"
-      >
-        <template #loading>
-          <n-divider />
-          <NovelListSkeleton simple />
-          <n-divider />
+    <template v-if="novelPage">
+      <n-divider />
+      <NovelListWeb :items="novelPage.items" :option="[]" simple>
+        <template #action="item">
+          <c-button
+            size="tiny"
+            label="删除"
+            style="margin-top: 2px"
+            @action="deleteHistory(item.providerId, item.novelId)"
+          />
         </template>
-      </XAsyncContent>
-    </CPage>
+      </NovelListWeb>
+      <n-empty v-if="novelPage.items.length === 0" description="空列表" />
+    </template>
+
+    <XAsyncContent
+      v-else
+      :loading="!error"
+      :error="error?.message ?? ''"
+      error-title="加载错误"
+    >
+      <template #loading>
+        <n-divider />
+        <NovelListSkeleton simple />
+      </template>
+    </XAsyncContent>
+
+    <XPagination
+      v-if="pageCount > 1"
+      :page="page"
+      :total-pages="pageCount"
+      keyboard
+      @update:page="onUpdatePage"
+    />
   </div>
 </template>

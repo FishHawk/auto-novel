@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import NovelListSkeleton from '@/components/NovelListSkeleton.vue';
-import { XAsyncContent } from '@novelia/web-kit';
+import { XAsyncContent, XPagination } from '@novelia/web-kit';
 
 import type { ListOptions, ListValue } from '@/components/list/types';
 import { WebNovelRepo } from '@/repos';
@@ -45,6 +45,8 @@ const { data: novelPage, error } = WebNovelRepo.useWebNovelRankList(
       listValue.value,
     ),
 );
+
+const pageCount = computed(() => novelPage.value?.pageNumber ?? 1);
 </script>
 
 <template>
@@ -57,30 +59,30 @@ const { data: novelPage, error } = WebNovelRepo.useWebNovelRankList(
       @update:value="onUpdateListValue(listOptions, $event)"
     />
 
-    <CPage
-      :page="page"
-      :page-number="novelPage?.pageNumber"
-      @update:page="onUpdatePage"
-    >
-      <template v-if="novelPage">
-        <n-divider />
-        <NovelListWeb :items="novelPage.items" />
-        <n-empty v-if="novelPage.items.length === 0" description="空列表" />
-        <n-divider />
-      </template>
+    <template v-if="novelPage">
+      <n-divider />
+      <NovelListWeb :items="novelPage.items" />
+      <n-empty v-if="novelPage.items.length === 0" description="空列表" />
+    </template>
 
-      <XAsyncContent
-        v-else
-        :loading="!error"
-        :error="error?.message ?? ''"
-        error-title="加载错误"
-      >
-        <template #loading>
-          <n-divider />
-          <NovelListSkeleton />
-          <n-divider />
-        </template>
-      </XAsyncContent>
-    </CPage>
+    <XAsyncContent
+      v-else
+      :loading="!error"
+      :error="error?.message ?? ''"
+      error-title="加载错误"
+    >
+      <template #loading>
+        <n-divider />
+        <NovelListSkeleton />
+      </template>
+    </XAsyncContent>
+
+    <XPagination
+      v-if="pageCount > 1"
+      :page="page"
+      :total-pages="pageCount"
+      keyboard
+      @update:page="onUpdatePage"
+    />
   </div>
 </template>

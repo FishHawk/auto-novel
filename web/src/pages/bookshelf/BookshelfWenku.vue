@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import NovelGridSkeleton from '@/components/NovelGridSkeleton.vue';
 import { ChecklistOutlined } from '@vicons/material';
-import { XAsyncContent } from '@novelia/web-kit';
+import { XAsyncContent, XPagination } from '@novelia/web-kit';
 
 import { useIsWideScreen } from '@/pages/util';
 import { WenkuNovelRepo } from '@/repos';
@@ -43,6 +43,8 @@ const { data: novelPage, error } = WenkuNovelRepo.useWenkuNovelFavoredList(
   }),
 );
 
+const pageCount = computed(() => novelPage.value?.pageNumber ?? 1);
+
 const showControlPanel = ref(false);
 
 const novelListRef = useTemplateRef('novelList');
@@ -77,35 +79,35 @@ const novelListRef = useTemplateRef('novelList');
       @update:value="onUpdateListValue(listOptions, $event)"
     />
 
-    <CPage
-      :page="page"
-      :page-number="novelPage?.pageNumber"
-      @update:page="onUpdatePage"
-    >
-      <template v-if="novelPage">
-        <n-divider />
-        <NovelListWenku
-          ref="novelList"
-          :items="novelPage.items"
-          :selectable="showControlPanel"
-          simple
-        />
-        <n-empty v-if="novelPage.items.length === 0" description="空列表" />
-        <n-divider />
-      </template>
+    <template v-if="novelPage">
+      <n-divider />
+      <NovelListWenku
+        ref="novelList"
+        :items="novelPage.items"
+        :selectable="showControlPanel"
+        simple
+      />
+      <n-empty v-if="novelPage.items.length === 0" description="空列表" />
+    </template>
 
-      <XAsyncContent
-        v-else
-        :loading="!error"
-        :error="error?.message ?? ''"
-        error-title="加载错误"
-      >
-        <template #loading>
-          <n-divider />
-          <NovelGridSkeleton />
-          <n-divider />
-        </template>
-      </XAsyncContent>
-    </CPage>
+    <XAsyncContent
+      v-else
+      :loading="!error"
+      :error="error?.message ?? ''"
+      error-title="加载错误"
+    >
+      <template #loading>
+        <n-divider />
+        <NovelGridSkeleton />
+      </template>
+    </XAsyncContent>
+
+    <XPagination
+      v-if="pageCount > 1"
+      :page="page"
+      :total-pages="pageCount"
+      keyboard
+      @update:page="onUpdatePage"
+    />
   </bookshelf-layout>
 </template>
