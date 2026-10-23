@@ -9,6 +9,7 @@ on:
       - .github/workflows/ci-web.yml
       - .dockerignore
       - deploy/web/**
+      - patches/**
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml

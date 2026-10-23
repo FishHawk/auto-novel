@@ -5,6 +5,7 @@ RUN corepack enable
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN corepack install
+COPY patches/ ./patches/
 COPY packages/crawler/package.json ./packages/crawler/
 COPY packages/translator/package.json ./packages/translator/
 COPY web/package.json ./web/
