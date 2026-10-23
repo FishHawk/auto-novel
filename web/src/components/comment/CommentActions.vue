@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { MoreVertOutlined } from '@vicons/material';
-import type { Comment } from '@novelia/forum-api';
+import type { Comment } from '@novelia/web-kit';
 import {
   copyToClipboard,
   Toast,

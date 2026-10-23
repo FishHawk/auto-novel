@@ -1,4 +1,4 @@
-import type { Comment } from '@novelia/forum-api';
+import type { Comment } from '@novelia/web-kit';
 
 export const COMMENT_EDIT_WINDOW = 20 * 60_000;
 

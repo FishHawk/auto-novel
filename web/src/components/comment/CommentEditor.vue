@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Comment } from '@novelia/forum-api';
+import type { Comment } from '@novelia/web-kit';
 import { Toast, XButton } from '@novelia/web-kit';
 
 import { CommentRepo } from '@/repos';

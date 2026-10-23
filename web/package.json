@@ -44,7 +44,6 @@
     "@auto-novel/crawler": "workspace:*",
     "@auto-novel/translator": "workspace:*",
     "@img-comparison-slider/vue": "^8.0.0",
-    "@novelia/forum-api": "github:auto-novel/forum#1cc0de616c9d89c5a5043c912f625c04c1515d76&path:packages/forum-api",
     "@pinia/colada": "^1.2.0",
     "@types/lodash-es": "^4.17.12",
     "@types/opencc-js": "^1.0.3",
@@ -74,7 +73,7 @@
     "vue-draggable-plus": "^0.5.6",
     "vue-router": "^5.2.0",
     "vue-tsc": "^2.2.12",
-    "@novelia/web-kit": "github:auto-novel/web-kit#f16daab1821d476993183110643d380217f6838b",
+    "@novelia/web-kit": "github:auto-novel/web-kit#c5a113b8aab1e6df41d91c0bcfedac179475f04b",
     "@tailwindcss/vite": "^4.3.3",
     "tailwindcss": "^4.3.3"
   }

@@ -4,9 +4,9 @@ import {
   KeyboardArrowUpRound,
   SortOutlined,
 } from '@vicons/material';
-import { subjectKeys } from '@novelia/forum-api';
 import { NScrollbar } from 'naive-ui';
 
+import { subjectKeys } from '@/api/commentSubject';
 import { GenericNovelId } from '@/model/Common';
 import type { WebNovelDto, WebNovelTocItemDto } from '@/model/WebNovel';
 import NovelBottomTabs from '@/pages/novel/components/NovelBottomTabs.vue';

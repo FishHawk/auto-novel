@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
-import type { Comment, CommentPage } from '@novelia/forum-api';
+import type { Comment, CommentPage } from '@novelia/web-kit';
 
 const mocks = vi.hoisted(() => ({
   api: {

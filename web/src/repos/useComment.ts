@@ -4,7 +4,7 @@ import type {
   Comment,
   CommentPage,
   CreateCommentRequest,
-} from '@novelia/forum-api';
+} from '@novelia/web-kit';
 
 import { CommentApi } from '@/api';
 import { webKit } from '@/webKit';

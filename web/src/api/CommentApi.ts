@@ -1,4 +1,4 @@
-import { createForumApi } from '@novelia/forum-api';
+import { createForumApi } from '@novelia/web-kit';
 
 import { forumApiUrl } from '@/config';
 import { webKit } from '@/webKit';

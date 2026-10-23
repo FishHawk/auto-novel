@@ -3,7 +3,7 @@ import { CommentOutlined } from '@vicons/material';
 import { XAsyncContent, XButton } from '@novelia/web-kit';
 
 import { CommentRepo } from '@/repos';
-import type { Comment } from '@novelia/forum-api';
+import type { Comment } from '@novelia/web-kit';
 import { useDraftStore, useWhoamiStore } from '@/stores';
 
 const props = defineProps<{

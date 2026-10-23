@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { XAsyncContent } from '@novelia/web-kit';
 
-import type { Comment } from '@novelia/forum-api';
+import type { Comment } from '@novelia/web-kit';
 import { CommentRepo } from '@/repos';
 
 const props = defineProps<{

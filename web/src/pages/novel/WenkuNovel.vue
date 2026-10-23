@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { Toast, XDialog, XAsyncContent } from '@novelia/web-kit';
 import { EditNoteOutlined, LanguageOutlined } from '@vicons/material';
-import { subjectKeys } from '@novelia/forum-api';
 import { createReusableTemplate } from '@vueuse/core';
 
 import { externalImageUrls } from '@/config';
+import { subjectKeys } from '@/api/commentSubject';
 import { GenericNovelId } from '@/model/Common';
 import type { VolumeJpDto } from '@/model/WenkuNovel';
 import NovelBottomTabs from '@/pages/novel/components/NovelBottomTabs.vue';
