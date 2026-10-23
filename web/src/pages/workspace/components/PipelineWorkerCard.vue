@@ -153,7 +153,7 @@ const testWorker = async () => {
           :icon="PlayArrowOutlined"
           size="tiny"
           secondary
-          :disabled="deltaDisabled || startDisabled"
+          :disabled="deltaDisabled"
           @action="emit('startDelta', worker.id)"
         />
         <c-icon-button

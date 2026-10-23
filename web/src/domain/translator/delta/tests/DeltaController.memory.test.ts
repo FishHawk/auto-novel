@@ -18,12 +18,12 @@ const worker = {
   model: 'model',
   key: 'test-only',
 };
-function chapter(chapterId: string) {
+function chapter(chapterId: string, source = ['原文']) {
   return createDeltaSession({
     runId: chapterId,
     workerId: worker.id,
     identity: { taskId: 'task', taskCreatedAt: 1, novelId: 'novel', chapterId },
-    source: ['原文'],
+    source,
     glossaryId: 'g',
     glossary: {},
     model: deltaWorkerModel(worker),
@@ -33,13 +33,81 @@ function chapter(chapterId: string) {
     }),
   });
 }
+function completedChapter(chapterId: string) {
+  const session = chapter(chapterId, ['原文一', '原文二']);
+  session.phase = 'completed';
+  session.completedAt = Date.now();
+  session.batches = [
+    { id: 'b0001', paragraphIds: ['p000001'] },
+    { id: 'b0002', paragraphIds: ['p000002'] },
+  ];
+  session.cursor = 2;
+  session.translations = { p000001: '译文一', p000002: '译文二' };
+  session.finalParagraphs = ['译文一', '译文二'];
+  session.messages = [
+    { role: 'user', content: '完整提示与历史', timestamp: Date.now() },
+  ];
+  session.preferences = '翻译偏好';
+  session.glossary = { 原文: '译文' };
+  session.requests = [
+    {
+      requestId: 'r1',
+      batchId: 'b0001',
+      window: 1,
+      attempt: 1,
+      status: 'accepted',
+      usage: {
+        input: 11,
+        output: 5,
+        cacheRead: 3,
+        cacheWrite: 0,
+        totalTokens: 19,
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      },
+      usagePresence: {
+        input: true,
+        output: true,
+        cacheRead: true,
+        cacheWrite: false,
+      },
+    },
+  ];
+  session.review = {
+    id: 'review',
+    options: { enabled: true, mode: 'new' },
+    draftHash: 'draft',
+    originalTranslations: { p000001: '初译一', p000002: '译文二' },
+    systemPrompt: '审校提示',
+    tools: session.tools,
+    messages: [
+      { role: 'user', content: '完整审校历史', timestamp: Date.now() },
+    ],
+    initialMessageCount: 0,
+    requests: session.requests,
+    attempts: 1,
+    failures: 0,
+    totalAttempts: 1,
+    window: 1,
+    contextReads: 1,
+    changes: [
+      {
+        paragraphId: 'p000001',
+        translation: '译文一',
+        category: 'accuracy',
+        reason: '修正语义',
+      },
+    ],
+    unresolved: [],
+    completed: true,
+  };
+  return session;
+}
 function fixture(
   records: DeltaChapterSession[] = [],
   options: Partial<ConstructorParameters<typeof DeltaController>[0]> = {},
 ) {
   const saved = new Map(records.map((s) => [s.id, structuredClone(s)]));
   const store = {
-    list: vi.fn(async () => structuredClone([...saved.values()])),
     listSummaries: vi.fn(async () =>
       [...saved.values()].map(summarizeDeltaSession),
     ),
@@ -90,22 +158,23 @@ function fixture(
 }
 
 describe('Delta controller bounded session history', () => {
-  it('retranslates only the selected task with the chosen model and fresh history', async () => {
-    const selectedWorker = { ...worker, model: 'another-model' };
-    const old = { ...chapter('a'), phase: 'completed' as const };
-    old.messages = [{ role: 'user', content: 'old history', timestamp: 0 }];
-    const other = chapter('b');
-    other.identity.taskId = 'other';
-    const onTaskDone = vi.fn();
-    const f = fixture([old, other], {
-      jobs: () => [
-        { task: 'other', description: 'Other', createAt: 1 },
-        { task: 'task', description: 'Novel', createAt: 2 },
-      ],
+  it('lets another worker claim and complete a different chapter while the first waits for review', async () => {
+    let releaseReview!: () => void;
+    const waiting = new Promise<void>((resolve) => {
+      releaseReview = resolve;
+    });
+    const reviewed: string[] = [];
+    const upload = vi.fn();
+    const f = fixture([], {
       source: async () => ({
         novelId: 'novel',
         metadata: {},
-        chapters: [{ chapterId: 'a', title: 'A', order: 0, status: 'pending' }],
+        chapters: ['a', 'b'].map((chapterId, order) => ({
+          chapterId,
+          title: chapterId,
+          order,
+          status: 'pending',
+        })),
         readChapter: async () => ({
           paragraphs: ['原文'],
           glossaryId: 'g',
@@ -116,28 +185,52 @@ describe('Delta controller bounded session history', () => {
           available: false,
           reason: 'no context',
         }),
-        uploadChapter: vi.fn(),
+        uploadChapter: upload,
       }),
-      onTaskDone,
+      runReview: async (session) => {
+        reviewed.push(session.identity.chapterId);
+        if (session.identity.chapterId === 'a') await waiting;
+        return {
+          ...session,
+          revision: session.revision + 1,
+          phase: 'readyToSubmit',
+        };
+      },
     });
+    const first = {
+      ...worker,
+      id: 'first',
+      concurrency: 1,
+      deltaReview: { enabled: true, mode: 'new' as const },
+    };
+    const second = { ...first, id: 'second' };
     await f.controller.load();
-
-    await f.controller.startWorker(selectedWorker, 'task');
-
-    expect(f.runChapter).toHaveBeenCalledOnce();
-    const session = f.runChapter.mock.calls[0][0];
-    expect(session.model.model).toBe('another-model');
-    expect(session.runId).not.toBe(old.runId);
-    expect(session.messages).toEqual([]);
-    expect((await f.store.get(old.id))?.phase).toBe('completed');
-    expect(await f.store.get(other.id)).toEqual(other);
-    expect(onTaskDone.mock.calls).toEqual([['task', 1]]);
+    const firstRun = f.controller.startWorker(first);
+    try {
+      await vi.waitFor(() => expect(reviewed).toEqual(['a']));
+      await f.controller.startWorker(second);
+      expect(f.controller.isRunning(first.id)).toBe(true);
+      expect(f.saved.get(chapter('a').id)?.phase).toBe('reviewing');
+      expect(f.saved.get(chapter('b').id)?.phase).toBe('completed');
+      expect(
+        f.runChapter.mock.calls.map(([session]) => [
+          session.identity.chapterId,
+          session.workerId,
+        ]),
+      ).toEqual([
+        ['a', 'first'],
+        ['b', 'second'],
+      ]);
+      expect(upload.mock.calls.map(([chapterId]) => chapterId)).toEqual(['b']);
+    } finally {
+      releaseReview();
+      await firstRun;
+    }
   });
 
   it('loads summaries without fetching any complete chapter histories', async () => {
     const f = fixture([chapter('a'), chapter('b')]);
     await f.controller.load();
-    expect(f.store.list).not.toHaveBeenCalled();
     expect(f.store.listSummaries).toHaveBeenCalledOnce();
     expect(f.store.get).not.toHaveBeenCalled();
     expect(f.events).toEqual([{ type: 'reset', sessions: expect.any(Array) }]);
@@ -256,9 +349,8 @@ describe('Delta output simplification', () => {
     expect(saved?.phase).toBe('completed');
   });
 
-  it('uploads the original output when the converter is unavailable', async () => {
+  it('pauses without uploading when simplification fails', async () => {
     const uploadChapter = vi.fn(async () => {});
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const f = fixture([chapter('a')], {
       source: async () => ({
         novelId: 'novel',
@@ -293,9 +385,11 @@ describe('Delta output simplification', () => {
 
     await f.controller.startWorker(worker);
 
-    expect(uploadChapter).toHaveBeenCalledWith('a', 'g', ['繁體']);
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
+    expect(uploadChapter).not.toHaveBeenCalled();
+    const saved = await f.store.get(chapter('a').id);
+    expect(saved?.phase).toBe('readyToSubmit');
+    expect(saved?.pauseReason).toContain('opencc unavailable');
+    expect(saved?.finalParagraphs).toEqual(['繁體']);
   });
 });
 
@@ -336,8 +430,8 @@ describe('Delta task scope', () => {
     expect(f.runChapter.mock.calls[0][0].identity.chapterId).toBe('b');
   });
 
-  it('removes all checkpoints for one task without touching other tasks', async () => {
-    const a = { ...chapter('a'), phase: 'completed' as const };
+  it('removes task drafts but retains compact completed results without touching other tasks', async () => {
+    const a = completedChapter('a');
     const b = chapter('b');
     const other = {
       ...chapter('c'),
@@ -347,13 +441,52 @@ describe('Delta task scope', () => {
     await f.controller.load();
     f.events.length = 0;
     await f.controller.discardTask('task');
-    expect(f.saved.has(a.id)).toBe(false);
+    const retained = f.saved.get(a.id)!;
+    expect(retained).toMatchObject({
+      revision: a.revision + 1,
+      phase: 'completed',
+      model: a.model,
+      paragraphs: a.paragraphs,
+      batches: a.batches,
+      translations: a.translations,
+      requests: a.requests,
+      source: [],
+      messages: [],
+      systemPrompt: '',
+      tools: [],
+      glossary: {},
+      preferences: '',
+      review: {
+        completed: true,
+        requests: a.review!.requests,
+        changes: a.review!.changes,
+        originalTranslations: { p000001: '初译一' },
+        messages: [],
+        systemPrompt: '',
+        tools: [],
+      },
+    });
+    expect(retained.finalParagraphs).toBeUndefined();
     expect(f.saved.has(b.id)).toBe(false);
     expect(f.saved.has(other.id)).toBe(true);
     expect(f.events).toContainEqual({
       type: 'remove',
-      ids: expect.arrayContaining([a.id, b.id]),
+      ids: [b.id],
     });
+    expect(f.events).toContainEqual({
+      type: 'upsert',
+      session: summarizeDeltaSession(retained),
+    });
+    expect(
+      f.events.some(
+        (event) => event.type === 'remove' && event.ids.includes(a.id),
+      ),
+    ).toBe(false);
+
+    f.store.get.mockClear();
+    await f.controller.load();
+    expect(f.store.get).not.toHaveBeenCalled();
+    expect(await f.controller.getSession(a.id)).toEqual(retained);
   });
 
   it('removes one chapter checkpoint by task and chapter id', async () => {
@@ -364,5 +497,71 @@ describe('Delta task scope', () => {
     await f.controller.discardChapterByTask('task', 'a');
     expect(f.saved.has(a.id)).toBe(false);
     expect(f.saved.has(b.id)).toBe(true);
+  });
+
+  it('retains completed chapter batches when removing just that chapter from its task', async () => {
+    const a = completedChapter('a');
+    const b = chapter('b');
+    const f = fixture([a, b]);
+    await f.controller.load();
+    await f.controller.discardChapterByTask('task', 'a');
+    expect(f.saved.get(a.id)?.batches).toEqual(a.batches);
+    expect(f.saved.get(a.id)?.messages).toEqual([]);
+    expect(f.saved.get(b.id)).toEqual(b);
+  });
+
+  it('keeps completed history and its summary intact if compacting fails', async () => {
+    const a = completedChapter('a');
+    const f = fixture([a]);
+    await f.controller.load();
+    f.events.length = 0;
+    f.store.save.mockRejectedValueOnce(new Error('storage failed'));
+    await expect(f.controller.discardTask('task')).rejects.toThrow(
+      'storage failed',
+    );
+    expect(f.saved.get(a.id)).toEqual(a);
+    expect(f.events).toEqual([]);
+  });
+
+  it('still deletes completed results when explicitly clearing chapter data', async () => {
+    const a = completedChapter('a');
+    const f = fixture([a]);
+    await f.controller.load();
+    await f.controller.discardChapter(a.id);
+    expect(f.saved.has(a.id)).toBe(false);
+  });
+
+  it('starts a fresh translation after removing and readding a task with retained results', async () => {
+    const a = completedChapter('a');
+    let createAt = 1;
+    const f = fixture([a], {
+      jobs: () => [{ task: 'task', description: 'Novel', createAt }],
+      source: async () => ({
+        novelId: 'novel',
+        metadata: {},
+        chapters: [{ chapterId: 'a', title: 'A', order: 0, status: 'pending' }],
+        readChapter: async () => ({
+          paragraphs: ['原文'],
+          glossaryId: 'g',
+          glossary: {},
+          oldParagraphZh: null,
+        }),
+        readChapterContext: async () => ({
+          available: false,
+          reason: 'no context',
+        }),
+        uploadChapter: vi.fn(),
+      }),
+    });
+    await f.controller.load();
+    await f.controller.discardTask('task');
+    expect(f.saved.has(a.id)).toBe(true);
+    createAt = 2;
+    await f.controller.startWorker(worker);
+    expect(f.runChapter).toHaveBeenCalledOnce();
+    const fresh = f.runChapter.mock.calls[0][0];
+    expect(fresh.runId).not.toBe(a.runId);
+    expect(fresh.identity.taskCreatedAt).toBe(2);
+    expect(fresh.translations).toEqual({});
   });
 });

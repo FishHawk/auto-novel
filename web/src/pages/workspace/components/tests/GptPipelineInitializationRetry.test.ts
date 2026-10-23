@@ -2,13 +2,24 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { onUnmounted, ref, shallowRef, toRaw } from 'vue';
 import { TaskState } from '@/domain/translator/TaskState';
 import { TranslateTaskDescriptor } from '@/model/Translator';
+import { createDeltaSession } from '@auto-novel/translator';
+import {
+  summarizeDeltaSession,
+  type DeltaSessionSummary,
+} from '@/domain/translator/delta/session-summary';
+import { syncDeltaChapterProgress } from '@/domain/translator/delta/chapter-progress';
+import { groupDeltaSessions } from '@/domain/translator/delta/session-events';
 import { setupSfc } from './sfc';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => cleanups.splice(0).forEach((cleanup) => cleanup()));
 
-it('retries failed task initialization from the Delta toolbar without an existing checkpoint', async () => {
-  const job = { task: 'local/test', createAt: 1 };
+function fixture() {
+  const job = {
+    task: 'local/test',
+    createAt: 1,
+    excludedChapters: [] as string[],
+  };
   const workspace = { ref: ref({ jobs: [job], workers: [] }) };
   let authorized = false;
   const task = {
@@ -34,7 +45,9 @@ it('retries failed task initialization from the Delta toolbar without an existin
   const setup = setupSfc<{
     selectedMode: string;
     initializationErrors: Map<string, string>;
-    deltaSessions: unknown[];
+    deltaSessions: DeltaSessionSummary[];
+    visibleDeltaSessions: DeltaSessionSummary[];
+    syncDeltaSessionsToTasks: (sessions: DeltaSessionSummary[]) => void;
     taskStates: Map<string, TaskState>;
     retryTaskCards: () => Promise<void> | void;
   }>(
@@ -78,16 +91,28 @@ it('retries failed task initialization from the Delta toolbar without an existin
         createDeltaTaskSource: vi.fn(),
       },
       '@/domain/translator/delta/chapter-progress': {
-        syncDeltaChapterProgress: vi.fn((chapters) => chapters),
+        syncDeltaChapterProgress,
       },
       '@/domain/translator/delta/session-events': {
-        applyDeltaSessionEvent: vi.fn((sessions) => sessions),
-        groupDeltaSessions: vi.fn(() => new Map()),
+        applyDeltaSessionEvents: vi.fn((sessions) => sessions),
+        groupDeltaSessions,
       },
     },
     { onUnmounted, shallowRef, toRaw },
   );
   cleanups.push(setup.unmount);
+  return {
+    setup,
+    task,
+    job,
+    authorize: () => {
+      authorized = true;
+    },
+  };
+}
+
+it('retries failed task initialization from the Delta toolbar without an existing checkpoint', async () => {
+  const { setup, task, job, authorize } = fixture();
 
   await vi.waitFor(() => {
     expect(task.initMeta).toHaveBeenCalledTimes(1);
@@ -97,7 +122,7 @@ it('retries failed task initialization from the Delta toolbar without an existin
   });
   expect(setup.state.deltaSessions).toEqual([]);
 
-  authorized = true;
+  authorize();
   setup.state.selectedMode = 'delta';
   await setup.state.retryTaskCards();
 
@@ -106,4 +131,49 @@ it('retries failed task initialization from the Delta toolbar without an existin
     expect(setup.state.initializationErrors.has(job.task)).toBe(false);
     expect(setup.state.taskStates.get(job.task)?.initialized).toBe(true);
   });
+});
+
+it('keeps completed previews visible without an enabled worker and preserves new pending work', () => {
+  const { setup, job } = fixture();
+  const state = new TaskState(job.task);
+  state.initChapters([
+    { chapterId: 'a', title: 'A', order: 0, status: 'pending' },
+  ]);
+  setup.state.taskStates.set(job.task, state);
+  job.excludedChapters = ['excluded'];
+  const sessions = ['a', 'b', 'excluded', 'draft'].map((chapterId) => {
+    const session = createDeltaSession({
+      runId: 'old',
+      workerId: 'removed-worker',
+      identity: {
+        taskId: job.task,
+        taskCreatedAt: 0,
+        novelId: 'novel',
+        chapterId,
+      },
+      source: ['原文'],
+      glossary: {},
+      glossaryId: 'g',
+      model: {
+        protocol: 'openai-completions',
+        endpoint: 'https://test.invalid',
+        model: 'model',
+      },
+    });
+    session.phase = chapterId === 'draft' ? 'translating' : 'completed';
+    return summarizeDeltaSession(session);
+  });
+  setup.state.deltaSessions = sessions;
+  expect(
+    setup.state.visibleDeltaSessions.map(
+      (session) => session.identity.chapterId,
+    ),
+  ).toEqual(['a', 'b', 'excluded']);
+  setup.state.syncDeltaSessionsToTasks(sessions);
+  expect(
+    state.chapters.map((chapter) => [chapter.chapterId, chapter.status]),
+  ).toEqual([
+    ['a', 'pending'],
+    ['b', 'done'],
+  ]);
 });

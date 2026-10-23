@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { createDeltaSession } from '@auto-novel/translator';
 import { syncDeltaChapterProgress } from '../chapter-progress';
+import type { ChapterMeta } from '../../TaskState';
 
 it('restores a claimed chapter omitted by normal translated filtering, including Review progress', () => {
   const session = createDeltaSession({
@@ -52,4 +53,38 @@ it('restores progress directly from a lightweight summary', () => {
       segmentProgress: { completed: 3, total: 3 },
     },
   ]);
+});
+
+it('keeps a readded task pending when an older or undated completed result exists', () => {
+  const chapters: ChapterMeta[] = [
+    { chapterId: 'c', title: 'C', order: 0, status: 'pending' },
+  ];
+  for (const taskCreatedAt of [1, undefined]) {
+    const summary = {
+      identity: { taskId: 't', novelId: 'n', chapterId: 'c', taskCreatedAt },
+      metadata: {},
+      phase: 'completed' as const,
+      cursor: 2,
+      batchCount: 2,
+    };
+    expect(syncDeltaChapterProgress(chapters, summary, 2)).toEqual(chapters);
+    expect(syncDeltaChapterProgress([], summary, 2)[0]).toMatchObject({
+      chapterId: 'c',
+      status: 'done',
+      segmentProgress: { completed: 2, total: 2 },
+    });
+  }
+});
+
+it('does not project older or undated unfinished drafts into a new task', () => {
+  for (const taskCreatedAt of [1, undefined]) {
+    const summary = {
+      identity: { taskId: 't', novelId: 'n', chapterId: 'c', taskCreatedAt },
+      metadata: {},
+      phase: 'translating' as const,
+      cursor: 1,
+      batchCount: 2,
+    };
+    expect(syncDeltaChapterProgress([], summary, 2)).toEqual([]);
+  }
 });

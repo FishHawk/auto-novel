@@ -7,8 +7,6 @@ export interface ChapterDetail {
   glossaryId: string;
   oldParagraphZh?: string[] | null;
   oldGlossary?: Glossary;
-  /** Opaque local revision for durable conflict checks when the source provides one. */
-  translationVersion?: string;
 }
 
 export interface TaskExecutionContext {

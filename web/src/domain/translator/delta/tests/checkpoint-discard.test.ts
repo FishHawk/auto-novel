@@ -35,7 +35,6 @@ function fixture(records: DeltaChapterSession[]) {
   const saved = new Map(records.map((s) => [s.id, structuredClone(s)]));
   const store: DeltaSessionRepository = {
     get: async (id) => structuredClone(saved.get(id)),
-    list: async () => structuredClone([...saved.values()]),
     listSummaries: async () => [...saved.values()].map(summarizeDeltaSession),
     save: async (s) => {
       saved.set(s.id, structuredClone(s));
@@ -114,7 +113,7 @@ describe('Delta scoped checkpoint discard', () => {
     const f = fixture(records);
     await f.controller.load();
     await f.controller.discardChapter(records[0].id);
-    expect(await f.store.list()).toEqual(records.slice(1));
+    expect([...f.saved.values()]).toEqual(records.slice(1));
     expect(f.sessions()).toEqual(records.slice(1).map(summarizeDeltaSession));
     expect(f.change.mock.calls).toEqual([['novel-a', '1', 'pending']]);
     expect(f.store.clear).not.toHaveBeenCalled();
@@ -136,7 +135,7 @@ describe('Delta scoped checkpoint discard', () => {
     f.uploaded.set('1', ['已提交的译文']);
     await f.controller.load();
     await f.controller.discardNovel('novel-a');
-    expect(await f.store.list()).toEqual([records[2]]);
+    expect([...f.saved.values()]).toEqual([records[2]]);
     expect(f.sessions()).toEqual([summarizeDeltaSession(records[2])]);
     expect(f.uploaded.get('1')).toEqual(['已提交的译文']);
     expect(f.src.uploadChapter).not.toHaveBeenCalled();
@@ -214,7 +213,7 @@ describe('Delta scoped checkpoint discard', () => {
     await expect(f.controller.discardNovel('novel-a')).rejects.toThrow(
       'storage failed',
     );
-    expect(await f.store.list()).toEqual(records.slice(1));
+    expect([...f.saved.values()]).toEqual(records.slice(1));
     expect(f.sessions()).toEqual(records.slice(1).map(summarizeDeltaSession));
   });
 });

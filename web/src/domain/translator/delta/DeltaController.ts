@@ -32,6 +32,7 @@ import {
   type DeltaSessionSummary,
   type DeltaSessionEvent,
 } from './session-summary';
+import { compactCompletedSession } from './thinking-retention';
 
 interface ControllerOptions {
   store: DeltaSessionRepository;
@@ -53,7 +54,7 @@ interface ControllerOptions {
     session?: DeltaChapterSession,
   ) => void;
   onTaskDone?: (taskId: string, total: number) => void;
-  /** Best-effort normalization before the final fingerprint and upload. */
+  /** Normalize output before the final fingerprint and upload. */
   simplifyText?: DeltaTextConverter;
   runChapter?: typeof runDeltaChapter;
   runReview?: typeof runDeltaReview;
@@ -63,7 +64,6 @@ interface WorkerRun {
   controller: AbortController;
   promise: Promise<void>;
   targetSessionId?: string;
-  targetTaskId?: string;
   current: number;
   max: number;
   attempted: Set<string>;
@@ -102,16 +102,10 @@ export function deltaWorkerModel(
   };
 }
 
-function translationHash(
-  detail: ChapterDetail,
-  includeVersion = false,
-): string {
+function translationHash(detail: ChapterDetail): string {
   return deltaFingerprint({
     paragraphs: detail.oldParagraphZh ?? null,
     glossary: sortedGlossary(detail.oldGlossary ?? {}),
-    ...(includeVersion && detail.translationVersion !== undefined
-      ? { version: detail.translationVersion }
-      : {}),
   });
 }
 function sortedGlossary(glossary: Record<string, string>) {
@@ -198,9 +192,6 @@ export class DeltaController {
   hasTask(taskId: string) {
     return [...this.claimedTasks.values()].includes(taskId);
   }
-  hasDrafts() {
-    return [...this.sessions.values()].some((s) => s.phase !== 'completed');
-  }
   taskHasDrafts(taskId: string) {
     return [...this.sessions.values()].some(
       (s) =>
@@ -209,25 +200,21 @@ export class DeltaController {
     );
   }
 
-  startWorker(worker: GptPipelineWorker, taskId?: string): Promise<void> {
+  startWorker(worker: GptPipelineWorker): Promise<void> {
     const retry = this.retries.get(worker.id);
     if (retry) return retry.promise;
     const actions = this.chapterActions(worker.id);
     if (actions.length)
       return Promise.all(actions.map((run) => run.promise)).then(() => {});
-    return this.beginWorker(worker, taskId);
+    return this.beginWorker(worker);
   }
-  private beginWorker(
-    worker: GptPipelineWorker,
-    taskId?: string,
-  ): Promise<void> {
+  private beginWorker(worker: GptPipelineWorker): Promise<void> {
     const existing = this.workers.get(worker.id);
     if (existing) return existing.promise;
     const snapshot = cloneDeep(worker);
     const run: WorkerRun = {
       controller: new AbortController(),
       promise: Promise.resolve(),
-      targetTaskId: taskId,
       current: 0,
       max: Math.min(snapshot.concurrency ?? 1, this.window),
       attempted: new Set(),
@@ -239,7 +226,7 @@ export class DeltaController {
       Array.from({ length: run.max }, () => this.slot(snapshot, run)),
     )
       .then(async (results) => {
-        await this.completeTasks(taskId);
+        await this.completeTasks();
         const failed = results.find((r) => r.status === 'rejected');
         if (failed?.status === 'rejected') throw failed.reason;
         if (run.errors.length) throw run.errors[0];
@@ -396,11 +383,7 @@ export class DeltaController {
   /** A completed or discarded task no longer needs its TOC/glossary adapter. */
   private releaseTaskSources(taskId: string) {
     for (const key of [...this.sources.keys()]) {
-      try {
-        if (JSON.parse(key)[0] === taskId) this.sources.delete(key);
-      } catch {
-        this.sources.delete(key);
-      }
+      if (JSON.parse(key)[0] === taskId) this.sources.delete(key);
     }
   }
 
@@ -417,7 +400,7 @@ export class DeltaController {
     return this.discard((session) => session.id === sessionId);
   }
 
-  /** Remove one task's checkpoints without blocking unrelated running tasks. */
+  /** Drop task drafts and compact completed results for future previews. */
   discardTask(taskId: string): Promise<void> {
     return this.discardScoped(
       (session) =>
@@ -426,7 +409,7 @@ export class DeltaController {
     );
   }
 
-  /** Remove one chapter checkpoint without blocking unrelated running tasks. */
+  /** Remove a chapter from the queue, retaining completed preview data. */
   discardChapterByTask(taskId: string, chapterId: string): Promise<void> {
     return this.discardScoped(
       (session) =>
@@ -543,7 +526,7 @@ export class DeltaController {
           },
           model: deltaWorkerModel(worker),
           deltaMode: worker.deltaMode,
-          previousTranslationHash: translationHash(current, true),
+          previousTranslationHash: translationHash(current),
           reviewOptions: normalizeDeltaReviewOptions(worker.deltaReview),
         });
         session.revision = previous.revision + 1;
@@ -565,18 +548,25 @@ export class DeltaController {
     try {
       for (const session of this.sessions.values()) {
         if (!matches(session)) continue;
+        if (session.phase === 'completed') {
+          const detail = await this.requireSession(session.id);
+          if (compactCompletedSession(detail)) {
+            detail.revision++;
+            await this.save(detail);
+          }
+          continue;
+        }
         await this.options.store.delete(session.id);
         this.sessions.delete(session.id);
         removed.push(session.id);
         for (const key of this.done) {
           if (JSON.parse(key)[0] === session.id) this.done.delete(key);
         }
-        if (session.phase !== 'completed')
-          this.options.onChapterChange?.(
-            session.identity.taskId,
-            session.identity.chapterId,
-            'pending',
-          );
+        this.options.onChapterChange?.(
+          session.identity.taskId,
+          session.identity.chapterId,
+          'pending',
+        );
       }
     } finally {
       this.releaseTaskSources(taskId);
@@ -649,20 +639,11 @@ export class DeltaController {
     return next;
   }
 
-  /** Never block a finished chapter because the optional converter failed. */
   private async simplifyOutput(session: DeltaChapterSession) {
     if (!this.options.simplifyText || session.phase !== 'readyToSubmit')
       return session;
-    try {
-      const patch = await simplifyDeltaOutput(
-        session,
-        this.options.simplifyText,
-      );
-      return patch ? await this.patch(session, patch) : session;
-    } catch (error) {
-      console.warn('Delta 简繁后处理失败，保留模型原文', error);
-      return session;
-    }
+    const patch = await simplifyDeltaOutput(session, this.options.simplifyText);
+    return patch ? this.patch(session, patch) : session;
   }
 
   private async claim(
@@ -673,7 +654,6 @@ export class DeltaController {
     for (const session of this.sessions.values()) {
       if (
         session.workerId !== worker.id ||
-        (run.targetTaskId && session.identity.taskId !== run.targetTaskId) ||
         (run.targetSessionId && session.id !== run.targetSessionId) ||
         session.phase === 'completed' ||
         run.attempted.has(session.id) ||
@@ -690,7 +670,6 @@ export class DeltaController {
     }
     if (run.targetSessionId) return;
     for (const job of this.options.jobs()) {
-      if (run.targetTaskId && job.task !== run.targetTaskId) continue;
       if (job.finishAt) continue;
       let src: DeltaTaskSource;
       try {
@@ -789,7 +768,7 @@ export class DeltaController {
             metadata: { ...src.metadata, chapterTitle: item.title },
             model: deltaWorkerModel(worker),
             deltaMode: worker.deltaMode,
-            previousTranslationHash: translationHash(current, true),
+            previousTranslationHash: translationHash(current),
             reviewOptions: normalizeDeltaReviewOptions(worker.deltaReview),
           });
           const old = this.sessions.get(session.id);
@@ -972,7 +951,7 @@ export class DeltaController {
       await this.finish(session);
       return;
     }
-    if (translationHash(current, true) !== session.previousTranslationHash)
+    if (translationHash(current) !== session.previousTranslationHash)
       throw new Error('既有译文已变化，已暂停以保留新的译文');
     signal.throwIfAborted();
     session = await this.patch(session, {
@@ -1021,10 +1000,9 @@ export class DeltaController {
       completed,
     );
   }
-  private async completeTasks(taskId?: string) {
+  private async completeTasks() {
     let failure: unknown;
     for (const job of this.options.jobs()) {
-      if (taskId && job.task !== taskId) continue;
       if (
         job.finishAt ||
         this.taskHasDrafts(job.task) ||

@@ -21,12 +21,22 @@ type ChapterProgressSession =
 export function syncDeltaChapterProgress(
   chapters: ChapterMeta[],
   session: ChapterProgressSession,
+  taskCreatedAt?: number,
 ): ChapterMeta[] {
   const batchCount =
     'batchCount' in session ? session.batchCount : session.batches.length;
   const index = chapters.findIndex(
     (chapter) => chapter.chapterId === session.identity.chapterId,
   );
+  // Historical results can restore a preview row, but must not complete work
+  // explicitly selected for a new run. Undated records are historical too.
+  if (
+    taskCreatedAt !== undefined &&
+    session.identity.taskCreatedAt !== taskCreatedAt &&
+    (session.phase !== 'completed' ||
+      (index >= 0 && chapters[index].status !== 'done'))
+  )
+    return chapters;
   const chapter: ChapterMeta = {
     ...(index < 0
       ? {

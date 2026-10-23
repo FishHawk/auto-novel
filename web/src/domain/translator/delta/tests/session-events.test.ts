@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  applyDeltaSessionEvent,
-  applyDeltaSessionEvents,
-  groupDeltaSessions,
-} from '../session-events';
+import { applyDeltaSessionEvents, groupDeltaSessions } from '../session-events';
 import { summarizeDeltaSession } from '../session-summary';
 import { createDeltaSession } from '@auto-novel/translator';
 
@@ -45,28 +41,29 @@ describe('Delta session list notifications', () => {
     const b = summary('b');
     const original = [a, b];
     const updated = { ...a, revision: a.revision + 1 };
-    const result = applyDeltaSessionEvent(original, {
-      type: 'upsert',
-      session: updated,
-    });
+    const result = applyDeltaSessionEvents(original, [
+      { type: 'upsert', session: updated },
+    ]);
     expect(result).toEqual([updated, b]);
     expect(result[1]).toBe(b);
     expect(original[0]).toBe(a);
     expect(
-      applyDeltaSessionEvent(result, { type: 'upsert', session: summary('c') }),
+      applyDeltaSessionEvents(result, [
+        { type: 'upsert', session: summary('c') },
+      ]),
     ).toHaveLength(3);
   });
   it('resets from repository state and removes only specified chapters', () => {
     const a = summary('a');
     const b = summary('b');
-    const result = applyDeltaSessionEvent([a, b], {
-      type: 'remove',
-      ids: [a.id],
-    });
+    const result = applyDeltaSessionEvents(
+      [a, b],
+      [{ type: 'remove', ids: [a.id] }],
+    );
     expect(result).toEqual([b]);
     expect(result[0]).toBe(b);
     expect(
-      applyDeltaSessionEvent(result, { type: 'reset', sessions: [] }),
+      applyDeltaSessionEvents(result, [{ type: 'reset', sessions: [] }]),
     ).toEqual([]);
   });
   it('applies a notification burst with one list rewrite and stable order', () => {

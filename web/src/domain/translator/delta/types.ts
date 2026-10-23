@@ -10,7 +10,6 @@ import type { DeltaSessionSummary } from './session-summary';
 
 export interface DeltaSessionRepository extends DeltaSessionStore {
   get(id: string): Promise<DeltaChapterSession | undefined>;
-  list(): Promise<DeltaChapterSession[]>;
   listSummaries(): Promise<DeltaSessionSummary[]>;
   delete(id: string): Promise<void>;
   clear(): Promise<void>;

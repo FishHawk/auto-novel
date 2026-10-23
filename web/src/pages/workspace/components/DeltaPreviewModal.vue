@@ -371,18 +371,6 @@ const reviewMetrics = computed(() => {
   });
 });
 
-const reviewSummary = computed(() => {
-  const review = props.session?.review;
-  if (!review) return '未开启';
-  if (review.skipped) return '已跳过';
-  const unresolved = review.unresolved?.length ?? 0;
-  if (unresolved && review.unresolved?.some(isBlockingDeltaReviewIssue))
-    return `未解决 ${unresolved} 项`;
-  if (review.completed)
-    return `已完成 · 修改 ${review.changes?.length ?? 0} 段`;
-  return props.session?.pauseReason ? '已暂停' : '审校中';
-});
-
 const canSkipReview = computed(
   () =>
     !props.actionsDisabled &&
@@ -788,6 +776,13 @@ const reviewToolCalls = computed<ReviewToolCallItem[]>(() => {
   }
 
   return calls;
+});
+
+const reviewToolHistoryMessage = computed(() => {
+  const review = props.session?.review;
+  if (props.session?.phase === 'completed' && !review?.messages.length)
+    return `详细工具记录已清理；曾请求相邻章节上下文 ${review?.contextReads ?? 0} 次。`;
+  return '本次审校直接提交，未请求相邻章节上下文。';
 });
 
 const defaultExpandedReviewPanels = computed(() => {
@@ -1199,7 +1194,7 @@ const defaultExpandedReviewPanels = computed(() => {
             </template>
 
             <div v-if="!reviewToolCalls.length" class="delta-tools-empty">
-              本次审校直接提交，未请求相邻章节上下文。
+              {{ reviewToolHistoryMessage }}
             </div>
             <div v-else class="delta-tools-list">
               <div

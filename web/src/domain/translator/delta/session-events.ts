@@ -23,29 +23,9 @@ export function groupDeltaSessions(
   return groups;
 }
 
-/** Preserve unchanged chapter identities; history bodies never enter the list. */
-export function applyDeltaSessionEvent(
-  sessions: DeltaSessionSummary[],
-  event: DeltaSessionEvent,
-): DeltaSessionSummary[] {
-  if (event.type === 'reset') return event.sessions;
-  if (event.type === 'remove') {
-    const removed = new Set(event.ids);
-    return sessions.filter((session) => !removed.has(session.id));
-  }
-  const index = sessions.findIndex(
-    (session) => session.id === event.session.id,
-  );
-  if (index < 0) return [...sessions, event.session];
-  const next = sessions.slice();
-  next[index] = event.session;
-  return next;
-}
-
 /**
- * Apply a burst of save notifications with one array rewrite. Map semantics
- * match the single-event helper: existing entries keep their position, new
- * chapters append, and a reset replaces the whole list.
+ * Apply a burst of save notifications with one array rewrite. Existing entries
+ * keep their position, new chapters append, and a reset replaces the whole list.
  */
 export function applyDeltaSessionEvents(
   sessions: DeltaSessionSummary[],

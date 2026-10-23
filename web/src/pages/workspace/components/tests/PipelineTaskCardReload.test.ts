@@ -180,12 +180,42 @@ it('retains a local task state for cards without an externally provided state', 
   expect(setup.load).not.toHaveBeenCalled();
 });
 
-it('does not restore an older job generation into the current chapter grid', async () => {
+it('restores older completed results for preview after readding a task without reading details', async () => {
   const taskState = reactive(new TaskState('task')) as TaskState;
   const setup = fixture(taskState, [], 9);
   await setup.state.toggleExpand();
+  expect(setup.state.chapterMetas[0]).toMatchObject({
+    chapterId: 'completed',
+    status: 'done',
+    segmentProgress: { completed: 2, total: 2 },
+  });
+  expect(setup.load).not.toHaveBeenCalled();
+  await setup.state.openPreview('completed');
+  await nextTick();
+  expect(setup.load).toHaveBeenCalledOnce();
+});
+
+it('does not restore an older unfinished job generation into the current chapter grid', async () => {
+  const taskState = reactive(new TaskState('task')) as TaskState;
+  const setup = fixture(taskState, [], 9, { deltaPhase: 'translating' });
+  await setup.state.toggleExpand();
   expect(setup.state.chapterMetas).toEqual([]);
   expect(setup.load).not.toHaveBeenCalled();
+});
+
+it('does not mark new pending work completed using an older or undated result', async () => {
+  for (const taskCreatedAt of [9, undefined]) {
+    const taskState = reactive(new TaskState('task')) as TaskState;
+    taskState.initChapters([
+      { chapterId: 'completed', title: 'C', order: 0, status: 'pending' },
+    ]);
+    const setup = fixture(taskState, taskState.chapters, taskCreatedAt, {
+      job: { finishAt: undefined },
+    });
+    await setup.state.toggleExpand();
+    expect(setup.state.chapterMetas[0].status).toBe('pending');
+    expect(setup.state.taskStatus).toBe('pending');
+  }
 });
 
 it('restores checkpoints belonging to the current job generation', async () => {

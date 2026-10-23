@@ -87,7 +87,7 @@ function pct(sp: { completed: number; total: number } | undefined): number {
             ×
           </button>
         </template>
-        移除本章后不再翻译，并清除它的 Delta 数据。确定吗？
+        移除本章后不再翻译；已完成章节保留基本信息，未完成草稿将清除。确定吗？
       </n-popconfirm>
     </div>
   </div>

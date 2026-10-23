@@ -4,6 +4,7 @@ import {
   type DeltaChapterSession,
 } from '@auto-novel/translator';
 import {
+  compactCompletedSession,
   pruneSessionHistory,
   pruneSessionThinking,
   THINKING_RETENTION_MS,
@@ -115,6 +116,28 @@ function createdSession(
 }
 
 describe('diagnostic retention', () => {
+  it('compacts completed history immediately and leaves unfinished resumable input intact', () => {
+    const value = createdSession('delta', { enabled: true, mode: 'append' });
+    value.preferences = '完整偏好';
+    value.metadata.description = '完整简介';
+    value.messages = [{ role: 'user', content: '完整请求', timestamp: now }];
+    expect(compactCompletedSession(value)).toBe(false);
+    expect(value.source).toHaveLength(2);
+    expect(value.messages).toHaveLength(1);
+    value.phase = 'completed';
+    expect(compactCompletedSession(value)).toBe(true);
+    expect(value.messages).toEqual([]);
+    expect(value.source).toEqual([]);
+    expect(value.paragraphs.map((paragraph) => paragraph.source)).toEqual([
+      '原文一',
+      '原文二',
+    ]);
+    expect(value.glossary).toEqual({});
+    expect(value.preferences).toBe('');
+    expect(value.metadata.description).toBeUndefined();
+    expect(compactCompletedSession(value)).toBe(false);
+  });
+
   it('clears replay-only payloads from a completed chapter after the window', () => {
     const value = createdSession('deltax');
     value.phase = 'completed';

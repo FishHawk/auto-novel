@@ -139,12 +139,7 @@ const toggleExpand = async () => {
   const state = getOrCreateTaskState();
   let chapters = state.initialized ? state.chapters : await getChapterMetas();
   for (const session of taskDeltaSessions.value) {
-    if (
-      session.identity.taskCreatedAt === undefined ||
-      session.identity.taskCreatedAt === props.job.createAt
-    ) {
-      chapters = syncDeltaChapterProgress(chapters, session);
-    }
+    chapters = syncDeltaChapterProgress(chapters, session, props.job.createAt);
   }
   state.initChapters(filterExcluded(chapters));
   expanded.value = true;

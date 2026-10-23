@@ -126,13 +126,72 @@ function pruneReviewOriginals(session: DeltaChapterSession): boolean {
   return pruned;
 }
 
+/** Keep completed results previewable without retaining their replay history. */
+export function compactCompletedSession(session: DeltaChapterSession): boolean {
+  if (session.phase !== 'completed') return false;
+  let changed = false;
+  if (session.messages.length) {
+    session.messages = [];
+    changed = true;
+  }
+  if (session.pendingAssistant) {
+    session.pendingAssistant = undefined;
+    changed = true;
+  }
+  if (session.systemPrompt) {
+    session.systemPrompt = '';
+    changed = true;
+  }
+  if (session.tools?.length) {
+    session.tools = [];
+    changed = true;
+  }
+  if (session.source?.length) {
+    session.source = [];
+    changed = true;
+  }
+  if (session.finalParagraphs?.length) {
+    session.finalParagraphs = undefined;
+    changed = true;
+  }
+  if (Object.keys(session.glossary).length) {
+    session.glossary = {};
+    changed = true;
+  }
+  if (session.preferences) {
+    session.preferences = '';
+    changed = true;
+  }
+  if (session.metadata.description) {
+    session.metadata.description = undefined;
+    changed = true;
+  }
+  const review = session.review;
+  if (review) {
+    if (review.messages?.length) {
+      review.messages = [];
+      changed = true;
+    }
+    if (review.pendingAssistant) {
+      review.pendingAssistant = undefined;
+      changed = true;
+    }
+    if (review.systemPrompt) {
+      review.systemPrompt = '';
+      changed = true;
+    }
+    if (review.tools?.length) {
+      review.tools = [];
+      changed = true;
+    }
+    if (pruneReviewOriginals(session)) changed = true;
+  }
+  return changed;
+}
+
 /**
- * Drop expired diagnostic payloads in place.
- *
- * Thinking is always bounded by the retention window. Completed chapters also
- * stop carrying request transcripts and replay-only prompts, which are never
- * read again. DeltaX/DeltaXs translation prompts are rebuilt per request, so an
- * unfinished draft only needs recent transcript turns for the preview.
+ * Drop expired diagnostics; unfinished native/append sessions retain the
+ * transcript needed to resume, while completed results only need preview data.
  */
 export function pruneSessionHistory(
   session: DeltaChapterSession,
@@ -141,56 +200,11 @@ export function pruneSessionHistory(
   let changed = pruneSessionThinking(session, now);
   const cutoff = now - THINKING_RETENTION_MS;
 
-  if (session.phase === 'completed' && completedBefore(session, cutoff)) {
-    if (session.messages.length) {
-      session.messages = [];
-      changed = true;
-    }
-    if (session.pendingAssistant) {
-      session.pendingAssistant = undefined;
-      changed = true;
-    }
-    if (session.systemPrompt) {
-      session.systemPrompt = '';
-      changed = true;
-    }
-    if (session.tools?.length) {
-      session.tools = [];
-      changed = true;
-    }
-    if (session.source?.length) {
-      session.source = [];
-      changed = true;
-    }
-    if (session.finalParagraphs?.length) {
-      session.finalParagraphs = undefined;
-      changed = true;
-    }
-    const review = session.review;
-    if (review) {
-      if (review.messages?.length) {
-        review.messages = [];
-        changed = true;
-      }
-      if (review.pendingAssistant) {
-        review.pendingAssistant = undefined;
-        changed = true;
-      }
-      if (review.systemPrompt) {
-        review.systemPrompt = '';
-        changed = true;
-      }
-      if (review.tools?.length) {
-        review.tools = [];
-        changed = true;
-      }
-      if (pruneReviewOriginals(session)) changed = true;
-    }
-    return changed;
-  }
+  if (session.phase === 'completed' && completedBefore(session, cutoff))
+    return compactCompletedSession(session) || changed;
 
   // Native Delta replays its transcript, so only thinking can be trimmed.
-  // DeltaX/DeltaXs rebuild the whole prompt per request; append Review still
+  // DeltaX/DeltaXs rebuild their prompt per request; append Review still
   // reuses the translation transcript and keeps it alive.
   if (
     session.phase !== 'completed' &&

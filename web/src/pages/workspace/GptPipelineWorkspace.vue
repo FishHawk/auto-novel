@@ -135,8 +135,10 @@ const hasEnabledDeltaWorkers = computed(
   () => deltaEnabledWorkerIds.value.size > 0,
 );
 const visibleDeltaSessions = computed(() =>
-  deltaSessions.value.filter((session) =>
-    deltaEnabledWorkerIds.value.has(session.workerId),
+  deltaSessions.value.filter(
+    (session) =>
+      session.phase === 'completed' ||
+      deltaEnabledWorkerIds.value.has(session.workerId),
   ),
 );
 const deltaSessionsByTask = computed(
@@ -146,19 +148,25 @@ const deltaSessionsByTask = computed(
 
 function syncDeltaSessionsToTasks(sessions: DeltaSessionSummary[]) {
   for (const session of sessions) {
-    if (!deltaEnabledWorkerIds.value.has(session.workerId)) continue;
+    if (
+      session.phase !== 'completed' &&
+      !deltaEnabledWorkerIds.value.has(session.workerId)
+    )
+      continue;
     const taskId = session.identity.taskId;
     const state = taskStates.value.get(taskId);
     const job = jobs.value.find((item) => item.task === taskId);
     if (
       !state ||
       !job ||
-      job.excludedChapters?.includes(session.identity.chapterId) ||
-      (session.identity.taskCreatedAt !== undefined &&
-        session.identity.taskCreatedAt !== job.createAt)
+      job.excludedChapters?.includes(session.identity.chapterId)
     )
       continue;
-    state.chapters = syncDeltaChapterProgress(state.chapters, session);
+    state.chapters = syncDeltaChapterProgress(
+      state.chapters,
+      session,
+      job.createAt,
+    );
     (job as TranslateJobRecord).progress = {
       finished: state.chapters.filter((chapter) => chapter.status === 'done')
         .length,
@@ -1482,9 +1490,7 @@ watch(
         :delta-sessions="deltaSessionsByTask.get(job.task) ?? []"
         :load-delta-session="loadDeltaSession"
         :delta-busy-session-ids="deltaBusySessionIds"
-        :delta-actions-disabled="
-          maintainingCheckpoints || deltaBusy || hasRunningWorker()
-        "
+        :delta-actions-disabled="maintainingCheckpoints || hasRunningWorker()"
         :removable="
           !maintainingCheckpoints && !deltaBusy && !hasRunningWorker()
         "
