@@ -127,7 +127,6 @@ watch(
         <MarkdownView
           v-if="showModeratedContent"
           class="mt-2"
-          mode="comment"
           :source="comment.content"
         />
       </div>
@@ -135,7 +134,6 @@ watch(
     <form v-else-if="editing" class="mt-2" @submit.prevent="saveEdit">
       <MarkdownEditor
         v-model:value="content"
-        mode="comment"
         :rows="5"
         :maxlength="1000"
         :disabled="submitting"
@@ -166,7 +164,7 @@ watch(
       [屏蔽]
     </p>
     <div v-else class="comment-body mt-0.5 rounded-floating px-4 py-3">
-      <MarkdownView mode="comment" :source="comment.content" />
+      <MarkdownView :source="comment.content" />
     </div>
     <slot />
   </article>

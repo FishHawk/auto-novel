@@ -5,12 +5,11 @@ import type { DropdownOption } from 'naive-ui';
 
 import { useDraftStore } from '@/stores';
 
-import { markdownByMode, type MarkdownMode } from './markdown';
+import { markdown } from './markdown';
 
 defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
-    mode: MarkdownMode;
     draftId?: string;
     rows?: number;
     maxlength?: number;
@@ -71,7 +70,7 @@ const selectDraft = (key: string | number, option: DropdownOption) => {
       :rows="rows"
       :maxlength="maxlength"
       :spellcheck="false"
-      :markdown="markdownByMode[mode]"
+      :markdown="markdown"
       :tools="[
         'bold',
         'italic',

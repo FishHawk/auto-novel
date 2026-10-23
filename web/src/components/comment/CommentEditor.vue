@@ -66,7 +66,6 @@ const reply = async () => {
     <CommentRulesNotice class="mb-3" />
     <MarkdownEditor
       :disabled="submitting || disabled"
-      mode="comment"
       :draft-id="draftId"
       v-model:value="content"
       :placeholder="placeholder"
