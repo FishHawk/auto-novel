@@ -98,7 +98,6 @@ export function createDeltaSession(
     promptCursor: -1,
     requests: [],
     retry: {
-      batchId: batches[0]?.id ?? '',
       window: 1,
       attempts: 0,
       totalAttempts: 0,
@@ -176,7 +175,6 @@ function splitCurrentBatch(session: DeltaChapterSession): boolean {
   session.pauseReason = undefined;
   session.retry = {
     ...session.retry,
-    batchId: children[0].id,
     window: 1,
     attempts: 0,
     outputBudgetIncreased: false,
@@ -372,7 +370,6 @@ function settlePending(session: DeltaChapterSession) {
   else
     session.retry = {
       ...session.retry,
-      batchId: session.batches[session.cursor].id,
       window: 1,
       attempts: 0,
       outputBudgetIncreased: false,

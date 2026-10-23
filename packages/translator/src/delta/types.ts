@@ -12,8 +12,6 @@ export interface DeltaChapterIdentity {
   novelId: string;
   volumeId?: string;
   chapterId: string;
-  chapterKey?: string;
-  taskDesc?: string;
   title?: string;
 }
 
@@ -33,7 +31,7 @@ export interface DeltaMetadata {
   chapterTitle?: string;
 }
 
-/** DeltaX：每批全章紧凑上下文 + 工具协议；DeltaXs：同一上下文，纯文本逐行协议（面向不支持工具调用的端点/小模型）。 */
+/** DeltaX：每批全章上下文 + 工具协议；DeltaXs：当前批原文 + 上一批已译文，纯文本逐行协议。 */
 export type DeltaMode = 'delta' | 'deltax' | 'deltaxs';
 
 export interface DeltaParagraph {
@@ -100,7 +98,6 @@ export interface DeltaChapterSession {
     usagePresence: DeltaUsagePresence;
   };
   retry: {
-    batchId: string;
     window: number;
     attempts: number;
     totalAttempts: number;

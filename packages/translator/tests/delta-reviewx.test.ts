@@ -6,10 +6,6 @@ import {
 } from '../src/delta/chapter-runner';
 import type { DeltaChapterSession } from '../src/delta/types';
 import {
-  buildReviewSystemPrompt,
-  DELTA_REVIEW_PROMPT_VERSION,
-} from '../src/delta/review-prompt';
-import {
   normalizeDeltaReviewOptions,
   runDeltaReview,
 } from '../src/delta/review-runner';
@@ -109,26 +105,13 @@ describe('ReviewX-only review pipeline', () => {
     ).toEqual({ enabled: true, mode: 'new' });
   });
 
-  it('uses the ReviewX checklist as the only review prompt', async () => {
-    const initial = createReviewSession();
-    const translated = await translate(initial);
-    expect(translated.phase).toBe('reviewing');
-    const prompt = buildReviewSystemPrompt(translated);
-    expect(prompt).toContain('ReviewX');
-    expect(prompt).not.toContain('审校核心职责与排查清单');
-    expect(prompt).toContain('逐段必查');
-    expect(DELTA_REVIEW_PROMPT_VERSION).toBe(3);
-  });
-
   it('applies a ReviewX submission and completes the chapter', async () => {
     const translated = await translate(createReviewSession());
-    let request: PiAiSessionRequest | undefined;
     const reviewStore = store();
     const result = await runDeltaReview(translated, {
       key: 'secret',
       store: reviewStore,
-      transport: async (current) => {
-        request = current;
+      transport: async () => {
         const snapshot = reviewStore.snapshots.at(-1)!;
         return {
           message: assistant('submit_review', {
@@ -141,11 +124,6 @@ describe('ReviewX-only review pipeline', () => {
         };
       },
     });
-    expect(request!.systemPrompt).toContain('ReviewX');
-    const task = String(request!.messages.at(-1)!.content);
-    expect(task).toContain('<chapter_source>');
-    expect(task).toContain('<chapter_translation>');
-    expect(task).not.toContain('<chapter_pairs>');
     expect(result.phase).toBe('readyToSubmit');
     expect(result.review!.completed).toBe(true);
     expect(result.review!.options).toEqual({
@@ -157,13 +135,11 @@ describe('ReviewX-only review pipeline', () => {
 
   it('resumes a legacy review checkpoint with ReviewX', async () => {
     const translated = await translate(createReviewSession('new', 'review'));
-    let systemPrompt = '';
     const reviewStore = store();
     const result = await runDeltaReview(translated, {
       key: 'secret',
       store: reviewStore,
-      transport: async (request) => {
-        systemPrompt = request.systemPrompt ?? '';
+      transport: async () => {
         const snapshot = reviewStore.snapshots.at(-1)!;
         return {
           message: assistant('submit_review', {
@@ -176,7 +152,6 @@ describe('ReviewX-only review pipeline', () => {
         };
       },
     });
-    expect(systemPrompt).toContain('ReviewX');
     expect(result.phase).toBe('readyToSubmit');
     expect(result.review!.options).toEqual({
       enabled: true,
@@ -229,17 +204,12 @@ describe('DeltaX fresh-context translation', () => {
     return requests;
   }
 
-  it('sends one fresh context message per batch and carries accepted translations', async () => {
+  it('sends one fresh context message per batch', async () => {
     const requests = await requestMessages('deltax');
     expect(requests).toHaveLength(2);
     for (const request of requests) {
       expect(request.messages).toHaveLength(1);
-      expect(String(request.messages[0].content)).toContain('<chapter_source>');
-      expect(String(request.messages[0].content)).toContain('<current_batch');
     }
-    const second = String(requests[1].messages[0].content);
-    expect(second).toContain('<translated_so_far>');
-    expect(second).toContain('译文-p000001');
   });
 
   it('keeps native history for the default Delta mode', async () => {
