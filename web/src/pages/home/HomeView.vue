@@ -210,10 +210,10 @@ const showQQModal = ref(false);
     </p>
   </XDialog>
 
-  <XDialog title="QQ群" v-model:open="showQQModal" class="w-150">
+  <XDialog title="QQ群No.2" v-model:open="showQQModal" class="w-150">
     <p class="my-4 first:mt-0 last:mb-0">
       交流群：
-      <n-a :href="siteUrls.qqGroup" target="_blank">819513328</n-a>
+      <n-a :href="siteUrls.qqGroup" target="_blank">1131569744</n-a>
       ，验证答案是“绿色”。
       <br />
       <n-qr-code :size="150" :value="siteUrls.qqGroup" />

@@ -107,6 +107,7 @@ watch(
     >
       <XButton
         v-if="whoami.asAdmin"
+        color="neutral"
         variant="ghost"
         size="xs"
         class="min-h-0 p-0 text-sm font-normal leading-6 text-muted hover:bg-transparent hover:text-primary"
@@ -144,6 +145,7 @@ watch(
         <MarkdownHelpDialog />
         <div class="flex gap-2">
           <XButton
+            color="neutral"
             variant="ghost"
             size="xs"
             :disabled="submitting"

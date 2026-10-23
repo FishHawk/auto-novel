@@ -11,6 +11,7 @@ import NovelBottomTabs from '@/pages/novel/components/NovelBottomTabs.vue';
 import { useIsWideScreen } from '@/pages/util';
 import { WenkuNovelRepo } from '@/repos';
 import { useSettingStore, useWhoamiStore } from '@/stores';
+import NovelDetailSkeleton from './components/NovelDetailSkeleton.vue';
 
 const { novelId } = defineProps<{ novelId: string }>();
 
@@ -304,6 +305,10 @@ function sortJpVolumes(volumeJp: VolumeJpDto[]) {
       :loading="!error"
       :error="error?.message ?? ''"
       error-title="加载错误"
-    />
+    >
+      <template #loading>
+        <NovelDetailSkeleton wenku />
+      </template>
+    </XAsyncContent>
   </div>
 </template>

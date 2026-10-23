@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import { PanoramaOutlined } from '@vicons/material';
 import {
+  AdminSiteSwitcher,
   WebKitApp,
   WebKitLayout,
   useWebKit,
@@ -44,6 +45,9 @@ onMounted(checkSession);
       :account-options="[]"
       :selected-navigation-key="String(route.name ?? '')"
     >
+      <template #header-actions>
+        <AdminSiteSwitcher current="auto-novel" />
+      </template>
       <main class="admin-container">
         <div v-if="checking" class="empty-state" role="status">
           正在检查登录状态…

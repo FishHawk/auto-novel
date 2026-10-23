@@ -164,6 +164,20 @@ const onTocItemClick = (item: ReadableTocItem) => {
       :error="tocResult && !tocResult.ok ? tocResult.error.message : ''"
       error-title="加载错误"
     >
+      <template #loading>
+        <div role="status">
+          <span class="sr-only">正在加载章节目录…</span>
+          <div aria-hidden="true" class="divide-y divide-divider">
+            <div v-for="index in 8" :key="index" class="py-3">
+              <div
+                class="h-5 skeleton"
+                :class="index % 3 ? 'w-4/5' : 'w-3/5'"
+              />
+              <div class="mt-2 h-4 w-1/2 skeleton" />
+            </div>
+          </div>
+        </div>
+      </template>
       <template v-if="tocResult?.ok">
         <ChapterTocList
           v-if="gnid.type === 'web' && tocSections"

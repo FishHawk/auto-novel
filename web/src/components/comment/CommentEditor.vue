@@ -78,6 +78,7 @@ const reply = async () => {
       <MarkdownHelpDialog />
       <div class="flex items-center gap-2">
         <XButton
+          color="neutral"
           variant="outline"
           :disabled="submitting"
           @click="emit('cancel')"

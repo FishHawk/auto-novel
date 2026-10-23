@@ -161,6 +161,7 @@ async function unhideComment() {
   >
     <XButton
       v-if="permissions.canReply"
+      color="neutral"
       variant="ghost"
       size="xs"
       :disabled="submitting"
@@ -171,6 +172,7 @@ async function unhideComment() {
     </XButton>
     <XButton
       v-if="permissions.canEdit"
+      color="neutral"
       variant="ghost"
       size="xs"
       :disabled="submitting"
@@ -181,6 +183,7 @@ async function unhideComment() {
     <XDropdownMenu align="end" class="min-w-32 w-32">
       <template #trigger>
         <XButton
+          color="neutral"
           variant="ghost"
           size="icon-xs"
           aria-label="更多操作"

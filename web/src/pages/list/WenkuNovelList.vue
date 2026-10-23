@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import NovelGridSkeleton from '@/components/NovelGridSkeleton.vue';
 import { XAsyncContent } from '@novelia/web-kit';
 import { PlusOutlined } from '@vicons/material';
 
@@ -84,7 +85,13 @@ watch(novelPage, (novelPage) => {
         :loading="!error"
         :error="error?.message ?? ''"
         error-title="加载错误"
-      />
+      >
+        <template #loading>
+          <n-divider />
+          <NovelGridSkeleton />
+          <n-divider />
+        </template>
+      </XAsyncContent>
     </CPage>
   </div>
 </template>

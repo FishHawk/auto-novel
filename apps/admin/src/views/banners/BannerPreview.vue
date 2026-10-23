@@ -260,7 +260,7 @@ watch(canCompare, (available) => {
 .preview-toolbar .filter-tabs {
   padding: 3px;
   border-radius: 8px;
-  background: var(--color-embedded);
+  background: var(--color-neutral-soft);
 }
 .preview-toolbar .filter-tabs button {
   border-radius: 6px;
@@ -325,7 +325,7 @@ watch(canCompare, (available) => {
   overflow: hidden;
   padding: 20px;
   border-radius: 10px;
-  background: var(--color-embedded);
+  background: var(--color-neutral-soft);
 }
 .mobile-stage {
   height: auto;
@@ -473,7 +473,7 @@ watch(canCompare, (available) => {
 .mock-cover {
   height: clamp(40px, 8cqw, 90px);
   border-radius: 5px;
-  background: var(--color-embedded);
+  background: var(--color-neutral-soft);
 }
 .mock-line {
   height: 5px;

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import NovelGridSkeleton from '@/components/NovelGridSkeleton.vue';
 import { XAsyncContent } from '@novelia/web-kit';
 
 import type { WenkuNovelOutlineDto } from '@/model/WenkuNovel';
@@ -31,5 +32,9 @@ defineProps<{
     :loading="!error"
     :error="error?.message ?? ''"
     error-title="加载错误"
-  />
+  >
+    <template #loading>
+      <NovelGridSkeleton panel />
+    </template>
+  </XAsyncContent>
 </template>

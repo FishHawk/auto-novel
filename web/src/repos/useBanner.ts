@@ -1,4 +1,5 @@
 import { useLocalStorage } from '@novelia/web-kit';
+import { watch } from 'vue';
 
 import { BannerApi, type Banner } from '@/api';
 
@@ -53,7 +54,7 @@ const state = useLocalStorage<BannerCache>(STORAGE_KEY, {
       (!hasExpiry(selection) || !Number.isSafeInteger(selection.bannerId))
     )
       return undefined;
-    // 过期只影响使用，不删除旧选中 ID，刷新列表后仍可选择下一张。
+    // 保留过期列表供后台刷新期间使用，旧选中 ID 用于继续轮换。
     return { list, selection };
   },
 });
@@ -61,20 +62,25 @@ let pending: Promise<Banner[]> | undefined;
 let lastRefreshAttempt = -Infinity;
 
 export const BannerRepo = {
-  /** 同步读取仍有效的缓存选中项，供首屏直接出图，避免先闪一次占位。 */
+  /** 订阅列表替换（包括后台刷新和跨标签页更新），不监听选中项轮换。 */
+  watchList: (callback: () => void) => watch(() => state.value.list, callback),
+
+  /** 列表过期仍可首屏出图，选中项保持原来的轮换有效期。 */
   peek: (): BannerSelection | undefined => {
     const { list, selection } = state.value;
     if (!list || !selection) return undefined;
     const now = Date.now();
-    if (now >= list.expiresAt || now >= selection.expiresAt) return undefined;
+    if (now >= selection.expiresAt) return undefined;
     const banner = list.banners.find((it) => it.id === selection.bannerId);
     return banner ? { banner, expiresAt: selection.expiresAt } : undefined;
   },
 
-  /** 手动切换使用一分钟刷新冷却，不影响默认的十二小时缓存。 */
+  /** 过期列表先用旧缓存并后台刷新；手动切换等待刷新，失败也保留旧列表。 */
   list: (refresh = false): Promise<Banner[]> => {
-    if (pending) return pending;
     const cached = state.value.list;
+    if (pending) {
+      return !refresh && cached ? Promise.resolve(cached.banners) : pending;
+    }
     const now = Date.now();
     // 从原缓存有效期推算成功拉取时间，兼容旧缓存并跨页面刷新保留冷却。
     const lastRefresh = Math.max(
@@ -83,9 +89,8 @@ export const BannerRepo = {
     );
     if (
       cached &&
-      (refresh
-        ? now < lastRefresh + MANUAL_REFRESH_COOLDOWN
-        : now < cached.expiresAt)
+      ((!refresh && now < cached.expiresAt) ||
+        now < lastRefresh + MANUAL_REFRESH_COOLDOWN)
     ) {
       return Promise.resolve(cached.banners);
     }
@@ -97,14 +102,14 @@ export const BannerRepo = {
         return banners;
       })
       .catch((error: unknown) => {
-        // 手动刷新失败仍用旧列表切换，失败尝试也受冷却限制。
-        if (refresh && cached) return cached.banners;
+        // 后台和手动刷新失败均保留旧列表，失败尝试也受冷却限制。
+        if (cached) return cached.banners;
         throw error;
       })
       .finally(() => {
         pending = undefined;
       });
-    return pending;
+    return !refresh && cached ? Promise.resolve(cached.banners) : pending;
   },
 
   current: async (next = false): Promise<BannerSelection | undefined> => {

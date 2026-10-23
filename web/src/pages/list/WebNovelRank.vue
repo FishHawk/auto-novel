@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import NovelListSkeleton from '@/components/NovelListSkeleton.vue';
 import { XAsyncContent } from '@novelia/web-kit';
 
 import type { ListOptions, ListValue } from '@/components/list/types';
@@ -73,7 +74,13 @@ const { data: novelPage, error } = WebNovelRepo.useWebNovelRankList(
         :loading="!error"
         :error="error?.message ?? ''"
         error-title="加载错误"
-      />
+      >
+        <template #loading>
+          <n-divider />
+          <NovelListSkeleton />
+          <n-divider />
+        </template>
+      </XAsyncContent>
     </CPage>
   </div>
 </template>

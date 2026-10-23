@@ -72,7 +72,25 @@ const pageCount = computed(() =>
         :loading="!error"
         :error="error?.message ?? ''"
         error-title="回复加载错误"
-      />
+      >
+        <template #loading>
+          <div role="status">
+            <span class="sr-only">正在加载回复…</span>
+            <div class="space-y-8" aria-hidden="true">
+              <div
+                v-for="index in Math.min(comment.replyCount, 3)"
+                :key="index"
+              >
+                <div class="h-5 w-28 skeleton bg-border" />
+                <div class="mt-0.5 rounded-floating bg-embedded px-4 py-3">
+                  <div class="h-4 w-full skeleton" />
+                  <div class="mt-2 h-4 w-2/3 skeleton" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </XAsyncContent>
     </div>
   </section>
 </template>

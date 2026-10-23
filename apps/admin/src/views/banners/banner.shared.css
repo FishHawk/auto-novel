@@ -39,7 +39,7 @@
   padding: 8px;
   border: none;
   border-radius: 8px;
-  background: var(--color-embedded);
+  background: var(--color-neutral-soft);
   transition: background 150ms ease;
 }
 .banner-thumbnail img {

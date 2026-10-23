@@ -181,6 +181,12 @@ describe('BannerRepo', () => {
     vi.advanceTimersByTime(11 * hour);
     await repo.current();
     vi.advanceTimersByTime(hour);
+    expect(repo.peek()?.banner).toEqual(banners[0]);
+    expect(await repo.current()).toEqual({
+      banner: banners[0],
+      expiresAt: 13 * hour,
+    });
+    await repo.list(true); // 等待共享的后台刷新完成。
     expect(await repo.current()).toEqual({
       banner: updated,
       expiresAt: 13 * hour,
@@ -204,11 +210,55 @@ describe('BannerRepo', () => {
     vi.advanceTimersByTime(2 * hour);
     expect((await repo.current())?.banner.id).toBe(2);
 
-    // 列表变空：清除选中项，空列表也照样缓存。
+    // 列表变空：刷新期间仍用旧列表，完成后清除选中项，空列表也照样缓存。
     vi.advanceTimersByTime(10 * hour);
+    expect((await repo.current())?.banner.id).toBe(2);
+    await repo.list(true);
     expect(await repo.current()).toBeUndefined();
     expect(await repo.current()).toBeUndefined();
     expect(stored()).toEqual({ list: { banners: [], expiresAt: 36 * hour } });
+    expect(list).toHaveBeenCalledTimes(3);
+  });
+
+  it('serves expired lists without waiting and shares the background refresh', async () => {
+    list.mockResolvedValueOnce(banners);
+    const repo = await loadRepo();
+    await repo.current();
+    vi.advanceTimersByTime(12 * hour);
+    const updated = [{ ...banners[0], imageUrl: '/updated.webp' }];
+    let resolve!: (value: typeof banners) => void;
+    list.mockImplementationOnce(
+      () => new Promise<typeof banners>((done) => (resolve = done)),
+    );
+
+    await expect(repo.list()).resolves.toEqual(banners);
+    expect((await repo.current())?.banner.id).toBe(2);
+    const refresh = repo.list(true);
+    expect(repo.list(true)).toBe(refresh);
+    expect(list).toHaveBeenCalledTimes(2);
+    resolve(updated);
+    await refresh;
+    expect((await repo.current())?.banner).toEqual(updated[0]);
+  });
+
+  it('keeps expired lists after background failures and cools down retries', async () => {
+    list.mockResolvedValueOnce(banners).mockRejectedValue(new Error('offline'));
+    let repo = await loadRepo();
+    await repo.list();
+    vi.advanceTimersByTime(11 * hour);
+    await repo.current();
+    vi.advanceTimersByTime(hour);
+    repo = await reloadRepo();
+    expect(repo.peek()?.banner.id).toBe(1);
+    const cached = stored().list;
+    await expect(repo.list()).resolves.toEqual(banners);
+    await repo.list(true);
+    expect(stored().list).toEqual(cached);
+    expect((await repo.current())?.banner.id).toBe(1);
+    expect(list).toHaveBeenCalledTimes(2);
+    vi.advanceTimersByTime(60_000);
+    await repo.list();
+    await repo.list(true);
     expect(list).toHaveBeenCalledTimes(3);
   });
 

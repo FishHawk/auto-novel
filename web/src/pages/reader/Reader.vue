@@ -17,6 +17,7 @@ import type { ReaderChapter } from './ReaderStore';
 import { useReaderStore } from './ReaderStore';
 import ReaderLayoutDesktop from './components/ReaderLayoutDesktop.vue';
 import ReaderLayoutMobile from './components/ReaderLayoutMobile.vue';
+import ReaderSkeleton from './components/ReaderSkeleton.vue';
 import { useScrollDetector } from './components/useScrollDetector';
 
 const [DefineChapterLink, ReuseChapterLink] = createReusableTemplate<{
@@ -302,6 +303,13 @@ onKeyDown(['Enter'], (e) => {
       "
       error-title="加载错误"
     >
+      <template #loading>
+        <ReaderSkeleton v-if="chapterList.length === 0" />
+        <div v-else role="status" class="py-6 text-center text-sm text-muted">
+          <span class="sr-only">正在加载章节…</span>
+          <span aria-hidden="true">正在加载章节…</span>
+        </div>
+      </template>
       <component
         v-if="currentChapter"
         :is="isMobile ? ReaderLayoutMobile : ReaderLayoutDesktop"
@@ -335,6 +343,12 @@ onKeyDown(['Enter'], (e) => {
             "
             error-title="加载错误"
           >
+            <template #loading>
+              <div role="status" class="py-6 text-center text-sm text-muted">
+                <span class="sr-only">正在加载下一章…</span>
+                <span aria-hidden="true">正在加载下一章…</span>
+              </div>
+            </template>
             <template v-if="item.chapter">
               <n-divider v-if="idx > 0 && loadedChapters.length > 0" />
               <reader-content

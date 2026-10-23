@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import NovelListSkeleton from '@/components/NovelListSkeleton.vue';
 import { ChecklistOutlined } from '@vicons/material';
 import { XAsyncContent } from '@novelia/web-kit';
 
@@ -114,7 +115,13 @@ const novelListRef = useTemplateRef('novelList');
         :loading="!error"
         :error="error?.message ?? ''"
         error-title="加载错误"
-      />
+      >
+        <template #loading>
+          <n-divider />
+          <NovelListSkeleton :simple="!setting.showTagInWebFavored" />
+          <n-divider />
+        </template>
+      </XAsyncContent>
     </CPage>
   </bookshelf-layout>
 </template>

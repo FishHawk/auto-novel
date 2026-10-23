@@ -1,4 +1,4 @@
-import { MyStrikeListView } from '@novelia/web-kit';
+import { MyStrikeListView, restoreScrollPosition } from '@novelia/web-kit';
 import type { LocationQuery } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -243,7 +243,13 @@ const router = createRouter({
         return { top };
       }
     }
-    return { top: savedPosition?.top ?? 0 };
+    if (savedPosition) {
+      return restoreScrollPosition(
+        savedPosition,
+        () => router.currentRoute.value === to,
+      );
+    }
+    return { top: 0 };
   },
 });
 
