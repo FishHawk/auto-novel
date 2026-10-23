@@ -11,18 +11,14 @@ import type {
   Tool,
 } from '@earendil-works/pi-ai';
 import type { PiAiProtocol } from '../translator/pi-ai-api';
+import type { DeltaUsagePresence } from './types';
 import { createPiAiFetch } from '../translator/pi-ai-fetch';
 
 export type DeltaMessage = Message;
 export type DeltaAssistantMessage = AssistantMessage;
 export type DeltaTool = Tool;
 
-export interface DeltaUsagePresence {
-  input: boolean;
-  output: boolean;
-  cacheRead: boolean;
-  cacheWrite: boolean;
-}
+export type { DeltaUsagePresence } from './types';
 
 export interface PiAiSessionRequest {
   protocol: PiAiProtocol;
@@ -88,6 +84,9 @@ export async function createPiAiSession(
   const stream = streams[request.protocol].stream(model, context, {
     apiKey: request.key,
     signal: request.signal,
+    // Delta consumes thinking deltas and final tool calls, so avoid reparsing
+    // the growing tool JSON on every token.
+    parsePartialToolArguments: false,
     maxRetries: 0,
     cacheRetention: request.cacheRetention ?? 'short',
     sessionId: request.sessionId,

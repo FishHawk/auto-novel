@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@earendil-works/pi-ai@1.2.0': 86488cd8a2b3b558d59ce88367161f1c98abc59c1850eacc6ccf8ddf6e88a4d5
+
 importers:
   .:
     devDependencies:
@@ -183,7 +186,7 @@ importers:
     dependencies:
       '@earendil-works/pi-ai':
         specifier: ^1.1.0
-        version: 1.2.0(@aws-sdk/credential-provider-node@3.972.86)(@smithy/signature-v4@5.7.4)(supports-color@7.2.0)(undici@7.30.0)(ws@8.22.0)(zod@4.6.7)
+        version: 1.2.0(patch_hash=86488cd8a2b3b558d59ce88367161f1c98abc59c1850eacc6ccf8ddf6e88a4d5)(@aws-sdk/credential-provider-node@3.972.86)(@smithy/signature-v4@5.7.4)(supports-color@7.2.0)(undici@7.30.0)(ws@8.22.0)(zod@4.6.7)
       crypto-es:
         specifier: ^2.1.0
         version: 2.1.0
@@ -6868,7 +6871,7 @@ snapshots:
 
   '@dual-bundle/import-meta-resolve@4.2.1': {}
 
-  '@earendil-works/pi-ai@1.2.0(@aws-sdk/credential-provider-node@3.972.86)(@smithy/signature-v4@5.7.4)(supports-color@7.2.0)(undici@7.30.0)(ws@8.22.0)(zod@4.6.7)':
+  '@earendil-works/pi-ai@1.2.0(patch_hash=86488cd8a2b3b558d59ce88367161f1c98abc59c1850eacc6ccf8ddf6e88a4d5)(@aws-sdk/credential-provider-node@3.972.86)(@smithy/signature-v4@5.7.4)(supports-color@7.2.0)(undici@7.30.0)(ws@8.22.0)(zod@4.6.7)':
     dependencies:
       '@anthropic-ai/sdk': 0.129.0(zod@4.6.7)
       '@aws-sdk/client-bedrock-runtime': 3.1127.0

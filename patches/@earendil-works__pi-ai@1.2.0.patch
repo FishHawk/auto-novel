@@ -1,0 +1,89 @@
+diff --git a/dist/api/anthropic-messages.js b/dist/api/anthropic-messages.js
+index d0a5b0f1bcd77e4afff2c92b068a6e3150dcdd86..9bc1b3561ca3c8eaaacf8f08d8672066be5a4bc4 100644
+--- a/dist/api/anthropic-messages.js
++++ b/dist/api/anthropic-messages.js
+@@ -585,7 +585,8 @@ export const stream = (model, context, options) => {
+                         const block = blocks[index];
+                         if (block && block.type === "toolCall") {
+                             block.partialJson += event.delta.partial_json;
+-                            block.arguments = parseStreamingJson(block.partialJson);
++                            if (options?.parsePartialToolArguments !== false)
++                                block.arguments = parseStreamingJson(block.partialJson);
+                             stream.push({
+                                 type: "toolcall_delta",
+                                 contentIndex: index,
+diff --git a/dist/api/openai-completions.js b/dist/api/openai-completions.js
+index a60f39352b776d71497e55b33b3334bacfbeb2f5..356ac761744d581b908bb470209e62c4748e2c4b 100644
+--- a/dist/api/openai-completions.js
++++ b/dist/api/openai-completions.js
+@@ -438,7 +438,8 @@ export const stream = (model, context, options) => {
+                             if (toolCall.function?.arguments) {
+                                 delta = toolCall.function.arguments;
+                                 block.partialArgs = (block.partialArgs ?? "") + toolCall.function.arguments;
+-                                block.arguments = parseStreamingJson(block.partialArgs);
++                                if (options?.parsePartialToolArguments !== false)
++                                    block.arguments = parseStreamingJson(block.partialArgs);
+                             }
+                             else if (toolCall.custom?.input) {
+                                 const nextInput = getCustomToolCallInput(block) + toolCall.custom.input;
+diff --git a/dist/api/openai-responses-shared.d.ts b/dist/api/openai-responses-shared.d.ts
+index b7f2a35f8f7176536db73c8da14054d9120bd5e1..6359f35d06d26be9e3e981fd6dc45c9929ba2361 100644
+--- a/dist/api/openai-responses-shared.d.ts
++++ b/dist/api/openai-responses-shared.d.ts
+@@ -2,6 +2,7 @@ import type { Tool as OpenAITool, ResponseCreateParamsStreaming, ResponseInput,
+ import type { Api, AssistantMessage, Model, StreamOptions, Tool, TranscriptContext, Usage } from "../types.ts";
+ import type { AssistantMessageEventStream } from "../utils/event-stream.ts";
+ export interface OpenAIResponsesStreamOptions {
++    parsePartialToolArguments?: StreamOptions["parsePartialToolArguments"];
+     onProviderStreamEvent?: StreamOptions["onProviderStreamEvent"];
+     serviceTier?: ResponseCreateParamsStreaming["service_tier"];
+     grammarToolInputProperties?: ReadonlyMap<string, string>;
+diff --git a/dist/api/openai-responses-shared.js b/dist/api/openai-responses-shared.js
+index f413fe5f2a1abcac39c38bbd4a77b38c349a5918..b246344201a03f5184243a2313cb20a8d642528d 100644
+--- a/dist/api/openai-responses-shared.js
++++ b/dist/api/openai-responses-shared.js
+@@ -548,7 +548,8 @@ export async function processResponsesStream(openaiStream, output, stream, model
+             if (!slot || slot.block.partialJson === undefined)
+                 continue;
+             slot.block.partialJson += event.delta;
+-            slot.block.arguments = parseStreamingJson(slot.block.partialJson);
++            if (options?.parsePartialToolArguments !== false)
++                slot.block.arguments = parseStreamingJson(slot.block.partialJson);
+             pushToolCallDelta(slot, event.delta);
+         }
+         else if (event.type === "response.function_call_arguments.done") {
+@@ -557,7 +558,8 @@ export async function processResponsesStream(openaiStream, output, stream, model
+                 continue;
+             const previousPartialJson = slot.block.partialJson;
+             slot.block.partialJson = event.arguments;
+-            slot.block.arguments = parseStreamingJson(slot.block.partialJson);
++            if (options?.parsePartialToolArguments !== false)
++                slot.block.arguments = parseStreamingJson(slot.block.partialJson);
+             if (event.arguments.startsWith(previousPartialJson)) {
+                 const delta = event.arguments.slice(previousPartialJson.length);
+                 if (delta.length > 0)
+diff --git a/dist/api/openai-responses.js b/dist/api/openai-responses.js
+index 2a6b4e408498e33fd7685471559fbd4696755f0a..5c62e86ca2c23d9595c3e839306863a0152a6b7c 100644
+--- a/dist/api/openai-responses.js
++++ b/dist/api/openai-responses.js
+@@ -139,6 +139,7 @@ export const stream = (model, context, options) => {
+             stream.push({ type: "start", partial: output });
+             await processResponsesStream(openaiStream, output, stream, model, {
+                 onProviderStreamEvent: options?.onProviderStreamEvent,
++                parsePartialToolArguments: options?.parsePartialToolArguments,
+                 serviceTier: options?.serviceTier,
+                 grammarToolInputProperties,
+                 applyServiceTierPricing: (usage, serviceTier) => applyServiceTierPricing(usage, serviceTier, model),
+diff --git a/dist/types.d.ts b/dist/types.d.ts
+index d0a535d2651164b5338c6bfc4f0ab529c8572789..fc7750823e26b76e3c1681974c0149a9ba72a3b0 100644
+--- a/dist/types.d.ts
++++ b/dist/types.d.ts
+@@ -99,6 +99,8 @@ export interface ProviderRequestOptions<TModel = Model<Api>> {
+     maxRetryDelayMs?: number;
+ }
+ export interface StreamOptions extends ProviderRequestOptions<Model<Api>> {
++    /** Parse partial tool-call JSON on each delta. Defaults to true; false defers parsing until toolcall_end. */
++    parsePartialToolArguments?: boolean;
+     /**
+      * Optional callback invoked after an HTTP response is received and before
+      * its body stream is consumed.
