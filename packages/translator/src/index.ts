@@ -26,7 +26,10 @@ export type {
   LineRange,
 } from './types';
 
-export { openAiProfiles } from './translator/profiles/openai';
+export {
+  openAiProfiles,
+  buildOpenAiProfileParams,
+} from './translator/profiles/openai';
 
 export type { openAiProfileId } from './translator/profiles/openai';
 
@@ -43,3 +46,54 @@ export type {
   PiAiMessage,
   PiAiProtocol,
 } from './translator/pi-ai-api';
+
+export { createPiAiSession, PiAiSessionError } from './delta/pi-ai-transport';
+export type {
+  DeltaMessage,
+  DeltaAssistantMessage,
+  DeltaTool,
+  DeltaUsagePresence,
+  PiAiSessionRequest,
+  PiAiSessionResult,
+} from './delta/pi-ai-transport';
+
+export {
+  createDeltaSession,
+  runDeltaChapter,
+  reopenDeltaRetryWindow,
+  deltaChapterKey,
+  deltaFingerprint,
+} from './delta/chapter-runner';
+export type { RunDeltaChapterOptions } from './delta/chapter-runner';
+export { DELTA_PROMPT_VERSION } from './delta/prompt';
+export type {
+  DeltaChapterIdentity,
+  DeltaModelSnapshot,
+  DeltaMode,
+  DeltaMetadata,
+  DeltaParagraph,
+  DeltaBatch,
+  DeltaRequestRecord,
+  DeltaChapterSession,
+  CreateDeltaSessionInput,
+  DeltaSessionStore,
+  DeltaSubmitBatch,
+} from './delta/types';
+
+export {
+  runDeltaReview,
+  reopenDeltaReviewRetryWindow,
+  skipDeltaReview,
+  normalizeDeltaReviewOptions,
+  isBlockingDeltaReviewIssue,
+} from './delta/review-runner';
+export type { RunDeltaReviewOptions } from './delta/review-runner';
+export type {
+  DeltaReviewOptions,
+  DeltaReviewCategory,
+  DeltaReviewState,
+  DeltaChapterContext,
+  DeltaReviewChange,
+  DeltaReviewIssue,
+  DeltaSubmitReview,
+} from './delta/types';
