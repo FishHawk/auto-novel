@@ -1,5 +1,10 @@
 import type { Glossary } from './Glossary';
-import type { openAiProfileId, ProfileValues } from '@auto-novel/translator';
+import type {
+  DeltaMode,
+  DeltaReviewOptions,
+  openAiProfileId,
+  ProfileValues,
+} from '@auto-novel/translator';
 
 export type TranslatorId = 'sakura' | 'youdao' | 'gpt';
 
@@ -14,6 +19,10 @@ export interface GptWorker {
 export interface GptPipelineWorker extends GptWorker {
   concurrency: number;
   profile?: { id: openAiProfileId; values?: ProfileValues };
+  /** Opt-in: Delta controls stay hidden until the user enables it. */
+  deltaEnabled?: boolean;
+  deltaMode?: DeltaMode;
+  deltaReview?: DeltaReviewOptions;
 }
 
 export interface SakuraWorker {
@@ -29,6 +38,8 @@ export interface TranslateJob {
   description: string;
   createAt: number;
   finishAt?: number;
+  /** Chapters deliberately removed from this task; durable across reloads. */
+  excludedChapters?: string[];
 }
 
 export type TranslateJobRecord = TranslateJob & {

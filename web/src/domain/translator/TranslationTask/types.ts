@@ -7,6 +7,8 @@ export interface ChapterDetail {
   glossaryId: string;
   oldParagraphZh?: string[] | null;
   oldGlossary?: Glossary;
+  /** Opaque local revision for durable conflict checks when the source provides one. */
+  translationVersion?: string;
 }
 
 export interface TaskExecutionContext {
@@ -26,6 +28,8 @@ export interface TranslationTask {
   initialized: boolean;
   /** 调用以初始化内部参数。防止多个Task初始化时发出大量请求 */
   initMeta(signal?: AbortSignal): Promise<void>;
+  /** 单章读取完成后释放目录等大块元数据。 */
+  releaseMeta?(): void;
   /** 只允许浏览器爬虫只在正式执行任务时更新目录。 */
   readonly needsPreparation?: boolean;
   prepareExecution?(context: TaskExecutionContext): Promise<void>;

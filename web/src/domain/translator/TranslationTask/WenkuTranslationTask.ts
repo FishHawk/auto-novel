@@ -68,6 +68,10 @@ export class WenkuTranslationTask implements TranslationTask {
     this.initialized = true;
   }
 
+  releaseMeta(): void {
+    this.chapters = [];
+  }
+
   async fetchChapter(chapterId: string): Promise<ChapterDetail> {
     const chapterTask = await this.api.getChapterTranslateTask(chapterId);
     return {

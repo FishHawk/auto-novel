@@ -67,6 +67,10 @@ export class LocalTranslationTask implements TranslationTask {
     this.initialized = true;
   }
 
+  releaseMeta(): void {
+    this.chapters = [];
+  }
+
   async fetchChapter(chapterId: string): Promise<ChapterDetail> {
     await this._ensureStore();
     const chapter = await this.volumeStore.getChapter(this.volumeId, chapterId);

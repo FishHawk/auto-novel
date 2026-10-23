@@ -18,16 +18,26 @@ const props = defineProps<{
   running: boolean;
   concurrency: { current: number; max: number };
   errorCount: number;
+  pausedCount?: number;
+  deltaResume?: boolean;
+  deltaDisabled?: boolean;
+  startDisabled?: boolean;
 }>();
 
 const emit = defineEmits<{
   start: [workerId: string];
+  startDelta: [workerId: string];
   stop: [workerId: string];
   delete: [workerId: string];
 }>();
 
 const themeVars = useThemeVars();
 const showEditModal = ref(false);
+const deltaAvailable = computed(
+  () =>
+    props.translatorId === 'gpt' &&
+    (props.worker as GptPipelineWorker).deltaEnabled === true,
+);
 
 function isWorkerActive(): boolean {
   return props.concurrency.current > 0;
@@ -91,14 +101,6 @@ const testWorker = async () => {
         </n-text>
         <span class="viz-status-dot" :class="{ active: isWorkerActive() }" />
         <n-tag
-          v-if="running && !isWorkerActive()"
-          size="tiny"
-          :bordered="false"
-          class="viz-error-tag"
-        >
-          待机
-        </n-tag>
-        <n-tag
           v-if="errorCount"
           size="tiny"
           type="error"
@@ -106,6 +108,23 @@ const testWorker = async () => {
           class="viz-error-tag"
         >
           ✕ {{ errorCount }}
+        </n-tag>
+        <n-tag
+          v-if="pausedCount && deltaAvailable"
+          size="tiny"
+          type="warning"
+          :bordered="false"
+          class="viz-error-tag"
+        >
+          暂停 {{ pausedCount }}
+        </n-tag>
+        <n-tag
+          v-if="running && !isWorkerActive()"
+          size="tiny"
+          :bordered="false"
+          class="viz-error-tag"
+        >
+          待机
         </n-tag>
       </span>
     </template>
@@ -125,7 +144,17 @@ const testWorker = async () => {
           :icon="PlayArrowOutlined"
           size="tiny"
           secondary
+          :disabled="startDisabled"
           @action="emit('start', worker.id)"
+        />
+        <c-button
+          v-if="translatorId === 'gpt' && deltaAvailable && !running"
+          :label="deltaResume ? 'Delta 继续' : 'Delta 启动'"
+          :icon="PlayArrowOutlined"
+          size="tiny"
+          secondary
+          :disabled="deltaDisabled || startDisabled"
+          @action="emit('startDelta', worker.id)"
         />
         <c-icon-button
           tooltip="测试"

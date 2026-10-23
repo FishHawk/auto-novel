@@ -1,6 +1,11 @@
 import type { SegmentTracker, LineRange } from '@auto-novel/translator';
 
-export type ChapterStatus = 'pending' | 'translating' | 'done' | 'error';
+export type ChapterStatus =
+  | 'pending'
+  | 'translating'
+  | 'paused'
+  | 'done'
+  | 'error';
 export type SegmentStatus = 'pending' | 'translating' | 'done' | 'error';
 
 export interface ChapterMeta {
@@ -25,6 +30,8 @@ export class ChapterSegmentState implements SegmentTracker {
   segments: SegmentInfo[] = [];
   /** 是否完成 Segment 切分 */
   ready = false;
+  /** 已完成章节可释放正文，预览时按需重新读取。 */
+  textReleased = false;
 
   get allDone(): boolean {
     return (
@@ -47,6 +54,15 @@ export class ChapterSegmentState implements SegmentTracker {
     return reactive(this) as ChapterSegmentState;
   }
 
+  get finished(): boolean {
+    return (
+      this.segments.length > 0 &&
+      this.segments.every(
+        (segment) => segment.status === 'done' || segment.status === 'error',
+      )
+    );
+  }
+
   onSegmentsReady(lines: string[], ranges: LineRange[]): void {
     this.ranges = ranges;
     this.segments = ranges.map((range) => ({
@@ -56,6 +72,7 @@ export class ChapterSegmentState implements SegmentTracker {
       error: null,
     }));
     this.ready = true;
+    this.textReleased = false;
   }
 
   onSegStart(segmentOrder: number, translatorId: string): void {
@@ -107,6 +124,26 @@ export class ChapterSegmentState implements SegmentTracker {
       error: null,
     }));
     this.ready = true;
+    this.textReleased = false;
+  }
+
+  /**
+   * Drop source/translation text while keeping progress counts. Active
+   * segments are left alone because the executor still reads their lines.
+   */
+  releaseText(): boolean {
+    if (this.textReleased) return false;
+    if (this.segments.some((segment) => segment.status === 'translating'))
+      return false;
+    let changed = false;
+    for (const segment of this.segments) {
+      if (!segment.lines.length && !segment.translatedLines.length) continue;
+      segment.lines = [];
+      segment.translatedLines = [];
+      changed = true;
+    }
+    this.textReleased = true;
+    return changed;
   }
 }
 
@@ -143,5 +180,18 @@ export class TaskState {
       this.chapterStates.set(chapterId, state);
     }
     return state;
+  }
+
+  /** Keep preview text for the newest completed chapters only. */
+  releaseFinishedChapterTexts(keep = 8): void {
+    const completed = [...this.chapterStates.values()].filter(
+      (state) => state.allDone && !state.textReleased,
+    );
+    for (let i = 0; i < completed.length - keep; i++)
+      completed[i].releaseText();
+  }
+
+  releaseAllChapterTexts(): void {
+    for (const state of this.chapterStates.values()) state.releaseText();
   }
 }

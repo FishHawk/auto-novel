@@ -10,6 +10,14 @@ export const defaultConverter: Converter = {
   toData: (text: string) => text,
 };
 
+let simplifiedConverter: Promise<Converter> | undefined;
+
+/** Translation output always targets 简体中文, independent of the display locale. */
+export function useSimplifiedChineseConverter(): Promise<Converter['toView']> {
+  simplifiedConverter ??= useOpenCC('zh-cn');
+  return simplifiedConverter.then((converter) => converter.toView);
+}
+
 export async function useOpenCC(locale: Locale) {
   if (locale === 'origin') {
     return defaultConverter;

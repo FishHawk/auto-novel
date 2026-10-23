@@ -76,7 +76,14 @@ export class WebTranslationTask implements TranslationTask {
       isExpired,
       toMeta,
     );
+    // Only metadata translation (Sakura) needs the full provider snapshot.
+    if (this.translatorId !== 'sakura') this.task = undefined;
     this.initialized = true;
+  }
+
+  releaseMeta(): void {
+    this.chapters = [];
+    this.task = undefined;
   }
 
   get needsPreparation(): boolean {

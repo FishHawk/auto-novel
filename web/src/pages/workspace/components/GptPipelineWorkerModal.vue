@@ -6,6 +6,8 @@ import type { GptPipelineWorker } from '@/model/Translator';
 import { useGptPipelineWorkspaceStore } from '@/stores';
 import {
   openAiProfiles,
+  type DeltaMode,
+  type DeltaReviewOptions,
   type openAiProfileId,
   type ProfileValues,
 } from '@auto-novel/translator';
@@ -50,9 +52,16 @@ const initFormValue = (
   concurrency: number;
   profileId: openAiProfileId;
   profileValues: ProfileValues;
+  deltaEnabled: boolean;
+  deltaMode: DeltaMode;
+  deltaReview: DeltaReviewOptions;
 } => {
   const profileId = worker?.profile?.id ?? DEFAULT_PROFILE_ID;
   const defaultValues = defaultProfileValues(profileId);
+  const deltaReview: DeltaReviewOptions = {
+    enabled: worker?.deltaReview?.enabled ?? false,
+    mode: worker?.deltaReview?.mode ?? 'new',
+  };
 
   if (worker === undefined) {
     return {
@@ -63,6 +72,9 @@ const initFormValue = (
       concurrency: 1,
       profileId,
       profileValues: defaultValues,
+      deltaEnabled: false,
+      deltaMode: 'deltax',
+      deltaReview,
     };
   } else {
     return {
@@ -76,6 +88,10 @@ const initFormValue = (
         ...defaultValues,
         ...(worker.profile?.values ?? {}),
       },
+      deltaEnabled: worker.deltaEnabled ?? false,
+      // 基础 Delta 不对外开放；旧记录统一回落到 DeltaX。
+      deltaMode: worker.deltaMode === 'deltaxs' ? 'deltaxs' : 'deltax',
+      deltaReview,
     };
   }
 };
@@ -377,6 +393,20 @@ const validateIds = (): string | null => {
   return null;
 };
 
+/** ReviewX is only valid for the X modes; disabling Delta clears it. */
+const deltaSettings = (): {
+  deltaEnabled: boolean;
+  deltaMode: DeltaMode;
+  deltaReview: DeltaReviewOptions;
+} => ({
+  deltaEnabled: formValue.value.deltaEnabled,
+  deltaMode:
+    formValue.value.deltaMode === 'deltaxs' ? 'deltaxs' : ('deltax' as const),
+  deltaReview: formValue.value.deltaEnabled
+    ? { ...formValue.value.deltaReview }
+    : { enabled: false, mode: 'new' as const },
+});
+
 const addWorkers = () => {
   const endpoint = formValue.value.endpoint.trim();
   const profile = {
@@ -391,6 +421,7 @@ const addWorkers = () => {
       key: w.key,
       concurrency: workerConcurrencies[w.uid] ?? defaultConcurrency.value,
       profile,
+      ...deltaSettings(),
     });
   }
 };
@@ -420,6 +451,7 @@ const submit = async () => {
         id: profileId,
         values: { ...profileValues },
       },
+      ...deltaSettings(),
     };
     const index = workspaceRef.value.workers.findIndex(
       (w) => w.id === props.worker?.id,
@@ -614,6 +646,57 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
             :max="100"
           />
         </n-form-item-row>
+      </template>
+
+      <n-form-item-row label="Delta 翻译">
+        <n-flex align="center" :size="8">
+          <n-switch
+            v-model:value="formValue.deltaEnabled"
+            aria-label="启用 Delta 翻译"
+          />
+          <n-text depth="3" style="font-size: 12px">
+            开启后可选择 DeltaX / DeltaXs 断点翻译
+          </n-text>
+        </n-flex>
+      </n-form-item-row>
+      <template v-if="formValue.deltaEnabled">
+        <n-form-item-row label="Delta 模式">
+          <n-radio-group v-model:value="formValue.deltaMode">
+            <n-flex :size="12">
+              <n-radio value="deltax">DeltaX（实验性）</n-radio>
+              <n-radio value="deltaxs">DeltaXs（小模型）</n-radio>
+            </n-flex>
+          </n-radio-group>
+        </n-form-item-row>
+        <n-collapse style="margin-bottom: 16px">
+          <n-collapse-item title="ReviewX（实验性）" name="delta-reviewx">
+            <n-flex vertical :size="12">
+              <n-text depth="3" style="font-size: 12px">
+                仅适用于 DeltaX / DeltaXs。全章初译完成后，由 ReviewX
+                依据原文做一次全章对照审校，再提交终稿。
+              </n-text>
+              <n-flex align="center" :size="8">
+                <n-switch
+                  v-model:value="formValue.deltaReview.enabled"
+                  aria-label="开启 ReviewX 审校"
+                />
+                <n-text>开启（注意！消耗更多 token！）</n-text>
+              </n-flex>
+              <n-form-item-row
+                v-if="formValue.deltaReview.enabled"
+                label="会话方式"
+                :show-feedback="false"
+              >
+                <n-radio-group v-model:value="formValue.deltaReview.mode">
+                  <n-flex :size="12">
+                    <n-radio value="new">独立会话（默认）</n-radio>
+                    <n-radio value="append">追加到原会话</n-radio>
+                  </n-flex>
+                </n-radio-group>
+              </n-form-item-row>
+            </n-flex>
+          </n-collapse-item>
+        </n-collapse>
       </template>
     </n-form>
 
