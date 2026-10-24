@@ -12,7 +12,7 @@ export interface HarnessPreset {
   outputFormat: HarnessOutputFormat;
   rules: string;
   requestParams: Record<string, unknown>;
-  /** 每百万 token 的美元参考单价，仅用于费用估算。 */
+  /** 每百万 token 的人民币参考单价，仅用于费用估算。 */
   cost: ModelCost;
 }
 

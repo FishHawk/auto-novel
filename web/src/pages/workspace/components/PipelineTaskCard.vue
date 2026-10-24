@@ -69,7 +69,7 @@ const toggleExpand = async () => {
 
 const themeVars = useThemeVars();
 
-const taskStatus = computed<'done' | 'executing' | 'pending'>(() => {
+const taskStatus = computed<'done' | 'executing' | 'pending' | 'error'>(() => {
   if (props.job.finishAt) return 'done';
   if (!chapterMetas.value.length)
     return props.taskCacheEntry?.needsPreparation ||
@@ -78,14 +78,34 @@ const taskStatus = computed<'done' | 'executing' | 'pending'>(() => {
       : 'done';
   if (chapterMetas.value.some((c) => c.status === 'translating'))
     return 'executing';
+  if (
+    chapterMetas.value.some((c) => c.status === 'error') &&
+    chapterMetas.value.every((c) => c.status === 'done' || c.status === 'error')
+  ) {
+    return 'error';
+  }
   return 'pending';
+});
+
+/** 当前所有在途章节已完成的分段/批次总数。 */
+const activeSegmentProgress = computed(() => {
+  let completed = 0;
+  let total = 0;
+  for (const chapter of chapterMetas.value) {
+    if (chapter.status !== 'translating') continue;
+    const state = props.taskState?.chapterStates.get(chapter.chapterId);
+    if (!state?.ready || state.segments.length === 0) continue;
+    completed += state.completedCount;
+    total += state.segments.length;
+  }
+  return total > 0 ? { completed, total } : null;
 });
 
 function retryAllFailed() {
   for (const ch of chapterMetas.value) {
     if (ch.status === 'error') {
       ch.status = 'pending';
-      props.taskState?.chapterStates.delete(ch.chapterId);
+      props.taskState?.chapterStates.get(ch.chapterId)?.resetSegments();
     }
   }
   delete props.job.finishAt;
@@ -190,10 +210,21 @@ const closePreview = () => {
             <n-tag v-else-if="taskStatus === 'done'" size="tiny" type="success">
               已完成
             </n-tag>
+            <n-tag v-else-if="taskStatus === 'error'" size="tiny" type="error">
+              有失败
+            </n-tag>
             <n-tag v-else size="tiny" type="default">等待中</n-tag>
             <span class="task-progress">
               {{ jobRecord.progress?.finished ?? 0 }}/{{
                 jobRecord.progress?.total ?? chapterMetas.length ?? 0
+              }}
+            </span>
+            <span
+              v-if="activeSegmentProgress"
+              class="task-progress task-progress--active"
+            >
+              进行中 {{ activeSegmentProgress.completed }}/{{
+                activeSegmentProgress.total
               }}
             </span>
           </n-flex>
@@ -311,6 +342,9 @@ const closePreview = () => {
   color: v-bind('themeVars.textColor3');
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+.task-progress--active {
+  color: v-bind('themeVars.infoColor');
 }
 .expand-arrow {
   font-size: 14px;

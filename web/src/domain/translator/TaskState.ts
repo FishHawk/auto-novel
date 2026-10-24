@@ -29,6 +29,7 @@ export class ChapterSegmentState implements SegmentTracker {
   /** 是否完成 Segment 切分 */
   ready = false;
 
+  /** 汇总当前章节的 token 与人民币估算费用。 */
   get harnessUsageTotal() {
     const total = {
       uncachedInputTokens: 0,

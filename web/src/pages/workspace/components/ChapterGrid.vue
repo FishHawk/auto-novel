@@ -20,9 +20,11 @@ const chapters = computed(() => {
       ? { completed: chState.completedCount, total: chState.segments.length }
       : ch.segmentProgress;
     let displayStatus = ch.status;
+    // 分段尚未建立时（Harness 抓取阶段）保持翻译中。
     if (
       displayStatus === 'translating' &&
-      (!chState?.ready || chState.translatingCount === 0)
+      chState?.ready &&
+      chState.translatingCount === 0
     ) {
       displayStatus = 'pending';
     }

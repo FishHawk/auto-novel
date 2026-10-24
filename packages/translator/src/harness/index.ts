@@ -10,7 +10,7 @@
  * （p0000、p0001…）。模型每次只翻译当前批次，但仍能看到整章原文、
  * 术语表和已经翻好的部分，从而保持称谓、语气和上下文一致。
  */
-import type { Glossary, Logger } from '../types';
+import type { Glossary, Logger, LineRange } from '../types';
 import type { Usage } from '@earendil-works/pi-ai';
 import { createPiAiCompletion } from '../translator/pi-ai-api';
 import type { HarnessPreset } from './presets';
@@ -22,6 +22,11 @@ export interface HarnessUsageRecord {
   usage: Usage;
 }
 
+/** 一批原文在整章中的位置；index 为从 0 开始的批序号。 */
+export interface HarnessBatch extends LineRange {
+  index: number;
+}
+
 export interface HarnessInput {
   source: string[];
   glossary: Glossary;
@@ -30,6 +35,11 @@ export interface HarnessInput {
   signal?: AbortSignal;
   onLog?: Logger;
   onUsage?: (record: HarnessUsageRecord) => void;
+  /** 翻译开始前一次性给出整章批次划分，便于界面预先建立进度项。 */
+  onBatchesReady?: (batches: HarnessBatch[]) => void;
+  onBatchStart?: (batch: HarnessBatch) => void;
+  /** 完成事件携带与 source[start, end) 逐段对齐的译文。 */
+  onBatchComplete?: (batch: HarnessBatch, translatedLines: string[]) => void;
 }
 
 /**
@@ -39,6 +49,18 @@ export interface HarnessInput {
 const BATCH_SIZE = 20;
 /** 段落编号固定 4 位，保证按字符串排序时顺序仍与原文一致。 */
 const paragraphId = (index: number) => `p${String(index).padStart(4, '0')}`;
+
+const planBatches = (total: number): HarnessBatch[] => {
+  const batches: HarnessBatch[] = [];
+  for (let start = 0, index = 0; start < total; start += BATCH_SIZE, index++) {
+    batches.push({
+      index,
+      start,
+      end: Math.min(start + BATCH_SIZE, total),
+    });
+  }
+  return batches;
+};
 
 /**
  * 把带编号的段落拼成多行文本，供提示词使用。
@@ -60,6 +82,9 @@ export async function translateChapter({
   signal,
   onLog,
   onUsage,
+  onBatchesReady,
+  onBatchStart,
+  onBatchComplete,
 }: HarnessInput): Promise<string[]> {
   const translated: string[] = [];
   // 每次请求都会重复带上整章原文和术语表：模型看到当前批次之外的内容后，
@@ -71,20 +96,22 @@ export async function translateChapter({
       .join('\n')}\n</glossary>`,
   ].join('\n\n');
 
+  const batches = planBatches(source.length);
+  onBatchesReady?.(batches);
+
   // 批与批之间串行：下一批的提示词里要带上前面批次的译文，
-  for (let start = 0; start < source.length; start += BATCH_SIZE) {
+  for (const batch of batches) {
     signal?.throwIfAborted();
-    const lines = source.slice(start, start + BATCH_SIZE);
+    const lines = source.slice(batch.start, batch.end);
     // 只把非空段落计入本批：空行原样保留，不需要也不应该让模型翻译。
     const paragraphIds = lines.flatMap((line, index) =>
-      line.trim() ? [paragraphId(start + index)] : [],
+      line.trim() ? [paragraphId(batch.start + index)] : [],
     );
     const count = paragraphIds.length;
     let translations: string[] = [];
+    onBatchStart?.(batch);
     if (count > 0) {
-      onLog?.(
-        `翻译批次 ${Math.floor(start / BATCH_SIZE) + 1}/${Math.ceil(source.length / BATCH_SIZE)}`,
-      );
+      onLog?.(`翻译批次 ${batch.index + 1}/${batches.length}`);
       // 请求结构：system 放翻译规则和输出格式；user 按
       // 「整章原文 → 已译内容 → 当前批次」摆放，最后明确要求返回本批译文。
       // 把 current_batch 放在最后，模型更容易把注意力落在真正要翻译的段落上。
@@ -106,7 +133,7 @@ ${outputInstructions[preset.outputFormat]}
             content: [
               prefix,
               `<translated_so_far>\n${numberedLines(translated)}\n</translated_so_far>`,
-              `<current_batch>\n${numberedLines(lines, start)}\n</current_batch>`,
+              `<current_batch>\n${numberedLines(lines, batch.start)}\n</current_batch>`,
               `请返回本批 ${count} 段的译文。`,
             ].join('\n\n'),
           },
@@ -116,7 +143,7 @@ ${outputInstructions[preset.outputFormat]}
         onUsage: (usage) =>
           onUsage?.({
             model: preset.model,
-            batch: Math.floor(start / BATCH_SIZE) + 1,
+            batch: batch.index + 1,
             usage,
           }),
       });
@@ -133,13 +160,13 @@ ${outputInstructions[preset.outputFormat]}
     // - 非空段落沿用原文行首缩进，避免模型改动排版；
     // - 空行原样保留（包括空字符串），保证返回数组长度和 source 完全一致。
     let index = 0;
-    translated.push(
-      ...lines.map((line) =>
-        line.trim()
-          ? line.match(/^\s*/)![0] + translations[index++].trim()
-          : line,
-      ),
+    const translatedLines = lines.map((line) =>
+      line.trim()
+        ? line.match(/^\s*/)![0] + translations[index++].trim()
+        : line,
     );
+    translated.push(...translatedLines);
+    onBatchComplete?.(batch, translatedLines);
   }
   return translated;
 }

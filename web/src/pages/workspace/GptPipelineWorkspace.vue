@@ -562,7 +562,7 @@ const startWorker = async (workerId: string) => {
         '@/domain/translator/harness/HarnessMode'
       );
       if (workerStates.value.get(workerId) !== state) return;
-      state.translateChapter = createHarnessMode(preset, worker.key);
+      state.translateChapter = createHarnessMode(preset, worker.key, worker.id);
       state.allowUpload = true;
     } else {
       const log = (msg: string) => console.log(`[${w.id}] ${msg}`);

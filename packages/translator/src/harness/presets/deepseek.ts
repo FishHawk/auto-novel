@@ -44,16 +44,16 @@ const deepseek = {
 
 /** 由共享配置派生出各模型预设；界面上的模型下拉也直接读这份列表。 */
 export const deepseekPresets: HarnessPreset[] = [
-  // 峰价（USD / 1M tokens）
-  // https://api-docs.deepseek.com/quick_start/pricing/
+  // 峰价（CNY / 1M tokens）
+  // https://api-docs.deepseek.com/zh-cn/quick_start/pricing/
   {
     ...deepseek,
     model: 'deepseek-v4-flash',
-    cost: { input: 0.3, output: 1.2, cacheRead: 0.006, cacheWrite: 0 },
+    cost: { input: 2, output: 8, cacheRead: 0.04, cacheWrite: 0 },
   },
   {
     ...deepseek,
     model: 'deepseek-v4-pro',
-    cost: { input: 1.32, output: 3.96, cacheRead: 0.044, cacheWrite: 0 },
+    cost: { input: 9, output: 27, cacheRead: 0.3, cacheWrite: 0 },
   },
 ];
