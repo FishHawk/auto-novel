@@ -2,11 +2,11 @@ import type { HarnessPreset } from '../presets';
 
 /**
  * DeepSeek 系列共用同一套翻译规则和请求参数；
- * 期望是每个系列模型单独应用规则，根据不同模型特性调整 DS暂时先用聊天补全API。
+ * 使用 Responses API；JSON 输出和思考参数也按该协议配置。
  */
 const deepseek = {
   endpoint: 'https://api.deepseek.com',
-  protocol: 'openai-completions' as const,
+  protocol: 'openai-responses' as const,
   outputFormat: 'json' as const,
   rules: `请严格遵守以下核心翻译准则：
 1. 【文风与圈内语感】：
@@ -37,14 +37,23 @@ const deepseek = {
    - 不要“原文直出”，允许在不影响原意的前提下，根据中文读者的阅读习惯进行适当的调整和润色。
 `,
   requestParams: {
-    response_format: { type: 'json_object' },
-    thinking: { type: 'enabled' },
-    reasoning_effort: 'high',
+    text: { format: { type: 'json_object' } },
+    reasoning: { effort: 'high' },
   },
 };
 
 /** 由共享配置派生出各模型预设；界面上的模型下拉也直接读这份列表。 */
 export const deepseekPresets: HarnessPreset[] = [
-  { ...deepseek, model: 'deepseek-v4-flash' },
-  { ...deepseek, model: 'deepseek-v4-pro' },
+  // 峰价（USD / 1M tokens）
+  // https://api-docs.deepseek.com/quick_start/pricing/
+  {
+    ...deepseek,
+    model: 'deepseek-v4-flash',
+    cost: { input: 0.3, output: 1.2, cacheRead: 0.006, cacheWrite: 0 },
+  },
+  {
+    ...deepseek,
+    model: 'deepseek-v4-pro',
+    cost: { input: 1.32, output: 3.96, cacheRead: 0.044, cacheWrite: 0 },
+  },
 ];

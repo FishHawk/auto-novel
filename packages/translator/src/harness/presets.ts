@@ -1,4 +1,5 @@
 import type { PiAiProtocol } from '../translator/pi-ai-api';
+import type { ModelCost } from '@earendil-works/pi-ai';
 import { deepseekPresets } from './presets/deepseek';
 
 export type HarnessOutputFormat = 'json' | 'paragraph-id' | 'lines';
@@ -11,6 +12,8 @@ export interface HarnessPreset {
   outputFormat: HarnessOutputFormat;
   rules: string;
   requestParams: Record<string, unknown>;
+  /** 每百万 token 的美元参考单价，仅用于费用估算。 */
+  cost: ModelCost;
 }
 
 export interface HarnessPresetGroup {

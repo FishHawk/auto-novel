@@ -20,6 +20,9 @@ export function createHarnessMode(
       key,
       signal,
       onLog: tracker.onLog,
+      onUsage: (record) => {
+        tracker.segmentTracker?.harnessUsage.push(record);
+      },
     });
     // harness 内部按批翻译，没有 pipeline 的分段回调；
     // 整章完成后一次性把段落状态标为 done，让进度条和分段视图仍能正确显示。

@@ -11,9 +11,16 @@
  * 术语表和已经翻好的部分，从而保持称谓、语气和上下文一致。
  */
 import type { Glossary, Logger } from '../types';
+import type { Usage } from '@earendil-works/pi-ai';
 import { createPiAiCompletion } from '../translator/pi-ai-api';
 import type { HarnessPreset } from './presets';
 import { outputInstructions, parseBatchOutput } from './output';
+
+export interface HarnessUsageRecord {
+  model: string;
+  batch: number;
+  usage: Usage;
+}
 
 export interface HarnessInput {
   source: string[];
@@ -22,6 +29,7 @@ export interface HarnessInput {
   key: string;
   signal?: AbortSignal;
   onLog?: Logger;
+  onUsage?: (record: HarnessUsageRecord) => void;
 }
 
 /**
@@ -51,6 +59,7 @@ export async function translateChapter({
   key,
   signal,
   onLog,
+  onUsage,
 }: HarnessInput): Promise<string[]> {
   const translated: string[] = [];
   // 每次请求都会重复带上整章原文和术语表：模型看到当前批次之外的内容后，
@@ -103,6 +112,13 @@ ${outputInstructions[preset.outputFormat]}
           },
         ],
         requestParams: preset.requestParams,
+        cost: preset.cost,
+        onUsage: (usage) =>
+          onUsage?.({
+            model: preset.model,
+            batch: Math.floor(start / BATCH_SIZE) + 1,
+            usage,
+          }),
       });
       signal?.throwIfAborted();
       // 解析和数量校验统一放在 output.ts；格式不符会直接抛错，
