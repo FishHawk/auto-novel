@@ -16,6 +16,7 @@ const emit = defineEmits<{
 }>();
 
 const selectedSegmentIndex = ref(0);
+const usageSummary = computed(() => props.chapterState?.harnessUsageTotal);
 const previewState = computed(() => {
   const state = props.chapterState;
   const seg = state?.segments[selectedSegmentIndex.value] ?? null;
@@ -110,6 +111,28 @@ const onUpdateShow = (val: boolean) => {
         </n-tag>
       </div>
       <n-divider style="margin: 4px 0 4px" />
+    </div>
+
+    <!--  先暂时用着，后面再改进了  -->
+    <div v-if="chapterState?.harnessUsage.length && usageSummary">
+      <n-text depth="3">
+        {{ chapterState.harnessUsage.length }} 次请求 · 输入
+        {{
+          usageSummary.uncachedInputTokens +
+          usageSummary.cacheReadTokens +
+          usageSummary.cacheWriteTokens
+        }}
+        （未命中 {{ usageSummary.uncachedInputTokens }}，缓存命中
+        {{ usageSummary.cacheReadTokens }}）· 输出
+        {{ usageSummary.outputTokens }}
+        <template v-if="usageSummary.reasoningTokens !== undefined">
+          （含思考 {{ usageSummary.reasoningTokens }}）
+        </template>
+        · 总计 {{ usageSummary.totalTokens }} tokens
+        <br />
+        估算费用 ¥{{ usageSummary.estimatedCost.toFixed(4) }}
+        （价格统一按峰价与官价预估）
+      </n-text>
     </div>
 
     <div v-if="previewState.ranges.length > 1" class="segment-tabs">

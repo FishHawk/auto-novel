@@ -1,4 +1,5 @@
 import type { SegmentTracker, LineRange } from '@auto-novel/translator';
+import type { HarnessUsageRecord } from '@auto-novel/translator/harness';
 
 export type ChapterStatus = 'pending' | 'translating' | 'done' | 'error';
 export type SegmentStatus = 'pending' | 'translating' | 'done' | 'error';
@@ -23,8 +24,35 @@ export class ChapterSegmentState implements SegmentTracker {
   readonly chapterId: string;
   ranges: LineRange[] = [];
   segments: SegmentInfo[] = [];
+  /** 当前工作区内的请求用量；不持久化到章节数据。 */
+  harnessUsage: HarnessUsageRecord[] = [];
   /** 是否完成 Segment 切分 */
   ready = false;
+
+  /** 汇总当前章节的 token 与人民币估算费用。 */
+  get harnessUsageTotal() {
+    const total = {
+      uncachedInputTokens: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      outputTokens: 0,
+      reasoningTokens: undefined as number | undefined,
+      totalTokens: 0,
+      estimatedCost: 0,
+    };
+    for (const { usage } of this.harnessUsage) {
+      total.uncachedInputTokens += usage.input;
+      total.cacheReadTokens += usage.cacheRead;
+      total.cacheWriteTokens += usage.cacheWrite;
+      total.outputTokens += usage.output;
+      if (usage.reasoning !== undefined) {
+        total.reasoningTokens = (total.reasoningTokens ?? 0) + usage.reasoning;
+      }
+      total.totalTokens += usage.totalTokens;
+      total.estimatedCost += usage.cost.total;
+    }
+    return total;
+  }
 
   get allDone(): boolean {
     return (
@@ -45,6 +73,13 @@ export class ChapterSegmentState implements SegmentTracker {
   constructor(chapterId: string) {
     this.chapterId = chapterId;
     return reactive(this) as ChapterSegmentState;
+  }
+
+  /** 重试只清理译文状态，保留已发生的请求用量。 */
+  resetSegments(): void {
+    this.ranges = [];
+    this.segments = [];
+    this.ready = false;
   }
 
   onSegmentsReady(lines: string[], ranges: LineRange[]): void {
