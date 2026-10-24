@@ -11,9 +11,12 @@ export interface GptWorker {
   concurrency?: number;
 }
 
+export type TranslatorPresetId = 'general' | 'deepseek';
+
 export interface GptPipelineWorker extends GptWorker {
   concurrency: number;
   profile?: { id: openAiProfileId; values?: ProfileValues };
+  preset?: TranslatorPresetId;
 }
 
 export interface SakuraWorker {

@@ -2,7 +2,7 @@
 import { Toast, XSelect, XDialog } from '@novelia/web-kit';
 import type { FormInst, FormItemRule, FormRules } from 'naive-ui';
 
-import type { GptPipelineWorker } from '@/model/Translator';
+import type { GptPipelineWorker, TranslatorPresetId } from '@/model/Translator';
 import { useGptPipelineWorkspaceStore } from '@/stores';
 import {
   openAiProfiles,
@@ -30,6 +30,18 @@ const GEMINI_ENDPOINT =
 /** 新建翻译器时默认使用的接口格式 */
 const DEFAULT_PROFILE_ID: openAiProfileId = 'deepseek';
 
+const presetOptions: { label: string; value: TranslatorPresetId }[] = [
+  { label: '通用', value: 'general' },
+  { label: 'DeepSeek', value: 'deepseek' },
+];
+
+/** DeepSeek 预设锁定的模型白名单 */
+const DEEPSEEK_MODELS = ['deepseek-v4-flash', 'deepseek-v4-pro'] as const;
+const deepseekModelOptions = DEEPSEEK_MODELS.map((model) => ({
+  label: model,
+  value: model,
+}));
+
 /**
  * 按接口格式自动填入默认端点：
  * Gemini 用谷歌兼容端点，Anthropic 用 DeepSeek 的 /anthropic，，默认 DeepSeek。
@@ -50,9 +62,11 @@ const initFormValue = (
   concurrency: number;
   profileId: openAiProfileId;
   profileValues: ProfileValues;
+  preset: TranslatorPresetId;
 } => {
   const profileId = worker?.profile?.id ?? DEFAULT_PROFILE_ID;
   const defaultValues = defaultProfileValues(profileId);
+  const preset = worker?.preset ?? 'general';
 
   if (worker === undefined) {
     return {
@@ -63,6 +77,7 @@ const initFormValue = (
       concurrency: 1,
       profileId,
       profileValues: defaultValues,
+      preset,
     };
   } else {
     return {
@@ -76,6 +91,7 @@ const initFormValue = (
         ...defaultValues,
         ...(worker.profile?.values ?? {}),
       },
+      preset,
     };
   }
 };
@@ -115,6 +131,17 @@ const onProfileChange = (value: string) => {
   if (!preserveEndpoint.value) {
     formValue.value.endpoint = defaultEndpoint(id);
   }
+};
+
+const onPresetChange = (value: string) => {
+  formValue.value.preset = value as TranslatorPresetId;
+  if (formValue.value.preset !== 'deepseek') return;
+  formValue.value.profileId = 'deepseek';
+  formValue.value.profileValues = { reasoning_effort: 'high' };
+  formValue.value.model = DEEPSEEK_MODELS[0];
+  formValue.value.endpoint = DEEPSEEK_ENDPOINT;
+  modelText.value = DEEPSEEK_MODELS[0];
+  preserveEndpoint.value = true;
 };
 
 watch(
@@ -379,6 +406,7 @@ const validateIds = (): string | null => {
 
 const addWorkers = () => {
   const endpoint = formValue.value.endpoint.trim();
+  const preset = formValue.value.preset;
   const profile = {
     id: formValue.value.profileId,
     values: { ...formValue.value.profileValues },
@@ -391,6 +419,7 @@ const addWorkers = () => {
       key: w.key,
       concurrency: workerConcurrencies[w.uid] ?? defaultConcurrency.value,
       profile,
+      preset,
     });
   }
 };
@@ -408,8 +437,16 @@ const submit = async () => {
     emit('update:show', false);
   } else {
     if (!(await doValidate())) return;
-    const { id, model, endpoint, key, concurrency, profileId, profileValues } =
-      formValue.value;
+    const {
+      id,
+      model,
+      endpoint,
+      key,
+      concurrency,
+      profileId,
+      profileValues,
+      preset,
+    } = formValue.value;
     const worker = {
       id: id.trim(),
       model: model.trim(),
@@ -420,6 +457,7 @@ const submit = async () => {
         id: profileId,
         values: { ...profileValues },
       },
+      preset,
     };
     const index = workspaceRef.value.workers.findIndex(
       (w) => w.id === props.worker?.id,
@@ -458,6 +496,15 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
       label-placement="left"
       label-width="auto"
     >
+      <n-form-item-row label="预设">
+        <XSelect
+          :model-value="formValue.preset"
+          :options="presetOptions"
+          aria-label="预设"
+          class="w-full"
+          @update:model-value="onPresetChange"
+        />
+      </n-form-item-row>
       <n-form-item-row label="接口格式">
         <XSelect
           :model-value="formValue.profileId"
@@ -466,6 +513,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           "
           aria-label="接口格式"
           class="w-full"
+          :disabled="formValue.preset === 'deepseek'"
           @update:model-value="onProfileChange"
         />
       </n-form-item-row>
@@ -494,6 +542,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
             "
             :aria-label="field.label"
             class="w-full"
+            :disabled="formValue.preset === 'deepseek'"
             @update:model-value="
               (value) =>
                 (formValue.profileValues[field.key] =
@@ -508,12 +557,23 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
+            :disabled="formValue.preset === 'deepseek'"
             @update:value="onEndpointInput"
           />
         </n-form-item-row>
 
         <n-form-item-row path="models" label="模型">
+          <XSelect
+            v-if="formValue.preset === 'deepseek'"
+            :model-value="modelText"
+            :options="deepseekModelOptions"
+            aria-label="模型"
+            class="w-full"
+            disabled
+            @update:model-value="modelText = $event"
+          />
           <n-input
+            v-else
             v-model:value="modelText"
             type="textarea"
             placeholder="每行一个模型名&#10;deepseek-v4-pro&#10;deepseek-v4-flash"
@@ -592,7 +652,17 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           />
         </n-form-item-row>
         <n-form-item-row path="model" label="模型">
+          <XSelect
+            v-if="formValue.preset === 'deepseek'"
+            :model-value="formValue.model"
+            :options="deepseekModelOptions"
+            aria-label="模型"
+            class="w-full"
+            disabled
+            @update:model-value="formValue.model = $event"
+          />
           <n-input
+            v-else
             v-model:value="formValue.model"
             placeholder="deepseek-v4-pro"
           />
@@ -601,6 +671,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
+            :disabled="formValue.preset === 'deepseek'"
             @update:value="onEndpointInput"
           />
         </n-form-item-row>

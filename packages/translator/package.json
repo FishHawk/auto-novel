@@ -37,7 +37,8 @@
     "vitest": "^4.0.6"
   },
   "dependencies": {
-    "@earendil-works/pi-ai": "^1.1.0",
+    "@earendil-works/pi-agent-core": "^1.4.0",
+    "@earendil-works/pi-ai": "^1.4.0",
     "crypto-es": "^2.1.0",
     "lodash-es": "^4.17.21",
     "ky": "^2.1.0"
