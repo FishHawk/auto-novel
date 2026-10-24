@@ -15,10 +15,15 @@ import {
   TranslationPipeline,
 } from '@auto-novel/translator';
 import type { TranslatorTracker } from '@auto-novel/translator';
+import {
+  findHarnessPresetGroup,
+  getHarnessModelPreset,
+} from '@auto-novel/translator/harness/presets';
 
 import { forumPostUrls, siteUrls } from '@/config';
 import { useWorkspaceStore } from '@/stores';
 import { TaskExecutor } from '@/domain/translator/TaskExecutor';
+import type { ChapterTranslator } from '@/domain/translator/TaskExecutor';
 import { IndexedDbSegmentCache } from '@/domain/translator/IndexedDbSegmentCache';
 import { createTranslationTask } from '@/domain/translator/TranslationTask/createTranslationTask';
 import type {
@@ -74,8 +79,14 @@ const initializingTasks = new Map<string, { createAt: number }>();
 
 interface WorkerState {
   running: boolean;
+  /** 翻译方式：pipeline 走原有分块队列，harness 走整章直连预设 */
+  mode: 'pipeline' | 'harness';
   concurrency: { current: number; max: number };
   allowUpload?: boolean;
+  /** harness 模式下的章节翻译函数；pipeline 模式为空 */
+  translateChapter?: ChapterTranslator;
+  /** harness 模式独立的中止开关，停止该 worker 时只中止它自己领取的章节 */
+  controller?: AbortController;
 }
 const workerStates = ref(new Map<string, WorkerState>());
 const workerErrors = computed(() => {
@@ -114,6 +125,9 @@ onUnmounted(() => {
   abortPreparationTasks();
   pipeline.clearLoops();
   pipeline.queue.clear();
+  // harness worker 有各自的 controller，页面卸载时需要逐个中止在途章节，
+  // 否则模型请求会在组件销毁后继续跑完。
+  for (const state of workerStates.value.values()) state.controller?.abort();
   processLoopAbortController?.abort();
   processLoopAbortController = null;
   executingTasks.clear();
@@ -404,9 +418,10 @@ function runProcessLoop(): void {
   if (pendingCount === 0) return;
   processLoopAbortController ??= new AbortController();
   const controller = processLoopAbortController;
-  const signal = controller.signal;
-
-  const processOne = async () => {
+  const processOne = async (worker?: WorkerState) => {
+    // harness worker 用自己的 controller：停止它时只结束它领取的章节；
+    // pipeline 模式没有 worker 参数，继续共用全局 controller。
+    const signal = worker?.controller?.signal ?? controller.signal;
     while (!signal.aborted && hasRunningWorker()) {
       const item = getNextJob(jobs.value, taskStates.value);
       if (!item) break;
@@ -417,7 +432,7 @@ function runProcessLoop(): void {
       const task = await getOrCreateTask(job.task);
       const executor = new TaskExecutor(
         task,
-        pipeline,
+        worker?.translateChapter ?? pipeline,
         fetchSemaphore,
         () =>
           !signal.aborted &&
@@ -462,11 +477,12 @@ function runProcessLoop(): void {
 
   // 运行中新增的待翻章节（新任务、重试、任务延迟初始化）也要补满窗口，
   // 否则章节并发会一直被卡在循环启动时的待翻章节数。
-  const spawnCount = Math.min(GLOBAL_WINDOW - activeProcessors, pendingCount);
-  for (let i = 0; i < spawnCount; i++) {
+  const startProcessor = (worker?: WorkerState) => {
     activeProcessors++;
-    processOne().finally(() => {
+    if (worker) worker.concurrency.current++;
+    processOne(worker).finally(() => {
       activeProcessors--;
+      if (worker) worker.concurrency.current--;
       if (activeProcessors === 0) {
         executingTasks.clear();
         if (processLoopAbortController === controller) {
@@ -477,6 +493,26 @@ function runProcessLoop(): void {
         runProcessLoop();
       }
     });
+  };
+
+  // 存在 harness worker 时，按每个 worker 自己的并发上限分配槽位；
+  // GLOBAL_WINDOW 仍是所有 worker 合计的章节并发总上限。
+  // pipeline 模式的分块并发由 pipeline 内部管理，所以只按全局窗口启动循环。
+  const chapterWorkers = [...workerStates.value.values()].filter(
+    (state) => state.running && state.translateChapter,
+  );
+  if (chapterWorkers.length > 0) {
+    for (const worker of chapterWorkers) {
+      const slots = Math.min(
+        worker.concurrency.max - worker.concurrency.current,
+        GLOBAL_WINDOW - activeProcessors,
+        pendingCount,
+      );
+      for (let i = 0; i < slots; i++) startProcessor(worker);
+    }
+  } else {
+    const spawnCount = Math.min(GLOBAL_WINDOW - activeProcessors, pendingCount);
+    for (let i = 0; i < spawnCount; i++) startProcessor();
   }
 }
 
@@ -491,28 +527,59 @@ const startWorker = async (workerId: string) => {
     return;
   }
 
+  const harnessPreset = isSakura.value
+    ? undefined
+    : findHarnessPresetGroup((w as GptPipelineWorker).preset);
+  const mode = harnessPreset?.mode ?? 'pipeline';
+  // 两种方式的调度、并发和进度统计不能混跑：同一条待翻队列会被双方同时领取，
+  // 所以只要另一种模式还有 worker 在运行，就先拒绝切换。
+  if (
+    [...workerStates.value.values()].some(
+      (state) => state.running && state.mode !== mode,
+    )
+  ) {
+    Toast.warning('请先停止正在运行的另一种预设，再切换翻译方式');
+    return;
+  }
+
   const state = reactive<WorkerState>({
     running: true,
+    mode,
+    // harness 的并发由 runProcessLoop 按 worker 槽位分配；
+    // pipeline 的并发由 pipeline 内部按注册时传入的 concurrency 控制。
     concurrency: { current: 0, max: w.concurrency ?? 1 },
+    controller: mode === 'harness' ? new AbortController() : undefined,
   });
   workerStates.value.set(workerId, state);
 
   try {
-    const log = (msg: string) => console.log(`[${w.id}] ${msg}`);
-    const t = isSakura.value
-      ? await SakuraTranslator.create({ ...(w as SakuraWorker), log })
-      : new OpenAiTranslator({ ...(w as GptPipelineWorker), log });
+    if (harnessPreset) {
+      // 动态导入：只有启动 Harness 预设时才加载引擎及其依赖，
+      // 默认翻译流程不会因此增加首屏体积。
+      const worker = w as GptPipelineWorker;
+      const preset = getHarnessModelPreset(harnessPreset, worker.model);
+      const { createHarnessMode } = await import(
+        '@/domain/translator/harness/HarnessMode'
+      );
+      if (workerStates.value.get(workerId) !== state) return;
+      state.translateChapter = createHarnessMode(preset, worker.key);
+      state.allowUpload = true;
+    } else {
+      const log = (msg: string) => console.log(`[${w.id}] ${msg}`);
+      const t = isSakura.value
+        ? await SakuraTranslator.create({ ...(w as SakuraWorker), log })
+        : new OpenAiTranslator({ ...(w as GptPipelineWorker), log });
 
-    if (workerStates.value.get(workerId) !== state) return;
+      if (workerStates.value.get(workerId) !== state) return;
 
-    state.allowUpload = !(t instanceof SakuraTranslator) || t.allowUpload();
-
-    const workerTracker: TranslatorTracker = {
-      onConcurrencyChange: (current: number, max: number) => {
-        state.concurrency = { current, max };
-      },
-    };
-    pipeline.registerTranslator(t, w.concurrency, workerTracker, w.id);
+      state.allowUpload = !(t instanceof SakuraTranslator) || t.allowUpload();
+      const workerTracker: TranslatorTracker = {
+        onConcurrencyChange: (current: number, max: number) => {
+          state.concurrency = { current, max };
+        },
+      };
+      pipeline.registerTranslator(t, w.concurrency, workerTracker, w.id);
+    }
 
     runProcessLoop();
   } catch (e) {
@@ -527,6 +594,10 @@ const stopWorker = (workerId: string) => {
   if (!state?.running) return;
 
   pipeline.unregisterTranslator(workerId);
+  // 先置为停止，避免正在执行的循环继续领取新章节；
+  // 再中止该 worker 自己的 controller，让它在途的章节回到 pending。
+  state.running = false;
+  state.controller?.abort();
 
   workerStates.value.set(workerId, { ...state, running: false });
 

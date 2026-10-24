@@ -9,6 +9,10 @@ import {
   type openAiProfileId,
   type ProfileValues,
 } from '@auto-novel/translator';
+import {
+  harnessPresets,
+  findHarnessPresetGroup,
+} from '@auto-novel/translator/harness/presets';
 
 const props = defineProps<{
   show: boolean;
@@ -32,15 +36,11 @@ const DEFAULT_PROFILE_ID: openAiProfileId = 'deepseek';
 
 const presetOptions: { label: string; value: TranslatorPresetId }[] = [
   { label: '通用', value: 'general' },
-  { label: 'DeepSeek', value: 'deepseek' },
+  ...harnessPresets.map((preset) => ({
+    label: preset.label,
+    value: preset.id,
+  })),
 ];
-
-/** DeepSeek 预设锁定的模型白名单 */
-const DEEPSEEK_MODELS = ['deepseek-v4-flash', 'deepseek-v4-pro'] as const;
-const deepseekModelOptions = DEEPSEEK_MODELS.map((model) => ({
-  label: model,
-  value: model,
-}));
 
 /**
  * 按接口格式自动填入默认端点：
@@ -98,6 +98,21 @@ const initFormValue = (
 
 const formRef = useTemplateRef<FormInst>('form');
 const formValue = ref(initFormValue(props.worker));
+const harnessPreset = computed(() =>
+  findHarnessPresetGroup(formValue.value.preset),
+);
+const harnessModel = computed(() =>
+  harnessPreset.value?.models.find(
+    (preset) => preset.model === formValue.value.model,
+  ),
+);
+const harnessModelOptions = computed(
+  () =>
+    harnessPreset.value?.models.map(({ model }) => ({
+      label: model,
+      value: model,
+    })) ?? [],
+);
 
 /** 已保存或手动输入的 API 端点不随接口格式切换而覆盖。 */
 const preserveEndpoint = ref(Boolean(props.worker?.endpoint.trim()));
@@ -133,15 +148,27 @@ const onProfileChange = (value: string) => {
   }
 };
 
+const onHarnessModelChange = (value: string) => {
+  const preset = harnessPreset.value?.models.find(
+    (preset) => preset.model === value,
+  );
+  if (!preset) return;
+  formValue.value.model = preset.model;
+  formValue.value.endpoint = preset.endpoint;
+  modelText.value = preset.model;
+  preserveEndpoint.value = true;
+};
+
 const onPresetChange = (value: string) => {
   formValue.value.preset = value as TranslatorPresetId;
-  if (formValue.value.preset !== 'deepseek') return;
-  formValue.value.profileId = 'deepseek';
-  formValue.value.profileValues = { reasoning_effort: 'high' };
-  formValue.value.model = DEEPSEEK_MODELS[0];
-  formValue.value.endpoint = DEEPSEEK_ENDPOINT;
-  modelText.value = DEEPSEEK_MODELS[0];
-  preserveEndpoint.value = true;
+  const model = harnessPreset.value?.models[0];
+  if (model) onHarnessModelChange(model.model);
+  else {
+    formValue.value.endpoint = defaultEndpoint(formValue.value.profileId);
+    formValue.value.model = '';
+    modelText.value = '';
+    preserveEndpoint.value = false;
+  }
 };
 
 watch(
@@ -407,10 +434,12 @@ const validateIds = (): string | null => {
 const addWorkers = () => {
   const endpoint = formValue.value.endpoint.trim();
   const preset = formValue.value.preset;
-  const profile = {
-    id: formValue.value.profileId,
-    values: { ...formValue.value.profileValues },
-  };
+  const profile = harnessPreset.value
+    ? undefined
+    : {
+        id: formValue.value.profileId,
+        values: { ...formValue.value.profileValues },
+      };
   for (const w of generatedWorkers.value) {
     workspace.addWorker({
       id: workerName(w),
@@ -453,10 +482,12 @@ const submit = async () => {
       endpoint: endpoint.trim(),
       key: key.trim(),
       concurrency,
-      profile: {
-        id: profileId,
-        values: { ...profileValues },
-      },
+      profile: harnessPreset.value
+        ? undefined
+        : {
+            id: profileId,
+            values: { ...profileValues },
+          },
       preset,
     };
     const index = workspaceRef.value.workers.findIndex(
@@ -506,19 +537,24 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
         />
       </n-form-item-row>
       <n-form-item-row label="接口格式">
+        <n-input
+          v-if="harnessPreset"
+          :value="harnessModel?.protocol"
+          readonly
+        />
         <XSelect
+          v-else
           :model-value="formValue.profileId"
           :options="
             openAiProfiles.map((p) => ({ label: p.label, value: p.id }))
           "
           aria-label="接口格式"
           class="w-full"
-          :disabled="formValue.preset === 'deepseek'"
           @update:model-value="onProfileChange"
         />
       </n-form-item-row>
 
-      <template v-if="currentProfile?.fields.length">
+      <template v-if="!harnessPreset && currentProfile?.fields.length">
         <n-form-item-row
           v-for="field in currentProfile.fields"
           :key="`${formValue.profileId}-${field.key}`"
@@ -542,7 +578,6 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
             "
             :aria-label="field.label"
             class="w-full"
-            :disabled="formValue.preset === 'deepseek'"
             @update:model-value="
               (value) =>
                 (formValue.profileValues[field.key] =
@@ -557,20 +592,19 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
-            :disabled="formValue.preset === 'deepseek'"
+            :disabled="Boolean(harnessPreset)"
             @update:value="onEndpointInput"
           />
         </n-form-item-row>
 
         <n-form-item-row path="models" label="模型">
           <XSelect
-            v-if="formValue.preset === 'deepseek'"
+            v-if="harnessPreset"
             :model-value="modelText"
-            :options="deepseekModelOptions"
+            :options="harnessModelOptions"
             aria-label="模型"
             class="w-full"
-            disabled
-            @update:model-value="modelText = $event"
+            @update:model-value="onHarnessModelChange"
           />
           <n-input
             v-else
@@ -653,13 +687,12 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
         </n-form-item-row>
         <n-form-item-row path="model" label="模型">
           <XSelect
-            v-if="formValue.preset === 'deepseek'"
+            v-if="harnessPreset"
             :model-value="formValue.model"
-            :options="deepseekModelOptions"
+            :options="harnessModelOptions"
             aria-label="模型"
             class="w-full"
-            disabled
-            @update:model-value="formValue.model = $event"
+            @update:model-value="onHarnessModelChange"
           />
           <n-input
             v-else
@@ -671,7 +704,7 @@ const verb = computed(() => (props.worker === undefined ? '添加' : '更新'));
           <n-input
             :value="formValue.endpoint"
             :placeholder="defaultEndpoint(formValue.profileId)"
-            :disabled="formValue.preset === 'deepseek'"
+            :disabled="Boolean(harnessPreset)"
             @update:value="onEndpointInput"
           />
         </n-form-item-row>
